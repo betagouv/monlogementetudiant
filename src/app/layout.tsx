@@ -19,8 +19,8 @@ export const generateMetadata = async () => {
     description: t('description'),
     title: t('title'),
     robots: {
-      index: false,
-      follow: false,
+      index: process.env.NEXT_PUBLIC_APP_ENV === 'production',
+      follow: process.env.NEXT_PUBLIC_APP_ENV === 'production',
     },
   }
 }
