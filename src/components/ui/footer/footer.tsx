@@ -1,5 +1,6 @@
 import Footer, { type FooterProps } from '@codegouvfr/react-dsfr/Footer'
 import { getTranslations } from 'next-intl/server'
+import { z } from 'zod'
 import { BrandTop } from '~/components/ui/brand-top'
 import { getPopularCities } from '~/server-only/get-popular-cities'
 import styles from './footer.module.css'
@@ -94,6 +95,13 @@ export const FooterComponent = async () => {
         title: 'Budget Mon Logement Étudiant',
       },
       text: 'Budget Mon Logement Étudiant',
+    },
+    {
+      linkProps: {
+        href: z.string().parse(process.env.NEXT_PUBLIC_GITBOOK_URL),
+        title: 'Notre Gitbook',
+      },
+      text: 'Notre Gitbook',
     },
   ]
   return (
