@@ -24,6 +24,5 @@ export const getAccommodations = async (searchParams: {
     throw new Error('Error occurred calling API while retrieving accommodations')
   }
   const data = await response.json()
-
   return data as TGetAccomodationsResponse
 }
