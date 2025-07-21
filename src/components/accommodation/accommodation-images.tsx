@@ -1,4 +1,3 @@
-import { fr } from '@codegouvfr/react-dsfr'
 import Button from '@codegouvfr/react-dsfr/Button'
 import { createModal } from '@codegouvfr/react-dsfr/Modal'
 import clsx from 'clsx'
@@ -26,7 +25,7 @@ interface ImageGridProps {
 
 function ImageGrid({ images, imageWidth, imageHeight, totalImages }: ImageGridProps) {
   return (
-    <div className={clsx(fr.cx('fr-hidden'), fr.cx('fr-unhidden-sm'), styles.gridContainer)} data-images={totalImages}>
+    <div className={clsx('fr-hidden fr-unhidden-sm', styles.gridContainer)} data-images={totalImages}>
       <div className={styles.imageGrid}>
         {images.map((image, index) => (
           <AccommodationImage key={index} src={image} width={imageWidth} height={imageHeight} />
