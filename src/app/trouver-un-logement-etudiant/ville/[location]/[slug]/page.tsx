@@ -60,8 +60,8 @@ export default async function LogementPage({ params }: { params: { slug: string 
               )}
             </div>
           </div>
-          <AccommodationResidence accommodation={accommodation} />
           <AccommodationAvailability nbAvailable={nbAvailable} />
+          <AccommodationResidence accommodation={accommodation} />
           <AccommodationEquipments accommodation={accommodation} />
           <AccommodationLocalisation address={address} city={city} latitude={latitude} longitude={longitude} postalCode={postal_code} />
           {/* TODO: Uncomment when we want to reenable the redirection */}
