@@ -56,6 +56,12 @@
     "faq": "Foire aux questions"
   },
   "accomodation": {
+    "availability": {
+      "noAvailabilityTitle": "Aucune disponibilité pour le moment",
+      "noAvailabilityDescription": "Les logements sont actuellement complets, mais de nouvelles places peuvent se libérer à tout moment.",
+      "maximiseChancesTitle": "Maximisez vos chances en déposant un dossier",
+      "maximiseChancesDescription": "Même si aucune place n’est disponible pour le moment, votre dossier sera étudié dès qu’une opportunité se présente. Plus vous déposez de candidatures, plus vous augmentez vos chances d’obtenir un logement adapté à vos besoins."
+    },
     "equipments": {
       "title": "Equipements"
     },
