@@ -76,7 +76,7 @@ export default async function LogementPage({ params }: { params: { slug: string 
             title={name}
             location={city}
           />
-          <NearbyAccommodations nearbyAccommodations={nearbyAccommodations} />
+          <NearbyAccommodations nearbyAccommodations={nearbyAccommodations} accommodation={accommodation} />
         </div>
       </div>
     </div>

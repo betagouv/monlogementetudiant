@@ -62,6 +62,7 @@ enum AccommodationHouseRoomType {
 }
 
 export const ZAccomodationDetails = z.object({
+  id: z.number(),
   available: z.boolean(),
   address: z.string().max(255),
   bathroom: z.nativeEnum(AccommodationHouseRoomType),
