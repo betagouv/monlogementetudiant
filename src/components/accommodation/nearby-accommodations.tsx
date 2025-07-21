@@ -14,10 +14,14 @@ export const NearbyAccommodations = ({
   nearbyAccommodations,
   accommodation,
 }: { nearbyAccommodations: TGetAccomodationsResponse; accommodation: TAccomodationDetails }) => {
+  const nearbyFeatures = nearbyAccommodations.results.features.filter((feature) => feature.id !== accommodation.id)
+  if (nearbyFeatures.length === 0) {
+    return null
+  }
   const { classes } = useStyles()
   const t = useTranslations('accomodation')
   const [currentIndex, setCurrentIndex] = useState(0)
-  const nearbyFeatures = nearbyAccommodations.results.features.filter((feature) => feature.id !== accommodation.id)
+
   const maxIndex = nearbyFeatures.length - 1
   const handlePrevious = () => setCurrentIndex((prev) => (prev > 0 ? prev - 1 : maxIndex))
   const handleNext = () => setCurrentIndex((prev) => (prev < maxIndex ? prev + 1 : 0))
