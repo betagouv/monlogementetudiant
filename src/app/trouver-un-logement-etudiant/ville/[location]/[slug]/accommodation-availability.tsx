@@ -12,7 +12,7 @@ type AccommodationAvailabilityProps = {
 export const AccommodationAvailability = async ({ nbAvailable }: AccommodationAvailabilityProps) => {
   const t = await getTranslations('accomodation.availability')
 
-  if (!nbAvailable) {
+  if (nbAvailable === 0) {
     return (
       <div className={styles.section}>
         <div className={classes.mainContainer}>
