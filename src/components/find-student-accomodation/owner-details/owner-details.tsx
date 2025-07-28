@@ -4,6 +4,7 @@ import Button from '@codegouvfr/react-dsfr/Button'
 import { getTranslations } from 'next-intl/server'
 import Image from 'next/image'
 import { OwnerDetailsActions } from '~/components/find-student-accomodation/owner-details/owner-details-actions'
+import { OwnerDetailsAlert } from '~/components/find-student-accomodation/owner-details/owner-details-alert'
 import { TAccomodationDetails } from '~/schemas/accommodations/accommodations'
 import { sPluriel } from '~/utils/sPluriel'
 import styles from './owner-details.module.css'
@@ -71,6 +72,9 @@ export const OwnerDetails = async ({
           </>
         )}
       </div>
+      <hr className={styles.sidebarSeparator} />
+      <OwnerDetailsAlert location={location} />
+      <hr className={styles.sidebarSeparator} />
       <OwnerDetailsActions title={title} location={location} />
     </div>
   )
