@@ -1,4 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
+import { createToast } from '~/components/ui/createToast'
 import { TAlertAccommodationForm } from '~/schemas/alert-accommodation/alert-accommodation'
 
 export const postSubscribeToNewsletter = async (body: TAlertAccommodationForm): Promise<void> => {
@@ -15,6 +16,12 @@ export const postSubscribeToNewsletter = async (body: TAlertAccommodationForm): 
 export const useAlertAccommodation = () => {
   const { mutateAsync } = useMutation({
     mutationFn: async (data: TAlertAccommodationForm) => postSubscribeToNewsletter(data),
+    onSuccess: () => {
+      createToast({
+        priority: 'success',
+        message: 'Votre e-mail a bien été enregistré',
+      })
+    },
   })
 
   return {
