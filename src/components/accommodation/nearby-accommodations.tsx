@@ -7,13 +7,21 @@ import Card, { CardProps } from '@codegouvfr/react-dsfr/Card'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { tss } from 'tss-react'
+import { TAccomodationDetails } from '~/schemas/accommodations/accommodations'
 import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
 
-export const NearbyAccommodations = ({ nearbyAccommodations }: { nearbyAccommodations: TGetAccomodationsResponse }) => {
+export const NearbyAccommodations = ({
+  nearbyAccommodations,
+  accommodation,
+}: { nearbyAccommodations: TGetAccomodationsResponse; accommodation: TAccomodationDetails }) => {
+  const nearbyFeatures = nearbyAccommodations.results.features.filter((feature) => feature.id !== accommodation.id)
+  if (nearbyFeatures.length === 0) {
+    return null
+  }
   const { classes } = useStyles()
   const t = useTranslations('accomodation')
   const [currentIndex, setCurrentIndex] = useState(0)
-  const nearbyFeatures = nearbyAccommodations.results.features
+
   const maxIndex = nearbyFeatures.length - 1
   const handlePrevious = () => setCurrentIndex((prev) => (prev > 0 ? prev - 1 : maxIndex))
   const handleNext = () => setCurrentIndex((prev) => (prev < maxIndex ? prev + 1 : 0))

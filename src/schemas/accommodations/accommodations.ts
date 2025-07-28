@@ -31,6 +31,11 @@ export const ZAccomodation = z.object({
     name: z.string().max(250),
     nb_accessible_apartments: z.number().nullable(),
     nb_coliving_apartments: z.number().nullable(),
+    nb_t1_available: z.number().nullable(),
+    nb_t1_bis_available: z.number().nullable(),
+    nb_t2_available: z.number().nullable(),
+    nb_t3_available: z.number().nullable(),
+    nb_t4_more_available: z.number().nullable(),
     nb_t1: z.number().nullable(),
     nb_t1_bis: z.number().nullable(),
     nb_t2: z.number().nullable(),
@@ -57,6 +62,7 @@ enum AccommodationHouseRoomType {
 }
 
 export const ZAccomodationDetails = z.object({
+  id: z.number(),
   available: z.boolean(),
   address: z.string().max(255),
   bathroom: z.nativeEnum(AccommodationHouseRoomType),

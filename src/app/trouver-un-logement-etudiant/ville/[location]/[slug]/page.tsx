@@ -2,6 +2,7 @@ import { FrIconClassName, RiIconClassName, fr } from '@codegouvfr/react-dsfr'
 import { Tag } from '@codegouvfr/react-dsfr/Tag'
 import clsx from 'clsx'
 import { getTranslations } from 'next-intl/server'
+import { AccommodationAvailability } from '~/app/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-availability'
 import { AccommodationEquipments } from '~/app/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-equipments'
 import { AccommodationLocalisation } from '~/app/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-localisation'
 import AccommodationMap from '~/app/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-map'
@@ -59,6 +60,7 @@ export default async function LogementPage({ params }: { params: { slug: string 
               )}
             </div>
           </div>
+          <AccommodationAvailability nbAvailable={nbAvailable} />
           <AccommodationResidence accommodation={accommodation} />
           <AccommodationEquipments accommodation={accommodation} />
           <AccommodationLocalisation address={address} city={city} latitude={latitude} longitude={longitude} postalCode={postal_code} />
@@ -76,7 +78,7 @@ export default async function LogementPage({ params }: { params: { slug: string 
             title={name}
             location={city}
           />
-          <NearbyAccommodations nearbyAccommodations={nearbyAccommodations} />
+          <NearbyAccommodations nearbyAccommodations={nearbyAccommodations} accommodation={accommodation} />
         </div>
       </div>
     </div>
