@@ -21,6 +21,7 @@ export const AlertAccommodationForm: FC = () => {
       email: '',
       territory_name: queryStates.q || '',
       territory_type: queryStates.type || '',
+      kind: 'newsletter' as const,
     },
     resolver: zodResolver(ZAlertAccommodationFormSchema),
   })

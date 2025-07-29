@@ -26,6 +26,7 @@ export const OwnerDetailsAlert = ({ location }: OwnerDetailsAlertProps) => {
         email,
         territory_name: location,
         territory_type: 'city',
+        kind: 'accommodation',
       })
       setEmail('')
     } catch (error) {
