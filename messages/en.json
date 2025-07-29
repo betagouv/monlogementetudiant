@@ -88,6 +88,12 @@
         "link": "Copier le lien",
         "email": "Envoyer par email",
         "print": "Imprimer"
+      },
+      "alert": {
+        "label": "E-mail",
+        "title": "Restez alerté des disponibilités",
+        "description": "En renseignant votre e-mail, vous acceptez de recevoir nos alertes par courriel.",
+        "subscribe": "Activer"
       }
     },
     "nearby": {
