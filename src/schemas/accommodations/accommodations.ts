@@ -118,6 +118,7 @@ export const ZAccomodationDetails = z.object({
   secure_access: z.boolean().nullable(),
   slug: z.string().max(250),
   external_url: z.string().optional(),
+  description: z.string().nullable(),
 })
 export type TAccomodationDetails = z.infer<typeof ZAccomodationDetails>
 

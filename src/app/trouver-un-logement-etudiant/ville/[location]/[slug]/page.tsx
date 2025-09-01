@@ -3,6 +3,7 @@ import { Tag } from '@codegouvfr/react-dsfr/Tag'
 import clsx from 'clsx'
 import { getTranslations } from 'next-intl/server'
 import { AccommodationAvailability } from '~/app/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-availability'
+import AccommodationDescription from '~/app/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-description'
 import { AccommodationEquipments } from '~/app/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-equipments'
 import { AccommodationLocalisation } from '~/app/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-localisation'
 import AccommodationMap from '~/app/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-map'
@@ -19,7 +20,8 @@ export default async function LogementPage({ params }: { params: { slug: string 
   const t = await getTranslations('accomodation')
   const commonT = await getTranslations()
   const accommodation = await getAccommodationById(params.slug)
-  const { address, city, geom, available, images_urls, name, nb_total_apartments, owner, postal_code, external_url } = accommodation
+  const { address, city, geom, available, images_urls, name, nb_total_apartments, owner, postal_code, external_url, description } =
+    accommodation
   const { coordinates } = geom
   const [longitude, latitude] = coordinates
   const nearbyAccommodations = await getAccommodations({ center: `${longitude},${latitude}` })
@@ -64,6 +66,7 @@ export default async function LogementPage({ params }: { params: { slug: string 
           <AccommodationResidence accommodation={accommodation} />
           <AccommodationEquipments accommodation={accommodation} />
           <AccommodationLocalisation address={address} city={city} latitude={latitude} longitude={longitude} postalCode={postal_code} />
+          <AccommodationDescription title={name} description={description} />
           {/* TODO: Uncomment when we want to reenable the redirection */}
           {/* <PrepareStudentLifeRedirection city={city} /> */}
         </div>
