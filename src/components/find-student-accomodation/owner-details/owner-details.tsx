@@ -72,8 +72,12 @@ export const OwnerDetails = async ({
           </>
         )}
       </div>
-      <hr className={styles.sidebarSeparator} />
-      <OwnerDetailsAlert location={location} />
+      {nbAvailable === 0 && (
+        <>
+          <hr className={styles.sidebarSeparator} />
+          <OwnerDetailsAlert location={location} />
+        </>
+      )}
       <hr className={styles.sidebarSeparator} />
       <OwnerDetailsActions title={title} location={location} />
     </div>
