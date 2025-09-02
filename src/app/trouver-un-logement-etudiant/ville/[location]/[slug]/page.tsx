@@ -5,6 +5,7 @@ import { getTranslations } from 'next-intl/server'
 import { AccommodationAvailability } from '~/app/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-availability'
 import AccommodationDescription from '~/app/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-description'
 import { AccommodationEquipments } from '~/app/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-equipments'
+import AccommodationInstitutions from '~/app/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-institutions'
 import { AccommodationLocalisation } from '~/app/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-localisation'
 import AccommodationMap from '~/app/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-map'
 import { AccommodationResidence } from '~/app/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-residence'
@@ -14,6 +15,7 @@ import { OwnerDetails } from '~/components/find-student-accomodation/owner-detai
 import { DynamicBreadcrumb } from '~/components/ui/breadcrumb'
 import { getAccommodationById } from '~/server-only/get-accommodation-by-id'
 import { getAccommodations } from '~/server-only/get-accommodations'
+import { getInstitutions } from '~/server-only/get-institutions'
 import styles from './logement.module.css'
 
 export default async function LogementPage({ params }: { params: { slug: string } }) {
@@ -24,6 +26,7 @@ export default async function LogementPage({ params }: { params: { slug: string 
     accommodation
   const { coordinates } = geom
   const [longitude, latitude] = coordinates
+  const institutions = await getInstitutions(longitude, latitude)
   const nearbyAccommodations = await getAccommodations({ center: `${longitude},${latitude}` })
   const tags: Array<{ iconId?: FrIconClassName | RiIconClassName; label: string }> = [
     ...(accommodation.nb_t1 || accommodation.nb_t1_bis ? [{ iconId: 'ri-user-line' as RiIconClassName, label: t('tags.studio') }] : []),
@@ -66,6 +69,7 @@ export default async function LogementPage({ params }: { params: { slug: string 
           <AccommodationResidence accommodation={accommodation} />
           <AccommodationEquipments accommodation={accommodation} />
           <AccommodationLocalisation address={address} city={city} latitude={latitude} longitude={longitude} postalCode={postal_code} />
+          <AccommodationInstitutions institutions={institutions.features} />
           <AccommodationDescription title={name} description={description} />
           {/* TODO: Uncomment when we want to reenable the redirection */}
           {/* <PrepareStudentLifeRedirection city={city} /> */}

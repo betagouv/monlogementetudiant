@@ -66,6 +66,9 @@
       "title": "Equipements"
     },
     "descriptionTitle": "À propos de la résidence {title}",
+    "institutions": {
+      "title": "{count} lieux d'enseignement supérieur à proximité"
+    },
     "title": "Logement étudiant {title} à {city}",
     "tags": {
       "studio": "Studio",
