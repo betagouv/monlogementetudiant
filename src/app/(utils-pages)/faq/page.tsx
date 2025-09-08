@@ -26,9 +26,9 @@ export const FAQ_CONTENTS: TFaqQuestionsAnswers[] = [
           </li>
           <li>
             <p>
-              <span className={fr.cx('fr-text--bold')}>Résidences services étudiantes</span>&nbsp également réservées aux étudiants, mais
-              avec des loyers non encadrés aujourd’hui. À l’avenir, une offre de résidences-services à loyers intermédiaires (entre les
-              loyers du parc locatif social et les loyers du marché locatif libre) se développera.
+              <span className={fr.cx('fr-text--bold')}>Résidences services étudiantes</span> également réservées aux étudiants, mais avec
+              des loyers non encadrés aujourd’hui. À l’avenir, une offre de résidences-services à loyers intermédiaires (entre les loyers du
+              parc locatif social et les loyers du marché locatif libre) se développera.
             </p>
           </li>
           <li>
@@ -105,7 +105,7 @@ export const FAQ_CONTENTS: TFaqQuestionsAnswers[] = [
           <li>
             <p>
               <span className={fr.cx('fr-text--bold')}>Meublé</span>&nbsp;: contient un équipement minimum (lit, plaques de cuisson, frigo,
-              vaisselle, etc.). Les loyers sont généralement plus élevés.
+              etc.). Les loyers sont généralement plus élevés.
             </p>
           </li>
           <li>
