@@ -1,6 +1,7 @@
 import { fr } from '@codegouvfr/react-dsfr'
 import Badge from '@codegouvfr/react-dsfr/Badge'
 import Button from '@codegouvfr/react-dsfr/Button'
+import clsx from 'clsx'
 import { getTranslations } from 'next-intl/server'
 import Image from 'next/image'
 import { OwnerDetailsActions } from '~/components/find-student-accomodation/owner-details/owner-details-actions'
@@ -48,13 +49,12 @@ export const OwnerDetails = async ({
 
   return (
     <div className={styles.sidebarCard}>
-      <div className={styles.sidebarHeader}>
+      <div className={clsx(styles.sidebarHeader, 'fr-mb-2w')}>
         {nbTotalApartments ? (
           <h3 className={styles.sidebarTitle}>{t('sidebar.accommodationsCount', { count: nbTotalApartments })}</h3>
         ) : (
           <h3 className={styles.sidebarTitle}>{t('sidebar.accommodationsNoCount')}</h3>
         )}
-        {badgeAvailability}
         <span>{t('sidebar.proposedBy')}</span>
         {owner?.image_base64 ? (
           <Image src={owner.image_base64} alt={owner.name} width={201} height={90} quality={100} />
@@ -62,6 +62,7 @@ export const OwnerDetails = async ({
           <h3 className={fr.cx('fr-m-0')}>{owner?.name}</h3>
         )}
       </div>
+      {badgeAvailability}
       <div className={styles.sidebarOwner}>
         {!!ownerUrl && available && (
           <>
