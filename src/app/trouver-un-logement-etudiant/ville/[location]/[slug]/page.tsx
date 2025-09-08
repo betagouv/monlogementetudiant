@@ -1,5 +1,5 @@
-import { FrIconClassName, RiIconClassName, fr } from '@codegouvfr/react-dsfr'
-import { Tag } from '@codegouvfr/react-dsfr/Tag'
+import { RiIconClassName, fr } from '@codegouvfr/react-dsfr'
+import { Tag, TagProps } from '@codegouvfr/react-dsfr/Tag'
 import clsx from 'clsx'
 import { getTranslations } from 'next-intl/server'
 import { AccommodationAvailability } from '~/app/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-availability'
@@ -25,10 +25,20 @@ export default async function LogementPage({ params }: { params: { slug: string 
   const { coordinates } = geom
   const [longitude, latitude] = coordinates
   const nearbyAccommodations = await getAccommodations({ center: `${longitude},${latitude}` })
-  const tags: Array<{ iconId?: FrIconClassName | RiIconClassName; label: string }> = [
-    ...(accommodation.nb_t1 || accommodation.nb_t1_bis ? [{ iconId: 'ri-user-line' as RiIconClassName, label: t('tags.studio') }] : []),
-    ...(accommodation.nb_coliving_apartments ? [{ iconId: 'ri-group-line' as RiIconClassName, label: t('tags.shared') }] : []),
-    ...(accommodation.nb_accessible_apartments ? [{ iconId: 'ri-wheelchair-line' as RiIconClassName, label: t('tags.accessible') }] : []),
+  const tags: TagProps[] = [
+    ...[
+      {
+        iconId: 'ri-map-pin-2-line' as RiIconClassName,
+        children: city,
+        linkProps: { href: `/trouver-un-logement-etudiant/ville/${city}` },
+      },
+    ],
+    ...(accommodation.price_min ? [{ children: t('tags.priceFrom', { price: accommodation.price_min }) }] : []),
+    ...(accommodation.nb_t1 || accommodation.nb_t1_bis ? [{ iconId: 'ri-user-line' as RiIconClassName, children: t('tags.studio') }] : []),
+    ...(accommodation.nb_coliving_apartments ? [{ iconId: 'ri-group-line' as RiIconClassName, children: t('tags.shared') }] : []),
+    ...(accommodation.nb_accessible_apartments
+      ? [{ iconId: 'ri-wheelchair-line' as RiIconClassName, children: t('tags.accessible') }]
+      : []),
   ]
 
   const breadCrumbTitle = commonT('breadcrumbs.accommodationTitle', { name, city })
@@ -51,15 +61,11 @@ export default async function LogementPage({ params }: { params: { slug: string 
           <div className={styles.section}>
             <h1>{name}</h1>
             <div className={styles.tagContainer}>
-              {tags.map((t) =>
-                t.iconId ? (
-                  <Tag iconId={t.iconId} key={t.label}>
-                    {t.label}
-                  </Tag>
-                ) : (
-                  <Tag key={t.label}>{t.label}</Tag>
-                ),
-              )}
+              {tags.map((t) => (
+                <Tag key={t.children as string} {...t}>
+                  {t.children}
+                </Tag>
+              ))}
             </div>
           </div>
           <AccommodationAvailability nbAvailable={nbAvailable} />

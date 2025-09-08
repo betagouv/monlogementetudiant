@@ -70,7 +70,8 @@
     "tags": {
       "studio": "Studio",
       "shared": "Colocation",
-      "accessible": "Accessible"
+      "accessible": "Accessible",
+      "priceFrom": "À partir de {price} €"
     },
     "availableAccommodations": "Logements de la résidence étudiante",
     "location": {
