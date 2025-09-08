@@ -11,9 +11,10 @@ type DynamicBreadcrumbProps = {
   color?: string
   margin?: boolean
   title?: string
+  city?: string
 }
 
-export const DynamicBreadcrumb: FC<DynamicBreadcrumbProps> = ({ color, margin = true, title }) => {
+export const DynamicBreadcrumb: FC<DynamicBreadcrumbProps> = ({ color, margin = true, title, city }) => {
   const pathname = usePathname()
   const t = useTranslations()
   const { classes } = useStyles({ color, margin })
@@ -58,7 +59,7 @@ export const DynamicBreadcrumb: FC<DynamicBreadcrumbProps> = ({ color, margin = 
         break
       case pathname.match(/^\/trouver-un-logement-etudiant\/ville\/[^/]+\/[^/]+$/)?.input:
         segments.push({
-          label: t('breadcrumbs.findAccomodationWithLocation', { location: title }),
+          label: t('breadcrumbs.findAccomodationWithLocation', { location: city }),
           linkProps: {
             href: '/trouver-un-logement-etudiant',
           },

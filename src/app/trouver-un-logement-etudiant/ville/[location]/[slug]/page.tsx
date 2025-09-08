@@ -53,7 +53,7 @@ export default async function LogementPage({ params }: { params: { slug: string 
   const nbAvailable = nonNullValues.length > 0 ? nonNullValues.reduce((sum, value) => sum + value, 0) : null
   return (
     <div className={fr.cx('fr-container')}>
-      <DynamicBreadcrumb title={breadCrumbTitle} />
+      <DynamicBreadcrumb title={breadCrumbTitle} city={city} />
       <h2>{t('title', { city, title: name })}</h2>
       <div className={styles.container}>
         <div className={clsx(fr.cx('fr-col-sm-8'), styles.infosContainer)}>
