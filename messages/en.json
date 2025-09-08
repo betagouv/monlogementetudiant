@@ -83,7 +83,6 @@
       "accommodationsCount": "{count} logements",
       "accommodationsNoCount": "Logements disponibles",
       "share": "Partager le logement",
-      "hasAvailableAccommodation": "Sous réserve de disponibilité des logements",
       "emailSubject": "Logement étudiant {title} à {location}",
       "emailBody": "Venez découvrir le logement étudiant {title}, situé à {location}.\n\n🔗 {url}\n📍 {location}\n\nCordialement,\nMon Logement Étudiant",
       "buttons": {

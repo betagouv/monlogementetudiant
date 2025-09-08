@@ -65,12 +65,9 @@ export const OwnerDetails = async ({
       {badgeAvailability}
       <div className={styles.sidebarOwner}>
         {!!ownerUrl && available && (
-          <>
-            <span className={fr.cx('fr-text--sm', 'fr-m-0')}>{t('sidebar.hasAvailableAccommodation')}</span>
-            <Button linkProps={{ href: ownerUrl }} priority="primary" size="large" className={styles.sidebarOwnerButton}>
-              {t('sidebar.buttons.consult')}
-            </Button>
-          </>
+          <Button linkProps={{ href: ownerUrl }} priority="primary" size="large" className={styles.sidebarOwnerButton}>
+            {t('sidebar.buttons.consult')}
+          </Button>
         )}
       </div>
       {nbAvailable === 0 && (
