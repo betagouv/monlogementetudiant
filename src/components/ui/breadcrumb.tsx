@@ -61,7 +61,7 @@ export const DynamicBreadcrumb: FC<DynamicBreadcrumbProps> = ({ color, margin = 
         segments.push({
           label: t('breadcrumbs.findAccomodationWithLocation', { location: city }),
           linkProps: {
-            href: '/trouver-un-logement-etudiant',
+            href: `/trouver-un-logement-etudiant/ville/${city}`,
           },
         })
         currentPageLabel = title as string
