@@ -3,6 +3,7 @@ import Button from '@codegouvfr/react-dsfr/Button'
 import clsx from 'clsx'
 import { getTranslations } from 'next-intl/server'
 import Image from 'next/image'
+import { z } from 'zod'
 import agefo from '~/images/agefo.svg'
 import al from '~/images/al.svg'
 import apl from '~/images/apl.svg'
@@ -28,6 +29,7 @@ import styles from './landing.module.css'
 
 export default async function LandingPage() {
   const t = await getTranslations('landing')
+  const calendlyUrl = z.string().parse(process.env.NEXT_PUBLIC_CALENDLY_URL)
 
   return (
     <>
@@ -52,7 +54,7 @@ export default async function LandingPage() {
                 </div>
                 <div className={styles.contactButton}>
                   <Button className="whiteButton" priority="secondary">
-                    <a href="https://calendly.com/cecilia-foret-beta/30min" target="_blank">
+                    <a href={calendlyUrl} target="_blank">
                       {t('hero.contact.button')}
                     </a>
                   </Button>
@@ -209,7 +211,7 @@ export default async function LandingPage() {
           </h2>
           <div className={styles.buttonContainer}>
             <Button>
-              <a href="https://calendly.com/cecilia-foret-beta/30min" target="_blank">
+              <a href={calendlyUrl} target="_blank">
                 {t('callToAction.button')}
               </a>
             </Button>
