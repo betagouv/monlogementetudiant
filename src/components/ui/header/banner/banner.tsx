@@ -36,7 +36,7 @@ export const Banner = () => {
           <span>
             {t.rich('description', {
               link: (chunks) => (
-                <a href={tallyUrl} className={fr.cx('fr-link')}>
+                <a className={fr.cx('fr-link')} href={tallyUrl} target="_blank" rel="noreferrer">
                   {chunks}
                 </a>
               ),
