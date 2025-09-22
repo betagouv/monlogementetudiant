@@ -41,6 +41,7 @@ const ZCity = z
     postal_codes: z.array(z.string()),
     price_min: z.number().nullable(),
     slug: z.string(),
+    department_code: z.string(),
   })
   .merge(ZBbox)
 
