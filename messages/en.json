@@ -2,6 +2,7 @@
   "breadcrumbs": {
     "home": "Simulez mes aides au logement",
     "findAccomodation": "Trouver un logement étudiant",
+    "findAccomodationWithLocation": "Trouver un logement étudiant à {location}",
     "accommodationTitle": "Logement étudiant {name} à {city}",
     "prepareBudget": "Préparer mon budget étudiant",
     "prepareStudentLife": "Préparer sa vie étudiante",
@@ -32,7 +33,7 @@
     "tally": "Donnez votre avis",
     "banner": {
       "title": "Lancement de la plateforme :",
-      "description": "site en phase d'expérimentation, n'hésitez pas à donner votre avis pour nous aider à améliorer le service.",
+      "description": "site en phase d'expérimentation, n'hésitez pas à <link>donner votre avis</link> pour nous aider à améliorer le service.",
       "close": "Fermer"
     }
   },
@@ -65,11 +66,13 @@
     "equipments": {
       "title": "Equipements"
     },
+    "descriptionTitle": "À propos de la résidence {title}",
     "title": "Logement étudiant {title} à {city}",
     "tags": {
       "studio": "Studio",
       "shared": "Colocation",
-      "accessible": "Accessible"
+      "accessible": "Accessible",
+      "priceFrom": "À partir de {price} €"
     },
     "availableAccommodations": "Logements de la résidence étudiante",
     "location": {
@@ -80,7 +83,6 @@
       "accommodationsCount": "{count} logements",
       "accommodationsNoCount": "Logements disponibles",
       "share": "Partager le logement",
-      "hasAvailableAccommodation": "Sous réserve de disponibilité des logements",
       "emailSubject": "Logement étudiant {title} à {location}",
       "emailBody": "Venez découvrir le logement étudiant {title}, situé à {location}.\n\n🔗 {url}\n📍 {location}\n\nCordialement,\nMon Logement Étudiant",
       "buttons": {
@@ -427,6 +429,7 @@
       "highlight": "logement étudiant",
       "subtitle": "et découvrez les <aides>aides</aides> auxquelles vous avez droit en tant qu'étudiant."
     },
+    "cta": "Rechercher un logement",
     "simulator": {
       "title": "Simulez le montant de vos aides au logement",
       "description": "et identifiez les aides dont vous pouvez bénéficier d'après votre situation.",

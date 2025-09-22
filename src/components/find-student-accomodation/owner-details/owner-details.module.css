@@ -25,6 +25,7 @@
   align-items: center;
   text-align: center;
   gap: 1rem;
+  margin-top: 1rem;
 }
 
 .sidebarHeader {
