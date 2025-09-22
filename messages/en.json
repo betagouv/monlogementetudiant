@@ -33,7 +33,7 @@
     "tally": "Donnez votre avis",
     "banner": {
       "title": "Lancement de la plateforme :",
-      "description": "site en phase d'expérimentation, n'hésitez pas à donner votre avis pour nous aider à améliorer le service.",
+      "description": "site en phase d'expérimentation, n'hésitez pas à <link>donner votre avis</link> pour nous aider à améliorer le service.",
       "close": "Fermer"
     }
   },
