@@ -28,7 +28,6 @@ export const FindStudentAccomodationResults: FC<FindStudentAccomodationResultsPr
     prix: parseAsInteger,
     accessible: parseAsString,
     colocation: parseAsString,
-    disponible: parseAsString,
   })
 
   useEffect(() => {
@@ -102,9 +101,6 @@ export const FindStudentAccomodationResults: FC<FindStudentAccomodationResultsPr
                   }
                   if (queryStates.prix) {
                     params.set('prix', queryStates.prix.toString())
-                  }
-                  if (queryStates.disponible) {
-                    params.set('disponible', queryStates.disponible)
                   }
                   params.set('page', page.toString())
                   return { href: `/trouver-un-logement-etudiant?${params.toString()}` }

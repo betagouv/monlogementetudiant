@@ -20,7 +20,6 @@ export const FindAccommodationForm: FC = () => {
     bbox: parseAsString,
     colocation: parseAsBoolean.withDefault(false),
     accessible: parseAsBoolean.withDefault(false),
-    disponible: parseAsBoolean.withDefault(false),
   })
 
   const form = useForm({
@@ -28,7 +27,6 @@ export const FindAccommodationForm: FC = () => {
       maxPrice: queryStates.prix,
       q: queryStates.q,
       bbox: queryStates.bbox,
-      disponible: queryStates.disponible,
       coliving: queryStates.colocation,
       accessible: queryStates.accessible,
     },
@@ -41,7 +39,6 @@ export const FindAccommodationForm: FC = () => {
     bbox: form.getValues('bbox') ?? '',
     colocation: form.getValues('coliving') ? 'true' : 'false',
     accessible: form.getValues('accessible') ? 'true' : 'false',
-    disponible: form.getValues('disponible') ? 'true' : 'false',
     vue: 'carte',
   })
 

@@ -1,17 +1,11 @@
-.mainContainer {
-  border-bottom: 1px solid var(--border-default-grey);
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
 .container {
   align-items: flex-end;
+  border-bottom: 1px solid var(--border-default-grey);
   display: flex;
   gap: 1rem;
   justify-content: space-between;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
 }
 
 .checkboxRoot {
