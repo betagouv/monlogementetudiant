@@ -66,6 +66,7 @@ export const FindStudentAccomodationAutocompleteResults: FC<FindStudentAccomodat
                     >
                       <li className={classes.item} key={item.id} tabIndex={0}>
                         {item.name}
+                        {'department_code' in item && item.department_code ? <>&nbsp;({item.department_code})</> : null}
                       </li>
                     </Link>
                   )
