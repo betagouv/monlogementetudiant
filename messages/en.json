@@ -429,6 +429,7 @@
       "highlight": "logement étudiant",
       "subtitle": "et découvrez les <aides>aides</aides> auxquelles vous avez droit en tant qu'étudiant."
     },
+    "cta": "Rechercher un logement",
     "simulator": {
       "title": "Simulez le montant de vos aides au logement",
       "description": "et identifiez les aides dont vous pouvez bénéficier d'après votre situation.",

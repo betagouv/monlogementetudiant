@@ -50,8 +50,13 @@ export default async function Home() {
                 <Image src={al.src} width={40} height={40} alt="Logo AL" />
               </div>
               <div className={styles.fullWidth}>
-                <Button size="large" linkProps={{ href: '/simuler-mes-aides-au-logement' }} className={styles.fullWidthButton}>
-                  {t('simulator.button')}
+                <Button
+                  size="large"
+                  linkProps={{ href: '/trouver-un-logement-etudiant' }}
+                  className={styles.fullWidthButton}
+                  iconId="ri-search-line"
+                >
+                  {t('cta')}
                 </Button>
               </div>
             </div>
