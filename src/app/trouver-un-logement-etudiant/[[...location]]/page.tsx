@@ -40,6 +40,7 @@ export default async function FindStudentAccommodationPage({
     bbox?: string
     content_type?: string
     colocation?: string
+    disponible?: string
     object_id?: string
     page?: string
   }
