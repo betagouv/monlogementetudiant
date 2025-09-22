@@ -127,8 +127,10 @@
     "title": "Trouver un logement étudiant",
     "titleWithLocation": "Trouver un logement étudiant à {location}",
     "header": {
+      "subFilterTitle": "Résidences",
+      "available": "Logements disponibles",
       "inputLabel": "Académie, ville ou département",
-      "shared": "Colocation",
+      "shared": "En colocation",
       "tooltip": {
         "accessible": "Etablissements en capacité d'accueillir des personnes en situation de handicap"
       },
