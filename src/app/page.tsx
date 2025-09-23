@@ -6,15 +6,11 @@ import Image from 'next/image'
 import { FAQ_CONTENTS } from '~/app/(utils-pages)/faq/page'
 import { FaqQuestionsAnswers } from '~/components/faq/faq-questions-answers'
 import { FindAccommodationForm } from '~/components/find-student-accomodation/home/find-accommodation-form'
-import al from '~/images/al.svg'
-import apl from '~/images/apl.svg'
 import arpej from '~/images/arpej.svg'
 import background from '~/images/background.webp'
-import caf from '~/images/caf.svg'
 import espacil from '~/images/espacil.svg'
 import exploreCities from '~/images/explore-cities.webp'
 import home from '~/images/landing.webp'
-import crous from '~/images/logo-crous.svg'
 import sogima from '~/images/sogima.svg'
 import studefi from '~/images/studefi.svg'
 import { getPopularCities } from '~/server-only/get-popular-cities'
@@ -41,13 +37,12 @@ export default async function Home() {
               </h2>
             </div>
             <div className={clsx(fr.cx('fr-col-md-5'), 'boxShadow', styles.simulatorCard)}>
-              <h2>{t('simulator.title')}</h2>
-              <p style={{ fontSize: '18px' }}>{t('simulator.description')}</p>
+              <h2>{t('title')}</h2>
+              <p className="fr-text--lg">{t('description')}</p>
               <div className={styles.logoContainer}>
-                <Image src={apl.src} width={40} height={40} alt="Logo APL" />
-                <Image src={caf.src} width={40} height={40} alt="Logo CAF" />
-                <Image src={crous.src} width={40} height={40} alt="Logo Crous" />
-                <Image src={al.src} width={40} height={40} alt="Logo AL" />
+                <Image src={espacil.src} width={120} height={50} alt="Logo Espacil" />
+                <Image src={arpej.src} width={120} height={50} alt="Logo Arpej" />
+                <Image src={studefi.src} width={120} height={50} alt="Logo Studefi" />
               </div>
               <div className={styles.fullWidth}>
                 <Button

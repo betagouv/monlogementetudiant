@@ -429,12 +429,9 @@
       "highlight": "logement étudiant",
       "subtitle": "et découvrez les <aides>aides</aides> auxquelles vous avez droit en tant qu'étudiant."
     },
-    "cta" : "Rechercher un logement",
-    "simulator": {
-      "title": "Simulez le montant de vos aides au logement",
-      "description": "et identifiez les aides dont vous pouvez bénéficier d'après votre situation.",
-      "button": "Commencer la simulation"
-    },
+    "cta": "Rechercher un logement",
+    "title": "Plus de 250 résidences étudiantes",
+    "description": "référencées partout en France",
     "mainSection": {
       "title": "Tout savoir pour bien se loger",
       "description": "<part1>Estimation, fiches pratiques et aperçu des logements, tout est là pour</part1><part2>vous guider pas à pas vers votre prochaine vie étudiante.</part2>"
