@@ -36,6 +36,7 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({ accomodation }) =>
     nb_t4_more_available,
     postal_code,
     price_min,
+    accept_waiting_list,
   } = accomodation.properties
   const availabilityValues = [nb_t1_available, nb_t1_bis_available, nb_t2_available, nb_t3_available, nb_t4_more_available]
   const nonNullValues = availabilityValues.filter((value): value is number => value !== null && value !== undefined)
@@ -48,17 +49,36 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({ accomodation }) =>
           imageComponent: <FindStudentAccommodationPlaceholderImageCard />,
         }
   const badgeAvailability =
-    !!nbAvailable && nbAvailable > 0 ? (
-      <Badge severity="success" noIcon>
-        {nbAvailable} DISPONIBILITÉ{sPluriel(nbAvailable)}
+    nbAvailable === null || nbAvailable === undefined ? (
+      <Badge className={classes.otherBadge} severity="warning" noIcon>
+        <span className="fr-text--uppercase fr-mb-0">{t('unknownAvailability')}</span>
       </Badge>
-    ) : null
+    ) : nbAvailable === 0 ? (
+      <Badge severity="error" noIcon>
+        <span className="fr-text--uppercase fr-mb-0">{t('noAvailability')}</span>
+      </Badge>
+    ) : (
+      <Badge severity="success" noIcon>
+        {nbAvailable}&nbsp;
+        <span className="fr-text--uppercase fr-mb-0">
+          {t('availability')}
+          {sPluriel(nbAvailable)}
+        </span>
+      </Badge>
+    )
+  const waitingListBadge = accept_waiting_list && (
+    <Badge className={classes.otherBadge} severity="warning" noIcon>
+      <span className="fr-text--uppercase fr-mb-0">{t('waitingList')}</span>
+    </Badge>
+  )
+
   const badgeProps = price_min
     ? {
         badge: (
           <>
             <Badge severity="new" noIcon>{`${t('priceFrom')} ${price_min}€`}</Badge>
             {badgeAvailability}
+            {waitingListBadge}
           </>
         ),
       }
@@ -102,5 +122,9 @@ export const useStyles = tss.create({
   },
   active: {
     border: '2px solid #3B7FF6',
+  },
+  otherBadge: {
+    backgroundColor: '#fee7fc',
+    color: '#6e445a',
   },
 })

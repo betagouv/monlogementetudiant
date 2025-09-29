@@ -146,7 +146,11 @@
     "card": {
       "priceFrom": "À partir de",
       "individual": "Individuel",
-      "colocation": "Colocation"
+      "colocation": "Colocation",
+      "availability": "Disponibilité",
+      "unknownAvailability": "Disponibilités non-communiqués",
+      "noAvailability": "Aucune disponibilité",
+      "waitingList": "Liste d'attente"
     },
     "results": {
       "noResult": "Aucun résultat pour votre recherche",
