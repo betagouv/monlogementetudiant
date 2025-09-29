@@ -45,3 +45,8 @@
   width: 100%;
   margin-top: 1.5rem;
 }
+
+.otherBadge {
+  background-color: #fee7fc;
+  color: #6e445a;
+}

@@ -18,6 +18,7 @@ interface OwnerDetailsProps {
   location: string
   available: boolean
   nbAvailable: number | null
+  acceptWaitingList: boolean
 }
 
 export const OwnerDetails = async ({
@@ -28,24 +29,32 @@ export const OwnerDetails = async ({
   externalUrl,
   title,
   location,
+  acceptWaitingList,
 }: OwnerDetailsProps) => {
   const t = await getTranslations('accomodation')
   const ownerUrl = externalUrl || owner?.url
-  let badgeAvailability = null
-  if (!!nbAvailable && nbAvailable > 0) {
-    badgeAvailability = (
-      <Badge severity="success" noIcon>
-        {nbAvailable} DISPONIBLE{sPluriel(nbAvailable)}
-      </Badge>
-    )
-  }
-  if (nbAvailable === 0) {
-    badgeAvailability = (
-      <Badge severity="error" noIcon>
-        AUCUNE DISPONIBILITÉ
-      </Badge>
-    )
-  }
+  const badgeAvailability =
+    nbAvailable !== null && nbAvailable !== undefined ? (
+      nbAvailable === 0 ? (
+        <Badge severity="error" noIcon>
+          <span className="fr-text--uppercase fr-mb-0">{t('card.noAvailability')}</span>
+        </Badge>
+      ) : (
+        <Badge severity="success" noIcon>
+          {nbAvailable}&nbsp;
+          <span className="fr-text--uppercase fr-mb-0">
+            {t('card.availability')}
+            {sPluriel(nbAvailable)}
+          </span>
+        </Badge>
+      )
+    ) : null
+
+  const waitingListBadge = acceptWaitingList && (
+    <Badge className={styles.otherBadge} severity="warning" noIcon>
+      <span className="fr-text--uppercase fr-mb-0">{t('waitingList')}</span>
+    </Badge>
+  )
 
   return (
     <div className={styles.sidebarCard}>
@@ -63,6 +72,13 @@ export const OwnerDetails = async ({
         )}
       </div>
       {badgeAvailability}
+      {waitingListBadge}
+      {(nbAvailable === null || nbAvailable === undefined) && (
+        <>
+          <br />
+          <span className={clsx('ri-information-line')}>{t('unknownAvailability')}</span>
+        </>
+      )}
       <div className={styles.sidebarOwner}>
         {!!ownerUrl && available && (
           <Button linkProps={{ href: ownerUrl }} priority="primary" size="large" className={styles.sidebarOwnerButton}>
