@@ -48,6 +48,7 @@ export const ZAccomodation = z.object({
     price_min: z.number().nullable(),
     residence_type: z.nativeEnum(EResidence),
     slug: z.string().max(250),
+    accept_waiting_list: z.boolean(),
   }),
 })
 
@@ -119,6 +120,7 @@ export const ZAccomodationDetails = z.object({
   slug: z.string().max(250),
   external_url: z.string().optional(),
   description: z.string().nullable(),
+  accept_waiting_list: z.boolean(),
 })
 export type TAccomodationDetails = z.infer<typeof ZAccomodationDetails>
 

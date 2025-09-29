@@ -20,8 +20,20 @@ export default async function LogementPage({ params }: { params: { slug: string 
   const t = await getTranslations('accomodation')
   const commonT = await getTranslations()
   const accommodation = await getAccommodationById(params.slug)
-  const { address, city, geom, available, images_urls, name, nb_total_apartments, owner, postal_code, external_url, description } =
-    accommodation
+  const {
+    address,
+    city,
+    geom,
+    available,
+    images_urls,
+    name,
+    nb_total_apartments,
+    owner,
+    postal_code,
+    external_url,
+    description,
+    accept_waiting_list,
+  } = accommodation
   const { coordinates } = geom
   const [longitude, latitude] = coordinates
   const nearbyAccommodations = await getAccommodations({ center: `${longitude},${latitude}` })
@@ -68,7 +80,7 @@ export default async function LogementPage({ params }: { params: { slug: string 
               ))}
             </div>
           </div>
-          <AccommodationAvailability nbAvailable={nbAvailable} />
+          <AccommodationAvailability nbAvailable={nbAvailable} acceptWaitingList={accept_waiting_list} />
           <AccommodationResidence accommodation={accommodation} />
           <AccommodationEquipments accommodation={accommodation} />
           <AccommodationLocalisation address={address} city={city} latitude={latitude} longitude={longitude} postalCode={postal_code} />
