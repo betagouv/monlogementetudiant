@@ -55,7 +55,7 @@ export const AccommodationAvailability = async ({ nbAvailable, acceptWaitingList
             </div>
           </div>
         </div>
-        <AccommodationMaximizeChance />
+        {acceptWaitingList && <AccommodationMaximizeChance />}
       </div>
     )
   }
