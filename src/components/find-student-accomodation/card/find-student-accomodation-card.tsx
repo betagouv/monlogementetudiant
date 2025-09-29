@@ -1,6 +1,4 @@
 'use client'
-
-import { fr } from '@codegouvfr/react-dsfr'
 import { Badge } from '@codegouvfr/react-dsfr/Badge'
 import { Card } from '@codegouvfr/react-dsfr/Card'
 import { Tag } from '@codegouvfr/react-dsfr/Tag'
@@ -49,23 +47,22 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({ accomodation }) =>
           imageComponent: <FindStudentAccommodationPlaceholderImageCard />,
         }
   const badgeAvailability =
-    nbAvailable === null || nbAvailable === undefined ? (
-      <Badge className={classes.otherBadge} severity="warning" noIcon>
-        <span className="fr-text--uppercase fr-mb-0">{t('unknownAvailability')}</span>
-      </Badge>
-    ) : nbAvailable === 0 ? (
-      <Badge severity="error" noIcon>
-        <span className="fr-text--uppercase fr-mb-0">{t('noAvailability')}</span>
-      </Badge>
-    ) : (
-      <Badge severity="success" noIcon>
-        {nbAvailable}&nbsp;
-        <span className="fr-text--uppercase fr-mb-0">
-          {t('availability')}
-          {sPluriel(nbAvailable)}
-        </span>
-      </Badge>
-    )
+    nbAvailable !== null && nbAvailable !== undefined ? (
+      nbAvailable === 0 ? (
+        <Badge severity="error" noIcon>
+          <span className="fr-text--uppercase fr-mb-0">{t('noAvailability')}</span>
+        </Badge>
+      ) : (
+        <Badge severity="success" noIcon>
+          {nbAvailable}&nbsp;
+          <span className="fr-text--uppercase fr-mb-0">
+            {t('availability')}
+            {sPluriel(nbAvailable)}
+          </span>
+        </Badge>
+      )
+    ) : null
+
   const waitingListBadge = accept_waiting_list && (
     <Badge className={classes.otherBadge} severity="warning" noIcon>
       <span className="fr-text--uppercase fr-mb-0">{t('waitingList')}</span>
@@ -74,13 +71,7 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({ accomodation }) =>
 
   const badgeProps = price_min
     ? {
-        badge: (
-          <>
-            <Badge severity="new" noIcon>{`${t('priceFrom')} ${price_min}€`}</Badge>
-            {badgeAvailability}
-            {waitingListBadge}
-          </>
-        ),
+        badge: <Badge severity="new" noIcon>{`${t('priceFrom')} ${price_min}€`}</Badge>,
       }
     : {}
   return (
@@ -93,9 +84,23 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({ accomodation }) =>
       border
       desc={
         <>
-          <span className={fr.cx('ri-group-line')}>{accommodationsTypes.join(' • ')}</span>
+          <span className={clsx('ri-group-line', classes.description)}>{accommodationsTypes.join(' • ')}</span>
           <br />
-          {nb_total_apartments && <span className={fr.cx('ri-community-line')}>{`${nb_total_apartments} logements`}</span>}
+          {nb_total_apartments && (
+            <span className={clsx('ri-community-line', classes.description)}>{`${nb_total_apartments} logements`}</span>
+          )}
+          {!!badgeAvailability && (
+            <>
+              <br />
+              {badgeAvailability}
+            </>
+          )}
+          {(nbAvailable === null || nbAvailable === undefined) && (
+            <>
+              <br />
+              <span className={clsx('ri-information-line', classes.description)}>{t('unknownAvailability')}</span>
+            </>
+          )}
         </>
       }
       enlargeLink
@@ -109,6 +114,7 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({ accomodation }) =>
           </li>
         </ul>
       }
+      end={<>{waitingListBadge}</>}
       size="small"
       title={name}
       titleAs="h2"
@@ -126,5 +132,8 @@ export const useStyles = tss.create({
   otherBadge: {
     backgroundColor: '#fee7fc',
     color: '#6e445a',
+  },
+  description: {
+    color: '#666666',
   },
 })
