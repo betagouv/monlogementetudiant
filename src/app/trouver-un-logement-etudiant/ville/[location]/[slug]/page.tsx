@@ -91,6 +91,7 @@ export default async function LogementPage({ params }: { params: { slug: string 
         <div className={fr.cx('fr-hidden-sm')}>{<AccommodationMap latitude={latitude} longitude={longitude} />}</div>
         <div className={fr.cx('fr-col-sm-4')}>
           <OwnerDetails
+            acceptWaitingList={accept_waiting_list}
             owner={owner}
             nbAvailable={nbAvailable}
             available={available}

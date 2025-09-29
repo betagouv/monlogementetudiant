@@ -110,7 +110,13 @@
     "colocation": "Colocation",
     "appartement": "Appartement {type}",
     "simulator": "Sous réserve de l'obtention des aides aux logements étudiants",
-    "simulatorButton": "Simulateur"
+    "simulatorButton": "Simulateur",
+    "card": {
+      "availability": "Disponibilité",
+      "noAvailability": "Aucune disponibilité"
+    },
+    "waitingList": "Liste d'attente",
+    "unknownAvailability": "Disponibilités non-communiqués"
   },
   "findAccomodation": {
     "faq": {
