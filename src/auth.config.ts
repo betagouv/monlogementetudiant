@@ -1,11 +1,20 @@
 import type { NextAuthConfig } from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 
+interface User {
+  id: string
+  email: string
+  firstname: string
+  lastname: string
+  name: string
+}
+
 interface TokenInterface {
   accessToken?: string
   refreshToken?: string
   accessTokenExpires?: number
   error?: string
+  user?: User
 }
 
 async function refreshAccessToken(token: TokenInterface): Promise<TokenInterface> {
@@ -32,8 +41,7 @@ async function refreshAccessToken(token: TokenInterface): Promise<TokenInterface
       accessTokenExpires: Date.now() + 15 * 60 * 1000, // 15 minutes
       refreshToken: refreshedTokens.refresh_token ?? token.refreshToken,
     }
-  } catch (error) {
-    console.error('Token refresh failed:', error)
+  } catch {
     return {
       ...token,
       error: 'RefreshAccessTokenError',
@@ -68,7 +76,13 @@ export const authConfig = {
           return {
             accessToken: data.access,
             refreshToken: data.refresh,
-            user: data.user,
+            user: {
+              id: data.user.id,
+              email: data.user.email,
+              firstname: data.user.first_name,
+              lastname: data.user.last_name,
+              name: `${data.user.first_name} ${data.user.last_name}`.trim(),
+            },
           }
         } catch {
           return null

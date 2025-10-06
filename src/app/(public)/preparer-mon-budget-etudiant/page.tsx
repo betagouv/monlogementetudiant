@@ -3,8 +3,8 @@ import { getTranslations } from 'next-intl/server'
 import { DynamicBreadcrumb } from '~/components/ui/breadcrumb'
 
 import clsx from 'clsx'
-import PrepareBudgetContent from '~/app/preparer-mon-budget-etudiant/components/prepare-budget-content'
-import { PrepareBudgetSidemenu } from '~/app/preparer-mon-budget-etudiant/components/prepare-budget-sidemenu'
+import PrepareBudgetContent from '~/app/(public)/preparer-mon-budget-etudiant/components/prepare-budget-content'
+import { PrepareBudgetSidemenu } from '~/app/(public)/preparer-mon-budget-etudiant/components/prepare-budget-sidemenu'
 import styles from './preparer-mon-budget-etudiant.module.css'
 
 export default async function PrepareBudgetPage() {

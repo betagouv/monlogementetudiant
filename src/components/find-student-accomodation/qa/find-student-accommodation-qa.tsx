@@ -2,7 +2,7 @@ import { fr } from '@codegouvfr/react-dsfr'
 import Button from '@codegouvfr/react-dsfr/Button'
 import clsx from 'clsx'
 import { getTranslations } from 'next-intl/server'
-import { FAQ_CONTENTS } from '~/app/(utils-pages)/faq/page'
+import { FAQ_CONTENTS } from '~/app/(public)/(utils-pages)/faq/page'
 import { FaqQuestionsAnswers } from '~/components/faq/faq-questions-answers'
 import styles from './find-student-accommodation-qa.module.css'
 

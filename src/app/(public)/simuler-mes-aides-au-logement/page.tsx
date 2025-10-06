@@ -2,7 +2,7 @@ import { fr } from '@codegouvfr/react-dsfr'
 import Accordion from '@codegouvfr/react-dsfr/Accordion'
 import Button from '@codegouvfr/react-dsfr/Button'
 import { clsx } from 'clsx'
-import { WrapperSimulator } from '~/app/simuler-mes-aides-au-logement/wrapper-simulator'
+import { WrapperSimulator } from '~/app/(public)/simuler-mes-aides-au-logement/wrapper-simulator'
 import { getGlobalQuestionsAnswers } from '~/server-only/get-global-questions-answers'
 import styles from './simuler-mes-aides-au-logement.module.css'
 

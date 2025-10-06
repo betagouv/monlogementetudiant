@@ -55,7 +55,13 @@
     "prepareStudentLife": "Préparer sa vie étudiante",
     "findAccommodation": "Trouver un logement étudiant",
     "byAcademies": "Par académies",
-    "faq": "Foire aux questions"
+    "faq": "Foire aux questions",
+    "workspace": {
+      "dashboard": "Tableau de bord",
+      "helpCenter": "Centre d'aide",
+      "residences": "Résidences",
+      "candidates": "Candidatures"
+    }
   },
   "accomodation": {
     "availability": {
@@ -623,6 +629,56 @@
       "savingsRate": "Taux d'épargne : {rate} %",
       "expensesBreakdown": "Répartition des dépenses",
       "chartTooltipAmount": "Montant"
+    }
+  },
+  "bailleur": {
+    "dashboard": {
+      "breadcrumb": {
+        "title": "Espace bailleur de {name} - ARPEJ"
+      },
+      "welcome": {
+        "title": "Ravi de vous revoir Michel 👋"
+      },
+      "testimonial": {
+        "quote": "« Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna 🙂 »",
+        "author": "Cécilia",
+        "organization": "de Mon Logement Etudiant",
+        "altText": "Image de profil de Cécilia - Chargé de déploiement"
+      },
+      "helpSection": {
+        "faq": {
+          "title": "Questions fréquentes",
+          "link": "Consulter notre FAQ"
+        },
+        "contact": {
+          "title": "Besoin d'échanger ?",
+          "link": "Prendre rendez-vous"
+        }
+      },
+      "priorityActions": {
+        "title": "Actions prioritaires",
+        "actions": {
+          "charter": {
+            "title": "Valider la charte des bailleurs",
+            "badge": "BON FONCTIONNEMENT",
+            "status": "A valider"
+          },
+          "availability": {
+            "title": "Actualiser les disponibilités",
+            "badge": "DISPONIBILITES",
+            "status": "Résidence Ariane"
+          },
+          "applications": {
+            "title": "Modérer vos candidatures",
+            "badge": "CANDIDATURES",
+            "status": "3 candidatures ont été deposées"
+          }
+        },
+        "viewAll": "Toutes les actions prioritaires"
+      },
+      "statistics": {
+        "title": "En quelques chiffres"
+      }
     }
   }
 }
