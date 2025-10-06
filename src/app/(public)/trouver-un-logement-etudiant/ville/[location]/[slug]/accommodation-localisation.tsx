@@ -1,6 +1,6 @@
 import { fr } from '@codegouvfr/react-dsfr'
 import { getTranslations } from 'next-intl/server'
-import AccommodationMap from '~/app/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-map'
+import AccommodationMap from '~/app/(public)/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-map'
 import styles from './logement.module.css'
 
 type AccommodationLocalisationProps = {

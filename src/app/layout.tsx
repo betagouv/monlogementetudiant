@@ -2,10 +2,8 @@ import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages, getTranslations } from 'next-intl/server'
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
 import { FooterComponent } from '~/components/ui/footer/footer'
-import { HeaderComponent } from '~/components/ui/header/header'
 import { NextAuthProvider } from '~/providers/next-auth'
 import { TanstackQueryClientProvider } from '~/providers/tanstack-client'
-import styles from './layout.module.css'
 import '~/globals.css'
 import { NextAppDirEmotionCacheProvider } from 'tss-react/next'
 import Matomo from '~/app/matomo'
@@ -49,8 +47,7 @@ export default async function RootLayout({
               <DsfrProvider lang={locale}>
                 <TanstackQueryClientProvider>
                   <NuqsAdapter>
-                    <HeaderComponent />
-                    <main className={styles.container}>{children}</main>
+                    {children}
                     <Toaster />
                     <FooterComponent />
                   </NuqsAdapter>

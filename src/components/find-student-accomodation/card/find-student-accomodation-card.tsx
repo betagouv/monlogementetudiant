@@ -78,7 +78,10 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({ accomodation }) =>
     <Card
       {...badgeProps}
       {...imageProps}
-      classes={{ root: clsx(selectedAccommodation === accomodation.id.toString() && classes.active), header: classes.header }}
+      classes={{
+        root: clsx(classes.container, selectedAccommodation === accomodation.id.toString() && classes.active),
+        header: classes.header,
+      }}
       id={`accomodation-${accomodation.id}`}
       background
       border
@@ -125,6 +128,9 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({ accomodation }) =>
 export const useStyles = tss.create({
   header: {
     overflow: 'hidden',
+  },
+  container: {
+    minWidth: '384px',
   },
   active: {
     border: '2px solid #3B7FF6',

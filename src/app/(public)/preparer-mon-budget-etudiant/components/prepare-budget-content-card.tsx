@@ -1,7 +1,7 @@
 import { fr } from '@codegouvfr/react-dsfr'
 import clsx from 'clsx'
 import { getTranslations } from 'next-intl/server'
-import PrepareBudgetChart from '~/app/preparer-mon-budget-etudiant/components/prepare-budget-chart'
+import PrepareBudgetChart from '~/app/(public)/preparer-mon-budget-etudiant/components/prepare-budget-chart'
 import styles from './prepare-budget-content-card.module.css'
 
 interface PrepareBudgetContentCardProps {

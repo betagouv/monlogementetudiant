@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/verification/erreur', request.url))
     }
 
-    return NextResponse.redirect(new URL('/preparer-mon-budget-etudiant', request.url))
+    return NextResponse.redirect(new URL('/bailleur', request.url))
   } catch (error) {
     console.error('Verification error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
