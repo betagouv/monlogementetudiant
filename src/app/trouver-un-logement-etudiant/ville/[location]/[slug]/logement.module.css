@@ -1,5 +1,6 @@
 .container {
   display: block;
+  position: relative;
 
   @media (min-width: 768px) {
     display: flex;
@@ -113,4 +114,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.stickyColumn {
+  position: sticky;
+  top: 2rem;
+  align-self: flex-start;
 }

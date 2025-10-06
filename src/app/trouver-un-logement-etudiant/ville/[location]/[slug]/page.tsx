@@ -89,7 +89,7 @@ export default async function LogementPage({ params }: { params: { slug: string 
           {/* <PrepareStudentLifeRedirection city={city} /> */}
         </div>
         <div className={fr.cx('fr-hidden-sm')}>{<AccommodationMap latitude={latitude} longitude={longitude} />}</div>
-        <div className={fr.cx('fr-col-sm-4')}>
+        <div className={clsx(fr.cx('fr-col-sm-4'), styles.stickyColumn)}>
           <OwnerDetails
             acceptWaitingList={accept_waiting_list}
             owner={owner}
