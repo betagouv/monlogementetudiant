@@ -1,0 +1,30 @@
+.summarySubtitle {
+  color: #adadf9;
+}
+
+.positiveRemainingBalance {
+  color: #27a658;
+}
+
+.negativeRemainingBalance {
+  color: #e10600;
+}
+
+.totalIncomes {
+  color: #c9fcac;
+}
+
+.totalExpenses {
+  color: #fcc0b0;
+}
+
+.border {
+  border: 1px solid rgba(221, 221, 221, 0.2);
+}
+
+.totalsContainer {
+  width: 100%;
+  @media (min-width: 768px) {
+    width: 50%;
+  }
+}

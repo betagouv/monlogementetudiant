@@ -27,6 +27,9 @@ export const DynamicBreadcrumb: FC<DynamicBreadcrumbProps> = ({ color, margin = 
     }[] = []
 
     switch (pathname) {
+      case '/simuler-budget':
+        currentPageLabel = t('breadcrumbs.budgetSimulator')
+        break
       case '/simuler-mes-aides-au-logement':
         currentPageLabel = t('breadcrumbs.home')
         break

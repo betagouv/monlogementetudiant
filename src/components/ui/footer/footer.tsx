@@ -98,6 +98,13 @@ export const FooterComponent = async () => {
     },
     {
       linkProps: {
+        href: '/simuler-budget',
+        title: 'Simulateur de budget étudiant',
+      },
+      text: 'Simulateur de budget étudiant',
+    },
+    {
+      linkProps: {
         href: z.string().parse(process.env.NEXT_PUBLIC_GITBOOK_URL),
         title: 'Notre Gitbook',
       },

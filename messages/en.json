@@ -15,7 +15,8 @@
     "sitemap": "Plan du site",
     "notFound": "Page non trouvée",
     "budget": "Budget Mon Logement Étudiant",
-    "privacyPolicy": "Politique de confidentialité"
+    "privacyPolicy": "Politique de confidentialité",
+    "budgetSimulator": "Simulateur de budget étudiant"
   },
   "loading": {
     "card": "Chargement de la carte..."
@@ -563,5 +564,58 @@
     "titlePart3": "au logement",
     "descriptionPart1": "20 questions pour estimer vos",
     "descriptionPart2": "droits et faciliter vos recherches"
+  },
+  "budgetSimulator": {
+    "titlePart1": "Simulez votre",
+    "titlePart2": "budget étudiant",
+    "subtitle": "Gérez vos finances facilement et visualisez votre budget mensuel en temps réel",
+    "sections": {
+      "income": {
+        "title": "Revenus mensuels",
+        "subtitle": "Renseignez toutes vos sources de revenus"
+      },
+      "expenses": {
+        "title": "Dépenses mensuelles",
+        "subtitle": "Listez toutes vos dépenses régulières"
+      }
+    },
+    "income": {
+      "sourceLabel": "Source de revenus",
+      "amountLabel": "Montant",
+      "addIncomeTitle": "Ajouter un revenu",
+      "removeIncomeTitle": "Supprimer un revenu",
+      "types": {
+        "salary": "Job étudiant",
+        "housingAssistance": "Aides aux logement",
+        "other": "Autres revenus"
+      }
+    },
+    "expenses": {
+      "categoryLabel": "Catégorie",
+      "amountLabel": "Montant",
+      "addExpenseTitle": "Ajouter une dépense",
+      "removeExpenseTitle": "Supprimer une dépense",
+      "types": {
+        "housing": "Loyer",
+        "food": "Nourriture",
+        "enjoyment": "Loisirs",
+        "transport": "Transport",
+        "communication": "Communication",
+        "education": "Étude",
+        "healthcare": "Santé",
+        "childcare": "Garde d'enfant",
+        "other": "Autres"
+      }
+    },
+    "summary": {
+      "title": "Résumé du budget",
+      "subtitle": "Résultats de votre simulation",
+      "totalIncome": "Revenus totaux",
+      "totalExpenses": "Dépenses totales",
+      "remainingBalance": "Solde restant",
+      "savingsRate": "Taux d'épargne : {rate} %",
+      "expensesBreakdown": "Répartition des dépenses",
+      "chartTooltipAmount": "Montant"
+    }
   }
 }
