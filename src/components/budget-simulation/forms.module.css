@@ -1,0 +1,10 @@
+/* Mobile-specific form layouts */
+@media (max-width: 767px) {
+  .sourceSelect {
+    flex: 0 0 55% !important;
+  }
+
+  .amountInput {
+    flex: 0 0 30% !important;
+  }
+}

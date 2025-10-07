@@ -1,0 +1,67 @@
+.fr-text--normal {
+  font-weight: 400 !important;
+}
+
+.fr-text--medium {
+  font-weight: 500 !important;
+}
+
+.fr-text--start {
+  text-align: start !important;
+}
+
+.fr-text--center {
+  text-align: center !important;
+}
+
+.fr-text--left {
+  text-align: left !important;
+}
+
+.fr-text--right {
+  text-align: right !important;
+}
+
+.fr-text--justify {
+  text-align: justify !important;
+}
+
+.fr-text--break-all {
+  word-break: break-all;
+}
+
+.fr-text--nowrap {
+  text-wrap: nowrap;
+}
+
+.fr-text--uppercase {
+  text-transform: uppercase !important;
+}
+
+.fr-whitespace-nowrap {
+  white-space: nowrap;
+}
+
+.fr-whitespace-wrap {
+  white-space: normal;
+}
+
+.fr-line-height-1 {
+  line-height: 1 !important;
+}
+
+/* sm rules */
+@media (min-width: 36em) {
+  .fr-text-sm--right {
+    text-align: right !important;
+  }
+}
+
+.fr-text--underline {
+  text-decoration: underline;
+}
+
+.fr-h7 {
+  font-size: 1.125rem;
+  line-height: 1.25rem;
+}
