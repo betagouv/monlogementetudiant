@@ -1,0 +1,15 @@
+.highlight {
+  color: #fcc63a;
+}
+
+.summaryContainer {
+  background-color: #272747;
+}
+
+.iconSize:before {
+  --icon-size: 2.5rem;
+}
+
+.euroIcon {
+  color: #4b9f6c;
+}
