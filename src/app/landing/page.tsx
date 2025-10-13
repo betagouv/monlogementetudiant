@@ -10,6 +10,7 @@ import apl from '~/images/apl.svg'
 import aquitanis from '~/images/aquitanis.svg'
 import arpej from '~/images/arpej.svg'
 import avatarCecilia from '~/images/avatar-cecilia.svg'
+import avatarYasmine from '~/images/avatar-yasmine.svg'
 import caf from '~/images/caf.svg'
 import espacil from '~/images/espacil.svg'
 import heneo from '~/images/heneo.svg'
@@ -45,18 +46,25 @@ export default async function LandingPage() {
                 <span className={styles.bold}>Mon Logement Étudiant</span> {t('hero.description')}
               </p>
               <div className={styles.contactSection}>
-                <div className={styles.profileInfo}>
-                  <Image src={avatarCecilia.src} alt={t('callToAction.contact.role')} priority quality={100} width={56} height={56} />
-                  <div className={styles.profileText}>
-                    <p className={styles.profileName}>{t('hero.contact.name')}</p>
-                    <p className={styles.profileRole}>{t('hero.contact.role')}</p>
+                <div className={clsx('fr-text-inverted--grey fr-flex fr-flex-gap-4v fr-position-relative')}>
+                  <Image src={avatarCecilia.src} alt="Logo Cécilia" priority quality={100} width={56} height={56} />
+                  <Image
+                    className={styles.avatarYasmine}
+                    src={avatarYasmine.src}
+                    alt="Logo Yasmine"
+                    priority
+                    quality={100}
+                    width={56}
+                    height={56}
+                  />
+                  <div className="fr-flex fr-direction-column fr-ml-5w">
+                    <p className="fr-mb-0 fr-text--bold">{t('hero.contact.name')}</p>
+                    <p className="fr-mb-0">{t('hero.contact.role')}</p>
                   </div>
                 </div>
                 <div className={styles.contactButton}>
-                  <Button className="whiteButton" priority="secondary">
-                    <a href={calendlyUrl} target="_blank">
-                      {t('hero.contact.button')}
-                    </a>
+                  <Button className="whiteButton" priority="secondary" linkProps={{ href: calendlyUrl, target: '_blank' }}>
+                    {t('hero.contact.button')}
                   </Button>
                 </div>
               </div>
@@ -217,7 +225,10 @@ export default async function LandingPage() {
             </Button>
           </div>
           <div className={styles.profileContainer}>
-            <Image src={avatarCecilia.src} alt={t('callToAction.contact.role')} quality={100} width={56} height={56} />
+            <div className="fr-flex fr-position-relative">
+              <Image src={avatarCecilia.src} alt={t('callToAction.contact.role')} quality={100} width={56} height={56} />
+              <Image src={avatarYasmine.src} alt={t('callToAction.contact.role')} quality={100} width={56} height={56} />
+            </div>
             <div className={styles.profileDetails}>
               <p className={styles.profileName}>{t('callToAction.contact.name')}</p>
               <p className={styles.profileRole}>{t('callToAction.contact.role')}</p>

@@ -262,3 +262,27 @@
   width: 100%;
   height: 180px;
 }
+
+.partners {
+  background-color: white;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+}
+
+.partners > *:nth-child(odd) {
+  justify-self: end;
+}
+
+.partners > *:nth-child(even) {
+  justify-self: start;
+}
+
+.partnersHighlightedTitle {
+  color: #fcc63a;
+}
+
+.avatarYasmine {
+  position: absolute;
+  left: 45px;
+}

@@ -359,9 +359,9 @@
       "highlight": "logement étudiant",
       "description": " centralise les offres de logements sociaux des différents bailleurs. La plateforme intègre également un simulateur d'aides financières, permettant à chaque étudiant d'estimer son futur budget selon son prochain lieu de vie.",
       "contact": {
-        "name": "Cécilia Foret",
-        "role": "Chargée de déploiement de Mon Logement Etudiant",
-        "button": "Contacter"
+        "name": "Cécilia et Yasmine",
+        "role": "Chargées de déploiement - Mon Logement Etudiant",
+        "button": "Prendre rendez-vous"
       }
     },
     "partners": {
@@ -426,8 +426,8 @@
       },
       "button": "Prendre rendez-vous",
       "contact": {
-        "name": "Cécilia Foret",
-        "role": "Chargée de déploiement"
+        "name": "Cécilia et Yasmine",
+        "role": "Chargées de déploiement"
       }
     }
   },
@@ -465,6 +465,11 @@
     },
     "partners": {
       "title": "Parmi les bailleurs partenaires"
+    },
+    "social": {
+      "titlePart1": "Bailleurs sociaux, rejoignez la plateforme nationale du",
+      "titlePart2": "logement étudiant",
+      "description": "Nous centralisons l'ensemble de l'offre de résidences à vocation sociale pour fluidifier le parcours d'accès au logement des étudiants et futurs étudiants"
     },
     "faq": {
       "title": "Parmi les questions fréquentes",

@@ -3,23 +3,33 @@ import { Button } from '@codegouvfr/react-dsfr/Button'
 import clsx from 'clsx'
 import { getTranslations } from 'next-intl/server'
 import Image from 'next/image'
+import { z } from 'zod'
 import { FAQ_CONTENTS } from '~/app/(utils-pages)/faq/page'
 import { FaqQuestionsAnswers } from '~/components/faq/faq-questions-answers'
 import { FindAccommodationForm } from '~/components/find-student-accomodation/home/find-accommodation-form'
+import agefo from '~/images/agefo.svg'
+import aquitanis from '~/images/aquitanis.svg'
 import arpej from '~/images/arpej.svg'
+import avatarCecilia from '~/images/avatar-cecilia.svg'
+import avatarYasmine from '~/images/avatar-yasmine.svg'
 import background from '~/images/background.webp'
 import espacil from '~/images/espacil.svg'
 import exploreCities from '~/images/explore-cities.webp'
+import heneo from '~/images/heneo.svg'
 import home from '~/images/landing.webp'
+import mmn from '~/images/mmn.svg'
+import prepareBudget from '~/images/prepare-budget.webp'
 import sogima from '~/images/sogima.svg'
 import studefi from '~/images/studefi.svg'
 import { getPopularCities } from '~/server-only/get-popular-cities'
 import styles from './home.module.css'
 
 export default async function Home() {
-  const t = await getTranslations('home')
+  const tHome = await getTranslations('home')
+  const t = await getTranslations()
   const popularCities = await getPopularCities()
-  const _sortedPopularCities = popularCities.sort((a, b) => b.nb_total_apartments - a.nb_total_apartments).slice(0, 18)
+  const sortedPopularCities = popularCities.sort((a, b) => b.nb_total_apartments - a.nb_total_apartments).slice(0, 18)
+  const calendlyUrl = z.string().parse(process.env.NEXT_PUBLIC_CALENDLY_URL)
 
   return (
     <>
@@ -28,17 +38,17 @@ export default async function Home() {
           <div className={styles.heroContent}>
             <div className={clsx(fr.cx('fr-col-md-7'), styles.heroTextContainer)}>
               <h1 className={styles.heroTitle}>
-                {t('hero.title')} <span className={styles.heroHighlight}>{t('hero.highlight')}</span>
+                {tHome('hero.title')} <span className={styles.heroHighlight}>{tHome('hero.highlight')}</span>
               </h1>
               <h2 className={styles.heroSubtitle}>
-                {t.rich('hero.subtitle', {
+                {tHome.rich('hero.subtitle', {
                   aides: (chunks) => <span className={fr.cx('fr-text--bold')}>{chunks}</span>,
                 })}
               </h2>
             </div>
             <div className={clsx(fr.cx('fr-col-md-5'), 'boxShadow', styles.simulatorCard)}>
-              <h2>{t('title')}</h2>
-              <p className="fr-text--lg">{t('description')}</p>
+              <h2>{tHome('title')}</h2>
+              <p className="fr-text--lg">{tHome('description')}</p>
               <div className={styles.logoContainer}>
                 <Image src={espacil.src} width={120} height={50} alt="Logo Espacil" />
                 <Image src={arpej.src} width={120} height={50} alt="Logo Arpej" />
@@ -51,7 +61,7 @@ export default async function Home() {
                   className={styles.fullWidthButton}
                   iconId="ri-search-line"
                 >
-                  {t('cta')}
+                  {tHome('cta')}
                 </Button>
               </div>
             </div>
@@ -60,15 +70,15 @@ export default async function Home() {
         <div className={styles.heroImageContainer}>
           <Image className={styles.heroImage} priority quality={100} src={home} alt="Hero" />
         </div>
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <div className="fr-flex fr-justify-content-center">
           <Image className={clsx(fr.cx('fr-hidden-sm'), styles.heroImageMobile)} priority quality={100} src={home} alt="Hero" />
         </div>
       </div>
       <div className={clsx(fr.cx('fr-container'), styles.mainContainer)}>
         <div className={clsx(fr.cx('fr-container'), styles.headerSection)}>
-          <h1 className={styles.headerSectionTitle}>{t('mainSection.title')}</h1>
-          <p style={{ fontSize: '18px' }}>
-            {t.rich('mainSection.description', {
+          <h1 className={styles.headerSectionTitle}>{tHome('mainSection.title')}</h1>
+          <p className="fr-text--lg">
+            {tHome.rich('mainSection.description', {
               part1: (chunks) => <>{chunks}</>,
               part2: (chunks) => (
                 <>
@@ -82,48 +92,12 @@ export default async function Home() {
         <div className={styles.featuresContainer}>
           <div className={clsx('boxShadow', styles.featureCard)}>
             <div className={styles.cardContent}>
-              <div>
-                <h1 className={styles.cardTitle}>{t('features.prepareBudget.title')}</h1>
-                <p className="fr-text--lg">{t('features.prepareBudget.description')}</p>
-              </div>
-              <Button size="large" linkProps={{ href: '/preparer-mon-budget-etudiant' }}>
-                {t('features.prepareBudget.button')}
-              </Button>
-              {/* <div className={styles.citiesGrid}>
-                {sortedPopularCities.map((city) => (
-                  <Button
-                    className={styles.cityButton}
-                    linkProps={{ href: `/preparer-sa-vie-etudiante/${city.slug}` }}
-                    key={city.id}
-                    priority="secondary"
-                  >
-                    {city.name}
-                  </Button>
-                ))}
-                <div className={styles.moreContainer}>
-                  <Button
-                    priority="secondary"
-                    linkProps={{ href: `/preparer-sa-vie-etudiante` }}
-                    iconPosition="right"
-                    iconId="fr-icon-arrow-right-line"
-                  >
-                    {t('features.exploreCities.moreButton')}
-                  </Button>
-                </div> 
-              </div>*/}
-            </div>
-            <div className={fr.cx('fr-col-md-6')}>
-              <Image src={exploreCities} className={styles.featureImage} alt="Préparer son budget étudiant" priority quality={100} />
-            </div>
-          </div>
-          {/* <div className={clsx('boxShadow', styles.featureCard)}>
-            <div className={styles.cardContent}>
-              <h1 className={styles.cardTitle}>{t('features.exploreCities.title')}</h1>
+              <h1 className={styles.cardTitle}>{tHome('features.exploreCities.title')}</h1>
               <div className={styles.citiesGrid}>
                 {sortedPopularCities.map((city) => (
                   <Button
                     className={styles.cityButton}
-                    linkProps={{ href: `/preparer-sa-vie-etudiante/${city.slug}` }}
+                    linkProps={{ href: `/trouver-un-logement-etudiant/ville/${city.name}` }}
                     key={city.id}
                     priority="secondary"
                   >
@@ -133,11 +107,11 @@ export default async function Home() {
                 <div className={styles.moreContainer}>
                   <Button
                     priority="secondary"
-                    linkProps={{ href: `/preparer-sa-vie-etudiante` }}
+                    linkProps={{ href: `/trouver-un-logement-etudiant` }}
                     iconPosition="right"
                     iconId="fr-icon-arrow-right-line"
                   >
-                    {t('features.exploreCities.moreButton')}
+                    {tHome('features.exploreCities.moreButton')}
                   </Button>
                 </div>
               </div>
@@ -145,7 +119,7 @@ export default async function Home() {
             <div className={fr.cx('fr-col-md-6')}>
               <Image src={exploreCities} className={styles.featureImage} alt="Explorer les villes étudiantes" priority quality={100} />
             </div>
-          </div> */}
+          </div>
           <div className={clsx('boxShadow', styles.featureCard)}>
             <div className={fr.cx('fr-col-md-6')}>
               <Image
@@ -156,7 +130,7 @@ export default async function Home() {
               />
             </div>
             <div className={styles.cardContent}>
-              <h1 className={styles.cardTitle}>{t('features.findAccommodation.title')}</h1>
+              <h1 className={styles.cardTitle}>{tHome('features.findAccommodation.title')}</h1>
               <FindAccommodationForm />
             </div>
             <Image
@@ -166,9 +140,23 @@ export default async function Home() {
               alt="Trouver votre prochain logement étudiant"
             />
           </div>
+          <div className={clsx('boxShadow', styles.featureCard)}>
+            <div className={styles.cardContent}>
+              <div>
+                <h1 className={styles.cardTitle}>{tHome('features.prepareBudget.title')}</h1>
+                <p className="fr-text--lg">{tHome('features.prepareBudget.description')}</p>
+              </div>
+              <Button size="large" linkProps={{ href: '/preparer-mon-budget-etudiant' }}>
+                {tHome('features.prepareBudget.button')}
+              </Button>
+            </div>
+            <div className={fr.cx('fr-col-md-6')}>
+              <Image src={prepareBudget} className={styles.featureImage} alt="Préparer son budget étudiant" priority quality={100} />
+            </div>
+          </div>
         </div>
       </div>
-      <div className={styles.partnersSection}>
+      {/* <div className={styles.partnersSection}>
         <div className={fr.cx('fr-container')}>
           <h2 className={styles.partnersHeader}>{t('partners.title')}</h2>
           <div className={styles.partnersGrid}>
@@ -178,17 +166,57 @@ export default async function Home() {
             <Image src={studefi} alt="Logo Studefi" quality={100} width={201} height={90} />
           </div>
         </div>
+      </div> */}
+      <div className="fr-hidden fr-unhidden-sm">
+        <div className="primaryBackgroundColor fr-flex fr-justify-content-space-between">
+          <div className={clsx('fr-p-6w fr-width-full', styles.partners)}>
+            <Image src={arpej.src} width={200} height={90} alt="Logo Arpej" />
+            <Image src={agefo.src} width={200} height={90} alt="Logo Agefo" />
+            <Image src={sogima.src} width={200} height={90} alt="Logo Sogima" />
+            <Image src={espacil.src} width={200} height={90} alt="Logo Espacil" />
+            <Image src={studefi.src} width={200} height={90} alt="Logo Studefi" />
+            <Image src={aquitanis.src} width={200} height={90} alt="Logo Aquitanis" />
+            <Image src={heneo.src} width={200} height={90} alt="Logo Hénéo" />
+            <Image src={mmn.src} width={200} height={90} alt="Logo Meurthe et Moselle Habitat" />
+          </div>
+          <div className="fr-p-8w fr-width-full fr-flex fr-direction-column fr-justify-content-center fr-flex-gap-6v">
+            <span className="fr-h1 fr-text-inverted--grey fr-mb-0">
+              {tHome('social.titlePart1')}&nbsp;
+              <span className={styles.partnersHighlightedTitle}>{tHome('social.titlePart2')}</span>
+            </span>
+            <p className="fr-mb-0 fr-text-inverted--grey">{tHome('social.description')}</p>
+            <div className={clsx('fr-text-inverted--grey fr-flex fr-flex-gap-4v fr-position-relative')}>
+              <Image src={avatarCecilia.src} alt="Logo Cécilia" priority quality={100} width={56} height={56} />
+              <Image
+                className={styles.avatarYasmine}
+                src={avatarYasmine.src}
+                alt="Logo Yasmine"
+                priority
+                quality={100}
+                width={56}
+                height={56}
+              />
+              <div className="fr-flex fr-direction-column fr-ml-5w">
+                <p className="fr-mb-0 fr-text--bold">{t('landing.hero.contact.name')}</p>
+                <p className="fr-mb-0">{t('landing.hero.contact.role')}</p>
+              </div>
+            </div>
+            <Button className="whiteButton" priority="secondary" linkProps={{ href: calendlyUrl, target: '_blank' }}>
+              {t('landing.hero.contact.button')}
+            </Button>
+          </div>
+        </div>
       </div>
       <div className={clsx(fr.cx('fr-container'), styles.faqContainer)}>
         <div className={styles.faqContent}>
           <div>
-            <h1 className={styles.faqHeader}>{t('faq.title')}</h1>
+            <h1 className={styles.faqHeader}>{tHome('faq.title')}</h1>
           </div>
 
           <FaqQuestionsAnswers contents={FAQ_CONTENTS.slice(0, 5)} />
 
           <Button size="large" priority="secondary" linkProps={{ href: '/faq' }}>
-            {t('faq.button')}
+            {tHome('faq.button')}
           </Button>
         </div>
       </div>
