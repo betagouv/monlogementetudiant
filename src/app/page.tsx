@@ -3,7 +3,6 @@ import { Button } from '@codegouvfr/react-dsfr/Button'
 import clsx from 'clsx'
 import { getTranslations } from 'next-intl/server'
 import Image from 'next/image'
-import { z } from 'zod'
 import { FAQ_CONTENTS } from '~/app/(utils-pages)/faq/page'
 import { FaqQuestionsAnswers } from '~/components/faq/faq-questions-answers'
 import { FindAccommodationForm } from '~/components/find-student-accomodation/home/find-accommodation-form'
@@ -29,7 +28,6 @@ export default async function Home() {
   const t = await getTranslations()
   const popularCities = await getPopularCities()
   const sortedPopularCities = popularCities.sort((a, b) => b.nb_total_apartments - a.nb_total_apartments).slice(0, 18)
-  const calendlyUrl = z.string().parse(process.env.NEXT_PUBLIC_CALENDLY_URL)
 
   return (
     <>
@@ -201,7 +199,7 @@ export default async function Home() {
                 <p className="fr-mb-0">{t('landing.hero.contact.role')}</p>
               </div>
             </div>
-            <Button className="whiteButton" priority="secondary" linkProps={{ href: calendlyUrl, target: '_blank' }}>
+            <Button className="whiteButton" priority="secondary" linkProps={{ href: '/landing', target: '_blank' }}>
               {t('landing.hero.contact.button')}
             </Button>
           </div>
