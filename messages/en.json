@@ -555,6 +555,8 @@
     "repartition": "Répartition des dépenses",
     "investigationDate": "Octobre à janvier 2024 (investigation)",
     "constructionDate": "Novembre 2024 à mars 2025 (construction)",
+    "constructionDatePart2": "Avril à septembre 2025 (construction)",
+    "total": "Le total cumulé des dépenses d’octobre 2024 à fin septembre 2025 s’élève donc à",
     "table": {
       "coaching": "Coaching",
       "development": "Développement",
