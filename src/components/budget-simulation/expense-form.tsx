@@ -58,11 +58,13 @@ export function ExpenseForm() {
                 },
               }}
             >
-              {expenseTypes.map((expenseType) => (
-                <option key={expenseType} value={expenseType}>
-                  {t(`types.${expenseType}`)}
-                </option>
-              ))}
+              {expenseTypes
+                .filter((expenseType) => expenseType === type || !state.activeExpenseTypes.includes(expenseType))
+                .map((expenseType) => (
+                  <option key={expenseType} value={expenseType}>
+                    {t(`types.${expenseType}`)}
+                  </option>
+                ))}
             </Select>
           </div>
           <div className={clsx('fr-flex-basis-0 fr-flex-grow-1', styles.amountInput)}>

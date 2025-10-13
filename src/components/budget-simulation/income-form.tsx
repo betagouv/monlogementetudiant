@@ -52,11 +52,13 @@ export function IncomeForm() {
                 },
               }}
             >
-              {incomeTypes.map((incomeType) => (
-                <option key={incomeType} value={incomeType}>
-                  {t(`types.${incomeType}`)}
-                </option>
-              ))}
+              {incomeTypes
+                .filter((incomeType) => incomeType === type || !state.activeIncomeTypes.includes(incomeType))
+                .map((incomeType) => (
+                  <option key={incomeType} value={incomeType}>
+                    {t(`types.${incomeType}`)}
+                  </option>
+                ))}
             </Select>
           </div>
           <div className={clsx('fr-flex-basis-0 fr-flex-grow-1', styles.amountInput)}>
