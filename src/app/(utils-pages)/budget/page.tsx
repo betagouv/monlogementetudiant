@@ -26,15 +26,19 @@ export default async function BudgetPage() {
               noCaption
               caption={t('repartition')}
               data={[
-                [t('table.coaching'), '16 128€', '33 984 €'],
-                [t('table.development'), '0 €', '55 062 €'],
-                [t('table.design'), '0 €', '27 463 €'],
-                [t('table.deployment'), '0 €', '24 077 €'],
-                [t('table.total'), '16 128 €', '140 586 €'],
+                [t('table.coaching'), '16 128€', '33 984 €', '46 080 €'],
+                [t('table.development'), '0 €', '55 062 €', '65 990 €'],
+                [t('table.design'), '0 €', '27 463 €', '21 437 €'],
+                [t('table.deployment'), '0 €', '24 077 €', '32 256 €'],
+                [t('table.total'), '16 128 €', '140 586 €', '165 763 €'],
               ]}
-              headers={['', t('investigationDate'), t('constructionDate')]}
+              headers={['', t('investigationDate'), t('constructionDate'), t('constructionDatePart2')]}
               className={styles.boldTable}
             />
+            <p>
+              {t('total')}&nbsp;
+              <span className="fr-text--bold">322 477€ TTC.</span>
+            </p>
           </div>
         </div>
       </div>
