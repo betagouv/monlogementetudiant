@@ -31,12 +31,7 @@
     "description": "Faciliter l'accès au logement pour les étudiants boursiers",
     "alerts": "Alertes logements",
     "login": "Se connecter",
-    "tally": "Donnez votre avis",
-    "banner": {
-      "title": "Lancement de la plateforme :",
-      "description": "site en phase d'expérimentation, n'hésitez pas à <link>donner votre avis</link> pour nous aider à améliorer le service.",
-      "close": "Fermer"
-    }
+    "tally": "Donnez votre avis"
   },
   "footer": {
     "linkList": {
@@ -361,7 +356,7 @@
       "contact": {
         "name": "Cécilia et Yasmine",
         "role": "Chargées de déploiement - Mon Logement Etudiant",
-        "button": "Prendre rendez-vous"
+        "button": "En savoir plus"
       }
     },
     "partners": {

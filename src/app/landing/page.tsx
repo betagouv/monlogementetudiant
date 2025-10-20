@@ -64,7 +64,7 @@ export default async function LandingPage() {
                 </div>
                 <div className={styles.contactButton}>
                   <Button className="whiteButton" priority="secondary" linkProps={{ href: calendlyUrl, target: '_blank' }}>
-                    {t('hero.contact.button')}
+                    {t('callToAction.button')}
                   </Button>
                 </div>
               </div>
