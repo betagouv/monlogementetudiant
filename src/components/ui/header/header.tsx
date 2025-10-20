@@ -5,6 +5,7 @@ import { getTranslations } from 'next-intl/server'
 import { FC } from 'react'
 import { z } from 'zod'
 import { BrandTop } from '~/components/ui/brand-top'
+import { Banner } from '~/components/ui/header/banner/banner'
 import { HeaderNavigation } from '~/components/ui/header/navigation'
 import logo from '~/images/logo.svg'
 
@@ -54,6 +55,7 @@ export const HeaderComponent: FC = async () => {
           orientation: 'horizontal',
         }}
       />
+      <Banner />
     </div>
   )
 }
