@@ -11,6 +11,13 @@ import { getDepartments } from '~/server-only/get-departments'
 import { getPopularCities } from '~/server-only/get-popular-cities'
 import styles from './preparer-sa-vie-etudiante.module.css'
 
+export const generateMetadata = () => ({
+  robots: {
+    index: false,
+    follow: false,
+  },
+})
+
 export default async function PrepareYourStudentLife() {
   const t = await getTranslations('prepareStudentLife')
   const departments = await getDepartments()
