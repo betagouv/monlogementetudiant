@@ -117,7 +117,7 @@
       "noAvailability": "Aucune disponibilité"
     },
     "waitingList": "Liste d'attente",
-    "unknownAvailability": "Disponibilités non-communiqués"
+    "unknownAvailability": "Disponibilités non-communiquées"
   },
   "findAccomodation": {
     "faq": {
@@ -155,7 +155,7 @@
       "individual": "Individuel",
       "colocation": "Colocation",
       "availability": "Disponibilité",
-      "unknownAvailability": "Disponibilités non-communiqués",
+      "unknownAvailability": "Disponibilités non-communiquées",
       "noAvailability": "Aucune disponibilité",
       "waitingList": "Liste d'attente"
     },
