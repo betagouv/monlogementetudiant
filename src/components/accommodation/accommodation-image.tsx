@@ -8,15 +8,16 @@ export const AccommodationImage = ({
   height,
   className,
   src,
-}: { width: number; height: number; className?: string; src: string }) => {
+  withModal,
+}: { width: number; height: number; className?: string; src: string; withModal: boolean }) => {
   return (
     <Image
       src={src}
       alt="Photo du logement"
       width={width}
       height={height}
-      onClick={() => accommodationPicturesModal.open()}
       className={className}
+      {...(withModal && { onClick: () => accommodationPicturesModal.open() })}
     />
   )
 }
