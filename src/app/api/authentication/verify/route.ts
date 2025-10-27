@@ -16,10 +16,10 @@ export async function GET(request: NextRequest) {
     })
 
     if (result?.error) {
-      return NextResponse.redirect(new URL('/verification/erreur', request.url))
+      return NextResponse.redirect(new URL(`${process.env.BASE_URL}/verification/erreur`))
     }
 
-    return NextResponse.redirect(new URL('/bailleur', request.url))
+    return NextResponse.redirect(new URL(`${process.env.BASE_URL}/bailleur`))
   } catch (error) {
     console.error('Verification error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
