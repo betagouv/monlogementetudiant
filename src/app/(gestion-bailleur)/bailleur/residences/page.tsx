@@ -1,7 +1,7 @@
 import Breadcrumb from '@codegouvfr/react-dsfr/Breadcrumb'
 import Button from '@codegouvfr/react-dsfr/Button'
 import Companie from '@codegouvfr/react-dsfr/picto/Companie'
-import { ResidenceFilters } from '~/app/(gestion-bailleur)/bailleur/residences/filters'
+import { ResidenceFilters } from '~/components/bailleur/residence-filters'
 import { ResidenceList } from '~/components/bailleur/residence-list'
 import { getMyAccommodations } from '~/server-only/bailleur/get-my-accommodations'
 

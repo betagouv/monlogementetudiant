@@ -14,21 +14,13 @@ interface ResidenceListProps {
 }
 
 export const ResidenceList: FC<ResidenceListProps> = ({ initialData }) => {
-  const { data: accommodations, isLoading } = useMyAccommodations({ initialData })
+  const { data: accommodations } = useMyAccommodations({ initialData })
 
   const accommodationsList = accommodations?.results.features || []
 
-  if (isLoading) {
-    return (
-      <div className="fr-flex fr-justify-content-center fr-py-8w">
-        <div className="fr-spinner fr-spinner--lg" />
-      </div>
-    )
-  }
-
   if (accommodationsList.length === 0) {
     return (
-      <div className="fr-flex fr-flex-direction-column fr-align-items-center fr-py-8w">
+      <div className="fr-flex fr-direction-column fr-align-items-center fr-py-8w">
         <h3>Aucune résidence trouvée</h3>
         <p>Aucune résidence ne correspond à vos critères de recherche.</p>
       </div>
@@ -59,7 +51,7 @@ export const ResidenceList: FC<ResidenceListProps> = ({ initialData }) => {
               </Badge>
             )
           ) : null
-
+        console.log('prout', accommodation.properties)
         return (
           <div
             className={clsx(
@@ -69,7 +61,7 @@ export const ResidenceList: FC<ResidenceListProps> = ({ initialData }) => {
             key={accommodation.id}
           >
             <div className="fr-p-4w">
-              <AccomodationCard key={index} accomodation={accommodation} />
+              <AccomodationCard key={index} accomodation={accommodation} href={`/bailleur/residences/${accommodation.properties.slug}`} />
             </div>
             <div className="fr-width-full fr-p-4w fr-border-left" style={{ background: 'white' }}>
               {badgeAvailability}

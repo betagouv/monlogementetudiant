@@ -16,9 +16,10 @@ import { sPluriel } from '~/utils/sPluriel'
 
 type AccomodationCardProps = {
   accomodation: TAccomodationCard
+  href?: string
 }
 
-export const AccomodationCard: FC<AccomodationCardProps> = ({ accomodation }) => {
+export const AccomodationCard: FC<AccomodationCardProps> = ({ accomodation, href }) => {
   const [selectedAccommodation] = useQueryState('id', parseAsString)
   const t = useTranslations('findAccomodation.card')
   const { classes } = useStyles()
@@ -74,6 +75,8 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({ accomodation }) =>
         badge: <Badge severity="new" noIcon>{`${t('priceFrom')} ${price_min}€`}</Badge>,
       }
     : {}
+
+  const redirectUri = href ?? `/trouver-un-logement-etudiant/ville/${encodeURIComponent(city)}/${accomodation.properties.slug}`
   return (
     <Card
       {...badgeProps}
@@ -108,7 +111,7 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({ accomodation }) =>
       }
       enlargeLink
       linkProps={{
-        href: `/trouver-un-logement-etudiant/ville/${encodeURIComponent(city)}/${accomodation.properties.slug}`,
+        href: redirectUri,
       }}
       start={
         <ul className="fr-tags-group">

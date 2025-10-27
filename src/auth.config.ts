@@ -17,6 +17,8 @@ interface TokenInterface {
   user?: User
 }
 
+export const fiveteenMinutes = 15 * 60 * 1000
+
 async function refreshAccessToken(token: TokenInterface): Promise<TokenInterface> {
   try {
     const response = await fetch(`${process.env.API_AUTH_BASE_URL}/admin-auth/refresh/`, {
@@ -38,8 +40,8 @@ async function refreshAccessToken(token: TokenInterface): Promise<TokenInterface
     return {
       ...token,
       accessToken: refreshedTokens.access_token,
-      accessTokenExpires: Date.now() + 15 * 60 * 1000, // 15 minutes
-      refreshToken: refreshedTokens.refresh_token ?? token.refreshToken,
+      accessTokenExpires: Date.now() + fiveteenMinutes,
+      refreshToken: refreshedTokens.refresh_token,
     }
   } catch {
     return {
@@ -99,7 +101,7 @@ export const authConfig = {
       if (user) {
         token.accessToken = user.accessToken
         token.refreshToken = user.refreshToken
-        token.accessTokenExpires = Date.now() + 15 * 60 * 1000 // 15 minutes
+        token.accessTokenExpires = Date.now() + fiveteenMinutes
         token.user = user.user
       }
 

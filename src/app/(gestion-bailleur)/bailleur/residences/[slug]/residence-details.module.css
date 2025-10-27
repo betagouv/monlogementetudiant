@@ -1,0 +1,9 @@
+.container {
+  background: white;
+}
+
+.stickyColumn {
+  position: sticky;
+  top: 2rem;
+  align-self: flex-start;
+}
