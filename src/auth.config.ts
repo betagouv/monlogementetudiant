@@ -25,7 +25,7 @@ async function refreshAccessToken(token: TokenInterface): Promise<TokenInterface
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        refresh_token: token.refreshToken,
+        refresh: token.refreshToken,
       }),
     })
 
@@ -107,7 +107,6 @@ export const authConfig = {
       if (Date.now() < (token.accessTokenExpires as number)) {
         return token
       }
-
       // Access token has expired, try to update it
       return refreshAccessToken(token)
     },

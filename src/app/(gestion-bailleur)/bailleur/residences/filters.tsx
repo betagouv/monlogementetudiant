@@ -3,19 +3,43 @@
 import { Input } from '@codegouvfr/react-dsfr/Input'
 import Select from '@codegouvfr/react-dsfr/Select'
 import ToggleSwitch from '@codegouvfr/react-dsfr/ToggleSwitch'
+import { parseAsBoolean, parseAsString, useQueryStates } from 'nuqs'
+import { useMyAccommodations } from '~/hooks/use-my-accommodations'
+import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
 
-export const ResidenceFilters = () => {
+interface ResidenceFiltersProps {
+  initialData: TGetAccomodationsResponse
+}
+
+export const ResidenceFilters = ({ initialData }: ResidenceFiltersProps) => {
+  const { data: accommodations } = useMyAccommodations({ initialData })
+  const [queryStates, setQueryStates] = useQueryStates({
+    disponible: parseAsBoolean.withDefault(false),
+    recherche: parseAsString.withDefault(''),
+  })
+  const accommodationsList = accommodations?.results.features || []
+
   return (
     <>
+      <span className="fr-h4 fr-mb-0">{accommodationsList.length} résidences</span>
       <ToggleSwitch
         label="Logements disponibles"
-        checked={false}
-        onChange={() => null}
+        checked={queryStates.disponible}
+        onChange={(checked) => setQueryStates({ disponible: checked })}
         showCheckedHint={false}
         style={{ width: '300px' }}
       />
       <div className="fr-flex fr-flex-gap-4v">
-        <Input label="" nativeInputProps={{ placeholder: 'Rechercher' }} iconId="ri-search-line" className="fr-mb-0" />
+        <Input
+          label=""
+          nativeInputProps={{
+            placeholder: 'Rechercher',
+            value: queryStates.recherche,
+            onChange: (e) => setQueryStates({ recherche: e.target.value }),
+          }}
+          iconId="ri-search-line"
+          className="fr-mb-0"
+        />
         <Select label="" nativeSelectProps={{ name: 'Filtre' }} className="fr-mb-0">
           <option value="" selected disabled hidden>
             Triés par disponibilités
