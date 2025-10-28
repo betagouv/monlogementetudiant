@@ -51,7 +51,6 @@ export const ResidenceList: FC<ResidenceListProps> = ({ initialData }) => {
               </Badge>
             )
           ) : null
-        console.log('prout', accommodation.properties)
         return (
           <div
             className={clsx(

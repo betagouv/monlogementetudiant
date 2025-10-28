@@ -32,16 +32,15 @@ async function refreshAccessToken(token: TokenInterface): Promise<TokenInterface
     })
 
     const refreshedTokens = await response.json()
-
     if (!response.ok) {
       throw refreshedTokens
     }
 
     return {
       ...token,
-      accessToken: refreshedTokens.access_token,
+      accessToken: refreshedTokens.access,
       accessTokenExpires: Date.now() + fiveteenMinutes,
-      refreshToken: refreshedTokens.refresh_token,
+      refreshToken: refreshedTokens.refresh,
     }
   } catch {
     return {
@@ -84,6 +83,7 @@ export const authConfig = {
               firstname: data.user.first_name,
               lastname: data.user.last_name,
               name: `${data.user.first_name} ${data.user.last_name}`.trim(),
+              role: data.user.role,
             },
           }
         } catch {
