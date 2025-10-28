@@ -6,6 +6,7 @@ interface UserData {
   firstname: string
   lastname: string
   name: string
+  role: 'admin' | 'owner' | 'user'
 }
 
 declare module 'next-auth' {
