@@ -8,7 +8,7 @@ import styles from './accommodation-images.module.css'
 
 interface AccommodationImagesProps {
   images: string[]
-  title: string
+  title?: string
   withModal?: boolean
 }
 
@@ -52,7 +52,7 @@ export const AccommodationImages = ({ images, title, withModal = true }: Accommo
     <div className={styles.container}>
       <div className={clsx(withModal && styles.cursor, styles.mainImageContainer)} style={{ width: widthStyle }}>
         <AccommodationImage src={mainImage} className={styles.mainImage} width={400} height={300} withModal={withModal} />
-        {!!withModal && (
+        {!!withModal && !!title && (
           <div className={styles.photoCountButton}>
             <AccommodationImagesModal images={images} title={title}>
               <Button priority="tertiary no outline" nativeButtonProps={accommodationPicturesModal.buttonProps}>
