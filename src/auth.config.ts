@@ -22,9 +22,9 @@ export const fiveteenMinutes = 15 * 60 * 1000
 function getTokenExpiration(token: string): number {
   try {
     const payload = JSON.parse(atob(token.split('.')[1]))
-    return payload.exp * 1000 // Convert to milliseconds
+    return payload.exp * 1000
   } catch {
-    return Date.now() + fiveteenMinutes // Fallback to 15 minutes
+    return Date.now() + fiveteenMinutes
   }
 }
 
@@ -39,17 +39,8 @@ async function refreshAccessToken(token: TokenInterface): Promise<TokenInterface
         refresh: token.refreshToken,
       }),
     })
-    console.log(
-      'body',
-      JSON.stringify({
-        refresh: token.refreshToken,
-      }),
-    )
 
-    console.log('response', response)
     const refreshedTokens = await response.json()
-
-    console.log('refreshedTokens', refreshedTokens)
 
     if (!response.ok) {
       throw refreshedTokens

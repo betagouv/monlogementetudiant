@@ -1,11 +1,13 @@
 'use client'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useRouter } from 'next/navigation'
 import { createToast } from '~/components/ui/createToast'
 import { TUpdateResidence } from '~/schemas/accommodations/update-residence'
 
 export const useUpdateResidenceDetails = (slug: string) => {
   const queryClient = useQueryClient()
+  const router = useRouter()
 
   return useMutation({
     mutationFn: async (data: TUpdateResidence) => {
@@ -29,6 +31,7 @@ export const useUpdateResidenceDetails = (slug: string) => {
         priority: 'success',
         message: 'Résidence mise à jour avec succès',
       })
+      router.refresh()
     },
     onError: () => {
       createToast({

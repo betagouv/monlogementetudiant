@@ -4,7 +4,6 @@ import { getAccommodationMyById } from '~/server-only/get-accommodation-my-by-id
 
 export default async function ResidenceDetailsPage({ params }: { params: { slug: string } }) {
   const accommodation = await getAccommodationMyById(params.slug)
-  console.log('accommodation', accommodation)
   return (
     <div className="fr-container fr-pb-12w">
       <Breadcrumb

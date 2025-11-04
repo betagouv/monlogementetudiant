@@ -1,16 +1,78 @@
 'use client'
 
 import Button from '@codegouvfr/react-dsfr/Button'
+import { useRef, useState } from 'react'
 import { Controller, useFormContext } from 'react-hook-form'
 import { AccommodationImage } from '~/components/accommodation/accommodation-image'
 import { AccommodationImages } from '~/components/accommodation/accommodation-images'
+import { useDeleteResidenceImage, useUploadResidenceImages, validateFiles } from '~/hooks/use-upload-residence-images'
 import { TAccomodationMy } from '~/schemas/accommodations/accommodations'
 import { TUpdateResidence } from '~/schemas/accommodations/update-residence'
 
 export const ResidencePictures = ({ accommodation }: { accommodation: TAccomodationMy }) => {
-  const { control, watch } = useFormContext<TUpdateResidence>()
-  const { name } = accommodation.properties
+  const { control, watch, setValue } = useFormContext<TUpdateResidence>()
   const watchedImages = watch('images_urls')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+  const [fileError, setFileError] = useState<string | null>(null)
+
+  const uploadMutation = useUploadResidenceImages(accommodation.properties.slug, accommodation.properties.name)
+  const deleteMutation = useDeleteResidenceImage(accommodation.properties.slug, accommodation.properties.name)
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || [])
+    setSelectedFiles(files)
+    setFileError(null)
+
+    if (files.length > 0) {
+      const validationError = validateFiles(files)
+      if (validationError) {
+        setFileError(validationError)
+        return
+      }
+
+      uploadMutation.mutate(
+        { files, currentImages: watchedImages || [] },
+        {
+          onSuccess: (data) => {
+            setValue('images_urls', data.images_urls || [])
+            setSelectedFiles([])
+            if (fileInputRef.current) {
+              fileInputRef.current.value = ''
+            }
+          },
+          onError: () => {
+            setSelectedFiles([])
+            if (fileInputRef.current) {
+              fileInputRef.current.value = ''
+            }
+          },
+        },
+      )
+    }
+  }
+
+  const handleDeleteImage = (index: number, currentImages: string[]) => {
+    const newImages = currentImages.filter((_, i) => i !== index)
+    deleteMutation.mutate(newImages, {
+      onSuccess: () => {
+        setValue('images_urls', newImages)
+      },
+    })
+  }
+
+  const getStatusText = () => {
+    if (uploadMutation.isPending) {
+      return 'Upload en cours...'
+    }
+    if (fileError) {
+      return fileError
+    }
+    if (selectedFiles.length > 0) {
+      return `${selectedFiles.length} fichier${selectedFiles.length > 1 ? 's' : ''} sélectionné${selectedFiles.length > 1 ? 's' : ''}`
+    }
+    return 'Aucun fichier sélectionné'
+  }
   return (
     <div className="fr-border-bottom">
       <div className="fr-p-6w">
@@ -19,8 +81,18 @@ export const ResidencePictures = ({ accommodation }: { accommodation: TAccomodat
           Ajouter une photo
           <span className="fr-text-mention--grey fr-text--sm fr-mb-0">Taille maximale: 10 Mo. Format supporté: jpeg, png, webp</span>
           <div className="fr-flex fr-align-items-center fr-flex-gap-4v">
-            <Button priority="tertiary">Parcourir...</Button>
-            <span className="fr-text-mention--grey fr-text--sm fr-mb-0">Aucun fichier sélectionné</span>
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleFileSelect}
+              style={{ display: 'none' }}
+            />
+            <Button priority="tertiary" onClick={() => fileInputRef.current?.click()} disabled={uploadMutation.isPending}>
+              Parcourir...
+            </Button>
+            <span className={`fr-text--sm fr-mb-0 ${fileError ? 'fr-text--error' : 'fr-text-mention--grey'}`}>{getStatusText()}</span>
           </div>
         </div>
         <Controller
@@ -39,9 +111,11 @@ export const ResidencePictures = ({ accommodation }: { accommodation: TAccomodat
                           iconId="ri-delete-bin-line"
                           size="small"
                           title="Supprimer cette image"
+                          disabled={deleteMutation.isPending}
                           onClick={() => {
-                            const newImages = field.value?.filter((_, i) => i !== index) || []
-                            field.onChange(newImages)
+                            if (field.value) {
+                              handleDeleteImage(index, field.value)
+                            }
                           }}
                         />
                       </div>
@@ -55,7 +129,7 @@ export const ResidencePictures = ({ accommodation }: { accommodation: TAccomodat
         <hr className="fr-mt-2w fr-mb-0" />
         <span>Aperçu</span>
         <div className="fr-mt-2w">
-          <AccommodationImages images={watchedImages ?? []} title={name} withModal={false} />
+          <AccommodationImages images={watchedImages ?? []} withModal={false} />
         </div>
       </div>
     </div>
