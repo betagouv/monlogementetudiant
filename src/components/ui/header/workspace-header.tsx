@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation'
 import { FC } from 'react'
 import { auth } from '~/auth'
 import { BrandTop } from '~/components/ui/brand-top'
+import { UserConnectedDropdown } from '~/components/ui/header/user-connected-dropdown'
 import { WorkspaceHeaderNavigation } from '~/components/ui/header/workspace-navigation'
 import logo from '~/images/logo.svg'
 
@@ -31,9 +32,7 @@ export const WorkspaceHeaderComponent: FC = async () => {
           >
             {t('header.notifications')}
           </Button>,
-          <Button priority="tertiary" iconId="ri-user-line">
-            {session.user.name}
-          </Button>,
+          <UserConnectedDropdown user={session.user} />,
         ]}
         brandTop={<BrandTop />}
         serviceTagline={t('header.description')}

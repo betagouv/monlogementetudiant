@@ -19,6 +19,15 @@ interface TokenInterface {
 
 export const fiveteenMinutes = 15 * 60 * 1000
 
+function getTokenExpiration(token: string): number {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return payload.exp * 1000 // Convert to milliseconds
+  } catch {
+    return Date.now() + fiveteenMinutes // Fallback to 15 minutes
+  }
+}
+
 async function refreshAccessToken(token: TokenInterface): Promise<TokenInterface> {
   try {
     const response = await fetch(`${process.env.API_AUTH_BASE_URL}/admin-auth/refresh/`, {
@@ -30,8 +39,18 @@ async function refreshAccessToken(token: TokenInterface): Promise<TokenInterface
         refresh: token.refreshToken,
       }),
     })
+    console.log(
+      'body',
+      JSON.stringify({
+        refresh: token.refreshToken,
+      }),
+    )
 
+    console.log('response', response)
     const refreshedTokens = await response.json()
+
+    console.log('refreshedTokens', refreshedTokens)
+
     if (!response.ok) {
       throw refreshedTokens
     }
@@ -39,7 +58,7 @@ async function refreshAccessToken(token: TokenInterface): Promise<TokenInterface
     return {
       ...token,
       accessToken: refreshedTokens.access,
-      accessTokenExpires: Date.now() + fiveteenMinutes,
+      accessTokenExpires: getTokenExpiration(refreshedTokens.access),
       refreshToken: refreshedTokens.refresh,
     }
   } catch {
@@ -51,6 +70,19 @@ async function refreshAccessToken(token: TokenInterface): Promise<TokenInterface
 }
 
 export const authConfig = {
+  events: {
+    async signOut(authUser) {
+      if ('token' in authUser && authUser.token?.accessToken) {
+        await fetch(`${process.env.API_AUTH_BASE_URL}/admin-auth/logout/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${authUser.token.accessToken}`,
+          },
+        })
+      }
+    },
+  },
   providers: [
     Credentials({
       id: 'magic-link',
@@ -101,7 +133,7 @@ export const authConfig = {
       if (user) {
         token.accessToken = user.accessToken
         token.refreshToken = user.refreshToken
-        token.accessTokenExpires = Date.now() + fiveteenMinutes
+        token.accessTokenExpires = getTokenExpiration(user.accessToken)
         token.user = user.user
       }
 
@@ -109,7 +141,7 @@ export const authConfig = {
       if (Date.now() < (token.accessTokenExpires as number)) {
         return token
       }
-      // Access token has expired, try to update it
+
       return refreshAccessToken(token)
     },
     // biome-ignore lint/suspicious/noExplicitAny: TODO
@@ -122,6 +154,6 @@ export const authConfig = {
     },
   },
   pages: {
-    signIn: '/login',
+    signIn: '/se-connecter',
   },
 } satisfies NextAuthConfig

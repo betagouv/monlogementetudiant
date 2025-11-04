@@ -1,8 +1,10 @@
 'use client'
 
-import { TAccomodationDetails } from '~/schemas/accommodations/accommodations'
+import { useFormContext } from 'react-hook-form'
+import { TUpdateResidence } from '~/schemas/accommodations/update-residence'
 
-export const ResidenceSummary = ({ accommodation }: { accommodation: TAccomodationDetails }) => {
+export const ResidenceSummary = () => {
+  const { register } = useFormContext<TUpdateResidence>()
   return (
     <div className="fr-border-bottom">
       <div className="fr-p-6w">
@@ -12,10 +14,8 @@ export const ResidenceSummary = ({ accommodation }: { accommodation: TAccomodati
           className={'fr-input fr-mt-2w'}
           aria-describedby={'Description de la résidence'}
           id="accommodation-description"
-          // onBlur={onBlur}
-          onChange={console.log}
-          value={accommodation.description ?? ''}
           rows={5}
+          {...register('description')}
         />
       </div>
     </div>

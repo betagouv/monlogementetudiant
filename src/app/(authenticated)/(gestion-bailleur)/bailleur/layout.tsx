@@ -23,7 +23,7 @@ export default async function WorkspaceLayout({
   children: React.ReactNode
 }>) {
   const session = await auth()
-  if (!session || session.user.role === 'user') {
+  if (!session || session.user.role === 'user' || !!session.error) {
     return notFound()
   }
 

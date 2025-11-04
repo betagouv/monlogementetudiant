@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { auth } from '~/auth'
+import { ZUpdateResidence } from '~/schemas/accommodations/update-residence'
 import { ZUpdateResidenceList } from '~/schemas/accommodations/update-residence-list'
 
 export async function PATCH(request: Request, { params }: { params: { slug: string } }) {
@@ -9,9 +10,16 @@ export async function PATCH(request: Request, { params }: { params: { slug: stri
   }
 
   try {
+    const url = new URL(request.url)
+    const updateType = url.searchParams.get('type')
     const body = await request.json()
 
-    const validatedData = ZUpdateResidenceList.parse(body)
+    let validatedData
+    if (updateType === 'details') {
+      validatedData = ZUpdateResidence.parse(body)
+    } else {
+      validatedData = ZUpdateResidenceList.parse(body)
+    }
 
     const response = await fetch(`${process.env.API_URL}/accommodations/my/${params.slug}/`, {
       method: 'PATCH',
