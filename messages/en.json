@@ -24,7 +24,11 @@
   "metadata": {
     "title": "Mon logement étudiant",
     "description": "Mon logement étudiant - Votre guide à l'accès au logement étudiant",
-    "homeLinkTitle": "Accueil - Mon logement étudiant"
+    "homeLinkTitle": "Accueil - Mon logement étudiant",
+    "workspace": {
+      "description": "Votre espace bailleur",
+      "title": "Espace bailleur - Gestion de vos résidences"
+    }
   },
   "header": {
     "title": "Mon logement étudiant",
@@ -36,7 +40,8 @@
       "title": "Lancement de la plateforme :",
       "description": "site en phase d'expérimentation, n'hésitez pas à <link>donner votre avis</link> pour nous aider à améliorer le service.",
       "close": "Fermer"
-    }
+    },
+    "notifications": "Notifications"
   },
   "footer": {
     "linkList": {
@@ -637,7 +642,7 @@
         "title": "Espace bailleur de {name} - ARPEJ"
       },
       "welcome": {
-        "title": "Ravi de vous revoir Michel 👋"
+        "title": "Ravi de vous revoir {firstname} 👋"
       },
       "testimonial": {
         "quote": "« Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna 🙂 »",
