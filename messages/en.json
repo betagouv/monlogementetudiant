@@ -515,7 +515,8 @@
       "title": "Première visite ?",
       "description": "Créez votre compte dès maintenant pour accèder votre espace Mon Logement Etudiant",
       "cta": "Créer un compte"
-    }
+    },
+    "success": "Si un compte est associé à cette adresse e-mail, vous recevrez un lien sur cette adresse."
   },
   "forgotPassword": {
     "title": "Réinitialiser votre mot de passe",
@@ -639,7 +640,7 @@
   "bailleur": {
     "dashboard": {
       "breadcrumb": {
-        "title": "Espace bailleur de {name} - ARPEJ"
+        "title": "Espace bailleur de {name}"
       },
       "welcome": {
         "title": "Ravi de vous revoir {firstname} 👋"

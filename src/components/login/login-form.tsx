@@ -38,7 +38,7 @@ export const LoginForm: FC = () => {
       if (response.ok) {
         createToast({
           priority: 'success',
-          message: 'Un email contenant un lien magique vient de vous être envoyé',
+          message: t('success'),
         })
       } else {
         createToast({

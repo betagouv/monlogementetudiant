@@ -15,6 +15,7 @@ import { useUpdateResidenceDetails } from '~/hooks/use-update-residence-details'
 import { TAccomodationMy } from '~/schemas/accommodations/accommodations'
 import { TUpdateResidence, ZUpdateResidence } from '~/schemas/accommodations/update-residence'
 import { formatRelativeTime } from '~/utils/formatRelativeTime'
+import { sanitizeHTML } from '~/utils/sanitize-html'
 import styles from './update-residence-form.module.css'
 
 export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomodationMy }) => {
@@ -32,14 +33,14 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
       external_url: accommodation.properties.external_url || '',
       accept_waiting_list: accommodation.properties.accept_waiting_list || false,
       nb_t1: accommodation.properties.nb_t1 || null,
-      nb_t1_bis: accommodation.properties.nb_t1_bis || null,
-      nb_t2: accommodation.properties.nb_t2 || null,
-      nb_t3: accommodation.properties.nb_t3 || null,
-      nb_t4_more: accommodation.properties.nb_t4_more || null,
       nb_t1_available: accommodation.properties.nb_t1_available || null,
+      nb_t1_bis: accommodation.properties.nb_t1_bis || null,
       nb_t1_bis_available: accommodation.properties.nb_t1_bis_available || null,
+      nb_t2: accommodation.properties.nb_t2 || null,
       nb_t2_available: accommodation.properties.nb_t2_available || null,
+      nb_t3: accommodation.properties.nb_t3 || null,
       nb_t3_available: accommodation.properties.nb_t3_available || null,
+      nb_t4_more: accommodation.properties.nb_t4_more || null,
       nb_t4_more_available: accommodation.properties.nb_t4_more_available || null,
       nb_total_apartments: accommodation.properties.nb_total_apartments || null,
       nb_accessible_apartments: accommodation.properties.nb_accessible_apartments || null,
@@ -71,7 +72,11 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
   })
 
   const onSubmit = async (data: TUpdateResidence) => {
-    await updateMutation.mutateAsync(data)
+    const sanitizedData = {
+      ...data,
+      description: data.description ? sanitizeHTML(data.description) : data.description,
+    }
+    await updateMutation.mutateAsync(sanitizedData)
   }
 
   return (

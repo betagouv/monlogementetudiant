@@ -9,7 +9,10 @@ import { TUpdateResidence } from '~/schemas/accommodations/update-residence'
 import { sPluriel } from '~/utils/sPluriel'
 
 export const ResidenceAccommodationList = ({ accommodation }: { accommodation: TAccomodationMy }) => {
-  const { register } = useFormContext<TUpdateResidence>()
+  const {
+    register,
+    formState: { errors },
+  } = useFormContext<TUpdateResidence>()
 
   const numberTransform = {
     setValueAs: (value: string) => {
@@ -150,6 +153,8 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
                 <div className="fr-col-6">
                   <Input
                     label="Nombre total de logements"
+                    state={errors[typology.totalField] ? 'error' : 'default'}
+                    stateRelatedMessage={errors[typology.totalField]?.message}
                     nativeInputProps={{
                       type: 'number',
                       placeholder: '0',
@@ -160,6 +165,8 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
                 <div className="fr-col-6">
                   <Input
                     label="Logements disponibles"
+                    state={errors[typology.availableField] ? 'error' : 'default'}
+                    stateRelatedMessage={errors[typology.availableField]?.message}
                     nativeInputProps={{
                       type: 'number',
                       placeholder: '0',
