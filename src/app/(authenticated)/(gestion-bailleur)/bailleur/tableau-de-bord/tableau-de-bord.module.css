@@ -1,0 +1,99 @@
+.testimonialContainer {
+  background: white;
+}
+
+.testimonialContent {
+  border-left: 4px solid #3b7ff6;
+  min-height: 398px;
+}
+
+.testimonialDivider {
+  border-top: 1px solid #dddddd;
+}
+
+.priorityActionsContainer {
+  background: white;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.actionsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.actionCard {
+  border: 1px solid #dddddd;
+  padding: 8px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.actionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.actionFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.customBadge {
+  background-color: #fee7fc;
+  color: #6e445a;
+}
+
+.helpSectionItem {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.ctaBorder {
+  border-bottom: 1px solid #dddddd;
+
+  @media (min-width: 768px) {
+    border-right: 1px solid #dddddd;
+    border-bottom: none;
+  }
+}
+
+.statisticsContainer {
+  background: white;
+  margin-top: 2rem;
+  padding-bottom: 2rem;
+  padding: 2rem;
+}
+
+.statisticsGrid {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (min-width: 768px) {
+  .statisticsGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.statisticsChart {
+  height: 200px;
+}
+
+.avatarYasmine {
+  position: absolute;
+  left: 35px;
+  @media (min-width: 768px) {
+    left: -45px;
+  }
+}

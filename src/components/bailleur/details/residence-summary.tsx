@@ -7,7 +7,7 @@ export const ResidenceSummary = () => {
   const { register } = useFormContext<TUpdateResidence>()
   return (
     <div className="fr-border-bottom">
-      <div className="fr-p-6w">
+      <div className="fr-p-2w fr-p-md-6w">
         <h3>En quelques mots</h3>
         <span>Description</span>
         <textarea

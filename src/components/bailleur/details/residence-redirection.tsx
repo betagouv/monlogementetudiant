@@ -10,7 +10,7 @@ export const ResidenceRedirection = () => {
   } = useFormContext<TUpdateResidence>()
   return (
     <div className="fr-border-top">
-      <div className="fr-p-6w">
+      <div className="fr-p-2w fr-p-md-6w">
         <span className="fr-pb-2w">
           URL de redirection <span className="fr-text-default--error">*</span>
         </span>

@@ -2,11 +2,18 @@
 
 import { Cell, Label, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
 
-export const ResidenceChart = () => {
+interface ResidenceChartProps {
+  available: number
+  total: number
+}
+
+export const ResidenceChart = ({ available, total }: ResidenceChartProps) => {
+  const occupied = total - available
+  const availablePercentage = total > 0 ? 100 - Math.round((available / total) * 100) : 0
+
   const data = [
-    { name: 'Occupé', value: 60, color: '#4B9F6C' },
-    { name: 'Disponible', value: 25, color: '#F3EDE5' },
-    { name: 'Fin de bail', value: 15, color: '#FA7A35' },
+    { name: 'Occupé', value: occupied, color: '#FA7A35' },
+    { name: 'Disponible', value: available, color: '#4B9F6C' },
   ]
 
   return (
@@ -20,9 +27,7 @@ export const ResidenceChart = () => {
               ))}
             </Pie>
             <Tooltip />
-            <Label value="60%" position="center" fontSize={16}>
-              50 %
-            </Label>
+            <Label value={`${availablePercentage}%`} position="center" className="recharts-text recharts-label" fontSize={16} fill="#000" />
           </PieChart>
         </ResponsiveContainer>
       </div>

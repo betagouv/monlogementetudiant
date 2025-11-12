@@ -44,7 +44,7 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
     ) : null
   return (
     <div className="fr-border-bottom">
-      <div className="fr-p-6w">
+      <div className="fr-p-2w fr-p-md-6w">
         <div className="fr-flex fr-justify-content-space-between fr-align-items-center fr-mb-2w">
           <h3 className="fr-mb-0">{accommodation.properties.nb_total_apartments} logements</h3>
           {badgeAvailability}

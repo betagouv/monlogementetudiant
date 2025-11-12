@@ -54,12 +54,12 @@ export const ResidenceList: FC<ResidenceListProps> = ({ initialData }) => {
         return (
           <div
             className={clsx(
-              'fr-border-top fr-border-left fr-border-right fr-flex',
+              'fr-flex fr-direction-md-row fr-direction-column fr-border-top fr-border-left fr-border-right',
               index === accommodationsList.length - 1 && 'fr-border-bottom',
             )}
             key={accommodation.id}
           >
-            <div className="fr-p-4w">
+            <div className="fr-p-md-4w">
               <AccomodationCard key={index} accomodation={accommodation} href={`/bailleur/residences/${accommodation.properties.slug}`} />
             </div>
             <div className="fr-width-full fr-p-4w fr-border-left" style={{ background: 'white' }}>

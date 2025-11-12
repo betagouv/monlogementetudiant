@@ -75,7 +75,7 @@ export const ResidencePictures = ({ accommodation }: { accommodation: TAccomodat
   }
   return (
     <div className="fr-border-bottom">
-      <div className="fr-p-6w">
+      <div className="fr-p-2w fr-p-md-6w">
         <h3>Photos de la résidence</h3>
         <div className="fr-flex fr-direction-column fr-flex-gap-4v">
           Ajouter une photo

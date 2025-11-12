@@ -82,7 +82,7 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
   return (
     <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        <div className="fr-flex fr-justify-content-space-between fr-align-items-center">
+        <div className="fr-flex fr-direction-md-row fr-direction-column fr-justify-content-space-between fr-align-items-md-center fr-flex-gap-4v">
           <h1 className="fr-mb-0">{accommodation.properties.name}</h1>
           <div className="fr-flex fr-flex-gap-4v">
             <Button type="submit" iconId="ri-save-line" disabled={updateMutation.isPending}>
@@ -93,8 +93,8 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
             </Button>
           </div>
         </div>
-        <div className="fr-flex fr-justify-content-space-between fr-py-4w fr-flex-gap-4v">
-          <div className={clsx(styles.container, 'fr-col-8')}>
+        <div className="fr-flex fr-direction-md-row fr-direction-column-reverse fr-justify-content-space-between fr-py-4w fr-flex-gap-4v">
+          <div className={clsx(styles.container, 'fr-col-md-8')}>
             <ResidenceDetails />
             <ResidencePictures accommodation={accommodation} />
             <ResidenceAccommodationList accommodation={accommodation} />

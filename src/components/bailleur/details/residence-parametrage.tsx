@@ -13,7 +13,7 @@ export const ResidenceDetails = () => {
   } = useFormContext<TUpdateResidence>()
   return (
     <div className="fr-border-bottom">
-      <div className="fr-px-6w fr-py-6w">
+      <div className="fr-p-2w fr-p-md-6w">
         <h3>Paramétrage de la résidence</h3>
         <Input
           label={

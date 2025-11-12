@@ -9,7 +9,7 @@ export const ResidenceEquipments = () => {
   const { control } = useFormContext<TUpdateResidence>()
   return (
     <div className="fr-border-bottom">
-      <div className="fr-p-6w">
+      <div className="fr-p-2w fr-p-md-6w">
         <h3>Équipements</h3>
         {EQUIPMENTS.map((equipment) => {
           const fieldName = equipment.key as keyof TUpdateResidence

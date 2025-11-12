@@ -1,5 +1,4 @@
 import Breadcrumb from '@codegouvfr/react-dsfr/Breadcrumb'
-import Button from '@codegouvfr/react-dsfr/Button'
 import Companie from '@codegouvfr/react-dsfr/picto/Companie'
 import { ResidenceFilters } from '~/components/bailleur/residence-filters'
 import { ResidenceList } from '~/components/bailleur/residence-list'
@@ -33,7 +32,6 @@ export default async function ResidencesPage({ searchParams }: ResidencesPagePro
           <Companie width={72} height={72} />
           <h1 className="fr-mb-0">Gestion des résidences</h1>
         </div>
-        <Button iconId="ri-add-line">Nouvelle résidence</Button>
       </div>
       <hr className="fr-mt-2w fr-mb-0" />
       <div className="fr-flex fr-justify-content-space-between fr-align-items-center fr-mb-4w">
