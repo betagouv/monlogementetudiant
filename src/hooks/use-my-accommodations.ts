@@ -37,14 +37,14 @@ export const useMyAccommodations = ({ initialData, debounceTime = 300 }: UseMyAc
   const { page, disponible, recherche } = queryStates
   const [debouncedRecherche] = useDebounce(recherche, debounceTime)
 
-  // Enable query if we have page, disponible filter, or search with min 3 chars, or if search is cleared
+  // Enable query when filters are active or search is valid
   const enabled =
-    !!page || disponible !== null || (debouncedRecherche !== null && (debouncedRecherche.length === 0 || debouncedRecherche.length >= 3))
+    page !== null || disponible !== null || debouncedRecherche === null || debouncedRecherche.length === 0 || debouncedRecherche.length >= 3
 
   return useQuery<TGetAccomodationsResponse>({
     enabled,
     initialData: enabled ? undefined : initialData,
     queryFn: () => fetchMyAccommodations(page, disponible, debouncedRecherche),
-    queryKey: ['my-accommodations', { page, disponible, recherche: debouncedRecherche }],
+    queryKey: ['my-accommodations', page, disponible, debouncedRecherche],
   })
 }

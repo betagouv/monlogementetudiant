@@ -10,7 +10,8 @@ import { FormProvider, useForm } from 'react-hook-form'
 import { createToast } from '~/components/ui/createToast'
 import { useUpdateAccommodation } from '~/hooks/use-update-accommodation'
 import { TAccomodation } from '~/schemas/accommodations/accommodations'
-import { TUpdateResidenceList, ZUpdateResidenceList } from '~/schemas/accommodations/update-residence-list'
+import { createUpdateResidenceSchema } from '~/schemas/accommodations/update-residence'
+import { TUpdateResidenceList } from '~/schemas/accommodations/update-residence-list'
 import styles from './update-residence-list.module.css'
 
 interface UpdateResidenceListProps {
@@ -29,7 +30,7 @@ export const UpdateResidenceList: FC<UpdateResidenceListProps> = ({ accommodatio
       nb_t3_available: accommodation.properties.nb_t3_available ?? 0,
       nb_t4_more_available: accommodation.properties.nb_t4_more_available ?? 0,
     },
-    resolver: zodResolver(ZUpdateResidenceList),
+    resolver: zodResolver(createUpdateResidenceSchema(accommodation.properties)),
   })
 
   const { formState, handleSubmit, register } = form
