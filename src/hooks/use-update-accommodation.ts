@@ -23,7 +23,9 @@ export const useUpdateAccommodation = (slug: string) => {
       return response.json()
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-accommodations'] })
+      queryClient.invalidateQueries({
+        predicate: (query) => query.queryKey[0] === 'my-accommodations',
+      })
     },
   })
 }
