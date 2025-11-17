@@ -153,12 +153,11 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
                 <div className="fr-col-6">
                   <Input
                     label="Nombre total de logements"
-                    state={errors[typology.totalField] ? 'error' : 'default'}
-                    stateRelatedMessage={errors[typology.totalField]?.message}
+                    disabled
                     nativeInputProps={{
                       type: 'number',
-                      placeholder: '0',
-                      ...register(typology.totalField, numberTransform),
+                      disabled: true,
+                      value: typology.total ?? 0,
                     }}
                   />
                 </div>

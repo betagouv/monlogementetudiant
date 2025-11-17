@@ -1,5 +1,4 @@
 import { fr } from '@codegouvfr/react-dsfr'
-import { Button } from '@codegouvfr/react-dsfr/Button'
 import { Header } from '@codegouvfr/react-dsfr/Header'
 import { getTranslations } from 'next-intl/server'
 import { notFound } from 'next/navigation'
@@ -24,14 +23,14 @@ export const WorkspaceHeaderComponent: FC = async () => {
           title: t('metadata.workspace.title'),
         }}
         quickAccessItems={[
-          <Button
-            priority="tertiary no outline"
-            key="alerts-cta"
-            iconId="ri-notification-3-line"
-            linkProps={{ href: '/alerte-logement', target: '_self' }}
-          >
-            {t('header.notifications')}
-          </Button>,
+          // <Button
+          //   priority="tertiary no outline"
+          //   key="alerts-cta"
+          //   iconId="ri-notification-3-line"
+          //   linkProps={{ href: '/alerte-logement', target: '_self' }}
+          // >
+          //   {t('header.notifications')}
+          // </Button>,
           <UserConnectedDropdown user={session.user} />,
         ]}
         brandTop={<BrandTop />}

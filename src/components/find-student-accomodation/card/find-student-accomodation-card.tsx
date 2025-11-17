@@ -51,11 +51,11 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({ className, accomod
   const badgeAvailability =
     nbAvailable !== null && nbAvailable !== undefined ? (
       nbAvailable === 0 ? (
-        <Badge severity="error" noIcon>
+        <Badge severity="error" noIcon as="span">
           <span className="fr-text--uppercase fr-mb-0">{t('noAvailability')}</span>
         </Badge>
       ) : (
-        <Badge severity="success" noIcon>
+        <Badge severity="success" noIcon as="span">
           {nbAvailable}&nbsp;
           <span className="fr-text--uppercase fr-mb-0">
             {t('availability')}
@@ -66,14 +66,14 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({ className, accomod
     ) : null
 
   const waitingListBadge = accept_waiting_list && (
-    <Badge className={classes.otherBadge} severity="warning" noIcon>
+    <Badge className={classes.otherBadge} severity="warning" noIcon as="span">
       <span className="fr-text--uppercase fr-mb-0">{t('waitingList')}</span>
     </Badge>
   )
 
   const badgeProps = price_min
     ? {
-        badge: <Badge severity="new" noIcon>{`${t('priceFrom')} ${price_min}€`}</Badge>,
+        badge: <Badge severity="new" noIcon as="span">{`${t('priceFrom')} ${price_min}€`}</Badge>,
       }
     : {}
 
