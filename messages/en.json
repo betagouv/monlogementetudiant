@@ -604,9 +604,14 @@
       "addIncomeTitle": "Ajouter un revenu",
       "removeIncomeTitle": "Supprimer un revenu",
       "types": {
-        "salary": "Job étudiant",
-        "housingAssistance": "Aides aux logement",
-        "other": "Autres revenus"
+        "familyAid": "Family financial support",
+        "scholarships": "Scholarships (CROUS or Regional)",
+        "cafHousingAid": "CAF housing assistance",
+        "otherPublicAid": "Other public assistance",
+        "salary": "Student job",
+        "studentLoan": "Student loan (e.g.: state-guaranteed student loan)",
+        "other": "Other income",
+        "savings": "Money set aside"
       }
     },
     "expenses": {
@@ -615,15 +620,20 @@
       "addExpenseTitle": "Ajouter une dépense",
       "removeExpenseTitle": "Supprimer une dépense",
       "types": {
-        "housing": "Loyer",
-        "food": "Nourriture",
-        "enjoyment": "Loisirs",
-        "transport": "Transport",
-        "communication": "Communication",
-        "education": "Étude",
-        "healthcare": "Santé",
-        "childcare": "Garde d'enfant",
-        "other": "Autres"
+        "housing": "Rent",
+        "housingCharges": "Housing expenses (Insurance, utilities, water, electricity…)",
+        "food": "Food (collective catering and grocery shopping)",
+        "dailyLife": "Daily life (clothing, hygiene products…)",
+        "communication": "Phone and internet",
+        "transport": "Transportation (daily and to go home)",
+        "registrationFees": "Registration fees for my educational institution",
+        "cvec": "CVEC",
+        "studyMaterials": "Study materials (computer, printing, books, paper, small equipment)",
+        "mutuelle": "Health insurance",
+        "otherHealthcare": "Other healthcare costs",
+        "enjoyment": "Leisure (sports, cultural activities, outings with friends)",
+        "childcare": "Childcare",
+        "other": "Other"
       }
     },
     "summary": {
