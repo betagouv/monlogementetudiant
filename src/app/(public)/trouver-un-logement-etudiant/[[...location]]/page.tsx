@@ -58,6 +58,7 @@ export default async function FindStudentAccommodationPage({
     redirect(`/trouver-un-logement-etudiant`)
   }
 
+  console.log(territory)
   const territoryBbox = territory?.bbox
     ? `${territory.bbox.xmin},${territory.bbox.ymin},${territory.bbox.xmax},${territory.bbox.ymax}`
     : undefined

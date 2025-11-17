@@ -8,13 +8,17 @@ import styles from './budget-summary.module.css'
 
 const expensesColors = {
   housing: '#ADADF9',
-  dailyLife: '#FFB6C1',
-  transport: '#B8FEC9',
+  housingCharges: '#9A9AE8',
   food: '#FCC63A',
-  enjoyment: '#FB9175',
+  dailyLife: '#FFB6C1',
   communication: '#87CEEB',
-  education: '#DDA0DD',
-  healthcare: '#FABFF5',
+  transport: '#B8FEC9',
+  registrationFees: '#DDA0DD',
+  cvec: '#C8A2C8',
+  studyMaterials: '#E6D4FF',
+  mutuelle: '#FABFF5',
+  otherHealthcare: '#F5A3F0',
+  enjoyment: '#FB9175',
   childcare: '#F0E68C',
   other: '#D3D3D3',
 }
@@ -42,7 +46,7 @@ export function ExpensesPieChart() {
       <div className="fr-py-2w fr-px-4w">
         <span className="fr-text-inverted--grey fr-h6 fr-mb-0">{t('summary.expensesBreakdown')}</span>
       </div>
-      <div className="fr-flex fr-direction-column fr-direction-md-row fr-justify-content-center fr-align-items-center">
+      <div className="fr-flex fr-direction-column fr-justify-content-center fr-align-items-center">
         <div style={{ height: '200px', width: '100%' }}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>

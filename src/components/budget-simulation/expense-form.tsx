@@ -18,12 +18,17 @@ export function ExpenseForm() {
 
   const expenseTypes = [
     'housing',
+    'housingCharges',
     'food',
-    'enjoyment',
-    'transport',
+    'dailyLife',
     'communication',
-    'education',
-    'healthcare',
+    'transport',
+    'registrationFees',
+    'cvec',
+    'studyMaterials',
+    'mutuelle',
+    'otherHealthcare',
+    'enjoyment',
     'childcare',
     'other',
   ] as ExpenseType[]

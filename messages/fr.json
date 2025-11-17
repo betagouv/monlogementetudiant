@@ -604,9 +604,14 @@
       "addIncomeTitle": "Ajouter un revenu",
       "removeIncomeTitle": "Supprimer un revenu",
       "types": {
+        "familyAid": "Aides de ma famille",
+        "scholarships": "Bourses (du Crous ou de la Région)",
+        "cafHousingAid": "Aides au logement de la CAF",
+        "otherPublicAid": "Autres aides publiques",
         "salary": "Job étudiant",
-        "housingAssistance": "Aides aux logement",
-        "other": "Autres revenus"
+        "studentLoan": "Prêt étudiant (ex : prêt étudiant garanti par l'Etat)",
+        "other": "Autres revenus",
+        "savings": "Argent mis de côté"
       }
     },
     "expenses": {
@@ -616,14 +621,19 @@
       "removeExpenseTitle": "Supprimer une dépense",
       "types": {
         "housing": "Loyer",
-        "food": "Nourriture",
-        "enjoyment": "Loisirs",
-        "transport": "Transport",
-        "communication": "Communication",
-        "education": "Étude",
-        "healthcare": "Santé",
+        "housingCharges": "Charges d'habitation (Assurance, charges, eau, électricité…)",
+        "food": "Alimentation (restauration collective et courses d'alimentation)",
+        "dailyLife": "Vie quotidienne (habillement, produit d'hygiène…)",
+        "communication": "Téléphone et internet",
+        "transport": "Transports (quotidiens et pour rentrer chez moi)",
+        "registrationFees": "Frais d'inscription dans mon établissement d'enseignement",
+        "cvec": "CVEC",
+        "studyMaterials": "Matériel pour les études (ordinateur, impressions, livres, papier, petit matériel)",
+        "mutuelle": "Mutuelle",
+        "otherHealthcare": "Autres frais de santé",
+        "enjoyment": "Loisirs (activités sportives, culturelles, sorties entre amis)",
         "childcare": "Garde d'enfant",
-        "other": "Autres"
+        "other": "Autre"
       }
     },
     "summary": {
