@@ -3,6 +3,7 @@
 import Button from '@codegouvfr/react-dsfr/Button'
 import Input from '@codegouvfr/react-dsfr/Input'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useQueryClient } from '@tanstack/react-query'
 import clsx from 'clsx'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
@@ -19,23 +20,16 @@ interface UpdateResidenceListProps {
 
 export const UpdateResidenceList: FC<UpdateResidenceListProps> = ({ accommodation }) => {
   const router = useRouter()
-  const { mutate: updateAccommodation, isPending } = useUpdateAccommodation(accommodation.properties.slug)
+  const queryClient = useQueryClient()
 
+  const { mutate: updateAccommodation, isPending } = useUpdateAccommodation(accommodation.properties.slug)
   const form = useForm<TUpdateResidenceList>({
     defaultValues: {
-      nb_t1: accommodation.properties.nb_t1 ?? 0,
-      nb_t1_bis: accommodation.properties.nb_t1_bis ?? 0,
-      nb_t2: accommodation.properties.nb_t2 ?? 0,
-      nb_t3: accommodation.properties.nb_t3 ?? 0,
-      nb_t4_more: accommodation.properties.nb_t4_more ?? 0,
       nb_t1_available: accommodation.properties.nb_t1_available ?? 0,
       nb_t1_bis_available: accommodation.properties.nb_t1_bis_available ?? 0,
       nb_t2_available: accommodation.properties.nb_t2_available ?? 0,
       nb_t3_available: accommodation.properties.nb_t3_available ?? 0,
       nb_t4_more_available: accommodation.properties.nb_t4_more_available ?? 0,
-      nb_total_apartments: accommodation.properties.nb_total_apartments ?? 0,
-      nb_accessible_apartments: accommodation.properties.nb_accessible_apartments ?? 0,
-      nb_coliving_apartments: accommodation.properties.nb_coliving_apartments ?? 0,
     },
     resolver: zodResolver(ZUpdateResidenceList),
   })
@@ -49,6 +43,7 @@ export const UpdateResidenceList: FC<UpdateResidenceListProps> = ({ accommodatio
           priority: 'success',
           message: 'Résidence mise à jour avec succès',
         })
+        queryClient.invalidateQueries({ queryKey: ['my-accommodations'] })
         router.refresh()
       },
       onError: () => {
