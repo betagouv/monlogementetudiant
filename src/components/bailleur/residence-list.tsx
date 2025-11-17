@@ -3,6 +3,7 @@
 import Badge from '@codegouvfr/react-dsfr/Badge'
 import clsx from 'clsx'
 import { FC } from 'react'
+import { tss } from 'tss-react'
 import { UpdateResidenceList } from '~/components/bailleur/update-residence-list'
 import { AccomodationCard } from '~/components/find-student-accomodation/card/find-student-accomodation-card'
 import { useMyAccommodations } from '~/hooks/use-my-accommodations'
@@ -14,6 +15,7 @@ interface ResidenceListProps {
 }
 
 export const ResidenceList: FC<ResidenceListProps> = ({ initialData }) => {
+  const { classes } = useStyles()
   const { data: accommodations } = useMyAccommodations({ initialData })
 
   const accommodationsList = accommodations?.results.features || []
@@ -60,7 +62,12 @@ export const ResidenceList: FC<ResidenceListProps> = ({ initialData }) => {
             key={accommodation.id}
           >
             <div className="fr-p-md-4w">
-              <AccomodationCard key={index} accomodation={accommodation} href={`/bailleur/residences/${accommodation.properties.slug}`} />
+              <AccomodationCard
+                key={index}
+                accomodation={accommodation}
+                href={`/bailleur/residences/${accommodation.properties.slug}`}
+                className={classes.container}
+              />
             </div>
             <div className="fr-width-full fr-p-4w fr-border-left" style={{ background: 'white' }}>
               {badgeAvailability}
@@ -72,3 +79,9 @@ export const ResidenceList: FC<ResidenceListProps> = ({ initialData }) => {
     </>
   )
 }
+
+export const useStyles = tss.create({
+  container: {
+    minWidth: '384px',
+  },
+})

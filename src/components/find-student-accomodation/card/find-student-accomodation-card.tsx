@@ -17,9 +17,10 @@ import { sPluriel } from '~/utils/sPluriel'
 type AccomodationCardProps = {
   accomodation: TAccomodationCard
   href?: string
+  className?: string
 }
 
-export const AccomodationCard: FC<AccomodationCardProps> = ({ accomodation, href }) => {
+export const AccomodationCard: FC<AccomodationCardProps> = ({ className, accomodation, href }) => {
   const [selectedAccommodation] = useQueryState('id', parseAsString)
   const t = useTranslations('findAccomodation.card')
   const { classes } = useStyles()
@@ -82,7 +83,7 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({ accomodation, href
       {...badgeProps}
       {...imageProps}
       classes={{
-        root: clsx(classes.container, selectedAccommodation === accomodation.id.toString() && classes.active),
+        root: clsx(className, selectedAccommodation === accomodation.id.toString() && classes.active),
         header: classes.header,
       }}
       id={`accomodation-${accomodation.id}`}
@@ -131,9 +132,6 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({ accomodation, href
 export const useStyles = tss.create({
   header: {
     overflow: 'hidden',
-  },
-  container: {
-    minWidth: '384px',
   },
   active: {
     border: '2px solid #3B7FF6',
