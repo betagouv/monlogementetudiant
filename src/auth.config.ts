@@ -131,9 +131,16 @@ export const authConfig = {
       // Return previous token if the access token has not expired yet
       if (Date.now() < (token.accessTokenExpires as number)) {
         return token
+      } else {
+        const tokens = await refreshAccessToken(token)
+        if (tokens) {
+          token.accessToken = tokens.accessToken
+          token.refreshToken = tokens.refreshToken
+          token.accessTokenExpires = tokens.accessTokenExpires
+          token.error = tokens.error
+        }
       }
-
-      return refreshAccessToken(token)
+      return token
     },
     // biome-ignore lint/suspicious/noExplicitAny: TODO
     async session({ session, token }: any) {
