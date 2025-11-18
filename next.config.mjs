@@ -48,14 +48,8 @@ export default withSentryConfig(withNextIntl(nextConfig), {
   // This can increase your server load as well as your hosting bill.
   // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
   // side errors will fail.
-  tunnelRoute: '/monitoring',
+  // tunnelRoute: '/monitoring',
 
   // Automatically tree-shake Sentry logger statements to reduce bundle size
   disableLogger: true,
-
-  // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
-  // See the following for more information:
-  // https://docs.sentry.io/product/crons/
-  // https://vercel.com/docs/cron-jobs
-  automaticVercelMonitors: false,
 })
