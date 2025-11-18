@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages, getTranslations } from 'next-intl/server'
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
@@ -20,6 +21,9 @@ export const generateMetadata = async () => {
     robots: {
       index: process.env.NEXT_PUBLIC_APP_ENV === 'production',
       follow: process.env.NEXT_PUBLIC_APP_ENV === 'production',
+    },
+    other: {
+      ...Sentry.getTraceData(),
     },
   }
 }
