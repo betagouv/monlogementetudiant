@@ -7,6 +7,7 @@ import { FindStudentAccomodationHeader } from '~/components/find-student-accomod
 import FindStudentAccommodationQA from '~/components/find-student-accomodation/qa/find-student-accommodation-qa'
 import { FindStudentAccomodationResults } from '~/components/find-student-accomodation/results/find-student-accomodation-results'
 import { FindStudentAccomodationSortView } from '~/components/find-student-accomodation/sort-view/find-student-accomodation-sort-view'
+import { expandBbox } from '~/components/map/map-utils'
 import { TTerritories } from '~/schemas/territories'
 import { getAccommodations } from '~/server-only/get-accommodations'
 import { getTerritories } from '~/server-only/get-territories'
@@ -58,11 +59,13 @@ export default async function FindStudentAccommodationPage({
     redirect(`/trouver-un-logement-etudiant`)
   }
 
-  console.log(territory)
   const territoryBbox = territory?.bbox
-    ? `${territory.bbox.xmin},${territory.bbox.ymin},${territory.bbox.xmax},${territory.bbox.ymax}`
+    ? expandBbox(territory.bbox.xmin, territory.bbox.ymin, territory.bbox.xmax, territory.bbox.ymax)
     : undefined
-  const accommodations = await getAccommodations({ ...searchParams, bbox: territoryBbox })
+  const accommodations = await getAccommodations({
+    ...searchParams,
+    ...(territoryBbox && { bbox: `${territoryBbox?.west},${territoryBbox?.south},${territoryBbox?.east},${territoryBbox?.north}` }),
+  })
   // const qa = await getTerritoryQuestionsAnswers({
   //   content_type: getQACategoryKey(routeCategoryKey as 'ville' | 'academie' | 'departement'),
   //   object_id: territory?.id,
