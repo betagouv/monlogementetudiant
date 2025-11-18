@@ -25,6 +25,7 @@ export const ZAccomodation = z.object({
   geometry: ZGeometry,
   id: z.number(),
   properties: z.object({
+    available: z.boolean().nullable(),
     address: z.string().max(255),
     city: z.string().max(150),
     images_urls: z.array(z.string()).nullable(),

@@ -604,14 +604,14 @@
       "addIncomeTitle": "Ajouter un revenu",
       "removeIncomeTitle": "Supprimer un revenu",
       "types": {
-        "familyAid": "Family financial support",
-        "scholarships": "Scholarships (CROUS or Regional)",
-        "cafHousingAid": "CAF housing assistance",
-        "otherPublicAid": "Other public assistance",
-        "salary": "Student job",
-        "studentLoan": "Student loan (e.g.: state-guaranteed student loan)",
-        "other": "Other income",
-        "savings": "Money set aside"
+        "familyAid": "Aides de ma famille",
+        "scholarships": "Bourses (du Crous ou de la Région)",
+        "cafHousingAid": "Aides au logement de la CAF",
+        "otherPublicAid": "Autres aides publiques",
+        "salary": "Job étudiant",
+        "studentLoan": "Prêt étudiant (ex : prêt étudiant garanti par l'Etat)",
+        "other": "Autres revenus",
+        "savings": "Argent mis de côté"
       }
     },
     "expenses": {
@@ -620,20 +620,20 @@
       "addExpenseTitle": "Ajouter une dépense",
       "removeExpenseTitle": "Supprimer une dépense",
       "types": {
-        "housing": "Rent",
-        "housingCharges": "Housing expenses (Insurance, utilities, water, electricity…)",
-        "food": "Food (collective catering and grocery shopping)",
-        "dailyLife": "Daily life (clothing, hygiene products…)",
-        "communication": "Phone and internet",
-        "transport": "Transportation (daily and to go home)",
-        "registrationFees": "Registration fees for my educational institution",
+        "housing": "Loyer",
+        "housingCharges": "Charges d'habitation (Assurance, charges, eau, électricité…)",
+        "food": "Alimentation (restauration collective et courses d'alimentation)",
+        "dailyLife": "Vie quotidienne (habillement, produit d'hygiène…)",
+        "communication": "Téléphone et internet",
+        "transport": "Transports (quotidiens et pour rentrer chez moi)",
+        "registrationFees": "Frais d'inscription dans mon établissement d'enseignement",
         "cvec": "CVEC",
-        "studyMaterials": "Study materials (computer, printing, books, paper, small equipment)",
-        "mutuelle": "Health insurance",
-        "otherHealthcare": "Other healthcare costs",
-        "enjoyment": "Leisure (sports, cultural activities, outings with friends)",
-        "childcare": "Childcare",
-        "other": "Other"
+        "studyMaterials": "Matériel pour les études (ordinateur, impressions, livres, papier, petit matériel)",
+        "mutuelle": "Mutuelle",
+        "otherHealthcare": "Autres frais de santé",
+        "enjoyment": "Loisirs (activités sportives, culturelles, sorties entre amis)",
+        "childcare": "Garde d'enfant",
+        "other": "Autre"
       }
     },
     "summary": {
@@ -656,7 +656,7 @@
         "title": "Ravi de vous revoir {firstname} 👋"
       },
       "testimonial": {
-        "quote": "« Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna 🙂 »",
+        "quote": "« Bienvenue sur votre Espace Gestionnaire. Ensemble, nous rendons la recherche de logement étudiant plus simple. 🙂 »",
         "author": "Cécilia et Yasmine",
         "organization": "de Mon Logement Etudiant",
         "altText": "Image de profil de Cécilia et Yasmine - Chargé de déploiement"
