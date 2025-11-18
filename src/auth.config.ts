@@ -70,6 +70,7 @@ export const authConfig = {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${authUser.token.accessToken}`,
           },
+          body: JSON.stringify({ refresh: authUser.token.refreshToken }),
         })
       }
     },
