@@ -9,9 +9,11 @@ import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommod
 const ResidenceFiltersSkeleton = () => {
   return (
     <>
-      <div className="skeleton-rectangle skeleton-rectangle--180" style={{ height: '24px' }} />
-      <div className="skeleton-rectangle skeleton-rectangle--400" style={{ height: '40px' }} />
-      <div className="skeleton-rectangle skeleton-rectangle--240" style={{ height: '40px' }} />
+      <div className="skeleton-rectangle skeleton-rectangle--180" style={{ height: '40px' }} />
+      <div className="fr-width-full fr-flex fr-flex-gap-4v fr-justify-content-end">
+        <div className="skeleton-rectangle skeleton-rectangle--200" style={{ height: '40px' }} />
+        <div className="skeleton-rectangle skeleton-rectangle--240" style={{ height: '40px' }} />
+      </div>
     </>
   )
 }
@@ -35,14 +37,14 @@ export const ResidenceFilters = ({ initialData }: ResidenceFiltersProps) => {
   return (
     <>
       <span className="fr-h4 fr-mb-0">{accommodationsList.length} résidences</span>
-      <ToggleSwitch
-        label="Logements disponibles"
-        checked={queryStates.disponible}
-        onChange={(checked) => setQueryStates({ disponible: checked })}
-        showCheckedHint={false}
-        style={{ width: '300px' }}
-      />
-      <div className="fr-flex fr-flex-gap-4v">
+      <div className="fr-flex fr-flex-gap-4v fr-align-items-center">
+        <ToggleSwitch
+          label="Logements disponibles"
+          checked={queryStates.disponible}
+          onChange={(checked) => setQueryStates({ disponible: checked })}
+          showCheckedHint={false}
+          style={{ width: '300px' }}
+        />
         <Input
           label=""
           nativeInputProps={{
