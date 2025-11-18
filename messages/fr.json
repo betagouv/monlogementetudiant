@@ -617,6 +617,7 @@
     "expenses": {
       "categoryLabel": "Catégorie",
       "amountLabel": "Montant",
+      "amountHint": "Entre {low} € et {high} € en moyenne",
       "addExpenseTitle": "Ajouter une dépense",
       "removeExpenseTitle": "Supprimer une dépense",
       "types": {

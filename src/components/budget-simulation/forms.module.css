@@ -8,3 +8,7 @@
     flex: 0 0 30% !important;
   }
 }
+
+.select {
+  max-width: 300px;
+}
