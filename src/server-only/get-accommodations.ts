@@ -13,7 +13,7 @@ export const getAccommodations = async (searchParams: {
   if (searchParams.bbox) params.append('bbox', searchParams.bbox)
   if (searchParams.center) {
     params.append('center', searchParams.center)
-    params.append('radius', '5')
+    params.append('radius', '10')
   }
   if (searchParams.accessible) params.append('is_accessible', searchParams.accessible)
   if (searchParams.colocation) params.append('coliving', searchParams.colocation)
