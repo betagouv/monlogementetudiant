@@ -4,9 +4,9 @@ import Button from '@codegouvfr/react-dsfr/Button'
 import { signOut } from 'next-auth/react'
 import { createToast } from '~/components/ui/createToast'
 import { Dropdown } from '~/components/ui/dropdown'
-import { UserData } from '~/types/next-auth'
+import { TUser } from '~/types/next-auth'
 
-export const UserConnectedDropdown = ({ user }: { user: UserData }) => {
+export const UserConnectedDropdown = ({ user }: { user: TUser }) => {
   const handleSignout = async () => {
     await signOut({
       redirectTo: '/',

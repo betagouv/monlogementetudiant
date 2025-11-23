@@ -1,0 +1,20 @@
+.testimonialContainer {
+  background: white;
+}
+
+.testimonialContent {
+  border-left: 4px solid #3b7ff6;
+  min-height: 398px;
+}
+
+.testimonialDivider {
+  border-top: 1px solid #dddddd;
+}
+
+.avatarYasmine {
+  position: absolute;
+  left: 35px;
+  @media (min-width: 768px) {
+    left: -45px;
+  }
+}
