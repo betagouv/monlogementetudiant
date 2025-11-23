@@ -1,5 +1,6 @@
 {
   "breadcrumbs": {
+    "welcome": "Accueil",
     "home": "Simulez mes aides au logement",
     "findAccomodation": "Trouver un logement étudiant",
     "findAccomodationWithLocation": "Trouver un logement étudiant à {location}",
@@ -670,6 +671,45 @@
       }
     }
   },
+  "shared": {
+    "welcome": {
+      "title": "Ravi de vous revoir {firstname} 👋"
+    },
+    "testimonial": {
+      "quote": "« Bienvenue sur votre Espace Gestionnaire. Ensemble, nous rendons la recherche de logement étudiant plus simple. 🙂 »",
+      "author": "Cécilia et Yasmine",
+      "organization": "de Mon Logement Etudiant",
+      "altText": "Image de profil de Cécilia et Yasmine - Chargé de déploiement"
+    }
+  },
+  "student": {
+    "navigation": {
+      "backToHome": "Retour à l'accueil",
+      "dashboard": "Tableau de bord",
+      "todoList": "To-do list",
+      "housingAid": "Aides au logement",
+      "favoritesAndApplications": "Favoris et candidatures",
+      "housingAlerts": "Alertes logements"
+    },
+    "welcome": {
+      "subtitle": "Bienvenue dans votre espace personnel"
+    },
+    "summary": {
+      "title": "En résumé",
+      "favorites": "{count} favoris",
+      "applications": "{count} candidature",
+      "alerts": "{count} alertes"
+    },
+    "maximizeChances": {
+      "title": "Mettez toutes les chances de votre côté",
+      "completeTodoList": "Complétez votre to-do list",
+      "estimateAid": "Estimez vos aides au logement",
+      "createAlerts": "Créez vous des alertes logements",
+      "todoListButton": "To-do list",
+      "myAidButton": "Mes aides",
+      "myAlertsButton": "Mes alertes"
+    }
+  },
   "bailleur": {
     "header": {
       "title": "Espace gestionnaire"
@@ -677,15 +717,6 @@
     "dashboard": {
       "breadcrumb": {
         "title": "Espace gestionnaire de {name}"
-      },
-      "welcome": {
-        "title": "Ravi de vous revoir {firstname} 👋"
-      },
-      "testimonial": {
-        "quote": "« Bienvenue sur votre Espace Gestionnaire. Ensemble, nous rendons la recherche de logement étudiant plus simple. 🙂 »",
-        "author": "Cécilia et Yasmine",
-        "organization": "de Mon Logement Etudiant",
-        "altText": "Image de profil de Cécilia et Yasmine - Chargé de déploiement"
       },
       "helpSection": {
         "faq": {
