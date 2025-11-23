@@ -1,6 +1,6 @@
 import 'next-auth'
 
-interface UserData {
+interface TUser {
   id: string
   email: string
   firstname: string
@@ -14,13 +14,13 @@ declare module 'next-auth' {
     accessToken: string
     refreshToken: string
     error: string
-    user: UserData
+    user: TUser
   }
 
   interface User {
     accessToken: string
     refreshToken: string
-    user: UserData
+    user: TUser
   }
 }
 
@@ -30,6 +30,6 @@ declare module 'next-auth/jwt' {
     refreshToken?: string
     accessTokenExpires?: number
     error?: string
-    user?: UserData
+    user?: TUser
   }
 }

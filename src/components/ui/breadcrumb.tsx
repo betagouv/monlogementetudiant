@@ -27,6 +27,15 @@ export const DynamicBreadcrumb: FC<DynamicBreadcrumbProps> = ({ color, margin = 
     }[] = []
 
     switch (pathname) {
+      case '/mon-espace/tableau-de-bord':
+        currentPageLabel = t('student.dashboard.breadcrumb.title')
+        break
+      case '/mon-espace/to-do':
+        currentPageLabel = t('student.todo.breadcrumb.title')
+        break
+      case '/mon-espace/alertes':
+        currentPageLabel = t('student.alerts.breadcrumb.title')
+        break
       case '/simuler-budget':
         currentPageLabel = t('breadcrumbs.budgetSimulator')
         break
