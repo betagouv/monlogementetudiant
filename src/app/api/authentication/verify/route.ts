@@ -20,8 +20,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.redirect(new URL(`${process.env.BASE_URL}/bailleur`))
-  } catch (error) {
-    console.error('Verification error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  } catch {
+    return NextResponse.redirect(new URL(`${process.env.BASE_URL}/verification/erreur`))
   }
 }
