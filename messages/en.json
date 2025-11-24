@@ -648,6 +648,21 @@
       "chartTooltipAmount": "Montant"
     }
   },
+  "verification": {
+    "error": {
+      "title": "Erreur de vérification",
+      "description": "Une erreur est survenue lors de la vérification de votre compte. Le lien de vérification est peut-être expiré ou invalide.",
+      "whatToDo": "Que faire maintenant ?",
+      "instructions": {
+        "checkLink": "Vérifiez que vous avez cliqué sur le bon lien de vérification",
+        "expiration": "Le lien de vérification expire après 5 minutes.",
+        "checkEmail": "Assurez-vous que votre adresse email est correcte"
+      },
+      "buttons": {
+        "login": "Se connecter"
+      }
+    }
+  },
   "bailleur": {
     "dashboard": {
       "breadcrumb": {
