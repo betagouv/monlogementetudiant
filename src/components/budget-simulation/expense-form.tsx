@@ -140,7 +140,7 @@ export function ExpenseForm() {
               Repère 2023 de OVE
             </Link>{' '}
             et retravaillées en fonction des profils “décohabitants” (n’habitant pas chez leurs parents) et “indépendants” (n'étant pas ou
-            peu aidés par leurs parents) des étudiants.” afin de donner des estimations de budget.
+            peu aidés par leurs parents) des étudiants afin de donner des estimations de budget.
           </span>
         </div>
       )}
