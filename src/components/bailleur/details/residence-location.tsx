@@ -11,7 +11,7 @@ export const ResidenceLocation = ({ accommodation }: { accommodation: TAccomodat
   const { coordinates } = geometry
   const [longitude, latitude] = coordinates
   return (
-    <div className="fr-flex fr-justify-content-space-between fr-align-items-center">
+    <div className="fr-flex-sm fr-justify-content-md-space-between fr-align-items-md-center">
       <div className="fr-col-md-6 fr-height-full fr-flex fr-direction-column fr-p-2w fr-px-md-6w">
         <h3>Localisation</h3>
         <Input nativeInputProps={{ readOnly: true, value: `${address} ${postalCode} ${city}` }} label="Adresse" className="fr-mb-0" />

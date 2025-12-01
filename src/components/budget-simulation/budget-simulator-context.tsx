@@ -51,7 +51,7 @@ interface BudgetSimulatorContextType {
 export type ExpenseType = keyof MonthlyExpenses
 
 export const EXPENSE_RANGES = {
-  housingCharges: { lowRange: 85, highRange: 100 },
+  housingCharges: { lowRange: 7, highRange: 12 },
   dailyLife: { lowRange: 60, highRange: 75 },
   food: { lowRange: 130, highRange: 145 },
   enjoyment: { lowRange: 60, highRange: 65 },
