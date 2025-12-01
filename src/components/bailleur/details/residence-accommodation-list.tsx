@@ -109,8 +109,8 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
             },
           ].map((typology, index) => (
             <div key={typology.type} className={`fr-p-4w ${index !== 4 ? 'fr-border-bottom' : ''}`}>
-              <div className="fr-grid-row fr-grid-row--gutters fr-mb-2w">
-                <div className="fr-col-6">
+              <div className="fr-grid-row fr-grid-row--gutters fr-flex fr-direction-md-row fr-direction-column">
+                <div className="fr-col-md-6">
                   <Select
                     label="Type de Logement"
                     nativeSelectProps={{
@@ -124,7 +124,7 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
                     <option value="T4+">Logement T4+</option>
                   </Select>
                 </div>
-                <div className="fr-col-3">
+                <div className="fr-col-md-3">
                   <Input
                     label="Loyer min."
                     iconId="fr-icon-money-euro-circle-line"
@@ -135,7 +135,7 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
                     }}
                   />
                 </div>
-                <div className="fr-col-3">
+                <div className="fr-col-md-3">
                   <Input
                     label="Loyer max."
                     iconId="fr-icon-money-euro-circle-line"
@@ -148,9 +148,8 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
                 </div>
               </div>
 
-              {/* Second row: Total and Available inputs */}
-              <div className="fr-grid-row fr-grid-row--gutters">
-                <div className="fr-col-6">
+              <div className="fr-grid-row fr-grid-row--gutters fr-flex fr-direction-md-row fr-direction-column">
+                <div className="fr-col-md-6">
                   <Input
                     label="Nombre total de logements"
                     state={errors[typology.totalField] ? 'error' : 'default'}
@@ -161,7 +160,7 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
                     }}
                   />
                 </div>
-                <div className="fr-col-6">
+                <div className="fr-col-md-6">
                   <Input
                     label="Logements disponibles"
                     state={errors[typology.availableField] ? 'error' : 'default'}

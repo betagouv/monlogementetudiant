@@ -105,7 +105,7 @@ export const ResidenceList: FC<ResidenceListProps> = ({ initialData }) => {
           return (
             <div
               className={clsx(
-                'fr-flex fr-direction-md-row fr-direction-column fr-border-top fr-border-left fr-border-right',
+                'fr-flex fr-direction-md-row fr-direction-column fr-border-top fr-border-left fr-border-right fr-mb-2w fr-mb-md-0',
                 index === accommodationsList.length - 1 && 'fr-border-bottom',
               )}
               key={accommodation.id}
@@ -113,7 +113,7 @@ export const ResidenceList: FC<ResidenceListProps> = ({ initialData }) => {
               <div>
                 <ResidenceCard key={index} accomodation={accommodation} href={`/bailleur/residences/${accommodation.properties.slug}`} />
               </div>
-              <div className="fr-width-full fr-p-4w fr-border-left" style={{ background: 'white' }}>
+              <div className="fr-width-full fr-p-4w fr-border-left fr-border-bottom" style={{ background: 'white' }}>
                 {badgeAvailability}
                 <UpdateResidenceList accommodation={accommodation} />
               </div>

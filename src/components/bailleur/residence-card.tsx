@@ -1,4 +1,6 @@
 'use client'
+
+import { fr } from '@codegouvfr/react-dsfr'
 import { Badge } from '@codegouvfr/react-dsfr/Badge'
 import Button from '@codegouvfr/react-dsfr/Button'
 import { Card } from '@codegouvfr/react-dsfr/Card'
@@ -12,6 +14,7 @@ import {
   FindStudentAccommodationPlaceholderImageCard,
 } from '~/components/find-student-accomodation/card/find-student-accommodation-image-card'
 import { TAccomodationCard } from '~/schemas/accommodations/accommodations'
+
 type ResidenceCardProps = {
   accomodation: TAccomodationCard
   href?: string
@@ -85,7 +88,9 @@ export const useStyles = tss.create({
     overflow: 'hidden',
   },
   root: {
-    minWidth: '384px',
+    [fr.breakpoints.up('md')]: {
+      minWidth: '384px',
+    },
     backgroundImage: 'none',
   },
   description: {

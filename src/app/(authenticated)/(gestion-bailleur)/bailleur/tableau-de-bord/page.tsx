@@ -45,7 +45,7 @@ export default async function TableauDeBordPage() {
         >
           <div
             className={clsx(
-              'fr-flex fr-direction-column fr-align-items-center fr-justify-content-center fr-p-4w fr-p-md-8w',
+              'fr-flex fr-direction-column fr-align-items-center fr-justify-content-center fr-p-4w fr-p-md-6w',
               styles.testimonialContent,
             )}
           >
@@ -103,35 +103,38 @@ export default async function TableauDeBordPage() {
           </div>
         </div>
         <div className={clsx('fr-col-md-6', styles.priorityActionsContainer)}>
-          <span className="fr-h3 fr-text--bold">{t('dashboard.priorityActions.title')}</span>
-          <div className={styles.actionsGrid}>
-            <div className={styles.actionCard}>
+          <div>
+            <span className="fr-h3 fr-text--bold">{t('dashboard.priorityActions.title')}</span>
+            <div className={styles.actionsGrid}>
+              {/* <div className={styles.actionCard}>
               <div className={styles.actionHeader}>
-                <span className="fr-h6 fr-text-title--blue-france fr-mb-0">{t('dashboard.priorityActions.actions.charter.title')}</span>
-                <Badge severity="info" className="fr-hidden fr-unhidden-md" noIcon>
-                  {t('dashboard.priorityActions.actions.charter.badge')}
-                </Badge>
+              <span className="fr-h6 fr-text-title--blue-france fr-mb-0">{t('dashboard.priorityActions.actions.charter.title')}</span>
+              <Badge severity="info" className="fr-hidden fr-unhidden-md" noIcon>
+              {t('dashboard.priorityActions.actions.charter.badge')}
+              </Badge>
               </div>
               <div className={styles.actionFooter}>
-                <span className="fr-text--xs fr-mb-0">{t('dashboard.priorityActions.actions.charter.status')}</span>
-                <span className="ri-arrow-right-line" />
+              <span className="fr-text--xs fr-mb-0">{t('dashboard.priorityActions.actions.charter.status')}</span>
+              <span className="ri-arrow-right-line" />
+              </div>
+              </div> */}
+              <div className={styles.actionCard}>
+                <div className={styles.actionHeader}>
+                  <span className="fr-h6 fr-text-title--blue-france fr-mb-0">
+                    {t('dashboard.priorityActions.actions.availability.title')}
+                  </span>
+                  <Badge severity="success" className="fr-hidden fr-unhidden-md" noIcon>
+                    {t('dashboard.priorityActions.actions.availability.badge')}
+                  </Badge>
+                </div>
+                <div className={styles.actionFooter}>
+                  <Link className="fr-link fr-link--no-underline" href="/bailleur/disponibilites">
+                    <span className="ri-arrow-right-line" />
+                  </Link>
+                </div>
               </div>
             </div>
-            <div className={styles.actionCard}>
-              <div className={styles.actionHeader}>
-                <span className="fr-h6 fr-text-title--blue-france fr-mb-0">
-                  {t('dashboard.priorityActions.actions.availability.title')}
-                </span>
-                <Badge severity="success" className="fr-hidden fr-unhidden-md" noIcon>
-                  {t('dashboard.priorityActions.actions.availability.badge')}
-                </Badge>
-              </div>
-              <div className={styles.actionFooter}>
-                <span className="fr-text--xs fr-mb-0">{t('dashboard.priorityActions.actions.availability.status')}</span>
-                <span className="ri-arrow-right-line" />
-              </div>
-            </div>
-            <div className={styles.actionCard}>
+            {/* <div className={styles.actionCard}>
               <div className={styles.actionHeader}>
                 <span className="fr-h6 fr-text-title--blue-france fr-mb-0">
                   {t('dashboard.priorityActions.actions.applications.title')}
@@ -144,13 +147,7 @@ export default async function TableauDeBordPage() {
                 <span className="fr-text--xs fr-mb-0">{t('dashboard.priorityActions.actions.applications.status')}</span>
                 <span className="ri-arrow-right-line" />
               </div>
-            </div>
-          </div>
-
-          <div className="fr-flex fr-justify-content-center fr-mt-2w">
-            <Link className="fr-link fr-link--no-underline fr-text--sm fr-mb-0" href="/bailleur/centre-d-aide">
-              {t('dashboard.priorityActions.viewAll')}
-            </Link>
+            </div> */}
           </div>
         </div>
       </div>

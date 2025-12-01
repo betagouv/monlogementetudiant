@@ -82,7 +82,7 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
         <div className="fr-flex fr-direction-row fr-justify-content-space-between fr-align-items-md-center fr-flex-gap-4v">
           <h1 className="fr-mb-0">{accommodation.properties.name}</h1>
         </div>
-        <div className="fr-flex fr-direction-md-row fr-direction-column-reverse fr-justify-content-space-between fr-py-4w fr-flex-gap-4v">
+        <div className="fr-flex fr-direction-md-row fr-direction-column fr-justify-content-space-between fr-py-4w fr-flex-gap-4v">
           <div className={clsx(styles.container, 'fr-col-md-8')}>
             <ResidenceDetails />
             <ResidencePictures accommodation={accommodation} />

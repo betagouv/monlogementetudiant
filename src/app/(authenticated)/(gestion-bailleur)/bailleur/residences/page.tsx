@@ -34,9 +34,7 @@ export default async function ResidencesPage({ searchParams }: ResidencesPagePro
         </div>
       </div>
       <hr className="fr-mt-2w fr-mb-0" />
-      <div className="fr-flex fr-justify-content-space-between fr-align-items-center fr-mb-4w">
-        <ResidenceFilters initialData={accommodations} />
-      </div>
+      <ResidenceFilters initialData={accommodations} />
 
       <ResidenceList initialData={accommodations} />
     </div>
