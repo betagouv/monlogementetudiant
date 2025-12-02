@@ -10,6 +10,7 @@ import { FC, Suspense, useEffect, useMemo } from 'react'
 import { tss } from 'tss-react'
 import { AccomodationCard } from '~/components/find-student-accomodation/card/find-student-accomodation-card'
 import { MapSkeleton } from '~/components/map/map-skeleton'
+import { expandBbox } from '~/components/map/map-utils'
 import { CardSkeleton } from '~/components/ui/skeleton/card-skeleton'
 import { useAccomodations } from '~/hooks/use-accomodations'
 import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
@@ -32,7 +33,8 @@ export const FindStudentAccomodationResults: FC<FindStudentAccomodationResultsPr
 
   useEffect(() => {
     if (territory && territory.bbox) {
-      setQueryStates({ bbox: `${territory.bbox.xmin},${territory.bbox.ymin},${territory.bbox.xmax},${territory.bbox.ymax}` })
+      const expanded = expandBbox(territory.bbox.xmin, territory.bbox.ymin, territory.bbox.xmax, territory.bbox.ymax)
+      setQueryStates({ bbox: `${expanded.west},${expanded.south},${expanded.east},${expanded.north}` })
     }
   }, [])
 

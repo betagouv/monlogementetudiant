@@ -24,7 +24,11 @@
   "metadata": {
     "title": "Mon logement étudiant",
     "description": "Mon logement étudiant - Votre guide à l'accès au logement étudiant",
-    "homeLinkTitle": "Accueil - Mon logement étudiant"
+    "homeLinkTitle": "Accueil - Mon logement étudiant",
+    "workspace": {
+      "description": "Votre espace bailleur",
+      "title": "Espace bailleur - Gestion de vos résidences"
+    }
   },
   "header": {
     "title": "Mon logement étudiant",
@@ -36,7 +40,8 @@
       "title": "Lancement de la plateforme :",
       "description": "site en phase d'expérimentation, n'hésitez pas à <link>donner votre avis</link> pour nous aider à améliorer le service.",
       "close": "Fermer"
-    }
+    },
+    "notifications": "Notifications"
   },
   "footer": {
     "linkList": {
@@ -55,7 +60,13 @@
     "prepareStudentLife": "Préparer sa vie étudiante",
     "findAccommodation": "Trouver un logement étudiant",
     "byAcademies": "Par académies",
-    "faq": "Foire aux questions"
+    "faq": "Foire aux questions",
+    "workspace": {
+      "dashboard": "Tableau de bord",
+      "helpCenter": "Centre d'aide",
+      "residences": "Résidences",
+      "candidates": "Candidatures"
+    }
   },
   "accomodation": {
     "availability": {
@@ -309,7 +320,7 @@
         "title": "A la recherche d’un logement en résidence étudiante ?",
         "description": "Mon Logement Etudiant facilite l'accès au logement et aux droits pour les étudiants.",
         "cta": "Trouver un logement étudiant",
-        "ctaDisclaimer": "Plus de 1000 résidences partout en France"
+        "ctaDisclaimer": "Plus de 300 résidences partout en France"
       }
     }
   },
@@ -504,7 +515,8 @@
       "title": "Première visite ?",
       "description": "Créez votre compte dès maintenant pour accèder votre espace Mon Logement Etudiant",
       "cta": "Créer un compte"
-    }
+    },
+    "success": "Si un compte est associé à cette adresse e-mail, vous recevrez un lien sur cette adresse."
   },
   "forgotPassword": {
     "title": "Réinitialiser votre mot de passe",
@@ -573,7 +585,7 @@
     "descriptionPart2": "droits et faciliter vos recherches"
   },
   "budgetSimulator": {
-    "titlePart1": "Simulez votre",
+    "titlePart1": "Calculez votre",
     "titlePart2": "budget étudiant",
     "subtitle": "Gérez vos finances facilement et visualisez votre budget mensuel en temps réel",
     "sections": {
@@ -592,26 +604,37 @@
       "addIncomeTitle": "Ajouter un revenu",
       "removeIncomeTitle": "Supprimer un revenu",
       "types": {
+        "familyAid": "Aides de ma famille",
+        "scholarships": "Bourses (du Crous ou de la Région)",
+        "cafHousingAid": "Aides au logement de la CAF",
+        "otherPublicAid": "Autres aides publiques",
         "salary": "Job étudiant",
-        "housingAssistance": "Aides aux logement",
-        "other": "Autres revenus"
+        "studentLoan": "Prêt étudiant (ex : prêt étudiant garanti par l'Etat)",
+        "other": "Autres revenus",
+        "savings": "Argent mis de côté"
       }
     },
     "expenses": {
       "categoryLabel": "Catégorie",
       "amountLabel": "Montant",
+      "amountHint": "Entre {low} € et {high} € en moyenne *",
       "addExpenseTitle": "Ajouter une dépense",
       "removeExpenseTitle": "Supprimer une dépense",
       "types": {
         "housing": "Loyer",
-        "food": "Nourriture",
-        "enjoyment": "Loisirs",
-        "transport": "Transport",
-        "communication": "Communication",
-        "education": "Étude",
-        "healthcare": "Santé",
+        "housingCharges": "Charges d'habitation (Assurance, charges, eau, électricité…)",
+        "food": "Alimentation (restauration collective et courses d'alimentation)",
+        "dailyLife": "Vie quotidienne (habillement, produit d'hygiène…)",
+        "communication": "Téléphone et internet",
+        "transport": "Transports (quotidiens et pour rentrer chez moi)",
+        "registrationFees": "Frais d'inscription dans mon établissement d'enseignement",
+        "cvec": "CVEC",
+        "studyMaterials": "Matériel pour les études (ordinateur, impressions, livres, papier, petit matériel)",
+        "mutuelle": "Mutuelle",
+        "otherHealthcare": "Autres frais de santé",
+        "enjoyment": "Loisirs (activités sportives, culturelles, sorties entre amis)",
         "childcare": "Garde d'enfant",
-        "other": "Autres"
+        "other": "Autre"
       }
     },
     "summary": {
@@ -623,6 +646,71 @@
       "savingsRate": "Taux d'épargne : {rate} %",
       "expensesBreakdown": "Répartition des dépenses",
       "chartTooltipAmount": "Montant"
+    }
+  },
+  "verification": {
+    "error": {
+      "title": "Erreur de vérification",
+      "description": "Une erreur est survenue lors de la vérification de votre compte. Le lien de vérification est peut-être expiré ou invalide.",
+      "whatToDo": "Que faire maintenant ?",
+      "instructions": {
+        "checkLink": "Vérifiez que vous avez cliqué sur le bon lien de vérification",
+        "expiration": "Le lien de vérification expire après 5 minutes.",
+        "checkEmail": "Assurez-vous que votre adresse email est correcte"
+      },
+      "buttons": {
+        "login": "Se connecter"
+      }
+    }
+  },
+  "bailleur": {
+    "dashboard": {
+      "breadcrumb": {
+        "title": "Espace bailleur de {name}"
+      },
+      "welcome": {
+        "title": "Ravi de vous revoir {firstname} 👋"
+      },
+      "testimonial": {
+        "quote": "« Bienvenue sur votre Espace Gestionnaire. Ensemble, nous rendons la recherche de logement étudiant plus simple. 🙂 »",
+        "author": "Cécilia et Yasmine",
+        "organization": "de Mon Logement Etudiant",
+        "altText": "Image de profil de Cécilia et Yasmine - Chargé de déploiement"
+      },
+      "helpSection": {
+        "faq": {
+          "title": "Questions fréquentes",
+          "link": "Consulter notre FAQ"
+        },
+        "contact": {
+          "title": "Besoin d'échanger ?",
+          "link": "Prendre rendez-vous"
+        }
+      },
+      "priorityActions": {
+        "title": "Actions prioritaires",
+        "actions": {
+          "charter": {
+            "title": "Valider la charte des bailleurs",
+            "badge": "BON FONCTIONNEMENT",
+            "status": "A valider"
+          },
+          "availability": {
+            "title": "Actualiser les disponibilités",
+            "badge": "DISPONIBILITES",
+            "status": "Résidence Ariane"
+          },
+          "applications": {
+            "title": "Modérer vos candidatures",
+            "badge": "CANDIDATURES",
+            "status": "3 candidatures ont été deposées"
+          }
+        },
+        "viewAll": "Toutes les actions prioritaires"
+      },
+      "statistics": {
+        "title": "En quelques chiffres"
+      }
     }
   }
 }

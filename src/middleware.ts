@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-
 import { AvailableLocales } from '~/i18n/request'
 
 export const middleware = (request: NextRequest) => {

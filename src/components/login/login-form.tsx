@@ -6,10 +6,10 @@ import { Input } from '@codegouvfr/react-dsfr/Input'
 import { zodResolver } from '@hookform/resolvers/zod'
 import clsx from 'clsx'
 import { useTranslations } from 'next-intl'
-import Link from 'next/link'
-import { FC, useState } from 'react'
+import { FC } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { tss } from 'tss-react'
+import { createToast } from '~/components/ui/createToast'
 import { ZLoginForm } from '~/schemas/login/login'
 
 export const LoginForm: FC = () => {
@@ -19,15 +19,40 @@ export const LoginForm: FC = () => {
   const loginForm = useForm({
     defaultValues: {
       email: '',
-      password: '',
     },
     resolver: zodResolver(ZLoginForm),
   })
-  const [showPassword, setShowPassword] = useState(false)
   const { formState, getValues, handleSubmit, register } = loginForm
 
   const onSubmit = async () => {
-    console.log(getValues())
+    const { email } = getValues()
+    try {
+      const response = await fetch('/api/admin-auth/magic-link', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      })
+
+      if (response.ok) {
+        createToast({
+          priority: 'success',
+          message: t('success'),
+        })
+      } else {
+        createToast({
+          priority: 'error',
+          message: 'Une erreur est survenue lors de la connexion, veuillez réessayé ultérieurement',
+        })
+      }
+    } catch (error) {
+      console.log(error)
+      createToast({
+        priority: 'error',
+        message: 'Une erreur est survenue lors de la connexion, veuillez réessayé ultérieurement',
+      })
+    }
   }
 
   return (
@@ -48,36 +73,12 @@ export const LoginForm: FC = () => {
                 ...register('email'),
               }}
             />
-
-            <Input
-              addon={
-                <Button
-                  iconId="ri-eye-line"
-                  priority="tertiary"
-                  type="button"
-                  title="Afficher le mot de passe"
-                  nativeButtonProps={{ onClick: () => setShowPassword(!showPassword) }}
-                />
-              }
-              label={
-                <>
-                  {t('labels.password')}
-                  &nbsp;<span className={clsx(fr.cx('fr-text--bold'), classes.required)}>*</span>
-                </>
-              }
-              state={formState.errors.password ? 'error' : undefined}
-              stateRelatedMessage={formState.errors.password?.message}
-              nativeInputProps={{
-                ...register('password'),
-                type: showPassword ? 'text' : 'password',
-              }}
-            />
           </div>
-          <div>
+          {/* <div>
             <Link className={fr.cx('fr-link')} href="/mot-de-passe-oublie">
               {t('labels.forgotPassword')}
             </Link>
-          </div>
+          </div> */}
           <Button type="submit" iconPosition="right" iconId="ri-arrow-right-line">
             {t('labels.cta')}
           </Button>

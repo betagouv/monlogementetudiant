@@ -3,21 +3,31 @@
 import { type ReactNode, createContext, useContext, useState } from 'react'
 
 interface MonthlyIncomes {
-  salary: number
-  housingAssistance: number
-  other: number
+  familyAid: number // Aides de ma famille
+  scholarships: number // Bourses (du Crous ou de la Région)
+  cafHousingAid: number // Aides au logement de la CAF
+  otherPublicAid: number // Autres aides publiques
+  salary: number // Job étudiant
+  studentLoan: number // Prêt étudiant (ex : prêt étudiant garanti par l'Etat)
+  other: number // Autres revenus
+  savings: number // Argent mis de côté
 }
 
 interface MonthlyExpenses {
-  housing: number // Charge d'habitation
-  food: number // Dépenses d'alimentation
-  enjoyment: number // Dépenses de loisir
-  transport: number // Dépenses de transport
-  communication: number // Dépenses de communication
-  education: number // Dépenses d'étude
-  healthcare: number // Dépenses de soin
-  childcare: number // Dépenses de garde d'enfants
-  other: number // Autres dépenses
+  housing: number // Loyer
+  housingCharges: number // Charges d'habitation (Assurance, charges, eau, électricité…)
+  food: number // Alimentation (restauration collective et courses d'alimentation)
+  dailyLife: number // Vie quotidienne (habillement, produit d'hygiène…)
+  communication: number // Téléphone et internet
+  transport: number // Transports (quotidiens et pour rentrer chez moi)
+  registrationFees: number // Frais d'inscription dans mon établissement d'enseignement
+  cvec: number // CVEC
+  studyMaterials: number // Matériel pour les études (ordinateur, impressions, livres, papier, petit matériel)
+  mutuelle: number // Mutuelle
+  otherHealthcare: number // Autres frais de santé
+  enjoyment: number // Loisirs (activités sportives, culturelles, sorties entre amis)
+  childcare: number // Garde d'enfant
+  other: number // Autre
 }
 
 interface BudgetSimulatorState {
@@ -40,6 +50,19 @@ interface BudgetSimulatorContextType {
 
 export type ExpenseType = keyof MonthlyExpenses
 
+export const EXPENSE_RANGES = {
+  housingCharges: { lowRange: 7, highRange: 12 },
+  dailyLife: { lowRange: 60, highRange: 75 },
+  food: { lowRange: 130, highRange: 145 },
+  enjoyment: { lowRange: 60, highRange: 65 },
+  communication: { lowRange: 30, highRange: 35 },
+  studyMaterials: { lowRange: 25, highRange: 30 },
+  mutuelle: { lowRange: 35, highRange: 45 },
+  otherHealthcare: { lowRange: 35, highRange: 40 },
+  childcare: { lowRange: 30, highRange: 35 },
+  other: { lowRange: 40, highRange: 50 },
+} as const
+
 const BudgetSimulatorContext = createContext<BudgetSimulatorContextType | undefined>(undefined)
 
 interface BudgetSimulatorProviderProps {
@@ -49,18 +72,28 @@ interface BudgetSimulatorProviderProps {
 export function BudgetSimulatorProvider({ children }: BudgetSimulatorProviderProps) {
   const [state, setState] = useState<BudgetSimulatorState>({
     monthlyIncomes: {
+      familyAid: 0,
+      scholarships: 0,
+      cafHousingAid: 0,
+      otherPublicAid: 0,
       salary: 0,
-      housingAssistance: 0,
+      studentLoan: 0,
       other: 0,
+      savings: 0,
     },
     monthlyExpenses: {
       housing: 0,
+      housingCharges: 0,
       food: 0,
-      enjoyment: 0,
+      dailyLife: 0,
       communication: 0,
       transport: 0,
-      education: 0,
-      healthcare: 0,
+      registrationFees: 0,
+      cvec: 0,
+      studyMaterials: 0,
+      mutuelle: 0,
+      otherHealthcare: 0,
+      enjoyment: 0,
       childcare: 0,
       other: 0,
     },

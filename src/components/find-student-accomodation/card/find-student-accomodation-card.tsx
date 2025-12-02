@@ -16,9 +16,11 @@ import { sPluriel } from '~/utils/sPluriel'
 
 type AccomodationCardProps = {
   accomodation: TAccomodationCard
+  href?: string
+  className?: string
 }
 
-export const AccomodationCard: FC<AccomodationCardProps> = ({ accomodation }) => {
+export const AccomodationCard: FC<AccomodationCardProps> = ({ className, accomodation, href }) => {
   const [selectedAccommodation] = useQueryState('id', parseAsString)
   const t = useTranslations('findAccomodation.card')
   const { classes } = useStyles()
@@ -49,11 +51,11 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({ accomodation }) =>
   const badgeAvailability =
     nbAvailable !== null && nbAvailable !== undefined ? (
       nbAvailable === 0 ? (
-        <Badge severity="error" noIcon>
+        <Badge severity="error" noIcon as="span">
           <span className="fr-text--uppercase fr-mb-0">{t('noAvailability')}</span>
         </Badge>
       ) : (
-        <Badge severity="success" noIcon>
+        <Badge severity="success" noIcon as="span">
           {nbAvailable}&nbsp;
           <span className="fr-text--uppercase fr-mb-0">
             {t('availability')}
@@ -64,21 +66,26 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({ accomodation }) =>
     ) : null
 
   const waitingListBadge = accept_waiting_list && (
-    <Badge className={classes.otherBadge} severity="warning" noIcon>
+    <Badge className={classes.otherBadge} severity="warning" noIcon as="span">
       <span className="fr-text--uppercase fr-mb-0">{t('waitingList')}</span>
     </Badge>
   )
 
   const badgeProps = price_min
     ? {
-        badge: <Badge severity="new" noIcon>{`${t('priceFrom')} ${price_min}€`}</Badge>,
+        badge: <Badge severity="new" noIcon as="span">{`${t('priceFrom')} ${price_min}€`}</Badge>,
       }
     : {}
+
+  const redirectUri = href ?? `/trouver-un-logement-etudiant/ville/${encodeURIComponent(city)}/${accomodation.properties.slug}`
   return (
     <Card
       {...badgeProps}
       {...imageProps}
-      classes={{ root: clsx(selectedAccommodation === accomodation.id.toString() && classes.active), header: classes.header }}
+      classes={{
+        root: clsx(className, selectedAccommodation === accomodation.id.toString() && classes.active),
+        header: classes.header,
+      }}
       id={`accomodation-${accomodation.id}`}
       background
       border
@@ -105,7 +112,7 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({ accomodation }) =>
       }
       enlargeLink
       linkProps={{
-        href: `/trouver-un-logement-etudiant/ville/${encodeURIComponent(city)}/${accomodation.properties.slug}`,
+        href: redirectUri,
       }}
       start={
         <ul className="fr-tags-group">

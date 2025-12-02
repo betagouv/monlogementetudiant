@@ -8,13 +8,22 @@ import { useTranslations } from 'next-intl'
 import { useBudgetSimulator } from './budget-simulator-context'
 import styles from './forms.module.css'
 
-type IncomeType = 'salary' | 'housingAssistance' | 'other'
-
 export function IncomeForm() {
   const { state, updateMonthlyIncomes, addIncomeType, removeIncomeType } = useBudgetSimulator()
   const t = useTranslations('budgetSimulator.income')
 
-  const incomeTypes: IncomeType[] = ['salary', 'housingAssistance', 'other']
+  type IncomeType = keyof typeof state.monthlyIncomes
+
+  const incomeTypes: IncomeType[] = [
+    'familyAid',
+    'scholarships',
+    'cafHousingAid',
+    'otherPublicAid',
+    'salary',
+    'studentLoan',
+    'other',
+    'savings',
+  ]
 
   const handleIncomeChange = (type: IncomeType, value: number) => {
     updateMonthlyIncomes({ [type]: value })

@@ -5,7 +5,8 @@ import { Input } from '@codegouvfr/react-dsfr/Input'
 import { Select } from '@codegouvfr/react-dsfr/Select'
 import clsx from 'clsx'
 import { useTranslations } from 'next-intl'
-import { ExpenseType, useBudgetSimulator } from './budget-simulator-context'
+import Link from 'next/link'
+import { EXPENSE_RANGES, ExpenseType, useBudgetSimulator } from './budget-simulator-context'
 import styles from './forms.module.css'
 
 export function ExpenseForm() {
@@ -18,12 +19,17 @@ export function ExpenseForm() {
 
   const expenseTypes = [
     'housing',
+    'housingCharges',
     'food',
-    'enjoyment',
-    'transport',
+    'dailyLife',
     'communication',
-    'education',
-    'healthcare',
+    'transport',
+    'registrationFees',
+    'cvec',
+    'studyMaterials',
+    'mutuelle',
+    'otherHealthcare',
+    'enjoyment',
     'childcare',
     'other',
   ] as ExpenseType[]
@@ -42,60 +48,102 @@ export function ExpenseForm() {
 
   return (
     <div className="fr-flex fr-direction-column fr-flex-gap-4v">
-      {state.activeExpenseTypes.map((type, index) => (
-        <div key={type} className="fr-flex fr-align-items-end fr-flex-gap-4v">
-          <div className={clsx('fr-flex-basis-0 fr-flex-grow-1', styles.sourceSelect)}>
-            <Select
-              label={t('categoryLabel')}
-              nativeSelectProps={{
-                value: type,
-                onChange: (e) => {
-                  // Remove old type and add new one
-                  const oldAmount = state.monthlyExpenses[type]
-                  removeExpenseType(type)
-                  addExpenseType(e.target.value as ExpenseType)
-                  updateMonthlyExpenses({ [e.target.value as ExpenseType]: oldAmount })
-                },
-              }}
-            >
-              {expenseTypes
-                .filter((expenseType) => expenseType === type || !state.activeExpenseTypes.includes(expenseType))
-                .map((expenseType) => (
-                  <option key={expenseType} value={expenseType}>
-                    {t(`types.${expenseType}`)}
-                  </option>
-                ))}
-            </Select>
-          </div>
-          <div className={clsx('fr-flex-basis-0 fr-flex-grow-1', styles.amountInput)}>
-            <Input
-              label={t('amountLabel')}
-              nativeInputProps={{
-                type: 'number',
-                min: 0,
-                value: state.monthlyExpenses[type] === 0 ? '' : state.monthlyExpenses[type],
-                onChange: (e) => handleExpenseChange(type, Number(e.target.value) || 0),
-              }}
-              iconId="ri-money-euro-circle-line"
-            />
-          </div>
-          <div className="fr-flex fr-flex-gap-2v">
-            {index === state.activeExpenseTypes.length - 1 && canAddMore ? (
-              <Button iconId="ri-add-line" title={t('addExpenseTitle')} priority="secondary" size="small" onClick={handleAddExpenseType} />
-            ) : (
-              state.activeExpenseTypes.length > 1 && (
-                <Button
-                  priority="tertiary"
-                  title={t('removeExpenseTitle')}
-                  iconId="ri-delete-bin-line"
-                  size="small"
-                  onClick={() => handleRemoveExpenseType(type)}
+      {state.activeExpenseTypes.map((type, index) => {
+        return (
+          <div key={type} className="fr-flex fr-flex-gap-4v">
+            <div className={clsx('fr-flex-basis-0 fr-flex-grow-1', styles.sourceSelect)}>
+              <Select
+                className={styles.select}
+                label={t('categoryLabel')}
+                nativeSelectProps={{
+                  value: type,
+                  onChange: (e) => {
+                    // Remove old type and add new one
+                    const oldAmount = state.monthlyExpenses[type]
+                    removeExpenseType(type)
+                    addExpenseType(e.target.value as ExpenseType)
+                    updateMonthlyExpenses({ [e.target.value as ExpenseType]: oldAmount })
+                  },
+                }}
+              >
+                {expenseTypes
+                  .filter((expenseType) => expenseType === type || !state.activeExpenseTypes.includes(expenseType))
+                  .map((expenseType) => (
+                    <option key={expenseType} value={expenseType}>
+                      {t(`types.${expenseType}`)}
+                    </option>
+                  ))}
+              </Select>
+            </div>
+            <div className={clsx('fr-flex-basis-0 fr-flex-grow-1', styles.amountInput)}>
+              <div className="fr-flex fr-direction-column">
+                <Input
+                  className="fr-mb-1w"
+                  label={t('amountLabel')}
+                  nativeInputProps={{
+                    type: 'number',
+                    min: 0,
+                    value: state.monthlyExpenses[type] === 0 ? '' : state.monthlyExpenses[type],
+                    onChange: (e) => handleExpenseChange(type, Number(e.target.value) || 0),
+                  }}
+                  iconId="ri-money-euro-circle-line"
                 />
-              )
-            )}
+                {EXPENSE_RANGES[type as keyof typeof EXPENSE_RANGES] && (
+                  <span className="fr-text--xs fr-mb-0">
+                    {t('amountHint', {
+                      low: EXPENSE_RANGES[type as keyof typeof EXPENSE_RANGES].lowRange,
+                      high: EXPENSE_RANGES[type as keyof typeof EXPENSE_RANGES].highRange,
+                    })}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div
+              className={clsx(
+                EXPENSE_RANGES[type as keyof typeof EXPENSE_RANGES] ? 'fr-align-items-center fr-mt-1w' : 'fr-align-items-end fr-mb-1w',
+                'fr-flex fr-flex-gap-2v',
+              )}
+            >
+              {index === state.activeExpenseTypes.length - 1 && canAddMore ? (
+                <Button
+                  iconId="ri-add-line"
+                  title={t('addExpenseTitle')}
+                  priority="secondary"
+                  size="small"
+                  onClick={handleAddExpenseType}
+                />
+              ) : (
+                state.activeExpenseTypes.length > 1 && (
+                  <Button
+                    priority="tertiary"
+                    title={t('removeExpenseTitle')}
+                    iconId="ri-delete-bin-line"
+                    size="small"
+                    onClick={() => handleRemoveExpenseType(type)}
+                  />
+                )
+              )}
+            </div>
           </div>
+        )
+      })}
+      {state.activeExpenseTypes.some((type) => EXPENSE_RANGES[type as keyof typeof EXPENSE_RANGES]) && (
+        <div>
+          <hr className="fr-pt-2w fr-pb-0 fr-mt-2w" />
+          <span className="fr-text--xs fr-mb-0 fr-text-mention--grey">
+            * Ces informations sont issues des données déclarées par les étudiants dans le cadre de l’enquête{' '}
+            <Link
+              className="fr-link fr-text--xs"
+              href="https://www.ove-national.education.fr/wp-content/uploads/2024/03/OVE-BROCHURE-REPERES-CDV2023-1-1.pdf"
+              target="_blank"
+            >
+              Repère 2023 de OVE
+            </Link>{' '}
+            et retravaillées en fonction des profils “décohabitants” (n’habitant pas chez leurs parents) et “indépendants” (n'étant pas ou
+            peu aidés par leurs parents) des étudiants afin de donner des estimations de budget.
+          </span>
         </div>
-      ))}
+      )}
     </div>
   )
 }
