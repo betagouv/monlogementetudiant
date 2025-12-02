@@ -13,7 +13,7 @@ import { ResidenceRedirection } from '~/components/bailleur/details/residence-re
 import { ResidenceSummary } from '~/components/bailleur/details/residence-summary'
 import { useUpdateResidenceDetails } from '~/hooks/use-update-residence-details'
 import { TAccomodationMy } from '~/schemas/accommodations/accommodations'
-import { TUpdateResidence, ZUpdateResidence } from '~/schemas/accommodations/update-residence'
+import { TUpdateResidence, createUpdateResidenceSchema } from '~/schemas/accommodations/update-residence'
 import { formatRelativeTime } from '~/utils/formatRelativeTime'
 import { sanitizeHTML } from '~/utils/sanitize-html'
 import styles from './update-residence-form.module.css'
@@ -26,7 +26,15 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
   const updateMutation = useUpdateResidenceDetails(accommodation.properties.slug)
 
   const form = useForm<TUpdateResidence>({
-    resolver: zodResolver(ZUpdateResidence),
+    resolver: zodResolver(
+      createUpdateResidenceSchema({
+        nb_t1: accommodation.properties.nb_t1,
+        nb_t1_bis: accommodation.properties.nb_t1_bis,
+        nb_t2: accommodation.properties.nb_t2,
+        nb_t3: accommodation.properties.nb_t3,
+        nb_t4_more: accommodation.properties.nb_t4_more,
+      }),
+    ),
     defaultValues: {
       name: accommodation.properties.name || '',
       description: accommodation.properties.description || '',

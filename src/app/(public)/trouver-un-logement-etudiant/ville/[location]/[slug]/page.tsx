@@ -66,12 +66,12 @@ export default async function LogementPage({ params }: { params: { slug: string 
   return (
     <div className={fr.cx('fr-container')}>
       <DynamicBreadcrumb title={breadCrumbTitle} city={city} />
-      <h2>{t('title', { city, title: name })}</h2>
+      <h1 className="fr-h2">{t('title', { city, title: name })}</h1>
       <div className={styles.container}>
         <div className={clsx(fr.cx('fr-col-sm-8'), styles.infosContainer)}>
           {images_urls && images_urls.length > 0 && <AccommodationImages images={images_urls} title={name} />}
           <div className={styles.section}>
-            <h1>{name}</h1>
+            <h2>{name}</h2>
             <div className={styles.tagContainer}>
               {tags.map((t) => (
                 <Tag key={t.children as string} {...t}>

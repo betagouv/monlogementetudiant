@@ -57,17 +57,32 @@ export const createUpdateResidenceSchema = (existingData: {
 }) =>
   ZUpdateResidence.superRefine((data, ctx) => {
     const validations = [
-      { total: existingData.nb_t1, available: data.nb_t1_available, availablePath: 'nb_t1_available', type: 'T1' },
       {
-        total: existingData.nb_t1_bis,
+        total: data.nb_t1 ?? existingData.nb_t1,
+        available: data.nb_t1_available,
+        availablePath: 'nb_t1_available',
+        type: 'T1',
+      },
+      {
+        total: data.nb_t1_bis ?? existingData.nb_t1_bis,
         available: data.nb_t1_bis_available,
         availablePath: 'nb_t1_bis_available',
         type: 'T1 bis',
       },
-      { total: existingData.nb_t2, available: data.nb_t2_available, availablePath: 'nb_t2_available', type: 'T2' },
-      { total: existingData.nb_t3, available: data.nb_t3_available, availablePath: 'nb_t3_available', type: 'T3' },
       {
-        total: existingData.nb_t4_more,
+        total: data.nb_t2 ?? existingData.nb_t2,
+        available: data.nb_t2_available,
+        availablePath: 'nb_t2_available',
+        type: 'T2',
+      },
+      {
+        total: data.nb_t3 ?? existingData.nb_t3,
+        available: data.nb_t3_available,
+        availablePath: 'nb_t3_available',
+        type: 'T3',
+      },
+      {
+        total: data.nb_t4_more ?? existingData.nb_t4_more,
         available: data.nb_t4_more_available,
         availablePath: 'nb_t4_more_available',
         type: 'T4+',
