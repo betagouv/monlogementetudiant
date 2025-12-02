@@ -120,15 +120,17 @@ export default async function TableauDeBordPage() {
               </div> */}
               <div className={styles.actionCard}>
                 <div className={styles.actionHeader}>
-                  <span className="fr-h6 fr-text-title--blue-france fr-mb-0">
-                    {t('dashboard.priorityActions.actions.availability.title')}
-                  </span>
+                  <Link className="fr-link fr-link--no-underline" href="/bailleur/residences">
+                    <span className="fr-h6 fr-text-title--blue-france fr-mb-0">
+                      {t('dashboard.priorityActions.actions.availability.title')}
+                    </span>
+                  </Link>
                   <Badge severity="success" className="fr-hidden fr-unhidden-md" noIcon>
                     {t('dashboard.priorityActions.actions.availability.badge')}
                   </Badge>
                 </div>
                 <div className={styles.actionFooter}>
-                  <Link className="fr-link fr-link--no-underline" href="/bailleur/disponibilites">
+                  <Link className="fr-link fr-link--no-underline" href="/bailleur/residences">
                     <span className="ri-arrow-right-line" />
                   </Link>
                 </div>
