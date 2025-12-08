@@ -78,7 +78,7 @@
     "equipments": {
       "title": "Equipements"
     },
-    "descriptionTitle": "À propos de la résidence {title}",
+    "descriptionTitle": "À propos du logement étudiant {title}",
     "title": "Logement étudiant {title} à {city}",
     "tags": {
       "studio": "Studio",
