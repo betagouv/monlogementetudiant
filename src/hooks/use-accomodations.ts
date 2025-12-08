@@ -9,6 +9,7 @@ export const fetchAccomodations = async (
   isAccessible: string | null,
   hasColiving: string | null,
   maxPrice: number | null,
+  crous: string | null,
 ): Promise<TGetAccomodationsResponse> => {
   const params = new URLSearchParams()
   if (bbox) params.append('bbox', bbox)
@@ -16,6 +17,7 @@ export const fetchAccomodations = async (
   if (isAccessible) params.append('is_accessible', isAccessible)
   if (hasColiving) params.append('has_coliving', hasColiving)
   if (maxPrice) params.append('price_max', maxPrice.toString())
+  if (crous) params.append('view_crous', crous)
 
   const response = await fetch(`/api/accommodations${params.size > 0 ? `?${params.toString()}` : ''}`)
   if (!response.ok) {
@@ -35,14 +37,15 @@ export const useAccomodations = ({ initialData }: UseAccomodationsOptions = {}) 
     colocation: parseAsString,
     page: parseAsInteger,
     prix: parseAsInteger,
+    crous: parseAsString,
   })
-  const { accessible, bbox, colocation, page, prix } = queryStates
-  const enabled = !!bbox || !!accessible || !!page || !!colocation || !!prix
+  const { accessible, bbox, colocation, page, prix, crous } = queryStates
+  const enabled = !!bbox || !!accessible || !!page || !!colocation || !!prix || !crous
 
   return useQuery<TGetAccomodationsResponse>({
     enabled,
     initialData: enabled ? undefined : initialData,
-    queryFn: () => fetchAccomodations(bbox, page, accessible, colocation, prix),
-    queryKey: ['accomodations', { accessible, bbox, colocation, page, prix }],
+    queryFn: () => fetchAccomodations(bbox, page, accessible, colocation, prix, crous),
+    queryKey: ['accomodations', { accessible, bbox, colocation, page, prix, crous }],
   })
 }
