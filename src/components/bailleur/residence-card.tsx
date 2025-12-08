@@ -71,7 +71,7 @@ export const ResidenceCard: FC<ResidenceCardProps> = ({ accomodation, href }) =>
         </>
       }
       footer={
-        <Button priority="secondary" iconId="ri-pencil-line" linkProps={{ href: redirectUri }}>
+        <Button size="small" priority="secondary" iconId="ri-pencil-line" linkProps={{ href: redirectUri }}>
           Éditer la résidence
         </Button>
       }

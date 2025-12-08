@@ -6,7 +6,6 @@ import { FC } from 'react'
 import { BrandTop } from '~/components/ui/brand-top'
 import { Banner } from '~/components/ui/header/banner/banner'
 import { HeaderNavigation } from '~/components/ui/header/navigation'
-import logo from '~/images/logo.svg'
 
 export const HeaderComponent: FC = async () => {
   const t = await getTranslations()
@@ -48,11 +47,6 @@ export const HeaderComponent: FC = async () => {
         // navigation={<HeaderNavigation academies={academies} />}
         navigation={<HeaderNavigation />}
         className={fr.cx('fr-header')}
-        operatorLogo={{
-          alt: 'Mon logement étudiant - logo',
-          imgUrl: logo.src,
-          orientation: 'horizontal',
-        }}
       />
       <Banner />
     </div>

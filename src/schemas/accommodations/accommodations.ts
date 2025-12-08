@@ -188,6 +188,7 @@ export const ZAccomodationMy = z.object({
     residence_type: z.nativeEnum(EResidence),
     slug: z.string().max(250),
     accept_waiting_list: z.boolean(),
+    scholarship_holders_priority: z.boolean(),
     updated_at: z.date(),
     published: z.boolean(),
   }),

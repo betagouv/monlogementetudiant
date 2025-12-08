@@ -71,8 +71,10 @@ export const OwnerDetails = async ({
           <h3 className={fr.cx('fr-m-0')}>{owner?.name}</h3>
         )}
       </div>
-      {badgeAvailability}
-      {waitingListBadge}
+      <div className="fr-flex fr-flex-gap-2v fr-direction-column fr-align-items-center fr-justify-content-center">
+        {badgeAvailability}
+        {waitingListBadge}
+      </div>
       {(nbAvailable === null || nbAvailable === undefined) && (
         <>
           <br />
@@ -81,9 +83,12 @@ export const OwnerDetails = async ({
       )}
       <div className={styles.sidebarOwner}>
         {!!ownerUrl && available && (
-          <Button linkProps={{ href: ownerUrl }} priority="primary" size="large" className={styles.sidebarOwnerButton}>
-            {t('sidebar.buttons.consult')}
-          </Button>
+          <>
+            <Button linkProps={{ href: ownerUrl }} priority="primary" size="large" className={styles.sidebarOwnerButton}>
+              {t('sidebar.buttons.consult')}
+            </Button>
+            <span> {t('sidebar.buttons.consultDescription')}</span>
+          </>
         )}
       </div>
       {nbAvailable === 0 && (
