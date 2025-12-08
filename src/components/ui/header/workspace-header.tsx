@@ -7,7 +7,6 @@ import { auth } from '~/auth'
 import { BrandTop } from '~/components/ui/brand-top'
 import { UserConnectedDropdown } from '~/components/ui/header/user-connected-dropdown'
 import { WorkspaceHeaderNavigation } from '~/components/ui/header/workspace-navigation'
-import logo from '~/images/logo.svg'
 
 export const WorkspaceHeaderComponent: FC = async () => {
   const t = await getTranslations()
@@ -43,11 +42,6 @@ export const WorkspaceHeaderComponent: FC = async () => {
         }
         navigation={<WorkspaceHeaderNavigation />}
         className={fr.cx('fr-header')}
-        operatorLogo={{
-          alt: 'Mon logement étudiant - logo',
-          imgUrl: logo.src,
-          orientation: 'horizontal',
-        }}
       />
     </div>
   )
