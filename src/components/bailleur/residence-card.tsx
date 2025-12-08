@@ -23,7 +23,7 @@ type ResidenceCardProps = {
 export const ResidenceCard: FC<ResidenceCardProps> = ({ accomodation, href }) => {
   const t = useTranslations('findAccomodation.card')
   const { classes } = useStyles()
-  const { available, city, images_urls, name, nb_total_apartments, postal_code } = accomodation.properties
+  const { city, images_urls, name, nb_total_apartments, postal_code, published } = accomodation.properties
   const accommodationsTypes = accomodation.properties.nb_coliving_apartments ? [t('individual'), t('colocation')] : [t('individual')]
   const imageProps =
     images_urls && images_urls.length > 0
@@ -32,7 +32,7 @@ export const ResidenceCard: FC<ResidenceCardProps> = ({ accomodation, href }) =>
           imageComponent: <FindStudentAccommodationPlaceholderImageCard />,
         }
 
-  const badgeProps = available
+  const badgeProps = published
     ? {
         badge: (
           <Badge severity="success" noIcon as="span">
@@ -40,7 +40,13 @@ export const ResidenceCard: FC<ResidenceCardProps> = ({ accomodation, href }) =>
           </Badge>
         ),
       }
-    : {}
+    : {
+        badge: (
+          <Badge severity="error" noIcon as="span">
+            Dépubliée
+          </Badge>
+        ),
+      }
 
   const redirectUri = href ?? `/trouver-un-logement-etudiant/ville/${encodeURIComponent(city)}/${accomodation.properties.slug}`
   return (

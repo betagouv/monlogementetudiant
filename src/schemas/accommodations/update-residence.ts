@@ -45,6 +45,8 @@ export const ZUpdateResidence = z.object({
   residence_manager: z.boolean().optional(),
   cooking_plates: z.boolean().optional(),
   images_urls: z.array(z.string()).optional(),
+
+  published: z.boolean().optional(),
 })
 
 // For validation with existing accommodation data
