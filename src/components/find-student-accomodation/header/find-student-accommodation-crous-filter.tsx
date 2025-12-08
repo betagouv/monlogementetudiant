@@ -18,14 +18,14 @@ export const FindStudentAccommodationCrousFilter: FC = () => {
       segments={[
         {
           nativeInputProps: {
-            onClick: () => setQueryStates({ crous: 'true', page: 1 }),
+            onChange: () => setQueryStates({ crous: 'true', page: 1 }),
             checked: queryStates.crous === 'true',
           },
           label: t('crous'),
         },
         {
           nativeInputProps: {
-            onClick: () => setQueryStates({ crous: 'false', page: 1 }),
+            onChange: () => setQueryStates({ crous: 'false', page: 1 }),
             checked: queryStates.crous === 'false' || !queryStates.crous,
           },
           label: t('others'),
