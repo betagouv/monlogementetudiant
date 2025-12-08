@@ -55,10 +55,10 @@
     "en": "Anglais"
   },
   "navigation": {
-    "home": "Simuler mes aides au logement",
-    "prepareBudget": "Préparer mon budget étudiant",
+    "home": "Identifier les aides au logement",
+    "prepareBudget": { "title": "Préparer mon budget", "hints": "Conseils pratiques", "calculator": "Calculatrice de budget" },
     "prepareStudentLife": "Préparer sa vie étudiante",
-    "findAccommodation": "Trouver un logement étudiant",
+    "findAccommodation": "Trouver un logement",
     "byAcademies": "Par académies",
     "faq": "Foire aux questions",
     "workspace": {
@@ -197,14 +197,15 @@
   "prepareBudget": {
     "title": "Préparer mon budget étudiant",
     "sideMenu": {
-      "title": "Au programme",
+      "title": "Conseils pratiques",
       "items": {
         "monthlyResources": "1. Définir vos ressources mensuelles",
         "fixedCharges": "2. Identifier vos charges fixes",
         "variableExpenses": "3. Estimer vos dépenses variables",
         "exceptionalExpenses": "4. Anticiper les dépenses exceptionnelles",
         "aids": "5. Les aides à ne pas oublier"
-      }
+      },
+      "calculator": "Calculer son budget étudiant"
     },
     "content": {
       "subtitle": "Fiche pratique",
@@ -648,7 +649,9 @@
       "remainingBalance": "Solde restant",
       "savingsRate": "Taux d'épargne : {rate} %",
       "expensesBreakdown": "Répartition des dépenses",
-      "chartTooltipAmount": "Montant"
+      "chartTooltipAmount": "Montant",
+      "hintsCta": "Conseils pratiques pour son budget",
+      "hintsTitle": "Pour aller plus loin"
     }
   },
   "verification": {
