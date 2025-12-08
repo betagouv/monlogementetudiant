@@ -21,15 +21,6 @@ const getTerritoriesCategoryKey = (categoryKey: 'ville' | 'academie' | 'departem
   return keys[categoryKey] as keyof TTerritories
 }
 
-// const getQACategoryKey = (categoryKey: 'ville' | 'academie' | 'departement') => {
-//   const keys = {
-//     academie: 'academy',
-//     departement: 'department',
-//     ville: 'city',
-//   }
-//   return keys[categoryKey]
-// }
-
 export default async function FindStudentAccommodationPage({
   params,
   searchParams,
@@ -43,6 +34,7 @@ export default async function FindStudentAccommodationPage({
     colocation?: string
     object_id?: string
     page?: string
+    crous?: string
   }
 }) {
   const routeCategoryKey = params?.location?.[0] || ''
@@ -66,10 +58,6 @@ export default async function FindStudentAccommodationPage({
     ...searchParams,
     ...(territoryBbox && { bbox: `${territoryBbox?.west},${territoryBbox?.south},${territoryBbox?.east},${territoryBbox?.north}` }),
   })
-  // const qa = await getTerritoryQuestionsAnswers({
-  //   content_type: getQACategoryKey(routeCategoryKey as 'ville' | 'academie' | 'departement'),
-  //   object_id: territory?.id,
-  // })
 
   return (
     <>

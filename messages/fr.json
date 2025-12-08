@@ -152,7 +152,10 @@
       },
       "rangeLabel": "Budget maximum",
       "filtersCta": "Filtres",
-      "accessbility": "Adapté PMR"
+      "accessbility": "Adapté PMR",
+      "accommodations": "Résidences",
+      "crous": "Crous",
+      "others": "Autres résidences"
     },
     "filters": {
       "accommodations": "résidence",

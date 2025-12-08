@@ -7,6 +7,7 @@ export const getAccommodations = async (searchParams: {
   colocation?: string
   prix?: string
   page?: string
+  crous?: string
 }) => {
   const params = new URLSearchParams()
   if (searchParams.page) params.append('page', searchParams.page)
@@ -18,6 +19,7 @@ export const getAccommodations = async (searchParams: {
   if (searchParams.accessible) params.append('is_accessible', searchParams.accessible)
   if (searchParams.colocation) params.append('coliving', searchParams.colocation)
   if (searchParams.prix) params.append('price_max', searchParams.prix)
+  if (searchParams.crous) params.append('view_crous', searchParams.crous)
 
   const response = await fetch(`${process.env.API_URL}/accommodations/${params.size > 0 ? `?${params.toString()}` : ''}`)
   if (!response.ok) {
