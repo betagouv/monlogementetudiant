@@ -1,6 +1,7 @@
 'use client'
 
 import { fr } from '@codegouvfr/react-dsfr'
+import Button from '@codegouvfr/react-dsfr/Button'
 import SideMenu from '@codegouvfr/react-dsfr/SideMenu'
 import clsx from 'clsx'
 import { useTranslations } from 'next-intl'
@@ -87,7 +88,7 @@ export const PrepareBudgetSidemenu = () => {
   ]
 
   return (
-    <div className={clsx(fr.cx('fr-col-md-4'), classes.sideMenuContainer)}>
+    <div className={clsx('fr-col-md-4', classes.sideMenuContainer)}>
       <SideMenu
         className={clsx(fr.cx('fr-px-4w', 'fr-py-5w'), classes.sideMenu)}
         align="left"
@@ -99,6 +100,14 @@ export const PrepareBudgetSidemenu = () => {
         items={items}
         title={t('title').toUpperCase()}
       />
+      <div className="fr-hidden fr-unhidden-sm">
+        <hr className="fr-mx-4w fr-mb-3w" />
+        <div className="fr-px-4w">
+          <Button priority="secondary" iconId="ri-calculator-line" linkProps={{ href: '/simuler-budget', target: '_self' }}>
+            {t('calculator')}
+          </Button>
+        </div>
+      </div>
     </div>
   )
 }

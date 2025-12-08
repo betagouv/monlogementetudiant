@@ -1,5 +1,6 @@
 'use client'
 
+import Button from '@codegouvfr/react-dsfr/Button'
 import clsx from 'clsx'
 import { useTranslations } from 'next-intl'
 import { ExpensesPieChart } from '~/components/budget-simulation/expenses-pie-chart'
@@ -64,6 +65,12 @@ export function BudgetSummary() {
         </div>
       </div>
       <ExpensesPieChart />
+      <div className={clsx(styles.border, 'fr-flex fr-flex-gap-4v fr-direction-column fr-mt-4w fr-mb-2w fr-py-2w fr-px-4w')}>
+        <span className="fr-text-inverted--grey fr-h4 fr-mb-0">{t('hintsTitle')}</span>
+        <Button iconId="fr-icon-money-euro-circle-line" linkProps={{ href: '/preparer-mon-budget-etudiant', target: '_self' }}>
+          {t('hintsCta')}
+        </Button>
+      </div>
     </div>
   )
 }
