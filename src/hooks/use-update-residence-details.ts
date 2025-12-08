@@ -26,7 +26,9 @@ export const useUpdateResidenceDetails = (slug: string) => {
       return response.json()
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-accommodations'] })
+      queryClient.invalidateQueries({
+        predicate: (query) => query.queryKey[0] === 'my-accommodations',
+      })
       createToast({
         priority: 'success',
         message: 'Résidence mise à jour avec succès',

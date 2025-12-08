@@ -65,7 +65,9 @@ export const useUploadResidenceImages = (slug: string, name: string) => {
       return { images_urls: allImages }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-accommodations'] })
+      queryClient.invalidateQueries({
+        predicate: (query) => query.queryKey[0] === 'my-accommodations',
+      })
       createToast({
         priority: 'success',
         message: 'Images uploadées avec succès',
