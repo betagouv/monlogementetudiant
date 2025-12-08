@@ -56,3 +56,17 @@ export const ZTerritories = z.object({
 })
 
 export type TTerritories = z.infer<typeof ZTerritories>
+
+export const ZRentSearchResult = z.object({
+  city: z.string(),
+  rentPerM2: z.number(),
+  rentFor20M2: z.number(),
+})
+
+export const ZRentSearchResponse = z.object({
+  cities: z.array(ZRentSearchResult),
+  total: z.number(),
+})
+
+export type TRentSearchResult = z.infer<typeof ZRentSearchResult>
+export type TRentSearchResponse = z.infer<typeof ZRentSearchResponse>
