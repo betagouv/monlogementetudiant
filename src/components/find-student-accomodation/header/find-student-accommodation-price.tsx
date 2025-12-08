@@ -19,7 +19,7 @@ export const FindStudentAccommodationPrice = () => {
       hideMinMax
       step={50}
       suffix=" €"
-      style={{ width: '25%' }}
+      style={{ width: '260px' }}
       nativeInputProps={{ value: queryStates.prix, onChange: (e) => setQueryStates({ prix: Number(e.target.value), page: 1 }) }}
     />
   )

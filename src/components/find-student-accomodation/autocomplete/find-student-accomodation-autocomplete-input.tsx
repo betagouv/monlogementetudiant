@@ -1,6 +1,4 @@
 'use client'
-
-import { fr } from '@codegouvfr/react-dsfr'
 import Input from '@codegouvfr/react-dsfr/Input'
 import { useTranslations } from 'next-intl'
 import { FC } from 'react'
@@ -19,7 +17,7 @@ export const FindStudentAccomodationAutocompleteInput: FC = () => {
   }
 
   return (
-    <div className={classes.container}>
+    <div className="fr-position-relative">
       <Input
         classes={{ root: classes.input }}
         label={t('header.inputLabel')}
@@ -34,14 +32,8 @@ export const FindStudentAccomodationAutocompleteInput: FC = () => {
 }
 
 const useStyles = tss.create({
-  container: {
-    position: 'relative',
-    [fr.breakpoints.down('sm')]: {
-      width: '100%',
-    },
-    width: '30%',
-  },
   input: {
     marginBottom: '0 !important',
+    maxWidth: '260px',
   },
 })

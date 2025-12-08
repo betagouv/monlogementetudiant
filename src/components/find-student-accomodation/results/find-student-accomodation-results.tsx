@@ -29,6 +29,7 @@ export const FindStudentAccomodationResults: FC<FindStudentAccomodationResultsPr
     prix: parseAsInteger,
     accessible: parseAsString,
     colocation: parseAsString,
+    crous: parseAsString,
   })
 
   useEffect(() => {
