@@ -11,6 +11,7 @@ import { ResidenceDetails } from '~/components/bailleur/details/residence-parame
 import { ResidencePictures } from '~/components/bailleur/details/residence-pictures'
 import { ResidenceRedirection } from '~/components/bailleur/details/residence-redirection'
 import { ResidenceSummary } from '~/components/bailleur/details/residence-summary'
+import { UpdateResidencePublication } from '~/components/bailleur/details/update-residence-publication'
 import { useUpdateResidenceDetails } from '~/hooks/use-update-residence-details'
 import { TAccomodationMy } from '~/schemas/accommodations/accommodations'
 import { TUpdateResidence, createUpdateResidenceSchema } from '~/schemas/accommodations/update-residence'
@@ -73,6 +74,7 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
       residence_manager: accommodation.properties.residence_manager || false,
       cooking_plates: accommodation.properties.cooking_plates || false,
       images_urls: accommodation.properties.images_urls || [],
+      published: accommodation.properties.published,
     },
   })
 
@@ -89,6 +91,7 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <div className="fr-flex fr-direction-row fr-justify-content-space-between fr-align-items-md-center fr-flex-gap-4v">
           <h1 className="fr-mb-0">{accommodation.properties.name}</h1>
+          <UpdateResidencePublication onSubmit={onSubmit} />
         </div>
         <div className="fr-flex fr-direction-md-row fr-direction-column fr-justify-content-space-between fr-py-4w fr-flex-gap-4v">
           <div className={clsx(styles.container, 'fr-col-md-8')}>

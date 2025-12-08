@@ -50,6 +50,7 @@ export const ZAccomodation = z.object({
     residence_type: z.nativeEnum(EResidence),
     slug: z.string().max(250),
     accept_waiting_list: z.boolean(),
+    published: z.boolean(),
   }),
 })
 
@@ -188,6 +189,7 @@ export const ZAccomodationMy = z.object({
     slug: z.string().max(250),
     accept_waiting_list: z.boolean(),
     updated_at: z.date(),
+    published: z.boolean(),
   }),
 })
 export type TAccomodationMy = z.infer<typeof ZAccomodationMy>
