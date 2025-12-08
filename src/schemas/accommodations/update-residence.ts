@@ -47,6 +47,7 @@ export const ZUpdateResidence = z.object({
   images_urls: z.array(z.string()).optional(),
 
   published: z.boolean().optional(),
+  scholarship_holders_priority: z.boolean().optional(),
 })
 
 // For validation with existing accommodation data

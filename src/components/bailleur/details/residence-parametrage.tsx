@@ -44,6 +44,16 @@ export const ResidenceDetails = () => {
             )}
           />
         </div>
+        <div className="fr-py-4w fr-flex fr-justify-content-space-between fr-align-items-center">
+          <span>{t('scholarship')}</span>
+          <Controller
+            name="scholarship_holders_priority"
+            control={control}
+            render={({ field }) => (
+              <ToggleSwitch inputTitle="" label="" showCheckedHint={false} checked={field.value} onChange={field.onChange} />
+            )}
+          />
+        </div>
         {/* <div className="fr-py-4w fr-flex fr-justify-content-space-between fr-align-items-center">
           <span>{t('accessible')}</span>
           <Controller
