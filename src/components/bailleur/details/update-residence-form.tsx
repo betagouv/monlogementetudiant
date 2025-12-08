@@ -75,6 +75,7 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
       cooking_plates: accommodation.properties.cooking_plates || false,
       images_urls: accommodation.properties.images_urls || [],
       published: accommodation.properties.published,
+      scholarship_holders_priority: accommodation.properties.scholarship_holders_priority || false,
     },
   })
 
