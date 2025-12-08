@@ -6,6 +6,7 @@ import { Select } from '@codegouvfr/react-dsfr/Select'
 import clsx from 'clsx'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
+import { RentSearchModal } from '~/components/ui/rent-search-modal'
 import { EXPENSE_RANGES, ExpenseType, useBudgetSimulator } from './budget-simulator-context'
 import styles from './forms.module.css'
 
@@ -88,6 +89,7 @@ export function ExpenseForm() {
                   }}
                   iconId="ri-money-euro-circle-line"
                 />
+
                 {EXPENSE_RANGES[type as keyof typeof EXPENSE_RANGES] && (
                   <span className="fr-text--xs fr-mb-0">
                     {t('amountHint', {
@@ -96,12 +98,23 @@ export function ExpenseForm() {
                     })}
                   </span>
                 )}
+                {type === 'housing' && (
+                  <RentSearchModal
+                    onApply={(selectedCity) => {
+                      handleExpenseChange('housing', Math.round(selectedCity.rentFor20M2))
+                    }}
+                  />
+                )}
               </div>
             </div>
             <div
               className={clsx(
-                EXPENSE_RANGES[type as keyof typeof EXPENSE_RANGES] ? 'fr-align-items-center fr-mt-1w' : 'fr-align-items-end fr-mb-1w',
                 'fr-flex fr-flex-gap-2v',
+                type === 'housing'
+                  ? 'fr-align-items-center fr-mb-1w'
+                  : EXPENSE_RANGES[type as keyof typeof EXPENSE_RANGES]
+                    ? 'fr-align-items-center fr-mt-1w'
+                    : 'fr-align-items-end fr-mb-1w',
               )}
             >
               {index === state.activeExpenseTypes.length - 1 && canAddMore ? (
