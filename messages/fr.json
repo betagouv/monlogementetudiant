@@ -717,6 +717,9 @@
     },
     "residences": {
       "details": {
+        "published": "Publiée",
+        "publishedLegend": "Publication de la résidence",
+        "unpublished": "Dépubliée",
         "title": "Paramétrage de la résidence",
         "accommodationName": "Nom de la résidence",
         "waitingList": "La résidence accepte les candidatures en liste d'attente",
