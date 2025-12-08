@@ -711,6 +711,14 @@
       "statistics": {
         "title": "En quelques chiffres"
       }
+    },
+    "residences": {
+      "details": {
+        "title": "Paramétrage de la résidence",
+        "accommodationName": "Nom de la résidence",
+        "waitingList": "La résidence accepte les candidatures en liste d'attente",
+        "accessible": "La résidence dispose de logements adaptés PMR"
+      }
     }
   }
 }

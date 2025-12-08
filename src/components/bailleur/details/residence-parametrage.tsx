@@ -2,6 +2,7 @@
 
 import Input from '@codegouvfr/react-dsfr/Input'
 import ToggleSwitch from '@codegouvfr/react-dsfr/ToggleSwitch'
+import { useTranslations } from 'next-intl'
 import { Controller, useFormContext } from 'react-hook-form'
 import { TUpdateResidence } from '~/schemas/accommodations/update-residence'
 
@@ -11,14 +12,15 @@ export const ResidenceDetails = () => {
     formState: { errors },
     control,
   } = useFormContext<TUpdateResidence>()
+  const t = useTranslations('bailleur.residences.details')
   return (
     <div className="fr-border-bottom">
       <div className="fr-p-2w fr-p-md-6w">
-        <h3>Paramétrage de la résidence</h3>
+        <h3>{t('title')}</h3>
         <Input
           label={
             <>
-              Nom de la résidence <span className="fr-text-">*</span>
+              {t('accommodationName')} <span className="fr-text-">*</span>
             </>
           }
           nativeInputProps={register('name')}
@@ -27,7 +29,7 @@ export const ResidenceDetails = () => {
         />
 
         <div className="fr-py-4w fr-flex fr-justify-content-space-between fr-align-items-center">
-          <span>Le bailleur accepte les listes d'attente</span>
+          <span>{t('waitingList')}</span>
           <Controller
             name="accept_waiting_list"
             control={control}
@@ -43,11 +45,19 @@ export const ResidenceDetails = () => {
           />
         </div>
         {/* <div className="fr-py-4w fr-flex fr-justify-content-space-between fr-align-items-center">
-          <span>Des logements PMR sont disponibles dans la résidence</span>
-          <ToggleSwitch 
-            inputTitle="pmr_available" 
-            label="" 
-            showCheckedHint={false}
+          <span>{t('accessible')}</span>
+          <Controller
+            name="accept_waiting_list"
+            control={control}
+            render={({ field }) => (
+              <ToggleSwitch
+                inputTitle=""
+                label=""
+                showCheckedHint={false}
+                checked={field.value}
+                onChange={field.onChange}
+              />
+            )}
           />
         </div> */}
       </div>
