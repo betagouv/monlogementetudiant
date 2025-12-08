@@ -113,10 +113,7 @@ export const ResidenceList: FC<ResidenceListProps> = ({ initialData }) => {
               <div>
                 <ResidenceCard key={index} accomodation={accommodation} href={`/bailleur/residences/${accommodation.properties.slug}`} />
               </div>
-              <div className="fr-width-full fr-p-4w fr-border-left fr-border-bottom" style={{ background: 'white' }}>
-                {badgeAvailability}
-                <UpdateResidenceList accommodation={accommodation} />
-              </div>
+              <UpdateResidenceList accommodation={accommodation}>{badgeAvailability}</UpdateResidenceList>
             </div>
           )
         })}

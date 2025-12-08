@@ -10,12 +10,6 @@ export const FooterComponent = async () => {
   const popularCities = await getPopularCities()
   const sortedPopularCities = popularCities.sort((a, b) => b.nb_total_apartments - a.nb_total_apartments)
 
-  const operatorLogo: NonNullable<FooterProps['operatorLogo']> = {
-    alt: 'Mon logement étudiant - logo',
-    imgUrl: '/images/logo.svg',
-    orientation: 'horizontal',
-  }
-
   const partnersLogos: NonNullable<FooterProps['partnersLogos']> = {
     sub: [
       {
@@ -131,7 +125,6 @@ export const FooterComponent = async () => {
           {t('header.description')}
         </>
       }
-      operatorLogo={operatorLogo}
       partnersLogos={partnersLogos}
       bottomItems={bottomItems}
       termsLinkProps={{
