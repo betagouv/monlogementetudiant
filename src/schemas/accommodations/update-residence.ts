@@ -33,7 +33,7 @@ export const ZUpdateResidence = z.object({
   price_max_t4_more: z.number().min(0).nullish(),
 
   nb_accessible_apartments: z.number().nullish(),
-  
+
   refrigerator: z.boolean().optional(),
   laundry_room: z.boolean().optional(),
   bathroom: z.enum(['private', 'shared']).optional(),
