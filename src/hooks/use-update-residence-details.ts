@@ -15,6 +15,7 @@ export const useUpdateResidenceDetails = (slug: string) => {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          cache: 'no-store',
         },
         body: JSON.stringify(data),
       })
@@ -25,9 +26,10 @@ export const useUpdateResidenceDetails = (slug: string) => {
 
       return response.json()
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        predicate: (query) => query.queryKey[0] === 'my-accommodations',
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['my-accommodations'],
+        exact: false,
       })
       createToast({
         priority: 'success',

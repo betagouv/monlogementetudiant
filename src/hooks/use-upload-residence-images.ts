@@ -64,9 +64,10 @@ export const useUploadResidenceImages = (slug: string, name: string) => {
 
       return { images_urls: allImages }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        predicate: (query) => query.queryKey[0] === 'my-accommodations',
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['my-accommodations'],
+        exact: false,
       })
       createToast({
         priority: 'success',
@@ -104,7 +105,7 @@ export const useDeleteResidenceImage = (slug: string, name: string) => {
       return response.json()
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-accommodations'] })
+      queryClient.refetchQueries({ queryKey: ['my-accommodations'] })
       createToast({
         priority: 'success',
         message: 'Image supprimée avec succès',
