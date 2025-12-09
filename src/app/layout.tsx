@@ -2,7 +2,6 @@ import * as Sentry from '@sentry/nextjs'
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages, getTranslations } from 'next-intl/server'
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
-import { FooterComponent } from '~/components/ui/footer/footer'
 import { NextAuthProvider } from '~/providers/next-auth'
 import { TanstackQueryClientProvider } from '~/providers/tanstack-client'
 import '~/globals.css'
@@ -53,7 +52,6 @@ export default async function RootLayout({
                   <NuqsAdapter>
                     {children}
                     <Toaster />
-                    <FooterComponent />
                   </NuqsAdapter>
                 </TanstackQueryClientProvider>
               </DsfrProvider>
