@@ -105,6 +105,9 @@ export const FindStudentAccomodationResults: FC<FindStudentAccomodationResultsPr
                   if (queryStates.prix) {
                     params.set('prix', queryStates.prix.toString())
                   }
+                  if (queryStates.crous) {
+                    params.set('crous', queryStates.crous.toString())
+                  }
                   params.set('page', page.toString())
                   return { href: `/trouver-un-logement-etudiant?${params.toString()}` }
                 }}
