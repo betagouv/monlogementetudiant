@@ -3,10 +3,8 @@
 import Button from '@codegouvfr/react-dsfr/Button'
 import Input from '@codegouvfr/react-dsfr/Input'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useRouter } from 'next/navigation'
 import React, { FC } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
-import { createToast } from '~/components/ui/createToast'
 import { useUpdateAccommodation } from '~/hooks/use-update-accommodation'
 import { TAccomodation } from '~/schemas/accommodations/accommodations'
 import { TUpdateResidenceList, createUpdateResidenceListSchema } from '~/schemas/accommodations/update-residence-list'
@@ -18,9 +16,7 @@ interface UpdateResidenceListProps {
 }
 
 export const UpdateResidenceList: FC<UpdateResidenceListProps> = ({ accommodation, children }) => {
-  const router = useRouter()
-
-  const { mutate: updateAccommodation, isPending } = useUpdateAccommodation(accommodation.properties.slug)
+  const { mutateAsync: updateAccommodation, isPending } = useUpdateAccommodation(accommodation.properties.slug)
   const form = useForm<TUpdateResidenceList>({
     defaultValues: {
       nb_t1_available: accommodation.properties.nb_t1_available ?? 0,
@@ -42,26 +38,12 @@ export const UpdateResidenceList: FC<UpdateResidenceListProps> = ({ accommodatio
 
   const { formState, handleSubmit, register } = form
 
-  const onSubmit = (data: TUpdateResidenceList) => {
-    updateAccommodation(data, {
-      onSuccess: () => {
-        createToast({
-          priority: 'success',
-          message: 'Résidence mise à jour avec succès',
-        })
-        router.refresh()
-      },
-      onError: () => {
-        createToast({
-          priority: 'error',
-          message: 'Erreur lors de la mise à jour de la résidence',
-        })
-      },
-    })
+  const onSubmit = async (data: TUpdateResidenceList) => {
+    await updateAccommodation(data)
   }
 
   return (
-    <div className="fr-width-full fr-p-4w fr-border-left fr-border-bottom" style={{ background: 'white' }}>
+    <div className="fr-width-full fr-p-4w fr-border-top fr-border-right fr-border-bottom" style={{ background: 'white' }}>
       <FormProvider {...form}>
         <form onSubmit={handleSubmit(onSubmit)} className="fr-height-full">
           <div className="fr-flex fr-direction-column fr-flex-gap-6v fr-justify-content-space-between fr-height-full">
