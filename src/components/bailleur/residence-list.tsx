@@ -11,15 +11,9 @@ import { sPluriel } from '~/utils/sPluriel'
 
 const ResidenceListSkeleton = () => {
   return (
-    <>
+    <div className="fr-flex fr-direction-column fr-flex-gap-6v">
       {Array.from({ length: 6 }).map((_, index) => (
-        <div
-          key={index}
-          className={clsx(
-            'fr-flex fr-direction-md-row fr-direction-column fr-border-top fr-border-left fr-border-right',
-            index === 5 && 'fr-border-bottom',
-          )}
-        >
+        <div key={index} className={clsx('fr-flex fr-direction-md-row fr-direction-column fr-border', index === 5 && 'fr-border-bottom')}>
           <div className="fr-p-md-4w" style={{ minWidth: '384px' }}>
             <div className="skeleton-rectangle" style={{ height: '200px' }} />
           </div>
@@ -51,7 +45,7 @@ const ResidenceListSkeleton = () => {
           </div>
         </div>
       ))}
-    </>
+    </div>
   )
 }
 
@@ -78,7 +72,7 @@ export const ResidenceList: FC<ResidenceListProps> = ({ initialData }) => {
   }
 
   return (
-    <>
+    <div className="fr-flex fr-direction-column fr-flex-gap-6v">
       {accommodations?.count &&
         accommodationsList.map((accommodation, index) => {
           const { nb_t1_available, nb_t1_bis_available, nb_t2_available, nb_t3_available, nb_t4_more_available } = accommodation.properties
@@ -105,18 +99,16 @@ export const ResidenceList: FC<ResidenceListProps> = ({ initialData }) => {
           return (
             <div
               className={clsx(
-                'fr-flex fr-direction-md-row fr-direction-column fr-border-top fr-border-left fr-border-right fr-mb-2w fr-mb-md-0',
+                'fr-flex fr-direction-md-row fr-direction-column fr-mb-2w fr-mb-md-0',
                 index === accommodationsList.length - 1 && 'fr-border-bottom',
               )}
               key={accommodation.id}
             >
-              <div>
-                <ResidenceCard key={index} accomodation={accommodation} href={`/bailleur/residences/${accommodation.properties.slug}`} />
-              </div>
+              <ResidenceCard key={index} accomodation={accommodation} href={`/bailleur/residences/${accommodation.properties.slug}`} />
               <UpdateResidenceList accommodation={accommodation}>{badgeAvailability}</UpdateResidenceList>
             </div>
           )
         })}
-    </>
+    </div>
   )
 }

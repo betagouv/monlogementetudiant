@@ -26,6 +26,7 @@ export async function PATCH(request: Request, { params }: { params: { slug: stri
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${session.accessToken}`,
+        cache: 'no-store',
       },
       body: JSON.stringify(validatedData),
     })
