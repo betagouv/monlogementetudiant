@@ -4,6 +4,9 @@ import { ResidenceFilters } from '~/components/bailleur/residence-filters'
 import { ResidenceList } from '~/components/bailleur/residence-list'
 import { getMyAccommodations } from '~/server-only/bailleur/get-my-accommodations'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 type SearchParams = {
   page?: string
   disponible?: string
