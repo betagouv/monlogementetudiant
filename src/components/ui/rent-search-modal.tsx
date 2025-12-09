@@ -5,6 +5,7 @@ import Button from '@codegouvfr/react-dsfr/Button'
 import Input from '@codegouvfr/react-dsfr/Input'
 import { createModal } from '@codegouvfr/react-dsfr/Modal'
 import clsx from 'clsx'
+import Link from 'next/link'
 import { useState } from 'react'
 import { tss } from 'tss-react'
 import { useDebounce } from 'use-debounce'
@@ -114,7 +115,18 @@ export const RentSearchModal = ({ onApply, onCancel }: RentSearchModalProps) => 
 
           {selectedCity && (
             <div className="fr-flex fr-justify-content-space-between fr-align-items-center fr-py-4w fr-px-2w fr-border">
-              <span>Loyer moyen pour 20m²</span>
+              <div className="fr-flex fr-direction-column">
+                <span className="fr-text--md fr-mb-0">Loyer moyen pour 20m²</span>
+                <span className="fr-text--xs fr-mb-0 fr-text-mention--grey">
+                  D'après la&nbsp;
+                  <Link
+                    href="https://www.data.gouv.fr/datasets/carte-des-loyers-indicateurs-de-loyers-dannonce-par-commune-en-2024/"
+                    target="_blank"
+                  >
+                    Carte des loyers 2024
+                  </Link>
+                </span>
+              </div>
               <span className="fr-text--bold">{selectedCity.rentFor20M2.toFixed(2)} €</span>
             </div>
           )}
