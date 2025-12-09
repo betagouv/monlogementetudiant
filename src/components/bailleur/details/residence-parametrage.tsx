@@ -54,22 +54,20 @@ export const ResidenceDetails = () => {
             )}
           />
         </div>
-        {/* <div className="fr-py-4w fr-flex fr-justify-content-space-between fr-align-items-center">
+        <div className="fr-py-4w fr-flex fr-justify-content-space-between fr-align-items-center">
           <span>{t('accessible')}</span>
-          <Controller
-            name="accept_waiting_list"
-            control={control}
-            render={({ field }) => (
-              <ToggleSwitch
-                inputTitle=""
-                label=""
-                showCheckedHint={false}
-                checked={field.value}
-                onChange={field.onChange}
-              />
-            )}
+          <Input
+            hideLabel
+            label={t('accessible')}
+            style={{ width: '74px' }}
+            className="fr-mr-4w"
+            nativeInputProps={{
+              ...register('nb_accessible_apartments', { valueAsNumber: true }),
+              type: 'number',
+              min: 0,
+            }}
           />
-        </div> */}
+        </div>
       </div>
     </div>
   )
