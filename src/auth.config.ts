@@ -18,6 +18,7 @@ interface TokenInterface {
 }
 
 export const fiveteenMinutes = 15 * 60 * 1000
+export const fiveMinutes = 5 * 60 * 1000
 
 function getTokenExpiration(token: string): number {
   try {
@@ -120,8 +121,7 @@ export const authConfig = {
     strategy: 'jwt',
   },
   callbacks: {
-    // biome-ignore lint/suspicious/noExplicitAny: TODO
-    async jwt({ token, user }: any) {
+    async jwt({ token, user }) {
       if (user) {
         token.accessToken = user.accessToken
         token.refreshToken = user.refreshToken
@@ -129,11 +129,11 @@ export const authConfig = {
         token.user = user.user
       }
 
-      // Return previous token if the access token has not expired yet
-      if (Date.now() < (token.accessTokenExpires as number)) {
+      // Return previous token if the access token has not expired yet (with 5 min buffer)
+      if (Date.now() < (token.accessTokenExpires as number) - fiveMinutes) {
         return token
       } else {
-        const tokens = await refreshAccessToken(token)
+        const tokens = await refreshAccessToken(token as TokenInterface)
         if (tokens) {
           token.accessToken = tokens.accessToken
           token.refreshToken = tokens.refreshToken
