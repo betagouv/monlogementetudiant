@@ -115,15 +115,16 @@ export const RentSearchModal = ({ onApply, onCancel }: RentSearchModalProps) => 
 
           {selectedCity && (
             <div className="fr-flex fr-justify-content-space-between fr-align-items-center fr-py-4w fr-px-2w fr-border">
-              <div className="fr-flex fr-direction-column">
+              <div className="fr-flex fr-direction-column fr-col-md-8">
                 <span className="fr-text--md fr-mb-0">Loyer moyen pour 20m²</span>
                 <span className="fr-text--xs fr-mb-0 fr-text-mention--grey">
-                  D'après la&nbsp;
+                  D'après les&nbsp;
                   <Link
                     href="https://www.data.gouv.fr/datasets/carte-des-loyers-indicateurs-de-loyers-dannonce-par-commune-en-2024/"
                     target="_blank"
                   >
-                    Carte des loyers 2024
+                    Estimations de l’Agence Nationale pour l’Information sur le Logement (ANIL), à partir des données de SeLoger et de
+                    Leboncoin
                   </Link>
                 </span>
               </div>
