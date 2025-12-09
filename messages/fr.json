@@ -727,7 +727,7 @@
         "title": "Paramétrage de la résidence",
         "accommodationName": "Nom de la résidence",
         "waitingList": "La résidence accepte les candidatures en liste d'attente",
-        "accessible": "La résidence dispose de logements adaptés PMR",
+        "accessible": "Nombre de logements adaptés PMR",
         "scholarship": "Les étudiants boursiers sont prioritaires dans la résidence"
       }
     }
