@@ -43,17 +43,84 @@ const BoundsHandler: FC = () => {
         ['recherche-par-carte']: 'true',
       })
     },
-    zoomend: (e) => {
-      const bounds = e.target.getBounds()
-      setQueryStates({
-        bbox: `${bounds.getWest()},${bounds.getSouth()},${bounds.getEast()},${bounds.getNorth()}`,
-        academie: null,
-        ['recherche-par-carte']: 'true',
-      })
-    },
   })
 
   return null
+}
+
+const CustomZoomControls: FC = () => {
+  const map = useMap()
+  const [, setQueryStates] = useQueryStates({
+    bbox: parseAsString,
+    academie: parseAsString,
+    ['recherche-par-carte']: parseAsString,
+  })
+
+  const handleZoomIn = () => {
+    map.zoomIn()
+    const bounds = map.getBounds()
+    setQueryStates({
+      bbox: `${bounds.getWest()},${bounds.getSouth()},${bounds.getEast()},${bounds.getNorth()}`,
+      academie: null,
+      ['recherche-par-carte']: 'true',
+    })
+  }
+
+  const handleZoomOut = () => {
+    map.zoomOut()
+    const bounds = map.getBounds()
+
+    setQueryStates({
+      bbox: `${bounds.getWest()},${bounds.getSouth()},${bounds.getEast()},${bounds.getNorth()}`,
+      academie: null,
+      ['recherche-par-carte']: 'true',
+    })
+  }
+
+  return (
+    <div
+      className="leaflet-control-zoom leaflet-bar leaflet-control "
+      style={{
+        position: 'absolute',
+        top: '10px',
+        left: '10px',
+        zIndex: 1000,
+      }}
+    >
+      <button
+        className="leaflet-control-zoom-in"
+        type="button"
+        title="Zoom in"
+        onClick={handleZoomIn}
+        style={{
+          width: '30px',
+          height: '30px',
+          display: 'block',
+          border: 'none',
+          backgroundColor: 'white',
+          cursor: 'pointer',
+        }}
+      >
+        +
+      </button>
+      <button
+        className="leaflet-control-zoom-out"
+        type="button"
+        title="Zoom out"
+        onClick={handleZoomOut}
+        style={{
+          width: '30px',
+          height: '30px',
+          display: 'block',
+          border: 'none',
+          backgroundColor: 'white',
+          cursor: 'pointer',
+        }}
+      >
+        −
+      </button>
+    </div>
+  )
 }
 
 export const AccomodationsMap: FC<AccomodationsMapProps> = ({ data }) => {
@@ -85,12 +152,13 @@ export const AccomodationsMap: FC<AccomodationsMapProps> = ({ data }) => {
 
   const memoizedMap = useMemo(() => {
     return (
-      <MapContainer center={[46.5, 2.4]} zoom={6} className={classes.mapContainer} scrollWheelZoom={false}>
+      <MapContainer center={[46.5, 2.4]} zoom={6} className={classes.mapContainer} scrollWheelZoom={false} zoomControl={false}>
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
         <BoundsHandler />
+        <CustomZoomControls />
         {markers}
       </MapContainer>
     )
