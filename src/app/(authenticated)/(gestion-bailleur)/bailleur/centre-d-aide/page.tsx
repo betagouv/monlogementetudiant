@@ -17,7 +17,7 @@ export default async function CentreDAidePage() {
           <DocumentSearch width={62} height={66} />
           <h1 className="fr-mb-0">Centre d'aide</h1>
         </div>
-        <Button iconId="ri-search-line" priority="secondary">
+        <Button iconId="ri-search-line" priority="secondary" linkProps={{ href: 'mailto:contact@monlogementetudiant.beta.gouv.fr' }}>
           Contacter l'équipe
         </Button>
       </div>
