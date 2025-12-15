@@ -26,8 +26,8 @@
     "description": "Mon logement étudiant - Votre guide à l'accès au logement étudiant",
     "homeLinkTitle": "Accueil - Mon logement étudiant",
     "workspace": {
-      "description": "Votre espace bailleur",
-      "title": "Espace bailleur - Gestion de vos résidences"
+      "description": "Votre espace gestionnaire",
+      "title": "Espace gestionnaire - Gestion de vos résidences"
     }
   },
   "header": {
@@ -533,7 +533,7 @@
     },
     "backToLogin": "Retour à la page de connexion",
     "success": {
-      "description": "Si cet identifiant correspond bien à votre compte, un e-mail vous a été envoyé pour vous permettre de réinitialiser votre mot de passe. En cas de difficulté veuillez contacter <mailto>support@monlogementetudiant.beta.gouv.fr</mailto>"
+      "description": "Si cet identifiant correspond bien à votre compte, un e-mail vous a été envoyé pour vous permettre de réinitialiser votre mot de passe. En cas de difficulté veuillez contacter <mailto>contact@monlogementetudiant.beta.gouv.fr</mailto>"
     }
   },
   "resetPassword": {
@@ -671,9 +671,12 @@
     }
   },
   "bailleur": {
+    "header": {
+      "title": "Espace gestionnaire"
+    },
     "dashboard": {
       "breadcrumb": {
-        "title": "Espace bailleur de {name}"
+        "title": "Espace gestionnaire de {name}"
       },
       "welcome": {
         "title": "Ravi de vous revoir {firstname} 👋"
