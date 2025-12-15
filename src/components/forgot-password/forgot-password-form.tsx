@@ -32,7 +32,7 @@ export const ForgotPasswordForm: FC = () => {
   }
 
   const alertDescription = t.rich('success.description', {
-    mailto: (chunks) => <a href="mailto:support@monlogementetudiant.beta.gouv.fr">{chunks}</a>,
+    mailto: (chunks) => <a href="mailto:contact@monlogementetudiant.beta.gouv.fr">{chunks}</a>,
   }) as NonNullable<ReactNode>
 
   const { errors } = forgotPasswordForm.formState

@@ -37,7 +37,7 @@ export const WorkspaceHeaderComponent: FC = async () => {
         serviceTitle={
           <>
             {t('header.title')}
-            <span className={fr.cx('fr-ml-1w', 'fr-badge', 'fr-badge--new', 'fr-badge--no-icon')}>ESPACE BAILLEUR</span>
+            <span className="fr-ml-1w fr-badge fr-badge--new fr-badge--no-icon fr-text--uppercase">{t('bailleur.header.title')}</span>
           </>
         }
         navigation={<WorkspaceHeaderNavigation />}
