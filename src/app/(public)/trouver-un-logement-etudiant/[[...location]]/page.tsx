@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { fr } from '@codegouvfr/react-dsfr'
+import { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { FindStudentAccommodationTitle } from '~/components/find-student-accomodation/header/find-student-accommodation-title'
 import { FindStudentAccomodationHeader } from '~/components/find-student-accomodation/header/find-student-accomodation-header'
@@ -19,6 +20,25 @@ const getTerritoriesCategoryKey = (categoryKey: 'ville' | 'academie' | 'departem
     ville: 'cities',
   }
   return keys[categoryKey] as keyof TTerritories
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { location: string }
+}): Promise<Metadata> {
+  const routeCategoryKey = params?.location?.[0] || ''
+
+  if (routeCategoryKey === 'academie') {
+    return {
+      robots: {
+        index: false,
+        follow: false,
+      },
+    }
+  }
+
+  return {}
 }
 
 export default async function FindStudentAccommodationPage({
