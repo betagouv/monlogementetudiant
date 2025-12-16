@@ -48,6 +48,7 @@ export default async function FindStudentAccommodationPage({
   params: { location: string }
   searchParams: {
     accessible: string
+    academie?: string
     prix?: string
     bbox?: string
     content_type?: string
@@ -70,14 +71,20 @@ export default async function FindStudentAccommodationPage({
   if (routeCategoryKey && routeLocation && !territory) {
     redirect(`/trouver-un-logement-etudiant`)
   }
-
   const territoryBbox = territory?.bbox
     ? expandBbox(territory.bbox.xmin, territory.bbox.ymin, territory.bbox.xmax, territory.bbox.ymax)
     : undefined
-  const accommodations = await getAccommodations({
+
+  // do not use bbox while fetching if user searching by academy
+  const isAcademy = routeCategoryKey === 'academie'
+  const accommodationsParams = {
     ...searchParams,
-    ...(territoryBbox && { bbox: `${territoryBbox?.west},${territoryBbox?.south},${territoryBbox?.east},${territoryBbox?.north}` }),
-  })
+    ...(isAcademy && territory ? { academie: territory.id.toString() } : {}),
+    ...(!isAcademy && territoryBbox
+      ? { bbox: `${territoryBbox.west},${territoryBbox.south},${territoryBbox.east},${territoryBbox.north}` }
+      : {}),
+  }
+  const accommodations = await getAccommodations(accommodationsParams)
 
   return (
     <>
@@ -85,7 +92,7 @@ export default async function FindStudentAccommodationPage({
         <FindStudentAccommodationTitle location={territory?.name} />
         <FindStudentAccomodationHeader />
         <FindStudentAccomodationSortView data={accommodations} territory={territory} />
-        <FindStudentAccomodationResults data={accommodations} territory={territory} />
+        <FindStudentAccomodationResults data={accommodations} territory={territory} isAcademy={isAcademy} />
       </div>
       <FindStudentAccommodationQA />
     </>

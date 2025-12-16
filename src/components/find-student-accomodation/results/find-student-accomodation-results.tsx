@@ -19,10 +19,12 @@ import { TTerritory } from '~/schemas/territories'
 type FindStudentAccomodationResultsProps = {
   data: TGetAccomodationsResponse
   territory?: TTerritory
+  isAcademy?: boolean
 }
-export const FindStudentAccomodationResults: FC<FindStudentAccomodationResultsProps> = ({ data, territory }) => {
+export const FindStudentAccomodationResults: FC<FindStudentAccomodationResultsProps> = ({ data, territory, isAcademy }) => {
   const t = useTranslations('findAccomodation.results')
   const [queryStates, setQueryStates] = useQueryStates({
+    academie: parseAsString,
     vue: parseAsString,
     page: parseAsInteger,
     bbox: parseAsString,
@@ -30,12 +32,19 @@ export const FindStudentAccomodationResults: FC<FindStudentAccomodationResultsPr
     accessible: parseAsString,
     colocation: parseAsString,
     crous: parseAsString,
+    ['recherche-par-carte']: parseAsString,
   })
 
   useEffect(() => {
-    if (territory && territory.bbox) {
-      const expanded = expandBbox(territory.bbox.xmin, territory.bbox.ymin, territory.bbox.xmax, territory.bbox.ymax)
-      setQueryStates({ bbox: `${expanded.west},${expanded.south},${expanded.east},${expanded.north}` })
+    const hasMapInteraction = queryStates['recherche-par-carte'] === 'true'
+
+    if (!hasMapInteraction) {
+      if (territory && territory.bbox && !isAcademy) {
+        const expanded = expandBbox(territory.bbox.xmin, territory.bbox.ymin, territory.bbox.xmax, territory.bbox.ymax)
+        setQueryStates({ bbox: `${expanded.west},${expanded.south},${expanded.east},${expanded.north}` })
+      } else if (territory && isAcademy) {
+        setQueryStates({ academie: territory.id.toString() })
+      }
     }
   }, [])
 
@@ -93,9 +102,17 @@ export const FindStudentAccomodationResults: FC<FindStudentAccomodationResultsPr
                 getPageLinkProps={(page: number) => {
                   const params = new URLSearchParams()
                   if (queryStates.vue) params.set('vue', queryStates.vue)
-                  if (queryStates.bbox) {
-                    params.set('bbox', `${queryStates.bbox}`)
+
+                  const hasMapInteraction = queryStates['recherche-par-carte'] === 'true'
+                  if (hasMapInteraction && queryStates.bbox) {
+                    params.set('bbox', queryStates.bbox)
+                    params.set('recherche-par-carte', 'true')
+                  } else if (queryStates.academie) {
+                    params.set('academie', queryStates.academie)
+                  } else if (queryStates.bbox) {
+                    params.set('bbox', queryStates.bbox)
                   }
+
                   if (queryStates.accessible) {
                     params.set('accessible', queryStates.accessible)
                   }

@@ -2,6 +2,7 @@ import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommod
 
 export const getAccommodations = async (searchParams: {
   accessible?: string
+  academie?: string
   bbox?: string
   center?: string
   colocation?: string
@@ -20,6 +21,7 @@ export const getAccommodations = async (searchParams: {
   if (searchParams.colocation) params.append('coliving', searchParams.colocation)
   if (searchParams.prix) params.append('price_max', searchParams.prix)
   if (searchParams.crous) params.append('view_crous', searchParams.crous)
+  if (searchParams.academie) params.append('academy_id', searchParams.academie)
 
   const response = await fetch(`${process.env.API_URL}/accommodations/${params.size > 0 ? `?${params.toString()}` : ''}`)
   if (!response.ok) {
