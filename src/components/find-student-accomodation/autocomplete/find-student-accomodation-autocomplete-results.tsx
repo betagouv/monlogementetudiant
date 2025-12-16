@@ -55,7 +55,10 @@ export const FindStudentAccomodationAutocompleteResults: FC<FindStudentAccomodat
               <ul className={classes.list}>
                 {items.map((item: TTerritory) => {
                   const searchParams = new URLSearchParams()
-                  searchParams.set('vue', 'carte')
+                  // we dont want to set the vue to carte in this case
+                  if (categoryKey !== 'academies') {
+                    searchParams.set('vue', 'carte')
+                  }
                   return (
                     <Link
                       key={item.id}
