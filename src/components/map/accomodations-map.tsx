@@ -18,6 +18,7 @@ const BoundsHandler: FC = () => {
   const map = useMap()
   const [queryStates, setQueryStates] = useQueryStates({
     bbox: parseAsString,
+    academie: parseAsString,
     ['recherche-par-carte']: parseAsString,
   })
 
@@ -38,6 +39,7 @@ const BoundsHandler: FC = () => {
       const bounds = e.target.getBounds()
       setQueryStates({
         bbox: `${bounds.getWest()},${bounds.getSouth()},${bounds.getEast()},${bounds.getNorth()}`,
+        academie: null,
         ['recherche-par-carte']: 'true',
       })
     },
@@ -45,6 +47,7 @@ const BoundsHandler: FC = () => {
       const bounds = e.target.getBounds()
       setQueryStates({
         bbox: `${bounds.getWest()},${bounds.getSouth()},${bounds.getEast()},${bounds.getNorth()}`,
+        academie: null,
         ['recherche-par-carte']: 'true',
       })
     },
