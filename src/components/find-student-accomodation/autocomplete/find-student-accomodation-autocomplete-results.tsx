@@ -23,7 +23,7 @@ const getCategoryKeySingular = (categoryKey: keyof TTerritories) => {
 export const FindStudentAccomodationAutocompleteResults: FC<FindStudentAccomodationAutocompleteResults> = ({ data }) => {
   const t = useTranslations('findAccomodation')
   const { classes } = useStyles()
-  const categories = ['academies', 'cities', 'departments']
+  const categories = ['cities', 'academies', 'departments']
 
   const getCategoryLabelAndIcon = (category: keyof TTerritories): { icon: FrCxArg; label: string } => {
     const labels = {
