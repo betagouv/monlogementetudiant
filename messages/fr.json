@@ -99,7 +99,7 @@
       "emailBody": "Venez découvrir le logement étudiant {title}, situé à {location}.\n\n🔗 {url}\n📍 {location}\n\nCordialement,\nMon Logement Étudiant",
       "buttons": {
         "consult": "Consulter l'offre",
-        "consultDescription": "Vous serez rediriger vers le site du bailleur",
+        "consultDescription": "Vous serez redirigé vers le site du bailleur",
         "link": "Copier le lien",
         "email": "Envoyer par email",
         "print": "Imprimer"
