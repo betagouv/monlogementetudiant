@@ -1,17 +1,9 @@
 import Button from '@codegouvfr/react-dsfr/Button'
 import clsx from 'clsx'
-import { auth } from '~/auth'
 import { StudentAlerts } from '~/components/student-space/alerts/student-alerts'
 import styles from '../mon-espace.module.css'
 
 export default async function StudentAlertsPage() {
-  const session = await auth()
-
-  if (!session) {
-    // return notFound()
-  }
-  // const { user } = session
-
   return (
     <>
       <div className="fr-border-right fr-border-top fr-border-bottom fr-px-6w fr-py-5w">

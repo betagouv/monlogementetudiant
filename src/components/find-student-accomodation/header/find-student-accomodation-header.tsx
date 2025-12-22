@@ -1,4 +1,3 @@
-import { fr } from '@codegouvfr/react-dsfr'
 import { FC } from 'react'
 import { FindStudentAccomodationAutocompleteInput } from '~/components/find-student-accomodation/autocomplete/find-student-accomodation-autocomplete-input'
 import { FindStudentAccessibleAccomodationSwitch } from '~/components/find-student-accomodation/header/find-student-accessible-accomodation-switch'
@@ -10,7 +9,7 @@ import styles from './find-student-accomodation-header.module.css'
 export const FindStudentAccomodationHeader: FC = async () => {
   return (
     <>
-      <div className={fr.cx('fr-hidden', 'fr-unhidden-sm')}>
+      <div className="fr-hidden fr-unhidden-sm">
         <div className={styles.container}>
           <FindStudentAccomodationAutocompleteInput />
           <FindStudentAccommodationPrice />
@@ -19,9 +18,10 @@ export const FindStudentAccomodationHeader: FC = async () => {
           <FindStudentAccessibleAccomodationSwitch />
         </div>
       </div>
-      <div className={fr.cx('fr-hidden-sm')}>
+      <div className="fr-hidden-sm">
         <div className={styles.mobileContainer}>
           <FindStudentAccomodationAutocompleteInput />
+          <FindStudentAccommodationCrousFilter />
         </div>
       </div>
     </>

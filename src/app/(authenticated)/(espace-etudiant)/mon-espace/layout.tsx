@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server'
+import { notFound } from 'next/navigation'
 import { auth } from '~/auth'
-import { StudentSpaceNavigation } from '~/components/student-space/dashboard/student-space-navigation'
+import { StudentSpaceNavigation } from '~/components/student-space/navigation/student-space-navigation'
 import { DynamicBreadcrumb } from '~/components/ui/breadcrumb'
 import { FooterComponent } from '~/components/ui/footer/footer'
 import { HeaderComponent } from '~/components/ui/header/common-header'
@@ -24,12 +25,12 @@ export default async function WorkspaceLayout({
 }>) {
   const session = await auth()
   if (!session || session.user.role === 'owner' || !!session.error) {
-    // return notFound()
+    return notFound()
   }
 
   return (
     <>
-      <HeaderComponent />
+      <HeaderComponent withNavigation={false} />
       <main className="primaryBackgroundColor">
         <div className="fr-container fr-pb-12w">
           <DynamicBreadcrumb color="white" />
