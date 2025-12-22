@@ -7,7 +7,11 @@ import { BrandTop } from '~/components/ui/brand-top'
 import { Banner } from '~/components/ui/header/banner/banner'
 import { HeaderNavigation } from '~/components/ui/header/navigation'
 
-export const HeaderComponent: FC = async () => {
+type HeaderComponentProps = {
+  withNavigation?: boolean
+}
+
+export const HeaderComponent: FC<HeaderComponentProps> = async ({ withNavigation = true }) => {
   const t = await getTranslations()
   // const tallyUrl = z.string().parse(process.env.NEXT_PUBLIC_TALLY_URL)
   return (
@@ -44,8 +48,7 @@ export const HeaderComponent: FC = async () => {
             <span className={'fr-ml-1w fr-badge fr-badge--success fr-badge--no-icon'}>Beta</span>
           </>
         }
-        // navigation={<HeaderNavigation academies={academies} />}
-        navigation={<HeaderNavigation />}
+        {...(!!withNavigation && { navigation: <HeaderNavigation /> })}
         className={fr.cx('fr-header')}
       />
       <Banner />
