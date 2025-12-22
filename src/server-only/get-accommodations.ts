@@ -25,7 +25,15 @@ export const getAccommodations = async (searchParams: {
 
   const response = await fetch(`${process.env.API_URL}/accommodations/${params.size > 0 ? `?${params.toString()}` : ''}`)
   if (!response.ok) {
-    throw new Error('Error occurred calling API while retrieving accommodations')
+    return {
+      count: 0,
+      next: null,
+      previous: null,
+      page_size: 15,
+      results: {
+        features: [],
+      },
+    }
   }
   const data = await response.json()
   return data as TGetAccomodationsResponse
