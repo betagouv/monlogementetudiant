@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@codegouvfr/react-dsfr':
-        specifier: ^1.25.1
-        version: 1.25.1
+        specifier: ^1.25.3
+        version: 1.30.3
       '@emotion/server':
         specifier: ^11.11.0
         version: 11.11.0
@@ -258,8 +258,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@codegouvfr/react-dsfr@1.25.1':
-    resolution: {integrity: sha512-KU0ziUfsfApc6o1aO+gpYpmZpZWf5mZsV2G9aflBImhAACkZVxmcagfSuYlJj7DnWjb+R8WAYrTsVYtfQ+9TqA==}
+  '@codegouvfr/react-dsfr@1.30.3':
+    resolution: {integrity: sha512-tT10FlUz9wVACx5auRJNA6dq2FjffTqfN2WNwHTUtT+zu0Nv0FA6kVSECqeu0+TOmBpotCjR1ahga8WCbWzIqg==}
     hasBin: true
     peerDependencies:
       '@gouvfr/dsfr-chart': ^1.0.0
@@ -2525,7 +2525,7 @@ snapshots:
   '@biomejs/cli-win32-x64@1.9.4':
     optional: true
 
-  '@codegouvfr/react-dsfr@1.25.1':
+  '@codegouvfr/react-dsfr@1.30.3':
     dependencies:
       tsafe: 1.8.5
       yargs-parser: 21.1.1

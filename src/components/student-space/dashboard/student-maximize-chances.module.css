@@ -1,0 +1,11 @@
+.icon::before {
+  --icon-size: 1.5rem;
+}
+
+.completed {
+  color: #49bc8d;
+}
+
+.uncompleted {
+  color: #cfcfcf;
+}

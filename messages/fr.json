@@ -1,6 +1,5 @@
 {
   "breadcrumbs": {
-    "welcome": "Accueil",
     "home": "Simulez mes aides au logement",
     "findAccomodation": "Trouver un logement étudiant",
     "findAccomodationWithLocation": "Trouver un logement étudiant à {location}",
@@ -17,7 +16,19 @@
     "notFound": "Page non trouvée",
     "budget": "Budget Mon Logement Étudiant",
     "privacyPolicy": "Politique de confidentialité",
-    "budgetSimulator": "Simulateur de budget étudiant"
+    "budgetSimulator": "Simulateur de budget étudiant",
+    "student": {
+      "title": "Mon espace connecté",
+      "dashboard": {
+        "title": "Tableau de bord"
+      },
+      "todo": {
+        "title": "To-do list"
+      },
+      "alerts": {
+        "title": "Alertes logements"
+      }
+    }
   },
   "loading": {
     "card": "Chargement de la carte..."
@@ -29,6 +40,12 @@
     "workspace": {
       "description": "Votre espace gestionnaire",
       "title": "Espace gestionnaire - Gestion de vos résidences"
+    },
+    "student": {
+      "workspace": {
+        "title": "Espace étudiant - Gestion de votre espace",
+        "description": "Votre espace étudiant"
+      }
     }
   },
   "header": {
@@ -222,7 +239,7 @@
           "item3": "Anticiper les imprévus",
           "item4": "Mieux planifier vos projets (voyage, permis, matériel...)",
           "item5": "Garder l'esprit tranquille pour vos études",
-          "item6": "💡 Bon à savoir : votre établissement d’enseignement supérieur, ainsi que les Crous peuvent vous accompagner. D’autres services (CAF, ADIL, centre communal d’action sociale…) peuvent aussi vous aider au besoin. "
+          "item6": " Bon à savoir : votre établissement d’enseignement supérieur, ainsi que les Crous peuvent vous accompagner. D’autres services (CAF, ADIL, centre communal d’action sociale…) peuvent aussi vous aider au besoin."
         }
       },
       "item1": {
@@ -256,7 +273,7 @@
           "item5": "Assurance habitation, santé, responsabilité civile",
           "item6": "Frais de scolarité ou d'inscription"
         },
-        "descriptionSubList": "Ces estimations ont été faites en s’appuyant sur les réponses des étudiants « décohabitants » et « indépendants » de l’enquête Repère Condition de Vie - 2023 de l’OVE."
+        "descriptionSubList": "Ces estimations ont été faites en s’appuyant sur les réponses des étudiants « décohabitants » et « indépendants » de l’enquête Repère Condition de Vie - 2023 de l’OVE."
       },
       "item3": {
         "title": "3. Estimer vos dépenses variables",
@@ -679,17 +696,17 @@
       "quote": "« Bienvenue sur votre Espace Gestionnaire. Ensemble, nous rendons la recherche de logement étudiant plus simple. 🙂 »",
       "author": "Cécilia et Yasmine",
       "organization": "de Mon Logement Etudiant",
-      "altText": "Image de profil de Cécilia et Yasmine - Chargé de déploiement"
+      "altText": "Image de profil de Cécilia et Yasmine Chargées de déploiement"
     }
   },
   "student": {
     "navigation": {
       "backToHome": "Retour à l'accueil",
       "dashboard": "Tableau de bord",
-      "todoList": "To-do list",
+      "todoList": "To-do list ({done}/{total})",
       "housingAid": "Aides au logement",
-      "favoritesAndApplications": "Favoris et candidatures",
-      "housingAlerts": "Alertes logements"
+      "favorites": "Favoris",
+      "alerts": "Alertes logements"
     },
     "welcome": {
       "subtitle": "Bienvenue dans votre espace personnel"
@@ -702,12 +719,22 @@
     },
     "maximizeChances": {
       "title": "Mettez toutes les chances de votre côté",
-      "completeTodoList": "Complétez votre to-do list",
-      "estimateAid": "Estimez vos aides au logement",
-      "createAlerts": "Créez vous des alertes logements",
+      "completeTodoList": { "title": "Complétez votre to-do list", "cta": "To-do list" },
+      "estimateAid": { "title": "Estimez vos aides au logement", "cta": "Mes aides" },
+      "createAlerts": { "title": "Créez vous des alertes logements", "cta": "Mes alertes" },
       "todoListButton": "To-do list",
       "myAidButton": "Mes aides",
       "myAlertsButton": "Mes alertes"
+    },
+    "news": {
+      "title": "À la une",
+      "testimonial": {
+        "quote": "« Bienvenue sur votre Espace Gestionnaire. Ensemble, nous rendons la recherche de logement étudiant plus simple. 🙂 »"
+      }
+    },
+    "todo": {
+      "title": "Ma To-do list",
+      "description": "Complétez votre to-do list pour mettre toutes les chances de votre côté"
     }
   },
   "bailleur": {
@@ -717,6 +744,15 @@
     "dashboard": {
       "breadcrumb": {
         "title": "Espace gestionnaire de {name}"
+      },
+      "welcome": {
+        "title": "Ravi de vous revoir {firstname} 👋"
+      },
+      "testimonial": {
+        "quote": "« Bienvenue sur votre Espace Gestionnaire. Ensemble, nous rendons la recherche de logement étudiant plus simple. 🙂 »",
+        "author": "Cécilia et Yasmine",
+        "organization": "de Mon Logement Etudiant",
+        "altText": "Image de profil de Cécilia et Yasmine - Chargé de déploiement"
       },
       "helpSection": {
         "faq": {

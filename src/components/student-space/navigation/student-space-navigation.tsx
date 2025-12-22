@@ -1,11 +1,15 @@
 import Button from '@codegouvfr/react-dsfr/Button'
+import { getTranslations } from 'next-intl/server'
+import { StudentSpaceTodoNavigationButton } from '~/components/student-space/navigation/student-space-todo-navigation-button'
 
-export const StudentSpaceNavigation = () => {
+export const StudentSpaceNavigation = async () => {
+  const t = await getTranslations('student.navigation')
+
   return (
     <>
       <div className="fr-border-bottom fr-p-3w">
         <Button iconPosition="left" iconId="fr-icon-arrow-left-line" priority="tertiary no outline">
-          Retour à l'accueil
+          {t('backToHome')}
         </Button>
       </div>
       <div className="fr-flex fr-direction-column fr-flex-gap-2v fr-p-3w">
@@ -15,16 +19,11 @@ export const StudentSpaceNavigation = () => {
           iconId="fr-icon-user-line"
           linkProps={{ href: '/mon-espace/tableau-de-bord' }}
         >
-          Tableau de bord
+          {t('dashboard')}
         </Button>
-        <Button priority="tertiary no outline" iconPosition="left" iconId="ri-todo-line" linkProps={{ href: '/mon-espace/to-do' }}>
-          To-do list
-        </Button>
-        {/* <Button priority="tertiary no outline" iconPosition="left" iconId="ri-money-euro-circle-line">
-          Aides au logement
-        </Button> */}
+        <StudentSpaceTodoNavigationButton />
         <Button priority="tertiary no outline" iconPosition="left" iconId="ri-heart-line" linkProps={{ href: '/mon-espace/favoris' }}>
-          Favoris
+          {t('favorites')}
         </Button>
         <Button
           priority="tertiary no outline"
@@ -32,7 +31,7 @@ export const StudentSpaceNavigation = () => {
           iconId="ri-notification-3-line"
           linkProps={{ href: '/mon-espace/alertes' }}
         >
-          Alertes logements
+          {t('alerts')}
         </Button>
       </div>
     </>

@@ -1,20 +1,16 @@
 import clsx from 'clsx'
-import { auth } from '~/auth'
+import { getTranslations } from 'next-intl/server'
 import { StudentTodoList } from '~/components/student-space/todo/student-todo-list'
 import styles from '../mon-espace.module.css'
 
 export default async function EtudiantTableauDeBordPage() {
-  const session = await auth()
-
-  if (!session) {
-    // return notFound()
-  }
+  const t = await getTranslations('student.todo')
 
   return (
     <>
       <div className="fr-border-right fr-border-top fr-border-bottom fr-px-6w fr-py-5w">
-        <h1>Ma to-do list</h1>
-        <span className="fr-text--xl fr-text-mention--grey">Complétez votre to-do list pour mettre toutes les chances de votre côté</span>
+        <h1>{t('title')}</h1>
+        <span className="fr-text--xl fr-text-mention--grey">{t('description')}</span>
       </div>
       <div
         className={clsx(

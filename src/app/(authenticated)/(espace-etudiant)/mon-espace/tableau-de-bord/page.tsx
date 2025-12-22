@@ -1,3 +1,4 @@
+import { notFound } from 'next/navigation'
 import { auth } from '~/auth'
 import { StudentMaximizeChances } from '~/components/student-space/dashboard/student-maximize-chances'
 import { StudentNews } from '~/components/student-space/dashboard/student-news'
@@ -9,17 +10,10 @@ export default async function StudentDashboardPage() {
   const session = await auth()
 
   if (!session) {
-    // return notFound()
+    return notFound()
   }
-  // const { user } = session
-  const user = {
-    firstname: 'Kévin',
-    lastname: 'Gallet',
-    name: 'Kévin Gallet',
-    email: 'toto@toto.com',
-    id: '1',
-    role: 'user' as const,
-  }
+
+  const { user } = session
 
   return (
     <>

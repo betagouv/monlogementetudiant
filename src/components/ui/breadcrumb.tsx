@@ -28,15 +28,39 @@ export const DynamicBreadcrumb: FC<DynamicBreadcrumbProps> = ({ color, margin = 
 
     switch (pathname) {
       case '/mon-espace/tableau-de-bord':
-        currentPageLabel = t('student.dashboard.breadcrumb.title')
+        segments.push({
+          label: t('breadcrumbs.student.title'),
+          linkProps: {
+            href: '/mon-espace',
+          },
+        })
+        currentPageLabel = t('breadcrumbs.student.dashboard.title')
         break
       case '/mon-espace/to-do':
-        currentPageLabel = t('student.todo.breadcrumb.title')
+        segments.push({
+          label: t('breadcrumbs.student.title'),
+          linkProps: {
+            href: '/mon-espace',
+          },
+        })
+        currentPageLabel = t('breadcrumbs.student.todo.title')
         break
       case '/mon-espace/alertes':
-        currentPageLabel = t('student.alerts.breadcrumb.title')
+        segments.push({
+          label: t('breadcrumbs.student.title'),
+          linkProps: {
+            href: '/mon-espace',
+          },
+        })
+        currentPageLabel = t('breadcrumbs.student.alerts.title')
         break
       case '/simuler-budget':
+        segments.push({
+          label: t('breadcrumbs.student.title'),
+          linkProps: {
+            href: '/mon-espace',
+          },
+        })
         currentPageLabel = t('breadcrumbs.budgetSimulator')
         break
       case '/simuler-mes-aides-au-logement':
