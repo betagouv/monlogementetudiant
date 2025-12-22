@@ -23,7 +23,15 @@ export const fetchAccomodations = async (
 
   const response = await fetch(`/api/accommodations${params.size > 0 ? `?${params.toString()}` : ''}`)
   if (!response.ok) {
-    throw new Error('Error occurred calling API retrieving accomodations')
+    return {
+      count: 0,
+      next: null,
+      previous: null,
+      page_size: 15,
+      results: {
+        features: [],
+      },
+    }
   }
   return response.json()
 }
