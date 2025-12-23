@@ -12,6 +12,7 @@ import { auth } from '~/auth'
 import avatarCecilia from '~/images/avatar-cecilia.svg'
 import avatarYasmine from '~/images/avatar-yasmine.svg'
 import { getMyAccommodations } from '~/server-only/bailleur/get-my-accommodations'
+import { calculateAvailability } from '~/utils/calculateAvailability'
 import styles from './tableau-de-bord.module.css'
 
 export default async function TableauDeBordPage() {
@@ -157,10 +158,27 @@ export default async function TableauDeBordPage() {
         <span className="fr-h5">{t('dashboard.statistics.title')}</span>
         <div className={styles.statisticsGrid}>
           {accommodations.results.features.map((res, index) => {
-            const { nb_t1_available, nb_t1_bis_available, nb_t2_available, nb_t3_available, nb_t4_more_available } = res.properties
-            const availabilityValues = [nb_t1_available, nb_t1_bis_available, nb_t2_available, nb_t3_available, nb_t4_more_available]
-            const nonNullValues = availabilityValues.filter((value): value is number => value !== null && value !== undefined)
-            const available = nonNullValues.length > 0 ? nonNullValues.reduce((sum, value) => sum + value, 0) : 0
+            const {
+              nb_t1_available,
+              nb_t1_bis_available,
+              nb_t2_available,
+              nb_t3_available,
+              nb_t4_available,
+              nb_t5_available,
+              nb_t6_available,
+              nb_t7_more_available,
+            } = res.properties
+            const calculatedAvailability = calculateAvailability({
+              nb_t1_available,
+              nb_t1_bis_available,
+              nb_t2_available,
+              nb_t3_available,
+              nb_t4_available,
+              nb_t5_available,
+              nb_t6_available,
+              nb_t7_more_available,
+            })
+            const available = calculatedAvailability ?? 0
             const total = res.properties.nb_total_apartments || 0
             if (total === 0) return null
 

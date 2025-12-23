@@ -1,12 +1,12 @@
 'use client'
 
-import Badge from '@codegouvfr/react-dsfr/Badge'
 import Input from '@codegouvfr/react-dsfr/Input'
 import Select from '@codegouvfr/react-dsfr/Select'
 import { useFormContext } from 'react-hook-form'
+import { AvailabilityBadge } from '~/components/shared/availability-badge'
 import { TAccomodationMy } from '~/schemas/accommodations/accommodations'
 import { TUpdateResidence } from '~/schemas/accommodations/update-residence'
-import { sPluriel } from '~/utils/sPluriel'
+import { calculateAvailability } from '~/utils/calculateAvailability'
 
 export const ResidenceAccommodationList = ({ accommodation }: { accommodation: TAccomodationMy }) => {
   const {
@@ -22,26 +22,34 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
     },
   }
 
-  const { nb_t1_available, nb_t1_bis_available, nb_t2_available, nb_t3_available, nb_t4_more_available } = accommodation.properties
-  const availabilityValues = [nb_t1_available, nb_t1_bis_available, nb_t2_available, nb_t3_available, nb_t4_more_available]
-  const nonNullValues = availabilityValues.filter((value): value is number => value !== null && value !== undefined)
-  const nbAvailable = nonNullValues.length > 0 ? nonNullValues.reduce((sum, value) => sum + value, 0) : null
-  const badgeAvailability =
-    nbAvailable !== null && nbAvailable !== undefined ? (
-      nbAvailable === 0 ? (
-        <Badge severity="error" noIcon>
-          <span className="fr-text--uppercase fr-mb-0">Disponibilité non communiquée</span>
-        </Badge>
-      ) : (
-        <Badge severity="success" noIcon>
-          {nbAvailable}&nbsp;
-          <span className="fr-text--uppercase fr-mb-0">
-            DISPONIBILITÉ
-            {sPluriel(nbAvailable)}
-          </span>
-        </Badge>
-      )
-    ) : null
+  const {
+    nb_t1_available,
+    nb_t1_bis_available,
+    nb_t2_available,
+    nb_t3_available,
+    nb_t4_available,
+    nb_t5_available,
+    nb_t6_available,
+    nb_t7_more_available,
+  } = accommodation.properties
+  const nbAvailable = calculateAvailability({
+    nb_t1_available,
+    nb_t1_bis_available,
+    nb_t2_available,
+    nb_t3_available,
+    nb_t4_available,
+    nb_t5_available,
+    nb_t6_available,
+    nb_t7_more_available,
+  })
+  const badgeAvailability = (
+    <AvailabilityBadge
+      nbAvailable={nbAvailable}
+      noAvailabilityText="Disponibilité non communiquée"
+      availabilityText="DISPONIBILITÉ"
+      as="span"
+    />
+  )
   return (
     <div className="fr-border-bottom">
       <div className="fr-p-2w fr-p-md-6w">
@@ -97,15 +105,48 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
               priceMaxField: 'price_max_t3' as const,
             },
             {
-              type: 'T4+',
-              available: accommodation.properties.nb_t4_more_available,
-              total: accommodation.properties.nb_t4_more,
-              priceMin: accommodation.properties.price_min_t4_more,
-              priceMax: accommodation.properties.price_max_t4_more,
-              availableField: 'nb_t4_more_available' as const,
-              totalField: 'nb_t4_more' as const,
-              priceMinField: 'price_min_t4_more' as const,
-              priceMaxField: 'price_max_t4_more' as const,
+              type: 'T4',
+              available: accommodation.properties.nb_t4_available,
+              total: accommodation.properties.nb_t4,
+              priceMin: accommodation.properties.price_min_t4,
+              priceMax: accommodation.properties.price_max_t4,
+              availableField: 'nb_t4_available' as const,
+              totalField: 'nb_t4' as const,
+              priceMinField: 'price_min_t4' as const,
+              priceMaxField: 'price_max_t4' as const,
+            },
+            {
+              type: 'T5',
+              available: accommodation.properties.nb_t5_available,
+              total: accommodation.properties.nb_t5,
+              priceMin: accommodation.properties.price_min_t5,
+              priceMax: accommodation.properties.price_max_t5,
+              availableField: 'nb_t5_available' as const,
+              totalField: 'nb_t5' as const,
+              priceMinField: 'price_min_t5' as const,
+              priceMaxField: 'price_max_t5' as const,
+            },
+            {
+              type: 'T6',
+              available: accommodation.properties.nb_t6_available,
+              total: accommodation.properties.nb_t6,
+              priceMin: accommodation.properties.price_min_t6,
+              priceMax: accommodation.properties.price_max_t6,
+              availableField: 'nb_t6_available' as const,
+              totalField: 'nb_t6' as const,
+              priceMinField: 'price_min_t6' as const,
+              priceMaxField: 'price_max_t6' as const,
+            },
+            {
+              type: 'T7+',
+              available: accommodation.properties.nb_t7_more_available,
+              total: accommodation.properties.nb_t7_more,
+              priceMin: accommodation.properties.price_min_t7_more,
+              priceMax: accommodation.properties.price_max_t7_more,
+              availableField: 'nb_t7_more_available' as const,
+              totalField: 'nb_t7_more' as const,
+              priceMinField: 'price_min_t7_more' as const,
+              priceMaxField: 'price_max_t7_more' as const,
             },
           ].map((typology, index) => (
             <div key={typology.type} className={`fr-p-4w ${index !== 4 ? 'fr-border-bottom' : ''}`}>
@@ -121,7 +162,10 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
                     <option value="T1 bis">Studio T1 bis</option>
                     <option value="T2">Logement T2</option>
                     <option value="T3">Logement T3</option>
-                    <option value="T4+">Logement T4+</option>
+                    <option value="T4">Logement T4</option>
+                    <option value="T5">Logement T5</option>
+                    <option value="T6">Logement T6</option>
+                    <option value="T7+">Logement T7+</option>
                   </Select>
                 </div>
                 <div className="fr-col-md-3">

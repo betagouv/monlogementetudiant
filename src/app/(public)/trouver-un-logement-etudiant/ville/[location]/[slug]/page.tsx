@@ -14,6 +14,7 @@ import { OwnerDetails } from '~/components/find-student-accomodation/owner-detai
 import { DynamicBreadcrumb } from '~/components/ui/breadcrumb'
 import { getAccommodationById } from '~/server-only/get-accommodation-by-id'
 import { getAccommodations } from '~/server-only/get-accommodations'
+import { calculateAvailability } from '~/utils/calculateAvailability'
 import styles from './logement.module.css'
 
 export default async function LogementPage({ params }: { params: { slug: string } }) {
@@ -54,15 +55,16 @@ export default async function LogementPage({ params }: { params: { slug: string 
   ]
 
   const breadCrumbTitle = commonT('breadcrumbs.accommodationTitle', { name, city })
-  const availabilityValues = [
-    accommodation.nb_t1_available,
-    accommodation.nb_t1_bis_available,
-    accommodation.nb_t2_available,
-    accommodation.nb_t3_available,
-    accommodation.nb_t4_more_available,
-  ]
-  const nonNullValues = availabilityValues.filter((value): value is number => value !== null && value !== undefined)
-  const nbAvailable = nonNullValues.length > 0 ? nonNullValues.reduce((sum, value) => sum + value, 0) : null
+  const nbAvailable = calculateAvailability({
+    nb_t1_available: accommodation.nb_t1_available,
+    nb_t1_bis_available: accommodation.nb_t1_bis_available,
+    nb_t2_available: accommodation.nb_t2_available,
+    nb_t3_available: accommodation.nb_t3_available,
+    nb_t4_available: accommodation.nb_t4_available,
+    nb_t5_available: accommodation.nb_t5_available,
+    nb_t6_available: accommodation.nb_t6_available,
+    nb_t7_more_available: accommodation.nb_t7_more_available,
+  })
   return (
     <div className={fr.cx('fr-container')}>
       <DynamicBreadcrumb title={breadCrumbTitle} city={city} />
