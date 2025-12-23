@@ -27,10 +27,25 @@ export const ZUpdateResidence = z.object({
   price_min_t3: z.number().min(0).nullish(),
   price_max_t3: z.number().min(0).nullish(),
 
-  nb_t4_more: z.number().min(0).nullish(),
-  nb_t4_more_available: z.number().min(0).nullish(),
-  price_min_t4_more: z.number().min(0).nullish(),
-  price_max_t4_more: z.number().min(0).nullish(),
+  nb_t4: z.number().min(0).nullish(),
+  nb_t4_available: z.number().min(0).nullish(),
+  price_min_t4: z.number().min(0).nullish(),
+  price_max_t4: z.number().min(0).nullish(),
+
+  nb_t5: z.number().min(0).nullish(),
+  nb_t5_available: z.number().min(0).nullish(),
+  price_min_t5: z.number().min(0).nullish(),
+  price_max_t5: z.number().min(0).nullish(),
+
+  nb_t6: z.number().min(0).nullish(),
+  nb_t6_available: z.number().min(0).nullish(),
+  price_min_t6: z.number().min(0).nullish(),
+  price_max_t6: z.number().min(0).nullish(),
+
+  nb_t7_more: z.number().min(0).nullish(),
+  nb_t7_more_available: z.number().min(0).nullish(),
+  price_min_t7_more: z.number().min(0).nullish(),
+  price_max_t7_more: z.number().min(0).nullish(),
 
   nb_accessible_apartments: z.number().nullish(),
 
@@ -58,7 +73,10 @@ export const createUpdateResidenceSchema = (existingData: {
   nb_t1_bis?: number | null
   nb_t2?: number | null
   nb_t3?: number | null
-  nb_t4_more?: number | null
+  nb_t4?: number | null
+  nb_t5?: number | null
+  nb_t6?: number | null
+  nb_t7_more?: number | null
 }) =>
   ZUpdateResidence.superRefine((data, ctx) => {
     const validations = [
@@ -87,10 +105,28 @@ export const createUpdateResidenceSchema = (existingData: {
         type: 'T3',
       },
       {
-        total: data.nb_t4_more ?? existingData.nb_t4_more,
-        available: data.nb_t4_more_available,
-        availablePath: 'nb_t4_more_available',
-        type: 'T4+',
+        total: data.nb_t4 ?? existingData.nb_t4,
+        available: data.nb_t4_available,
+        availablePath: 'nb_t4_available',
+        type: 'T4',
+      },
+      {
+        total: data.nb_t5 ?? existingData.nb_t5,
+        available: data.nb_t5_available,
+        availablePath: 'nb_t5_available',
+        type: 'T5',
+      },
+      {
+        total: data.nb_t6 ?? existingData.nb_t6,
+        available: data.nb_t6_available,
+        availablePath: 'nb_t6_available',
+        type: 'T6',
+      },
+      {
+        total: data.nb_t7_more ?? existingData.nb_t7_more,
+        available: data.nb_t7_more_available,
+        availablePath: 'nb_t7_more_available',
+        type: 'T7+',
       },
     ]
 

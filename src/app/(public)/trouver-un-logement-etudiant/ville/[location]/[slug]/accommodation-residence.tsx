@@ -43,11 +43,32 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
       title: t('appartement', { type: 'T3' }),
     },
     {
-      type: 'T4+',
-      min: accommodation.price_min_t4_more,
-      max: accommodation.price_max_t4_more,
-      enabled: !!accommodation.nb_t4_more && accommodation.price_min_t4_more,
-      title: t('appartement', { type: 'T4+' }),
+      type: 'T4',
+      min: accommodation.price_min_t4,
+      max: accommodation.price_max_t4,
+      enabled: !!accommodation.nb_t4 && accommodation.price_min_t4,
+      title: t('appartement', { type: 'T4' }),
+    },
+    {
+      type: 'T5',
+      min: accommodation.price_min_t5,
+      max: accommodation.price_max_t5,
+      enabled: !!accommodation.nb_t5 && accommodation.price_min_t5,
+      title: t('appartement', { type: 'T5' }),
+    },
+    {
+      type: 'T6',
+      min: accommodation.price_min_t6,
+      max: accommodation.price_max_t6,
+      enabled: !!accommodation.nb_t6 && accommodation.price_min_t6,
+      title: t('appartement', { type: 'T6' }),
+    },
+    {
+      type: 'T7+',
+      min: accommodation.price_min_t7_more,
+      max: accommodation.price_max_t7_more,
+      enabled: !!accommodation.nb_t7_more && accommodation.price_min_t7_more,
+      title: t('appartement', { type: 'T7+' }),
     },
   ]
 

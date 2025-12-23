@@ -6,8 +6,8 @@ import { getTranslations } from 'next-intl/server'
 import Image from 'next/image'
 import { OwnerDetailsActions } from '~/components/find-student-accomodation/owner-details/owner-details-actions'
 import { OwnerDetailsAlert } from '~/components/find-student-accomodation/owner-details/owner-details-alert'
+import { AvailabilityBadge } from '~/components/shared/availability-badge'
 import { TAccomodationDetails } from '~/schemas/accommodations/accommodations'
-import { sPluriel } from '~/utils/sPluriel'
 import styles from './owner-details.module.css'
 
 interface OwnerDetailsProps {
@@ -33,22 +33,9 @@ export const OwnerDetails = async ({
 }: OwnerDetailsProps) => {
   const t = await getTranslations('accomodation')
   const ownerUrl = externalUrl || owner?.url
-  const badgeAvailability =
-    nbAvailable !== null && nbAvailable !== undefined ? (
-      nbAvailable === 0 ? (
-        <Badge severity="error" noIcon>
-          <span className="fr-text--uppercase fr-mb-0">{t('card.noAvailability')}</span>
-        </Badge>
-      ) : (
-        <Badge severity="success" noIcon>
-          {nbAvailable}&nbsp;
-          <span className="fr-text--uppercase fr-mb-0">
-            {t('card.availability')}
-            {sPluriel(nbAvailable)}
-          </span>
-        </Badge>
-      )
-    ) : null
+  const badgeAvailability = (
+    <AvailabilityBadge nbAvailable={nbAvailable} noAvailabilityText={t('card.noAvailability')} availabilityText={t('card.availability')} />
+  )
 
   const waitingListBadge = acceptWaitingList && (
     <Badge className={styles.otherBadge} severity="warning" noIcon>

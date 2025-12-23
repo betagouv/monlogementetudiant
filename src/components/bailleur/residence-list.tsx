@@ -1,13 +1,13 @@
 'use client'
 
-import Badge from '@codegouvfr/react-dsfr/Badge'
 import clsx from 'clsx'
 import { FC } from 'react'
 import { ResidenceCard } from '~/components/bailleur/residence-card'
 import { UpdateResidenceList } from '~/components/bailleur/update-residence-list'
+import { AvailabilityBadge } from '~/components/shared/availability-badge'
 import { useMyAccommodations } from '~/hooks/use-my-accommodations'
 import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
-import { sPluriel } from '~/utils/sPluriel'
+import { calculateAvailability } from '~/utils/calculateAvailability'
 
 const ResidenceListSkeleton = () => {
   return (
@@ -75,27 +75,34 @@ export const ResidenceList: FC<ResidenceListProps> = ({ initialData }) => {
     <div className="fr-flex fr-direction-column fr-flex-gap-6v">
       {accommodations?.count &&
         accommodationsList.map((accommodation, index) => {
-          const { nb_t1_available, nb_t1_bis_available, nb_t2_available, nb_t3_available, nb_t4_more_available } = accommodation.properties
-          const availabilityValues = [nb_t1_available, nb_t1_bis_available, nb_t2_available, nb_t3_available, nb_t4_more_available]
-          const nonNullValues = availabilityValues.filter((value): value is number => value !== null && value !== undefined)
-          const nbAvailable = nonNullValues.length > 0 ? nonNullValues.reduce((sum, value) => sum + value, 0) : null
+          const {
+            nb_t1_available,
+            nb_t1_bis_available,
+            nb_t2_available,
+            nb_t3_available,
+            nb_t4_available,
+            nb_t5_available,
+            nb_t6_available,
+            nb_t7_more_available,
+          } = accommodation.properties
+          const nbAvailable = calculateAvailability({
+            nb_t1_available,
+            nb_t1_bis_available,
+            nb_t2_available,
+            nb_t3_available,
+            nb_t4_available,
+            nb_t5_available,
+            nb_t6_available,
+            nb_t7_more_available,
+          })
 
-          const badgeAvailability =
-            nbAvailable !== null && nbAvailable !== undefined ? (
-              nbAvailable === 0 ? (
-                <Badge severity="error" noIcon>
-                  <span className="fr-text--uppercase fr-mb-0">Disponibilité non communiquée</span>
-                </Badge>
-              ) : (
-                <Badge severity="success" noIcon>
-                  {nbAvailable}&nbsp;
-                  <span className="fr-text--uppercase fr-mb-0">
-                    DISPONIBILITÉ
-                    {sPluriel(nbAvailable)}
-                  </span>
-                </Badge>
-              )
-            ) : null
+          const badgeAvailability = (
+            <AvailabilityBadge
+              nbAvailable={nbAvailable}
+              noAvailabilityText="Disponibilité non communiquée"
+              availabilityText="DISPONIBILITÉ"
+            />
+          )
           return (
             <div
               className={clsx(
