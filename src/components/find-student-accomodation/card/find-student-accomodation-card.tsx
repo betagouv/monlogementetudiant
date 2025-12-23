@@ -11,8 +11,9 @@ import {
   FindStudentAccommodationImageCard,
   FindStudentAccommodationPlaceholderImageCard,
 } from '~/components/find-student-accomodation/card/find-student-accommodation-image-card'
+import { AvailabilityBadge } from '~/components/shared/availability-badge'
 import { TAccomodationCard } from '~/schemas/accommodations/accommodations'
-import { sPluriel } from '~/utils/sPluriel'
+import { calculateAvailability } from '~/utils/calculateAvailability'
 
 type AccomodationCardProps = {
   accomodation: TAccomodationCard
@@ -33,14 +34,24 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({ className, accomod
     nb_t1_bis_available,
     nb_t2_available,
     nb_t3_available,
-    nb_t4_more_available,
+    nb_t4_available,
+    nb_t5_available,
+    nb_t6_available,
+    nb_t7_more_available,
     postal_code,
     price_min,
     accept_waiting_list,
   } = accomodation.properties
-  const availabilityValues = [nb_t1_available, nb_t1_bis_available, nb_t2_available, nb_t3_available, nb_t4_more_available]
-  const nonNullValues = availabilityValues.filter((value): value is number => value !== null && value !== undefined)
-  const nbAvailable = nonNullValues.length > 0 ? nonNullValues.reduce((sum, value) => sum + value, 0) : null
+  const nbAvailable = calculateAvailability({
+    nb_t1_available,
+    nb_t1_bis_available,
+    nb_t2_available,
+    nb_t3_available,
+    nb_t4_available,
+    nb_t5_available,
+    nb_t6_available,
+    nb_t7_more_available,
+  })
   const accommodationsTypes = accomodation.properties.nb_coliving_apartments ? [t('individual'), t('colocation')] : [t('individual')]
   const imageProps =
     images_urls && images_urls.length > 0
@@ -48,22 +59,9 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({ className, accomod
       : {
           imageComponent: <FindStudentAccommodationPlaceholderImageCard />,
         }
-  const badgeAvailability =
-    nbAvailable !== null && nbAvailable !== undefined ? (
-      nbAvailable === 0 ? (
-        <Badge severity="error" noIcon as="span">
-          <span className="fr-text--uppercase fr-mb-0">{t('noAvailability')}</span>
-        </Badge>
-      ) : (
-        <Badge severity="success" noIcon as="span">
-          {nbAvailable}&nbsp;
-          <span className="fr-text--uppercase fr-mb-0">
-            {t('availability')}
-            {sPluriel(nbAvailable)}
-          </span>
-        </Badge>
-      )
-    ) : null
+  const badgeAvailability = (
+    <AvailabilityBadge nbAvailable={nbAvailable} noAvailabilityText={t('noAvailability')} availabilityText={t('availability')} as="span" />
+  )
 
   const waitingListBadge = accept_waiting_list && (
     <Badge className={classes.otherBadge} severity="warning" noIcon as="span">
