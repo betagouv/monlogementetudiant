@@ -6,7 +6,7 @@ interface AvailabilityBadgeProps {
   noAvailabilityText: string
   availabilityText: string
   className?: string
-  as?: 'span' | 'div'
+  as?: 'span' | 'p'
 }
 
 export function AvailabilityBadge({ nbAvailable, noAvailabilityText, availabilityText, className, as }: AvailabilityBadgeProps) {
