@@ -23,7 +23,10 @@ export const UpdateResidenceList: FC<UpdateResidenceListProps> = ({ accommodatio
       nb_t1_bis_available: accommodation.properties.nb_t1_bis_available ?? 0,
       nb_t2_available: accommodation.properties.nb_t2_available ?? 0,
       nb_t3_available: accommodation.properties.nb_t3_available ?? 0,
-      nb_t4_more_available: accommodation.properties.nb_t4_more_available ?? 0,
+      nb_t4_available: accommodation.properties.nb_t4_available ?? 0,
+      nb_t5_available: accommodation.properties.nb_t5_available ?? 0,
+      nb_t6_available: accommodation.properties.nb_t6_available ?? 0,
+      nb_t7_more_available: accommodation.properties.nb_t7_more_available ?? 0,
     },
     resolver: zodResolver(
       createUpdateResidenceListSchema({
@@ -31,7 +34,10 @@ export const UpdateResidenceList: FC<UpdateResidenceListProps> = ({ accommodatio
         nb_t1_bis: accommodation.properties.nb_t1_bis,
         nb_t2: accommodation.properties.nb_t2,
         nb_t3: accommodation.properties.nb_t3,
-        nb_t4_more: accommodation.properties.nb_t4_more,
+        nb_t4: accommodation.properties.nb_t4,
+        nb_t5: accommodation.properties.nb_t5,
+        nb_t6: accommodation.properties.nb_t6,
+        nb_t7_more: accommodation.properties.nb_t7_more,
       }),
     ),
   })
@@ -50,71 +56,30 @@ export const UpdateResidenceList: FC<UpdateResidenceListProps> = ({ accommodatio
             <div className="fr-flex fr-direction-column fr-flex-gap-4v">
               {children}
               <div className={styles.inputGrid}>
-                <div>
-                  <span className="fr-text--bold">Studio T1</span>
-                  <Input
-                    label="Logements disponibles"
-                    state={formState.errors.nb_t1_available ? 'error' : undefined}
-                    stateRelatedMessage={formState.errors.nb_t1_available?.message}
-                    nativeInputProps={{
-                      ...register('nb_t1_available', { valueAsNumber: true }),
-                      type: 'number',
-                      min: 0,
-                    }}
-                  />
-                </div>
-                <div>
-                  <span className="fr-text--bold">Studio T1 Bis</span>
-                  <Input
-                    label="Logements disponibles"
-                    state={formState.errors.nb_t1_bis_available ? 'error' : undefined}
-                    stateRelatedMessage={formState.errors.nb_t1_bis_available?.message}
-                    nativeInputProps={{
-                      ...register('nb_t1_bis_available', { valueAsNumber: true }),
-                      type: 'number',
-                      min: 0,
-                    }}
-                  />
-                </div>
-                <div>
-                  <span className="fr-text--bold">Studio T2</span>
-                  <Input
-                    label="Logements disponibles"
-                    state={formState.errors.nb_t2_available ? 'error' : undefined}
-                    stateRelatedMessage={formState.errors.nb_t2_available?.message}
-                    nativeInputProps={{
-                      ...register('nb_t2_available', { valueAsNumber: true }),
-                      type: 'number',
-                      min: 0,
-                    }}
-                  />
-                </div>
-                <div>
-                  <span className="fr-text--bold">Logement T3</span>
-                  <Input
-                    label="Logements disponibles"
-                    state={formState.errors.nb_t3_available ? 'error' : undefined}
-                    stateRelatedMessage={formState.errors.nb_t3_available?.message}
-                    nativeInputProps={{
-                      ...register('nb_t3_available', { valueAsNumber: true }),
-                      type: 'number',
-                      min: 0,
-                    }}
-                  />
-                </div>
-                <div>
-                  <span className="fr-text--bold">Logement T4+</span>
-                  <Input
-                    label="Logements disponibles"
-                    state={formState.errors.nb_t4_more_available ? 'error' : undefined}
-                    stateRelatedMessage={formState.errors.nb_t4_more_available?.message}
-                    nativeInputProps={{
-                      ...register('nb_t4_more_available', { valueAsNumber: true }),
-                      type: 'number',
-                      min: 0,
-                    }}
-                  />
-                </div>
+                {[
+                  { key: 'nb_t1_available', label: 'Studio T1' },
+                  { key: 'nb_t1_bis_available', label: 'Studio T1 Bis' },
+                  { key: 'nb_t2_available', label: 'Studio T2' },
+                  { key: 'nb_t3_available', label: 'Logement T3' },
+                  { key: 'nb_t4_available', label: 'Logement T4' },
+                  { key: 'nb_t5_available', label: 'Logement T5' },
+                  { key: 'nb_t6_available', label: 'Logement T6' },
+                  { key: 'nb_t7_more_available', label: 'Logement T7+' },
+                ].map(({ key, label }) => (
+                  <div key={key}>
+                    <span className="fr-text--bold">{label}</span>
+                    <Input
+                      label="Logements disponibles"
+                      state={formState.errors[key as keyof typeof formState.errors] ? 'error' : undefined}
+                      stateRelatedMessage={formState.errors[key as keyof typeof formState.errors]?.message}
+                      nativeInputProps={{
+                        ...register(key as keyof TUpdateResidenceList, { valueAsNumber: true }),
+                        type: 'number',
+                        min: 0,
+                      }}
+                    />
+                  </div>
+                ))}
               </div>
             </div>
 

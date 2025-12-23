@@ -9,7 +9,10 @@ export const PrepareStudentLifeAccommodationResidence = async ({
   nb_t2,
   nb_t3,
   location,
-  nb_t4_more,
+  nb_t4,
+  nb_t5,
+  nb_t6,
+  nb_t7_more,
 }: TPrepareStudentLifeAccommodationResidence) => {
   const studioPriceTiles = [
     {
@@ -31,8 +34,20 @@ export const PrepareStudentLifeAccommodationResidence = async ({
       enabled: !!nb_t3,
     },
     {
-      type: 'T4+',
-      enabled: !!nb_t4_more,
+      type: 'T4',
+      enabled: !!nb_t4,
+    },
+    {
+      type: 'T5',
+      enabled: !!nb_t5,
+    },
+    {
+      type: 'T6',
+      enabled: !!nb_t6,
+    },
+    {
+      type: 'T7',
+      enabled: !!nb_t7_more,
     },
   ]
 
