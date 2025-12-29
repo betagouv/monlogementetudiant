@@ -3,9 +3,11 @@ import { Button } from '@codegouvfr/react-dsfr/Button'
 import { Header } from '@codegouvfr/react-dsfr/Header'
 import { getTranslations } from 'next-intl/server'
 import { FC } from 'react'
+import { auth } from '~/auth'
 import { BrandTop } from '~/components/ui/brand-top'
 import { Banner } from '~/components/ui/header/banner/banner'
 import { HeaderNavigation } from '~/components/ui/header/navigation'
+import { UserConnectedDropdown } from '~/components/ui/header/user-connected-dropdown'
 
 type HeaderComponentProps = {
   withNavigation?: boolean
@@ -13,7 +15,8 @@ type HeaderComponentProps = {
 
 export const HeaderComponent: FC<HeaderComponentProps> = async ({ withNavigation = true }) => {
   const t = await getTranslations()
-  // const tallyUrl = z.string().parse(process.env.NEXT_PUBLIC_TALLY_URL)
+  const session = await auth()
+
   return (
     <div>
       <Header
@@ -33,12 +36,13 @@ export const HeaderComponent: FC<HeaderComponentProps> = async ({ withNavigation
           >
             {t('header.alerts')}
           </Button>,
-          // <Button priority="tertiary" key="tally-cta" linkProps={{ href: tallyUrl, target: '_blank' }}>
-          //   {t('header.tally')}
-          // </Button>,
-          <Button priority="secondary" key="login-cta" iconId="ri-user-line" linkProps={{ href: '/se-connecter', target: '_self' }}>
-            {t('header.login')}
-          </Button>,
+          session?.user ? (
+            <UserConnectedDropdown key="user-dropdown" user={session.user} />
+          ) : (
+            <Button priority="secondary" key="login-cta" iconId="ri-user-line" linkProps={{ href: '/se-connecter', target: '_self' }}>
+              {t('header.login')}
+            </Button>
+          ),
         ]}
         brandTop={<BrandTop />}
         serviceTagline={t('header.description')}

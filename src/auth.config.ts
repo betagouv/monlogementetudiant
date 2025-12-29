@@ -116,6 +116,46 @@ export const authConfig = {
         }
       },
     }),
+    Credentials({
+      id: 'credentials',
+      name: 'Credentials Email / Password',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Mot de passe', type: 'password' },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null
+
+        try {
+          const response = await fetch(`${process.env.API_URL}/accounts/students/token/`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email: credentials.email, password: credentials.password }),
+          })
+
+          if (!response.ok) return null
+
+          const data = await response.json()
+
+          return {
+            accessToken: data.access,
+            refreshToken: data.refresh,
+            user: {
+              id: data.user.id,
+              email: data.user.email,
+              firstname: data.user.first_name,
+              lastname: data.user.last_name,
+              name: `${data.user.first_name} ${data.user.last_name}`.trim(),
+              role: data.user.role,
+            },
+          }
+        } catch {
+          return null
+        }
+      },
+    }),
   ],
   session: {
     strategy: 'jwt',
