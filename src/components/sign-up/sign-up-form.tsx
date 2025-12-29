@@ -10,11 +10,13 @@ import Link from 'next/link'
 import { FC, useState } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { tss } from 'tss-react'
+import { useStudentRegistration } from '~/hooks/use-student-registration'
 import { ZSignUpForm } from '~/schemas/sign-up/sign-up'
 
 export const SignUpForm: FC = () => {
   const t = useTranslations('signUp')
   const [showPassword, setShowPassword] = useState(false)
+  const { mutateAsync, isLoading } = useStudentRegistration()
 
   const { classes } = useStyles()
 
@@ -29,9 +31,8 @@ export const SignUpForm: FC = () => {
   })
   const { formState, getValues, handleSubmit, register } = loginForm
 
-  const onSubmit = async () => {
-    console.log(getValues())
-  }
+  const onSubmit = async () => await mutateAsync(getValues())
+
   const { errors } = formState
   const { lastname, firstname, email, password } = errors || {}
   return (
@@ -102,8 +103,8 @@ export const SignUpForm: FC = () => {
           }}
         />
         <div className={classes.ctasContainer}>
-          <Button type="submit" iconPosition="right" iconId="ri-arrow-right-line">
-            {t('labels.cta')}
+          <Button type="submit" iconPosition="right" iconId="ri-arrow-right-line" disabled={isLoading}>
+            {isLoading ? 'Inscription en cours...' : t('labels.cta')}
           </Button>
           <div>
             <Link className={fr.cx('fr-link')} href="/politique-de-confidentialite">

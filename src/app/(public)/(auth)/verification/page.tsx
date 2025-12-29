@@ -1,11 +1,11 @@
 import { notFound, redirect } from 'next/navigation'
 
 interface VerificationPageProps {
-  searchParams: { sesame?: string; error?: string }
+  searchParams: { sesame?: string; validation_token?: string; error?: string }
 }
 
 export default async function VerificationPage({ searchParams }: VerificationPageProps) {
-  const { sesame, error } = searchParams
+  const { sesame, validation_token, error } = searchParams
 
   if (error) {
     return (
@@ -15,9 +15,14 @@ export default async function VerificationPage({ searchParams }: VerificationPag
     )
   }
 
-  if (!sesame) {
+  if (!sesame && !validation_token) {
     return notFound()
   }
 
-  redirect(`/api/authentication/verify?sesame=${encodeURIComponent(sesame)}`)
+  if (sesame) {
+    redirect(`/api/authentication/verify?sesame=${encodeURIComponent(sesame)}`)
+  }
+  if (validation_token) {
+    redirect(`/api/accounts/students/validate?validation_token=${encodeURIComponent(validation_token)}`)
+  }
 }
