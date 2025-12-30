@@ -1,8 +1,7 @@
 'use client'
 
-import { tss } from 'tss-react'
-
 import { FC } from 'react'
+import { tss } from 'tss-react'
 
 interface MapSkeletonProps {
   height: number

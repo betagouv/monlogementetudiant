@@ -2,8 +2,8 @@
 
 import { Breadcrumb } from '@codegouvfr/react-dsfr/Breadcrumb'
 import { RegisteredLinkProps } from '@codegouvfr/react-dsfr/link'
-import { useTranslations } from 'next-intl'
 import { usePathname } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { FC, ReactNode } from 'react'
 import { tss } from 'tss-react'
 

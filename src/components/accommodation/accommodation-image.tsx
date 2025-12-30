@@ -9,7 +9,13 @@ export const AccommodationImage = ({
   className,
   src,
   withModal,
-}: { width: number; height: number; className?: string; src: string; withModal: boolean }) => {
+}: {
+  width: number
+  height: number
+  className?: string
+  src: string
+  withModal: boolean
+}) => {
   return (
     <Image
       src={src}

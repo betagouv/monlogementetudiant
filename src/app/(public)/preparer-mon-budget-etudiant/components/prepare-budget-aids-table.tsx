@@ -1,7 +1,7 @@
 import { fr } from '@codegouvfr/react-dsfr'
 import { Table } from '@codegouvfr/react-dsfr/Table'
-import { getTranslations } from 'next-intl/server'
 import Link from 'next/link'
+import { getTranslations } from 'next-intl/server'
 
 export default async function PrepareBudgetAidsTable() {
   const links = {

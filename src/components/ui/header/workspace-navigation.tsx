@@ -1,8 +1,8 @@
 'use client'
 
 import MainNavigation, { MainNavigationProps } from '@codegouvfr/react-dsfr/MainNavigation'
-import { useTranslations } from 'next-intl'
 import { usePathname } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { FC } from 'react'
 import styles from './navigation.module.css'
 

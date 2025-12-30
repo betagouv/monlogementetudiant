@@ -1,7 +1,7 @@
 import { fr } from '@codegouvfr/react-dsfr'
 import clsx from 'clsx'
-import { getTranslations } from 'next-intl/server'
 import Link from 'next/link'
+import { getTranslations } from 'next-intl/server'
 import { FaqQuestionsAnswers } from '~/components/faq/faq-questions-answers'
 import { DynamicBreadcrumb } from '~/components/ui/breadcrumb'
 import { TFaqQuestionsAnswers } from '~/schemas/faq/faq-questions-answers'

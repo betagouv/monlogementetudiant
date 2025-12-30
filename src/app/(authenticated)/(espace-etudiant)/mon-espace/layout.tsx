@@ -1,5 +1,5 @@
-import { getTranslations } from 'next-intl/server'
 import { notFound } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
 import { auth } from '~/auth'
 import { StudentSpaceNavigation } from '~/components/student-space/navigation/student-space-navigation'
 import { DynamicBreadcrumb } from '~/components/ui/breadcrumb'
