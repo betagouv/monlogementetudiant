@@ -7,16 +7,16 @@ import { Input } from '@codegouvfr/react-dsfr/Input'
 import { zodResolver } from '@hookform/resolvers/zod'
 import clsx from 'clsx'
 import { useTranslations } from 'next-intl'
-import { FC, ReactNode, useState } from 'react'
+import { FC, ReactNode } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { tss } from 'tss-react'
+import { useForgotPassword } from '~/hooks/use-forgot-password'
 import { ZForgotPasswordForm } from '~/schemas/forgot-password/forgot-password'
 
 export const ForgotPasswordForm: FC = () => {
-  // todo: remove that in order to get the mutation status
-  const [isSent, setIsSent] = useState(false)
   const t = useTranslations('forgotPassword')
   const { classes } = useStyles()
+  const { mutateAsync, isLoading, isSuccess } = useForgotPassword()
 
   const forgotPasswordForm = useForm({
     defaultValues: {
@@ -27,8 +27,8 @@ export const ForgotPasswordForm: FC = () => {
   const { getValues, handleSubmit, register } = forgotPasswordForm
 
   const onSubmit = async () => {
-    console.log(getValues())
-    setIsSent(true)
+    const formData = getValues()
+    await mutateAsync(formData)
   }
 
   const alertDescription = t.rich('success.description', {
@@ -57,10 +57,10 @@ export const ForgotPasswordForm: FC = () => {
             />
           </div>
 
-          <Button type="submit" iconPosition="right" iconId="ri-arrow-right-line">
-            {t('labels.cta')}
+          <Button type="submit" iconPosition="right" iconId="ri-arrow-right-line" disabled={isLoading}>
+            {isLoading ? t('labels.sending') : t('labels.cta')}
           </Button>
-          {isSent && <Alert description={alertDescription} severity="success" small />}
+          {isSuccess && <Alert description={alertDescription} severity="success" small />}
         </div>
       </form>
     </FormProvider>
