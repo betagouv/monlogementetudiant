@@ -2,7 +2,7 @@ import { fr } from '@codegouvfr/react-dsfr'
 import Button from '@codegouvfr/react-dsfr/Button'
 import clsx from 'clsx'
 import { getTranslations } from 'next-intl/server'
-import { LoginForm } from '~/components/login/login-form'
+import { CredentialsSignInForm } from '~/components/credentials-sign-in/credentials-sign-in'
 import authStyles from '../auth.module.css'
 import styles from './login.module.css'
 
@@ -16,7 +16,7 @@ export default async function LoginPage() {
         &nbsp;<span className={clsx(fr.cx('fr-text--bold'), styles.required)}>*</span>
         &nbsp;{t('subTitlePart2')}
       </p>
-      <LoginForm />
+      <CredentialsSignInForm />
       <div className={styles.dividerContainer}>
         <span className={styles.divider}>{t('labels.or')}</span>
       </div>

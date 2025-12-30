@@ -1,12 +1,15 @@
 'use client'
+
 import { Badge } from '@codegouvfr/react-dsfr/Badge'
 import { Card } from '@codegouvfr/react-dsfr/Card'
 import { Tag } from '@codegouvfr/react-dsfr/Tag'
 import clsx from 'clsx'
+import { useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 import { parseAsString, useQueryState } from 'nuqs'
 import { FC } from 'react'
 import { tss } from 'tss-react'
+import { SaveAccommodationFavoriteButton } from '~/components/favorites/save-accommodation-favorite-button'
 import {
   FindStudentAccommodationImageCard,
   FindStudentAccommodationPlaceholderImageCard,
@@ -22,6 +25,8 @@ type AccomodationCardProps = {
 }
 
 export const AccomodationCard: FC<AccomodationCardProps> = ({ className, accomodation, href }) => {
+  const { data: session } = useSession()
+
   const [selectedAccommodation] = useQueryState('id', parseAsString)
   const t = useTranslations('findAccomodation.card')
   const { classes } = useStyles()
@@ -76,6 +81,17 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({ className, accomod
     : {}
 
   const redirectUri = href ?? `/trouver-un-logement-etudiant/ville/${encodeURIComponent(city)}/${accomodation.properties.slug}`
+
+  const handleCardClick = (event: React.MouseEvent) => {
+    // Check if the click target is the favorite button or its children
+    const target = event.target as HTMLElement
+    if (target.closest('button[title="Enregistrer en favoris"]')) {
+      return // Don't navigate if clicking on the favorite button
+    }
+    // Otherwise, navigate to the accommodation page
+    window.location.href = redirectUri
+  }
+
   return (
     <Card
       {...badgeProps}
@@ -87,6 +103,7 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({ className, accomod
       id={`accomodation-${accomodation.id}`}
       background
       border
+      nativeDivProps={{ onClick: handleCardClick }}
       desc={
         <>
           <span className={clsx('ri-group-line', classes.description)}>{accommodationsTypes.join(' • ')}</span>
@@ -108,16 +125,15 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({ className, accomod
           )}
         </>
       }
-      enlargeLink
-      linkProps={{
-        href: redirectUri,
-      }}
       start={
-        <ul className="fr-tags-group">
-          <li>
-            <Tag>{`${city} (${postal_code})`}</Tag>
-          </li>
-        </ul>
+        <div className="fr-flex fr-justify-content-space-between">
+          <ul className="fr-tags-group">
+            <li>
+              <Tag>{`${city} (${postal_code})`}</Tag>
+            </li>
+          </ul>
+          {session?.user && <SaveAccommodationFavoriteButton slug={accomodation.properties.slug} />}
+        </div>
       }
       end={<>{waitingListBadge}</>}
       size="small"

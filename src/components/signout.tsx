@@ -5,9 +5,10 @@ import { useEffect } from 'react'
 
 export const Signout = () => {
   const { data: session } = useSession()
+
   useEffect(() => {
     if (session?.error) {
-      signOut({ callbackUrl: '/accueil', redirect: true })
+      signOut({ callbackUrl: '/', redirect: true })
     }
   }, [session])
 
