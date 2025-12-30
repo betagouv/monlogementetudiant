@@ -13,7 +13,7 @@ import { tss } from 'tss-react'
 import { createToast } from '~/components/ui/createToast'
 import { ZLoginForm } from '~/schemas/login/login'
 
-export const LoginForm: FC = () => {
+export const CredentialsSignInForm: FC = () => {
   const t = useTranslations('login')
   const { classes } = useStyles()
 
