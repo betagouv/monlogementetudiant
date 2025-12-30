@@ -98,7 +98,7 @@ export const DynamicBreadcrumb: FC<DynamicBreadcrumbProps> = ({ color, margin = 
         break
       case pathname.match(/^\/trouver-un-logement-etudiant\/ville\/[^/]+\/[^/]+$/)?.input:
         segments.push({
-          label: t('breadcrumbs.findAccomodationWithLocation', { location: city }),
+          label: t('breadcrumbs.findAccomodationWithLocation', { location: city! }),
           linkProps: {
             href: `/trouver-un-logement-etudiant/ville/${city}`,
           },
@@ -115,7 +115,7 @@ export const DynamicBreadcrumb: FC<DynamicBreadcrumbProps> = ({ color, margin = 
         currentPageLabel = t('breadcrumbs.prepareStudentLife')
         break
       case pathname.match(/^\/preparer-sa-vie-etudiante\/[a-zA-Z0-9-]+$/)?.input:
-        currentPageLabel = t('breadcrumbs.prepareStudentLifeTitle', { title })
+        currentPageLabel = t('breadcrumbs.prepareStudentLifeTitle', { title: title! })
         segments.push({
           label: t('breadcrumbs.prepareStudentLife'),
           linkProps: {
