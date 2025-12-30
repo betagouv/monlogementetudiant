@@ -1,7 +1,7 @@
 import { fr } from '@codegouvfr/react-dsfr'
 import { HeaderQuickAccessItem } from '@codegouvfr/react-dsfr/Header'
-import { useTranslations } from 'next-intl'
 import { cookies } from 'next/headers'
+import { useTranslations } from 'next-intl'
 import { FC } from 'react'
 
 import { LanguageLink } from '~/components/ui/header/langage-selection/language-link'

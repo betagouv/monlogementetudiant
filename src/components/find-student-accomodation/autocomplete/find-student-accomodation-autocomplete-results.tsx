@@ -1,8 +1,8 @@
 'use client'
 
 import { FrCxArg, fr } from '@codegouvfr/react-dsfr'
-import { useTranslations } from 'next-intl'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { FC } from 'react'
 import { tss } from 'tss-react'
 import { TTerritories, TTerritory } from '~/schemas/territories'

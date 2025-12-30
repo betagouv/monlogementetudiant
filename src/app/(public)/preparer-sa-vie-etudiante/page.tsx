@@ -1,7 +1,7 @@
 import { FrIconClassName, fr } from '@codegouvfr/react-dsfr'
 import clsx from 'clsx'
-import { getTranslations } from 'next-intl/server'
 import Image from 'next/image'
+import { getTranslations } from 'next-intl/server'
 import { CitiesAutocompleteInput } from '~/components/prepare-student-life/autocomplete/cities-autocomplete-input'
 import { PopularCities } from '~/components/prepare-student-life/popular-cities'
 import { PrepareStudentLifeSelectDepartment } from '~/components/prepare-student-life/select-department'

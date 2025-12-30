@@ -1573,15 +1573,15 @@
 }
 
 .fr-border-width-0-5v {
-  border-width: .125rem !important;
+  border-width: 0.125rem !important;
 }
 
 .fr-border-width-1v {
-  border-width: .25rem !important;
+  border-width: 0.25rem !important;
 }
 
 .fr-border-width-2v {
-  border-width: .5rem !important;
+  border-width: 0.5rem !important;
 }
 
 @media screen and (min-width: 0\0) and (min-resolution: 72dpi) {

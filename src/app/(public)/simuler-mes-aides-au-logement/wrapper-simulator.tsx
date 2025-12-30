@@ -2,8 +2,8 @@
 
 import { fr } from '@codegouvfr/react-dsfr'
 import clsx from 'clsx'
-import { useTranslations } from 'next-intl'
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 import { FC, useMemo, useState } from 'react'
 import AidesSimplifiesSimulator from '~/app/(public)/simuler-mes-aides-au-logement/aides-simplifies-simulator'
 import { DynamicBreadcrumb } from '~/components/ui/breadcrumb'

@@ -1,6 +1,6 @@
 import { fr } from '@codegouvfr/react-dsfr'
-import { getTranslations } from 'next-intl/server'
 import Image from 'next/image'
+import { getTranslations } from 'next-intl/server'
 import PrepareBudgetAidsTable from '~/app/(public)/preparer-mon-budget-etudiant/components/prepare-budget-aids-table'
 import PrepareBudgetContentCard from '~/app/(public)/preparer-mon-budget-etudiant/components/prepare-budget-content-card'
 import PrepareBudgetContentHeader from '~/app/(public)/preparer-mon-budget-etudiant/components/prepare-budget-content-header'

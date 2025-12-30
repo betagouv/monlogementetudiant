@@ -14,7 +14,7 @@ import { ResidenceSummary } from '~/components/bailleur/details/residence-summar
 import { UpdateResidencePublication } from '~/components/bailleur/details/update-residence-publication'
 import { useUpdateResidenceDetails } from '~/hooks/use-update-residence-details'
 import { TAccomodationMy } from '~/schemas/accommodations/accommodations'
-import { TUpdateResidence, createUpdateResidenceSchema } from '~/schemas/accommodations/update-residence'
+import { createUpdateResidenceSchema, TUpdateResidence } from '~/schemas/accommodations/update-residence'
 import { formatRelativeTime } from '~/utils/formatRelativeTime'
 import { sanitizeHTML } from '~/utils/sanitize-html'
 import styles from './update-residence-form.module.css'

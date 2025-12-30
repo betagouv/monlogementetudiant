@@ -1,7 +1,7 @@
 import { fr } from '@codegouvfr/react-dsfr'
 import { Header } from '@codegouvfr/react-dsfr/Header'
-import { getTranslations } from 'next-intl/server'
 import { notFound } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
 import { FC } from 'react'
 import { auth } from '~/auth'
 import { BrandTop } from '~/components/ui/brand-top'

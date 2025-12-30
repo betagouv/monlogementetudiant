@@ -1,7 +1,6 @@
 import { fr } from '@codegouvfr/react-dsfr'
-import clsx from 'clsx'
-
 import Button from '@codegouvfr/react-dsfr/Button'
+import clsx from 'clsx'
 import Link from 'next/link'
 import { AccomodationCard } from '~/components/find-student-accomodation/card/find-student-accomodation-card'
 import { getAccommodations } from '~/server-only/get-accommodations'
