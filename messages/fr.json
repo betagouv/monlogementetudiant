@@ -550,7 +550,8 @@
     "subTitlePart2": "sont obligatoires.",
     "labels": {
       "email": "Email",
-      "cta": "Réinitialiser votre mot de passe"
+      "cta": "Réinitialiser votre mot de passe",
+      "labels": "Envoi en cours..."
     },
     "backToLogin": "Retour à la page de connexion",
     "success": {

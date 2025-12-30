@@ -6,19 +6,23 @@ import Button from '@codegouvfr/react-dsfr/Button'
 import Input from '@codegouvfr/react-dsfr/Input'
 import { zodResolver } from '@hookform/resolvers/zod'
 import clsx from 'clsx'
+import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { FC, useState } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { tss } from 'tss-react'
+import { useResetPassword } from '~/hooks/use-reset-password'
 import { ZResetPasswordForm } from '~/schemas/reset-password/reset-password'
 
 export const ResetPasswordForm: FC = () => {
-  // todo: remove that in order to get the mutation status
-  const [isResetted, setIsResetted] = useState(false)
+  const searchParams = useSearchParams()
+  const uid = searchParams.get('uid')
+  const token = searchParams.get('token')
 
   const [passwordState, setPasswordState] = useState({ password: false, confirmPassword: false })
   const t = useTranslations('resetPassword')
   const { classes } = useStyles()
+  const { mutateAsync, isLoading, isSuccess } = useResetPassword()
 
   const resetPasswordForm = useForm({
     defaultValues: {
@@ -30,8 +34,18 @@ export const ResetPasswordForm: FC = () => {
   const { getValues, handleSubmit, register } = resetPasswordForm
 
   const onSubmit = async () => {
-    console.log(getValues())
-    setIsResetted(true)
+    if (!uid || !token) {
+      console.error('Missing uid or token parameters')
+      return
+    }
+
+    const formData = getValues()
+    await mutateAsync({
+      id: uid,
+      token,
+      password: formData.password,
+      confirmPassword: formData.confirmPassword,
+    })
   }
 
   const { errors } = resetPasswordForm.formState
@@ -92,10 +106,11 @@ export const ResetPasswordForm: FC = () => {
             />
           </div>
 
-          <Button type="submit" iconPosition="right" iconId="ri-arrow-right-line">
-            {t('labels.cta')}
+          <Button type="submit" iconPosition="right" iconId="ri-arrow-right-line" disabled={isLoading || !uid || !token}>
+            {isLoading ? t('labels.resetting') || 'Réinitialisation...' : t('labels.cta')}
           </Button>
-          {isResetted && <Alert description={t('success.description')} severity="success" small />}
+          {isSuccess && <Alert description={t('success.description')} severity="success" small />}
+          {(!uid || !token) && <Alert description="Paramètres manquants pour réinitialiser le mot de passe" severity="error" small />}
         </div>
       </form>
     </FormProvider>
