@@ -8,6 +8,7 @@ import { BrandTop } from '~/components/ui/brand-top'
 import { Banner } from '~/components/ui/header/banner/banner'
 import { HeaderNavigation } from '~/components/ui/header/navigation'
 import { UserConnectedDropdown } from '~/components/ui/header/user-connected-dropdown'
+import { UserSignInDropdown } from '~/components/ui/header/user-sign-in-dropdown'
 
 type HeaderComponentProps = {
   withNavigation?: boolean
@@ -39,9 +40,7 @@ export const HeaderComponent: FC<HeaderComponentProps> = async ({ withNavigation
           session?.user ? (
             <UserConnectedDropdown key="user-dropdown" user={session.user} />
           ) : (
-            <Button priority="secondary" key="login-cta" iconId="ri-user-line" linkProps={{ href: '/se-connecter', target: '_self' }}>
-              {t('header.login')}
-            </Button>
+            <UserSignInDropdown key="user-sign-in-dropdown" />
           ),
         ]}
         brandTop={<BrandTop />}

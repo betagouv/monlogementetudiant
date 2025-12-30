@@ -13,7 +13,7 @@ export default async function LoginPage() {
       <h1>{t('title')}</h1>
       <p>
         {t('subTitlePart1')}
-        &nbsp;<span className={clsx(fr.cx('fr-text--bold'), styles.required)}>*</span>
+        &nbsp;<span className={clsx(fr.cx('fr-text--bold'), authStyles.required)}>*</span>
         &nbsp;{t('subTitlePart2')}
       </p>
       <CredentialsSignInForm />
