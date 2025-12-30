@@ -25,6 +25,9 @@
       "todo": {
         "title": "To-do list"
       },
+      "favorites": {
+        "title": "Mes favoris"
+      },
       "alerts": {
         "title": "Alertes logements"
       }

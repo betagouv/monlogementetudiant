@@ -1,5 +1,6 @@
 import type { NextAuthConfig } from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
+import { TUser } from '~/types/next-auth'
 
 interface User {
   id: string
@@ -7,6 +8,7 @@ interface User {
   firstname: string
   lastname: string
   name: string
+  role: string
 }
 
 interface TokenInterface {
@@ -52,6 +54,7 @@ async function refreshAccessToken(token: TokenInterface): Promise<TokenInterface
       accessToken: refreshedTokens.access,
       accessTokenExpires: getTokenExpiration(refreshedTokens.access),
       refreshToken: refreshedTokens.refresh,
+      error: undefined,
     }
   } catch {
     return {
@@ -63,15 +66,20 @@ async function refreshAccessToken(token: TokenInterface): Promise<TokenInterface
 
 export const authConfig = {
   events: {
-    async signOut(authUser) {
-      if ('token' in authUser && authUser.token?.accessToken) {
-        await fetch(`${process.env.API_AUTH_BASE_URL}/admin-auth/logout/`, {
+    async signOut(message) {
+      if ('token' in message) {
+        const url =
+          (message.token?.user as TUser).role === 'owner'
+            ? `${process.env.API_AUTH_BASE_URL}/admin-auth/logout/`
+            : `${process.env.API_URL}/accounts/students/logout/`
+
+        await fetch(url, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${authUser.token.accessToken}`,
+            Authorization: `Bearer ${message.token?.accessToken}`,
           },
-          body: JSON.stringify({ refresh: authUser.token.refreshToken }),
+          body: JSON.stringify({ refresh: message.token?.refreshToken }),
         })
       }
     },
@@ -173,12 +181,19 @@ export const authConfig = {
       if (Date.now() < (token.accessTokenExpires as number) - fiveMinutes) {
         return token
       } else {
-        const tokens = await refreshAccessToken(token as TokenInterface)
-        if (tokens) {
-          token.accessToken = tokens.accessToken
-          token.refreshToken = tokens.refreshToken
-          token.accessTokenExpires = tokens.accessTokenExpires
-          token.error = tokens.error
+        const refreshedToken = await refreshAccessToken(token as TokenInterface)
+        if (refreshedToken.error) {
+          return {
+            ...token,
+            error: refreshedToken.error,
+          }
+        }
+        return {
+          ...token,
+          accessToken: refreshedToken.accessToken,
+          refreshToken: refreshedToken.refreshToken,
+          accessTokenExpires: refreshedToken.accessTokenExpires,
+          error: undefined,
         }
       }
       return token

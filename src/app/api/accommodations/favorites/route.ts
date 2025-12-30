@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { auth } from '~/auth'
-
-const createFavoriteSchema = z.object({
-  accommodation_slug: z.string().min(1, 'accommodation_slug is required'),
-})
+import { ZPostFavorite } from '~/schemas/favorites/create-favorite'
 
 export async function GET() {
   const session = await auth()
@@ -40,7 +37,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json()
-    const validatedData = createFavoriteSchema.parse(body)
+    const validatedData = ZPostFavorite.parse(body)
 
     const response = await fetch(`${process.env.API_URL}/accommodations/favorites/`, {
       method: 'POST',
@@ -56,7 +53,7 @@ export async function POST(request: Request) {
     }
 
     const data = await response.json()
-    return NextResponse.json(data, { status: 201 })
+    return NextResponse.json(data)
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Invalid request data', details: error.errors }, { status: 400 })

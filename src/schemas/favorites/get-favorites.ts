@@ -6,7 +6,7 @@ export const ZGetFavoritesResponse = z.object({
   next: z.string().nullable(),
   page_size: z.number(),
   previous: z.string().nullable(),
-  results: z.array(ZAccomodation),
+  results: z.array(z.object({ id: z.number(), accommodation: ZAccomodation })),
 })
 
 export type TGetFavoritesResponse = z.infer<typeof ZGetFavoritesResponse>

@@ -8,7 +8,7 @@ export const StudentSpaceNavigation = async () => {
   return (
     <>
       <div className="fr-border-bottom fr-p-3w">
-        <Button iconPosition="left" iconId="fr-icon-arrow-left-line" priority="tertiary no outline">
+        <Button iconPosition="left" iconId="fr-icon-arrow-left-line" priority="tertiary no outline" linkProps={{ href: '/' }}>
           {t('backToHome')}
         </Button>
       </div>

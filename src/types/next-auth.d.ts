@@ -17,10 +17,31 @@ declare module 'next-auth' {
     user: TUser
   }
 
+  interface TokenInterface {
+    accessToken?: string
+    refreshToken?: string
+    accessTokenExpires?: number
+    error?: string
+    user?: TUser
+  }
+
   interface User {
     accessToken: string
     refreshToken: string
     user: TUser
+  }
+
+  interface AuthUser {
+    token: {
+      sub: string
+      accessToken: string
+      refreshToken: string
+      accessTokenExpires: number
+      user: TUser
+      iat: number
+      exp: number
+      jti: string
+    }
   }
 }
 

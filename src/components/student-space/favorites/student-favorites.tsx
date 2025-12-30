@@ -7,7 +7,7 @@ export const StudentFavorites = async () => {
 
   return (
     <div className={styles.container}>
-      {favorites.results.map((accommodation, index) => (
+      {favorites.results.map(({ accommodation }, index) => (
         <StudentAccommodationFavorite key={index} accomodation={accommodation} />
       ))}
     </div>

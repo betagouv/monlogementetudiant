@@ -7,6 +7,7 @@ import '~/globals.css'
 import { NextAppDirEmotionCacheProvider } from 'tss-react/next'
 import Matomo from '~/app/matomo'
 import { auth } from '~/auth'
+import { Signout } from '~/components/signout'
 import Toaster from '~/components/ui/toaster'
 import { DsfrHead, getHtmlAttributes } from '~/dsfr/dsfr-head'
 import { DsfrProvider, StartDsfrOnHydration } from '~/dsfr/dsfr-provider'
@@ -47,6 +48,7 @@ export default async function RootLayout({
                 <TanstackQueryClientProvider>
                   <NuqsAdapter>
                     {children}
+                    <Signout />
                     <Toaster />
                   </NuqsAdapter>
                 </TanstackQueryClientProvider>
