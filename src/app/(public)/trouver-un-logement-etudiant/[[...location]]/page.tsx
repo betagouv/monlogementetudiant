@@ -22,11 +22,7 @@ const getTerritoriesCategoryKey = (categoryKey: 'ville' | 'academie' | 'departem
   return keys[categoryKey] as keyof TTerritories
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { location: string }
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: { location: string } }): Promise<Metadata> {
   const routeCategoryKey = params?.location?.[0] || ''
 
   if (routeCategoryKey === 'academie') {

@@ -1,7 +1,7 @@
 import { fr } from '@codegouvfr/react-dsfr'
 import Button from '@codegouvfr/react-dsfr/Button'
-import { getTranslations } from 'next-intl/server'
 import Image from 'next/image'
+import { getTranslations } from 'next-intl/server'
 import { DynamicBreadcrumb } from '~/components/ui/breadcrumb'
 import { HeaderComponent } from '~/components/ui/header/common-header'
 import notFoundImage from '~/images/404.svg'

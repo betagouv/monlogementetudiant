@@ -1,10 +1,9 @@
 import { fr } from '@codegouvfr/react-dsfr'
-import { getTranslations } from 'next-intl/server'
-import { DynamicBreadcrumb } from '~/components/ui/breadcrumb'
-
 import clsx from 'clsx'
+import { getTranslations } from 'next-intl/server'
 import PrepareBudgetContent from '~/app/(public)/preparer-mon-budget-etudiant/components/prepare-budget-content'
 import { PrepareBudgetSidemenu } from '~/app/(public)/preparer-mon-budget-etudiant/components/prepare-budget-sidemenu'
+import { DynamicBreadcrumb } from '~/components/ui/breadcrumb'
 import styles from './preparer-mon-budget-etudiant.module.css'
 
 export default async function PrepareBudgetPage() {

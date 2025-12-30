@@ -1,4 +1,4 @@
-import { RiIconClassName, fr } from '@codegouvfr/react-dsfr'
+import { fr, RiIconClassName } from '@codegouvfr/react-dsfr'
 import { Tag, TagProps } from '@codegouvfr/react-dsfr/Tag'
 import clsx from 'clsx'
 import { getTranslations } from 'next-intl/server'

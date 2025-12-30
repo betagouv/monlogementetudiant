@@ -1,7 +1,7 @@
 import { fr } from '@codegouvfr/react-dsfr'
 import clsx from 'clsx'
-import { getTranslations } from 'next-intl/server'
 import Image from 'next/image'
+import { getTranslations } from 'next-intl/server'
 import { AlertAccommodationForm } from '~/components/alert-accommodation/alert-accommodation-form'
 import background from '~/images/background.webp'
 import styles from './alert-logement.module.css'

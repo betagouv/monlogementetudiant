@@ -13,7 +13,10 @@ import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommod
 export const NearbyAccommodations = ({
   nearbyAccommodations,
   accommodation,
-}: { nearbyAccommodations: TGetAccomodationsResponse; accommodation: TAccomodationDetails }) => {
+}: {
+  nearbyAccommodations: TGetAccomodationsResponse
+  accommodation: TAccomodationDetails
+}) => {
   const nearbyFeatures = nearbyAccommodations.results.features.filter((feature) => feature.id !== accommodation.id)
   if (nearbyFeatures.length === 0) {
     return null

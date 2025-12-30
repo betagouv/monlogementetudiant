@@ -1,6 +1,6 @@
 import { fr } from '@codegouvfr/react-dsfr'
-import { getTranslations } from 'next-intl/server'
 import Link from 'next/link'
+import { getTranslations } from 'next-intl/server'
 import { DynamicBreadcrumb } from '~/components/ui/breadcrumb'
 import styles from '../pages.module.css'
 

@@ -7,7 +7,7 @@ import React, { FC } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { useUpdateAccommodation } from '~/hooks/use-update-accommodation'
 import { TAccomodation } from '~/schemas/accommodations/accommodations'
-import { TUpdateResidenceList, createUpdateResidenceListSchema } from '~/schemas/accommodations/update-residence-list'
+import { createUpdateResidenceListSchema, TUpdateResidenceList } from '~/schemas/accommodations/update-residence-list'
 import styles from './update-residence-list.module.css'
 
 interface UpdateResidenceListProps {

@@ -1,11 +1,7 @@
 import { auth } from '~/auth'
 import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
 
-export const getMyAccommodations = async (searchParams?: {
-  page?: string
-  disponible?: string
-  recherche?: string
-}) => {
+export const getMyAccommodations = async (searchParams?: { page?: string; disponible?: string; recherche?: string }) => {
   const session = await auth()
   if (!session || !session.accessToken) {
     throw new Error('Unauthorized')
