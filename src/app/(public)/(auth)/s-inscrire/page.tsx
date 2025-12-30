@@ -1,10 +1,9 @@
-import { getTranslations } from 'next-intl/server'
-import styles from '../auth.module.css'
-
 import { fr } from '@codegouvfr/react-dsfr'
 import Button from '@codegouvfr/react-dsfr/Button'
 import clsx from 'clsx'
+import { getTranslations } from 'next-intl/server'
 import { SignUpForm } from '~/components/sign-up/sign-up-form'
+import styles from '../auth.module.css'
 
 export default async function SignUpPage() {
   const t = await getTranslations('signUp')
