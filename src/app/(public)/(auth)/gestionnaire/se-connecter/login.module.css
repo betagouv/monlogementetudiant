@@ -1,0 +1,35 @@
+.firstVisitContainer {
+  display: flex;
+  flex-direction: column;
+  @media (max-width: 768px) {
+    align-items: center;
+  }
+}
+
+.dividerContainer {
+  position: relative;
+  width: 100%;
+  text-align: center;
+  margin: 2rem 0;
+}
+
+.divider {
+  background-color: white;
+  padding: 0 1rem;
+  color: #666666;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 700;
+  position: relative;
+}
+
+.dividerContainer::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: #dddddd;
+  z-index: 0;
+}

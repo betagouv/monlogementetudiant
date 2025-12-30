@@ -5,43 +5,51 @@ import Button from '@codegouvfr/react-dsfr/Button'
 import { Input } from '@codegouvfr/react-dsfr/Input'
 import { zodResolver } from '@hookform/resolvers/zod'
 import clsx from 'clsx'
-import { signIn } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 import { FC } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { tss } from 'tss-react'
 import { createToast } from '~/components/ui/createToast'
-import { ZCredentialsSignInForm } from '~/schemas/credentials-sign-in/credentials-sign-in'
+import { TMagicLinkSignInForm, ZMagicLinkSignInForm } from '~/schemas/magic-link-sign-in/magic-link-sign-in'
 
-export const CredentialsSignInForm: FC = () => {
+export const MagicLinkSignInForm: FC = () => {
   const t = useTranslations('login')
   const { classes } = useStyles()
 
-  const loginForm = useForm({
+  const loginForm = useForm<TMagicLinkSignInForm>({
     defaultValues: {
       email: '',
-      password: '',
     },
-    resolver: zodResolver(ZCredentialsSignInForm),
+    resolver: zodResolver(ZMagicLinkSignInForm),
   })
   const { formState, getValues, handleSubmit, register } = loginForm
 
   const onSubmit = async () => {
-    const data = getValues()
+    const { email } = getValues()
     try {
-      await signIn('credentials', {
-        email: data.email,
-        password: data.password,
-        callbackUrl: '/mon-espace',
+      const response = await fetch('/api/admin-auth/magic-link', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
       })
-      createToast({
-        priority: 'success',
-        message: 'Vous êtes connecté avec succès !',
-      })
+
+      if (response.ok) {
+        createToast({
+          priority: 'success',
+          message: t('success'),
+        })
+      } else {
+        createToast({
+          priority: 'error',
+          message: 'Une erreur est survenue lors de la connexion, veuillez réessayé ultérieurement',
+        })
+      }
     } catch {
       createToast({
         priority: 'error',
-        message: 'Une erreur est survenue lors de la connexion.',
+        message: 'Une erreur est survenue lors de la connexion, veuillez réessayé ultérieurement',
       })
     }
   }
@@ -64,26 +72,7 @@ export const CredentialsSignInForm: FC = () => {
                 ...register('email'),
               }}
             />
-            <Input
-              label={
-                <>
-                  {t('labels.password')}
-                  &nbsp;<span className={clsx(fr.cx('fr-text--bold'), classes.required)}>*</span>{' '}
-                </>
-              }
-              state={formState.errors.password ? 'error' : undefined}
-              stateRelatedMessage={formState.errors.password?.message}
-              nativeInputProps={{
-                ...register('password'),
-                type: 'password',
-              }}
-            />
           </div>
-          {/* <div>
-            <Link className={fr.cx('fr-link')} href="/mot-de-passe-oublie">
-              {t('labels.forgotPassword')}
-            </Link>
-          </div> */}
           <Button type="submit" iconPosition="right" iconId="ri-arrow-right-line">
             {t('labels.cta')}
           </Button>
