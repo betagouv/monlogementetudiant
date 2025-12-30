@@ -1,18 +1,21 @@
 'use client'
 
-import init from '@socialgouv/matomo-next'
+import { trackAppRouter } from '@socialgouv/matomo-next'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { useEffect } from 'react'
 
 export default function Matomo() {
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   useEffect(() => {
     if (process.env.NEXT_PUBLIC_APP_ENV === 'production') {
-      init({
+      trackAppRouter({
         url: process.env.NEXT_PUBLIC_MATOMO_URL || '',
         siteId: process.env.NEXT_PUBLIC_MATOMO_SITE_ID || '',
         disableCookies: true,
       })
     }
-  }, [])
+  }, [pathname, searchParams])
 
   return null
 }
