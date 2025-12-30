@@ -5,6 +5,7 @@ import { NuqsAdapter } from 'nuqs/adapters/next/app'
 import { NextAuthProvider } from '~/providers/next-auth'
 import { TanstackQueryClientProvider } from '~/providers/tanstack-client'
 import '~/globals.css'
+import { Suspense } from 'react'
 import { NextAppDirEmotionCacheProvider } from 'tss-react/next'
 import Matomo from '~/app/matomo'
 import { auth } from '~/auth'
@@ -41,7 +42,9 @@ export default async function RootLayout({
     <html {...getHtmlAttributes({ lang: locale })} style={{ overflowX: 'hidden' }}>
       <head>
         <DsfrHead preloadFonts={['Marianne-Regular', 'Marianne-Medium', 'Marianne-Bold']} />
-        <Matomo />
+        <Suspense fallback={null}>
+          <Matomo />
+        </Suspense>
       </head>
       <body>
         <NextAppDirEmotionCacheProvider options={{ key: 'css' }}>
