@@ -21,6 +21,14 @@ export const HeaderNavigation: FC = () => {
       text: t('findAccommodation'),
     },
     {
+      isActive: pathname === '/preparer-sa-vie-etudiante/',
+      linkProps: {
+        href: '/preparer-sa-vie-etudiante',
+        target: '_self',
+      },
+      text: t('prepareStudentLife'),
+    },
+    {
       isActive: pathname === '/preparer-mon-budget-etudiant',
       text: t('prepareBudget.title'),
       menuLinks: [
