@@ -4,7 +4,8 @@ import { auth } from '~/auth'
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
-export async function POST(request: Request, { params }: { params: { slug: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
   const session = await auth()
   if (!session || !session.accessToken) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -29,7 +30,7 @@ export async function POST(request: Request, { params }: { params: { slug: strin
       backendFormData.append('images', file)
     })
 
-    const response = await fetch(`${process.env.API_URL}/accommodations/my/${params.slug}/upload/`, {
+    const response = await fetch(`${process.env.API_URL}/accommodations/my/${slug}/upload/`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${session.accessToken}`,

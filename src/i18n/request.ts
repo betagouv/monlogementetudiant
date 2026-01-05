@@ -7,7 +7,8 @@ export enum AvailableLocales {
 }
 
 export default getRequestConfig(async () => {
-  const locale = cookies().get('NEXT_LOCALE')?.value || AvailableLocales.FR
+  const cookieStore = await cookies()
+  const locale = cookieStore.get('NEXT_LOCALE')?.value || AvailableLocales.FR
   return {
     locale,
     messages: (await import(`../../messages/${locale}.json`)).default,
