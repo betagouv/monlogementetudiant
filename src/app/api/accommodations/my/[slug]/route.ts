@@ -3,7 +3,8 @@ import { auth } from '~/auth'
 import { ZUpdateResidence } from '~/schemas/accommodations/update-residence'
 import { ZUpdateResidenceList } from '~/schemas/accommodations/update-residence-list'
 
-export async function PATCH(request: Request, { params }: { params: { slug: string } }) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
   const session = await auth()
   if (!session || !session.accessToken) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -21,7 +22,7 @@ export async function PATCH(request: Request, { params }: { params: { slug: stri
       validatedData = ZUpdateResidenceList.parse(body)
     }
 
-    const response = await fetch(`${process.env.API_URL}/accommodations/my/${params.slug}/`, {
+    const response = await fetch(`${process.env.API_URL}/accommodations/my/${slug}/`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -32,7 +33,7 @@ export async function PATCH(request: Request, { params }: { params: { slug: stri
     })
 
     if (!response.ok) {
-      return NextResponse.json({ error: `Failed to update accommodation with slug: ${params.slug}` }, { status: response.status })
+      return NextResponse.json({ error: `Failed to update accommodation with slug: ${slug}` }, { status: response.status })
     }
 
     const data = await response.json()

@@ -1,17 +1,17 @@
 import { NextResponse } from 'next/server'
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string
     token: string
-  }
+  }>
 }
 
 export async function POST(request: Request, { params }: RouteParams) {
   try {
     const body = await request.json()
     const { new_password } = body
-    const { id, token } = params
+    const { id, token } = await params
 
     if (!new_password) {
       return NextResponse.json({ error: 'Missing required field: new_password' }, { status: 400 })

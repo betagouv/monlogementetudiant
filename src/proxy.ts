@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { AvailableLocales } from '~/i18n/request'
 
-export const middleware = (request: NextRequest) => {
+export function proxy(request: NextRequest) {
   const res = NextResponse.next()
   const localeCookie = request.cookies.get('NEXT_LOCALE')
 
@@ -10,8 +10,4 @@ export const middleware = (request: NextRequest) => {
   }
 
   return res
-}
-
-export const config = {
-  matcher: '/((?!_next|favicon.ico).*)',
 }
