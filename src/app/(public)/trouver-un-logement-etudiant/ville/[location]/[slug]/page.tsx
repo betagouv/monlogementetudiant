@@ -17,10 +17,11 @@ import { getAccommodations } from '~/server-only/get-accommodations'
 import { calculateAvailability } from '~/utils/calculateAvailability'
 import styles from './logement.module.css'
 
-export default async function LogementPage({ params }: { params: { slug: string } }) {
+export default async function LogementPage({ params }: { params: Promise<{ slug: string }> }) {
   const t = await getTranslations('accomodation')
   const commonT = await getTranslations()
-  const accommodation = await getAccommodationById(params.slug)
+  const { slug } = await params
+  const accommodation = await getAccommodationById(slug)
   const {
     address,
     city,

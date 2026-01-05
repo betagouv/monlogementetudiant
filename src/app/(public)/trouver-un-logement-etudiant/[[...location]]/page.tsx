@@ -22,8 +22,9 @@ const getTerritoriesCategoryKey = (categoryKey: 'ville' | 'academie' | 'departem
   return keys[categoryKey] as keyof TTerritories
 }
 
-export async function generateMetadata({ params }: { params: { location: string } }): Promise<Metadata> {
-  const routeCategoryKey = params?.location?.[0] || ''
+export async function generateMetadata({ params }: { params: Promise<{ location: string }> }): Promise<Metadata> {
+  const awaitedParams = await params
+  const routeCategoryKey = awaitedParams?.location?.[0] || ''
 
   if (routeCategoryKey === 'academie') {
     return {
@@ -42,7 +43,7 @@ export default async function FindStudentAccommodationPage({
   searchParams,
 }: {
   params: { location: string }
-  searchParams: {
+  searchParams: Promise<{
     accessible: string
     academie?: string
     prix?: string
@@ -52,8 +53,9 @@ export default async function FindStudentAccommodationPage({
     object_id?: string
     page?: string
     crous?: string
-  }
+  }>
 }) {
+  const awaitedSearchParams = await searchParams
   const routeCategoryKey = params?.location?.[0] || ''
   const routeLocation = decodeURIComponent(params?.location?.[1] || '')
   if (params && (params?.location?.length < 2 || params?.location?.length > 2)) {
@@ -74,7 +76,7 @@ export default async function FindStudentAccommodationPage({
   // do not use bbox while fetching if user searching by academy
   const isAcademy = routeCategoryKey === 'academie'
   const accommodationsParams = {
-    ...searchParams,
+    ...awaitedSearchParams,
     ...(isAcademy && territory ? { academie: territory.id.toString() } : {}),
     ...(!isAcademy && territoryBbox
       ? { bbox: `${territoryBbox.west},${territoryBbox.south},${territoryBbox.east},${territoryBbox.north}` }

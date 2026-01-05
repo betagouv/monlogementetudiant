@@ -1,11 +1,11 @@
 import { notFound, redirect } from 'next/navigation'
 
 interface VerificationPageProps {
-  searchParams: { sesame?: string; validation_token?: string; error?: string }
+  searchParams: Promise<{ sesame?: string; validation_token?: string; error?: string }>
 }
 
 export default async function VerificationPage({ searchParams }: VerificationPageProps) {
-  const { sesame, validation_token, error } = searchParams
+  const { sesame, validation_token, error } = await searchParams
 
   if (error) {
     return (
