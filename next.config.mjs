@@ -17,6 +17,18 @@ const nextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: '/preparer-sa-vie-etudiante',
+        destination: 'https://mle-wordpress.osc-secnum-fr1.scalingo.io/preparer-sa-vie-etudiante/',
+      },
+      {
+        source: '/preparer-sa-vie-etudiante/:path*',
+        destination: 'https://mle-wordpress.osc-secnum-fr1.scalingo.io/preparer-sa-vie-etudiante/:path*/',
+      },
+    ]
+  },
   webpack: (config) => {
     config.module.rules.push({
       test: /\.woff2$/,
