@@ -6,9 +6,9 @@ import PrepareStudentLifeSummary from '~/components/prepare-student-life/summary
 import { DynamicBreadcrumb } from '~/components/ui/breadcrumb'
 import { getCityDetails } from '~/server-only/get-city-details'
 
-export default async function PrepareStudentLifeCityPage({ params }: { params: { location: string } }) {
+export default async function PrepareStudentLifeCityPage({ params }: { params: Promise<{ location: string }> }) {
   const t = await getTranslations('prepareStudentLife')
-  const { location } = params
+  const { location } = await params
   const cityDetails = await getCityDetails(location)
   const { bbox, name } = cityDetails
 

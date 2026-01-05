@@ -5,8 +5,9 @@ import { getAccommodationMyById } from '~/server-only/get-accommodation-my-by-id
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-export default async function ResidenceDetailsPage({ params }: { params: { slug: string } }) {
-  const accommodation = await getAccommodationMyById(params.slug)
+export default async function ResidenceDetailsPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const accommodation = await getAccommodationMyById(slug)
   return (
     <div className="fr-container fr-pb-12w">
       <Breadcrumb
