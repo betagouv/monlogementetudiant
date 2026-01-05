@@ -6,6 +6,7 @@ import { Tag } from '@codegouvfr/react-dsfr/Tag'
 import clsx from 'clsx'
 import { useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
+import { useRouter } from 'next/navigation'
 import { parseAsString, useQueryState } from 'nuqs'
 import { FC } from 'react'
 import { tss } from 'tss-react'
@@ -26,7 +27,7 @@ type AccomodationCardProps = {
 
 export const AccomodationCard: FC<AccomodationCardProps> = ({ className, accomodation, href }) => {
   const { data: session } = useSession()
-
+  const router = useRouter()
   const [selectedAccommodation] = useQueryState('id', parseAsString)
   const t = useTranslations('findAccomodation.card')
   const { classes } = useStyles()
@@ -83,13 +84,11 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({ className, accomod
   const redirectUri = href ?? `/trouver-un-logement-etudiant/ville/${encodeURIComponent(city)}/${accomodation.properties.slug}`
 
   const handleCardClick = (event: React.MouseEvent) => {
-    // Check if the click target is the favorite button or its children
     const target = event.target as HTMLElement
     if (target.closest('button[title="Enregistrer en favoris"]')) {
-      return // Don't navigate if clicking on the favorite button
+      return
     }
-    // Otherwise, navigate to the accommodation page
-    window.location.href = redirectUri
+    router.push(redirectUri)
   }
 
   return (
@@ -97,7 +96,7 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({ className, accomod
       {...badgeProps}
       {...imageProps}
       classes={{
-        root: clsx(className, selectedAccommodation === accomodation.id.toString() && classes.active),
+        root: clsx(className, selectedAccommodation === accomodation.id.toString() && classes.active, classes.hover),
         header: classes.header,
       }}
       id={`accomodation-${accomodation.id}`}
@@ -108,7 +107,7 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({ className, accomod
         <>
           <span className={clsx('ri-group-line', classes.description)}>{accommodationsTypes.join(' • ')}</span>
           <br />
-          {nb_total_apartments && (
+          {!!nb_total_apartments && (
             <span className={clsx('ri-community-line', classes.description)}>{`${nb_total_apartments} logements`}</span>
           )}
           {!!badgeAvailability && (
@@ -146,6 +145,11 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({ className, accomod
 export const useStyles = tss.create({
   header: {
     overflow: 'hidden',
+  },
+  hover: {
+    '&:hover': {
+      cursor: 'pointer',
+    },
   },
   active: {
     border: '2px solid #3B7FF6',
