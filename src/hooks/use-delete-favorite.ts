@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { createToast } from '~/components/ui/createToast'
 
@@ -18,10 +18,15 @@ export const deleteFavorite = async (slug: string): Promise<void> => {
 }
 
 export const useDeleteFavorite = () => {
+  const queryClient = useQueryClient()
   const router = useRouter()
   const { mutateAsync, isPending } = useMutation({
     mutationFn: async (slug: string) => deleteFavorite(slug),
-    onSuccess: () => {
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['favorites'],
+        exact: false,
+      })
       createToast({
         priority: 'success',
         message: 'Logement supprimé des favoris !',

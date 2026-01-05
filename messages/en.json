@@ -551,7 +551,7 @@
     "labels": {
       "email": "Email",
       "cta": "Réinitialiser votre mot de passe",
-      "labels": "Envoi en cours..."
+      "sending": "Envoi en cours..."
     },
     "backToLogin": "Retour à la page de connexion",
     "success": {
@@ -564,7 +564,8 @@
       "newPassword": "Nouveau mot de passe",
       "newPasswordDescription": "12 caractères, composé de chiffres, lettres et caractères spéciaux.",
       "confirmPassword": "Confirmation du nouveau mot de passe",
-      "cta": "Réinitialiser votre mot de passe"
+      "cta": "Réinitialiser votre mot de passe",
+      "resetting": "Réinitialisation du mot de passe ..."
     },
     "success": {
       "description": "Votre nouveau mot de passe a bien été enregistré. Vous pouvez retourner à la page de connexion."

@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { createToast } from '~/components/ui/createToast'
 import { TPostFavorite } from '~/schemas/favorites/create-favorite'
@@ -20,10 +20,16 @@ export const postFavorite = async (body: TPostFavorite): Promise<void> => {
 }
 
 export const useCreateFavorite = () => {
+  const queryClient = useQueryClient()
+
   const router = useRouter()
   const { mutateAsync, isPending } = useMutation({
     mutationFn: async (data: TPostFavorite) => postFavorite(data),
-    onSuccess: () => {
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['favorites'],
+        exact: false,
+      })
       createToast({
         priority: 'success',
         message: 'Logement ajouté aux favoris !',
