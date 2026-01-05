@@ -17,10 +17,10 @@ export const ResidenceChart = ({ available, total }: ResidenceChartProps) => {
   ]
 
   return (
-    <div className="fr-flex fr-direction-column fr-align-items-center fr-justify-content-center">
-      <div style={{ height: '120px', width: '180px' }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
+    <div className="fr-flex fr-direction-column fr-align-items-center fr-justify-content-center" style={{ width: '100%', height: '100%' }}>
+      <div style={{ height: '120px', width: '180px', minHeight: '120px', minWidth: '180px' }}>
+        <ResponsiveContainer width={180} height={120}>
+          <PieChart width={180} height={120}>
             <Pie data={data} cx="50%" cy="50%" innerRadius={30} outerRadius={60} dataKey="value">
               {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color} />
