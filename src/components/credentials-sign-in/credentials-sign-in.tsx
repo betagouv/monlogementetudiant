@@ -6,9 +6,10 @@ import { Input } from '@codegouvfr/react-dsfr/Input'
 import { zodResolver } from '@hookform/resolvers/zod'
 import clsx from 'clsx'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
-import { FC } from 'react'
+import { FC, useState } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { tss } from 'tss-react'
 import { createToast } from '~/components/ui/createToast'
@@ -16,7 +17,9 @@ import { ZCredentialsSignInForm } from '~/schemas/credentials-sign-in/credential
 
 export const CredentialsSignInForm: FC = () => {
   const t = useTranslations('login')
+  const router = useRouter()
   const { classes } = useStyles()
+  const [isLoading, setIsLoading] = useState(false)
 
   const loginForm = useForm({
     defaultValues: {
@@ -29,21 +32,39 @@ export const CredentialsSignInForm: FC = () => {
 
   const onSubmit = async () => {
     const data = getValues()
+    setIsLoading(true)
+
     try {
-      await signIn('credentials', {
+      const result = await signIn('credentials', {
         email: data.email,
         password: data.password,
-        callbackUrl: '/mon-espace',
+        redirect: false,
       })
-      createToast({
-        priority: 'success',
-        message: 'Vous êtes connecté avec succès !',
-      })
+
+      if (result?.error) {
+        createToast({
+          priority: 'error',
+          message: 'Email ou mot de passe incorrect.',
+        })
+      } else if (result?.ok) {
+        createToast({
+          priority: 'success',
+          message: 'Vous êtes connecté avec succès !',
+        })
+        router.push('/mon-espace')
+      } else {
+        createToast({
+          priority: 'error',
+          message: 'Une erreur est survenue lors de la connexion.',
+        })
+      }
     } catch {
       createToast({
         priority: 'error',
         message: 'Une erreur est survenue lors de la connexion.',
       })
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -85,8 +106,8 @@ export const CredentialsSignInForm: FC = () => {
               {t('labels.forgotPassword')}
             </Link>
           </div>
-          <Button type="submit" iconPosition="right" iconId="ri-arrow-right-line">
-            {t('labels.cta')}
+          <Button type="submit" iconPosition="right" iconId={isLoading ? 'ri-loader-4-line' : 'ri-arrow-right-line'} disabled={isLoading}>
+            {isLoading ? 'Connexion en cours...' : t('labels.cta')}
           </Button>
         </div>
       </form>
