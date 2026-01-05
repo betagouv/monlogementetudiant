@@ -107,7 +107,7 @@ export const ResetPasswordForm: FC = () => {
           </div>
 
           <Button type="submit" iconPosition="right" iconId="ri-arrow-right-line" disabled={isLoading || !uid || !token}>
-            {isLoading ? t('labels.resetting') || 'Réinitialisation...' : t('labels.cta')}
+            {isLoading ? t('labels.resetting') : t('labels.cta')}
           </Button>
           {isSuccess && <Alert description={t('success.description')} severity="success" small />}
           {(!uid || !token) && <Alert description="Paramètres manquants pour réinitialiser le mot de passe" severity="error" small />}

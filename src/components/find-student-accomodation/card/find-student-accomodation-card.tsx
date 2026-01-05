@@ -4,13 +4,13 @@ import { Badge } from '@codegouvfr/react-dsfr/Badge'
 import { Card } from '@codegouvfr/react-dsfr/Card'
 import { Tag } from '@codegouvfr/react-dsfr/Tag'
 import clsx from 'clsx'
+import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
-import { useRouter } from 'next/navigation'
 import { parseAsString, useQueryState } from 'nuqs'
 import { FC } from 'react'
 import { tss } from 'tss-react'
-import { SaveAccommodationFavoriteButton } from '~/components/favorites/save-accommodation-favorite-button'
+import { FAVORITE_BUTTON_TITLES, SaveAccommodationFavoriteButton } from '~/components/favorites/save-accommodation-favorite-button'
 import {
   FindStudentAccommodationImageCard,
   FindStudentAccommodationPlaceholderImageCard,
@@ -85,7 +85,7 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({ className, accomod
 
   const handleCardClick = (event: React.MouseEvent) => {
     const target = event.target as HTMLElement
-    if (target.closest('button[title="Enregistrer en favoris"]')) {
+    if (target.closest(`button[title="${FAVORITE_BUTTON_TITLES.ADD}"], button[title="${FAVORITE_BUTTON_TITLES.REMOVE}"]`)) {
       return
     }
     router.push(redirectUri)

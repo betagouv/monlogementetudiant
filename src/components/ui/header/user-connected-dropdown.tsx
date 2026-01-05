@@ -17,7 +17,7 @@ export const UserConnectedDropdown = ({ user }: { user: TUser }) => {
     })
   }
 
-  const workspaceUrl = user.role === 'owner' ? `/bailleur/tableau-de-bord` : '/mon-espace'
+  const workspaceUrl = user.role === 'user' ? '/mon-espace' : '/bailleur/tableau-de-bord'
   return (
     <Dropdown id="header_user_menu" alignRight control={user.name} dropdownControlClassName="fr-mb-0">
       <ul>

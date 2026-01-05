@@ -4,9 +4,11 @@ import Badge from '@codegouvfr/react-dsfr/Badge'
 import Card from '@codegouvfr/react-dsfr/Card'
 import Tag from '@codegouvfr/react-dsfr/Tag'
 import clsx from 'clsx'
+import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { FC } from 'react'
 import { tss } from 'tss-react'
+import { FAVORITE_BUTTON_TITLES, SaveAccommodationFavoriteButton } from '~/components/favorites/save-accommodation-favorite-button'
 import {
   FindStudentAccommodationImageCard,
   FindStudentAccommodationPlaceholderImageCard,
@@ -20,6 +22,7 @@ type StudentAccommodationFavoriteProps = {
 }
 export const StudentAccommodationFavorite: FC<StudentAccommodationFavoriteProps> = ({ accomodation }) => {
   const t = useTranslations('findAccomodation.card')
+  const router = useRouter()
   const { classes } = useStyles()
   const {
     city,
@@ -34,7 +37,6 @@ export const StudentAccommodationFavorite: FC<StudentAccommodationFavoriteProps>
     nb_t5_available,
     nb_t6_available,
     nb_t7_more_available,
-
     postal_code,
     price_min,
   } = accomodation.properties
@@ -56,6 +58,15 @@ export const StudentAccommodationFavorite: FC<StudentAccommodationFavoriteProps>
       as="span"
     />
   )
+
+  const handleCardClick = (event: React.MouseEvent) => {
+    const target = event.target as HTMLElement
+    if (target.closest(`button[title="${FAVORITE_BUTTON_TITLES.ADD}"], button[title="${FAVORITE_BUTTON_TITLES.REMOVE}"]`)) {
+      return
+    }
+    router.push(redirectUri)
+  }
+
   const accommodationsTypes = accomodation.properties.nb_coliving_apartments ? [t('individual'), t('colocation')] : [t('individual')]
   const imageProps =
     images_urls && images_urls.length > 0
@@ -77,10 +88,12 @@ export const StudentAccommodationFavorite: FC<StudentAccommodationFavoriteProps>
       {...imageProps}
       classes={{
         header: classes.header,
+        root: classes.hover,
       }}
       id={`accomodation-${accomodation.id}`}
       background
       border
+      nativeDivProps={{ onClick: handleCardClick }}
       desc={
         <>
           <span className={clsx('ri-group-line', classes.description)}>{accommodationsTypes.join(' • ')}</span>
@@ -102,16 +115,15 @@ export const StudentAccommodationFavorite: FC<StudentAccommodationFavoriteProps>
           )}
         </>
       }
-      enlargeLink
-      linkProps={{
-        href: redirectUri,
-      }}
       start={
-        <ul className="fr-tags-group">
-          <li>
-            <Tag>{`${city} (${postal_code})`}</Tag>
-          </li>
-        </ul>
+        <div className="fr-flex fr-justify-content-space-between">
+          <ul className="fr-tags-group">
+            <li>
+              <Tag>{`${city} (${postal_code})`}</Tag>
+            </li>
+          </ul>
+          <SaveAccommodationFavoriteButton slug={accomodation.properties.slug} />
+        </div>
       }
       size="small"
       title={name}
@@ -124,12 +136,10 @@ export const useStyles = tss.create({
   header: {
     overflow: 'hidden',
   },
-  active: {
-    border: '2px solid #3B7FF6',
-  },
-  otherBadge: {
-    backgroundColor: '#fee7fc',
-    color: '#6e445a',
+  hover: {
+    '&:hover': {
+      cursor: 'pointer',
+    },
   },
   description: {
     color: '#666666',

@@ -8,6 +8,11 @@ import { useDeleteFavorite } from '~/hooks/use-delete-favorite'
 import { useFavorites } from '~/hooks/use-favorites'
 import { TPostFavorite, ZPostFavorite } from '~/schemas/favorites/create-favorite'
 
+export const FAVORITE_BUTTON_TITLES = {
+  ADD: 'Enregistrer en favoris',
+  REMOVE: 'Supprimer des favoris',
+} as const
+
 export const SaveAccommodationFavoriteButton = ({ slug }: { slug: string }) => {
   const { data: favorites } = useFavorites()
 
@@ -28,7 +33,7 @@ export const SaveAccommodationFavoriteButton = ({ slug }: { slug: string }) => {
     return (
       <Button
         priority="tertiary"
-        title="Supprimer des favoris"
+        title={FAVORITE_BUTTON_TITLES.REMOVE}
         iconId="ri-heart-fill"
         size="small"
         disabled={isLoadingDelete}
@@ -42,7 +47,7 @@ export const SaveAccommodationFavoriteButton = ({ slug }: { slug: string }) => {
   return (
     <Button
       priority="tertiary"
-      title="Enregistrer en favoris"
+      title={FAVORITE_BUTTON_TITLES.ADD}
       iconId="ri-heart-line"
       size="small"
       disabled={isLoading}
