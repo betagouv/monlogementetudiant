@@ -51,7 +51,7 @@ export const useAccomodations = ({ initialData }: UseAccomodationsOptions = {}) 
     crous: parseAsString,
   })
   const { accessible, bbox, colocation, page, prix, crous, academie } = queryStates
-  const enabled = !!bbox || !!accessible || !!page || !!colocation || !!prix || !crous || !academie
+  const enabled = !!bbox || !!accessible || !!page || !!colocation || !!prix || !!crous || !!academie
 
   return useQuery<TGetAccomodationsResponse>({
     enabled,

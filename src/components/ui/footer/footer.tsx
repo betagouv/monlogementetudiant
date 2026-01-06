@@ -1,6 +1,7 @@
 import Footer, { type FooterProps } from '@codegouvfr/react-dsfr/Footer'
 import { getTranslations } from 'next-intl/server'
 import { z } from 'zod'
+import { expandBbox } from '~/components/map/map-utils'
 import { BrandTop } from '~/components/ui/brand-top'
 import { getPopularCities } from '~/server-only/get-popular-cities'
 import styles from './footer.module.css'
@@ -8,7 +9,12 @@ import styles from './footer.module.css'
 export const FooterComponent = async () => {
   const t = await getTranslations()
   const popularCities = await getPopularCities()
-  const sortedPopularCities = popularCities.sort((a, b) => b.nb_total_apartments - a.nb_total_apartments)
+  const sortedPopularCities = popularCities
+    .sort((a, b) => b.nb_total_apartments - a.nb_total_apartments)
+    .map((city) => ({
+      ...city,
+      expandedBbox: expandBbox(city.bbox.xmin, city.bbox.ymin, city.bbox.xmax, city.bbox.ymax),
+    }))
 
   const partnersLogos: NonNullable<FooterProps['partnersLogos']> = {
     sub: [
@@ -44,7 +50,7 @@ export const FooterComponent = async () => {
     {
       links: sortedPopularCities.slice(0, ITEMS_PER_COLUMN).map((city) => ({
         linkProps: {
-          href: `/trouver-un-logement-etudiant/ville/${city.name}`,
+          href: `/trouver-un-logement-etudiant/ville/${city.name}?vue=carte&bbox=${city.expandedBbox.west},${city.expandedBbox.south},${city.expandedBbox.east},${city.expandedBbox.north}`,
         },
         text: `Logements étudiants ${city.name}`,
       })),
@@ -52,7 +58,7 @@ export const FooterComponent = async () => {
     {
       links: sortedPopularCities.slice(ITEMS_PER_COLUMN, ITEMS_PER_COLUMN * 2).map((city) => ({
         linkProps: {
-          href: `/trouver-un-logement-etudiant/ville/${city.name}`,
+          href: `/trouver-un-logement-etudiant/ville/${city.name}?vue=carte&bbox=${city.expandedBbox.west},${city.expandedBbox.south},${city.expandedBbox.east},${city.expandedBbox.north}`,
         },
         text: `Logements étudiants ${city.name}`,
       })),
@@ -60,7 +66,7 @@ export const FooterComponent = async () => {
     {
       links: sortedPopularCities.slice(ITEMS_PER_COLUMN * 2, ITEMS_PER_COLUMN * 3).map((city) => ({
         linkProps: {
-          href: `/trouver-un-logement-etudiant/ville/${city.name}`,
+          href: `/trouver-un-logement-etudiant/ville/${city.name}?vue=carte&bbox=${city.expandedBbox.west},${city.expandedBbox.south},${city.expandedBbox.east},${city.expandedBbox.north}`,
         },
         text: `Logements étudiants ${city.name}`,
       })),
@@ -68,7 +74,7 @@ export const FooterComponent = async () => {
     {
       links: sortedPopularCities.slice(ITEMS_PER_COLUMN * 3).map((city) => ({
         linkProps: {
-          href: `/trouver-un-logement-etudiant/ville/${city.name}`,
+          href: `/trouver-un-logement-etudiant/ville/${city.name}?vue=carte&bbox=${city.expandedBbox.west},${city.expandedBbox.south},${city.expandedBbox.east},${city.expandedBbox.north}`,
         },
         text: `Logements étudiants ${city.name}`,
       })),

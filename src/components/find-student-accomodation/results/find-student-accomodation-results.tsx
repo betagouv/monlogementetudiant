@@ -10,7 +10,6 @@ import { FC, Suspense, useEffect, useMemo } from 'react'
 import { tss } from 'tss-react'
 import { AccomodationCard } from '~/components/find-student-accomodation/card/find-student-accomodation-card'
 import { MapSkeleton } from '~/components/map/map-skeleton'
-import { expandBbox } from '~/components/map/map-utils'
 import { CardSkeleton } from '~/components/ui/skeleton/card-skeleton'
 import { useAccomodations } from '~/hooks/use-accomodations'
 import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
@@ -23,7 +22,7 @@ type FindStudentAccomodationResultsProps = {
 }
 export const FindStudentAccomodationResults: FC<FindStudentAccomodationResultsProps> = ({ data, territory, isAcademy }) => {
   const t = useTranslations('findAccomodation.results')
-  const [queryStates, setQueryStates] = useQueryStates({
+  const [queryStates] = useQueryStates({
     academie: parseAsString,
     vue: parseAsString,
     page: parseAsInteger,
@@ -34,19 +33,6 @@ export const FindStudentAccomodationResults: FC<FindStudentAccomodationResultsPr
     crous: parseAsString,
     ['recherche-par-carte']: parseAsString,
   })
-
-  useEffect(() => {
-    const hasMapInteraction = queryStates['recherche-par-carte'] === 'true'
-
-    if (!hasMapInteraction) {
-      if (territory && territory.bbox && !isAcademy) {
-        const expanded = expandBbox(territory.bbox.xmin, territory.bbox.ymin, territory.bbox.xmax, territory.bbox.ymax)
-        setQueryStates({ bbox: `${expanded.west},${expanded.south},${expanded.east},${expanded.north}` })
-      } else if (territory && isAcademy) {
-        setQueryStates({ academie: territory.id.toString() })
-      }
-    }
-  }, [])
 
   const { data: accommodations, isLoading } = useAccomodations({ initialData: data })
 

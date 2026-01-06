@@ -42,7 +42,7 @@ export default async function FindStudentAccommodationPage({
   params,
   searchParams,
 }: {
-  params: { location: string }
+  params: Promise<{ location: string }>
   searchParams: Promise<{
     accessible: string
     academie?: string
@@ -55,10 +55,11 @@ export default async function FindStudentAccommodationPage({
     crous?: string
   }>
 }) {
+  const awaitedParams = await params
   const awaitedSearchParams = await searchParams
-  const routeCategoryKey = params?.location?.[0] || ''
-  const routeLocation = decodeURIComponent(params?.location?.[1] || '')
-  if (params && (params?.location?.length < 2 || params?.location?.length > 2)) {
+  const routeCategoryKey = awaitedParams?.location?.[0] || ''
+  const routeLocation = decodeURIComponent(awaitedParams?.location?.[1] || '')
+  if (awaitedParams && (awaitedParams?.location?.length < 2 || awaitedParams?.location?.length > 2)) {
     redirect(`/trouver-un-logement-etudiant`)
   }
 

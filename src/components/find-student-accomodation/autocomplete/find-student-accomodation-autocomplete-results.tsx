@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { FC } from 'react'
 import { tss } from 'tss-react'
+import { expandBbox } from '~/components/map/map-utils'
 import { TTerritories, TTerritory } from '~/schemas/territories'
 
 interface FindStudentAccomodationAutocompleteResults {
@@ -55,10 +56,20 @@ export const FindStudentAccomodationAutocompleteResults: FC<FindStudentAccomodat
               <ul className={classes.list}>
                 {items.map((item: TTerritory) => {
                   const searchParams = new URLSearchParams()
+                  const isAcademy = categoryKey === 'academies'
+
                   // we dont want to set the vue to carte in this case
-                  if (categoryKey !== 'academies') {
+                  if (!isAcademy) {
                     searchParams.set('vue', 'carte')
+
+                    if (item.bbox) {
+                      const expanded = expandBbox(item.bbox.xmin, item.bbox.ymin, item.bbox.xmax, item.bbox.ymax)
+                      searchParams.set('bbox', `${expanded.west},${expanded.south},${expanded.east},${expanded.north}`)
+                    }
+                  } else {
+                    searchParams.set('academie', item.id.toString())
                   }
+
                   return (
                     <Link
                       key={item.id}
