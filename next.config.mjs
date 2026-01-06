@@ -21,7 +21,7 @@ const nextConfig = {
     return [
       {
         source: '/preparer-sa-vie-etudiante',
-        destination: 'https://mle-wordpress.osc-secnum-fr1.scalingo.io/preparer-sa-vie-etudiante/',
+        destination: 'https://mle-wordpress.osc-secnum-fr1.scalingo.io/',
       },
       {
         source: '/preparer-sa-vie-etudiante/:path*',
