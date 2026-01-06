@@ -10,11 +10,11 @@ import { HeaderNavigation } from '~/components/ui/header/navigation'
 import { UserConnectedDropdown } from '~/components/ui/header/user-connected-dropdown'
 import { UserSignInDropdown } from '~/components/ui/header/user-sign-in-dropdown'
 
-type HeaderComponentProps = {
+type CommonHeaderProps = {
   withNavigation?: boolean
 }
 
-export const HeaderComponent: FC<HeaderComponentProps> = async ({ withNavigation = true }) => {
+export const CommonHeader: FC<CommonHeaderProps> = async ({ withNavigation = true }) => {
   const t = await getTranslations()
   const auth = await getServerSession()
 

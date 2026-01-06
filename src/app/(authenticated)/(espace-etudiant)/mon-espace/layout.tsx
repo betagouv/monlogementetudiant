@@ -3,8 +3,8 @@ import { getTranslations } from 'next-intl/server'
 import { getServerSession } from '~/auth'
 import { StudentSpaceNavigation } from '~/components/student-space/navigation/student-space-navigation'
 import { DynamicBreadcrumb } from '~/components/ui/breadcrumb'
-import { FooterComponent } from '~/components/ui/footer/footer'
-import { HeaderComponent } from '~/components/ui/header/common-header'
+import { CommonFooter } from '~/components/ui/footer/footer'
+import { CommonHeader } from '~/components/ui/header/common-header'
 
 export const generateMetadata = async () => {
   const t = await getTranslations('metadata')
@@ -31,7 +31,7 @@ export default async function WorkspaceLayout({
 
   return (
     <>
-      <HeaderComponent withNavigation={false} />
+      <CommonHeader withNavigation={false} />
       <main className="primaryBackgroundColor">
         <div className="fr-container fr-pb-12w">
           <DynamicBreadcrumb color="white" />
@@ -43,7 +43,7 @@ export default async function WorkspaceLayout({
           </div>
         </div>
       </main>
-      <FooterComponent />
+      <CommonFooter />
     </>
   )
 }

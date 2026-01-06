@@ -527,7 +527,8 @@
     "button": "Page d'accueil"
   },
   "login": {
-    "title": "Se connecter à mon espace",
+    "studentTitle": "Se connecter à mon espace étudiant",
+    "ownerTitle": "Se connecter à mon espace gestionnaire",
     "subTitlePart1": "Les champs marqués du symbole",
     "subTitlePart2": "sont obligatoires.",
     "labels": {

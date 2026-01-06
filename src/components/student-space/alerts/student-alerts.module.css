@@ -1,0 +1,3 @@
+.icon::before {
+  --icon-size: 2rem;
+}

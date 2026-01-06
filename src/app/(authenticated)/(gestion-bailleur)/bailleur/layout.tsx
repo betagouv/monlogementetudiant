@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { getServerSession } from '~/auth'
-import { FooterComponent } from '~/components/ui/footer/footer'
+import { CommonFooter } from '~/components/ui/footer/footer'
 import { WorkspaceHeaderComponent } from '~/components/ui/header/workspace-header'
 import styles from './layout.module.css'
 
@@ -32,7 +32,7 @@ export default async function WorkspaceLayout({
     <>
       <WorkspaceHeaderComponent />
       <main className={styles.container}>{children}</main>
-      <FooterComponent />
+      <CommonFooter />
     </>
   )
 }
