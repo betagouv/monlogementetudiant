@@ -12,3 +12,19 @@
 .required {
   color: red;
 }
+
+.imageContainer {
+  @media (max-width: 768px) {
+    height: 250px;
+  }
+  width: 100%;
+}
+
+.imageContainer img {
+  object-fit: cover;
+}
+
+.image {
+  height: 100%;
+  width: 100%;
+}

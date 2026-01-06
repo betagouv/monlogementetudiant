@@ -3,12 +3,15 @@ import Button from '@codegouvfr/react-dsfr/Button'
 import Image from 'next/image'
 import { getTranslations } from 'next-intl/server'
 import { DynamicBreadcrumb } from '~/components/ui/breadcrumb'
+import { CommonFooter } from '~/components/ui/footer/footer'
+import { CommonHeader } from '~/components/ui/header/common-header'
 import notFoundImage from '~/images/404.svg'
 
 export default async function NotFound() {
   const t = await getTranslations('notFound')
   return (
     <>
+      <CommonHeader />
       <div className={fr.cx('fr-container')}>
         <DynamicBreadcrumb />
 
@@ -38,6 +41,7 @@ export default async function NotFound() {
           </div>
         </div>
       </div>
+      <CommonFooter />
     </>
   )
 }

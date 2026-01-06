@@ -1,43 +1,13 @@
 import { StudentAlert } from '~/components/student-space/alerts/student-alert'
+import { getAlerts } from '~/server-only/student/get-alerts'
 
 export const StudentAlerts = async () => {
-  const mock = [
-    {
-      title: 'Colocation Créteil',
-      city: 'Créteil (94300)',
-      price: '300 € max.',
-      colocation: true,
-    },
-    {
-      title: 'Colocation Créteil',
-      city: 'Créteil (94300)',
-      price: '300 € max.',
-      colocation: true,
-    },
-    {
-      title: 'Colocation Créteil',
-      city: 'Créteil (94300)',
-      price: '300 € max.',
-      colocation: true,
-    },
-    {
-      title: 'Colocation Créteil',
-      city: 'Créteil (94300)',
-      price: '300 € max.',
-      colocation: true,
-    },
-    {
-      title: 'Colocation Créteil',
-      city: 'Créteil (94300)',
-      price: '300 € max.',
-      colocation: true,
-    },
-  ]
+  const alertsResponse = await getAlerts()
 
   return (
     <>
-      {mock.map((alert, index) => (
-        <StudentAlert key={index} alert={alert} />
+      {alertsResponse.results.map((alert) => (
+        <StudentAlert key={alert.id} alert={alert} />
       ))}
     </>
   )
