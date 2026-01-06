@@ -6,7 +6,7 @@ import { BrandTop } from '~/components/ui/brand-top'
 import { getPopularCities } from '~/server-only/get-popular-cities'
 import styles from './footer.module.css'
 
-export const FooterComponent = async () => {
+export const CommonFooter = async () => {
   const t = await getTranslations()
   const popularCities = await getPopularCities()
   const sortedPopularCities = popularCities

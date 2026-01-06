@@ -1,5 +1,5 @@
-import { FooterComponent } from '~/components/ui/footer/footer'
-import { HeaderComponent } from '~/components/ui/header/common-header'
+import { CommonFooter } from '~/components/ui/footer/footer'
+import { CommonHeader } from '~/components/ui/header/common-header'
 import styles from './layout.module.css'
 
 export default async function RootLayout({
@@ -9,9 +9,9 @@ export default async function RootLayout({
 }>) {
   return (
     <>
-      <HeaderComponent />
+      <CommonHeader />
       <main className={styles.container}>{children}</main>
-      <FooterComponent />
+      <CommonFooter />
     </>
   )
 }

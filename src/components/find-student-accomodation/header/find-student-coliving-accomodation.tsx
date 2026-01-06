@@ -20,7 +20,7 @@ export const FindStudentColivingAccomodationSwitch: FC = () => {
     <div className={classes.container}>
       <ToggleSwitch
         classes={{ label: classes.label }}
-        inputTitle="accessibility"
+        inputTitle="coliving"
         showCheckedHint={false}
         label={t('header.shared')}
         labelPosition="right"

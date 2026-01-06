@@ -1,0 +1,4 @@
+.icon::before {
+  margin-right: 0;
+  --icon-size: 1rem;
+}

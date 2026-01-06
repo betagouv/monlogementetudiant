@@ -1,5 +1,5 @@
-import Button from '@codegouvfr/react-dsfr/Button'
 import clsx from 'clsx'
+import { CreateStudentAlert } from '~/components/student-space/alerts/create-student-alert'
 import { StudentAlerts } from '~/components/student-space/alerts/student-alerts'
 import styles from '../mon-espace.module.css'
 
@@ -17,9 +17,7 @@ export default async function StudentAlertsPage() {
         )}
       >
         <StudentAlerts />
-        <div>
-          <Button priority="secondary">Créer une nouvelle alerte</Button>
-        </div>
+        <CreateStudentAlert />
       </div>
     </>
   )

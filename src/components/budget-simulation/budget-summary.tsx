@@ -14,7 +14,6 @@ export function BudgetSummary() {
   const totalIncomes = Object.values(state.monthlyIncomes).reduce((sum, amount) => sum + amount, 0)
   const totalExpenses = Object.values(state.monthlyExpenses).reduce((sum, amount) => sum + amount, 0)
   const remainingBalance = totalIncomes - totalExpenses
-  const savingsRate = totalIncomes > 0 && remainingBalance > 0 ? ((remainingBalance / totalIncomes) * 100).toFixed(1) : null
 
   const formatAmount = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
@@ -56,11 +55,6 @@ export function BudgetSummary() {
               {remainingBalance >= 0 ? '+' : ''}
               {formatAmount(remainingBalance)}
             </span>
-            {savingsRate && (
-              <div className="fr-flex fr-justify-content-space-between">
-                <span className="fr-text--xs fr-mb-0 fr-text-mention--grey">{t('savingsRate', { rate: savingsRate })}</span>
-              </div>
-            )}
           </div>
         </div>
       </div>
