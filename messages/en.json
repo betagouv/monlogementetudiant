@@ -353,7 +353,7 @@
   "alertAccommodation": {
     "title": "Restez alerté des dernières annonces",
     "subTitle": "en recevant en temps réel les nouvelles offres disponibles dans la zone académique recherchée",
-    "disclaimer": "En renseignant votre adresse électronique, vous acceptez de recevoir nos alertes par courriel. Vous pouvez vous désinscrire à tout moment à l'aide des liens de désinscription ou en nous contactant.",
+    "disclaimer": "En renseignant votre adresse électronique, vous acceptez de recevoir nos alertes par courriel et les communications de la part de Mon Logement Étudiant. Vous pouvez vous désinscrire à tout moment à l'aide des liens de désinscription ou en nous contactant.",
     "emailPlaceholder": "Entrer votre email",
     "subscribe": "S'abonner"
   },
