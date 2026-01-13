@@ -17,13 +17,14 @@ export const getFavorites = async (): Promise<TGetFavoritesResponse> => {
   return response.json()
 }
 
-export const useFavorites = () => {
+export const useFavorites = (initialData?: TGetFavoritesResponse | null) => {
   const { data: session } = useSession()
 
   const { data, isPending } = useQuery({
     enabled: !!session?.user,
     queryFn: getFavorites,
     queryKey: ['favorites', session?.user?.id],
+    initialData: initialData ?? undefined,
   })
 
   return {
