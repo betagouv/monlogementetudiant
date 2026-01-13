@@ -87,7 +87,7 @@ export const DynamicBreadcrumb: FC<DynamicBreadcrumbProps> = ({ color, margin = 
       case '/cookies':
         currentPageLabel = t('breadcrumbs.cookies')
         break
-      case '/faq':
+      case '/foire-aux-questions':
         currentPageLabel = t('breadcrumbs.faq')
         break
       case '/plan-du-site':

@@ -3,7 +3,7 @@ import { Button } from '@codegouvfr/react-dsfr/Button'
 import clsx from 'clsx'
 import Image from 'next/image'
 import { getTranslations } from 'next-intl/server'
-import { FAQ_CONTENTS } from '~/app/(public)/(utils-pages)/faq/page'
+import { FAQ_CONTENTS } from '~/components/faq/faq-content'
 import { FaqQuestionsAnswers } from '~/components/faq/faq-questions-answers'
 import { FindAccommodationForm } from '~/components/find-student-accomodation/home/find-accommodation-form'
 import agefo from '~/images/agefo.svg'
@@ -213,7 +213,7 @@ export default async function Home() {
 
           <FaqQuestionsAnswers contents={FAQ_CONTENTS.slice(0, 5)} />
 
-          <Button size="large" priority="secondary" linkProps={{ href: '/faq' }}>
+          <Button size="large" priority="secondary" linkProps={{ href: '/foire-aux-questions' }}>
             {tHome('faq.button')}
           </Button>
         </div>

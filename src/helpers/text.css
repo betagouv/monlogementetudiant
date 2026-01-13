@@ -60,3 +60,7 @@
 .fr-text--underline {
   text-decoration: underline;
 }
+
+.fr-text--italic {
+  font-style: italic;
+}
