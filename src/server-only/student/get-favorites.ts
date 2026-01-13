@@ -4,7 +4,13 @@ import { TGetFavoritesResponse } from '~/schemas/favorites/get-favorites'
 export const getFavorites = async (): Promise<TGetFavoritesResponse> => {
   const session = await auth()
   if (!session || !session.accessToken) {
-    throw new Error('Unauthorized')
+    return {
+      count: 0,
+      results: [],
+      next: null,
+      previous: null,
+      page_size: 0,
+    }
   }
 
   const response = await fetch(`${process.env.API_URL}/accommodations/favorites/`, {
