@@ -2,6 +2,7 @@
 
 import { FrCxArg, fr } from '@codegouvfr/react-dsfr'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { FC } from 'react'
 import { tss } from 'tss-react'
@@ -24,6 +25,7 @@ const getCategoryKeySingular = (categoryKey: keyof TTerritories) => {
 export const FindStudentAccomodationAutocompleteResults: FC<FindStudentAccomodationAutocompleteResults> = ({ data }) => {
   const t = useTranslations('findAccomodation')
   const { classes } = useStyles()
+  const currentSearchParams = useSearchParams()
   const categories = ['cities', 'academies', 'departments']
 
   const getCategoryLabelAndIcon = (category: keyof TTerritories): { icon: FrCxArg; label: string } => {
@@ -58,7 +60,12 @@ export const FindStudentAccomodationAutocompleteResults: FC<FindStudentAccomodat
                   const searchParams = new URLSearchParams()
                   const isAcademy = categoryKey === 'academies'
 
-                  // we dont want to set the vue to carte in this case
+                  const paramsToPreserve = ['colocation', 'accessible', 'prix', 'crous']
+                  paramsToPreserve.forEach((param) => {
+                    const value = currentSearchParams.get(param)
+                    if (value) searchParams.set(param, value)
+                  })
+
                   if (!isAcademy) {
                     searchParams.set('vue', 'carte')
 
