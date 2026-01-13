@@ -75,6 +75,7 @@
 .borderRightGrid {
   border-right: 1px solid #ddd;
   width: 100%;
+  padding: 0 1rem;
 }
 
 @media (max-width: 768px) {

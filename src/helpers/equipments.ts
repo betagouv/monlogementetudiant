@@ -7,7 +7,7 @@ export const EQUIPMENTS = [
   {
     icon: 'ri-t-shirt-air-line',
     key: 'laundry_room',
-    label: 'Buanderie',
+    label: 'Laverie',
   },
   {
     icon: 'ri-bubble-chart-line',
