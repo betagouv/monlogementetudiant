@@ -1,6 +1,7 @@
 import { fr } from '@codegouvfr/react-dsfr'
 import Alert from '@codegouvfr/react-dsfr/Alert'
 import Button from '@codegouvfr/react-dsfr/Button'
+import { Tooltip } from '@codegouvfr/react-dsfr/Tooltip'
 import clsx from 'clsx'
 import { getTranslations } from 'next-intl/server'
 import { TAccomodationDetails } from '~/schemas/accommodations/accommodations'
@@ -20,6 +21,7 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
       max: accommodation.price_max_t1,
       enabled: !!accommodation.nb_t1 && accommodation.price_min_t1,
       title: t('studio', { type: 'T1' }),
+      tooltip: t('tooltip.t1'),
     },
     {
       type: 'T1bis',
@@ -27,6 +29,7 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
       max: accommodation.price_max_t1_bis,
       enabled: !!accommodation.nb_t1_bis && accommodation.price_min_t1_bis,
       title: t('studio', { type: 'T1bis' }),
+      tooltip: t('tooltip.t1bis'),
     },
     {
       type: 'T2',
@@ -34,6 +37,7 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
       max: accommodation.price_max_t2,
       enabled: !!accommodation.nb_t2 && accommodation.price_min_t2,
       title: t('studio', { type: 'T2' }),
+      tooltip: t('tooltip.t2'),
     },
     {
       type: 'T3',
@@ -41,6 +45,7 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
       max: accommodation.price_max_t3,
       enabled: !!accommodation.nb_t3 && accommodation.price_min_t3,
       title: t('appartement', { type: 'T3' }),
+      tooltip: t('tooltip.t3'),
     },
     {
       type: 'T4',
@@ -48,6 +53,7 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
       max: accommodation.price_max_t4,
       enabled: !!accommodation.nb_t4 && accommodation.price_min_t4,
       title: t('appartement', { type: 'T4' }),
+      tooltip: t('tooltip.t4'),
     },
     {
       type: 'T5',
@@ -55,6 +61,7 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
       max: accommodation.price_max_t5,
       enabled: !!accommodation.nb_t5 && accommodation.price_min_t5,
       title: t('appartement', { type: 'T5' }),
+      tooltip: t('tooltip.t5'),
     },
     {
       type: 'T6',
@@ -62,6 +69,7 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
       max: accommodation.price_max_t6,
       enabled: !!accommodation.nb_t6 && accommodation.price_min_t6,
       title: t('appartement', { type: 'T6' }),
+      tooltip: t('tooltip.t6'),
     },
     {
       type: 'T7+',
@@ -69,6 +77,7 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
       max: accommodation.price_max_t7_more,
       enabled: !!accommodation.nb_t7_more && accommodation.price_min_t7_more,
       title: t('appartement', { type: 'T7+' }),
+      tooltip: t('tooltip.t7'),
     },
   ]
 
@@ -87,7 +96,6 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
     )
   }
   const enabledAccommodationTiles = accommodationsTiles.filter((tile) => tile.enabled)
-  // const enabledAppartmentsTiles = appartmentsPriceTiles.filter((tile) => tile.enabled)
 
   return (
     <div className={styles.section}>
@@ -104,7 +112,10 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
                   )}
                   key={accommodation.type}
                 >
-                  <span className={fr.cx('ri-user-line', 'fr-text--bold')}>{accommodation.title}</span>
+                  <div className="fr-flex fr-justify-content-space-between">
+                    <span className="ri-user-line fr-text--bold">{accommodation.title}</span>
+                    <Tooltip kind="hover" title={accommodation.tooltip} />
+                  </div>
 
                   <div className={styles.pricesTiles}>
                     <span
@@ -114,7 +125,7 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
                         color: fr.colors.options.yellowTournesol.sun407moon922.default,
                         padding: '0 0.5rem',
                       }}
-                      className={fr.cx('fr-text--bold')}
+                      className="fr-text--bold"
                     >
                       {accommodation.min && accommodation.max
                         ? `DE ${accommodation.min} À  ${accommodation.max} €`
