@@ -16,7 +16,13 @@ export const getFavorites = async (): Promise<TGetFavoritesResponse> => {
   })
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch favorites: ${response.status}`)
+    return {
+      count: 0,
+      results: [],
+      next: null,
+      previous: null,
+      page_size: 0,
+    }
   }
 
   const data = await response.json()
