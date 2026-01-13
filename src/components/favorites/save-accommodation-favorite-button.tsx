@@ -7,14 +7,23 @@ import { useCreateFavorite } from '~/hooks/use-create-favorite'
 import { useDeleteFavorite } from '~/hooks/use-delete-favorite'
 import { useFavorites } from '~/hooks/use-favorites'
 import { TPostFavorite, ZPostFavorite } from '~/schemas/favorites/create-favorite'
+import { TGetFavoritesResponse } from '~/schemas/favorites/get-favorites'
 
 export const FAVORITE_BUTTON_TITLES = {
   ADD: 'Enregistrer en favoris',
   REMOVE: 'Supprimer des favoris',
 } as const
 
-export const SaveAccommodationFavoriteButton = ({ slug }: { slug: string }) => {
-  const { data: favorites } = useFavorites()
+export const SaveAccommodationFavoriteButton = ({
+  slug,
+  withLabel = false,
+  initialFavorites,
+}: {
+  slug: string
+  withLabel?: boolean
+  initialFavorites?: TGetFavoritesResponse | null
+}) => {
+  const { data: favorites } = useFavorites(initialFavorites)
 
   const { getValues } = useForm<TPostFavorite>({
     defaultValues: {
@@ -30,6 +39,22 @@ export const SaveAccommodationFavoriteButton = ({ slug }: { slug: string }) => {
   const handleDelete = async () => await mutationDelete(slug)
 
   if (favorites?.results.find((favorite) => favorite.accommodation.properties.slug === slug)) {
+    if (withLabel) {
+      return (
+        <Button
+          priority="secondary"
+          title={FAVORITE_BUTTON_TITLES.REMOVE}
+          iconId="ri-heart-fill"
+          size="small"
+          disabled={isLoadingDelete}
+          nativeButtonProps={{
+            onClick: handleDelete,
+          }}
+        >
+          Retirer des favoris
+        </Button>
+      )
+    }
     return (
       <Button
         priority="tertiary"
@@ -44,9 +69,23 @@ export const SaveAccommodationFavoriteButton = ({ slug }: { slug: string }) => {
     )
   }
 
+  if (withLabel) {
+    return (
+      <Button
+        priority="secondary"
+        title={FAVORITE_BUTTON_TITLES.ADD}
+        iconId="ri-heart-line"
+        size="small"
+        disabled={isLoading}
+        nativeButtonProps={{ onClick: handleSave }}
+      >
+        Ajouter aux favoris
+      </Button>
+    )
+  }
   return (
     <Button
-      priority="tertiary"
+      priority="secondary"
       title={FAVORITE_BUTTON_TITLES.ADD}
       iconId="ri-heart-line"
       size="small"

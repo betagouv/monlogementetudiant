@@ -8,20 +8,26 @@ import { AccommodationEquipments } from '~/app/(public)/trouver-un-logement-etud
 import { AccommodationLocalisation } from '~/app/(public)/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-localisation'
 import AccommodationMap from '~/app/(public)/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-map'
 import { AccommodationResidence } from '~/app/(public)/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-residence'
+import { auth } from '~/auth'
 import { AccommodationImages } from '~/components/accommodation/accommodation-images'
 import { NearbyAccommodations } from '~/components/accommodation/nearby-accommodations'
+import { SaveAccommodationFavoriteButton } from '~/components/favorites/save-accommodation-favorite-button'
 import { OwnerDetails } from '~/components/find-student-accomodation/owner-details/owner-details'
 import { DynamicBreadcrumb } from '~/components/ui/breadcrumb'
 import { getAccommodationById } from '~/server-only/get-accommodation-by-id'
 import { getAccommodations } from '~/server-only/get-accommodations'
+import { getFavorites } from '~/server-only/student/get-favorites'
 import { calculateAvailability } from '~/utils/calculateAvailability'
 import styles from './logement.module.css'
 
 export default async function LogementPage({ params }: { params: Promise<{ slug: string }> }) {
+  const session = await auth()
   const t = await getTranslations('accomodation')
   const commonT = await getTranslations()
   const { slug } = await params
   const accommodation = await getAccommodationById(slug)
+  const favorites = await getFavorites()
+
   const {
     address,
     city,
@@ -69,7 +75,14 @@ export default async function LogementPage({ params }: { params: Promise<{ slug:
   return (
     <div className={fr.cx('fr-container')}>
       <DynamicBreadcrumb title={breadCrumbTitle} city={city} />
-      <h1 className="fr-h2">{t('title', { city, title: name })}</h1>
+      <div className="fr-flex fr-justify-content-space-between fr-align-items-center">
+        <h1 className="fr-h2">{t('title', { city, title: name })}</h1>
+        {session?.user && (
+          <div>
+            <SaveAccommodationFavoriteButton slug={slug} withLabel initialFavorites={favorites} />
+          </div>
+        )}
+      </div>
       <div className={styles.container}>
         <div className={clsx(fr.cx('fr-col-sm-8'), styles.infosContainer)}>
           {images_urls && images_urls.length > 0 && <AccommodationImages images={images_urls} title={name} />}
