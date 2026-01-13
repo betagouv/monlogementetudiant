@@ -26,7 +26,12 @@ export const CommonHeader: FC<CommonHeaderProps> = async ({ withNavigation = tru
           title: t('metadata.homeLinkTitle'),
         }}
         quickAccessItems={[
-          <Button key="faq-cta" priority="tertiary no outline" iconId="ri-question-line" linkProps={{ href: '/faq', target: '_self' }}>
+          <Button
+            key="faq-cta"
+            priority="tertiary no outline"
+            iconId="ri-question-line"
+            linkProps={{ href: '/foire-aux-questions', target: '_self' }}
+          >
             {t('navigation.faq')}
           </Button>,
           <Button
