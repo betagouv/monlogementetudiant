@@ -22,6 +22,7 @@
 
 .imageContainer img {
   object-fit: cover;
+  object-position: left center;
 }
 
 .image {
