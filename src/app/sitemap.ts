@@ -63,7 +63,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     ...findStudentAccommodationMetadata,
     {
-      url: `${baseUrl}/faq`,
+      url: `${baseUrl}/foire-aux-questions`,
       lastModified,
       changeFrequency: 'monthly',
       priority: 0.5,

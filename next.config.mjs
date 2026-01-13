@@ -21,11 +21,15 @@ const nextConfig = {
     return [
       {
         source: '/preparer-sa-vie-etudiante',
-        destination: 'https://mle-wordpress.osc-secnum-fr1.scalingo.io/preparer-sa-vie-etudiante/',
+        destination: 'https://info.monlogementetudiant.beta.gouv.fr',
       },
       {
         source: '/preparer-sa-vie-etudiante/:path*',
-        destination: 'https://mle-wordpress.osc-secnum-fr1.scalingo.io/preparer-sa-vie-etudiante/:path*/',
+        destination: 'https://info.monlogementetudiant.beta.gouv.fr/preparer-sa-vie-etudiante/:path*/',
+      },
+      {
+        source: '/foire-aux-questions',
+        destination: 'https://info.monlogementetudiant.beta.gouv.fr/foire-aux-questions/',
       },
     ]
   },

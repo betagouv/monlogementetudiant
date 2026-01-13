@@ -70,7 +70,7 @@ export default async function SiteMap() {
             },
             {
               linkProps: {
-                href: '/faq',
+                href: '/foire-aux-questions',
               },
               text: t('links.faq'),
             },
