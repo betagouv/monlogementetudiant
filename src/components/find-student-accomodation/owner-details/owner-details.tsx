@@ -53,7 +53,7 @@ export const OwnerDetails = async ({
         )}
         <span>{t('sidebar.proposedBy')}</span>
         {owner?.image_base64 ? (
-          <Image src={owner.image_base64} alt={owner.name} width={201} height={90} quality={100} />
+          <Image className={styles.image} src={owner.image_base64} alt={owner.name} width={201} height={90} quality={100} />
         ) : (
           <h3 className={fr.cx('fr-m-0')}>{owner?.name}</h3>
         )}
