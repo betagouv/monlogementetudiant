@@ -50,3 +50,7 @@
   background-color: #fee7fc;
   color: #6e445a;
 }
+
+.image {
+  object-fit: scale-down;
+}
