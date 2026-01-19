@@ -1,8 +1,8 @@
 'use client'
 
-import Ecosystem from '@codegouvfr/react-dsfr/picto/Ecosystem'
-import Backpack from '@codegouvfr/react-dsfr/picto/Backpack'
 import { Input } from '@codegouvfr/react-dsfr/Input'
+import Backpack from '@codegouvfr/react-dsfr/picto/Backpack'
+import Ecosystem from '@codegouvfr/react-dsfr/picto/Ecosystem'
 import { RadioButtons } from '@codegouvfr/react-dsfr/RadioButtons'
 import { FC } from 'react'
 import { useFormContext } from 'react-hook-form'
