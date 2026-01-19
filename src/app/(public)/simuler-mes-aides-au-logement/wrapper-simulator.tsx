@@ -1,11 +1,10 @@
 'use client'
 
-import { fr } from '@codegouvfr/react-dsfr'
 import clsx from 'clsx'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import { FC, useMemo, useState } from 'react'
-import AidesSimplifiesSimulator from '~/app/(public)/simuler-mes-aides-au-logement/aides-simplifies-simulator'
+import { HelpSimulator } from '~/components/helps-simulator/help-simulator'
 import { DynamicBreadcrumb } from '~/components/ui/breadcrumb'
 import homeHero from '~/images/home-bg.webp'
 import styles from './simuler-mes-aides-au-logement.module.css'
@@ -13,9 +12,9 @@ import styles from './simuler-mes-aides-au-logement.module.css'
 const WrapperHeaderSimulator: FC = () => {
   const t = useTranslations('simulator')
   return (
-    <div className={clsx(fr.cx('fr-container'), styles.heroSection)}>
+    <div className={clsx('fr-container', styles.heroSection)}>
       <DynamicBreadcrumb color="white" />
-      <div className={clsx(fr.cx('fr-col-md-4'), styles.heroContent)}>
+      <div className={clsx('fr-col-md-4', styles.heroContent)}>
         <h1 className={styles.heroTitle}>
           {t('titlePart1')} <span className={styles.heroHighlight}>{t('titlePart2')}&nbsp;</span>
           <span className={styles.heroHighlight}>{t('titlePart3')}</span>
@@ -35,21 +34,22 @@ export const WrapperSimulator: FC = () => {
   }, [simulatorHeight])
 
   const containerStyles = { height: computedHeight, minHeight: computedHeight }
+
   return (
-    <div style={{ position: 'relative' }}>
-      <div style={containerStyles} className={clsx('primaryBackgroundColor', fr.cx('fr-hidden', 'fr-unhidden-md'))}>
+    <div className="fr-position-relative">
+      <div style={containerStyles} className="primaryBackgroundColor fr-hidden fr-unhidden-md">
         <WrapperHeaderSimulator />
       </div>
-      <div className={clsx('primaryBackgroundColor', fr.cx('fr-hidden-sm'))}>
+      <div className="primaryBackgroundColor fr-hidden-sm">
         <WrapperHeaderSimulator />
       </div>
 
-      <div className={clsx(styles.imageWrapper, 'fr-hidden', 'fr-unhidden-md')}>
+      <div className={clsx(styles.imageWrapper, 'fr-hidden fr-unhidden-md')}>
         <Image src={homeHero} priority alt="Image de la page d'accueil" quality={100} className={styles.heroImage} />
       </div>
       <div className={clsx('fr-container', styles.formContainer)}>
-        <div className={clsx(fr.cx('fr-col-md-8'), styles.formContent)}>
-          <AidesSimplifiesSimulator onHeightChange={setSimulatorHeight} />
+        <div className={clsx('fr-col-md-8', styles.formContent)}>
+          <HelpSimulator onHeightChange={setSimulatorHeight} />
         </div>
       </div>
       <div className={clsx(styles.imageWrapper, 'fr-hidden-sm')}>

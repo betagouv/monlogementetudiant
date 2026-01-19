@@ -1,0 +1,46 @@
+.card {
+  background-color: white;
+  border-left: 4px solid #5757ad;
+  gap: 0.75rem;
+}
+
+.content {
+  flex: 1;
+}
+
+.title {
+  font-weight: 700;
+}
+
+.eligibleText {
+  color: var(--text-default-success);
+  font-size: 0.875rem;
+}
+
+.ineligibleText {
+  color: var(--text-default-error);
+  font-size: 0.875rem;
+}
+
+.logoContainer {
+  flex-shrink: 0;
+  margin-left: 1rem;
+}
+
+.logo {
+  object-fit: contain;
+}
+
+.description {
+  color: var(--text-mention-grey);
+}
+
+.amountBadge {
+  background-color: var(--background-contrast-grey);
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.amountLabel {
+  font-weight: 700;
+}
