@@ -1,9 +1,9 @@
 import { fr } from '@codegouvfr/react-dsfr'
 import Alert from '@codegouvfr/react-dsfr/Alert'
 import Button from '@codegouvfr/react-dsfr/Button'
-import { Tooltip } from '@codegouvfr/react-dsfr/Tooltip'
 import clsx from 'clsx'
 import { getTranslations } from 'next-intl/server'
+import { TooltipHoverOnly } from '~/components/tooltip-hover-only'
 import { TAccomodationDetails } from '~/schemas/accommodations/accommodations'
 import styles from './accommodation-residence.module.css'
 
@@ -114,7 +114,7 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
                 >
                   <div className="fr-flex fr-justify-content-space-between">
                     <span className="ri-user-line fr-text--bold">{accommodation.title}</span>
-                    <Tooltip kind="hover" title={accommodation.tooltip} />
+                    <TooltipHoverOnly title={accommodation.tooltip} />
                   </div>
 
                   <div className={styles.pricesTiles}>
