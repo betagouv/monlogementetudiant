@@ -65,7 +65,7 @@ export default async function FindStudentAccommodationPage({
 
   const territories = await getTerritories(routeLocation)
   const territory = (territories[getTerritoriesCategoryKey(routeCategoryKey as 'ville' | 'academie' | 'departement')] || []).find(
-    (territory) => territory.name === routeLocation,
+    (territory) => territory.name === routeLocation || territory.slug === routeLocation,
   )
   if (routeCategoryKey && routeLocation && !territory) {
     redirect(`/trouver-un-logement-etudiant`)
