@@ -15,9 +15,11 @@ import { SaveAccommodationFavoriteButton } from '~/components/favorites/save-acc
 import { OwnerDetails } from '~/components/find-student-accomodation/owner-details/owner-details'
 import { expandBbox } from '~/components/map/map-utils'
 import { DynamicBreadcrumb } from '~/components/ui/breadcrumb'
+import { TTerritories } from '~/schemas/territories'
 import { getAccommodationById } from '~/server-only/get-accommodation-by-id'
 import { getAccommodations } from '~/server-only/get-accommodations'
 import { getCityDetails } from '~/server-only/get-city-details'
+import { getTerritories } from '~/server-only/get-territories'
 import { getFavorites } from '~/server-only/student/get-favorites'
 import { calculateAvailability } from '~/utils/calculateAvailability'
 import styles from './logement.module.css'
@@ -28,8 +30,11 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
   const commonT = await getTranslations()
   const { slug, location } = await params
   const accommodation = await getAccommodationById(slug)
+  const decodedLocationUri = decodeURIComponent(location)
   const favorites = await getFavorites()
-  const cityDetails = await getCityDetails(location)
+  const territories = await getTerritories(decodedLocationUri)
+  const territory = (territories.cities || []).find((territory) => territory.name === decodedLocationUri) as TTerritories['cities'][0]
+  const cityDetails = await getCityDetails(territory.slug)
   const cityBbox = expandBbox(cityDetails.bbox.xmin, cityDetails.bbox.ymin, cityDetails.bbox.xmax, cityDetails.bbox.ymax)
 
   const {
