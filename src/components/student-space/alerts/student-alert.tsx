@@ -11,6 +11,7 @@ type StudentAlertProps = {
   alert: TAlert
 }
 export const StudentAlert = ({ alert }: StudentAlertProps) => {
+  console.log(alert)
   return (
     <div className="fr-border fr-background-default--grey fr-width-full fr-p-5w">
       <div className="fr-flex fr-direction-column fr-flex-gap-4v">
@@ -33,7 +34,7 @@ export const StudentAlert = ({ alert }: StudentAlertProps) => {
           <ToggleSwitch label="E-mail" inputTitle="terms" defaultChecked={false} showCheckedHint={false} />
         </div>
         <div>
-          <StudentAlertCountButton count={alert.count} />
+          <StudentAlertCountButton alert={alert} />
         </div>
       </div>
     </div>

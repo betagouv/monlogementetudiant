@@ -1,25 +1,29 @@
 import { z } from 'zod'
 import { ZBbox } from '~/schemas/territories'
 
-const ZAlertDepartment = z.object({
-  id: z.number(),
-  name: z.string(),
-  code: z.string(),
-  ...ZBbox,
-})
+const ZAlertDepartment = z
+  .object({
+    id: z.number(),
+    name: z.string(),
+    code: z.string(),
+  })
+  .extend(ZBbox.shape)
 
-const ZAlertCity = z.object({
-  id: z.number(),
-  name: z.string(),
-  slug: z.string(),
-  department: ZAlertDepartment,
-})
+const ZAlertCity = z
+  .object({
+    id: z.number(),
+    name: z.string(),
+    slug: z.string(),
+    department: ZAlertDepartment,
+  })
+  .extend(ZBbox.shape)
 
-const ZAlertAcademy = z.object({
-  id: z.number(),
-  name: z.string(),
-  ...ZBbox,
-})
+const ZAlertAcademy = z
+  .object({
+    id: z.number(),
+    name: z.string(),
+  })
+  .extend(ZBbox.shape)
 
 const ZAlert = z.object({
   id: z.number(),
