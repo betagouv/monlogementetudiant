@@ -13,20 +13,24 @@ import { AccommodationImages } from '~/components/accommodation/accommodation-im
 import { NearbyAccommodations } from '~/components/accommodation/nearby-accommodations'
 import { SaveAccommodationFavoriteButton } from '~/components/favorites/save-accommodation-favorite-button'
 import { OwnerDetails } from '~/components/find-student-accomodation/owner-details/owner-details'
+import { expandBbox } from '~/components/map/map-utils'
 import { DynamicBreadcrumb } from '~/components/ui/breadcrumb'
 import { getAccommodationById } from '~/server-only/get-accommodation-by-id'
 import { getAccommodations } from '~/server-only/get-accommodations'
+import { getCityDetails } from '~/server-only/get-city-details'
 import { getFavorites } from '~/server-only/student/get-favorites'
 import { calculateAvailability } from '~/utils/calculateAvailability'
 import styles from './logement.module.css'
 
-export default async function LogementPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function AccommodationPage({ params }: { params: Promise<{ slug: string; location: string }> }) {
   const session = await auth()
   const t = await getTranslations('accomodation')
   const commonT = await getTranslations()
-  const { slug } = await params
+  const { slug, location } = await params
   const accommodation = await getAccommodationById(slug)
   const favorites = await getFavorites()
+  const cityDetails = await getCityDetails(location)
+  const cityBbox = expandBbox(cityDetails.bbox.xmin, cityDetails.bbox.ymin, cityDetails.bbox.xmax, cityDetails.bbox.ymax)
 
   const {
     address,
@@ -45,12 +49,13 @@ export default async function LogementPage({ params }: { params: Promise<{ slug:
   const { coordinates } = geom
   const [longitude, latitude] = coordinates
   const nearbyAccommodations = await getAccommodations({ center: `${longitude},${latitude}` })
+  const citySearchUrl = `/trouver-un-logement-etudiant/ville/${encodeURIComponent(city)}?vue=carte&bbox=${cityBbox.west},${cityBbox.south},${cityBbox.east},${cityBbox.north}`
   const tags: TagProps[] = [
     ...[
       {
         iconId: 'ri-map-pin-2-line' as RiIconClassName,
         children: city,
-        linkProps: { href: `/trouver-un-logement-etudiant/ville/${city}` },
+        linkProps: { href: citySearchUrl },
       },
     ],
     ...(accommodation.price_min ? [{ children: t('tags.priceFrom', { price: accommodation.price_min }) }] : []),
@@ -74,7 +79,7 @@ export default async function LogementPage({ params }: { params: Promise<{ slug:
   })
   return (
     <div className={fr.cx('fr-container')}>
-      <DynamicBreadcrumb title={breadCrumbTitle} city={city} />
+      <DynamicBreadcrumb title={breadCrumbTitle} city={city} cityBbox={cityBbox} />
       <div className="fr-flex fr-justify-content-space-between fr-align-items-center">
         <h1 className="fr-h2">{t('title', { city, title: name })}</h1>
         {session?.user && (

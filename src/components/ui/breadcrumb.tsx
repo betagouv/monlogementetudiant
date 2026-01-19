@@ -7,14 +7,22 @@ import { useTranslations } from 'next-intl'
 import { FC, ReactNode } from 'react'
 import { tss } from 'tss-react'
 
+type CityBbox = {
+  west: number
+  south: number
+  east: number
+  north: number
+}
+
 type DynamicBreadcrumbProps = {
   color?: string
   margin?: boolean
   title?: string
   city?: string
+  cityBbox?: CityBbox
 }
 
-export const DynamicBreadcrumb: FC<DynamicBreadcrumbProps> = ({ color, margin = true, title, city }) => {
+export const DynamicBreadcrumb: FC<DynamicBreadcrumbProps> = ({ color, margin = true, title, city, cityBbox }) => {
   const pathname = usePathname()
   const t = useTranslations()
   const { classes } = useStyles({ color, margin })
@@ -96,15 +104,17 @@ export const DynamicBreadcrumb: FC<DynamicBreadcrumbProps> = ({ color, margin = 
       case '/trouver-un-logement-etudiant':
         currentPageLabel = t('breadcrumbs.findAccomodation')
         break
-      case pathname.match(/^\/trouver-un-logement-etudiant\/ville\/[^/]+\/[^/]+$/)?.input:
+      case pathname.match(/^\/trouver-un-logement-etudiant\/ville\/[^/]+\/[^/]+$/)?.input: {
+        const bboxParam = cityBbox ? `?vue=carte&bbox=${cityBbox.west},${cityBbox.south},${cityBbox.east},${cityBbox.north}` : ''
         segments.push({
           label: t('breadcrumbs.findAccomodationWithLocation', { location: city! }),
           linkProps: {
-            href: `/trouver-un-logement-etudiant/ville/${city}`,
+            href: `/trouver-un-logement-etudiant/ville/${encodeURIComponent(city!)}${bboxParam}`,
           },
         })
         currentPageLabel = title as string
         break
+      }
       case pathname.match(/^\/trouver-un-logement-etudiant\/[^?]+(?:\?.*)?$/)?.input:
         currentPageLabel = title as string
         break
