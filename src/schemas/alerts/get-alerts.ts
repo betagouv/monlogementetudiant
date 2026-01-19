@@ -23,6 +23,7 @@ const ZAlertAcademy = z.object({
 
 const ZAlert = z.object({
   id: z.number(),
+  count: z.number(),
   name: z.string(),
   city: ZAlertCity.nullable(),
   department: ZAlertDepartment.nullable(),

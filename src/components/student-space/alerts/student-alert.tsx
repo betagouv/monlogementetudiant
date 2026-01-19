@@ -33,7 +33,7 @@ export const StudentAlert = ({ alert }: StudentAlertProps) => {
           <ToggleSwitch label="E-mail" inputTitle="terms" defaultChecked={false} showCheckedHint={false} />
         </div>
         <div>
-          <StudentAlertCountButton count={4} />
+          <StudentAlertCountButton count={alert.count} />
         </div>
       </div>
     </div>
