@@ -58,7 +58,11 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({ className, accomod
     nb_t6_available,
     nb_t7_more_available,
   })
-  const accommodationsTypes = accomodation.properties.nb_coliving_apartments ? [t('individual'), t('colocation')] : [t('individual')]
+  const nbIndividualApartments = (accomodation.properties.nb_total_apartments || 0) - (accomodation.properties.nb_coliving_apartments || 0)
+  const accommodationsTypes = [
+    ...(nbIndividualApartments > 0 ? [t('individual')] : []),
+    ...(accomodation.properties.nb_coliving_apartments ? [t('colocation')] : []),
+  ]
   const imageProps =
     images_urls && images_urls.length > 0
       ? { imageComponent: <FindStudentAccommodationImageCard image={images_urls[0]} name={name} /> }
@@ -105,7 +109,9 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({ className, accomod
       nativeDivProps={{ onClick: handleCardClick }}
       desc={
         <>
-          <span className={clsx('ri-group-line', classes.description)}>{accommodationsTypes.join(' • ')}</span>
+          {accommodationsTypes.length > 0 && (
+            <span className={clsx('ri-group-line', classes.description)}>{accommodationsTypes.join(' • ')}</span>
+          )}
           <br />
           {!!nb_total_apartments && (
             <span className={clsx('ri-community-line', classes.description)}>{`${nb_total_apartments} logements`}</span>
