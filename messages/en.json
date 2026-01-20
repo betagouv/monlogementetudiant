@@ -164,8 +164,12 @@
   },
   "findAccomodation": {
     "banner": {
-      "title": "De nouveaux logements arrivent bientôt à {location}.",
-      "description": "Nous sommes en cours d’intégration de nouvelles résidences. Activez <link>l'alerte</link> pour être notifié dès que de nouveaux logements seront disponibles."
+      "title": {
+        "city": "De nouveaux logements arrivent bientôt à {location}.",
+        "academy": "De nouveaux logements arrivent bientôt dans l'académie de {location}.",
+        "department": "De nouveaux logements arrivent bientôt dans le département {location}."
+      },
+      "description": "Nous sommes en cours d'intégration de nouvelles résidences. Activez <link>l'alerte</link> pour être notifié dès que de nouveaux logements seront disponibles."
     },
     "faq": {
       "title": "Parmi les questions fréquentes sur les logements étudiants",
