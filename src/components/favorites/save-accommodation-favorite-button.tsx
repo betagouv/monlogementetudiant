@@ -2,6 +2,8 @@
 
 import Button from '@codegouvfr/react-dsfr/Button'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { useForm } from 'react-hook-form'
 import { useCreateFavorite } from '~/hooks/use-create-favorite'
 import { useDeleteFavorite } from '~/hooks/use-delete-favorite'
@@ -23,6 +25,9 @@ export const SaveAccommodationFavoriteButton = ({
   withLabel?: boolean
   initialFavorites?: TGetFavoritesResponse | null
 }) => {
+  const { data: session } = useSession()
+  const router = useRouter()
+
   const { data: favorites } = useFavorites(initialFavorites)
 
   const { getValues } = useForm<TPostFavorite>({
@@ -35,7 +40,13 @@ export const SaveAccommodationFavoriteButton = ({
   const { mutateAsync, isLoading } = useCreateFavorite()
   const { mutateAsync: mutationDelete, isLoading: isLoadingDelete } = useDeleteFavorite()
 
-  const handleSave = async () => await mutateAsync(getValues())
+  const handleSave = async () => {
+    if (!session) {
+      router.push('/s-inscrire')
+      return
+    }
+    await mutateAsync(getValues())
+  }
   const handleDelete = async () => await mutationDelete(slug)
 
   if (favorites?.results.find((favorite) => favorite.accommodation.properties.slug === slug)) {

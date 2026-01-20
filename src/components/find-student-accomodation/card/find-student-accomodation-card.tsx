@@ -9,7 +9,6 @@ import { useTranslations } from 'next-intl'
 import { parseAsString, useQueryState } from 'nuqs'
 import { FC } from 'react'
 import { tss } from 'tss-react'
-import { authClient } from '~/auth-client'
 import { FAVORITE_BUTTON_TITLES, SaveAccommodationFavoriteButton } from '~/components/favorites/save-accommodation-favorite-button'
 import {
   FindStudentAccommodationImageCard,
@@ -26,7 +25,6 @@ type AccomodationCardProps = {
 }
 
 export const AccomodationCard: FC<AccomodationCardProps> = ({ className, accomodation, href }) => {
-  const { data: session } = authClient.useSession()
   const router = useRouter()
   const [selectedAccommodation] = useQueryState('id', parseAsString)
   const t = useTranslations('findAccomodation.card')
@@ -137,7 +135,7 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({ className, accomod
               <Tag>{`${city} (${postal_code})`}</Tag>
             </li>
           </ul>
-          {session?.user && <SaveAccommodationFavoriteButton slug={accomodation.properties.slug} />}
+          <SaveAccommodationFavoriteButton slug={accomodation.properties.slug} />
         </div>
       }
       end={<>{waitingListBadge}</>}

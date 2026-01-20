@@ -8,7 +8,6 @@ import { AccommodationEquipments } from '~/app/(public)/trouver-un-logement-etud
 import { AccommodationLocalisation } from '~/app/(public)/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-localisation'
 import AccommodationMap from '~/app/(public)/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-map'
 import { AccommodationResidence } from '~/app/(public)/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-residence'
-import { auth } from '~/auth'
 import { AccommodationImages } from '~/components/accommodation/accommodation-images'
 import { NearbyAccommodations } from '~/components/accommodation/nearby-accommodations'
 import { SaveAccommodationFavoriteButton } from '~/components/favorites/save-accommodation-favorite-button'
@@ -25,7 +24,6 @@ import { calculateAvailability } from '~/utils/calculateAvailability'
 import styles from './logement.module.css'
 
 export default async function AccommodationPage({ params }: { params: Promise<{ slug: string; location: string }> }) {
-  const session = await auth()
   const t = await getTranslations('accomodation')
   const commonT = await getTranslations()
   const { slug, location } = await params
@@ -87,11 +85,7 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
       <DynamicBreadcrumb title={breadCrumbTitle} city={city} cityBbox={cityBbox} />
       <div className="fr-flex fr-justify-content-space-between fr-align-items-center">
         <h1 className="fr-h2">{t('title', { city, title: name })}</h1>
-        {session?.user && (
-          <div>
-            <SaveAccommodationFavoriteButton slug={slug} withLabel initialFavorites={favorites} />
-          </div>
-        )}
+        <SaveAccommodationFavoriteButton slug={slug} withLabel initialFavorites={favorites} />
       </div>
       <div className={styles.container}>
         <div className={clsx(fr.cx('fr-col-sm-8'), styles.infosContainer)}>
