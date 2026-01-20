@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { fr } from '@codegouvfr/react-dsfr'
 import { Metadata } from 'next'
 import { redirect } from 'next/navigation'
+import { FindStudentAccommodationBanner } from '~/components/find-student-accomodation/find-student-accommodation-banner'
 import { FindStudentAccommodationTitle } from '~/components/find-student-accomodation/header/find-student-accommodation-title'
 import { FindStudentAccomodationHeader } from '~/components/find-student-accomodation/header/find-student-accomodation-header'
 import FindStudentAccommodationQA from '~/components/find-student-accomodation/qa/find-student-accommodation-qa'
@@ -91,6 +92,7 @@ export default async function FindStudentAccommodationPage({
         <FindStudentAccommodationTitle location={territory?.name} />
         <FindStudentAccomodationHeader />
         <FindStudentAccomodationSortView data={accommodations} territory={territory} />
+        {!!territory && <FindStudentAccommodationBanner territory={territory} />}
         <FindStudentAccomodationResults data={accommodations} territory={territory} isAcademy={isAcademy} />
       </div>
       <FindStudentAccommodationQA />

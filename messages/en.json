@@ -163,6 +163,10 @@
     }
   },
   "findAccomodation": {
+    "banner": {
+      "title": "De nouveaux logements arrivent bientôt à {location}.",
+      "description": "Nous sommes en cours d’intégration de nouvelles résidences. Activez <link>l'alerte</link> pour être notifié dès que de nouveaux logements seront disponibles."
+    },
     "faq": {
       "title": "Parmi les questions fréquentes sur les logements étudiants",
       "cta": "Foire aux questions"
