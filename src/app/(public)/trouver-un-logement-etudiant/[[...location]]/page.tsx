@@ -92,7 +92,7 @@ export default async function FindStudentAccommodationPage({
         <FindStudentAccommodationTitle location={territory?.name} />
         <FindStudentAccomodationHeader />
         <FindStudentAccomodationSortView data={accommodations} territory={territory} />
-        {!!territory && <FindStudentAccommodationBanner territory={territory} />}
+        {!!territory && <FindStudentAccommodationBanner territory={territory} categoryKey={routeCategoryKey} />}
         <FindStudentAccomodationResults data={accommodations} territory={territory} isAcademy={isAcademy} />
       </div>
       <FindStudentAccommodationQA />

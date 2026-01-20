@@ -1,10 +1,13 @@
 import { Notice } from '@codegouvfr/react-dsfr/Notice'
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
-import { TTerritories } from '~/schemas/territories'
+import { TTerritory } from '~/schemas/territories'
 
-export const FindStudentAccommodationBanner = async ({ territory }: { territory: TTerritories['cities'][0] }) => {
+export const FindStudentAccommodationBanner = async ({ territory, categoryKey }: { territory: TTerritory; categoryKey?: string }) => {
   const t = await getTranslations('findAccomodation.banner')
+
+  const territoryType = categoryKey === 'ville' ? 'city' : categoryKey === 'academie' ? 'academy' : 'department'
+  console.log(territoryType)
 
   return (
     <Notice
@@ -15,7 +18,7 @@ export const FindStudentAccommodationBanner = async ({ territory }: { territory:
           </Link>
         ),
       })}
-      title={t('title', { location: territory.name })}
+      title={t(`title.${territoryType}`, { location: territory.name })}
       className="fr-mb-4w"
     />
   )
