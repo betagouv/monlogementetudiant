@@ -14,6 +14,11 @@
   background-color: white;
   border: 1px solid var(--border-default-grey);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  @media (min-width: 768px) {
+    flex: 0 0 66.66%;
+    max-width: 66.66%;
+  }
 }
 
 .section {
@@ -120,4 +125,9 @@
   position: sticky;
   top: 2rem;
   align-self: flex-start;
+
+  @media (min-width: 768px) {
+    flex: 0 0 calc(33.33% - 1.5rem);
+    max-width: calc(33.33% - 1.5rem);
+  }
 }

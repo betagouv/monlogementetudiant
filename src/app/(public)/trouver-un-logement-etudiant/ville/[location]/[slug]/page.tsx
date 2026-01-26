@@ -1,6 +1,5 @@
 import { fr, RiIconClassName } from '@codegouvfr/react-dsfr'
 import { Tag, TagProps } from '@codegouvfr/react-dsfr/Tag'
-import clsx from 'clsx'
 import { getTranslations } from 'next-intl/server'
 import { AccommodationAvailability } from '~/app/(public)/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-availability'
 import AccommodationDescription from '~/app/(public)/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-description'
@@ -88,7 +87,7 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
         <SaveAccommodationFavoriteButton slug={slug} withLabel initialFavorites={favorites} />
       </div>
       <div className={styles.container}>
-        <div className={clsx(fr.cx('fr-col-sm-8'), styles.infosContainer)}>
+        <div className={styles.infosContainer}>
           {images_urls && images_urls.length > 0 && <AccommodationImages images={images_urls} title={name} />}
           <div className={styles.section}>
             <h2>{name}</h2>
@@ -109,7 +108,7 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
           {/* <PrepareStudentLifeRedirection city={city} /> */}
         </div>
         <div className={fr.cx('fr-hidden-sm')}>{<AccommodationMap latitude={latitude} longitude={longitude} />}</div>
-        <div className={clsx(fr.cx('fr-col-sm-4'), styles.stickyColumn)}>
+        <div className={styles.stickyColumn}>
           <OwnerDetails
             acceptWaitingList={accept_waiting_list}
             owner={owner}
