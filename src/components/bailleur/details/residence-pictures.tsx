@@ -5,6 +5,7 @@ import { useRef, useState } from 'react'
 import { Controller, useFormContext } from 'react-hook-form'
 import { AccommodationImage } from '~/components/accommodation/accommodation-image'
 import { AccommodationImages } from '~/components/accommodation/accommodation-images'
+import { useUpdateResidenceDetails } from '~/hooks/use-update-residence-details'
 import { useDeleteResidenceImage, useUploadResidenceImages, validateFiles } from '~/hooks/use-upload-residence-images'
 import { TAccomodationMy } from '~/schemas/accommodations/accommodations'
 import { TUpdateResidence } from '~/schemas/accommodations/update-residence'
@@ -18,6 +19,7 @@ export const ResidencePictures = ({ accommodation }: { accommodation: TAccomodat
 
   const uploadMutation = useUploadResidenceImages(accommodation.properties.slug, accommodation.properties.name)
   const deleteMutation = useDeleteResidenceImage(accommodation.properties.slug, accommodation.properties.name)
+  const updateMutation = useUpdateResidenceDetails(accommodation.properties.slug)
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || [])
@@ -59,6 +61,20 @@ export const ResidencePictures = ({ accommodation }: { accommodation: TAccomodat
         setValue('images_urls', newImages)
       },
     })
+  }
+
+  const handleMoveImage = (index: number, direction: 'left' | 'right', currentImages: string[]) => {
+    const newImages = [...currentImages]
+    const newIndex = direction === 'left' ? index - 1 : index + 1
+    ;[newImages[index], newImages[newIndex]] = [newImages[newIndex], newImages[index]]
+    updateMutation.mutate(
+      { images_urls: newImages, name: accommodation.properties.name },
+      {
+        onSuccess: () => {
+          setValue('images_urls', newImages)
+        },
+      },
+    )
   }
 
   const getStatusText = () => {
@@ -106,18 +122,44 @@ export const ResidencePictures = ({ accommodation }: { accommodation: TAccomodat
                     {field.value.map((imageUrl, index) => (
                       <div key={index} className="fr-flex fr-direction-column fr-align-items-center">
                         <AccommodationImage src={imageUrl} width={100} height={100} withModal={false} />
-                        <Button
-                          priority="tertiary no outline"
-                          iconId="ri-delete-bin-line"
-                          size="small"
-                          title="Supprimer cette image"
-                          disabled={deleteMutation.isPending}
-                          onClick={() => {
-                            if (field.value) {
-                              handleDeleteImage(index, field.value)
-                            }
-                          }}
-                        />
+                        <div className="fr-flex fr-align-items-center">
+                          <Button
+                            priority="tertiary no outline"
+                            iconId="ri-arrow-left-s-line"
+                            size="small"
+                            title="Déplacer vers la gauche"
+                            disabled={index === 0 || updateMutation.isPending}
+                            onClick={() => {
+                              if (field.value) {
+                                handleMoveImage(index, 'left', field.value)
+                              }
+                            }}
+                          />
+                          <Button
+                            priority="tertiary no outline"
+                            iconId="ri-delete-bin-line"
+                            size="small"
+                            title="Supprimer cette image"
+                            disabled={deleteMutation.isPending}
+                            onClick={() => {
+                              if (field.value) {
+                                handleDeleteImage(index, field.value)
+                              }
+                            }}
+                          />
+                          <Button
+                            priority="tertiary no outline"
+                            iconId="ri-arrow-right-s-line"
+                            size="small"
+                            title="Déplacer vers la droite"
+                            disabled={index === (field.value?.length ?? 0) - 1 || updateMutation.isPending}
+                            onClick={() => {
+                              if (field.value) {
+                                handleMoveImage(index, 'right', field.value)
+                              }
+                            }}
+                          />
+                        </div>
                       </div>
                     ))}
                   </div>
