@@ -20,6 +20,7 @@ import { getCityDetails } from '~/server-only/get-city-details'
 import { getTerritories } from '~/server-only/get-territories'
 import { getFavorites } from '~/server-only/student/get-favorites'
 import { calculateAvailability } from '~/utils/calculateAvailability'
+import { formatCityWithA } from '~/utils/french-contraction'
 import styles from './logement.module.css'
 
 export default async function AccommodationPage({ params }: { params: Promise<{ slug: string; location: string }> }) {
@@ -68,7 +69,8 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
       : []),
   ]
 
-  const breadCrumbTitle = commonT('breadcrumbs.accommodationTitle', { name, city })
+  const cityFormatted = formatCityWithA(city)
+  const breadCrumbTitle = commonT('breadcrumbs.accommodationTitle', { name, cityFormatted })
   const nbAvailable = calculateAvailability({
     nb_t1_available: accommodation.nb_t1_available,
     nb_t1_bis_available: accommodation.nb_t1_bis_available,
@@ -83,7 +85,7 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
     <div className={fr.cx('fr-container')}>
       <DynamicBreadcrumb title={breadCrumbTitle} city={city} cityBbox={cityBbox} />
       <div className="fr-flex fr-justify-content-space-between fr-align-items-center">
-        <h1 className="fr-h2">{t('title', { city, title: name })}</h1>
+        <h1 className="fr-h2">{t('title', { cityFormatted, title: name })}</h1>
         <SaveAccommodationFavoriteButton slug={slug} withLabel initialFavorites={favorites} />
       </div>
       <div className={styles.container}>
