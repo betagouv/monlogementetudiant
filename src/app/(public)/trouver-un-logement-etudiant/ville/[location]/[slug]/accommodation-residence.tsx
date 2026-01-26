@@ -127,9 +127,9 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
                       }}
                       className="fr-text--bold"
                     >
-                      {accommodation.min && accommodation.max
-                        ? `DE ${accommodation.min} À  ${accommodation.max} €`
-                        : `À partir de ${accommodation.min} €`}
+                      {accommodation.min && accommodation.max && accommodation.min !== accommodation.max
+                        ? `DE ${accommodation.min} À ${accommodation.max} €`
+                        : `${accommodation.min} €`}
                     </span>
                   </div>
                 </div>
