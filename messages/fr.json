@@ -161,7 +161,6 @@
       "t6": "T6 : Séjour + 5 chambres séparées + cuisine (ouverte/fermée) + généralement 2 salles de bain minimum.",
       "t7": "T7 : Séjour + 6 chambres séparées + cuisine (ouverte/fermée) + 2 à 3 salles de bain."
     }
-
   },
   "findAccomodation": {
     "banner": {
@@ -365,7 +364,7 @@
         "title": "A la recherche d’un logement en résidence étudiante ?",
         "description": "Mon Logement Etudiant facilite l'accès au logement et aux droits pour les étudiants.",
         "cta": "Trouver un logement étudiant",
-        "ctaDisclaimer": "Plus de 300 résidences partout en France"
+        "ctaDisclaimer": "Plus de 400 résidences partout en France"
       }
     }
   },
@@ -497,7 +496,7 @@
       "subtitle": "et découvrez les <aides>aides</aides> auxquelles vous avez droit en tant qu'étudiant."
     },
     "cta": "Rechercher un logement",
-    "title": "Plus de 300 résidences étudiantes",
+    "title": "Plus de 400 résidences étudiantes",
     "description": "référencées partout en France",
     "mainSection": {
       "title": "Tout savoir pour bien se loger",

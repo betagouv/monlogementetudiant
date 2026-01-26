@@ -2,14 +2,17 @@
 
 import { Range } from '@codegouvfr/react-dsfr/Range'
 import { useTranslations } from 'next-intl'
-import { parseAsInteger, useQueryStates } from 'nuqs'
+import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
 
 export const FindStudentAccommodationPrice = () => {
   const t = useTranslations('findAccomodation')
   const [queryStates, setQueryStates] = useQueryStates({
     prix: parseAsInteger.withDefault(1000),
     page: parseAsInteger,
+    crous: parseAsString,
   })
+
+  if (queryStates.crous === 'true') return null
 
   return (
     <Range
