@@ -31,7 +31,9 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
   const decodedLocationUri = decodeURIComponent(location)
   const favorites = await getFavorites()
   const territories = await getTerritories(decodedLocationUri)
-  const territory = (territories.cities || []).find((territory) => territory.name === decodedLocationUri) as TTerritories['cities'][0]
+  const territory = (territories.cities || []).find(
+    (territory) => territory.name === decodedLocationUri || territory.slug === decodedLocationUri,
+  ) as TTerritories['cities'][0]
   const cityDetails = await getCityDetails(territory.slug)
   const cityBbox = expandBbox(cityDetails.bbox.xmin, cityDetails.bbox.ymin, cityDetails.bbox.xmax, cityDetails.bbox.ymax)
 
