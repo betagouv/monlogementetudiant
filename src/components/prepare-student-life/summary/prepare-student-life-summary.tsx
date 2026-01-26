@@ -5,6 +5,7 @@ import Tag from '@codegouvfr/react-dsfr/Tag'
 import clsx from 'clsx'
 import { getTranslations } from 'next-intl/server'
 import PrepareStudentLifeMap from '~/components/map/prepare-student-life-map'
+import { formatCityWithA, formatCityWithDe } from '~/utils/french-contraction'
 import styles from './prepare-student-life-summary.module.css'
 
 interface PrepareStudentLifeSummaryProps {
@@ -39,7 +40,7 @@ export default async function PrepareStudentLifeSummary({
     <div className={clsx(fr.cx('fr-container'), styles.mainContainer)}>
       <div className={clsx(fr.cx('fr-col-md-12'), styles.container)}>
         <div className={clsx(fr.cx('fr-col-md-8'), styles.mainContent)}>
-          <h1 className={styles.subtitle}>{t('subTitle', { title: name })}</h1>
+          <h1 className={styles.subtitle}>{t('subTitle', { titleFormatted: formatCityWithA(name) })}</h1>
           <p>
             Aliquip reprehenderit laborum consectetur mollit aliqua magna consectetur eiusmod ad. Deserunt proident dolore non et commodo
             dolor. Culpa id aliquip do nisi mollit sunt cupidatat fugiat. Nostrud aliquip aute eu. Aliquip reprehenderit laborum consectetur
@@ -105,7 +106,7 @@ export default async function PrepareStudentLifeSummary({
             <PrepareStudentLifeMap bbox={formattedBbox} />
           </div>
           <div className={styles.nearbyContainer}>
-            <p>Villes à proximité de {location}</p>
+            <p>{t('nearbyCities', { titleFormattedDe: formatCityWithDe(name) })}</p>
             <div className={styles.tagContainer}>
               {nearby_cities.map((city) => (
                 <Tag key={city.slug}>{city.name}</Tag>

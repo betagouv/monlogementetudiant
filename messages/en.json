@@ -2,11 +2,11 @@
   "breadcrumbs": {
     "home": "Simulez mes aides au logement",
     "findAccomodation": "Trouver un logement étudiant",
-    "findAccomodationWithLocation": "Trouver un logement étudiant à {location}",
-    "accommodationTitle": "Logement étudiant {name} à {city}",
+    "findAccomodationWithLocation": "Trouver un logement étudiant {locationFormatted}",
+    "accommodationTitle": "Logement étudiant {name} {cityFormatted}",
     "prepareBudget": "Préparer mon budget étudiant",
     "prepareStudentLife": "Préparer sa vie étudiante",
-    "prepareStudentLifeTitle": "Préparer sa vie étudiante à {title}",
+    "prepareStudentLifeTitle": "Préparer sa vie étudiante {titleFormatted}",
     "faq": "Foire aux questions",
     "accessibilite": "Accessibilité",
     "legalMentions": "Mentions légales",
@@ -100,7 +100,7 @@
       "title": "Equipements"
     },
     "descriptionTitle": "À propos du logement étudiant {title}",
-    "title": "Logement étudiant {title} à {city}",
+    "title": "Logement étudiant {title} {cityFormatted}",
     "tags": {
       "studio": "Studio",
       "shared": "Colocation",
@@ -116,8 +116,8 @@
       "accommodationsCount": "{count} logements",
       "accommodationsNoCount": "Logements disponibles",
       "share": "Partager le logement",
-      "emailSubject": "Logement étudiant {title} à {location}",
-      "emailBody": "Venez découvrir le logement étudiant {title}, situé à {location}.\n\n🔗 {url}\n📍 {location}\n\nCordialement,\nMon Logement Étudiant",
+      "emailSubject": "Logement étudiant {title} {locationFormatted}",
+      "emailBody": "Venez découvrir le logement étudiant {title}, situé {locationFormatted}.\n\n🔗 {url}\n📍 {location}\n\nCordialement,\nMon Logement Étudiant",
       "buttons": {
         "consult": "Consulter l'offre",
         "consultDescription": "Vous serez redirigé vers le site du gestionnaire",
@@ -165,7 +165,7 @@
   "findAccomodation": {
     "banner": {
       "title": {
-        "city": "De nouveaux logements arrivent bientôt à {location}.",
+        "city": "De nouveaux logements arrivent bientôt {locationFormatted}.",
         "academy": "De nouveaux logements arrivent bientôt dans l'académie de {location}.",
         "department": "De nouveaux logements arrivent bientôt dans le département {location}."
       },
@@ -183,7 +183,7 @@
       }
     },
     "title": "Trouver un logement étudiant",
-    "titleWithLocation": "Trouver un logement étudiant à {location}",
+    "titleWithLocation": "Trouver un logement étudiant {locationFormatted}",
     "header": {
       "inputLabel": "Académie, ville ou département",
       "shared": "Colocation",
@@ -199,7 +199,7 @@
     },
     "filters": {
       "accommodations": "résidence",
-      "accommodationsWithLocation": "résidence{pluralize} à {location}",
+      "accommodationsWithLocation": "résidence{pluralize} {locationFormatted}",
       "grid": "Liste",
       "map": "Carte",
       "sortByPrice": "Triés par prix"
@@ -228,9 +228,9 @@
     "city": "Ville",
     "searchTitlePart": "Tout ce qu'il faut savoir sur sa prochaine ville étudiante",
     "popularCities": "Villes étudiantes populaires",
-    "title": "Préparer sa vie étudiante à {title}",
-    "subTitle": "Être étudiant à {title}",
-    "nearbyCities": "Villes à proximité de {title}",
+    "title": "Préparer sa vie étudiante {titleFormatted}",
+    "subTitle": "Être étudiant {titleFormatted}",
+    "nearbyCities": "Villes à proximité {titleFormattedDe}",
     "noResultTitle": "Aucun logement étudiant répertorié pour le moment",
     "noResultDescription": "Il n'y a pas de logements pour les villes de ce département. Nous vous invitons à réessayer plus tard, de nouvelles résidences sont ajoutées régulièrement."
   },

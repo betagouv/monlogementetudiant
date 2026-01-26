@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { FC, ReactNode } from 'react'
 import { tss } from 'tss-react'
+import { formatCityWithA } from '~/utils/french-contraction'
 
 type CityBbox = {
   west: number
@@ -107,7 +108,7 @@ export const DynamicBreadcrumb: FC<DynamicBreadcrumbProps> = ({ color, margin = 
       case pathname.match(/^\/trouver-un-logement-etudiant\/ville\/[^/]+\/[^/]+$/)?.input: {
         const bboxParam = cityBbox ? `?vue=carte&bbox=${cityBbox.west},${cityBbox.south},${cityBbox.east},${cityBbox.north}` : ''
         segments.push({
-          label: t('breadcrumbs.findAccomodationWithLocation', { location: city! }),
+          label: t('breadcrumbs.findAccomodationWithLocation', { locationFormatted: formatCityWithA(city!) }),
           linkProps: {
             href: `/trouver-un-logement-etudiant/ville/${encodeURIComponent(city!)}${bboxParam}`,
           },
@@ -125,7 +126,7 @@ export const DynamicBreadcrumb: FC<DynamicBreadcrumbProps> = ({ color, margin = 
         currentPageLabel = t('breadcrumbs.prepareStudentLife')
         break
       case pathname.match(/^\/preparer-sa-vie-etudiante\/[a-zA-Z0-9-]+$/)?.input:
-        currentPageLabel = t('breadcrumbs.prepareStudentLifeTitle', { title: title! })
+        currentPageLabel = t('breadcrumbs.prepareStudentLifeTitle', { titleFormatted: formatCityWithA(title!) })
         segments.push({
           label: t('breadcrumbs.prepareStudentLife'),
           linkProps: {
