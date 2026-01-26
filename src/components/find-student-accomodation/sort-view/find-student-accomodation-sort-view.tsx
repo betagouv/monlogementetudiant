@@ -9,6 +9,7 @@ import { tss } from 'tss-react'
 import { useAccomodations } from '~/hooks/use-accomodations'
 import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
 import { TTerritory } from '~/schemas/territories'
+import { formatCityWithA } from '~/utils/french-contraction'
 import { sPluriel } from '~/utils/sPluriel'
 
 type FindStudentAccomodationSortViewProps = {
@@ -28,7 +29,10 @@ export const FindStudentAccomodationSortView: FC<FindStudentAccomodationSortView
 
   const title =
     territory?.name && !queryStates['recherche-par-carte']
-      ? t('accommodationsWithLocation', { pluralize: sPluriel(accommodations?.count ?? 0), location: territory?.name })
+      ? t('accommodationsWithLocation', {
+          pluralize: sPluriel(accommodations?.count ?? 0),
+          locationFormatted: formatCityWithA(territory.name),
+        })
       : `${t('accommodations')}${sPluriel(accommodations?.count ?? 0)}`
   return (
     <div className={classes.headerContainer}>

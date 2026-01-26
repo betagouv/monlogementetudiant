@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useState } from 'react'
 import { tss } from 'tss-react'
 import { createToast } from '~/components/ui/createToast'
+import { formatCityWithA } from '~/utils/french-contraction'
 
 export const OwnerDetailsActions = ({ title, location }: { title: string; location: string }) => {
   const t = useTranslations('accomodation')
@@ -35,7 +36,8 @@ export const OwnerDetailsActions = ({ title, location }: { title: string; locati
     window.print()
   }, [])
 
-  const mailtoUrl = `mailto:?subject=${t('sidebar.emailSubject', { location, title })}&body=${encodeURIComponent(t('sidebar.emailBody', { url: currentUrl, location, title }))}`
+  const locationFormatted = formatCityWithA(location)
+  const mailtoUrl = `mailto:?subject=${t('sidebar.emailSubject', { locationFormatted, title })}&body=${encodeURIComponent(t('sidebar.emailBody', { url: currentUrl, location, locationFormatted, title }))}`
 
   return (
     <div className={classes.sidebarShare}>
