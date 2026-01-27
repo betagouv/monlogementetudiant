@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { auth } from '~/auth'
+import { getServerSession } from '~/auth'
 import { StudentMaximizeChances } from '~/components/student-space/dashboard/student-maximize-chances'
 import { StudentNews } from '~/components/student-space/dashboard/student-news'
 import { StudentSummary } from '~/components/student-space/dashboard/student-summary'
@@ -7,13 +7,13 @@ import { StudentWelcome } from '~/components/student-space/dashboard/student-wel
 import styles from '../mon-espace.module.css'
 
 export default async function StudentDashboardPage() {
-  const session = await auth()
+  const auth = await getServerSession()
 
-  if (!session) {
+  if (!auth || !auth.user) {
     return notFound()
   }
 
-  const { user } = session
+  const { user } = auth
 
   return (
     <>

@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
-import { auth } from '~/auth'
+import { getServerSession } from '~/auth'
 import { ZUpdateResidence } from '~/schemas/accommodations/update-residence'
 import { ZUpdateResidenceList } from '~/schemas/accommodations/update-residence-list'
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const session = await auth()
-  if (!session || !session.accessToken) {
+  const auth = await getServerSession()
+  if (!auth || !auth.session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -26,7 +26,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ sl
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${auth.session.accessToken}`,
         cache: 'no-store',
       },
       body: JSON.stringify(validatedData),

@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
-import { auth } from '~/auth'
+import { getServerSession } from '~/auth'
 import { FooterComponent } from '~/components/ui/footer/footer'
 import { WorkspaceHeaderComponent } from '~/components/ui/header/workspace-header'
 import styles from './layout.module.css'
@@ -22,8 +22,9 @@ export default async function WorkspaceLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const session = await auth()
-  if (!session || session.user.role === 'user' || !!session.error) {
+  const session = await getServerSession()
+
+  if (!session || session.user.role === 'user') {
     return notFound()
   }
 

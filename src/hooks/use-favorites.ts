@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useSession } from 'next-auth/react'
+import { authClient } from '~/auth-client'
 import { TGetFavoritesResponse } from '~/schemas/favorites/get-favorites'
 
 export const getFavorites = async (): Promise<TGetFavoritesResponse> => {
@@ -18,7 +18,7 @@ export const getFavorites = async (): Promise<TGetFavoritesResponse> => {
 }
 
 export const useFavorites = () => {
-  const { data: session } = useSession()
+  const { data: session } = authClient.useSession()
 
   const { data, isPending } = useQuery({
     enabled: !!session?.user,

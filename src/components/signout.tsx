@@ -1,13 +1,13 @@
 'use client'
 
-import { signOut, useSession } from 'next-auth/react'
 import { useEffect } from 'react'
+import { authClient, signOut } from '~/auth-client'
 
 export const Signout = () => {
-  const { data: session } = useSession()
+  const { data: session, error } = authClient.useSession()
 
   useEffect(() => {
-    if (session?.error) {
+    if (error) {
       signOut({ callbackUrl: '/', redirect: true })
     }
   }, [session])

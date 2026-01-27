@@ -1,19 +1,20 @@
 'use client'
 
 import Button from '@codegouvfr/react-dsfr/Button'
-import { signOut } from 'next-auth/react'
+import { signOut } from '~/auth-client'
 import { createToast } from '~/components/ui/createToast'
 import { Dropdown } from '~/components/ui/dropdown'
-import { TUser } from '~/types/next-auth'
+import { TUser } from '~/lib/external-auth-plugin'
 
 export const UserConnectedDropdown = ({ user }: { user: TUser }) => {
   const handleSignout = async () => {
-    await signOut({
-      redirectTo: '/',
-    })
     createToast({
       priority: 'success',
       message: 'Vous êtes maintenant déconnecté',
+    })
+    await signOut({
+      callbackUrl: '/',
+      redirect: true,
     })
   }
 

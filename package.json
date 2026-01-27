@@ -17,6 +17,7 @@
     "@hookform/resolvers": "^5.2.2",
     "@socialgouv/matomo-next": "^1.11.0",
     "@tanstack/react-query": "^5.90.15",
+    "better-auth": "^1.4.17",
     "clsx": "^2.1.1",
     "dayjs": "^1.11.19",
     "dompurify": "^3.3.1",

@@ -1,9 +1,10 @@
-import { auth } from '~/auth'
+import { getServerSession } from '~/auth'
 import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
 
 export const getMyAccommodations = async (searchParams?: { page?: string; disponible?: string; recherche?: string }) => {
-  const session = await auth()
-  if (!session || !session.accessToken) {
+  const auth = await getServerSession()
+
+  if (!auth || !auth.session.accessToken) {
     throw new Error('Unauthorized')
   }
 
@@ -14,7 +15,7 @@ export const getMyAccommodations = async (searchParams?: { page?: string; dispon
 
   const response = await fetch(`${process.env.API_URL}/accommodations/my/${params.size > 0 ? `?${params.toString()}` : ''}`, {
     headers: {
-      Authorization: `Bearer ${session.accessToken}`,
+      Authorization: `Bearer ${auth.session.accessToken}`,
       'Content-Type': 'application/json',
     },
     cache: 'no-store',
