@@ -2,10 +2,11 @@
 
 import { Controller, useFormContext } from 'react-hook-form'
 import { RichTextEditor } from '~/components/ui/rich-text-editor'
+import { TCreateResidence } from '~/schemas/accommodations/create-residence'
 import { TUpdateResidence } from '~/schemas/accommodations/update-residence'
 
 export const ResidenceSummary = () => {
-  const { control } = useFormContext<TUpdateResidence>()
+  const { control } = useFormContext<TUpdateResidence | TCreateResidence>()
   return (
     <div className="fr-border-bottom">
       <div className="fr-p-2w fr-p-md-6w">

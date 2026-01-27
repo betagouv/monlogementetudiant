@@ -46,6 +46,7 @@ export function applyFrenchContraction(preposition: Preposition, cityName: strin
  * @returns "au X", "aux X", ou "à X" selon le cas
  */
 export function formatCityWithA(cityName: string): string {
+  if (!cityName) return ''
   return applyFrenchContraction('à', cityName)
 }
 
@@ -55,5 +56,6 @@ export function formatCityWithA(cityName: string): string {
  * @returns "du X", "des X", ou "de X" selon le cas
  */
 export function formatCityWithDe(cityName: string): string {
+  if (!cityName) return ''
   return applyFrenchContraction('de', cityName)
 }
