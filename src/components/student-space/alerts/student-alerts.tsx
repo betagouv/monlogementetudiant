@@ -4,11 +4,5 @@ import { getAlerts } from '~/server-only/student/get-alerts'
 export const StudentAlerts = async () => {
   const alertsResponse = await getAlerts()
 
-  return (
-    <>
-      {alertsResponse.results.map((alert) => (
-        <StudentAlert key={alert.id} alert={alert} />
-      ))}
-    </>
-  )
+  return alertsResponse.results.map((alert) => <StudentAlert key={alert.id} alert={alert} />)
 }

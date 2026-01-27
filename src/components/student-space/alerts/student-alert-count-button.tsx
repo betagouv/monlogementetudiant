@@ -9,6 +9,14 @@ export const StudentAlertCountButton = ({ alert }: { alert: TAlert }) => {
   const getHref = () => {
     const searchParams = new URLSearchParams()
 
+    if (alert.has_coliving) {
+      searchParams.set('colocation', 'true')
+    }
+
+    if (alert.is_accessible) {
+      searchParams.set('accessible', 'true')
+    }
+
     if (alert.city) {
       const { bbox } = alert.city
       const expanded = expandBbox(bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax)
