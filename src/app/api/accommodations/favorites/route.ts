@@ -1,18 +1,18 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { auth } from '~/auth'
+import { getServerSession } from '~/auth'
 import { ZPostFavorite } from '~/schemas/favorites/create-favorite'
 
 export async function GET() {
-  const session = await auth()
-  if (!session || !session.accessToken) {
+  const auth = await getServerSession()
+  if (!auth || !auth.session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
     const response = await fetch(`${process.env.API_URL}/accommodations/favorites/`, {
       headers: {
-        Authorization: `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${auth.session.accessToken}`,
         'Content-Type': 'application/json',
       },
       cache: 'no-store',
@@ -30,8 +30,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const session = await auth()
-  if (!session || !session.accessToken) {
+  const auth = await getServerSession()
+  if (!auth || !auth.session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     const response = await fetch(`${process.env.API_URL}/accommodations/favorites/`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${auth.session.accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(validatedData),

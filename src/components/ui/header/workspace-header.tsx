@@ -3,15 +3,16 @@ import { Header } from '@codegouvfr/react-dsfr/Header'
 import { notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { FC } from 'react'
-import { auth } from '~/auth'
+import { getServerSession } from '~/auth'
 import { BrandTop } from '~/components/ui/brand-top'
 import { UserConnectedDropdown } from '~/components/ui/header/user-connected-dropdown'
 import { WorkspaceHeaderNavigation } from '~/components/ui/header/workspace-navigation'
 
 export const WorkspaceHeaderComponent: FC = async () => {
   const t = await getTranslations()
-  const session = await auth()
-  if (!session) {
+  const auth = await getServerSession()
+
+  if (!auth || !auth.session || !auth.user) {
     return notFound()
   }
   return (
@@ -30,7 +31,7 @@ export const WorkspaceHeaderComponent: FC = async () => {
           // >
           //   {t('header.notifications')}
           // </Button>,
-          <UserConnectedDropdown user={session.user} />,
+          <UserConnectedDropdown user={auth.user} />,
         ]}
         brandTop={<BrandTop />}
         serviceTagline={t('header.description')}

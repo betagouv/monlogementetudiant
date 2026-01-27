@@ -5,11 +5,11 @@ import { Card } from '@codegouvfr/react-dsfr/Card'
 import { Tag } from '@codegouvfr/react-dsfr/Tag'
 import clsx from 'clsx'
 import { useRouter } from 'next/navigation'
-import { useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 import { parseAsString, useQueryState } from 'nuqs'
 import { FC } from 'react'
 import { tss } from 'tss-react'
+import { authClient } from '~/auth-client'
 import { FAVORITE_BUTTON_TITLES, SaveAccommodationFavoriteButton } from '~/components/favorites/save-accommodation-favorite-button'
 import {
   FindStudentAccommodationImageCard,
@@ -26,7 +26,7 @@ type AccomodationCardProps = {
 }
 
 export const AccomodationCard: FC<AccomodationCardProps> = ({ className, accomodation, href }) => {
-  const { data: session } = useSession()
+  const { data: session } = authClient.useSession()
   const router = useRouter()
   const [selectedAccommodation] = useQueryState('id', parseAsString)
   const t = useTranslations('findAccomodation.card')

@@ -7,11 +7,11 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import clsx from 'clsx'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { signIn } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 import { FC, useState } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { tss } from 'tss-react'
+import { signInCredentials } from '~/auth-client'
 import { createToast } from '~/components/ui/createToast'
 import { ZCredentialsSignInForm } from '~/schemas/credentials-sign-in/credentials-sign-in'
 
@@ -35,23 +35,19 @@ export const CredentialsSignInForm: FC = () => {
     setIsLoading(true)
 
     try {
-      const result = await signIn('credentials', {
-        email: data.email,
-        password: data.password,
-        redirect: false,
-      })
+      const result = await signInCredentials(data.email, data.password)
 
-      if (result?.error) {
+      if ('error' in result) {
         createToast({
           priority: 'error',
           message: 'Email ou mot de passe incorrect.',
         })
-      } else if (result?.ok) {
+      } else if (result.success) {
         createToast({
           priority: 'success',
           message: 'Vous êtes connecté avec succès !',
         })
-        router.push('/mon-espace')
+        router.push(result.callbackUrl || '/mon-espace')
       } else {
         createToast({
           priority: 'error',

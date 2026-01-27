@@ -1,16 +1,17 @@
-import { auth } from '~/auth'
+import { notFound } from 'next/navigation'
+import { getServerSession } from '~/auth'
 import { TGetFavoritesResponse } from '~/schemas/favorites/get-favorites'
 
 export const getFavorites = async (): Promise<TGetFavoritesResponse> => {
-  const session = await auth()
-  if (!session || !session.accessToken) {
-    throw new Error('Unauthorized')
+  const auth = await getServerSession()
+  if (!auth || !auth.session) {
+    return notFound()
   }
 
   const response = await fetch(`${process.env.API_URL}/accommodations/favorites/`, {
     cache: 'no-store',
     headers: {
-      Authorization: `Bearer ${session.accessToken}`,
+      Authorization: `Bearer ${auth.session.accessToken}`,
       'Content-Type': 'application/json',
     },
   })

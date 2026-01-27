@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
-import { auth } from '~/auth'
+import { getServerSession } from '~/auth'
 import { StudentSpaceNavigation } from '~/components/student-space/navigation/student-space-navigation'
 import { DynamicBreadcrumb } from '~/components/ui/breadcrumb'
 import { FooterComponent } from '~/components/ui/footer/footer'
@@ -23,8 +23,9 @@ export default async function WorkspaceLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const session = await auth()
-  if (!session || session.user.role === 'owner' || !!session.error) {
+  const auth = await getServerSession()
+
+  if (!auth || !auth.session || !auth.user) {
     return notFound()
   }
 

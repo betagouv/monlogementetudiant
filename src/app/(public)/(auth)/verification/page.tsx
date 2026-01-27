@@ -20,7 +20,7 @@ export default async function VerificationPage({ searchParams }: VerificationPag
   }
 
   if (sesame) {
-    redirect(`/api/authentication/verify?sesame=${encodeURIComponent(sesame)}`)
+    redirect(`/api/auth/external-auth/signin/magic-link?sesame=${encodeURIComponent(sesame)}`)
   }
   if (validation_token) {
     redirect(`/api/accounts/students/validate?validation_token=${encodeURIComponent(validation_token)}`)

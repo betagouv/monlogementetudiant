@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
-import { auth } from '~/auth'
+import { getServerSession } from '~/auth'
 
 export async function GET(request: Request) {
-  const session = await auth()
-  if (!session || !session.accessToken) {
+  const auth = await getServerSession()
+  if (!auth || !auth.session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -16,7 +16,7 @@ export async function GET(request: Request) {
 
   const response = await fetch(`${process.env.API_URL}/accommodations/my/${params.size > 0 ? `?${params.toString()}` : ''}`, {
     headers: {
-      Authorization: `Bearer ${session.accessToken}`,
+      Authorization: `Bearer ${auth.session.accessToken}`,
       'Content-Type': 'application/json',
     },
     cache: 'no-store',

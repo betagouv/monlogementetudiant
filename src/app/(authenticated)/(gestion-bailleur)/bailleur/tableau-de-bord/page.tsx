@@ -8,7 +8,7 @@ import { notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { z } from 'zod'
 import { ResidenceChart } from '~/app/(authenticated)/(gestion-bailleur)/bailleur/tableau-de-bord/chart'
-import { auth } from '~/auth'
+import { getServerSession } from '~/auth'
 import avatarCecilia from '~/images/avatar-cecilia.svg'
 import avatarYasmine from '~/images/avatar-yasmine.svg'
 import { getMyAccommodations } from '~/server-only/bailleur/get-my-accommodations'
@@ -18,9 +18,9 @@ import styles from './tableau-de-bord.module.css'
 export default async function TableauDeBordPage() {
   const calendlyUrl = z.string().parse(process.env.NEXT_PUBLIC_CALENDLY_URL)
   const t = await getTranslations('bailleur')
-  const session = await auth()
+  const auth = await getServerSession()
 
-  if (!session) {
+  if (!auth || !auth.user) {
     return notFound()
   }
   const accommodations = await getMyAccommodations()
@@ -28,14 +28,14 @@ export default async function TableauDeBordPage() {
   return (
     <div className="fr-container fr-pb-12w">
       <Breadcrumb
-        currentPageLabel={<>{t('dashboard.breadcrumb.title', { name: session.user.name })}</>}
+        currentPageLabel={<>{t('dashboard.breadcrumb.title', { name: auth.user.name ?? '' })}</>}
         segments={[]}
         className="fr-mt-0 fr-pt-2w"
         classes={{ root: 'fr-mb-0' }}
       />
       <div className="fr-flex fr-align-items-center fr-flex-gap-4v fr-my-4w fr-mt-md-0 fr-mb-md-4w">
         <DataVisualization width={62} height={66} />
-        <h1 className="fr-mb-0">{t('dashboard.welcome.title', { firstname: session.user.firstname })}</h1>
+        <h1 className="fr-mb-0">{t('dashboard.welcome.title', { firstname: auth.user.firstname })}</h1>
       </div>
       <div className="fr-flex fr-direction-column fr-direction-md-row fr-flex-gap-4v">
         <div

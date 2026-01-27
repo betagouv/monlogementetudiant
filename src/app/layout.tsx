@@ -1,13 +1,11 @@
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages, getTranslations } from 'next-intl/server'
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
-import { NextAuthProvider } from '~/providers/next-auth'
 import { TanstackQueryClientProvider } from '~/providers/tanstack-client'
 import '~/globals.css'
 import { Suspense } from 'react'
 import { NextAppDirEmotionCacheProvider } from 'tss-react/next'
 import Matomo from '~/app/matomo'
-import { auth } from '~/auth'
 import { Signout } from '~/components/signout'
 import Toaster from '~/components/ui/toaster'
 import { DsfrHead, getHtmlAttributes } from '~/dsfr/dsfr-head'
@@ -32,7 +30,6 @@ export default async function RootLayout({
 }>) {
   const locale = await getLocale()
   const messages = await getMessages()
-  const session = await auth()
 
   return (
     <html {...getHtmlAttributes({ lang: locale })} style={{ overflowX: 'hidden' }}>
@@ -45,19 +42,17 @@ export default async function RootLayout({
       <body>
         <NextAppDirEmotionCacheProvider options={{ key: 'css' }}>
           <StartDsfrOnHydration />
-          <NextAuthProvider session={session}>
-            <NextIntlClientProvider messages={messages}>
-              <DsfrProvider lang={locale}>
-                <TanstackQueryClientProvider>
-                  <NuqsAdapter>
-                    {children}
-                    <Signout />
-                    <Toaster />
-                  </NuqsAdapter>
-                </TanstackQueryClientProvider>
-              </DsfrProvider>
-            </NextIntlClientProvider>
-          </NextAuthProvider>
+          <NextIntlClientProvider messages={messages}>
+            <DsfrProvider lang={locale}>
+              <TanstackQueryClientProvider>
+                <NuqsAdapter>
+                  {children}
+                  <Signout />
+                  <Toaster />
+                </NuqsAdapter>
+              </TanstackQueryClientProvider>
+            </DsfrProvider>
+          </NextIntlClientProvider>
         </NextAppDirEmotionCacheProvider>
       </body>
     </html>

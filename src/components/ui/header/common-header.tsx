@@ -3,7 +3,7 @@ import { Button } from '@codegouvfr/react-dsfr/Button'
 import { Header } from '@codegouvfr/react-dsfr/Header'
 import { getTranslations } from 'next-intl/server'
 import { FC } from 'react'
-import { auth } from '~/auth'
+import { getServerSession } from '~/auth'
 import { BrandTop } from '~/components/ui/brand-top'
 import { Banner } from '~/components/ui/header/banner/banner'
 import { HeaderNavigation } from '~/components/ui/header/navigation'
@@ -16,7 +16,7 @@ type HeaderComponentProps = {
 
 export const HeaderComponent: FC<HeaderComponentProps> = async ({ withNavigation = true }) => {
   const t = await getTranslations()
-  const session = await auth()
+  const auth = await getServerSession()
 
   return (
     <div>
@@ -37,11 +37,7 @@ export const HeaderComponent: FC<HeaderComponentProps> = async ({ withNavigation
           >
             {t('header.alerts')}
           </Button>,
-          session?.user ? (
-            <UserConnectedDropdown key="user-dropdown" user={session.user} />
-          ) : (
-            <UserSignInDropdown key="user-sign-in-dropdown" />
-          ),
+          auth?.user ? <UserConnectedDropdown key="user-dropdown" user={auth.user} /> : <UserSignInDropdown key="user-sign-in-dropdown" />,
         ]}
         brandTop={<BrandTop />}
         serviceTagline={t('header.description')}
