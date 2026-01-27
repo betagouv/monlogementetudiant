@@ -6,9 +6,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import clsx from 'clsx'
 import { FormProvider, useForm } from 'react-hook-form'
 import { ResidenceAccommodationList } from '~/components/bailleur/details/residence-accommodation-list'
+import { ResidenceDetails } from '~/components/bailleur/details/residence-details'
 import { ResidenceEquipments } from '~/components/bailleur/details/residence-equipments'
 import { ResidenceLocation } from '~/components/bailleur/details/residence-location'
-import { ResidenceDetails } from '~/components/bailleur/details/residence-parametrage'
 import { ResidencePictures } from '~/components/bailleur/details/residence-pictures'
 import { ResidenceRedirection } from '~/components/bailleur/details/residence-redirection'
 import { ResidenceSummary } from '~/components/bailleur/details/residence-summary'
@@ -114,7 +114,7 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
           <UpdateResidencePublication onSubmit={onSubmit} />
         </div>
         <div className="fr-flex fr-direction-md-row fr-direction-column fr-justify-content-space-between fr-py-4w fr-flex-gap-4v">
-          <div className={clsx(styles.container, 'fr-col-md-8')}>
+          <div className={clsx(styles.container, 'fr-col-md-8 boxShadow')}>
             <ResidenceDetails />
             <ResidencePictures accommodation={accommodation} />
             <ResidenceAccommodationList accommodation={accommodation} />
@@ -122,11 +122,11 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
             <ResidenceSummary />
             <ResidenceLocation accommodation={accommodation} />
           </div>
-          <div className={clsx(styles.container, styles.stickyColumn, 'fr-width-full')}>
+          <div className={clsx(styles.container, styles.stickyColumn, 'fr-width-full boxShadow')}>
             <div className="fr-flex fr-justify-content-center fr-p-6w">
               <span className="fr-mb-0 fr-text--xs">Dernière modification {formatRelativeTime(accommodation.properties.updated_at)}</span>
             </div>
-            <ResidenceRedirection />
+            <ResidenceRedirection className="fr-border-top" />
             <div className="fr-flex fr-flex-gap-4v fr-justify-content-center fr-p-2w fr-p-md-4w">
               <Button type="submit" iconId="ri-save-line" disabled={updateMutation.isPending}>
                 Enregistrer

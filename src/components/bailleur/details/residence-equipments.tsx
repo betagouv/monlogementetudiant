@@ -42,7 +42,7 @@ export const ResidenceEquipments = () => {
                 }
 
                 return (
-                  <Tag pressed={hasEquipment} className="fr-mx-1v fr-mb-2v" nativeButtonProps={{ onClick: handleClick }}>
+                  <Tag pressed={hasEquipment} className="fr-mx-1v fr-mb-2v" nativeButtonProps={{ type: 'button', onClick: handleClick }}>
                     {label}
                   </Tag>
                 )

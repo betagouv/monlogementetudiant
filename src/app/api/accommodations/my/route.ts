@@ -29,3 +29,35 @@ export async function GET(request: Request) {
   const data = await response.json()
   return NextResponse.json(data)
 }
+
+export async function POST(request: Request) {
+  const auth = await getServerSession()
+  if (!auth || !auth.session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  try {
+    const formData = await request.formData()
+
+    const response = await fetch(`${process.env.API_URL}/accommodations/my/`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${auth.session.accessToken}`,
+      },
+      body: formData,
+    })
+
+    if (!response.ok) {
+      const errorData = await response.text()
+      return NextResponse.json({ error: errorData }, { status: response.status })
+    }
+
+    const data = await response.json()
+    return NextResponse.json(data)
+  } catch (error) {
+    if (error instanceof Error) {
+      return NextResponse.json({ error: error.message }, { status: 400 })
+    }
+    return NextResponse.json({ error: 'Unknown error occurred' }, { status: 500 })
+  }
+}

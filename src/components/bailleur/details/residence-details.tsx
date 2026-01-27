@@ -20,7 +20,7 @@ export const ResidenceDetails = () => {
         <Input
           label={
             <>
-              {t('accommodationName')} <span className="fr-text-">*</span>
+              {t('accommodationName')} <span className="fr-text-default--error">*</span>
             </>
           }
           nativeInputProps={register('name')}
