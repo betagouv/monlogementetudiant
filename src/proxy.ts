@@ -1,10 +1,11 @@
 import { getCookieCache } from 'better-auth/cookies'
 import { NextRequest, NextResponse } from 'next/server'
+import { ACCESS_TOKEN_EXPIRATION } from '~/auth'
 
 import { AvailableLocales } from '~/i18n/request'
 import { devLog } from '~/lib/dev-log'
 
-const REFRESH_BUFFER_MS = 3 * 60 * 1000 // 3 minutes buffer
+const REFRESH_BUFFER_MS = (ACCESS_TOKEN_EXPIRATION - 2 * 60) * 1000 // 2 minutes before expiration
 
 const AUTHENTICATED_ROUTES = [
   // Pages
@@ -53,15 +54,7 @@ export async function proxy(request: NextRequest) {
   }
 
   const now = Date.now()
-  // const expiresAt = sessionData.accessTokenExpires
-  // const timeUntilExpiry = expiresAt ? expiresAt - now : null
   devLog('[proxy] Session found')
-  // devLog('[proxy] Session found', {
-  //   role: sessionData.role,
-  //   expiresAt: expiresAt ? new Date(expiresAt).toISOString() : 'not set',
-  //   timeUntilExpiry: timeUntilExpiry ? `${Math.round(timeUntilExpiry / 1000)}s` : 'n/a',
-  //   needsRefresh: expiresAt ? now >= expiresAt - REFRESH_BUFFER_MS : false,
-  // })
 
   if (!sessionData.accessTokenExpires || now < sessionData.accessTokenExpires - REFRESH_BUFFER_MS) {
     devLog('[proxy] Token still valid, skipping refresh', sessionData)
