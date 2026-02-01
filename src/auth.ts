@@ -5,19 +5,20 @@ import { headers } from 'next/headers'
 import { cache } from 'react'
 import { externalAuthPlugin, type TUser } from '~/lib/external-auth-plugin'
 
-export const fiveMinutes = 5 * 60
+export const ACCESS_TOKEN_EXPIRATION = 15 * 60 // 15 min
+export const oneDay = 24 * 60 * 60
 
 const options = {
   secret: process.env.AUTH_SECRET,
   baseURL: process.env.NEXT_PUBLIC_APP_URL,
   trustedOrigins: [process.env.NEXT_PUBLIC_APP_URL!, 'http://localhost:3000'],
   session: {
-    expiresIn: fiveMinutes,
-    updateAge: fiveMinutes,
-    freshAge: fiveMinutes,
+    expiresIn: oneDay,
+    updateAge: oneDay,
+    freshAge: ACCESS_TOKEN_EXPIRATION,
     cookieCache: {
       enabled: true,
-      maxAge: fiveMinutes,
+      maxAge: oneDay,
       strategy: 'jwe',
       refreshCache: {
         updateAge: 60,

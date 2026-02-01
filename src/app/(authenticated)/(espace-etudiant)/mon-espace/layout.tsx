@@ -25,7 +25,7 @@ export default async function WorkspaceLayout({
 }>) {
   const auth = await getServerSession()
 
-  if (!auth || !auth.session || !auth.user) {
+  if (!auth || !auth.session || !auth.user || auth.user.role === 'owner') {
     return notFound()
   }
 

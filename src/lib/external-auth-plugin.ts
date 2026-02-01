@@ -280,14 +280,19 @@ export const externalAuthPlugin = () => {
         const { callbackUrl = '/' } = body
 
         try {
-          // Try to get session from cookie to call backend logout
+          // Get session token from cookie
           const sessionToken = await ctx.getSignedCookie(ctx.context.authCookies.sessionToken.name, ctx.context.secret)
 
           if (sessionToken) {
-            const session = await ctx.context.internalAdapter.findSession(sessionToken)
+            const headers = ctx.headers ?? new Headers()
+            const cacheSession = await getCookieCache(headers, {
+              cookiePrefix: 'better-auth',
+              secret: ctx.context.options.secret,
+              strategy: 'jwe',
+            })
 
-            if (session?.session) {
-              const sessionData = session.session as {
+            if (cacheSession?.session) {
+              const sessionData = cacheSession.session as {
                 accessToken?: string
                 refreshToken?: string
                 role?: string
