@@ -4,6 +4,9 @@ const withNextIntl = createNextIntlPlugin()
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  env: {
+    NODE_ENV: process.env.NODE_ENV,
+  },
   images: {
     qualities: [50, 75, 100],
     remotePatterns: [
