@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { auth } from '~/auth'
+import { getServerSession } from '~/auth'
 import { ZCreateAlertRequest } from '~/schemas/alerts/create-alert'
 
 export async function POST(request: Request) {
-  const session = await auth()
-  if (!session || !session.accessToken) {
+  const auth = await getServerSession()
+  if (!auth || !auth.session || !auth.session.accessToken) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     const response = await fetch(`${process.env.API_URL}/alerts/`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${auth.session.accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(validatedData),

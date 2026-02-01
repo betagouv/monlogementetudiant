@@ -1,19 +1,19 @@
 import { NextResponse } from 'next/server'
-import { auth } from '~/auth'
+import { getServerSession } from '~/auth'
 import { ZUpdateAlertRequest } from '~/schemas/alerts/update-alert'
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
-  const session = await auth()
-  if (!session || !session.accessToken) {
+  const auth = await getServerSession()
+  if (!auth || !auth.session || !auth.session.accessToken) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   try {
     const response = await fetch(`${process.env.API_URL}/alerts/${id}/`, {
       method: 'DELETE',
       headers: {
-        Authorization: `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${auth.session.accessToken}`,
         'Content-Type': 'application/json',
       },
     })
@@ -29,8 +29,8 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const session = await auth()
-  if (!session || !session.accessToken) {
+  const auth = await getServerSession()
+  if (!auth || !auth.session || !auth.session.accessToken) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -43,7 +43,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${auth.session.accessToken}`,
       },
       body: JSON.stringify(validatedData),
     })

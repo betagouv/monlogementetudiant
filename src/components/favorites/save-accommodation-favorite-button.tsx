@@ -3,8 +3,8 @@
 import Button from '@codegouvfr/react-dsfr/Button'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
-import { useSession } from 'next-auth/react'
 import { useForm } from 'react-hook-form'
+import { authClient } from '~/auth-client'
 import { useCreateFavorite } from '~/hooks/use-create-favorite'
 import { useDeleteFavorite } from '~/hooks/use-delete-favorite'
 import { useFavorites } from '~/hooks/use-favorites'
@@ -25,7 +25,7 @@ export const SaveAccommodationFavoriteButton = ({
   withLabel?: boolean
   initialFavorites?: TGetFavoritesResponse | null
 }) => {
-  const { data: session } = useSession()
+  const { data: session } = authClient.useSession()
   const router = useRouter()
 
   const { data: favorites } = useFavorites(initialFavorites)
