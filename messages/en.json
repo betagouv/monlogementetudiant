@@ -77,7 +77,7 @@
   },
   "navigation": {
     "home": "Identifier les aides au logement",
-    "prepareBudget": { "title": "Préparer mon budget", "hints": "Conseils pratiques", "calculator": "Calculatrice de budget" },
+    "prepareBudget": { "title": "Préparer mon budget", "hints": "Consulter les conseils pratiques", "calculator": "Calculer mon budget étudiant", "anticipate": "Anticiper mon budget", "studentCities": "S'informer sur les villes étudiantes", "moreCities": "Plus de villes ›" },
     "prepareStudentLife": "Préparer sa vie étudiante",
     "findAccommodation": "Trouver un logement",
     "byAcademies": "Par académies",
