@@ -59,4 +59,9 @@ export const EQUIPMENTS = [
     key: 'cooking_plates',
     label: 'Plaques de cuisson',
   },
+  {
+    icon: 'ri-wifi-line',
+    key: 'wifi',
+    label: 'Wifi',
+  },
 ]

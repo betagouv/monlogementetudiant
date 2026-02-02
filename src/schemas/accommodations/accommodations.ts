@@ -42,6 +42,7 @@ const ZBaseAccommodationInfo = z.object({
   published: z.boolean(),
   available: z.boolean().nullable(),
   scholarship_holders_priority: z.boolean(),
+  wifi: z.boolean(),
 })
 
 const ZApartmentCounts = z.object({
@@ -113,7 +114,10 @@ const ZAmenities = z.object({
 export const ZAccomodation = z.object({
   geometry: ZGeometry,
   id: z.number(),
-  properties: ZBaseAccommodationInfo.merge(ZApartmentCounts).merge(ZApartmentAvailability).merge(ZOwnerInfo).merge(ZPricing),
+  properties: ZBaseAccommodationInfo.extend(ZApartmentCounts.shape)
+    .extend(ZApartmentAvailability.shape)
+    .extend(ZOwnerInfo.shape)
+    .extend(ZPricing.shape),
 })
 
 export type TAccomodation = z.infer<typeof ZAccomodation>
@@ -121,10 +125,10 @@ export type TAccomodation = z.infer<typeof ZAccomodation>
 export const ZAccomodationCard = ZAccomodation.pick({ id: true, geometry: true, properties: true })
 export type TAccomodationCard = z.infer<typeof ZAccomodationCard>
 
-export const ZAccomodationDetails = ZBaseAccommodationInfo.merge(ZApartmentCounts)
-  .merge(ZApartmentAvailability)
-  .merge(ZPricing)
-  .merge(ZAmenities)
+export const ZAccomodationDetails = ZBaseAccommodationInfo.extend(ZApartmentCounts.shape)
+  .extend(ZApartmentAvailability.shape)
+  .extend(ZPricing.shape)
+  .extend(ZAmenities.shape)
   .extend({
     available: z.boolean(),
     geom: ZGeometry,
@@ -157,10 +161,10 @@ export type TPrepareStudentLifeAccommodationResidence = z.infer<typeof ZPrepareS
 
 export const ZAccomodationMy = z.object({
   geometry: ZGeometry,
-  properties: ZBaseAccommodationInfo.merge(ZApartmentCounts)
-    .merge(ZApartmentAvailability)
-    .merge(ZOwnerInfo)
-    .merge(ZPricing)
-    .merge(ZAmenities),
+  properties: ZBaseAccommodationInfo.extend(ZApartmentCounts.shape)
+    .extend(ZApartmentAvailability.shape)
+    .extend(ZOwnerInfo.shape)
+    .extend(ZPricing.shape)
+    .extend(ZAmenities.shape),
 })
 export type TAccomodationMy = z.infer<typeof ZAccomodationMy>
