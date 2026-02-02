@@ -5,7 +5,7 @@ import { headers } from 'next/headers'
 import { cache } from 'react'
 import { externalAuthPlugin, type TUser } from '~/lib/external-auth-plugin'
 
-export const ACCESS_TOKEN_EXPIRATION = 15 * 60 // 15 min
+export const ACCESS_TOKEN_EXPIRATION = 5 * 60 // 5 min
 export const oneDay = 24 * 60 * 60
 
 const options = {
