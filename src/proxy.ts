@@ -104,7 +104,7 @@ export async function proxy(request: NextRequest) {
       headers: {
         'Content-Type': 'application/json',
         Cookie: request.headers.get('cookie') || '',
-        Origin: request.nextUrl.origin,
+        Origin: baseUrl,
       },
       body: JSON.stringify({
         accessToken: newAccessToken,
