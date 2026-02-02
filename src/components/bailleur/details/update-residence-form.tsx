@@ -1,6 +1,7 @@
 'use client'
 
 import Button from '@codegouvfr/react-dsfr/Button'
+import Tag from '@codegouvfr/react-dsfr/Tag'
 import { zodResolver } from '@hookform/resolvers/zod'
 import clsx from 'clsx'
 import { FormProvider, useForm } from 'react-hook-form'
@@ -106,7 +107,10 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
     <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <div className="fr-flex fr-direction-row fr-justify-content-space-between fr-align-items-md-center fr-flex-gap-4v">
-          <h1 className="fr-mb-0">{accommodation.properties.name}</h1>
+          <div className="fr-flex fr-flex-gap-2v fr-align-items-center">
+            <h1 className="fr-mb-0">{accommodation.properties.name}</h1>
+            <Tag>{`${city} (${accommodation.properties.postal_code})`}</Tag>
+          </div>
           <UpdateResidencePublication onSubmit={onSubmit} />
         </div>
         <div className="fr-flex fr-direction-md-row fr-direction-column fr-justify-content-space-between fr-py-4w fr-flex-gap-4v">
