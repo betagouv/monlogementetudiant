@@ -629,7 +629,13 @@
     "titlePart2": "aides",
     "titlePart3": "au logement",
     "descriptionPart1": "20 questions pour estimer vos",
-    "descriptionPart2": "droits et faciliter vos recherches"
+    "descriptionPart2": "droits et faciliter vos recherches",
+    "cta": {
+      "titleLine1": "Trouvez votre prochain",
+      "titleLine2": "logement étudiant",
+      "subtitle": "Plus de 1200 résidences étudiantes référencées partout en France",
+      "button": "Trouver un logement"
+    }
   },
   "budgetSimulator": {
     "titlePart1": "Calculez votre",
