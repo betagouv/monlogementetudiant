@@ -79,7 +79,10 @@ export async function proxy(request: NextRequest) {
     if (!refreshResponse.ok) {
       devLog('[proxy] Django refresh failed:', `${refreshResponse.status} ${refreshResponse.statusText}`)
       devLog('[proxy] Django refresh response:', await refreshResponse.json())
-      return res
+      devLog('[proxy] Refresh token rejected, clearing session and redirecting to home')
+      const redirectRes = NextResponse.redirect(new URL('/', request.url))
+      redirectRes.cookies.set('better-auth.session_token', '', { maxAge: 0, path: '/' })
+      return redirectRes
     }
 
     const data = await refreshResponse.json()
