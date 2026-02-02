@@ -78,6 +78,7 @@ export async function proxy(request: NextRequest) {
 
     if (!refreshResponse.ok) {
       devLog('[proxy] Django refresh failed:', `${refreshResponse.status} ${refreshResponse.statusText}`)
+      devLog('[proxy] Django refresh response:', await refreshResponse.json())
       return res
     }
 
