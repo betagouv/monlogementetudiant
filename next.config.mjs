@@ -4,6 +4,9 @@ const withNextIntl = createNextIntlPlugin()
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  env: {
+    ENABLE_PROXY_LOGS: process.env.ENABLE_PROXY_LOGS,
+  },
   images: {
     qualities: [50, 75, 100],
     remotePatterns: [
