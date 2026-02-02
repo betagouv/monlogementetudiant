@@ -8,24 +8,23 @@ import { type AidResult } from './aid-calculator'
 import styles from './aid-card.module.css'
 
 const AID_LOGOS: Record<string, string> = {
-  apl: '/images/apl.svg',
-  als: '/images/caf.svg',
+  'caf-aides-logement': '/images/caf.svg',
   visale: '/images/visale.svg',
   'mobili-jeune': '/images/al.svg',
   'loca-pass': '/images/al.svg',
-  crous: '/images/logo-crous.svg',
+  'crous-mobilite': '/images/logo-crous.svg',
 }
 
 const AID_LINKS: Record<string, string> = {
-  apl: 'https://www.caf.fr/allocataires/aides-et-demarches/droits-et-prestations/logement/les-aides-personnelles-au-logement',
-  als: 'https://www.caf.fr/allocataires/aides-et-demarches/droits-et-prestations/logement/les-aides-personnelles-au-logement',
+  'caf-aides-logement':
+    'https://www.caf.fr/allocataires/aides-et-demarches/droits-et-prestations/logement/les-aides-personnelles-au-logement',
   visale: 'https://www.visale.fr/',
-  'mobili-jeune': 'https://www.actionlogement.fr/aide-mobili-jeune',
+  'mobili-jeune': 'https://mobilijeune.actionlogement.fr/eligibilite',
   'loca-pass': 'https://www.actionlogement.fr/l-avance-loca-pass',
-  crous: 'https://www.etudiant.gouv.fr/fr/aides-specifiques-702',
+  'crous-mobilite': 'https://www.etudiant.gouv.fr/fr/aides-specifiques-702',
 }
 
-const POTENTIALLY_ELIGIBLE_AIDS = ['apl', 'als', 'crous', 'mobili-jeune']
+const POTENTIALLY_ELIGIBLE_AIDS = ['caf-aides-logement', 'mobili-jeune']
 
 interface AidCardProps {
   aid: AidResult
@@ -59,6 +58,13 @@ export const AidCard: FC<AidCardProps> = ({ aid }) => {
           </div>
         )}
       </div>
+
+      {aid.isEligible && aid.warningMessage && (
+        <div className={clsx('fr-flex fr-align-items-start fr-flex-gap-2v fr-p-2v', styles.warningBox)}>
+          <span className="ri-alert-line" aria-hidden="true" />
+          <span className="fr-text--sm fr-mb-0">{aid.warningMessage}</span>
+        </div>
+      )}
 
       <p className={clsx('fr-text--sm fr-mb-0', styles.description)}>{aid.description}</p>
 

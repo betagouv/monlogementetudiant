@@ -2,20 +2,16 @@ import { type HelpSimulatorFormData } from '~/components/helps-simulator/help-si
 
 // Types
 export type Zone = 1 | 2 | 3
-export type AidId = 'apl' | 'als' | 'visale' | 'mobili-jeune' | 'loca-pass' | 'crous'
-
-export interface ZoneConfig {
-  rentCap: number
-  aplMax: number
-  alsMax: number
-}
+export type AidId = 'caf-aides-logement' | 'visale' | 'mobili-jeune' | 'loca-pass' | 'crous-mobilite'
 
 interface AidDefinition {
   name: string
   description: string
 }
 
-type EligibilityResult = { isEligible: true; amount?: number; amountLabel?: string } | { isEligible: false; ineligibilityReason: string }
+type EligibilityResult =
+  | { isEligible: true; amount?: number; amountLabel?: string; warningMessage?: string }
+  | { isEligible: false; ineligibilityReason: string }
 
 export interface AidResult {
   id: AidId
@@ -24,14 +20,12 @@ export interface AidResult {
   amount?: number
   amountLabel?: string
   ineligibilityReason?: string
+  warningMessage?: string
   description: string
 }
 
 export interface CalculationResult {
   zone: Zone
-  zoneConfig: ZoneConfig
-  rentExceedsCap: boolean
-  cappedRent: number
   aids: AidResult[]
   eligibleCount: number
   totalEstimatedMonthly: number
@@ -40,15 +34,10 @@ export interface CalculationResult {
 
 // Aid definitions (static data)
 const AID_DEFINITIONS: Record<AidId, AidDefinition> = {
-  apl: {
-    name: 'APL - Aide Personnalisée au Logement',
+  'caf-aides-logement': {
+    name: 'Aides au logement de la Caf (APL, ALS)',
     description:
-      "L'APL est une aide de la CAF pour réduire votre loyer. Elle est calculée en fonction de vos revenus, du montant de votre loyer et de votre situation.",
-  },
-  als: {
-    name: 'ALS - Allocation de Logement Sociale',
-    description:
-      "L'ALS aide à payer votre loyer si vous n'êtes pas éligible à l'APL. Elle concerne les logements non conventionnés et varie selon votre zone géographique.",
+      'Les aides au logement de la CAF permettent de réduire votre loyer. Elles sont calculées en fonction de vos revenus, du montant de votre loyer et de votre situation.',
   },
   visale: {
     name: 'Garantie Visale',
@@ -60,22 +49,107 @@ const AID_DEFINITIONS: Record<AidId, AidDefinition> = {
   },
   'loca-pass': {
     name: 'Avance Loca-Pass',
-    description: "Prêt à 0% d'Action Logement pour financer votre dépôt de garantie (jusqu'à 1200€).",
+    description: "Prêt à 0% d'Action Logement pour financer votre dépôt de garantie (jusqu'à 1 200€).",
   },
-  crous: {
-    name: 'Aide spécifique CROUS',
-    description: 'Si vous êtes en difficulté financière, le CROUS peut vous accorder une aide ponctuelle ou annuelle.',
+  'crous-mobilite': {
+    name: 'Aide à la mobilité CROUS (Parcoursup)',
+    description: 'Aide ponctuelle de 500€ pour les anciens boursiers du lycée qui changent de région via Parcoursup.',
   },
 }
 
-// Constants
+// Zone constants
 const ZONE_1_CITIES = ['paris']
 const ZONE_2_CITIES = ['lyon', 'marseille', 'toulouse', 'lille', 'bordeaux', 'nice', 'nantes', 'strasbourg', 'montpellier', 'rennes']
 
-const ZONE_CONFIG: Record<Zone, ZoneConfig> = {
-  1: { rentCap: 350, aplMax: 400, alsMax: 320 },
-  2: { rentCap: 280, aplMax: 320, alsMax: 260 },
-  3: { rentCap: 250, aplMax: 270, alsMax: 220 },
+// Île-de-France cities for Visale zone I
+const ILE_DE_FRANCE_CITIES = [
+  'paris',
+  'boulogne-billancourt',
+  'saint-denis',
+  'argenteuil',
+  'montreuil',
+  'créteil',
+  'nanterre',
+  'versailles',
+  'évry',
+  'cergy',
+  'meaux',
+  'melun',
+  'massy',
+  'pontoise',
+  'bobigny',
+  'vitry-sur-seine',
+  'colombes',
+  'asnières-sur-seine',
+  'courbevoie',
+  'rueil-malmaison',
+  'champigny-sur-marne',
+  'aubervilliers',
+  'aulnay-sous-bois',
+  'drancy',
+  'noisy-le-grand',
+  'ivry-sur-seine',
+  'clichy',
+  'clamart',
+  'fontenay-sous-bois',
+  'sartrouville',
+  'antony',
+  'maisons-alfort',
+  'épinay-sur-seine',
+  'sevran',
+  'pantin',
+  'bondy',
+  'les mureaux',
+  'chelles',
+]
+
+// Cities >100k inhabitants for Visale zone II
+const VISALE_ZONE_2_CITIES = [
+  'lyon',
+  'marseille',
+  'toulouse',
+  'lille',
+  'bordeaux',
+  'nice',
+  'nantes',
+  'strasbourg',
+  'montpellier',
+  'rennes',
+  'reims',
+  'toulon',
+  'le havre',
+  'saint-étienne',
+  'grenoble',
+  'dijon',
+  'angers',
+  'nîmes',
+  'aix-en-provence',
+  'clermont-ferrand',
+  'brest',
+  'tours',
+  'amiens',
+  'limoges',
+  'metz',
+  'perpignan',
+  'besançon',
+  'orléans',
+  'rouen',
+  'mulhouse',
+  'caen',
+  'nancy',
+  'ajaccio',
+  'bastia',
+  'fort-de-france',
+  'pointe-à-pitre',
+  'cayenne',
+  'mamoudzou',
+  'saint-pierre',
+]
+
+const VISALE_RENT_CAPS: Record<Zone, number> = {
+  1: 1000,
+  2: 840,
+  3: 680,
 }
 
 const LOCAL_AIDS: Record<string, string[]> = {
@@ -107,6 +181,13 @@ export function getZone(city: string): Zone {
   return 3
 }
 
+export function getVisaleZone(city: string): Zone {
+  const normalizedCity = city.toLowerCase().trim()
+  if (ILE_DE_FRANCE_CITIES.some((c) => normalizedCity.includes(c))) return 1
+  if (VISALE_ZONE_2_CITIES.some((c) => normalizedCity.includes(c))) return 2
+  return 3
+}
+
 export function getLocalAids(city: string): string[] {
   const normalizedCity = city.toLowerCase().trim()
   for (const [cityKey, aids] of Object.entries(LOCAL_AIDS)) {
@@ -118,95 +199,189 @@ export function getLocalAids(city: string): string[] {
 }
 
 // Individual aid calculators
-function calculateAPL(input: HelpSimulatorFormData, zoneConfig: ZoneConfig, cappedRent: number): AidResult {
+
+function calculateCafAidesLogement(input: HelpSimulatorFormData): AidResult {
   const annualIncome = input.monthlyIncome * 12
+  const rentUnknown = input.rentUnknown === true
+  const hasRent = (input.monthlyRent !== undefined && input.monthlyRent > 0) || rentUnknown
 
-  if (input.status !== 'student') {
-    return buildAidResult('apl', { isEligible: false, ineligibilityReason: 'Réservé aux étudiants' })
+  if (annualIncome >= 15800) {
+    return buildAidResult('caf-aides-logement', {
+      isEligible: false,
+      ineligibilityReason: 'Vos revenus dépassent le plafond de 15 800€/an pour une personne seule',
+    })
   }
 
-  if (annualIncome >= 20000) {
-    return buildAidResult('apl', { isEligible: false, ineligibilityReason: 'Vos revenus dépassent le plafond de 20 000€/an' })
+  if (!hasRent) {
+    return buildAidResult('caf-aides-logement', {
+      isEligible: false,
+      ineligibilityReason: 'Vous devez avoir un loyer à charge',
+    })
   }
 
-  const amount = Math.round(Math.min(cappedRent * 0.6, zoneConfig.aplMax))
-  return buildAidResult('apl', { isEligible: true, amount, amountLabel: `Jusqu'à ${amount}€/mois` })
-}
+  let amount: number | undefined
+  let amountLabel: string
 
-function calculateALS(input: HelpSimulatorFormData, zoneConfig: ZoneConfig, cappedRent: number, aplEligible: boolean): AidResult {
-  const annualIncome = input.monthlyIncome * 12
-
-  if (aplEligible) {
-    return buildAidResult('als', { isEligible: false, ineligibilityReason: "Vous êtes déjà éligible à l'APL (non cumulable)" })
+  if (!rentUnknown && input.monthlyRent !== undefined) {
+    amount = Math.round(Math.min(input.monthlyRent * 0.5, 300))
+    amountLabel = `Jusqu'à ${amount}€/mois`
+  } else {
+    amountLabel = "Jusqu'à 300€/mois"
   }
 
-  if (annualIncome >= 25000) {
-    return buildAidResult('als', { isEligible: false, ineligibilityReason: 'Vos revenus dépassent le plafond de 25 000€/an' })
+  let warningMessage: string | undefined
+  if (annualIncome >= 14000 && annualIncome < 15800) {
+    warningMessage =
+      'Vos revenus sont proches du plafond accepté par la Caf pour une personne seule. Nous vous invitons à vérifier votre éligibilité directement sur le simulateur de la Caf.'
   }
 
-  const amount = Math.round(Math.min(cappedRent * 0.5, zoneConfig.alsMax))
-  return buildAidResult('als', { isEligible: true, amount, amountLabel: `Jusqu'à ${amount}€/mois` })
+  return buildAidResult('caf-aides-logement', { isEligible: true, amount, amountLabel, warningMessage })
 }
 
 function calculateVisale(input: HelpSimulatorFormData): AidResult {
-  if (input.age > 30 && input.status !== 'student') {
-    return buildAidResult('visale', { isEligible: false, ineligibilityReason: 'Réservé aux moins de 30 ans ou étudiants' })
+  const rentUnknown = input.rentUnknown === true
+
+  if (input.age < 18 || input.age > 30) {
+    return buildAidResult('visale', {
+      isEligible: false,
+      ineligibilityReason: 'Réservé aux personnes âgées de 18 à 30 ans',
+    })
+  }
+
+  if (input.hasGuarantor !== 'no') {
+    return buildAidResult('visale', {
+      isEligible: false,
+      ineligibilityReason: "La Garantie Visale s'adresse aux personnes n'ayant pas de garant",
+    })
+  }
+
+  if (!rentUnknown && input.monthlyRent !== undefined && input.monthlyRent > 0) {
+    const visaleZone = getVisaleZone(input.city)
+    const rentCap = VISALE_RENT_CAPS[visaleZone]
+    if (input.monthlyRent >= rentCap) {
+      return buildAidResult('visale', {
+        isEligible: false,
+        ineligibilityReason: `Votre loyer dépasse le plafond Visale de ${rentCap}€ pour votre zone`,
+      })
+    }
   }
 
   return buildAidResult('visale', { isEligible: true, amountLabel: "Garantie gratuite jusqu'à 36 mois" })
 }
 
 function calculateMobiliJeune(input: HelpSimulatorFormData): AidResult {
+  const rentUnknown = input.rentUnknown === true
+  const hasRent = (input.monthlyRent !== undefined && input.monthlyRent > 0) || rentUnknown
+
   if (input.status !== 'apprentice') {
-    return buildAidResult('mobili-jeune', { isEligible: false, ineligibilityReason: 'Réservé aux apprentis et alternants' })
+    return buildAidResult('mobili-jeune', {
+      isEligible: false,
+      ineligibilityReason: 'Réservé aux apprentis et alternants',
+    })
   }
 
   if (input.age >= 30) {
-    return buildAidResult('mobili-jeune', { isEligible: false, ineligibilityReason: 'Réservé aux moins de 30 ans' })
+    return buildAidResult('mobili-jeune', {
+      isEligible: false,
+      ineligibilityReason: 'Réservé aux moins de 30 ans',
+    })
   }
 
-  if (input.monthlyRent <= 0) {
-    return buildAidResult('mobili-jeune', { isEligible: false, ineligibilityReason: 'Vous devez avoir un loyer à charge' })
+  if (!hasRent) {
+    return buildAidResult('mobili-jeune', {
+      isEligible: false,
+      ineligibilityReason: 'Vous devez avoir un loyer à charge',
+    })
   }
 
-  const rawAmount = input.monthlyRent * 0.3
-  const amount = Math.round(Math.max(10, Math.min(rawAmount, 100)))
-  return buildAidResult('mobili-jeune', { isEligible: true, amount, amountLabel: `Entre 10€ et ${amount}€/mois` })
+  const warningMessage =
+    "Le montant de l'aide Mobili-Jeune dépend de votre entreprise de rattachement. Nous vous invitons à faire la simulation directement sur le site d'Action Logement."
+
+  if (!rentUnknown && input.monthlyRent !== undefined) {
+    const cafAmount = Math.round(Math.min(input.monthlyRent * 0.5, 300))
+    const rawAmount = input.monthlyRent - cafAmount - 10
+    const amount = Math.round(Math.max(10, Math.min(rawAmount, 100)))
+    return buildAidResult('mobili-jeune', {
+      isEligible: true,
+      amount,
+      amountLabel: `Entre 10€ et ${amount}€/mois`,
+      warningMessage,
+    })
+  }
+
+  return buildAidResult('mobili-jeune', {
+    isEligible: true,
+    amountLabel: 'Entre 10€ et 100€/mois',
+    warningMessage,
+  })
 }
 
-function calculateLocaPass(): AidResult {
-  return buildAidResult('loca-pass', { isEligible: true, amountLabel: "Prêt 0% jusqu'à 1 200€" })
+function calculateLocaPass(input: HelpSimulatorFormData): AidResult {
+  const rentUnknown = input.rentUnknown === true
+  const hasRent = (input.monthlyRent !== undefined && input.monthlyRent > 0) || rentUnknown
+
+  if (input.age >= 30) {
+    return buildAidResult('loca-pass', {
+      isEligible: false,
+      ineligibilityReason: 'Réservé aux moins de 30 ans',
+    })
+  }
+
+  if (input.status === 'student') {
+    return buildAidResult('loca-pass', {
+      isEligible: false,
+      ineligibilityReason: 'Réservé aux étudiants salariés et aux apprentis',
+    })
+  }
+
+  if (!hasRent) {
+    return buildAidResult('loca-pass', {
+      isEligible: false,
+      ineligibilityReason: 'Vous devez avoir un loyer à charge',
+    })
+  }
+
+  return buildAidResult('loca-pass', {
+    isEligible: true,
+    amountLabel: "Prêt 0% jusqu'à 1 200€, remboursable en 25 mois",
+    warningMessage:
+      "Il s'agit d'un prêt et non pas d'une aide, cela implique des remboursements réguliers à prendre en compte dans son budget.",
+  })
 }
 
-function calculateCROUS(input: HelpSimulatorFormData): AidResult {
-  const annualIncome = input.monthlyIncome * 12
-
-  if (input.status !== 'student') {
-    return buildAidResult('crous', { isEligible: false, ineligibilityReason: 'Réservé aux étudiants' })
+function calculateCrousMobilite(input: HelpSimulatorFormData): AidResult {
+  if (input.changingRegion !== 'yes') {
+    return buildAidResult('crous-mobilite', {
+      isEligible: false,
+      ineligibilityReason: 'Vous ne changez pas de région via Parcoursup',
+    })
   }
 
-  if (annualIncome >= 15000) {
-    return buildAidResult('crous', { isEligible: false, ineligibilityReason: 'Vos revenus dépassent le plafond de 15 000€/an' })
+  if (input.boursierLycee !== 'yes') {
+    return buildAidResult('crous-mobilite', {
+      isEligible: false,
+      ineligibilityReason: "Vous n'étiez pas boursier(e) au lycée",
+    })
   }
 
-  return buildAidResult('crous', { isEligible: true, amountLabel: 'Montant variable selon situation' })
+  return buildAidResult('crous-mobilite', {
+    isEligible: true,
+    amount: 500,
+    amountLabel: '500€ (aide ponctuelle)',
+  })
 }
 
 // Main calculation function
 export function calculateAllAids(input: HelpSimulatorFormData): CalculationResult {
   const zone = getZone(input.city)
-  const zoneConfig = ZONE_CONFIG[zone]
-  const rentExceedsCap = input.monthlyRent > zoneConfig.rentCap
-  const cappedRent = Math.min(input.monthlyRent, zoneConfig.rentCap)
 
-  const aplResult = calculateAPL(input, zoneConfig, cappedRent)
-  const alsResult = calculateALS(input, zoneConfig, cappedRent, aplResult.isEligible)
+  const cafResult = calculateCafAidesLogement(input)
   const visaleResult = calculateVisale(input)
   const mobiliJeuneResult = calculateMobiliJeune(input)
-  const locaPassResult = calculateLocaPass()
-  const crousResult = calculateCROUS(input)
+  const locaPassResult = calculateLocaPass(input)
+  const crousMobiliteResult = calculateCrousMobilite(input)
 
-  const aids = [aplResult, alsResult, visaleResult, mobiliJeuneResult, locaPassResult, crousResult]
+  const aids = [cafResult, visaleResult, mobiliJeuneResult, locaPassResult, crousMobiliteResult]
 
   const eligibleCount = aids.filter((aid) => aid.isEligible).length
   const totalEstimatedMonthly = aids.reduce((total, aid) => total + (aid.amount || 0), 0)
@@ -214,9 +389,6 @@ export function calculateAllAids(input: HelpSimulatorFormData): CalculationResul
 
   return {
     zone,
-    zoneConfig,
-    rentExceedsCap,
-    cappedRent,
     aids,
     eligibleCount,
     totalEstimatedMonthly,

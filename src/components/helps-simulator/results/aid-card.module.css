@@ -44,3 +44,10 @@
 .amountLabel {
   font-weight: 700;
 }
+
+.warningBox {
+  background-color: var(--background-contrast-warning);
+  border-radius: 4px;
+  color: var(--text-default-warning);
+  font-size: 0.875rem;
+}

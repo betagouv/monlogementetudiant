@@ -28,8 +28,8 @@ const stepSchemas = {
 
 const STEP_FIELDS: Record<number, (keyof HelpSimulatorFormData)[]> = {
   1: ['age', 'status'],
-  2: ['monthlyIncome', 'monthlyRent'],
-  3: ['city', 'hasGuarantor'],
+  2: ['monthlyIncome', 'monthlyRent', 'rentUnknown'],
+  3: ['city', 'hasGuarantor', 'changingRegion', 'boursierLycee'],
 }
 
 export const HelpSimulatorForm: FC = () => {
@@ -43,8 +43,11 @@ export const HelpSimulatorForm: FC = () => {
       status: urlState.status ?? undefined,
       monthlyIncome: urlState.monthlyIncome ?? undefined,
       monthlyRent: urlState.monthlyRent ?? undefined,
+      rentUnknown: urlState.rentUnknown ?? false,
       city: urlState.city || '',
       hasGuarantor: urlState.hasGuarantor ?? undefined,
+      changingRegion: urlState.changingRegion ?? undefined,
+      boursierLycee: urlState.boursierLycee ?? undefined,
     },
   })
 
@@ -62,11 +65,20 @@ export const HelpSimulatorForm: FC = () => {
     if (urlState.monthlyRent !== null && urlState.monthlyRent !== currentValues.monthlyRent) {
       form.setValue('monthlyRent', urlState.monthlyRent)
     }
+    if (urlState.rentUnknown !== currentValues.rentUnknown) {
+      form.setValue('rentUnknown', urlState.rentUnknown)
+    }
     if (urlState.city && urlState.city !== currentValues.city) {
       form.setValue('city', urlState.city)
     }
     if (urlState.hasGuarantor !== null && urlState.hasGuarantor !== currentValues.hasGuarantor) {
       form.setValue('hasGuarantor', urlState.hasGuarantor)
+    }
+    if (urlState.changingRegion !== null && urlState.changingRegion !== currentValues.changingRegion) {
+      form.setValue('changingRegion', urlState.changingRegion)
+    }
+    if (urlState.boursierLycee !== null && urlState.boursierLycee !== currentValues.boursierLycee) {
+      form.setValue('boursierLycee', urlState.boursierLycee)
     }
   }, [urlState, form])
 
@@ -88,11 +100,17 @@ export const HelpSimulatorForm: FC = () => {
     const result = stepSchema.safeParse(values)
 
     if (!result.success) {
-      for (const error of result.error.issues) {
-        const fieldName = error.path[0] as keyof HelpSimulatorFormData
-        form.setError(fieldName, { message: error.message })
+      const issues = values.rentUnknown ? result.error.issues.filter((e) => e.path[0] !== 'monthlyRent') : result.error.issues
+
+      if (issues.length === 0) {
+        // All errors were monthlyRent errors skipped because rentUnknown is checked
+      } else {
+        for (const error of issues) {
+          const fieldName = error.path[0] as keyof HelpSimulatorFormData
+          form.setError(fieldName, { message: error.message })
+        }
+        return
       }
-      return
     }
 
     const stepFields = STEP_FIELDS[currentStep] || []
@@ -113,9 +131,12 @@ export const HelpSimulatorForm: FC = () => {
         age: values.age,
         status: values.status,
         monthlyIncome: values.monthlyIncome,
-        monthlyRent: values.monthlyRent,
+        monthlyRent: values.monthlyRent ?? null,
+        rentUnknown: values.rentUnknown,
         city: values.city,
         hasGuarantor: values.hasGuarantor,
+        changingRegion: values.changingRegion ?? null,
+        boursierLycee: values.boursierLycee ?? null,
       })
       setCurrentStep(4)
     }
@@ -127,8 +148,11 @@ export const HelpSimulatorForm: FC = () => {
       status: undefined,
       monthlyIncome: undefined,
       monthlyRent: undefined,
+      rentUnknown: false,
       city: '',
       hasGuarantor: undefined,
+      changingRegion: undefined,
+      boursierLycee: undefined,
     })
     clearUrlState()
     setCurrentStep(1)

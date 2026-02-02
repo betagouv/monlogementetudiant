@@ -1,6 +1,7 @@
 'use client'
 
 import { Input } from '@codegouvfr/react-dsfr/Input'
+import { Money } from '@codegouvfr/react-dsfr/picto'
 import Backpack from '@codegouvfr/react-dsfr/picto/Backpack'
 import Ecosystem from '@codegouvfr/react-dsfr/picto/Ecosystem'
 import { RadioButtons } from '@codegouvfr/react-dsfr/RadioButtons'
@@ -36,13 +37,12 @@ export const HelpSimulatorStep1: FC = () => {
         stateRelatedMessage={errors.status?.message}
         className="fr-mb-0"
         classes={{
-          content: 'fr-flex fr-flex-gap-4v fr-align-items-center fr-justify-content-space-between',
-          inputGroup: 'fr-width-full fr-mb-0 fr-mt-0',
+          content: 'fr-flex fr-flex-gap-4v fr-align-items-center fr-flex-wrap',
+          inputGroup: 'fr-mb-0 fr-mt-0',
         }}
         options={[
           {
             illustration: <Backpack width={56} height={56} />,
-
             label: 'Étudiant',
             nativeInputProps: {
               ...register('status'),
@@ -50,8 +50,15 @@ export const HelpSimulatorStep1: FC = () => {
             },
           },
           {
+            illustration: <Money width={56} height={56} />,
+            label: 'Étudiant salarié',
+            nativeInputProps: {
+              ...register('status'),
+              value: 'employed-student',
+            },
+          },
+          {
             illustration: <Ecosystem width={56} height={56} />,
-
             label: 'Apprenti / Alternant',
             nativeInputProps: {
               ...register('status'),

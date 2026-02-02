@@ -52,6 +52,50 @@ export const HelpSimulatorStep3: FC = () => {
           },
         ]}
       />
+      <RadioButtons
+        legend="Allez-vous étudier dans une autre région que celle où vous viviez pendant le lycée (suite à une admission sur Parcoursup) ?"
+        name="changingRegion"
+        state={errors.changingRegion ? 'error' : undefined}
+        stateRelatedMessage={errors.changingRegion?.message}
+        options={[
+          {
+            label: 'Oui',
+            nativeInputProps: {
+              ...register('changingRegion'),
+              value: 'yes',
+            },
+          },
+          {
+            label: 'Non',
+            nativeInputProps: {
+              ...register('changingRegion'),
+              value: 'no',
+            },
+          },
+        ]}
+      />
+      <RadioButtons
+        legend="Étiez-vous boursier(e) au lycée l'année dernière ?"
+        name="boursierLycee"
+        state={errors.boursierLycee ? 'error' : undefined}
+        stateRelatedMessage={errors.boursierLycee?.message}
+        options={[
+          {
+            label: 'Oui',
+            nativeInputProps: {
+              ...register('boursierLycee'),
+              value: 'yes',
+            },
+          },
+          {
+            label: 'Non',
+            nativeInputProps: {
+              ...register('boursierLycee'),
+              value: 'no',
+            },
+          },
+        ]}
+      />
     </>
   )
 }

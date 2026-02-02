@@ -1,20 +1,24 @@
 'use client'
 
-import { parseAsInteger, parseAsString, parseAsStringLiteral, useQueryStates } from 'nuqs'
+import { parseAsBoolean, parseAsInteger, parseAsString, parseAsStringLiteral, useQueryStates } from 'nuqs'
 import { useMemo } from 'react'
 import { type HelpSimulatorFormData } from '~/components/helps-simulator/help-simulator-schema'
 import { type CalculationResult, calculateAllAids } from '~/components/helps-simulator/results/aid-calculator'
 
-const statusOptions = ['student', 'apprentice'] as const
+const statusOptions = ['student', 'apprentice', 'employed-student'] as const
 const guarantorOptions = ['yes', 'no', 'unknown'] as const
+const yesNoOptions = ['yes', 'no'] as const
 
 const formParsers = {
   age: parseAsInteger,
   status: parseAsStringLiteral(statusOptions),
   monthlyIncome: parseAsInteger,
   monthlyRent: parseAsInteger,
+  rentUnknown: parseAsBoolean.withDefault(false),
   city: parseAsString.withDefault(''),
   hasGuarantor: parseAsStringLiteral(guarantorOptions),
+  changingRegion: parseAsStringLiteral(yesNoOptions),
+  boursierLycee: parseAsStringLiteral(yesNoOptions),
 }
 
 export type FormUrlState = {
@@ -22,8 +26,11 @@ export type FormUrlState = {
   status: (typeof statusOptions)[number] | null
   monthlyIncome: number | null
   monthlyRent: number | null
+  rentUnknown: boolean
   city: string
   hasGuarantor: (typeof guarantorOptions)[number] | null
+  changingRegion: (typeof yesNoOptions)[number] | null
+  boursierLycee: (typeof yesNoOptions)[number] | null
 }
 
 export const useHelpSimulatorData = () => {
@@ -34,7 +41,7 @@ export const useHelpSimulatorData = () => {
       urlState.age === null ||
       urlState.status === null ||
       urlState.monthlyIncome === null ||
-      urlState.monthlyRent === null ||
+      (!urlState.rentUnknown && urlState.monthlyRent === null) ||
       !urlState.city ||
       urlState.hasGuarantor === null
     ) {
@@ -44,9 +51,12 @@ export const useHelpSimulatorData = () => {
       age: urlState.age,
       status: urlState.status,
       monthlyIncome: urlState.monthlyIncome,
-      monthlyRent: urlState.monthlyRent,
+      monthlyRent: urlState.rentUnknown ? undefined : (urlState.monthlyRent ?? undefined),
+      rentUnknown: urlState.rentUnknown,
       city: urlState.city,
       hasGuarantor: urlState.hasGuarantor,
+      changingRegion: urlState.changingRegion ?? undefined,
+      boursierLycee: urlState.boursierLycee ?? undefined,
     }
   }, [urlState])
 
@@ -61,8 +71,11 @@ export const useHelpSimulatorData = () => {
       status: null,
       monthlyIncome: null,
       monthlyRent: null,
+      rentUnknown: false,
       city: '',
       hasGuarantor: null,
+      changingRegion: null,
+      boursierLycee: null,
     })
   }
 
