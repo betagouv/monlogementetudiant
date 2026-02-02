@@ -1,5 +1,6 @@
 import { fr, RiIconClassName } from '@codegouvfr/react-dsfr'
 import { Tag, TagProps } from '@codegouvfr/react-dsfr/Tag'
+import { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 import { AccommodationAvailability } from '~/app/(public)/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-availability'
 import AccommodationDescription from '~/app/(public)/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-description'
@@ -22,6 +23,17 @@ import { getFavorites } from '~/server-only/student/get-favorites'
 import { calculateAvailability } from '~/utils/calculateAvailability'
 import { formatCityWithA } from '~/utils/french-contraction'
 import styles from './logement.module.css'
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string; location: string }> }): Promise<Metadata> {
+  const t = await getTranslations('metadata')
+  const { slug } = await params
+  const accommodation = await getAccommodationById(slug)
+  const cityFormatted = formatCityWithA(accommodation.city)
+  return {
+    title: t('accommodation.title', { name: accommodation.name, cityFormatted }),
+    description: t('accommodation.description', { name: accommodation.name, cityFormatted }),
+  }
+}
 
 export default async function AccommodationPage({ params }: { params: Promise<{ slug: string; location: string }> }) {
   const t = await getTranslations('accomodation')

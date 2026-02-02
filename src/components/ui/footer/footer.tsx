@@ -122,7 +122,7 @@ export const CommonFooter = async () => {
       linkList={linkList as NonNullable<FooterProps['linkList']>}
       homeLinkProps={{
         href: '/',
-        title: t('metadata.homeLinkTitle'),
+        title: t('metadata.home.title'),
       }}
       contentDescription={
         <>

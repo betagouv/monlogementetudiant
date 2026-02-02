@@ -23,7 +23,7 @@ export const CommonHeader: FC<CommonHeaderProps> = async ({ withNavigation = tru
       <Header
         homeLinkProps={{
           href: '/',
-          title: t('metadata.homeLinkTitle'),
+          title: t('metadata.home.title'),
         }}
         quickAccessItems={[
           <Button

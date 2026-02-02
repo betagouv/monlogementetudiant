@@ -37,9 +37,28 @@
     "card": "Chargement de la carte..."
   },
   "metadata": {
-    "title": "Mon logement étudiant",
-    "description": "Mon logement étudiant - Votre guide à l'accès au logement étudiant",
-    "homeLinkTitle": "Accueil - Mon logement étudiant",
+    "home": {
+      "title": "Mon Logement Étudiant - Comparez les offres de logements étudiants",
+      "description": "Mon Logement Étudiant vous aide à trouver rapidement un logement adapté à votre budget : studios, colocations, résidences étudiantes partout en France."
+    },
+    "search": {
+      "title": "Trouver votre prochain logement étudiant",
+      "description": "Trouvez facilement votre logement étudiant : studio, colocation, résidence. Comparez les offres de logements près de votre campus"
+    },
+    "searchDetails": {
+      "title": "Trouver votre prochain logement étudiant {locationFormatted}",
+      "description": "Trouvez facilement votre logement étudiant à {locationFormatted} : studio, colocation, résidence. Comparez les offres de logements près de votre campus"
+    },
+    "accommodation": {
+      "title": "Logement étudiant {name} {cityFormatted}",
+      "description": "Trouvez votre logement étudiant dans la résidence {name} {cityFormatted}"
+    },
+    "prepareBudget": {
+      "title": "Calculer son budget étudiant",
+      "description": "Gérez vos finances facilement et visualisez votre budget mensuel en temps réel"
+    },
+    "title": "Mon Logement Étudiant",
+    "description": "Mon Logement Étudiant - Votre guide à l'accès au logement étudiant",
     "workspace": {
       "description": "Votre espace gestionnaire",
       "title": "Espace gestionnaire - Gestion de vos résidences"
@@ -77,7 +96,14 @@
   },
   "navigation": {
     "home": "Identifier les aides au logement",
-    "prepareBudget": { "title": "Préparer mon budget", "hints": "Consulter les conseils pratiques", "calculator": "Calculer mon budget étudiant", "anticipate": "Anticiper mon budget", "studentCities": "S'informer sur les villes étudiantes", "moreCities": "Plus de villes ›" },
+    "prepareBudget": {
+      "title": "Préparer mon budget",
+      "hints": "Consulter les conseils pratiques",
+      "calculator": "Calculer mon budget étudiant",
+      "anticipate": "Anticiper mon budget",
+      "studentCities": "S'informer sur les villes étudiantes",
+      "moreCities": "Plus de villes ›"
+    },
     "prepareStudentLife": "Préparer sa vie étudiante",
     "findAccommodation": "Trouver un logement",
     "byAcademies": "Par académies",

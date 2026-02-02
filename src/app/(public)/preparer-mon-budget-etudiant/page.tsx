@@ -6,6 +6,14 @@ import { PrepareBudgetSidemenu } from '~/app/(public)/preparer-mon-budget-etudia
 import { DynamicBreadcrumb } from '~/components/ui/breadcrumb'
 import styles from './preparer-mon-budget-etudiant.module.css'
 
+export const generateMetadata = async () => {
+  const t = await getTranslations('metadata')
+  return {
+    title: t('prepareBudget.title'),
+    description: t('prepareBudget.description'),
+  }
+}
+
 export default async function PrepareBudgetPage() {
   const t = await getTranslations('prepareBudget')
   return (

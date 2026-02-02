@@ -23,6 +23,18 @@ import studefi from '~/images/studefi.svg'
 import { getPopularCities } from '~/server-only/get-popular-cities'
 import styles from './home.module.css'
 
+export const generateMetadata = async () => {
+  const t = await getTranslations('metadata')
+  return {
+    description: t('home.description'),
+    title: t('home.title'),
+    robots: {
+      index: false,
+      follow: false,
+    },
+  }
+}
+
 export default async function Home() {
   const tHome = await getTranslations('home')
   const t = await getTranslations()
@@ -45,7 +57,7 @@ export default async function Home() {
               </h2>
             </div>
             <div className={clsx(fr.cx('fr-col-md-5'), 'boxShadow', styles.simulatorCard)}>
-              <h2>{tHome('title')}</h2>
+              <h3 className="fr-h2">{tHome('title')}</h3>
               <p className="fr-text--lg">{tHome('description')}</p>
               <div className={styles.logoContainer}>
                 <Image src={espacil.src} width={120} height={50} alt="Logo Espacil" />
@@ -74,7 +86,7 @@ export default async function Home() {
       </div>
       <div className={clsx(fr.cx('fr-container'), styles.mainContainer)}>
         <div className={clsx(fr.cx('fr-container'), styles.headerSection)}>
-          <h1 className={styles.headerSectionTitle}>{tHome('mainSection.title')}</h1>
+          <h2 className={clsx('fr-h1', styles.headerSectionTitle)}>{tHome('mainSection.title')}</h2>
           <p className="fr-text--lg">
             {tHome.rich('mainSection.description', {
               part1: (chunks) => <>{chunks}</>,
@@ -90,7 +102,7 @@ export default async function Home() {
         <div className={styles.featuresContainer}>
           <div className={clsx('boxShadow', styles.featureCard)}>
             <div className={styles.cardContent}>
-              <h1 className={styles.cardTitle}>{tHome('features.exploreCities.title')}</h1>
+              <h3 className={clsx('fr-h1', styles.cardTitle)}>{tHome('features.exploreCities.title')}</h3>
               <div className={styles.citiesGrid}>
                 {sortedPopularCities.map((city) => (
                   <Button
@@ -128,7 +140,7 @@ export default async function Home() {
               />
             </div>
             <div className={styles.cardContent}>
-              <h1 className={styles.cardTitle}>{tHome('features.findAccommodation.title')}</h1>
+              <h3 className={clsx('fr-h1', styles.cardTitle)}>{tHome('features.findAccommodation.title')}</h3>
               <FindAccommodationForm />
             </div>
             <Image
@@ -141,7 +153,7 @@ export default async function Home() {
           <div className={clsx('boxShadow', styles.featureCard)}>
             <div className={styles.cardContent}>
               <div>
-                <h1 className={styles.cardTitle}>{tHome('features.prepareBudget.title')}</h1>
+                <h3 className={clsx('fr-h1', styles.cardTitle)}>{tHome('features.prepareBudget.title')}</h3>
                 <p className="fr-text--lg">{tHome('features.prepareBudget.description')}</p>
               </div>
               <Button size="large" linkProps={{ href: '/preparer-mon-budget-etudiant' }}>
@@ -208,7 +220,7 @@ export default async function Home() {
       <div className={clsx(fr.cx('fr-container'), styles.faqContainer)}>
         <div className={styles.faqContent}>
           <div>
-            <h1 className={styles.faqHeader}>{tHome('faq.title')}</h1>
+            <h3 className={clsx('fr-h1', styles.faqHeader)}>{tHome('faq.title')}</h3>
           </div>
 
           <FaqQuestionsAnswers contents={FAQ_CONTENTS.slice(0, 5)} />

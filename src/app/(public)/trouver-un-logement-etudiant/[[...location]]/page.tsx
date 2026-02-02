@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { fr } from '@codegouvfr/react-dsfr'
 import { Metadata } from 'next'
 import { redirect } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
 import { FindStudentAccommodationBanner } from '~/components/find-student-accomodation/find-student-accommodation-banner'
 import { FindStudentAccommodationTitle } from '~/components/find-student-accomodation/header/find-student-accommodation-title'
 import { FindStudentAccomodationHeader } from '~/components/find-student-accomodation/header/find-student-accomodation-header'
@@ -13,6 +14,7 @@ import { expandBbox } from '~/components/map/map-utils'
 import { TTerritories } from '~/schemas/territories'
 import { getAccommodations } from '~/server-only/get-accommodations'
 import { getTerritories } from '~/server-only/get-territories'
+import { formatCityWithA } from '~/utils/french-contraction'
 
 const getTerritoriesCategoryKey = (categoryKey: 'ville' | 'academie' | 'departement') => {
   const keys = {
@@ -36,7 +38,28 @@ export async function generateMetadata({ params }: { params: Promise<{ location:
     }
   }
 
-  return {}
+  const t = await getTranslations('metadata')
+
+  if ((routeCategoryKey === 'ville' || routeCategoryKey === 'departement') && awaitedParams?.location?.[1]) {
+    const routeLocation = decodeURIComponent(awaitedParams.location[1])
+    const territories = await getTerritories(routeLocation)
+    const territory = (territories[getTerritoriesCategoryKey(routeCategoryKey)] || []).find(
+      (territory) => territory.name === routeLocation || territory.slug === routeLocation,
+    )
+
+    if (territory) {
+      const locationFormatted = formatCityWithA(territory.name)
+      return {
+        title: t('searchDetails.title', { locationFormatted }),
+        description: t('searchDetails.description', { locationFormatted }),
+      }
+    }
+  }
+
+  return {
+    title: t('search.title'),
+    description: t('search.description'),
+  }
 }
 
 export default async function FindStudentAccommodationPage({
