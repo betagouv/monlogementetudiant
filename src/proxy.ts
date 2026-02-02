@@ -34,6 +34,13 @@ export async function proxy(request: NextRequest) {
     return res
   }
 
+  // Guard against redirect loop: skip refresh if we just did one
+  if (request.cookies.has('__session_refreshed')) {
+    devLog('[proxy] Skipping refresh (just redirected)')
+    res.cookies.delete('__session_refreshed')
+    return res
+  }
+
   devLog('[proxy] Checking session for token refresh')
   const session = await getCookieCache(request.headers, {
     cookiePrefix: 'better-auth',
@@ -107,10 +114,24 @@ export async function proxy(request: NextRequest) {
       return res
     }
 
-    // 3. Copy cookies from the response to the middleware response
+    // 3. Propagate refreshed cookies
+    // For page navigations, redirect to force browser to re-request with new cookies.
+    // This avoids the race condition where Server Components run with stale request cookies.
+    // API routes keep current behavior (Set-Cookie on response, client handles it).
+    if (!pathname.startsWith('/api/')) {
+      const redirectRes = NextResponse.redirect(request.url)
+      const setCookieHeader = updateResponse.headers.get('set-cookie')
+      if (setCookieHeader) {
+        redirectRes.headers.set('Set-Cookie', setCookieHeader)
+      }
+      // Guard cookie to prevent redirect loop on the next request
+      redirectRes.cookies.set('__session_refreshed', '1', { maxAge: 60, httpOnly: true, path: '/' })
+      devLog('[proxy] Redirecting to refresh cookies for page navigation')
+      return redirectRes
+    }
+
     const setCookieHeader = updateResponse.headers.get('set-cookie')
     if (setCookieHeader) {
-      // Parse and set each cookie
       const cookies = setCookieHeader.split(/,(?=\s*[^;]+=[^;]+)/)
       for (const cookie of cookies) {
         const [nameValue] = cookie.split(';')

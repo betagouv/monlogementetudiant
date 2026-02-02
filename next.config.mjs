@@ -5,7 +5,7 @@ const withNextIntl = createNextIntlPlugin()
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   env: {
-    NODE_ENV: process.env.NODE_ENV,
+    ENABLE_PROXY_LOGS: process.env.ENABLE_PROXY_LOGS,
   },
   images: {
     qualities: [50, 75, 100],
