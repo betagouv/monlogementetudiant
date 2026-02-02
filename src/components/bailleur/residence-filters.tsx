@@ -28,18 +28,16 @@ export const ResidenceFilters = ({ initialData }: ResidenceFiltersProps) => {
     disponible: parseAsBoolean.withDefault(false),
     recherche: parseAsString.withDefault(''),
   })
-  const accommodationsList = accommodations?.results.features || []
-
   if (isLoading) {
     return <ResidenceFiltersSkeleton />
   }
 
   return (
     <div className="fr-flex fr-direction-column fr-direction-md-row fr-justify-content-space-between fr-align-items-md-center fr-mb-4w fr-flex-gap-4v">
-      <span className="fr-h4 fr-mb-0 fr-hidden fr-unhidden-sm">{accommodationsList.length} résidences</span>
+      <span className="fr-h4 fr-mb-0 fr-hidden fr-unhidden-sm">{accommodations?.count ?? 0} résidences</span>
       <div className="fr-flex fr-direction-column fr-direction-md-row fr-flex-gap-4v fr-align-items-md-center">
         <div className="fr-flex fr-justify-content-space-between">
-          <span className="fr-h4 fr-mb-0 fr-hidden-sm">{accommodationsList.length} résidences</span>
+          <span className="fr-h4 fr-mb-0 fr-hidden-sm">{accommodations?.count ?? 0} résidences</span>
           <ToggleSwitch
             label="Logements disponibles"
             checked={queryStates.disponible}
