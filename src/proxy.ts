@@ -98,13 +98,13 @@ export async function proxy(request: NextRequest) {
     })
 
     // 2. Call Better Auth plugin endpoint to update session & cookies
-    const baseUrl = request.nextUrl.origin
+    const baseUrl = process.env.BASE_URL!
     const updateResponse = await fetch(`${baseUrl}/api/auth/external-auth/refresh`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Cookie: request.headers.get('cookie') || '',
-        Origin: baseUrl,
+        Origin: request.nextUrl.origin,
       },
       body: JSON.stringify({
         accessToken: newAccessToken,
