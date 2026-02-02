@@ -1,0 +1,13 @@
+.container {
+  background-color: #f5f5ed;
+  padding: 3rem 4rem;
+  text-align: center;
+}
+
+.title {
+  color: #161616;
+}
+
+.subtitle {
+  color: #3a3a3a;
+}

@@ -60,7 +60,7 @@ export const HelpSimulatorResults: FC<HelpSimulatorResultsProps> = ({ onRestart 
       </div>
 
       <div className="fr-flex fr-justify-content-center fr-mt-4w">
-        <Button priority="secondary" onClick={onRestart}>
+        <Button priority="tertiary" onClick={onRestart}>
           Recommencer
         </Button>
       </div>
