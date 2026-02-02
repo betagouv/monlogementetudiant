@@ -1,6 +1,6 @@
 'use client'
 
-import { Cell, Label, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
+import { Cell, Label, Pie, PieChart } from 'recharts'
 
 interface ResidenceChartProps {
   available: number
@@ -9,41 +9,37 @@ interface ResidenceChartProps {
 
 export const ResidenceChart = ({ available, total }: ResidenceChartProps) => {
   const occupied = total - available
-  const availablePercentage = total > 0 ? 100 - Math.round((available / total) * 100) : 0
+  const occupiedPercentage = total > 0 ? Math.round((occupied / total) * 100) : 0
 
   const data = [
-    { name: 'Occupé', value: occupied, color: '#FA7A35' },
-    { name: 'Disponible', value: available, color: '#4B9F6C' },
+    { name: 'occupés', value: occupied, color: '#4B9F6C' },
+    { name: 'disponibles', value: available, color: '#F3EDE5' },
   ]
 
   return (
-    <div className="fr-flex fr-direction-column fr-align-items-center fr-justify-content-center" style={{ width: '100%', height: '100%' }}>
-      <div style={{ height: '120px', width: '180px', minHeight: '120px', minWidth: '180px' }}>
-        <ResponsiveContainer width={180} height={120}>
-          <PieChart width={180} height={120}>
-            <Pie data={data} cx="50%" cy="50%" innerRadius={30} outerRadius={60} dataKey="value">
-              {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
-              ))}
-            </Pie>
-            <Tooltip />
-            <Label value={`${availablePercentage}%`} position="center" className="recharts-text recharts-label" fontSize={16} fill="#000" />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
+    <div className="fr-flex fr-align-items-center fr-flex-gap-6v">
+      <PieChart width={72} height={72}>
+        <Pie data={data} cx="50%" cy="50%" innerRadius={24} outerRadius={32} dataKey="value" startAngle={90} endAngle={-270}>
+          {data.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={entry.color} />
+          ))}
+          <Label value={`${occupiedPercentage}%`} position="center" fontSize={12} fontWeight="bold" fill="#000" />
+        </Pie>
+      </PieChart>
 
-      <div className="fr-flex fr-direction-column fr-mt-2v fr-flex-gap-1v">
+      <div className="fr-flex fr-direction-column fr-flex-gap-2v">
         {data.map((item, index) => (
           <div key={index} className="fr-flex fr-align-items-center fr-flex-gap-2v">
             <div
               style={{
-                width: '8px',
-                height: '8px',
+                width: '12px',
+                height: '12px',
                 backgroundColor: item.color,
                 borderRadius: '50%',
+                flexShrink: 0,
               }}
             />
-            <span className="fr-text--xs fr-mb-0">
+            <span className="fr-text--sm fr-text-mention--grey fr-mb-0">
               {item.value} {item.name}
             </span>
           </div>

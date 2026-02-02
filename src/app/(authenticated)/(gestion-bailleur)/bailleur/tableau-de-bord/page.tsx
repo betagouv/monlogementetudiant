@@ -183,10 +183,20 @@ export default async function TableauDeBordPage() {
             if (total === 0) return null
 
             return (
-              <div key={index} className="fr-border fr-px-4w fr-py-2w fr-flex fr-justify-content-space-between fr-direction-column">
-                <span className="fr-h6">{res.properties.name}</span>
-                <div className={styles.statisticsChart}>
-                  <ResidenceChart available={available} total={total} />
+              <div key={index} className={clsx('fr-px-3w fr-py-2w', styles.statisticsCard)}>
+                <div>
+                  <Link className="fr-link fr-link--no-underline" href={`/bailleur/residences/${res.properties.slug}`}>
+                    <span className="fr-text--bold fr-text-title--blue-france fr-text--lg">{res.properties.name}</span>
+                  </Link>
+                  <p className="fr-text--xs fr-mb-0 fr-mt-1v fr-text-mention--grey">
+                    {res.properties.postal_code} {res.properties.city}
+                  </p>
+                </div>
+                <ResidenceChart available={available} total={total} />
+                <div className="fr-flex fr-justify-content-end">
+                  <Link className="fr-link fr-link--no-underline" href={`/bailleur/residences/${res.properties.slug}`}>
+                    <span className="ri-arrow-right-line fr-text-title--blue-france ri-xl" />
+                  </Link>
                 </div>
               </div>
             )

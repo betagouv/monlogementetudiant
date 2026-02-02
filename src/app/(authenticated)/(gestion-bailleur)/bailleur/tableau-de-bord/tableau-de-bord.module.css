@@ -73,20 +73,37 @@
 
 .statisticsGrid {
   margin-top: 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: 1fr;
+  border-top: 1px solid #ddd;
+  border-left: 1px solid #ddd;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 576px) {
   .statisticsGrid {
-    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 992px) {
+  .statisticsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1200px) {
+  .statisticsGrid {
     grid-template-columns: repeat(4, 1fr);
   }
 }
 
-.statisticsChart {
-  height: 200px;
+.statisticsCard {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  border-right: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
 }
 
 .avatarYasmine {
