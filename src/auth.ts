@@ -10,8 +10,8 @@ export const oneDay = 24 * 60 * 60
 
 const options = {
   secret: process.env.AUTH_SECRET,
-  baseURL: process.env.NEXT_PUBLIC_APP_URL,
-  trustedOrigins: [process.env.NEXT_PUBLIC_APP_URL!, 'http://localhost:3000'],
+  baseURL: process.env.BASE_URL,
+  trustedOrigins: [process.env.BASE_URL!, 'http://localhost:3000'],
   session: {
     expiresIn: oneDay,
     updateAge: oneDay,
