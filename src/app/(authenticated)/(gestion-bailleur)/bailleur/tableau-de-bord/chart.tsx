@@ -12,8 +12,8 @@ export const ResidenceChart = ({ available, total }: ResidenceChartProps) => {
   const occupiedPercentage = total > 0 ? Math.round((occupied / total) * 100) : 0
 
   const data = [
-    { name: 'occupés', value: occupied, color: '#4B9F6C' },
-    { name: 'disponibles', value: available, color: '#F3EDE5' },
+    { name: 'occupés', value: occupied, color: '#F3EDE5' },
+    { name: 'disponibles', value: available, color: '#4B9F6C' },
   ]
 
   return (
