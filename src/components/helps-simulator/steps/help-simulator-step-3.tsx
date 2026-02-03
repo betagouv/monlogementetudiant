@@ -21,7 +21,6 @@ export const HelpSimulatorStep3: FC = () => {
   const { classes } = useStyles()
   const [showResults, setShowResults] = useState(false)
   const { data, isError, searchQuery, setSearchQuery } = useSearchCities()
-  console.log('data', data)
   const cityValue = watch('city')
 
   useEffect(() => {
