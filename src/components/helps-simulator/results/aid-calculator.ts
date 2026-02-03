@@ -248,7 +248,7 @@ function calculateVisale(input: HelpSimulatorFormData): AidResult {
     })
   }
 
-  if (input.hasGuarantor !== 'no') {
+  if (input.hasGuarantor === 'yes') {
     return buildAidResult('visale', {
       isEligible: false,
       ineligibilityReason: "La Garantie Visale s'adresse aux personnes n'ayant pas de garant",

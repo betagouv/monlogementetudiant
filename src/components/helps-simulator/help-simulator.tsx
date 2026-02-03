@@ -18,6 +18,8 @@ export const HelpSimulator: FC<HelpSimulatorProps> = ({ onHeightChange }) => {
   const [currentStep] = useHelpSimulatorStep()
   const t = useTranslations('simulator.cta')
 
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
+
   useEffect(() => {
     if (!onHeightChange || !containerRef.current) return
 
@@ -42,7 +44,7 @@ export const HelpSimulator: FC<HelpSimulatorProps> = ({ onHeightChange }) => {
       <div ref={containerRef}>
         <HelpSimulatorHeader />
         <div className="fr-py-5w fr-px-8w">
-          <HelpSimulatorForm />
+          <HelpSimulatorForm onScrollToTop={scrollToTop} />
         </div>
       </div>
       {currentStep === 4 && (

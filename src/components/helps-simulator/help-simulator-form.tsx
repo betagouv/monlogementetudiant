@@ -32,7 +32,11 @@ const STEP_FIELDS: Record<number, (keyof HelpSimulatorFormData)[]> = {
   3: ['city', 'hasGuarantor', 'changingRegion', 'boursierLycee'],
 }
 
-export const HelpSimulatorForm: FC = () => {
+interface HelpSimulatorFormProps {
+  onScrollToTop?: () => void
+}
+
+export const HelpSimulatorForm: FC<HelpSimulatorFormProps> = ({ onScrollToTop }) => {
   const [currentStep, setCurrentStep] = useHelpSimulatorStep()
   const { urlState, setUrlState, clearUrlState } = useHelpSimulatorData()
 
@@ -156,6 +160,7 @@ export const HelpSimulatorForm: FC = () => {
     })
     clearUrlState()
     setCurrentStep(1)
+    onScrollToTop?.()
   }
 
   if (currentStep === 4) {
