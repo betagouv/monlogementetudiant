@@ -349,27 +349,27 @@ function calculateLocaPass(input: HelpSimulatorFormData): AidResult {
   })
 }
 
-function calculateCrousMobilite(input: HelpSimulatorFormData): AidResult {
-  if (input.changingRegion !== 'yes') {
-    return buildAidResult('crous-mobilite', {
-      isEligible: false,
-      ineligibilityReason: 'Vous ne changez pas de région via Parcoursup',
-    })
-  }
+// function calculateCrousMobilite(input: HelpSimulatorFormData): AidResult {
+//   if (input.changingRegion !== 'yes') {
+//     return buildAidResult('crous-mobilite', {
+//       isEligible: false,
+//       ineligibilityReason: 'Vous ne changez pas de région via Parcoursup',
+//     })
+//   }
 
-  if (input.boursierLycee !== 'yes') {
-    return buildAidResult('crous-mobilite', {
-      isEligible: false,
-      ineligibilityReason: "Vous n'étiez pas boursier(e) au lycée",
-    })
-  }
+//   if (input.boursierLycee !== 'yes') {
+//     return buildAidResult('crous-mobilite', {
+//       isEligible: false,
+//       ineligibilityReason: "Vous n'étiez pas boursier(e) au lycée",
+//     })
+//   }
 
-  return buildAidResult('crous-mobilite', {
-    isEligible: true,
-    amount: 500,
-    amountLabel: '500€ (aide ponctuelle)',
-  })
-}
+//   return buildAidResult('crous-mobilite', {
+//     isEligible: true,
+//     amount: 500,
+//     amountLabel: '500€ (aide ponctuelle)',
+//   })
+// }
 
 // Main calculation function
 export function calculateAllAids(input: HelpSimulatorFormData): CalculationResult {
@@ -379,9 +379,10 @@ export function calculateAllAids(input: HelpSimulatorFormData): CalculationResul
   const visaleResult = calculateVisale(input)
   const mobiliJeuneResult = calculateMobiliJeune(input)
   const locaPassResult = calculateLocaPass(input)
-  const crousMobiliteResult = calculateCrousMobilite(input)
+  // Aide CROUS Mobilité - désactivée pour la prochaine release (questions Parcoursup commentées)
+  // const crousMobiliteResult = calculateCrousMobilite(input)
 
-  const aids = [cafResult, visaleResult, mobiliJeuneResult, locaPassResult, crousMobiliteResult]
+  const aids = [cafResult, visaleResult, mobiliJeuneResult, locaPassResult]
 
   const eligibleCount = aids.filter((aid) => aid.isEligible).length
   const totalEstimatedMonthly = aids.reduce((total, aid) => total + (aid.amount || 0), 0)
