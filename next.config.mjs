@@ -34,6 +34,16 @@ const nextConfig = {
         source: '/foire-aux-questions',
         destination: 'https://info.monlogementetudiant.beta.gouv.fr/foire-aux-questions/',
       },
+      // Assets from info.monlogementetudiant.beta.gouv.fr
+      {
+        source: '/app/:path*',
+        destination: 'https://info.monlogementetudiant.beta.gouv.fr/app/:path*',
+      },
+      // Assets from monlogementetudiant.beta.gouv.fr (WordPress)
+      {
+        source: '/wp-content/:path*',
+        destination: 'https://info.monlogementetudiant.beta.gouv.fr/wp-content/:path*',
+      },
     ]
   },
   webpack: (config) => {
