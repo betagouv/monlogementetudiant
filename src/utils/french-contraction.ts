@@ -21,6 +21,7 @@ type Preposition = 'à' | 'de'
  * @returns La chaîne avec la contraction appropriée
  */
 export function applyFrenchContraction(preposition: Preposition, cityName: string): string {
+  if (!cityName) return ''
   const trimmedCity = cityName.trim()
 
   // Vérifie si la ville commence par "Le " (article masculin singulier)
