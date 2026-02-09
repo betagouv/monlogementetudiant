@@ -22,14 +22,14 @@ const TOTAL_FORM_STEPS = 3
 
 const stepSchemas = {
   1: step1Schema,
-  2: step2Schema,
-  3: step3Schema,
+  2: step3Schema,
+  3: step2Schema,
 } as const
 
 const STEP_FIELDS: Record<number, (keyof HelpSimulatorFormData)[]> = {
   1: ['age', 'status'],
-  2: ['monthlyIncome', 'monthlyRent', 'rentUnknown'],
-  3: ['city', 'hasGuarantor', 'changingRegion', 'boursierLycee'],
+  2: ['city', 'hasGuarantor', 'changingRegion', 'boursierLycee'],
+  3: ['monthlyIncome', 'monthlyRent', 'rentUnknown'],
 }
 
 interface HelpSimulatorFormProps {
@@ -172,9 +172,9 @@ export const HelpSimulatorForm: FC<HelpSimulatorFormProps> = ({ onScrollToTop })
       case 1:
         return <HelpSimulatorStep1 />
       case 2:
-        return <HelpSimulatorStep2 />
-      case 3:
         return <HelpSimulatorStep3 />
+      case 3:
+        return <HelpSimulatorStep2 />
       default:
         return <HelpSimulatorStep1 />
     }

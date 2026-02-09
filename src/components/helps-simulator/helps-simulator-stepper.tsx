@@ -5,9 +5,9 @@ import { FC } from 'react'
 import { useHelpSimulatorStep } from '~/components/helps-simulator/use-help-simulator-step'
 
 const STEPS = [
-  { title: 'Votre profil', nextTitle: 'Votre situation financière' },
-  { title: 'Votre situation financière', nextTitle: 'Votre logement' },
-  { title: 'Votre logement', nextTitle: 'Résultats' },
+  { title: 'Votre profil', nextTitle: 'Votre recherche de logement' },
+  { title: 'Votre recherche de logement', nextTitle: 'Votre situation financière' },
+  { title: 'Votre situation financière', nextTitle: 'Résultats' },
 ] as const
 
 export const HelpsSimulatorStepper: FC = () => {

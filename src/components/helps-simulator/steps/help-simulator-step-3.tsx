@@ -68,7 +68,8 @@ export const HelpSimulatorStep3: FC = () => {
         )}
       </div>
       <RadioButtons
-        legend="Avez-vous un garant ?"
+        legend={<RequiredLabel>Avez-vous un garant ?</RequiredLabel>}
+        hintText="Un garant, c'est une personne qui s'engage à payer à votre place si vous ne pouvez plus le faire."
         name="hasGuarantor"
         state={errors.hasGuarantor ? 'error' : undefined}
         stateRelatedMessage={errors.hasGuarantor?.message}
