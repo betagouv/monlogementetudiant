@@ -83,6 +83,7 @@ export default async function FindStudentAccommodationPage({
   const awaitedSearchParams = await searchParams
   const routeCategoryKey = awaitedParams?.location?.[0] || ''
   const routeLocation = decodeURIComponent(awaitedParams?.location?.[1] || '')
+  console.log('routeLocation', routeLocation)
   if (awaitedParams && (awaitedParams?.location?.length < 2 || awaitedParams?.location?.length > 2)) {
     redirect(`/trouver-un-logement-etudiant`)
   }
@@ -91,6 +92,7 @@ export default async function FindStudentAccommodationPage({
   const territory = (territories[getTerritoriesCategoryKey(routeCategoryKey as 'ville' | 'academie' | 'departement')] || []).find(
     (territory) => territory.name === routeLocation || territory.slug === routeLocation,
   )
+  console.log('territory', territory)
   if (routeCategoryKey && routeLocation && !territory) {
     redirect(`/trouver-un-logement-etudiant`)
   }
@@ -100,6 +102,18 @@ export default async function FindStudentAccommodationPage({
 
   // do not use bbox while fetching if user searching by academy
   const isAcademy = routeCategoryKey === 'academie'
+
+  // Redirect to add bbox from territory if not present in URL
+  if (!isAcademy && !awaitedSearchParams.bbox && territoryBbox) {
+    const bboxString = `${territoryBbox.west},${territoryBbox.south},${territoryBbox.east},${territoryBbox.north}`
+    const params = new URLSearchParams()
+    Object.entries(awaitedSearchParams).forEach(([key, value]) => {
+      if (value !== undefined) params.set(key, value)
+    })
+    params.set('bbox', bboxString)
+    redirect(`/trouver-un-logement-etudiant/${routeCategoryKey}/${encodeURIComponent(routeLocation)}?${params.toString()}`)
+  }
+
   const accommodationsParams = {
     ...awaitedSearchParams,
     ...(isAcademy && territory ? { academie: territory.id.toString() } : {}),
