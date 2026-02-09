@@ -40,7 +40,7 @@ export const useAddressAutocomplete = () => {
 
     setIsLoading(true)
     try {
-      const response = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(query)}&limit=5`)
+      const response = await fetch(`https://data.geopf.fr/geocodage/search/?q=${encodeURIComponent(query)}&limit=5`)
       const data: ApiAddressResponse = await response.json()
 
       const mappedSuggestions: AddressSuggestion[] = data.features.map((feature) => ({
