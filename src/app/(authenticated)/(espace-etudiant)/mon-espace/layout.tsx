@@ -31,8 +31,11 @@ export default async function WorkspaceLayout({
 
   return (
     <>
+      <a className="fr-link fr-sr-only fr-sr-only-focusable" href="#main-content">
+        Aller au contenu principal
+      </a>
       <CommonHeader withNavigation={false} />
-      <main className="primaryBackgroundColor">
+      <main id="main-content" className="primaryBackgroundColor">
         <div className="fr-container fr-pb-12w">
           <DynamicBreadcrumb color="white" />
           <div className="fr-col-md-12 fr-flex fr-direction-column fr-direction-md-row fr-background-default--grey">

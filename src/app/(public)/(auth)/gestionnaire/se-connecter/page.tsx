@@ -11,7 +11,7 @@ export default async function LoginPage() {
   return (
     <>
       <div className={authStyles.imageContainer}>
-        <Image className={authStyles.image} src={background} alt="Se connecter" priority quality={100} />
+        <Image className={authStyles.image} src={background} alt="" aria-hidden="true" priority quality={100} />
       </div>
       <div className={clsx(authStyles.container, fr.cx('fr-container'))}>
         <h1>{t('ownerTitle')}</h1>

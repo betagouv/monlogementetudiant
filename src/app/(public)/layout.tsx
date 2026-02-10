@@ -9,8 +9,13 @@ export default async function RootLayout({
 }>) {
   return (
     <>
+      <a className="fr-link fr-sr-only fr-sr-only-focusable" href="#main-content">
+        Aller au contenu principal
+      </a>
       <CommonHeader />
-      <main className={styles.container}>{children}</main>
+      <main id="main-content" className={styles.container}>
+        {children}
+      </main>
       <CommonFooter />
     </>
   )

@@ -92,6 +92,7 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
     : {}
 
   const redirectUri = href ?? `/trouver-un-logement-etudiant/ville/${encodeURIComponent(city)}/${accomodation.properties.slug}`
+  const cardAriaLabel = targetBlank ? `${name} (nouvel onglet)` : name
 
   const handleCardClick = (event: React.MouseEvent) => {
     const target = event.target as HTMLElement
@@ -105,6 +106,12 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
     }
   }
 
+  const handleCardKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return
+    event.preventDefault()
+    handleCardClick(event as unknown as React.MouseEvent)
+  }
+
   return (
     <Card
       {...badgeProps}
@@ -116,7 +123,13 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
       id={`accomodation-${accomodation.id}`}
       background
       border
-      nativeDivProps={{ onClick: handleCardClick }}
+      nativeDivProps={{
+        onClick: handleCardClick,
+        onKeyDown: handleCardKeyDown,
+        role: 'link',
+        tabIndex: 0,
+        'aria-label': cardAriaLabel,
+      }}
       desc={
         <>
           {accommodationsTypes.length > 0 && (

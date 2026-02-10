@@ -82,7 +82,12 @@ export const AidCard: FC<AidCardProps> = ({ aid }) => {
             priority="secondary"
             iconId="ri-external-link-line"
             iconPosition="right"
-            linkProps={{ href: link, target: '_blank', rel: 'noopener noreferrer' }}
+            linkProps={{
+              href: link,
+              target: '_blank',
+              rel: 'noopener noreferrer',
+              'aria-label': `${aid.isEligible ? "Demander l'aide" : 'En savoir plus'} (nouvel onglet)`,
+            }}
           >
             {aid.isEligible ? "Demander l'aide" : 'En savoir plus'}
           </Button>

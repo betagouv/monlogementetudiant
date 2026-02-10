@@ -59,8 +59,10 @@ export const HelpSimulatorStep3: FC = () => {
           <div className={classes.resultsContainer}>
             <ul className={classes.resultsList}>
               {data.map((city: TCity) => (
-                <li key={city.id} className={classes.resultItem} onClick={() => handleCitySelect(city)}>
-                  {city.name}
+                <li key={city.id} className={classes.resultItem}>
+                  <button type="button" className={classes.resultButton} onClick={() => handleCitySelect(city)}>
+                    {city.name}
+                  </button>
                 </li>
               ))}
             </ul>
@@ -176,7 +178,16 @@ const useStyles = tss.create({
       backgroundColor: '#f0f0f0',
     },
     borderBottom: '1px solid #e0e0e0',
-    cursor: 'pointer',
     padding: '8px',
+  },
+  resultButton: {
+    background: 'none',
+    border: 'none',
+    color: 'inherit',
+    cursor: 'pointer',
+    display: 'block',
+    padding: 0,
+    textAlign: 'left',
+    width: '100%',
   },
 })

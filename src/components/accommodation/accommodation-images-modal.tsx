@@ -17,7 +17,12 @@ export const AccommodationImagesModal = ({ children, images, title }: { children
       <accommodationPicturesModal.Component title={title} size="large">
         <div className={classes.container}>
           <div style={{ position: 'relative', width: '100%', height: '50vh' }}>
-            <Image src={images[currentImage]} alt="Accommodation" fill style={{ objectFit: 'contain' }} />
+            <Image
+              src={images[currentImage]}
+              alt={`${title} - photo ${currentImage + 1} sur ${images.length}`}
+              fill
+              style={{ objectFit: 'contain' }}
+            />
           </div>
         </div>
         {images.length > 1 && (

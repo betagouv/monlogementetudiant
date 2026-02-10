@@ -95,7 +95,7 @@ export default async function TableauDeBordPage() {
                 <span className="fr-hidden fr-unhidden-md ri-discuss-line" />
                 <div className="fr-flex fr-direction-column fr-flex-gap-2v">
                   <span className="fr-text--bold">{t('dashboard.helpSection.contact.title')}</span>
-                  <Link className="fr-link" target="_blank" href={calendlyUrl}>
+                  <Link className="fr-link" target="_blank" href={calendlyUrl} aria-label="Calendly (nouvel onglet)">
                     {t('dashboard.helpSection.contact.link')}
                   </Link>
                 </div>

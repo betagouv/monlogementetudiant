@@ -7,8 +7,12 @@ export const CandidaturesFilters = () => {
   return (
     <>
       <div className="fr-flex fr-flex-gap-4v">
-        <Select label="" nativeSelectProps={{ name: 'Filtre' }} className="fr-mb-0">
-          <option value="" selected disabled hidden>
+        <Select
+          label={<span className="fr-sr-only">Filtrer par statut</span>}
+          nativeSelectProps={{ name: 'Filtre', defaultValue: '' }}
+          className="fr-mb-0"
+        >
+          <option value="" disabled hidden>
             Tous les status
           </option>
 
@@ -16,9 +20,19 @@ export const CandidaturesFilters = () => {
           <option value="2">Accepté</option>
           <option value="3">Refusé</option>
         </Select>
-        <Input label="" nativeInputProps={{ placeholder: 'Rechercher' }} iconId="ri-search-line" className="fr-mb-0" />
-        <Select label="" nativeSelectProps={{ name: 'Filtre' }} className="fr-mb-0">
-          <option value="" selected disabled hidden>
+        <Input
+          label="Rechercher une candidature"
+          hideLabel
+          nativeInputProps={{ placeholder: 'Rechercher' }}
+          iconId="ri-search-line"
+          className="fr-mb-0"
+        />
+        <Select
+          label={<span className="fr-sr-only">Trier les candidatures</span>}
+          nativeSelectProps={{ name: 'Filtre', defaultValue: '' }}
+          className="fr-mb-0"
+        >
+          <option value="" disabled hidden>
             Triés par date
           </option>
 

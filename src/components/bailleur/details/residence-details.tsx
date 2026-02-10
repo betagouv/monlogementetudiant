@@ -28,15 +28,15 @@ export const ResidenceDetails = () => {
           stateRelatedMessage={errors.name?.message}
         />
 
-        <div className="fr-py-4w fr-flex fr-justify-content-space-between fr-align-items-center">
-          <span>{t('waitingList')}</span>
+        <div className="fr-py-4w">
           <Controller
             name="accept_waiting_list"
             control={control}
             render={({ field }) => (
               <ToggleSwitch
                 inputTitle="accept_waiting_list"
-                label=""
+                label={t('waitingList')}
+                labelPosition="left"
                 showCheckedHint={false}
                 checked={field.value}
                 onChange={field.onChange}
@@ -44,13 +44,19 @@ export const ResidenceDetails = () => {
             )}
           />
         </div>
-        <div className="fr-py-4w fr-flex fr-justify-content-space-between fr-align-items-center">
-          <span>{t('scholarship')}</span>
+        <div className="fr-py-4w">
           <Controller
             name="scholarship_holders_priority"
             control={control}
             render={({ field }) => (
-              <ToggleSwitch inputTitle="" label="" showCheckedHint={false} checked={field.value} onChange={field.onChange} />
+              <ToggleSwitch
+                inputTitle="scholarship_holders_priority"
+                label={t('scholarship')}
+                labelPosition="left"
+                showCheckedHint={false}
+                checked={field.value}
+                onChange={field.onChange}
+              />
             )}
           />
         </div>

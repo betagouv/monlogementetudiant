@@ -103,6 +103,7 @@ export const ResidencePictures = ({ accommodation }: { accommodation: TAccomodat
               multiple
               accept="image/jpeg,image/png,image/webp"
               onChange={handleFileSelect}
+              aria-label="Ajouter des photos de la résidence"
               style={{ display: 'none' }}
             />
             <Button priority="tertiary" onClick={() => fileInputRef.current?.click()} disabled={uploadMutation.isPending}>

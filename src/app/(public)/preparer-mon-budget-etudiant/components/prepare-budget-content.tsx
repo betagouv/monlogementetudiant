@@ -50,7 +50,7 @@ export default async function PrepareBudgetContent() {
         <br />
         <span>{t('mainTitlePart2')}</span>
       </h2>
-      <Image src={imageHero} alt="Prepare mon budget étudiant - Image de fond" priority quality={100} className={styles.imageHero} />
+      <Image src={imageHero} alt="" aria-hidden="true" priority quality={100} className={styles.imageHero} />
       <PrepareBudgetContentHeader />
       {cards.map((card, index) => (
         <PrepareBudgetContentCard key={card.translationKey} {...card} withBorder={index !== cards.length - 1}>

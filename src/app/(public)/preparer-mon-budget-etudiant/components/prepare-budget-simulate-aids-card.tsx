@@ -11,12 +11,12 @@ export default async function PrepareBudgetSimulateAidsCard() {
 
   return (
     <div className={clsx(fr.cx('fr-col-md-5', 'fr-ml-md-2w', 'fr-px-2w', 'fr-py-4w'), styles.container)}>
-      <Money width={80} height={80} />
+      <Money width={80} height={80} aria-hidden="true" />
       <span className={fr.cx('fr-mb-0', 'fr-text--bold')}>{t('title')}</span>
       <div>
         {locationAids.map((aid) => (
           <div key={aid}>
-            <i className={clsx(styles.icon, 'ri-check-line')}></i>
+            <i aria-hidden="true" className={clsx(styles.icon, 'ri-check-line')}></i>
             {aid}
           </div>
         ))}

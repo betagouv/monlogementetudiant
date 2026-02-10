@@ -16,8 +16,10 @@ export const FindStudentAccommodationCitiesAutocompleteResults: FC<AutocompleteR
     <div className={classes.container}>
       <ul className={classes.list}>
         {data.map((item: TCity) => (
-          <li className={classes.item} key={item.id} onClick={() => onClickItem(item)}>
-            {item.name}
+          <li className={classes.item} key={item.id}>
+            <button type="button" className={classes.itemButton} onClick={() => onClickItem(item)}>
+              {item.name}
+            </button>
           </li>
         ))}
       </ul>
@@ -41,8 +43,17 @@ const useStyles = tss.create({
     },
     borderBottom: '1px solid #e0e0e0',
     borderTop: '1px solid #e0e0e0',
-    cursor: 'pointer',
     padding: '8px',
+  },
+  itemButton: {
+    background: 'none',
+    border: 'none',
+    color: 'inherit',
+    cursor: 'pointer',
+    display: 'block',
+    padding: 0,
+    textAlign: 'left',
+    width: '100%',
   },
   list: {
     backgroundColor: 'white',

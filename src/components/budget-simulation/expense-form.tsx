@@ -149,6 +149,7 @@ export function ExpenseForm() {
               className="fr-link fr-text--xs"
               href="https://www.ove-national.education.fr/wp-content/uploads/2024/03/OVE-BROCHURE-REPERES-CDV2023-1-1.pdf"
               target="_blank"
+              aria-label="Repère 2023 de OVE (nouvel onglet)"
             >
               Repère 2023 de OVE
             </Link>{' '}

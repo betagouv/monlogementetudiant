@@ -51,10 +51,10 @@ export const FindStudentAccomodationAutocompleteResults: FC<FindStudentAccomodat
           const { icon, label } = getCategoryLabelAndIcon(categoryKey)
 
           return (
-            <div className={classes.category} key={category}>
-              <li className={classes.categoryItem}>
+            <li className={classes.category} key={category}>
+              <div className={classes.categoryItem}>
                 <span className={fr.cx(icon)}>{label}</span>
-              </li>
+              </div>
               <ul className={classes.list}>
                 {items.map((item: TTerritory) => {
                   const searchParams = new URLSearchParams()
@@ -78,22 +78,22 @@ export const FindStudentAccomodationAutocompleteResults: FC<FindStudentAccomodat
                   }
 
                   return (
-                    <Link
-                      key={item.id}
-                      href={{
-                        pathname: `/trouver-un-logement-etudiant/${getCategoryKeySingular(categoryKey)}/${item.name}`,
-                        search: searchParams.toString(),
-                      }}
-                    >
-                      <li className={classes.item} key={item.id} tabIndex={0}>
+                    <li className={classes.item} key={item.id}>
+                      <Link
+                        className={classes.itemLink}
+                        href={{
+                          pathname: `/trouver-un-logement-etudiant/${getCategoryKeySingular(categoryKey)}/${item.name}`,
+                          search: searchParams.toString(),
+                        }}
+                      >
                         {item.name}
                         {'department_code' in item && item.department_code ? <>&nbsp;({item.department_code})</> : null}
-                      </li>
-                    </Link>
+                      </Link>
+                    </li>
                   )
                 })}
               </ul>
-            </div>
+            </li>
           )
         })}
       </ul>
@@ -128,8 +128,12 @@ const useStyles = tss.create({
     },
     borderBottom: '1px solid #e0e0e0',
     borderTop: '1px solid #e0e0e0',
-    cursor: 'pointer',
     padding: '8px',
+  },
+  itemLink: {
+    color: 'inherit',
+    display: 'block',
+    textDecoration: 'none',
   },
   list: {
     backgroundColor: 'white',

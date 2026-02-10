@@ -63,14 +63,18 @@ export default async function LandingPage() {
                   </div>
                 </div>
                 <div className={styles.contactButton}>
-                  <Button className="whiteButton" priority="secondary" linkProps={{ href: calendlyUrl, target: '_blank' }}>
+                  <Button
+                    className="whiteButton"
+                    priority="secondary"
+                    linkProps={{ href: calendlyUrl, target: '_blank', 'aria-label': 'Calendly (nouvel onglet)' }}
+                  >
                     {t('callToAction.button')}
                   </Button>
                 </div>
               </div>
             </div>
             <div className={clsx(styles.heroImage, fr.cx('fr-col-md-4'))}>
-              <Image src={landingHero} quality={100} priority alt="Image de la landing page" />
+              <Image src={landingHero} quality={100} priority alt="" aria-hidden="true" />
             </div>
           </div>
         </div>
@@ -219,7 +223,7 @@ export default async function LandingPage() {
           </h2>
           <div className={styles.buttonContainer}>
             <Button>
-              <a href={calendlyUrl} target="_blank">
+              <a href={calendlyUrl} target="_blank" aria-label="Calendly (nouvel onglet)">
                 {t('callToAction.button')}
               </a>
             </Button>

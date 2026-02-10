@@ -16,14 +16,18 @@ export const AccommodationImage = ({
   src: string
   withModal: boolean
 }) => {
+  if (!withModal) {
+    return <Image src={src} alt="Photo du logement" width={width} height={height} className={className} />
+  }
+
   return (
-    <Image
-      src={src}
-      alt="Photo du logement"
-      width={width}
-      height={height}
-      className={className}
-      {...(withModal && { onClick: () => accommodationPicturesModal.open() })}
-    />
+    <button
+      type="button"
+      onClick={() => accommodationPicturesModal.open()}
+      aria-label="Ouvrir la galerie de photos du logement"
+      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+    >
+      <Image src={src} alt="Photo du logement" width={width} height={height} className={className} />
+    </button>
   )
 }

@@ -2,7 +2,20 @@ import styles from './prepare-budget-chart.module.css'
 
 export default function PrepareBudgetChart() {
   return (
-    <svg className={styles.chart} width="688" height="419" viewBox="0 0 688 419" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg
+      className={styles.chart}
+      width="688"
+      height="419"
+      viewBox="0 0 688 419"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      role="img"
+      aria-labelledby="prepare-budget-chart-title prepare-budget-chart-desc"
+    >
+      <title id="prepare-budget-chart-title">Illustration du budget étudiant</title>
+      <desc id="prepare-budget-chart-desc">
+        Illustration décorative du budget étudiant. Les informations détaillées sont présentées dans le texte adjacent.
+      </desc>
       <rect y="-0.000976562" width="688" height="418.742" fill="url(#pattern0_1925_129253)" />
       <rect x="100" y="156" width="56" height="31" fill="white" />
       <rect x="156" y="58" width="56" height="31" fill="white" />

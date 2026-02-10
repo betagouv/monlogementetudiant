@@ -68,8 +68,10 @@ export const CreateResidenceLocation = () => {
                 <li className={styles.suggestionLoading}>Recherche en cours...</li>
               ) : (
                 suggestions.map((suggestion, index) => (
-                  <li key={index} onClick={() => handleSelectSuggestion(suggestion)} className={styles.suggestionItem}>
-                    {suggestion.label}
+                  <li key={index} className={styles.suggestionItem}>
+                    <button type="button" className={styles.suggestionButton} onClick={() => handleSelectSuggestion(suggestion)}>
+                      {suggestion.label}
+                    </button>
                   </li>
                 ))
               )}

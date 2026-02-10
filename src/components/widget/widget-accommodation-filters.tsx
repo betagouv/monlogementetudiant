@@ -63,8 +63,10 @@ export const WidgetAccommodationFilters: FC<WidgetAccommodationFiltersProps> = (
           <div className={classes.dropdown}>
             <ul className={classes.list}>
               {cities.map((city) => (
-                <li key={city.id} className={classes.dropdownItem} onClick={() => handleCitySelect(city)}>
-                  {city.name} {city.department_code ? `(${city.department_code})` : ''}
+                <li key={city.id} className={classes.dropdownItem}>
+                  <button type="button" className={classes.dropdownButton} onClick={() => handleCitySelect(city)}>
+                    {city.name} {city.department_code ? `(${city.department_code})` : ''}
+                  </button>
                 </li>
               ))}
             </ul>
@@ -115,8 +117,17 @@ const useStyles = tss.create({
       backgroundColor: '#f0f0f0',
     },
     borderBottom: '1px solid #e0e0e0',
-    cursor: 'pointer',
     padding: '8px',
+  },
+  dropdownButton: {
+    background: 'none',
+    border: 'none',
+    color: 'inherit',
+    cursor: 'pointer',
+    display: 'block',
+    padding: 0,
+    textAlign: 'left',
+    width: '100%',
   },
   filtersRow: {
     alignItems: 'flex-end',

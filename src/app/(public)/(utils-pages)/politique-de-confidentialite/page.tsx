@@ -91,7 +91,13 @@ export default function PolitiqueDeConfidentialite() {
             </li>
             <li>
               À la CNIL :&nbsp;
-              <a href="https://www.cnil.fr/fr/plaintes" target="_blank" rel="noopener noreferrer" className={fr.cx('fr-link')}>
+              <a
+                href="https://www.cnil.fr/fr/plaintes"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={fr.cx('fr-link')}
+                aria-label="cnil.fr, plaintes (nouvel onglet)"
+              >
                 https://www.cnil.fr/fr/plaintes
               </a>
             </li>
@@ -103,6 +109,7 @@ export default function PolitiqueDeConfidentialite() {
               target="_blank"
               rel="noopener noreferrer"
               className={fr.cx('fr-link')}
+              aria-label="cnil.fr, modèle de courrier (nouvel onglet)"
             >
               https://www.cnil.fr/fr/modele/courrier/exercer-son-droit-dacces
             </a>
@@ -157,6 +164,7 @@ export default function PolitiqueDeConfidentialite() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className={fr.cx('fr-link')}
+                  aria-label="scalingo.com, contrat de gestion des traitements (nouvel onglet)"
                 >
                   https://scalingo.com/fr/contrat-gestion-traitements-donnees-personnelles
                 </a>,
@@ -170,6 +178,7 @@ export default function PolitiqueDeConfidentialite() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className={fr.cx('fr-link')}
+                  aria-label="brevo.com, politique de confidentialité (nouvel onglet)"
                 >
                   https://www.brevo.com/fr/legal/privacypolicy/
                 </a>,

@@ -9,6 +9,10 @@ const Toaster = () => (
     gutter={8}
     toastOptions={{
       duration: 10_000,
+      ariaProps: {
+        role: 'status',
+        'aria-live': 'polite',
+      },
     }}
   />
 )

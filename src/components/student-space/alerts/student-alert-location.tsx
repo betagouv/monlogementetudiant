@@ -70,21 +70,27 @@ export const StudentAlertLocation: FC<StudentAlertLocationProps> = ({ error, ini
         <div className={classes.resultsContainer}>
           <ul className={classes.list}>
             {data.cities?.map((item: TCity) => (
-              <li className={classes.item} key={`city-${item.id}`} onClick={() => handleClick('city_id', item)}>
-                <span className={clsx(classes.icon, 'ri-map-pin-2-fill')} />
-                {item.name} ({item.department_code})
+              <li className={classes.item} key={`city-${item.id}`}>
+                <button type="button" className={classes.itemButton} onClick={() => handleClick('city_id', item)}>
+                  <span className={clsx(classes.icon, 'ri-map-pin-2-fill')} aria-hidden="true" />
+                  {item.name} ({item.department_code})
+                </button>
               </li>
             ))}
             {data.departments?.map((item: TAcademyOrDepartment) => (
-              <li className={classes.item} key={`dept-${item.id}`} onClick={() => handleClick('department_id', item)}>
-                <span className={clsx(classes.icon, 'ri-road-map-line')} />
-                {item.name}
+              <li className={classes.item} key={`dept-${item.id}`}>
+                <button type="button" className={classes.itemButton} onClick={() => handleClick('department_id', item)}>
+                  <span className={clsx(classes.icon, 'ri-road-map-line')} aria-hidden="true" />
+                  {item.name}
+                </button>
               </li>
             ))}
             {data.academies?.map((item: TAcademyOrDepartment) => (
-              <li className={classes.item} key={`academy-${item.id}`} onClick={() => handleClick('academy_id', item)}>
-                <span className={clsx(classes.icon, 'ri-government-line')} />
-                {item.name}
+              <li className={classes.item} key={`academy-${item.id}`}>
+                <button type="button" className={classes.itemButton} onClick={() => handleClick('academy_id', item)}>
+                  <span className={clsx(classes.icon, 'ri-government-line')} aria-hidden="true" />
+                  {item.name}
+                </button>
               </li>
             ))}
           </ul>
@@ -120,11 +126,19 @@ const useStyles = tss.create({
       backgroundColor: '#f0f0f0',
     },
     borderBottom: '1px solid #e0e0e0',
-    cursor: 'pointer',
     padding: '12px',
-    display: 'flex',
+  },
+  itemButton: {
     alignItems: 'center',
+    background: 'none',
+    border: 'none',
+    color: 'inherit',
+    cursor: 'pointer',
+    display: 'flex',
     gap: '8px',
+    padding: 0,
+    textAlign: 'left',
+    width: '100%',
   },
   list: {
     backgroundColor: 'white',

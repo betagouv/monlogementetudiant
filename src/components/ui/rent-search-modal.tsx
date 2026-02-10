@@ -122,6 +122,7 @@ export const RentSearchModal = ({ onApply, onCancel }: RentSearchModalProps) => 
                   <Link
                     href="https://www.data.gouv.fr/datasets/carte-des-loyers-indicateurs-de-loyers-dannonce-par-commune-en-2024/"
                     target="_blank"
+                    aria-label="Estimations de l’ANIL, SeLoger et Leboncoin (nouvel onglet)"
                   >
                     Estimations de l’Agence Nationale pour l’Information sur le Logement (ANIL), à partir des données de SeLoger et de
                     Leboncoin

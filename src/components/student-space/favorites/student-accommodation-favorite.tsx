@@ -82,6 +82,13 @@ export const StudentAccommodationFavorite: FC<StudentAccommodationFavoriteProps>
     : {}
 
   const redirectUri = `/trouver-un-logement-etudiant/ville/${encodeURIComponent(city)}/${accomodation.properties.slug}`
+
+  const handleCardKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return
+    event.preventDefault()
+    handleCardClick(event as unknown as React.MouseEvent)
+  }
+
   return (
     <Card
       {...badgeProps}
@@ -93,7 +100,7 @@ export const StudentAccommodationFavorite: FC<StudentAccommodationFavoriteProps>
       id={`accomodation-${accomodation.id}`}
       background
       border
-      nativeDivProps={{ onClick: handleCardClick }}
+      nativeDivProps={{ onClick: handleCardClick, onKeyDown: handleCardKeyDown, role: 'link', tabIndex: 0 }}
       desc={
         <>
           <span className={clsx('ri-group-line', classes.description)}>{accommodationsTypes.join(' • ')}</span>

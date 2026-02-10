@@ -12,7 +12,7 @@ export default async function SignUpPage() {
   return (
     <>
       <div className={styles.imageContainer}>
-        <Image className={styles.image} src={background} alt="S'inscrire" priority quality={100} />
+        <Image className={styles.image} src={background} alt="" aria-hidden="true" priority quality={100} />
       </div>
       <div className={clsx(styles.container, fr.cx('fr-container'))}>
         <Button

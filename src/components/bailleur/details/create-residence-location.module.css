@@ -25,7 +25,6 @@
 
 .suggestionItem {
   padding: 0.75rem 1rem;
-  cursor: pointer;
   border-bottom: 1px solid var(--border-default-grey);
 }
 
@@ -35,4 +34,15 @@
 
 .suggestionItem:hover {
   background-color: var(--background-contrast-grey);
+}
+
+.suggestionButton {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  display: block;
+  padding: 0;
+  text-align: left;
+  width: 100%;
 }

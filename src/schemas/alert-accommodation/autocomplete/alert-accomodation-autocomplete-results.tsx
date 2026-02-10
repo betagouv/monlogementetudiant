@@ -36,17 +36,19 @@ export const AlertAccommodationResultsItem: FC<AlertAccomodationAutocompleteItem
   }
 
   return (
-    <li
-      className={classes.item}
-      key={item.id}
-      onClick={() => {
-        setQueryStates({ q: item.name, type: getCategoryKeySingular(categoryKey) })
-        setValue('territory_name', item.name)
-        setValue('territory_type', getCategoryKeySingular(categoryKey))
-        onClick(item.name)
-      }}
-    >
-      {item.name}
+    <li className={classes.item} key={item.id}>
+      <button
+        type="button"
+        className={classes.itemButton}
+        onClick={() => {
+          setQueryStates({ q: item.name, type: getCategoryKeySingular(categoryKey) })
+          setValue('territory_name', item.name)
+          setValue('territory_type', getCategoryKeySingular(categoryKey))
+          onClick(item.name)
+        }}
+      >
+        {item.name}
+      </button>
     </li>
   )
 }
@@ -81,16 +83,16 @@ export const AlertAccomodationAutocompleteResults: FC<AlertAccomodationAutocompl
             const { icon, label } = getCategoryLabelAndIcon(categoryKey)
 
             return (
-              <div className={classes.category} key={category}>
-                <li className={classes.categoryItem}>
+              <li className={classes.category} key={category}>
+                <div className={classes.categoryItem}>
                   <span className={fr.cx(icon)}>{label}</span>
-                </li>
+                </div>
                 <ul className={classes.list}>
                   {items.map((item: TTerritory) => (
                     <AlertAccommodationResultsItem onClick={onClick} key={item.id} categoryKey={categoryKey} item={item} />
                   ))}
                 </ul>
-              </div>
+              </li>
             )
           })}
         </ul>
@@ -126,8 +128,17 @@ const useStyles = tss.create({
     },
     borderBottom: '1px solid #e0e0e0',
     borderTop: '1px solid #e0e0e0',
-    cursor: 'pointer',
     padding: '8px',
+  },
+  itemButton: {
+    background: 'none',
+    border: 'none',
+    color: 'inherit',
+    cursor: 'pointer',
+    display: 'block',
+    padding: 0,
+    textAlign: 'left',
+    width: '100%',
   },
   list: {
     backgroundColor: 'white',

@@ -47,7 +47,8 @@ export const ResidenceFilters = ({ initialData }: ResidenceFiltersProps) => {
           />
         </div>
         <Input
-          label=""
+          label="Rechercher une résidence"
+          hideLabel
           nativeInputProps={{
             placeholder: 'Rechercher',
             value: queryStates.recherche,

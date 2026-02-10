@@ -38,7 +38,13 @@ export const Banner = () => {
           <span>
             {t.rich('description', {
               link: (chunks) => (
-                <a className={fr.cx('fr-link')} href={tallyUrl} target="_blank" rel="noreferrer">
+                <a
+                  className={fr.cx('fr-link')}
+                  href={tallyUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="Formulaire Tally (nouvel onglet)"
+                >
                   {chunks}
                 </a>
               ),

@@ -1,11 +1,11 @@
 'use client'
 
 import { ToggleSwitch } from '@codegouvfr/react-dsfr/ToggleSwitch'
-import { Tooltip } from '@codegouvfr/react-dsfr/Tooltip'
 import { useTranslations } from 'next-intl'
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
 import { FC } from 'react'
 import { tss } from 'tss-react'
+import { TooltipHoverOnly } from '~/components/tooltip-hover-only'
 
 export const FindStudentAccessibleAccomodationSwitch: FC = () => {
   const [queryStates, setQueryStates] = useQueryStates({
@@ -28,7 +28,7 @@ export const FindStudentAccessibleAccomodationSwitch: FC = () => {
         checked={queryStates.accessible === 'true'}
         onChange={handleChange}
       />
-      <Tooltip kind="hover" title={t('header.tooltip.accessible')} />
+      <TooltipHoverOnly title={t('header.tooltip.accessible')} />
     </div>
   )
 }

@@ -91,6 +91,7 @@ const CustomZoomControls: FC = () => {
         className="leaflet-control-zoom-in"
         type="button"
         title="Zoom in"
+        aria-label="Zoomer"
         onClick={handleZoomIn}
         style={{
           width: '30px',
@@ -107,6 +108,7 @@ const CustomZoomControls: FC = () => {
         className="leaflet-control-zoom-out"
         type="button"
         title="Zoom out"
+        aria-label="Dézoomer"
         onClick={handleZoomOut}
         style={{
           width: '30px',
@@ -152,15 +154,29 @@ export const AccomodationsMap: FC<AccomodationsMapProps> = ({ data }) => {
 
   const memoizedMap = useMemo(() => {
     return (
-      <MapContainer center={[46.5, 2.4]} zoom={6} className={classes.mapContainer} scrollWheelZoom={false} zoomControl={false}>
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        />
-        <BoundsHandler />
-        <CustomZoomControls />
-        {markers}
-      </MapContainer>
+      <div>
+        <p id="accommodations-map-desc" className="fr-sr-only">
+          Carte des logements étudiants. Utilisez la liste des résultats pour parcourir les logements si vous ne pouvez pas utiliser la
+          carte.
+        </p>
+        <MapContainer
+          center={[46.5, 2.4]}
+          zoom={6}
+          className={classes.mapContainer}
+          scrollWheelZoom={false}
+          zoomControl={false}
+          aria-label="Carte des logements étudiants"
+          aria-describedby="accommodations-map-desc"
+        >
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          />
+          <BoundsHandler />
+          <CustomZoomControls />
+          {markers}
+        </MapContainer>
+      </div>
     )
   }, [markers, queryStates.bbox])
 

@@ -17,7 +17,12 @@ export default async function PrepareBudgetAidsTable() {
     t(`${row}.column1`),
     t(`${row}.column2`),
     row !== 'row6' ? (
-      <Link href={links[row as keyof typeof links]} className={fr.cx('fr-link')} target="_blank">
+      <Link
+        href={links[row as keyof typeof links]}
+        className={fr.cx('fr-link')}
+        target="_blank"
+        aria-label={`${t(`${row}.column3`)} (nouvel onglet)`}
+      >
         {t(`${row}.column3`)}
       </Link>
     ) : (

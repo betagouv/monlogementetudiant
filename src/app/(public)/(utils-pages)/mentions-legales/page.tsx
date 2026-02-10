@@ -35,7 +35,7 @@ export default async function MentionsLegalesPage() {
           67100 Strasbourg France
           <br />
           Contact :&nbsp;
-          <Link href="https://scalingo.com/fr/contact" target="_blank">
+          <Link href="https://scalingo.com/fr/contact" target="_blank" aria-label="Scalingo, formulaire de contact (nouvel onglet)">
             Formulaire de contact Scalingo
           </Link>
         </>
@@ -52,7 +52,11 @@ export default async function MentionsLegalesPage() {
       description: (
         <>
           Pour en savoir plus sur la politique d’accessibilité numérique de l’État :&nbsp;
-          <Link href="https://accessibilite.numerique.gouv.fr/" target="_blank">
+          <Link
+            href="https://accessibilite.numerique.gouv.fr/"
+            target="_blank"
+            aria-label="accessibilite.numerique.gouv.fr (nouvel onglet)"
+          >
             https://accessibilite.numerique.gouv.fr/
           </Link>
         </>

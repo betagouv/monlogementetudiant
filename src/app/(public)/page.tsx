@@ -78,10 +78,17 @@ export default async function Home() {
           </div>
         </div>
         <div className={styles.heroImageContainer}>
-          <Image className={styles.heroImage} priority quality={100} src={home} alt="Hero" />
+          <Image className={styles.heroImage} priority quality={100} src={home} alt="" aria-hidden="true" />
         </div>
         <div className="fr-flex fr-justify-content-center">
-          <Image className={clsx(fr.cx('fr-hidden-sm'), styles.heroImageMobile)} priority quality={100} src={home} alt="Hero" />
+          <Image
+            className={clsx(fr.cx('fr-hidden-sm'), styles.heroImageMobile)}
+            priority
+            quality={100}
+            src={home}
+            alt=""
+            aria-hidden="true"
+          />
         </div>
       </div>
       <div className={clsx(fr.cx('fr-container'), styles.mainContainer)}>

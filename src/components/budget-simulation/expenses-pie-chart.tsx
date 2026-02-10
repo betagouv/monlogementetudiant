@@ -47,7 +47,7 @@ export function ExpensesPieChart() {
         <span className="fr-text-inverted--grey fr-h6 fr-mb-0">{t('summary.expensesBreakdown')}</span>
       </div>
       <div className="fr-flex fr-direction-column fr-justify-content-center fr-align-items-center">
-        <div style={{ height: '200px', width: '100%' }}>
+        <div style={{ height: '200px', width: '100%' }} role="img" aria-label={t('summary.expensesBreakdown')}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie data={activeExpenses} cx="50%" cy="50%" innerRadius={60} outerRadius={80} dataKey="value">

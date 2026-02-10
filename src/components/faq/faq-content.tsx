@@ -84,7 +84,12 @@ export const FAQ_CONTENTS: TFaqQuestionsAnswers[] = [
           Attention ! Le contrat de location et les quittances doivent toujours bien distinguer le montant du loyer (qui peut être encadré
           s’il s’agit de logements locatifs sociaux ou intermédiaires) et le montant des charges locatives récupérables dont la liste
           limitative est définie par décret. Vous pouvez trouver ces informations sur
-          <Link target="_blank" href="https://www.service-public.fr/particuliers/vosdroits/F947" className="fr-link">
+          <Link
+            target="_blank"
+            href="https://www.service-public.fr/particuliers/vosdroits/F947"
+            className="fr-link"
+            aria-label="service-public.fr, droits F947 (nouvel onglet)"
+          >
             &nbsp;https://www.service-public.fr/particuliers/vosdroits/F947
           </Link>
         </p>
@@ -160,11 +165,17 @@ export const FAQ_CONTENTS: TFaqQuestionsAnswers[] = [
             target="_blank"
             href="https://www.caf.fr/allocataires/aides-et-demarches/droits-et-prestations/logement/les-aides-personnelles-au-logement"
             className="fr-link"
+            aria-label="caf.fr, aides personnelles au logement (nouvel onglet)"
           >
             https://www.caf.fr/allocataires/aides-et-demarches/droits-et-prestations/logement/les-aides-personnelles-au-logement
           </Link>
           &nbsp;et&nbsp;
-          <Link target="_blank" href="https://www.service-public.fr/particuliers/vosdroits/N20360" className="fr-link">
+          <Link
+            target="_blank"
+            href="https://www.service-public.fr/particuliers/vosdroits/N20360"
+            className="fr-link"
+            aria-label="service-public.fr, droits N20360 (nouvel onglet)"
+          >
             https://www.service-public.fr/particuliers/vosdroits/N20360
           </Link>
         </p>
@@ -190,7 +201,7 @@ export const FAQ_CONTENTS: TFaqQuestionsAnswers[] = [
           <li>
             <p>
               <span className="fr-text--bold">La grantie Visale</span>&nbsp;(gratuite et publique)&nbsp;
-              <Link target="_blank" href="https://www.visale.fr/" className="fr-link">
+              <Link target="_blank" href="https://www.visale.fr/" className="fr-link" aria-label="visale.fr (nouvel onglet)">
                 https://www.visale.fr/
               </Link>
             </p>

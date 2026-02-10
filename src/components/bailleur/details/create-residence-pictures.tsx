@@ -49,6 +49,7 @@ export const CreateResidencePictures = () => {
               multiple
               accept="image/jpeg,image/png,image/webp"
               onChange={handleFileSelect}
+              aria-label="Ajouter des photos de la résidence"
               style={{ display: 'none' }}
             />
             <Button type="button" priority="tertiary" onClick={() => fileInputRef.current?.click()}>
