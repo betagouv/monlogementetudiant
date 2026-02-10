@@ -36,5 +36,11 @@
     }
   })
 
-  script.parentNode.insertBefore(iframe, script.nextSibling)
+  var targetId = script.getAttribute('data-target')
+  var target = targetId ? document.getElementById(targetId) : null
+  if (target) {
+    target.appendChild(iframe)
+  } else {
+    script.parentNode.insertBefore(iframe, script.nextSibling)
+  }
 })()
