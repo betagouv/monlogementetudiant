@@ -3,7 +3,8 @@
 import Button from '@codegouvfr/react-dsfr/Button'
 import { zodResolver } from '@hookform/resolvers/zod'
 import clsx from 'clsx'
-import { FormProvider, useForm } from 'react-hook-form'
+import { useCallback } from 'react'
+import { FieldErrors, FormProvider, useForm } from 'react-hook-form'
 import { CreateResidenceAccommodationList } from '~/components/bailleur/details/create-residence-accommodation-list'
 import { CreateResidenceEquipments } from '~/components/bailleur/details/create-residence-equipments'
 import { CreateResidenceLocation } from '~/components/bailleur/details/create-residence-location'
@@ -51,24 +52,34 @@ export const CreateResidenceForm = () => {
       cooking_plates: false,
       images_urls: [],
       images_files: [],
-      published: false,
+      published: true,
       scholarship_holders_priority: false,
       nb_accessible_apartments: null,
+      nb_coliving_apartments: null,
       address: '',
       city: '',
       postal_code: '',
-      longitude: undefined as unknown as number,
-      latitude: undefined as unknown as number,
     },
   })
 
+  const onError = useCallback((errors: FieldErrors<TCreateResidence>) => {
+    const firstErrorKey = Object.keys(errors)[0]
+    if (!firstErrorKey) return
+
+    const errorElement = document.querySelector(`[name="${firstErrorKey}"], [id*="${firstErrorKey}"]`)
+    if (errorElement) {
+      errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }, [])
+
   const onSubmit = async (data: TCreateResidence) => {
-    const { typologies, ...rest } = data
+    const { typologies, images_files, ...rest } = data
     const flatTypologies = transformTypologiesToFlat(typologies)
 
     const payload = {
       ...rest,
       ...flatTypologies,
+      images_files,
       description: data.description ? sanitizeHTML(data.description) : data.description,
     }
 
@@ -77,7 +88,7 @@ export const CreateResidenceForm = () => {
 
   return (
     <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
+      <form onSubmit={form.handleSubmit(onSubmit, onError)}>
         <div className="fr-flex fr-direction-row fr-justify-content-space-between fr-align-items-center">
           <h1>Nouvelle résidence</h1>
           <CreateResidencePublication />

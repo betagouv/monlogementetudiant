@@ -35,6 +35,13 @@ export const ZTypology = z
     nb_available: z.number({ error: 'Le nombre disponible est requis' }).min(0, 'Le nombre disponible doit être positif'),
   })
   .superRefine((data, ctx) => {
+    if (data.price_min > data.price_max) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Le loyer minimum ne peut pas être supérieur au loyer maximum',
+        path: ['price_min'],
+      })
+    }
     if (data.nb_available > data.nb_total) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -83,8 +90,7 @@ export const ZCreateResidence = ZUpdateResidence.omit({
   address: z.string().min(1, "L'adresse est requise"),
   city: z.string().min(1, 'La ville est requise'),
   postal_code: z.string().min(1, 'Le code postal est requis'),
-  longitude: z.number({ error: 'La longitude est requise' }),
-  latitude: z.number({ error: 'La latitude est requise' }),
+  external_url: z.string().url('Veuillez saisir une URL valide').min(1, "L'URL de redirection est requise"),
   images_files: z.array(z.instanceof(File)).optional(),
   typologies: z
     .array(ZTypology)

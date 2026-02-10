@@ -68,6 +68,20 @@ export const ResidenceDetails = () => {
             }}
           />
         </div>
+        <div className="fr-py-4w fr-flex fr-justify-content-space-between fr-align-items-center">
+          <span>{t('coliving')}</span>
+          <Input
+            hideLabel
+            label={t('coliving')}
+            style={{ width: '74px' }}
+            className="fr-mr-4w"
+            nativeInputProps={{
+              ...register('nb_coliving_apartments', { valueAsNumber: true }),
+              type: 'number',
+              min: 0,
+            }}
+          />
+        </div>
       </div>
     </div>
   )

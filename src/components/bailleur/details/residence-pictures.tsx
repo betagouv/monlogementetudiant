@@ -168,11 +168,15 @@ export const ResidencePictures = ({ accommodation }: { accommodation: TAccomodat
             </>
           )}
         />
-        <hr className="fr-mt-2w fr-mb-0" />
-        <span>Aperçu</span>
-        <div className="fr-mt-2w">
-          <AccommodationImages images={watchedImages ?? []} withModal={false} />
-        </div>
+        {watchedImages && watchedImages.length > 0 && (
+          <>
+            <hr className="fr-mt-2w fr-mb-0" />
+            <span>Aperçu</span>
+            <div className="fr-mt-2w">
+              <AccommodationImages images={watchedImages ?? []} withModal={false} />
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
