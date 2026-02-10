@@ -2,6 +2,7 @@
 
 import Checkbox from '@codegouvfr/react-dsfr/Checkbox'
 import { Input } from '@codegouvfr/react-dsfr/Input'
+import { Range } from '@codegouvfr/react-dsfr/Range'
 import { FC } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { type HelpSimulatorFormData } from '~/components/helps-simulator/help-simulator-schema'
@@ -16,6 +17,7 @@ export const HelpSimulatorStep2: FC = () => {
   } = useFormContext<HelpSimulatorFormData>()
 
   const rentUnknown = watch('rentUnknown')
+  const monthlyRent = watch('monthlyRent')
 
   return (
     <>
@@ -30,16 +32,19 @@ export const HelpSimulatorStep2: FC = () => {
         }}
       />
       <div>
-        <Input
+        <Range
           label={rentUnknown ? 'Montant de votre loyer mensuel' : <RequiredLabel>Montant de votre loyer mensuel</RequiredLabel>}
-          hintText="Charges comprises, en euros"
+          hintText="Hors charges, en euros"
+          min={100}
+          max={1000}
+          step={20}
+          suffix=" €"
           disabled={rentUnknown === true}
-          state={errors.monthlyRent ? 'error' : undefined}
+          state={errors.monthlyRent ? 'error' : 'default'}
           stateRelatedMessage={errors.monthlyRent?.message}
           nativeInputProps={{
-            ...register('monthlyRent', { valueAsNumber: true }),
-            type: 'number',
-            min: 0,
+            value: rentUnknown ? 0 : (monthlyRent ?? 0),
+            onChange: (e) => setValue('monthlyRent', Number(e.target.value)),
             disabled: rentUnknown === true,
           }}
         />
