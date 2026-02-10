@@ -5,6 +5,7 @@ import { useRef, useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { AddressSuggestion, useAddressAutocomplete } from '~/hooks/use-address-autocomplete'
 import { TCreateResidence } from '~/schemas/accommodations/create-residence'
+import styles from './create-residence-location.module.css'
 
 export const CreateResidenceLocation = () => {
   const {
@@ -34,26 +35,17 @@ export const CreateResidenceLocation = () => {
     setValue('address', suggestion.address, { shouldValidate: true })
     setValue('city', suggestion.city, { shouldValidate: true })
     setValue('postal_code', suggestion.postalCode, { shouldValidate: true })
-    setValue('longitude', suggestion.longitude, { shouldValidate: true })
-    setValue('latitude', suggestion.latitude, { shouldValidate: true })
     setShowSuggestions(false)
     clearSuggestions()
   }
 
-  const handleBlur = () => {
-    // Delay hiding suggestions to allow click to register
-    setTimeout(() => {
-      setShowSuggestions(false)
-    }, 200)
-  }
-
-  const hasAddressError = errors.address || errors.city || errors.postal_code || errors.longitude || errors.latitude
+  const hasAddressError = errors.address || errors.city || errors.postal_code
 
   return (
     <div className="fr-border-bottom">
       <div className="fr-p-2w fr-p-md-6w">
         <h3>Localisation</h3>
-        <div ref={containerRef} style={{ position: 'relative' }}>
+        <div ref={containerRef} className={styles.container}>
           <Input
             label={
               <>
@@ -66,48 +58,17 @@ export const CreateResidenceLocation = () => {
               value: inputValue,
               onChange: handleInputChange,
               onFocus: () => setShowSuggestions(true),
-              onBlur: handleBlur,
               placeholder: 'Rechercher une adresse...',
               autoComplete: 'off',
             }}
           />
           {showSuggestions && (suggestions.length > 0 || isLoading) && (
-            <ul
-              style={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                right: 0,
-                zIndex: 1000,
-                backgroundColor: 'white',
-                border: '1px solid var(--border-default-grey)',
-                borderRadius: '0 0 4px 4px',
-                listStyle: 'none',
-                margin: 0,
-                padding: 0,
-                maxHeight: '200px',
-                overflowY: 'auto',
-              }}
-            >
+            <ul className={styles.suggestionList}>
               {isLoading ? (
-                <li style={{ padding: '0.75rem 1rem', color: 'var(--text-mention-grey)' }}>Recherche en cours...</li>
+                <li className={styles.suggestionLoading}>Recherche en cours...</li>
               ) : (
                 suggestions.map((suggestion, index) => (
-                  <li
-                    key={index}
-                    onClick={() => handleSelectSuggestion(suggestion)}
-                    style={{
-                      padding: '0.75rem 1rem',
-                      cursor: 'pointer',
-                      borderBottom: index < suggestions.length - 1 ? '1px solid var(--border-default-grey)' : 'none',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'var(--background-contrast-grey)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'white'
-                    }}
-                  >
+                  <li key={index} onClick={() => handleSelectSuggestion(suggestion)} className={styles.suggestionItem}>
                     {suggestion.label}
                   </li>
                 ))
