@@ -98,14 +98,14 @@ Si `data-city` ou `data-bbox` est fourni, le champ de recherche de localisation 
 <script src="https://mon-logement-etudiant.gouv.fr/widget/embed.js" data-city="Paris" data-prix="800"></script>
 
 <!-- Lyon, CROUS uniquement, sans filtres -->
-<script src="https://mon-logement-etudiant.gouv.fr/widget/embed.js" data-city="Lyon" data-crous="true" data-filters="false"></script>
+<script src="https://monlogementetudiant.beta.gouv.fr/widget/embed.js" data-city="Lyon" data-crous="true" data-filters="false"></script>
 
 <!-- Bbox manuelle, colocation -->
-<script src="https://mon-logement-etudiant.gouv.fr/widget/embed.js" data-bbox="2.2,48.8,2.5,48.9" data-colocation="true"></script>
+<script src="https://monlogementetudiant.beta.gouv.fr/widget/embed.js" data-bbox="2.2,48.8,2.5,48.9" data-colocation="true"></script>
 
 <!-- Iframe deposee dans un element specifique -->
 <div id="mon-widget"></div>
-<script src="https://mon-logement-etudiant.gouv.fr/widget/embed.js" data-city="Toulouse" data-target="mon-widget"></script>
+<script src="https://monlogementetudiant.beta.gouv.fr/widget/embed.js" data-city="Toulouse" data-target="mon-widget"></script>
 ```
 
 ### Test local
@@ -128,4 +128,3 @@ Ouvrir le fichier test en `file://` (pas via localhost) pour simuler un vrai con
 ## Maintainers
 
 - [@KGALLET](https://github.com/KGALLET)
-- [@mlvernay](https://github.com/mlvernay)
