@@ -48,6 +48,7 @@ export const ZUpdateResidence = z.object({
   price_max_t7_more: z.number().min(0).nullish(),
 
   nb_accessible_apartments: z.number().nullish(),
+  nb_coliving_apartments: z.number().nullish(),
 
   refrigerator: z.boolean().optional(),
   laundry_room: z.boolean().optional(),
