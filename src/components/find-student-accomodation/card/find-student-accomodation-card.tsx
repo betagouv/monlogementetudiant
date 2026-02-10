@@ -22,9 +22,17 @@ type AccomodationCardProps = {
   accomodation: TAccomodationCard
   href?: string
   className?: string
+  showFavorite?: boolean
+  targetBlank?: boolean
 }
 
-export const AccomodationCard: FC<AccomodationCardProps> = ({ className, accomodation, href }) => {
+export const AccomodationCard: FC<AccomodationCardProps> = ({
+  className,
+  accomodation,
+  href,
+  showFavorite = true,
+  targetBlank = false,
+}) => {
   const router = useRouter()
   const [selectedAccommodation] = useQueryState('id', parseAsString)
   const t = useTranslations('findAccomodation.card')
@@ -90,7 +98,11 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({ className, accomod
     if (target.closest(`button[title="${FAVORITE_BUTTON_TITLES.ADD}"], button[title="${FAVORITE_BUTTON_TITLES.REMOVE}"]`)) {
       return
     }
-    router.push(redirectUri)
+    if (targetBlank) {
+      window.open(redirectUri, '_blank', 'noopener,noreferrer')
+    } else {
+      router.push(redirectUri)
+    }
   }
 
   return (
@@ -135,7 +147,7 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({ className, accomod
               <Tag>{`${city} (${postal_code})`}</Tag>
             </li>
           </ul>
-          <SaveAccommodationFavoriteButton slug={accomodation.properties.slug} />
+          {showFavorite && <SaveAccommodationFavoriteButton slug={accomodation.properties.slug} />}
         </div>
       }
       end={<>{waitingListBadge}</>}
