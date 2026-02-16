@@ -120,6 +120,7 @@ const useStyles = tss.create({
   },
   filtersRow: {
     alignItems: 'flex-end',
+    justifyContent: 'space-between',
     display: 'flex',
     flexWrap: 'wrap',
     gap: '1rem',

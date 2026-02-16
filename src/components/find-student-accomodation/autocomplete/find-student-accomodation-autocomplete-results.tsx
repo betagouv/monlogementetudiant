@@ -6,7 +6,6 @@ import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { FC } from 'react'
 import { tss } from 'tss-react'
-import { expandBbox } from '~/components/map/map-utils'
 import { TTerritories, TTerritory } from '~/schemas/territories'
 
 interface FindStudentAccomodationAutocompleteResults {
@@ -66,17 +65,9 @@ export const FindStudentAccomodationAutocompleteResults: FC<FindStudentAccomodat
                     if (value) searchParams.set(param, value)
                   })
 
-                  if (!isAcademy) {
-                    searchParams.set('vue', 'carte')
-
-                    if (item.bbox) {
-                      const expanded = expandBbox(item.bbox.xmin, item.bbox.ymin, item.bbox.xmax, item.bbox.ymax)
-                      searchParams.set('bbox', `${expanded.west},${expanded.south},${expanded.east},${expanded.north}`)
-                    }
-                  } else {
+                  if (isAcademy) {
                     searchParams.set('academie', item.id.toString())
                   }
-
                   return (
                     <Link
                       key={item.id}
