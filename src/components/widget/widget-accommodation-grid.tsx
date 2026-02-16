@@ -5,21 +5,23 @@ import { Pagination } from '@codegouvfr/react-dsfr/Pagination'
 import { useTranslations } from 'next-intl'
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
 import { FC } from 'react'
-import { tss } from 'tss-react'
 import { AccomodationCard } from '~/components/find-student-accomodation/card/find-student-accomodation-card'
 import { CardSkeleton } from '~/components/ui/skeleton/card-skeleton'
 import { useAccomodations } from '~/hooks/use-accomodations'
 import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
+import { formatCityWithA } from '~/utils/french-contraction'
+import styles from './widget-accommodation-grid.module.css'
 
 type WidgetAccommodationGridProps = {
   data: TGetAccomodationsResponse
+  cityName?: string
 }
 
-export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = ({ data }) => {
+export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = ({ data, cityName }) => {
   const t = useTranslations('findAccomodation.results')
-  const { classes } = useStyles()
   const [queryStates] = useQueryStates({
     bbox: parseAsString,
+    city: parseAsString,
     page: parseAsInteger,
     prix: parseAsInteger,
     accessible: parseAsString,
@@ -27,22 +29,18 @@ export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = ({ data
     crous: parseAsString,
   })
 
-  const { data: accommodations, isLoading } = useAccomodations({ initialData: data })
+  const { data: accommodations, isLoading } = useAccomodations({ initialData: data, pageSize: 6 })
 
   return (
     <div>
-      {accommodations && accommodations.count > 0 && (
-        <h2 className={fr.cx('fr-mb-2w')} style={{ fontSize: '1.25rem' }}>
-          {accommodations.count} logement{accommodations.count > 1 ? 's' : ''}
-        </h2>
-      )}
+      <h2 className={`${fr.cx('fr-mb-2w')} ${styles.title}`}>Trouver un logement {cityName ? formatCityWithA(cityName) : 'étudiant'}</h2>
 
-      <div className={classes.grid}>
+      <div className={styles.grid}>
         {!isLoading &&
           (accommodations?.results.features || []).map((accommodation) => (
             <AccomodationCard key={accommodation.id} accomodation={accommodation} showFavorite={false} targetBlank />
           ))}
-        {isLoading && Array.from({ length: 12 }).map((_, index) => <CardSkeleton key={index} />)}
+        {isLoading && Array.from({ length: 6 }).map((_, index) => <CardSkeleton key={index} />)}
       </div>
 
       {accommodations?.count === 0 && (
@@ -54,7 +52,7 @@ export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = ({ data
       )}
 
       {accommodations && accommodations.count > accommodations.page_size && (
-        <div className={classes.paginationContainer}>
+        <div className={styles.paginationContainer}>
           <Pagination
             showFirstLast={false}
             count={Math.ceil(accommodations.count / accommodations.page_size)}
@@ -62,6 +60,7 @@ export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = ({ data
             getPageLinkProps={(page: number) => {
               const params = new URLSearchParams()
               if (queryStates.bbox) params.set('bbox', queryStates.bbox)
+              if (queryStates.city) params.set('city', queryStates.city)
               if (queryStates.accessible) params.set('accessible', queryStates.accessible)
               if (queryStates.colocation) params.set('colocation', queryStates.colocation)
               if (queryStates.prix) params.set('prix', queryStates.prix.toString())
@@ -72,26 +71,13 @@ export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = ({ data
           />
         </div>
       )}
+
+      <footer className={styles.footer}>
+        Proposé par{' '}
+        <a href="https://monlogementetudiant.beta.gouv.fr" target="_blank" rel="noopener noreferrer">
+          MonLogementEtudiant.beta.gouv.fr
+        </a>
+      </footer>
     </div>
   )
 }
-
-const useStyles = tss.create({
-  grid: {
-    display: 'grid',
-    gap: '1rem',
-    gridTemplateColumns: '1fr',
-    '@media (min-width: 640px)': {
-      gridTemplateColumns: 'repeat(2, 1fr)',
-    },
-    '@media (min-width: 1024px)': {
-      gridTemplateColumns: 'repeat(3, 1fr)',
-    },
-  },
-  paginationContainer: {
-    display: 'flex',
-    justifyContent: 'center',
-    paddingBottom: '2rem',
-    paddingTop: '2rem',
-  },
-})

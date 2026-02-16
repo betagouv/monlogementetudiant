@@ -44,12 +44,21 @@ export default async function WidgetLogementsPage({
   const hasLocation = !!awaitedSearchParams.city || !!awaitedSearchParams.bbox
   const showFilters = awaitedSearchParams.filters !== 'false'
 
+  // Resolve city name for the title
+  let cityName: string | undefined
+  if (awaitedSearchParams.city) {
+    const territories = await getTerritories(awaitedSearchParams.city)
+    const city = territories.cities?.find((c) => c.name === awaitedSearchParams.city || c.slug === awaitedSearchParams.city)
+    cityName = city?.name ?? awaitedSearchParams.city
+  }
+
   const accommodations = await getAccommodations({
     accessible: awaitedSearchParams.accessible,
     bbox: awaitedSearchParams.bbox,
     colocation: awaitedSearchParams.colocation,
     crous: awaitedSearchParams.crous,
     page: awaitedSearchParams.page,
+    page_size: '6',
     prix: awaitedSearchParams.prix,
   })
 
@@ -57,7 +66,7 @@ export default async function WidgetLogementsPage({
     <>
       <WidgetBodyStyle />
       {showFilters && <WidgetAccommodationFilters showLocationInput={!hasLocation} />}
-      <WidgetAccommodationGrid data={accommodations} />
+      <WidgetAccommodationGrid data={accommodations} cityName={cityName} />
     </>
   )
 }

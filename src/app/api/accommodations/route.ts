@@ -10,6 +10,7 @@ export async function GET(request: Request) {
   const maxPrice = url.searchParams.get('price_max')
   const crous = url.searchParams.get('view_crous')
   const academy = url.searchParams.get('academy_id')
+  const pageSize = url.searchParams.get('page_size')
 
   if (bbox) params.append('bbox', bbox)
   if (page) params.append('page', page)
@@ -18,6 +19,7 @@ export async function GET(request: Request) {
   params.append('is_accessible', isAccessible === 'true' ? 'true' : 'false')
   params.append('has_coliving', hasColiving === 'true' ? 'true' : 'false')
   params.append('view_crous', crous === 'true' ? 'true' : 'false')
+  if (pageSize) params.append('page_size', pageSize)
 
   const response = await fetch(`${process.env.API_URL}/accommodations/${params.size > 0 ? `?${params.toString()}` : ''}`)
   if (!response.ok) {

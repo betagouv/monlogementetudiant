@@ -85,11 +85,19 @@ Le script cree automatiquement l'iframe et gere le redimensionnement dynamique.
 | `data-crous` | CROUS uniquement | `data-crous="true"` |
 | `data-colocation` | Colocation uniquement | `data-colocation="true"` |
 | `data-accessible` | Logements PMR | `data-accessible="true"` |
-| `data-filters` | Masquer les filtres | `data-filters="false"` |
+| `data-filters` | Afficher/masquer les filtres (visible par defaut) | `data-filters="false"` |
 | `data-page` | Page de pagination | `data-page="2"` |
 | `data-target` | ID de l'element ou deposer l'iframe | `data-target="widget-container"` |
 
 Si `data-city` ou `data-bbox` est fourni, le champ de recherche de localisation est masque.
+
+Les filtres sont **visibles par defaut**. Pour les masquer, utiliser `data-filters="false"`.
+
+### Comportement du widget
+
+- **Pagination** : 6 residences par page (au lieu de 15 sur le site principal)
+- **Titre dynamique** : "Trouver un logement a [ville]" avec contractions francaises (au Mans, aux Lilas, a Paris). Sans ville : "Trouver un logement etudiant"
+- **Signature** : lien "Propose par MonLogementEtudiant.beta.gouv.fr" affiche en bas du widget
 
 ### Exemples
 
@@ -112,7 +120,7 @@ Si `data-city` ou `data-bbox` est fourni, le champ de recherche de localisation 
 
 ```bash
 pnpm dev
-open /tmp/widget-test.html   # ou copier public/widget/test.html en dehors du projet
+open /tmp/widget-test.html bun   # ou copier public/widget/test.html en dehors du projet
 ```
 
 Ouvrir le fichier test en `file://` (pas via localhost) pour simuler un vrai contexte cross-origin.

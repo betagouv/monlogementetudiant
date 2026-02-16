@@ -1,0 +1,35 @@
+.grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.paginationContainer {
+  display: flex;
+  justify-content: center;
+  padding-bottom: 2rem;
+  padding-top: 2rem;
+}
+
+.title {
+  font-size: 1.25rem;
+}
+
+.footer {
+  text-align: center;
+  padding: 1rem 0;
+  font-size: 0.875rem;
+  color: #666;
+}
