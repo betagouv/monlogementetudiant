@@ -72,7 +72,7 @@ export const StudentAccommodationFavorite: FC<StudentAccommodationFavoriteProps>
     images_urls && images_urls.length > 0
       ? { imageComponent: <FindStudentAccommodationImageCard image={images_urls[0]} name={name} /> }
       : {
-          imageComponent: <FindStudentAccommodationPlaceholderImageCard />,
+          imageComponent: <FindStudentAccommodationPlaceholderImageCard id={accomodation.id} />,
         }
 
   const badgeProps = price_min

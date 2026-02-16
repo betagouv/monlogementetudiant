@@ -2,6 +2,7 @@
 
 import { fr } from '@codegouvfr/react-dsfr'
 import { Pagination } from '@codegouvfr/react-dsfr/Pagination'
+import clsx from 'clsx'
 import { useTranslations } from 'next-intl'
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
 import { FC } from 'react'
@@ -9,7 +10,7 @@ import { AccomodationCard } from '~/components/find-student-accomodation/card/fi
 import { CardSkeleton } from '~/components/ui/skeleton/card-skeleton'
 import { useAccomodations } from '~/hooks/use-accomodations'
 import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
-import { formatCityWithA } from '~/utils/french-contraction'
+import { sPluriel } from '~/utils/sPluriel'
 import styles from './widget-accommodation-grid.module.css'
 
 type WidgetAccommodationGridProps = {
@@ -17,7 +18,7 @@ type WidgetAccommodationGridProps = {
   cityName?: string
 }
 
-export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = ({ data, cityName }) => {
+export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = ({ data }) => {
   const t = useTranslations('findAccomodation.results')
   const [queryStates] = useQueryStates({
     bbox: parseAsString,
@@ -33,8 +34,11 @@ export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = ({ data
 
   return (
     <div>
-      <h2 className={`${fr.cx('fr-mb-2w')} ${styles.title}`}>Trouver un logement {cityName ? formatCityWithA(cityName) : 'étudiant'}</h2>
-
+      {accommodations?.count && (
+        <h2 className={clsx('fr-mb-2w', styles.title)}>
+          {accommodations.count} résidence{sPluriel(accommodations.count)}
+        </h2>
+      )}
       <div className={styles.grid}>
         {!isLoading &&
           (accommodations?.results.features || []).map((accommodation) => (
@@ -42,7 +46,6 @@ export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = ({ data
           ))}
         {isLoading && Array.from({ length: 6 }).map((_, index) => <CardSkeleton key={index} />)}
       </div>
-
       {accommodations?.count === 0 && (
         <div className={fr.cx('fr-col-md-11')}>
           <h3>{t('noResult')}</h3>
@@ -50,7 +53,6 @@ export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = ({ data
           <p>{t('description2')}</p>
         </div>
       )}
-
       {accommodations && accommodations.count > accommodations.page_size && (
         <div className={styles.paginationContainer}>
           <Pagination
@@ -66,12 +68,14 @@ export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = ({ data
               if (queryStates.prix) params.set('prix', queryStates.prix.toString())
               if (queryStates.crous) params.set('crous', queryStates.crous.toString())
               params.set('page', page.toString())
-              return { href: `/widget/logements?${params.toString()}` }
+              return {
+                href: `/widget/logements?${params.toString()}`,
+                onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+              }
             }}
           />
         </div>
       )}
-
       <footer className={styles.footer}>
         Proposé par{' '}
         <a href="https://monlogementetudiant.beta.gouv.fr" target="_blank" rel="noopener noreferrer">

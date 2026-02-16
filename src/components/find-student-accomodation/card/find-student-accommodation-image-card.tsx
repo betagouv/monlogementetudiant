@@ -9,9 +9,9 @@ const PLACEHOLDER_IMAGES = [
   '/images/placeholder/logement-etudiant-chambre-5.jpg',
 ]
 
-export const FindStudentAccommodationPlaceholderImageCard = () => {
+export const FindStudentAccommodationPlaceholderImageCard = ({ id = 0 }: { id?: number }) => {
   const [vue] = useQueryState('vue', parseAsString)
-  const randomImage = PLACEHOLDER_IMAGES[Math.floor(Math.random() * PLACEHOLDER_IMAGES.length)]
+  const randomImage = PLACEHOLDER_IMAGES[Math.abs(id) % PLACEHOLDER_IMAGES.length]
 
   return (
     <Image

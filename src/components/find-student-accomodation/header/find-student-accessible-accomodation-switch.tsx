@@ -11,6 +11,7 @@ export const FindStudentAccessibleAccomodationSwitch: FC = () => {
   const [queryStates, setQueryStates] = useQueryStates({
     accessible: parseAsString,
     page: parseAsInteger,
+    crous: parseAsString,
   })
   const t = useTranslations('findAccomodation')
   const { classes } = useStyles()
@@ -27,6 +28,7 @@ export const FindStudentAccessibleAccomodationSwitch: FC = () => {
         labelPosition="right"
         checked={queryStates.accessible === 'true'}
         onChange={handleChange}
+        disabled={queryStates.crous === 'true'}
       />
       <Tooltip kind="hover" title={t('header.tooltip.accessible')} />
     </div>

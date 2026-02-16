@@ -112,7 +112,7 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
                   )}
                   key={accommodation.type}
                 >
-                  <div className="fr-flex fr-justify-content-space-between">
+                  <div className="fr-flex fr-flex-gap-2v">
                     <span className="ri-user-line fr-text--bold">{accommodation.title}</span>
                     <TooltipHoverOnly title={accommodation.tooltip} />
                   </div>
@@ -138,7 +138,11 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
           </div>
         </div>
         <div className={styles.simulatorContainer}>
-          <p className={fr.cx('fr-mb-0')}>{t('simulator')}</p>
+          <p className="fr-mb-0">
+            <span className="ri-information-line fr-mr-1v" aria-hidden />
+            <span className="fr-text--bold">{t('simulator')}</span>
+            <p className="fr-mb-0">{t('simulatorDescription')}</p>
+          </p>
           <Button
             size="small"
             iconId="fr-icon-money-euro-circle-fill"
