@@ -8,10 +8,12 @@ export const getAccommodations = async (searchParams: {
   colocation?: string
   prix?: string
   page?: string
+  page_size?: string
   crous?: string
 }) => {
   const params = new URLSearchParams()
   if (searchParams.page) params.append('page', searchParams.page)
+  if (searchParams.page_size) params.append('page_size', searchParams.page_size)
   if (searchParams.bbox) params.append('bbox', searchParams.bbox)
   if (searchParams.center) {
     params.append('center', searchParams.center)
