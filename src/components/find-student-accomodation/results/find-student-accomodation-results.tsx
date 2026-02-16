@@ -34,7 +34,7 @@ export const FindStudentAccomodationResults: FC<FindStudentAccomodationResultsPr
     ['recherche-par-carte']: parseAsString,
   })
 
-  const { data: accommodations, isLoading } = useAccomodations({ initialData: data })
+  const { data: accommodations, isLoading, isFetching } = useAccomodations({ initialData: data })
 
   useEffect(() => {
     if (!!accommodations?.results?.features && accommodations.results.features.length < 6) {
@@ -64,11 +64,11 @@ export const FindStudentAccomodationResults: FC<FindStudentAccomodationResultsPr
       <div className={classes.container}>
         <div className={classes.accomodationsContainer}>
           <div className={classes.accommodationGrid}>
-            {!isLoading &&
+            {!isFetching &&
               (accommodations?.results.features || []).map((accommodation) => (
                 <AccomodationCard key={accommodation.id} accomodation={accommodation} />
               ))}
-            {isLoading && Array.from({ length: 24 }).map((_, index) => <CardSkeleton key={index} />)}
+            {(isFetching || isLoading) && Array.from({ length: 24 }).map((_, index) => <CardSkeleton key={index} />)}
           </div>
 
           {accommodations?.count === 0 && (

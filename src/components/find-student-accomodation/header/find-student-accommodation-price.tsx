@@ -12,7 +12,7 @@ export const FindStudentAccommodationPrice = () => {
     crous: parseAsString,
   })
 
-  if (queryStates.crous === 'true') return null
+  const isCrous = queryStates.crous === 'true'
 
   return (
     <Range
@@ -22,8 +22,12 @@ export const FindStudentAccommodationPrice = () => {
       hideMinMax
       step={50}
       suffix=" €"
-      style={{ width: '260px' }}
-      nativeInputProps={{ value: queryStates.prix, onChange: (e) => setQueryStates({ prix: Number(e.target.value), page: 1 }) }}
+      style={{ width: '260px', opacity: isCrous ? 0.5 : 1, pointerEvents: isCrous ? 'none' : 'auto' }}
+      nativeInputProps={{
+        value: queryStates.prix,
+        onChange: (e) => setQueryStates({ prix: Number(e.target.value), page: 1 }),
+        disabled: isCrous,
+      }}
     />
   )
 }

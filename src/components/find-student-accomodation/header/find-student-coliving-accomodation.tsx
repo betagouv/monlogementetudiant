@@ -10,6 +10,7 @@ export const FindStudentColivingAccomodationSwitch: FC = () => {
   const [queryStates, setQueryStates] = useQueryStates({
     colocation: parseAsString,
     page: parseAsInteger,
+    crous: parseAsString,
   })
   const t = useTranslations('findAccomodation')
   const { classes } = useStyles()
@@ -26,6 +27,7 @@ export const FindStudentColivingAccomodationSwitch: FC = () => {
         labelPosition="right"
         checked={queryStates.colocation === 'true'}
         onChange={handleChange}
+        disabled={queryStates.crous === 'true'}
       />
     </div>
   )

@@ -71,7 +71,7 @@
     }
   },
   "header": {
-    "title": "Mon logement étudiant",
+    "title": "Mon Logement Étudiant",
     "description": "Faciliter l'accès au logement pour les étudiants boursiers",
     "alerts": "Alertes logements",
     "login": "Se connecter",
@@ -169,7 +169,8 @@
     "studio": "Studio {type}",
     "colocation": "Colocation",
     "appartement": "Appartement {type}",
-    "simulator": "Sous réserve de l'obtention des aides aux logements étudiants",
+    "simulator": "Des aides au logement peuvent diminuer le coût du logement.",
+    "simulatorDescription": "Effectuez une simulation pour savoir si vous êtes éligible.",
     "simulatorButton": "Simulateur",
     "card": {
       "availability": "Disponibilité",
