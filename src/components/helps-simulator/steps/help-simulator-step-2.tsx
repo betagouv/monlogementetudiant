@@ -23,6 +23,7 @@ export const HelpSimulatorStep2: FC = () => {
     <>
       <Input
         label={<RequiredLabel>Vos revenus mensuels</RequiredLabel>}
+        hintText="Salaire en euros"
         state={errors.monthlyIncome ? 'error' : undefined}
         stateRelatedMessage={errors.monthlyIncome?.message}
         nativeInputProps={{
