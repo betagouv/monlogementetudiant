@@ -1,6 +1,7 @@
 import { customSessionClient } from 'better-auth/client/plugins'
 import { createAuthClient } from 'better-auth/react'
 import type { auth } from '~/auth'
+import { trackEvent } from '~/lib/tracking'
 
 export const authClient = createAuthClient({
   plugins: [customSessionClient<typeof auth>()],
@@ -24,6 +25,7 @@ export async function signInCredentials(email: string, password: string, callbac
 
 export async function signOut(options: { callbackUrl?: string; redirect?: boolean } = {}) {
   const { callbackUrl = '/', redirect = true } = options
+  trackEvent({ category: 'Authentification', action: 'deconnexion' })
 
   const response = await fetch('/api/auth/external-auth/signout', {
     method: 'POST',

@@ -10,6 +10,7 @@ import { useState } from 'react'
 import { tss } from 'tss-react'
 import { useDebounce } from 'use-debounce'
 import { useRentSearch } from '~/hooks/use-rent-search'
+import { trackEvent } from '~/lib/tracking'
 import { TRentSearchResult } from '~/schemas/territories'
 
 export const rentSearchModal = createModal({
@@ -32,6 +33,12 @@ export const RentSearchModal = ({ onApply, onCancel }: RentSearchModalProps) => 
 
   const handleApply = () => {
     if (selectedCity && onApply) {
+      trackEvent({
+        category: 'Simulateur',
+        action: 'estimation loyer',
+        name: selectedCity.city,
+        value: Math.round(selectedCity.rentFor20M2),
+      })
       onApply(selectedCity)
     }
     rentSearchModal.close()

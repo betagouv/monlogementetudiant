@@ -11,6 +11,7 @@ import { useEffect } from 'react'
 import { Controller, FormProvider, useForm } from 'react-hook-form'
 import { StudentAlertLocation } from '~/components/student-space/alerts/student-alert-location'
 import { useUpdateAlert } from '~/hooks/use-update-alert'
+import { trackEvent } from '~/lib/tracking'
 import { TAlert } from '~/schemas/alerts/get-alerts'
 import { TUpdateAlertRequest, ZUpdateAlertRequest } from '~/schemas/alerts/update-alert'
 import styles from './student-alerts.module.css'
@@ -70,6 +71,7 @@ export const UpdateStudentAlert = ({ alert }: { alert: TAlert }) => {
   const handleSubmit = form.handleSubmit(async (data) => {
     try {
       await updateAlert(data)
+      trackEvent({ category: 'Alertes', action: 'modification alerte', name: String(data.id), value: data.max_price })
       updateStudentAlertModal.close()
     } catch (error) {
       console.error('Error creating alert:', error)

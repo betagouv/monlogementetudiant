@@ -13,6 +13,7 @@ import { FormProvider, useForm } from 'react-hook-form'
 import { tss } from 'tss-react'
 import { signInCredentials } from '~/auth-client'
 import { createToast } from '~/components/ui/createToast'
+import { trackEvent } from '~/lib/tracking'
 import { ZCredentialsSignInForm } from '~/schemas/credentials-sign-in/credentials-sign-in'
 
 export const CredentialsSignInForm: FC = () => {
@@ -38,23 +39,27 @@ export const CredentialsSignInForm: FC = () => {
       const result = await signInCredentials(data.email, data.password)
 
       if ('error' in result) {
+        trackEvent({ category: 'Authentification', action: 'connexion etudiant', name: 'erreur' })
         createToast({
           priority: 'error',
           message: 'Email ou mot de passe incorrect.',
         })
       } else if (result.success) {
+        trackEvent({ category: 'Authentification', action: 'connexion etudiant', name: 'succes' })
         createToast({
           priority: 'success',
           message: 'Vous êtes connecté avec succès !',
         })
         router.push(result.callbackUrl || '/mon-espace')
       } else {
+        trackEvent({ category: 'Authentification', action: 'connexion etudiant', name: 'erreur' })
         createToast({
           priority: 'error',
           message: 'Une erreur est survenue lors de la connexion.',
         })
       }
     } catch {
+      trackEvent({ category: 'Authentification', action: 'connexion etudiant', name: 'erreur' })
       createToast({
         priority: 'error',
         message: 'Une erreur est survenue lors de la connexion.',

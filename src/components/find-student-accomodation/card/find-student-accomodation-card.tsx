@@ -15,6 +15,7 @@ import {
   FindStudentAccommodationPlaceholderImageCard,
 } from '~/components/find-student-accomodation/card/find-student-accommodation-image-card'
 import { AvailabilityBadge } from '~/components/shared/availability-badge'
+import { trackEvent } from '~/lib/tracking'
 import { TAccomodationCard } from '~/schemas/accommodations/accommodations'
 import { calculateAvailability } from '~/utils/calculateAvailability'
 
@@ -98,6 +99,7 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
     if (target.closest(`button[title="${FAVORITE_BUTTON_TITLES.ADD}"], button[title="${FAVORITE_BUTTON_TITLES.REMOVE}"]`)) {
       return
     }
+    trackEvent({ category: 'Logement', action: 'clic carte logement', name: accomodation.properties.slug, value: price_min ?? undefined })
     if (targetBlank) {
       window.open(redirectUri, '_blank', 'noopener,noreferrer')
     } else {

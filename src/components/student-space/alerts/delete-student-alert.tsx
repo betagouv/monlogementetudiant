@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import clsx from 'clsx'
 import { useForm } from 'react-hook-form'
 import { useDeleteAlert } from '~/hooks/use-delete-alert'
+import { trackEvent } from '~/lib/tracking'
 import { TDeleteAlert, ZDeleteAlert } from '~/schemas/alerts/delete-alert'
 import styles from './student-alerts.module.css'
 
@@ -26,6 +27,7 @@ export const DeleteStudentAlert = ({ alertId }: { alertId: number }) => {
   const handleSubmit = form.handleSubmit(async () => {
     try {
       await deleteAlert(form.getValues())
+      trackEvent({ category: 'Alertes', action: 'suppression alerte', name: String(alertId) })
       form.reset()
       deleteStudentAlertModal.close()
     } catch (error) {

@@ -10,6 +10,7 @@ import clsx from 'clsx'
 import { FormProvider, useForm } from 'react-hook-form'
 import { StudentAlertLocation } from '~/components/student-space/alerts/student-alert-location'
 import { useCreateAlert } from '~/hooks/use-create-alert'
+import { trackEvent } from '~/lib/tracking'
 import { type TCreateAlertRequest, ZCreateAlertRequest } from '~/schemas/alerts/create-alert'
 import styles from './student-alerts.module.css'
 
@@ -39,6 +40,7 @@ export const CreateStudentAlert = () => {
   const handleSubmit = form.handleSubmit(async (data) => {
     try {
       await createAlert(data)
+      trackEvent({ category: 'Alertes', action: 'creation alerte', name: data.name, value: data.max_price })
       form.reset()
       createStudentAlertModal.close()
     } catch (error) {

@@ -13,6 +13,7 @@ import { ResidenceDetails } from '~/components/bailleur/details/residence-detail
 import { ResidenceRedirection } from '~/components/bailleur/details/residence-redirection'
 import { ResidenceSummary } from '~/components/bailleur/details/residence-summary'
 import { useCreateResidence } from '~/hooks/use-create-residence'
+import { trackEvent } from '~/lib/tracking'
 import { TCreateResidence, transformTypologiesToFlat, ZCreateResidence } from '~/schemas/accommodations/create-residence'
 import { sanitizeHTML } from '~/utils/sanitize-html'
 import styles from './update-residence-form.module.css'
@@ -73,6 +74,7 @@ export const CreateResidenceForm = () => {
     }
 
     await createMutation.mutateAsync(payload)
+    trackEvent({ category: 'Espace Gestionnaire', action: 'creation residence', name: data.name })
   }
 
   return (

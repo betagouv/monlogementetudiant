@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useState } from 'react'
 import { tss } from 'tss-react'
 import { createToast } from '~/components/ui/createToast'
+import { trackEvent } from '~/lib/tracking'
 import { formatCityWithA } from '~/utils/french-contraction'
 
 export const OwnerDetailsActions = ({ title, location }: { title: string; location: string }) => {
@@ -20,6 +21,7 @@ export const OwnerDetailsActions = ({ title, location }: { title: string; locati
   const handleCopyLink = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(currentUrl)
+      trackEvent({ category: 'Logement', action: 'partage copie lien' })
       createToast({
         priority: 'success',
         message: 'Copié dans le presse-papiers',
@@ -33,6 +35,7 @@ export const OwnerDetailsActions = ({ title, location }: { title: string; locati
   }, [currentUrl])
 
   const handlePrint = useCallback(() => {
+    trackEvent({ category: 'Logement', action: 'partage impression' })
     window.print()
   }, [])
 
@@ -44,7 +47,13 @@ export const OwnerDetailsActions = ({ title, location }: { title: string; locati
       <p className={fr.cx('fr-m-0')}>{t('sidebar.share')}</p>
       <div className={classes.buttonGroup}>
         <Button size="small" iconId="ri-links-line" priority="tertiary" title={t('sidebar.buttons.link')} onClick={handleCopyLink} />
-        <Button size="small" iconId="ri-mail-line" priority="tertiary" title={t('sidebar.buttons.email')} linkProps={{ href: mailtoUrl }} />
+        <Button
+          size="small"
+          iconId="ri-mail-line"
+          priority="tertiary"
+          title={t('sidebar.buttons.email')}
+          linkProps={{ href: mailtoUrl, onClick: () => trackEvent({ category: 'Logement', action: 'partage email' }) }}
+        />
         <Button size="small" iconId="ri-printer-line" priority="tertiary" title={t('sidebar.buttons.print')} onClick={handlePrint} />
       </div>
     </div>

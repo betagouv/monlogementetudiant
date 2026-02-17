@@ -17,6 +17,7 @@ import { HelpSimulatorStep2 } from '~/components/helps-simulator/steps/help-simu
 import { HelpSimulatorStep3 } from '~/components/helps-simulator/steps/help-simulator-step-3'
 import { useHelpSimulatorData } from '~/components/helps-simulator/use-help-simulator-data'
 import { useHelpSimulatorStep } from '~/components/helps-simulator/use-help-simulator-step'
+import { trackEvent } from '~/lib/tracking'
 
 const TOTAL_FORM_STEPS = 3
 
@@ -129,6 +130,10 @@ export const HelpSimulatorForm: FC<HelpSimulatorFormProps> = ({ onScrollToTop })
       for (const field of nextStepFields) {
         form.clearErrors(field)
       }
+      if (currentStep === 1) {
+        trackEvent({ category: 'Simulateur', action: 'demarrage simulateur aides' })
+      }
+      trackEvent({ category: 'Simulateur', action: 'etape simulateur aides', name: String(currentStep + 1) })
       setCurrentStep(currentStep + 1)
     } else {
       setUrlState({
@@ -142,11 +147,13 @@ export const HelpSimulatorForm: FC<HelpSimulatorFormProps> = ({ onScrollToTop })
         changingRegion: values.changingRegion ?? null,
         boursierLycee: values.boursierLycee ?? null,
       })
+      trackEvent({ category: 'Simulateur', action: 'completion simulateur aides' })
       setCurrentStep(4)
     }
   }
 
   const handleRestart = () => {
+    trackEvent({ category: 'Simulateur', action: 'redemarrage simulateur aides' })
     form.reset({
       age: undefined,
       status: undefined,

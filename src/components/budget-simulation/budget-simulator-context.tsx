@@ -1,6 +1,7 @@
 'use client'
 
-import { createContext, type ReactNode, useContext, useState } from 'react'
+import { createContext, type ReactNode, useContext, useEffect, useState } from 'react'
+import { trackEvent } from '~/lib/tracking'
 
 interface MonthlyIncomes {
   familyAid: number // Aides de ma famille
@@ -70,6 +71,10 @@ interface BudgetSimulatorProviderProps {
 }
 
 export function BudgetSimulatorProvider({ children }: BudgetSimulatorProviderProps) {
+  useEffect(() => {
+    trackEvent({ category: 'Simulateur', action: 'demarrage simulateur budget' })
+  }, [])
+
   const [state, setState] = useState<BudgetSimulatorState>({
     monthlyIncomes: {
       familyAid: 0,
