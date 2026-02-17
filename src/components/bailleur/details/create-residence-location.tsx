@@ -9,6 +9,7 @@ import styles from './create-residence-location.module.css'
 
 export const CreateResidenceLocation = () => {
   const {
+    register,
     setValue,
     formState: { errors },
     watch,
@@ -55,6 +56,7 @@ export const CreateResidenceLocation = () => {
             state={hasAddressError ? 'error' : 'default'}
             stateRelatedMessage={hasAddressError ? 'Veuillez sélectionner une adresse valide' : undefined}
             nativeInputProps={{
+              ...register('address'),
               value: inputValue,
               onChange: handleInputChange,
               onFocus: () => setShowSuggestions(true),
