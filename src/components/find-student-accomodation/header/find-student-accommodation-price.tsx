@@ -3,6 +3,7 @@
 import { Range } from '@codegouvfr/react-dsfr/Range'
 import { useTranslations } from 'next-intl'
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
+import { trackEvent } from '~/lib/tracking'
 
 export const FindStudentAccommodationPrice = () => {
   const t = useTranslations('findAccomodation')
@@ -25,7 +26,11 @@ export const FindStudentAccommodationPrice = () => {
       style={{ width: '260px', opacity: isCrous ? 0.5 : 1, pointerEvents: isCrous ? 'none' : 'auto' }}
       nativeInputProps={{
         value: queryStates.prix,
-        onChange: (e) => setQueryStates({ prix: Number(e.target.value), page: 1 }),
+        onChange: (e) => {
+          const prix = Number(e.target.value)
+          trackEvent({ category: 'Recherche', action: 'filtre prix', value: prix })
+          setQueryStates({ prix, page: 1 })
+        },
         disabled: isCrous,
       }}
     />

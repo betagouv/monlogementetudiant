@@ -5,10 +5,11 @@ import { Pagination } from '@codegouvfr/react-dsfr/Pagination'
 import clsx from 'clsx'
 import { useTranslations } from 'next-intl'
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
-import { FC } from 'react'
+import { FC, useEffect } from 'react'
 import { AccomodationCard } from '~/components/find-student-accomodation/card/find-student-accomodation-card'
 import { CardSkeleton } from '~/components/ui/skeleton/card-skeleton'
 import { useAccomodations } from '~/hooks/use-accomodations'
+import { trackEvent } from '~/lib/tracking'
 import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
 import { sPluriel } from '~/utils/sPluriel'
 import styles from './widget-accommodation-grid.module.css'
@@ -31,6 +32,14 @@ export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = ({ data
   })
 
   const { data: accommodations, isLoading } = useAccomodations({ initialData: data, pageSize: 6 })
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const referrer = urlParams.get('referrer') || document.referrer
+    if (referrer) {
+      trackEvent({ category: 'Widget', action: 'chargement widget', name: referrer })
+    }
+  }, [])
 
   return (
     <div>
@@ -70,7 +79,10 @@ export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = ({ data
               params.set('page', page.toString())
               return {
                 href: `/widget/logements?${params.toString()}`,
-                onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+                onClick: () => {
+                  trackEvent({ category: 'Widget', action: 'pagination widget', value: page })
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                },
               }
             }}
           />
@@ -78,7 +90,12 @@ export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = ({ data
       )}
       <footer className={styles.footer}>
         Proposé par{' '}
-        <a href="https://monlogementetudiant.beta.gouv.fr" target="_blank" rel="noopener noreferrer">
+        <a
+          href="https://monlogementetudiant.beta.gouv.fr"
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => trackEvent({ category: 'Widget', action: 'clic vers site principal' })}
+        >
           MonLogementEtudiant.beta.gouv.fr
         </a>
       </footer>

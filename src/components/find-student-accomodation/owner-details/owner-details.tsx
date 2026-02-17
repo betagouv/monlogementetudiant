@@ -1,9 +1,9 @@
 import { fr } from '@codegouvfr/react-dsfr'
 import Badge from '@codegouvfr/react-dsfr/Badge'
-import Button from '@codegouvfr/react-dsfr/Button'
 import clsx from 'clsx'
 import Image from 'next/image'
 import { getTranslations } from 'next-intl/server'
+import { ConsultOfferButton } from '~/components/find-student-accomodation/owner-details/consult-offer-button'
 import { OwnerDetailsActions } from '~/components/find-student-accomodation/owner-details/owner-details-actions'
 import { OwnerDetailsAlert } from '~/components/find-student-accomodation/owner-details/owner-details-alert'
 import { AvailabilityBadge } from '~/components/shared/availability-badge'
@@ -19,6 +19,7 @@ interface OwnerDetailsProps {
   available: boolean
   nbAvailable: number | null
   acceptWaitingList: boolean
+  slug?: string
 }
 
 export const OwnerDetails = async ({
@@ -30,6 +31,7 @@ export const OwnerDetails = async ({
   title,
   location,
   acceptWaitingList,
+  slug,
 }: OwnerDetailsProps) => {
   const t = await getTranslations('accomodation')
   const ownerUrl = externalUrl || owner?.url
@@ -68,16 +70,7 @@ export const OwnerDetails = async ({
           <span className={clsx('ri-information-line')}>{t('unknownAvailability')}</span>
         </>
       )}
-      <div className={styles.sidebarOwner}>
-        {!!ownerUrl && available && (
-          <>
-            <Button linkProps={{ href: ownerUrl }} priority="primary" size="large" className={styles.sidebarOwnerButton}>
-              {t('sidebar.buttons.consult')}
-            </Button>
-            <span> {t('sidebar.buttons.consultDescription')}</span>
-          </>
-        )}
-      </div>
+      <div className={styles.sidebarOwner}>{!!ownerUrl && available && <ConsultOfferButton href={ownerUrl} slug={slug ?? ''} />}</div>
       {nbAvailable === 0 && (
         <>
           <hr className={styles.sidebarSeparator} />

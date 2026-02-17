@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { z } from 'zod'
+import { trackEvent } from '~/lib/tracking'
 import styles from './banner.module.css'
 
 export const Banner = () => {
@@ -24,6 +25,7 @@ export const Banner = () => {
   }, [])
 
   const handleClose = () => {
+    trackEvent({ category: 'Navigation', action: 'fermeture banner' })
     sessionStorage.setItem('show-banner', 'false')
     setIsVisible(false)
   }
@@ -38,7 +40,13 @@ export const Banner = () => {
           <span>
             {t.rich('description', {
               link: (chunks) => (
-                <a className={fr.cx('fr-link')} href={tallyUrl} target="_blank" rel="noreferrer">
+                <a
+                  className={fr.cx('fr-link')}
+                  href={tallyUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => trackEvent({ category: 'Navigation', action: 'clic banner enquete', name: tallyUrl })}
+                >
                   {chunks}
                 </a>
               ),

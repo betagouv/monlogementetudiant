@@ -7,6 +7,7 @@ import Notification from '@codegouvfr/react-dsfr/picto/Notification'
 import Success from '@codegouvfr/react-dsfr/picto/Success'
 import clsx from 'clsx'
 import { useLocalStorage } from 'usehooks-ts'
+import { trackEvent } from '~/lib/tracking'
 import styles from './student-todo-list.module.css'
 
 export const ALL_TODOS = [
@@ -67,6 +68,7 @@ export const StudentTodoList = () => {
 
   const markAsCompleted = (todoId: string) => {
     if (!completedTodos.includes(todoId)) {
+      trackEvent({ category: 'Espace Etudiant', action: 'todo fait', name: todoId })
       setCompletedTodos((prev) => [...prev, todoId])
     }
   }

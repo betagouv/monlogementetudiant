@@ -10,6 +10,7 @@ import { tss } from 'tss-react'
 import { FindStudentAccessibleAccomodationSwitch } from '~/components/find-student-accomodation/header/find-student-accessible-accomodation-switch'
 import { FindStudentColivingAccomodationSwitch } from '~/components/find-student-accomodation/header/find-student-coliving-accomodation'
 import { FindStudentAccommodationCitiesAutocompleteInput } from '~/components/find-student-accomodation/home/autocomplete/find-student-accommodations-cities-autocomplete-input'
+import { trackEvent } from '~/lib/tracking'
 
 export const FindAccommodationForm: FC = () => {
   const t = useTranslations('home')
@@ -59,7 +60,20 @@ export const FindAccommodationForm: FC = () => {
         <FindStudentColivingAccomodationSwitch />
         <FindStudentAccessibleAccomodationSwitch />
       </div>
-      <Button size="large" iconId="ri-search-line" linkProps={{ href }} className={classes.searchButton}>
+      <Button
+        size="large"
+        iconId="ri-search-line"
+        linkProps={{
+          href,
+          onClick: () =>
+            trackEvent({
+              category: 'Recherche',
+              action: 'recherche logement',
+              name: form.getValues('q') || 'Recherche globale',
+            }),
+        }}
+        className={classes.searchButton}
+      >
         {t('features.findAccommodation.searchButton')}
       </Button>
     </>

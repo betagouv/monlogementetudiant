@@ -9,6 +9,8 @@
     if (value) params.set(key, value)
   })
 
+  params.set('referrer', window.location.hostname)
+
   var baseUrl = script.src.replace('/widget/embed.js', '')
   var src = baseUrl + '/widget/logements' + (params.toString() ? '?' + params.toString() : '')
 

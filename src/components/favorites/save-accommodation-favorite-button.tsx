@@ -8,6 +8,7 @@ import { authClient } from '~/auth-client'
 import { useCreateFavorite } from '~/hooks/use-create-favorite'
 import { useDeleteFavorite } from '~/hooks/use-delete-favorite'
 import { useFavorites } from '~/hooks/use-favorites'
+import { trackEvent } from '~/lib/tracking'
 import { TPostFavorite, ZPostFavorite } from '~/schemas/favorites/create-favorite'
 import { TGetFavoritesResponse } from '~/schemas/favorites/get-favorites'
 
@@ -46,8 +47,12 @@ export const SaveAccommodationFavoriteButton = ({
       return
     }
     await mutateAsync(getValues())
+    trackEvent({ category: 'Favoris', action: 'ajout favori', name: slug })
   }
-  const handleDelete = async () => await mutationDelete(slug)
+  const handleDelete = async () => {
+    await mutationDelete(slug)
+    trackEvent({ category: 'Favoris', action: 'suppression favori', name: slug })
+  }
 
   if (favorites?.results.find((favorite) => favorite.accommodation.properties.slug === slug)) {
     if (withLabel) {

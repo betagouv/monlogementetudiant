@@ -10,6 +10,7 @@ import { FormProvider, useForm } from 'react-hook-form'
 import { tss } from 'tss-react'
 import { createToast } from '~/components/ui/createToast'
 import { useAlertAccommodation } from '~/hooks/use-alert-accommodation'
+import { trackEvent } from '~/lib/tracking'
 import { ZAlertAccommodationFormSchema } from '~/schemas/alert-accommodation/alert-accommodation'
 import { AlertAccomodationAutocompleteInput } from '~/schemas/alert-accommodation/autocomplete/alert-accomodation-autocomplete-input'
 
@@ -36,6 +37,7 @@ export const AlertAccommodationForm: FC = () => {
   const onSubmit = async () => {
     const data = getValues()
     await mutateAsync(data)
+    trackEvent({ category: 'Alertes', action: 'inscription newsletter', name: data.territory_name })
     createToast({
       priority: 'success',
       message: 'Vous êtes inscrit à la newsletter',

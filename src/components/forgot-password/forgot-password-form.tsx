@@ -11,6 +11,7 @@ import { FC, ReactNode } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { tss } from 'tss-react'
 import { useForgotPassword } from '~/hooks/use-forgot-password'
+import { trackEvent } from '~/lib/tracking'
 import { ZForgotPasswordForm } from '~/schemas/forgot-password/forgot-password'
 
 export const ForgotPasswordForm: FC = () => {
@@ -29,6 +30,7 @@ export const ForgotPasswordForm: FC = () => {
   const onSubmit = async () => {
     const formData = getValues()
     await mutateAsync(formData)
+    trackEvent({ category: 'Authentification', action: 'mot de passe oublie', name: 'soumis' })
   }
 
   const alertDescription = t.rich('success.description', {

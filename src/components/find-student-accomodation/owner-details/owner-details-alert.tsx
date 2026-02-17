@@ -6,6 +6,7 @@ import clsx from 'clsx'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { useAlertAccommodation } from '~/hooks/use-alert-accommodation'
+import { trackEvent } from '~/lib/tracking'
 import styles from './owner-details-alert.module.css'
 
 interface OwnerDetailsAlertProps {
@@ -28,6 +29,7 @@ export const OwnerDetailsAlert = ({ location }: OwnerDetailsAlertProps) => {
         territory_type: 'city',
         kind: 'accommodation',
       })
+      trackEvent({ category: 'Alertes', action: 'inscription alerte logement', name: location })
       setEmail('')
     } catch (error) {
       console.error('Error subscribing to alert:', error)

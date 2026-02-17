@@ -14,6 +14,7 @@ import { ResidenceRedirection } from '~/components/bailleur/details/residence-re
 import { ResidenceSummary } from '~/components/bailleur/details/residence-summary'
 import { UpdateResidencePublication } from '~/components/bailleur/details/update-residence-publication'
 import { useUpdateResidenceDetails } from '~/hooks/use-update-residence-details'
+import { trackEvent } from '~/lib/tracking'
 import { TAccomodationMy } from '~/schemas/accommodations/accommodations'
 import { createUpdateResidenceSchema, TUpdateResidence } from '~/schemas/accommodations/update-residence'
 import { formatRelativeTime } from '~/utils/formatRelativeTime'
@@ -102,6 +103,7 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
       description: data.description ? sanitizeHTML(data.description) : data.description,
     }
     await updateMutation.mutateAsync(sanitizedData)
+    trackEvent({ category: 'Espace Gestionnaire', action: 'mise a jour residence', name: accommodation.properties.slug })
   }
 
   return (

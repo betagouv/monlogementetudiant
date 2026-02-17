@@ -12,6 +12,7 @@ import { AccomodationCard } from '~/components/find-student-accomodation/card/fi
 import { MapSkeleton } from '~/components/map/map-skeleton'
 import { CardSkeleton } from '~/components/ui/skeleton/card-skeleton'
 import { useAccomodations } from '~/hooks/use-accomodations'
+import { trackEvent } from '~/lib/tracking'
 import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
 import { TTerritory } from '~/schemas/territories'
 
@@ -112,7 +113,10 @@ export const FindStudentAccomodationResults: FC<FindStudentAccomodationResultsPr
                     params.set('crous', queryStates.crous.toString())
                   }
                   params.set('page', page.toString())
-                  return { href: `/trouver-un-logement-etudiant?${params.toString()}` }
+                  return {
+                    href: `/trouver-un-logement-etudiant?${params.toString()}`,
+                    onClick: () => trackEvent({ category: 'Recherche', action: 'pagination', value: page }),
+                  }
                 }}
               />
             </div>

@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { createToast } from '~/components/ui/createToast'
+import { trackEvent } from '~/lib/tracking'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
@@ -64,7 +65,8 @@ export const useUploadResidenceImages = (slug: string, name: string) => {
 
       return { images_urls: allImages }
     },
-    onSuccess: async () => {
+    onSuccess: async (_data, variables) => {
+      trackEvent({ category: 'Espace Gestionnaire', action: 'upload images', name: slug, value: variables.files.length })
       await queryClient.refetchQueries({
         queryKey: ['my-accommodations'],
         exact: false,
