@@ -8,6 +8,7 @@ import { FC } from 'react'
 import { tss } from 'tss-react'
 import { FindStudentAccommodationCitiesAutocompleteResults } from '~/components/find-student-accomodation/home/autocomplete/find-student-accommodations-cities-autocomplete-results'
 import { useSearchCities } from '~/hooks/use-search-cities'
+import { trackEvent } from '~/lib/tracking'
 import { TCity } from '~/schemas/territories'
 
 export const FindStudentAccommodationCitiesAutocompleteInput: FC = () => {
@@ -26,6 +27,7 @@ export const FindStudentAccommodationCitiesAutocompleteInput: FC = () => {
   }
 
   const handleOnClickItem = (item: TCity) => {
+    trackEvent({ category: 'Recherche', action: 'recherche ville', name: item.name })
     const formattedBbox = `${item.bbox.xmin},${item.bbox.ymin},${item.bbox.xmax},${item.bbox.ymax}`
     setBboxQuery(formattedBbox)
     setSearchQuery(item.name)

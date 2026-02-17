@@ -7,6 +7,7 @@ import { parseAsBoolean, parseAsString, useQueryStates } from 'nuqs'
 import { FC } from 'react'
 import { tss } from 'tss-react'
 import { useAccomodations } from '~/hooks/use-accomodations'
+import { trackEvent } from '~/lib/tracking'
 import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
 import { TTerritory } from '~/schemas/territories'
 import { formatCityWithA } from '~/utils/french-contraction'
@@ -54,7 +55,10 @@ export const FindStudentAccomodationSortView: FC<FindStudentAccomodationSortView
               iconId="ri-layout-grid-2-line"
               priority={queryStates.vue === 'grille' ? 'secondary' : 'tertiary'}
               className={classes.button}
-              onClick={() => setQueryStates({ vue: 'grille' })}
+              onClick={() => {
+                trackEvent({ category: 'Recherche', action: 'changement vue', name: 'grille' })
+                setQueryStates({ vue: 'grille' })
+              }}
             >
               {t('grid')}
             </Button>
@@ -62,7 +66,10 @@ export const FindStudentAccomodationSortView: FC<FindStudentAccomodationSortView
               iconId="ri-road-map-fill"
               priority={queryStates.vue === 'carte' ? 'secondary' : 'tertiary'}
               className={classes.button}
-              onClick={() => setQueryStates({ vue: 'carte' })}
+              onClick={() => {
+                trackEvent({ category: 'Recherche', action: 'changement vue', name: 'carte' })
+                setQueryStates({ vue: 'carte' })
+              }}
             >
               {t('map')}
             </Button>

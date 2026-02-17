@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl'
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
 import { FC } from 'react'
 import { tss } from 'tss-react'
+import { trackEvent } from '~/lib/tracking'
 
 export const FindStudentAccessibleAccomodationSwitch: FC = () => {
   const [queryStates, setQueryStates] = useQueryStates({
@@ -16,7 +17,10 @@ export const FindStudentAccessibleAccomodationSwitch: FC = () => {
   const t = useTranslations('findAccomodation')
   const { classes } = useStyles()
 
-  const handleChange = (value: boolean) => setQueryStates({ accessible: value ? 'true' : 'false', page: 1 })
+  const handleChange = (value: boolean) => {
+    trackEvent({ category: 'Recherche', action: 'filtre accessible', name: value ? 'active' : 'inactive' })
+    setQueryStates({ accessible: value ? 'true' : 'false', page: 1 })
+  }
 
   return (
     <div className={classes.container}>

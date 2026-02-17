@@ -134,6 +134,7 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
             externalUrl={external_url}
             title={name}
             location={city}
+            slug={slug}
           />
           <NearbyAccommodations nearbyAccommodations={nearbyAccommodations} accommodation={accommodation} />
         </div>

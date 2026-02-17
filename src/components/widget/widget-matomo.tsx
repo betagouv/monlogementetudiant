@@ -4,7 +4,7 @@ import { trackAppRouter } from '@socialgouv/matomo-next'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { useEffect } from 'react'
 
-export default function Matomo() {
+export default function WidgetMatomo() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   useEffect(() => {

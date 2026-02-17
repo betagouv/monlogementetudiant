@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
 import { FC } from 'react'
 import { tss } from 'tss-react'
+import { trackEvent } from '~/lib/tracking'
 
 export const FindStudentColivingAccomodationSwitch: FC = () => {
   const [queryStates, setQueryStates] = useQueryStates({
@@ -15,7 +16,10 @@ export const FindStudentColivingAccomodationSwitch: FC = () => {
   const t = useTranslations('findAccomodation')
   const { classes } = useStyles()
 
-  const handleChange = (value: boolean) => setQueryStates({ colocation: value ? 'true' : 'false', page: 1 })
+  const handleChange = (value: boolean) => {
+    trackEvent({ category: 'Recherche', action: 'filtre colocation', name: value ? 'active' : 'inactive' })
+    setQueryStates({ colocation: value ? 'true' : 'false', page: 1 })
+  }
 
   return (
     <div className={classes.container}>

@@ -12,6 +12,7 @@ import { FC, useState } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { tss } from 'tss-react'
 import { useResetPassword } from '~/hooks/use-reset-password'
+import { trackEvent } from '~/lib/tracking'
 import { ZResetPasswordForm } from '~/schemas/reset-password/reset-password'
 
 export const ResetPasswordForm: FC = () => {
@@ -40,12 +41,17 @@ export const ResetPasswordForm: FC = () => {
     }
 
     const formData = getValues()
-    await mutateAsync({
-      id: uid,
-      token,
-      password: formData.password,
-      confirmPassword: formData.confirmPassword,
-    })
+    try {
+      await mutateAsync({
+        id: uid,
+        token,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
+      })
+      trackEvent({ category: 'Authentification', action: 'reinitialisation mot de passe', name: 'succes' })
+    } catch {
+      trackEvent({ category: 'Authentification', action: 'reinitialisation mot de passe', name: 'erreur' })
+    }
   }
 
   const { errors } = resetPasswordForm.formState

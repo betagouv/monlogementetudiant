@@ -10,6 +10,7 @@ import { FC } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { tss } from 'tss-react'
 import { createToast } from '~/components/ui/createToast'
+import { trackEvent } from '~/lib/tracking'
 import { TMagicLinkSignInForm, ZMagicLinkSignInForm } from '~/schemas/magic-link-sign-in/magic-link-sign-in'
 
 export const MagicLinkSignInForm: FC = () => {
@@ -36,17 +37,20 @@ export const MagicLinkSignInForm: FC = () => {
       })
 
       if (response.ok) {
+        trackEvent({ category: 'Authentification', action: 'connexion gestionnaire', name: 'succes' })
         createToast({
           priority: 'success',
           message: t('success'),
         })
       } else {
+        trackEvent({ category: 'Authentification', action: 'connexion gestionnaire', name: 'erreur' })
         createToast({
           priority: 'error',
           message: 'Une erreur est survenue lors de la connexion, veuillez réessayé ultérieurement',
         })
       }
     } catch {
+      trackEvent({ category: 'Authentification', action: 'connexion gestionnaire', name: 'erreur' })
       createToast({
         priority: 'error',
         message: 'Une erreur est survenue lors de la connexion, veuillez réessayé ultérieurement',

@@ -3,7 +3,9 @@
 import Button from '@codegouvfr/react-dsfr/Button'
 import clsx from 'clsx'
 import { useTranslations } from 'next-intl'
+import { useEffect, useRef } from 'react'
 import { ExpensesPieChart } from '~/components/budget-simulation/expenses-pie-chart'
+import { trackEvent } from '~/lib/tracking'
 import { useBudgetSimulator } from './budget-simulator-context'
 import styles from './budget-summary.module.css'
 
@@ -14,6 +16,19 @@ export function BudgetSummary() {
   const totalIncomes = Object.values(state.monthlyIncomes).reduce((sum, amount) => sum + amount, 0)
   const totalExpenses = Object.values(state.monthlyExpenses).reduce((sum, amount) => sum + amount, 0)
   const remainingBalance = totalIncomes - totalExpenses
+  const hasTrackedCompletion = useRef(false)
+
+  useEffect(() => {
+    if (totalIncomes > 0 && totalExpenses > 0 && !hasTrackedCompletion.current) {
+      hasTrackedCompletion.current = true
+      trackEvent({
+        category: 'Simulateur',
+        action: 'completion simulateur budget',
+        name: remainingBalance >= 0 ? 'excedent' : 'deficit',
+        value: Math.abs(remainingBalance),
+      })
+    }
+  }, [totalIncomes, totalExpenses, remainingBalance])
 
   const formatAmount = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
