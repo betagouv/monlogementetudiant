@@ -110,6 +110,20 @@ export const CommonFooter = async () => {
       },
       text: 'Notre Gitbook',
     },
+    {
+      linkProps: {
+        href: 'https://info.monlogementetudiant.beta.gouv.fr/conditions-generales-dutilisation/',
+        title: "Conditions générales d'utilisation",
+      },
+      text: "Conditions générales d'utilisation",
+    },
+    {
+      linkProps: {
+        href: 'https://info.monlogementetudiant.beta.gouv.fr/mentions-legales/',
+        title: 'Mentions légales',
+      },
+      text: 'Mentions légales',
+    },
   ]
   return (
     <Footer
