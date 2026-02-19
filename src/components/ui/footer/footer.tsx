@@ -117,13 +117,6 @@ export const CommonFooter = async () => {
       },
       text: "Conditions générales d'utilisation",
     },
-    {
-      linkProps: {
-        href: 'https://info.monlogementetudiant.beta.gouv.fr/mentions-legales/',
-        title: 'Mentions légales',
-      },
-      text: 'Mentions légales',
-    },
   ]
   return (
     <Footer
@@ -148,7 +141,9 @@ export const CommonFooter = async () => {
       partnersLogos={partnersLogos}
       bottomItems={bottomItems}
       termsLinkProps={{
-        href: '/mentions-legales',
+        href: 'https://info.monlogementetudiant.beta.gouv.fr/mentions-legales/',
+        target: '_blank',
+        rel: 'noopener noreferrer',
       }}
       websiteMapLinkProps={{
         href: '/plan-du-site',
