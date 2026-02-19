@@ -1,5 +1,6 @@
 import Badge from '@codegouvfr/react-dsfr/Badge'
 import Breadcrumb from '@codegouvfr/react-dsfr/Breadcrumb'
+import Pagination from '@codegouvfr/react-dsfr/Pagination'
 import { DataVisualization } from '@codegouvfr/react-dsfr/picto'
 import clsx from 'clsx'
 import Image from 'next/image'
@@ -15,7 +16,11 @@ import { getMyAccommodations } from '~/server-only/bailleur/get-my-accommodation
 import { calculateAvailability } from '~/utils/calculateAvailability'
 import styles from './tableau-de-bord.module.css'
 
-export default async function TableauDeBordPage() {
+type TableauDeBordPageProps = {
+  searchParams: Promise<{ page?: string }>
+}
+
+export default async function TableauDeBordPage({ searchParams }: TableauDeBordPageProps) {
   const calendlyUrl = z.string().parse(process.env.NEXT_PUBLIC_CALENDLY_URL)
   const t = await getTranslations('bailleur')
   const auth = await getServerSession()
@@ -23,7 +28,8 @@ export default async function TableauDeBordPage() {
   if (!auth || !auth.user) {
     return notFound()
   }
-  const accommodations = await getMyAccommodations()
+  const awaitedSearchParams = await searchParams
+  const accommodations = await getMyAccommodations({ page: awaitedSearchParams.page })
 
   return (
     <div className="fr-container fr-pb-12w">
@@ -202,6 +208,19 @@ export default async function TableauDeBordPage() {
             )
           })}
         </div>
+        {accommodations.count > accommodations.page_size && (
+          <Pagination
+            showFirstLast={false}
+            count={Math.ceil(accommodations.count / accommodations.page_size)}
+            defaultPage={Number(awaitedSearchParams.page) || 1}
+            className="fr-flex fr-justify-content-center fr-align-items-center fr-py-2w"
+            getPageLinkProps={(page: number) => {
+              const params = new URLSearchParams()
+              params.set('page', page.toString())
+              return { href: `/bailleur/tableau-de-bord?${params.toString()}` }
+            }}
+          />
+        )}
       </div>
     </div>
   )
