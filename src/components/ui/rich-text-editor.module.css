@@ -3,13 +3,13 @@
   flex-wrap: wrap;
   gap: 0.25rem;
   padding: 0.5rem;
-  border-bottom: 1px solid var(--border-default-grey);
-  background-color: var(--background-alt-grey);
+  border-bottom: 1px solid var(--border-default-grey) !important;
+  background-color: var(--background-alt-grey) !important;
 }
 
 .separator {
   width: 1px;
-  background-color: var(--border-default-grey);
+  background-color: var(--border-default-grey) !important;
   margin: 0 0.25rem;
 }
 
@@ -22,9 +22,13 @@
   color: var(--text-default-grey);
 }
 
+.toolbarButton span::before {
+  margin-right: 0;
+}
+
 .toolbarButton.active {
-  background-color: var(--background-active-blue-france);
-  color: var(--text-inverted-blue-france);
+  background-color: var(--background-active-blue-france) !important;
+  color: var(--text-inverted-blue-france) !important;
 }
 
 .editor {
