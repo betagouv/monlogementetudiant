@@ -11,6 +11,7 @@ import { calculateAvailability } from '~/utils/calculateAvailability'
 export const ResidenceAccommodationList = ({ accommodation }: { accommodation: TAccomodationMy }) => {
   const {
     register,
+    watch,
     formState: { errors },
   } = useFormContext<TUpdateResidence>()
 
@@ -212,6 +213,7 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
                     nativeInputProps={{
                       type: 'number',
                       placeholder: '0',
+                      disabled: !watch(typology.totalField),
                       ...register(typology.availableField, numberTransform),
                     }}
                   />

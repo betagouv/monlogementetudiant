@@ -141,6 +141,7 @@ export const CreateResidenceAccommodationList = () => {
                     nativeInputProps={{
                       type: 'number',
                       min: 0,
+                      disabled: !watchedTypologies?.[index]?.nb_total,
                       ...register(`typologies.${index}.nb_available`, numberTransform),
                     }}
                   />
