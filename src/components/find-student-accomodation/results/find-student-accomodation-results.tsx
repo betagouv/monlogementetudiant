@@ -20,10 +20,11 @@ type FindStudentAccomodationResultsProps = {
   data: TGetAccomodationsResponse
   territory?: TTerritory
   isAcademy?: boolean
+  serverBbox?: string
 }
-export const FindStudentAccomodationResults: FC<FindStudentAccomodationResultsProps> = ({ data, territory, isAcademy }) => {
+export const FindStudentAccomodationResults: FC<FindStudentAccomodationResultsProps> = ({ data, territory, isAcademy, serverBbox }) => {
   const t = useTranslations('findAccomodation.results')
-  const [queryStates] = useQueryStates({
+  const [queryStates, setQueryStates] = useQueryStates({
     academie: parseAsString,
     vue: parseAsString,
     page: parseAsInteger,
@@ -35,7 +36,13 @@ export const FindStudentAccomodationResults: FC<FindStudentAccomodationResultsPr
     ['recherche-par-carte']: parseAsString,
   })
 
-  const { data: accommodations, isLoading, isFetching } = useAccomodations({ initialData: data })
+  useEffect(() => {
+    if (serverBbox && !queryStates.bbox) {
+      setQueryStates({ bbox: serverBbox })
+    }
+  }, [])
+
+  const { data: accommodations, isFetching } = useAccomodations({ initialData: data })
 
   useEffect(() => {
     if (!!accommodations?.results?.features && accommodations.results.features.length < 6) {
@@ -65,14 +72,15 @@ export const FindStudentAccomodationResults: FC<FindStudentAccomodationResultsPr
       <div className={classes.container}>
         <div className={classes.accomodationsContainer}>
           <div className={classes.accommodationGrid}>
-            {!isFetching &&
-              (accommodations?.results.features || []).map((accommodation) => (
-                <AccomodationCard key={accommodation.id} accomodation={accommodation} />
-              ))}
-            {(isFetching || isLoading) && Array.from({ length: 24 }).map((_, index) => <CardSkeleton key={index} />)}
+            {(accommodations?.results.features || []).map((accommodation) => (
+              <AccomodationCard key={accommodation.id} accomodation={accommodation} />
+            ))}
+            {!accommodations?.results.features?.length &&
+              isFetching &&
+              Array.from({ length: 24 }).map((_, index) => <CardSkeleton key={index} />)}
           </div>
 
-          {accommodations?.count === 0 && (
+          {!isFetching && accommodations?.count === 0 && (
             <div className={fr.cx('fr-col-md-11')}>
               <h3>{t('noResult')}</h3>
               <p className={fr.cx('fr-mb-0')}>{t('description')}</p>
