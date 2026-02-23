@@ -4,15 +4,20 @@ import { FindStudentAccessibleAccomodationSwitch } from '~/components/find-stude
 import { FindStudentAccommodationCrousFilter } from '~/components/find-student-accomodation/header/find-student-accommodation-crous-filter'
 import { FindStudentAccommodationPrice } from '~/components/find-student-accomodation/header/find-student-accommodation-price'
 import { FindStudentColivingAccomodationSwitch } from '~/components/find-student-accomodation/header/find-student-coliving-accomodation'
+import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
 import styles from './find-student-accomodation-header.module.css'
 
-export const FindStudentAccomodationHeader: FC = async () => {
+type FindStudentAccomodationHeaderProps = {
+  data?: TGetAccomodationsResponse
+}
+
+export const FindStudentAccomodationHeader: FC<FindStudentAccomodationHeaderProps> = async ({ data }) => {
   return (
     <>
       <div className="fr-hidden fr-unhidden-sm">
         <div className={styles.container}>
           <FindStudentAccomodationAutocompleteInput />
-          <FindStudentAccommodationPrice />
+          <FindStudentAccommodationPrice initialData={data} />
           <FindStudentAccommodationCrousFilter />
           <FindStudentColivingAccomodationSwitch />
           <FindStudentAccessibleAccomodationSwitch />
