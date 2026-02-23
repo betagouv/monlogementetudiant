@@ -7,6 +7,7 @@ import { ConsultOfferButton } from '~/components/find-student-accomodation/owner
 import { OwnerDetailsActions } from '~/components/find-student-accomodation/owner-details/owner-details-actions'
 import { OwnerDetailsAlert } from '~/components/find-student-accomodation/owner-details/owner-details-alert'
 import { AvailabilityBadge } from '~/components/shared/availability-badge'
+import { TooltipHoverOnly } from '~/components/tooltip-hover-only'
 import { TAccomodationDetails } from '~/schemas/accommodations/accommodations'
 import styles from './owner-details.module.css'
 
@@ -67,7 +68,12 @@ export const OwnerDetails = async ({
       {(nbAvailable === null || nbAvailable === undefined) && (
         <>
           <br />
-          <span className={clsx('ri-information-line')}>{t('unknownAvailability')}</span>
+          <span>
+            <TooltipHoverOnly title={t('unknownAvailabilityTooltip')}>
+              <span className={clsx('ri-information-line')} />
+            </TooltipHoverOnly>
+            {t('unknownAvailability')}
+          </span>
         </>
       )}
       <div className={styles.sidebarOwner}>{!!ownerUrl && available && <ConsultOfferButton href={ownerUrl} slug={slug ?? ''} />}</div>

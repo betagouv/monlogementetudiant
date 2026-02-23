@@ -176,8 +176,9 @@
       "availability": "Disponibilité",
       "noAvailability": "Aucune disponibilité"
     },
-    "waitingList": "Liste d'attente",
-    "unknownAvailability": "Disponibilités non-communiquées",
+    "waitingList": "Dépôt de dossier possible",
+    "unknownAvailability": "Disponibilités non renseignées",
+    "unknownAvailabilityTooltip": "Le gestionnaire ne nous a pas transmis les disponibilités de cette résidence.",
     "tooltip": {
       "t1": "T1 : Une seule pièce + coin cuisine ouvert ou cuisine fermée + salle de bain.",
       "t1bis": "T1bis : Grande pièce unique avec coin nuit semi-séparé et kitchenette ou cuisine séparée + salle de bain.",
@@ -236,9 +237,10 @@
       "individual": "Individuel",
       "colocation": "Colocation",
       "availability": "Disponibilité",
-      "unknownAvailability": "Disponibilités non-communiquées",
+      "unknownAvailability": "Disponibilités non renseignées",
+      "unknownAvailabilityTooltip": "Le gestionnaire ne nous a pas transmis les disponibilités de cette résidence.",
       "noAvailability": "Aucune disponibilité",
-      "waitingList": "Liste d'attente"
+      "waitingList": "Dépôt de dossier possible"
     },
     "results": {
       "noResult": "Aucun résultat pour votre recherche",
@@ -853,7 +855,7 @@
         "unpublished": "Dépubliée",
         "title": "Paramétrage de la résidence",
         "accommodationName": "Nom de la résidence",
-        "waitingList": "La résidence accepte les candidatures en liste d'attente",
+        "waitingList": "La résidence accepte les candidatures sur dépôt de dossier",
         "accessible": "Nombre de logements adaptés PMR",
         "coliving": "Nombre de logements en colocation dans la résidence",
         "scholarship": "Les étudiants boursiers sont prioritaires dans la résidence"
