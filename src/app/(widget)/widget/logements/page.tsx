@@ -65,7 +65,7 @@ export default async function WidgetLogementsPage({
   return (
     <>
       <WidgetBodyStyle />
-      {showFilters && <WidgetAccommodationFilters showLocationInput={!hasLocation} />}
+      {showFilters && <WidgetAccommodationFilters initialData={accommodations} showLocationInput={!hasLocation} />}
       <WidgetAccommodationGrid data={accommodations} cityName={cityName} />
     </>
   )
