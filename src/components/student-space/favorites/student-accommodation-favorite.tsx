@@ -54,7 +54,7 @@ export const StudentAccommodationFavorite: FC<StudentAccommodationFavoriteProps>
   const badgeAvailability = (
     <AvailabilityBadge
       nbAvailable={nbAvailable}
-      noAvailabilityText="Disponibilité non communiquée"
+      noAvailabilityText="Disponibilité non renseignée"
       availabilityText="DISPONIBILITÉ"
       as="span"
     />

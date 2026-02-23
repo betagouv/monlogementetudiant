@@ -1,5 +1,4 @@
 import { fr } from '@codegouvfr/react-dsfr'
-import Badge from '@codegouvfr/react-dsfr/Badge'
 import clsx from 'clsx'
 import Image from 'next/image'
 import { getTranslations } from 'next-intl/server'
@@ -7,6 +6,7 @@ import { ConsultOfferButton } from '~/components/find-student-accomodation/owner
 import { OwnerDetailsActions } from '~/components/find-student-accomodation/owner-details/owner-details-actions'
 import { OwnerDetailsAlert } from '~/components/find-student-accomodation/owner-details/owner-details-alert'
 import { AvailabilityBadge } from '~/components/shared/availability-badge'
+import { WaitingListBadge } from '~/components/shared/waiting-list-badge'
 import { TooltipHoverOnly } from '~/components/tooltip-hover-only'
 import { TAccomodationDetails } from '~/schemas/accommodations/accommodations'
 import styles from './owner-details.module.css'
@@ -40,10 +40,13 @@ export const OwnerDetails = async ({
     <AvailabilityBadge nbAvailable={nbAvailable} noAvailabilityText={t('card.noAvailability')} availabilityText={t('card.availability')} />
   )
 
-  const waitingListBadge = acceptWaitingList && (
-    <Badge className={styles.otherBadge} severity="warning" noIcon>
-      <span className="fr-text--uppercase fr-mb-0">{t('waitingList')}</span>
-    </Badge>
+  const waitingListBadge = (
+    <WaitingListBadge
+      acceptWaitingList={acceptWaitingList}
+      nbAvailable={nbAvailable}
+      waitingListText={t('waitingList')}
+      className={styles.otherBadge}
+    />
   )
 
   return (

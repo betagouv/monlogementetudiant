@@ -15,6 +15,7 @@ import {
   FindStudentAccommodationPlaceholderImageCard,
 } from '~/components/find-student-accomodation/card/find-student-accommodation-image-card'
 import { AvailabilityBadge } from '~/components/shared/availability-badge'
+import { WaitingListBadge } from '~/components/shared/waiting-list-badge'
 import { TooltipHoverOnly } from '~/components/tooltip-hover-only'
 import { trackEvent } from '~/lib/tracking'
 import { TAccomodationCard } from '~/schemas/accommodations/accommodations'
@@ -81,10 +82,14 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
     <AvailabilityBadge nbAvailable={nbAvailable} noAvailabilityText={t('noAvailability')} availabilityText={t('availability')} as="span" />
   )
 
-  const waitingListBadge = accept_waiting_list && (
-    <Badge className={classes.otherBadge} severity="warning" noIcon as="span">
-      <span className="fr-text--uppercase fr-mb-0">{t('waitingList')}</span>
-    </Badge>
+  const waitingListBadge = (
+    <WaitingListBadge
+      acceptWaitingList={accept_waiting_list}
+      nbAvailable={nbAvailable}
+      waitingListText={t('waitingList')}
+      className={classes.otherBadge}
+      as="span"
+    />
   )
 
   const badgeProps = price_min
@@ -158,7 +163,7 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
           {showFavorite && <SaveAccommodationFavoriteButton slug={accomodation.properties.slug} />}
         </div>
       }
-      end={<>{waitingListBadge}</>}
+      end={waitingListBadge}
       size="small"
       title={name}
       titleAs="h2"
