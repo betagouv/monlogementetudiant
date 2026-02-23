@@ -14,6 +14,7 @@ import {
   FindStudentAccommodationPlaceholderImageCard,
 } from '~/components/find-student-accomodation/card/find-student-accommodation-image-card'
 import { AvailabilityBadge } from '~/components/shared/availability-badge'
+import { TooltipHoverOnly } from '~/components/tooltip-hover-only'
 import { TAccomodationCard } from '~/schemas/accommodations/accommodations'
 import { calculateAvailability } from '~/utils/calculateAvailability'
 
@@ -110,7 +111,12 @@ export const StudentAccommodationFavorite: FC<StudentAccommodationFavoriteProps>
           {(nbAvailable === null || nbAvailable === undefined) && (
             <>
               <br />
-              <span className={clsx('ri-information-line', classes.description)}>{t('unknownAvailability')}</span>
+              <span>
+                <TooltipHoverOnly title={t('unknownAvailabilityTooltip')}>
+                  <span className={clsx('ri-information-line', classes.description)} />
+                </TooltipHoverOnly>
+                {t('unknownAvailability')}
+              </span>
             </>
           )}
         </>
