@@ -25,7 +25,6 @@ export function BudgetSummary() {
         category: 'Simulateur',
         action: 'completion simulateur budget',
         name: remainingBalance >= 0 ? 'excedent' : 'deficit',
-        value: Math.abs(remainingBalance),
       })
     }
   }, [totalIncomes, totalExpenses, remainingBalance])
