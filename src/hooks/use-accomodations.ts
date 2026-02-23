@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery } from '@tanstack/react-query'
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
 import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
@@ -60,7 +59,7 @@ export const useAccomodations = ({ initialData, pageSize }: UseAccomodationsOpti
 
   return useQuery<TGetAccomodationsResponse>({
     enabled,
-    initialData: enabled ? undefined : initialData,
+    initialData,
     queryFn: () => fetchAccomodations(bbox, page, accessible, colocation, prix, crous, academie, pageSize),
     queryKey: ['accomodations', { accessible, bbox, colocation, page, prix, crous, academie, pageSize }],
   })

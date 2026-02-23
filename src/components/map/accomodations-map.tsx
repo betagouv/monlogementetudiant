@@ -131,6 +131,7 @@ export const AccomodationsMap: FC<AccomodationsMapProps> = ({ data }) => {
   })
 
   const { data: accommodations } = useAccomodations({ initialData: data })
+
   const markers = useMemo(() => {
     const accommodationsData = accommodations?.results.features || []
     return accommodationsData.map((accommodation) => (
