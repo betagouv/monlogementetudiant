@@ -99,7 +99,7 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
     if (target.closest(`button[title="${FAVORITE_BUTTON_TITLES.ADD}"], button[title="${FAVORITE_BUTTON_TITLES.REMOVE}"]`)) {
       return
     }
-    trackEvent({ category: 'Logement', action: 'clic carte logement', name: accomodation.properties.slug, value: price_min ?? undefined })
+    trackEvent({ category: 'Logement', action: 'clic carte logement', name: accomodation.properties.slug })
     if (targetBlank) {
       window.open(redirectUri, '_blank', 'noopener,noreferrer')
     } else {

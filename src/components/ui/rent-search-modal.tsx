@@ -37,7 +37,6 @@ export const RentSearchModal = ({ onApply, onCancel }: RentSearchModalProps) => 
         category: 'Simulateur',
         action: 'estimation loyer',
         name: selectedCity.city,
-        value: Math.round(selectedCity.rentFor20M2),
       })
       onApply(selectedCity)
     }
