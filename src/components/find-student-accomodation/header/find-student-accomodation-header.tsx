@@ -14,7 +14,7 @@ type FindStudentAccomodationHeaderProps = {
 export const FindStudentAccomodationHeader: FC<FindStudentAccomodationHeaderProps> = async ({ data }) => {
   return (
     <>
-      <div className="fr-hidden fr-unhidden-sm">
+      <div className="fr-hidden fr-unhidden-md">
         <div className={styles.container}>
           <FindStudentAccomodationAutocompleteInput />
           <FindStudentAccommodationPrice initialData={data} />
@@ -23,7 +23,7 @@ export const FindStudentAccomodationHeader: FC<FindStudentAccomodationHeaderProp
           <FindStudentAccessibleAccomodationSwitch />
         </div>
       </div>
-      <div className="fr-hidden-sm">
+      <div className="fr-hidden-md">
         <div className={styles.mobileContainer}>
           <FindStudentAccomodationAutocompleteInput />
           <FindStudentAccommodationCrousFilter />
