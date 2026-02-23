@@ -31,6 +31,8 @@ export const getAccommodations = async (searchParams: {
       count: 0,
       next: null,
       previous: null,
+      min_price: null,
+      max_price: null,
       page_size: 15,
       results: {
         features: [],
