@@ -101,16 +101,8 @@ export default async function FindStudentAccommodationPage({
   // do not use bbox while fetching if user searching by academy
   const isAcademy = routeCategoryKey === 'academie'
 
-  // Redirect to add bbox from territory if not present in URL
-  if (!isAcademy && !awaitedSearchParams.bbox && territoryBbox) {
-    const bboxString = `${territoryBbox.west},${territoryBbox.south},${territoryBbox.east},${territoryBbox.north}`
-    const params = new URLSearchParams()
-    Object.entries(awaitedSearchParams).forEach(([key, value]) => {
-      if (value !== undefined) params.set(key, value)
-    })
-    params.set('bbox', bboxString)
-    redirect(`/trouver-un-logement-etudiant/${routeCategoryKey}/${encodeURIComponent(routeLocation)}?${params.toString()}`)
-  }
+  const serverBbox =
+    !isAcademy && territoryBbox ? `${territoryBbox.west},${territoryBbox.south},${territoryBbox.east},${territoryBbox.north}` : undefined
 
   const accommodationsParams = {
     ...awaitedSearchParams,
@@ -128,7 +120,7 @@ export default async function FindStudentAccommodationPage({
         <FindStudentAccomodationHeader data={accommodations} />
         <FindStudentAccomodationSortView data={accommodations} territory={territory} />
         {!!territory && <FindStudentAccommodationBanner territory={territory} categoryKey={routeCategoryKey} />}
-        <FindStudentAccomodationResults data={accommodations} territory={territory} isAcademy={isAcademy} />
+        <FindStudentAccomodationResults data={accommodations} territory={territory} isAcademy={isAcademy} serverBbox={serverBbox} />
       </div>
       <FindStudentAccommodationQA />
     </>

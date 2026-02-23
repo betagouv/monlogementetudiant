@@ -31,7 +31,8 @@ export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = ({ data
     crous: parseAsString,
   })
 
-  const { data: accommodations, isLoading } = useAccomodations({ initialData: data, pageSize: 6 })
+  const { data: queryData, isLoading } = useAccomodations({ pageSize: 6 })
+  const accommodations = queryData ?? data
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
@@ -49,13 +50,14 @@ export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = ({ data
         </h2>
       )}
       <div className={styles.grid}>
-        {!isLoading &&
-          (accommodations?.results.features || []).map((accommodation) => (
-            <AccomodationCard key={accommodation.id} accomodation={accommodation} showFavorite={false} targetBlank />
-          ))}
-        {isLoading && Array.from({ length: 6 }).map((_, index) => <CardSkeleton key={index} />)}
+        {(accommodations?.results.features || []).map((accommodation) => (
+          <AccomodationCard key={accommodation.id} accomodation={accommodation} showFavorite={false} targetBlank />
+        ))}
+        {!accommodations?.results.features?.length &&
+          isLoading &&
+          Array.from({ length: 6 }).map((_, index) => <CardSkeleton key={index} />)}
       </div>
-      {accommodations?.count === 0 && (
+      {!isLoading && accommodations?.count === 0 && (
         <div className={fr.cx('fr-col-md-11')}>
           <h3>{t('noResult')}</h3>
           <p className={fr.cx('fr-mb-0')}>{t('description')}</p>
