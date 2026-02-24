@@ -63,17 +63,17 @@ public/
 
 ## Widget iframe
 
-Widget embarquable qui affiche une grille de residences etudiantes sur des sites partenaires.
+Widget embarquable qui affiche une grille de résidences etudiantes sur des sites partenaires.
 
 ### Integration
 
 Une seule ligne a fournir au partenaire :
 
 ```html
-<script src="https://mon-logement-etudiant.gouv.fr/widget/embed.js" data-city="Paris"></script>
+<script src="https://monlogementetudiant.beta.gouv.fr/widget/embed.js" data-city="Paris"></script>
 ```
 
-Le script cree automatiquement l'iframe et gere le redimensionnement dynamique.
+Le script crée automatiquement l'iframe et gère le redimensionnement dynamique.
 
 ### Parametres
 
@@ -95,15 +95,14 @@ Les filtres sont **visibles par defaut**. Pour les masquer, utiliser `data-filte
 
 ### Comportement du widget
 
-- **Pagination** : 6 residences par page (au lieu de 15 sur le site principal)
+- **Pagination** : 6 residences par page
 - **Titre dynamique** : "Trouver un logement a [ville]" avec contractions francaises (au Mans, aux Lilas, a Paris). Sans ville : "Trouver un logement etudiant"
-- **Signature** : lien "Propose par MonLogementEtudiant.beta.gouv.fr" affiche en bas du widget
 
 ### Exemples
 
 ```html
 <!-- Paris, budget max 800€ -->
-<script src="https://mon-logement-etudiant.gouv.fr/widget/embed.js" data-city="Paris" data-prix="800"></script>
+<script src="https://monlogementetudiant.beta.gouv.fr/widget/embed.js" data-city="Paris" data-prix="800"></script>
 
 <!-- Lyon, CROUS uniquement, sans filtres -->
 <script src="https://monlogementetudiant.beta.gouv.fr/widget/embed.js" data-city="Lyon" data-crous="true" data-filters="false"></script>
