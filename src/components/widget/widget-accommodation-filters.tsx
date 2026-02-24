@@ -75,10 +75,10 @@ export const WidgetAccommodationFilters: FC<WidgetAccommodationFiltersProps> = (
       </div>
 
       <div className={classes.filtersRow}>
-        <FindStudentAccommodationPrice initialData={initialData} />
+        <FindStudentAccommodationPrice initialData={initialData} widget />
         <FindStudentAccommodationCrousFilter />
-        <FindStudentColivingAccomodationSwitch />
-        <FindStudentAccessibleAccomodationSwitch />
+        <FindStudentColivingAccomodationSwitch widget />
+        <FindStudentAccessibleAccomodationSwitch widget />
       </div>
     </div>
   )

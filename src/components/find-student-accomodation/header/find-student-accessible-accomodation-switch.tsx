@@ -8,7 +8,11 @@ import { FC } from 'react'
 import { tss } from 'tss-react'
 import { trackEvent } from '~/lib/tracking'
 
-export const FindStudentAccessibleAccomodationSwitch: FC = () => {
+type FindStudentAccessibleAccomodationSwitchProps = {
+  widget?: boolean
+}
+
+export const FindStudentAccessibleAccomodationSwitch: FC<FindStudentAccessibleAccomodationSwitchProps> = ({ widget = false }) => {
   const [queryStates, setQueryStates] = useQueryStates({
     accessible: parseAsString,
     page: parseAsInteger,
@@ -32,7 +36,7 @@ export const FindStudentAccessibleAccomodationSwitch: FC = () => {
         labelPosition="right"
         checked={queryStates.accessible === 'true'}
         onChange={handleChange}
-        disabled={queryStates.crous === 'true'}
+        disabled={widget && queryStates.crous === 'true'}
       />
       <Tooltip kind="hover" title={t('header.tooltip.accessible')} />
     </div>
