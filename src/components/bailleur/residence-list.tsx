@@ -2,6 +2,7 @@
 
 import Pagination from '@codegouvfr/react-dsfr/Pagination'
 import clsx from 'clsx'
+import { useTranslations } from 'next-intl'
 import { parseAsBoolean, parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
 import { FC } from 'react'
 import { ResidenceCard } from '~/components/bailleur/residence-card'
@@ -54,6 +55,7 @@ interface ResidenceListProps {
 }
 
 export const ResidenceList: FC<ResidenceListProps> = ({ initialData }) => {
+  const t = useTranslations('findAccomodation.card')
   const { data: accommodations, isLoading, isFetching } = useMyAccommodations({ initialData })
   const [queryStates] = useQueryStates({
     page: parseAsInteger.withDefault(1),
@@ -103,11 +105,7 @@ export const ResidenceList: FC<ResidenceListProps> = ({ initialData }) => {
             })
 
             const badgeAvailability = (
-              <AvailabilityBadge
-                nbAvailable={nbAvailable}
-                noAvailabilityText="Disponibilité non communiquée"
-                availabilityText="DISPONIBILITÉ"
-              />
+              <AvailabilityBadge nbAvailable={nbAvailable} noAvailabilityText={t('noAvailability')} availabilityText={t('availability')} />
             )
             return (
               <div
