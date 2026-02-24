@@ -7,7 +7,11 @@ import { FC } from 'react'
 import { tss } from 'tss-react'
 import { trackEvent } from '~/lib/tracking'
 
-export const FindStudentColivingAccomodationSwitch: FC = () => {
+type FindStudentColivingAccomodationSwitchProps = {
+  widget?: boolean
+}
+
+export const FindStudentColivingAccomodationSwitch: FC<FindStudentColivingAccomodationSwitchProps> = ({ widget = false }) => {
   const [queryStates, setQueryStates] = useQueryStates({
     colocation: parseAsString,
     page: parseAsInteger,
@@ -30,8 +34,8 @@ export const FindStudentColivingAccomodationSwitch: FC = () => {
         label={t('header.shared')}
         labelPosition="right"
         checked={queryStates.colocation === 'true'}
+        disabled={widget && queryStates.crous === 'true'}
         onChange={handleChange}
-        disabled={queryStates.crous === 'true'}
       />
     </div>
   )

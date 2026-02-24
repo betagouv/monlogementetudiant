@@ -8,9 +8,10 @@ import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommod
 
 type FindStudentAccommodationPriceProps = {
   initialData?: TGetAccomodationsResponse
+  widget?: boolean
 }
 
-export const FindStudentAccommodationPrice = ({ initialData }: FindStudentAccommodationPriceProps) => {
+export const FindStudentAccommodationPrice = ({ initialData, widget }: FindStudentAccommodationPriceProps) => {
   const t = useTranslations('findAccomodation')
 
   const step = 50
@@ -32,7 +33,7 @@ export const FindStudentAccommodationPrice = ({ initialData }: FindStudentAccomm
       max={max}
       min={min}
       hideMinMax
-      disabled={isCrous}
+      disabled={widget && isCrous}
       step={step}
       suffix=" €"
       style={{ width: '260px' }}
