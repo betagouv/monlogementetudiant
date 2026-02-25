@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { getServerSession } from '~/auth'
-import { TrackEffectiveConnection } from '~/components/bailleur/track-effective-connection'
 import { CommonFooter } from '~/components/ui/footer/footer'
 import { WorkspaceHeaderComponent } from '~/components/ui/header/workspace-header'
 import styles from './layout.module.css'
@@ -31,7 +30,6 @@ export default async function WorkspaceLayout({
 
   return (
     <>
-      <TrackEffectiveConnection />
       <WorkspaceHeaderComponent />
       <main className={styles.container}>{children}</main>
       <CommonFooter />

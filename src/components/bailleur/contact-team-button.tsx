@@ -11,7 +11,7 @@ export const ContactTeamButton = () => {
       linkProps={{
         href: 'mailto:contact@monlogementetudiant.beta.gouv.fr',
         onClick: () => {
-          trackEvent({ category: 'Espace Gestionnaire', action: 'contacter equipe', name: 'email' })
+          trackEvent({ category: 'Espace Gestionnaire', action: 'contacter equipe' })
         },
       }}
     >
