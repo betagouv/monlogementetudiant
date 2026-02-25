@@ -8,11 +8,6 @@ import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility
 import 'leaflet-defaulticon-compatibility'
 import { parseAsString, useQueryStates } from 'nuqs'
 import { useAccomodations } from '~/hooks/use-accomodations'
-import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
-
-interface AccomodationsMapProps {
-  data: TGetAccomodationsResponse
-}
 
 const BoundsHandler: FC = () => {
   const map = useMap()
@@ -123,14 +118,14 @@ const CustomZoomControls: FC = () => {
   )
 }
 
-export const AccomodationsMap: FC<AccomodationsMapProps> = ({ data }) => {
+export const AccomodationsMap: FC = () => {
   const { classes } = useStyles()
   const [queryStates, setQueryStates] = useQueryStates({
     bbox: parseAsString,
     id: parseAsString,
   })
 
-  const { data: accommodations } = useAccomodations({ initialData: data })
+  const { data: accommodations } = useAccomodations()
 
   const markers = useMemo(() => {
     const accommodationsData = accommodations?.results.features || []
