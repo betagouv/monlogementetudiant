@@ -27,8 +27,7 @@ export default async function ResidencesPage({ searchParams }: ResidencesPagePro
       <Breadcrumb
         currentPageLabel={<>Gestion des résidences</>}
         segments={[{ label: 'Tableau de bord', linkProps: { href: '/bailleur/tableau-de-bord' } }]}
-        className="fr-mt-0 fr-pt-2w"
-        classes={{ root: 'fr-mb-0' }}
+        classes={{ root: 'fr-mt-0 fr-mb-2w fr-pt-4w' }}
       />
 
       <div className="fr-flex fr-justify-content-space-between fr-align-items-center">

@@ -1,14 +1,20 @@
 import { fr } from '@codegouvfr/react-dsfr'
+import { Breadcrumb } from '@codegouvfr/react-dsfr/Breadcrumb'
 import { Summary } from '@codegouvfr/react-dsfr/Summary'
 import { getTranslations } from 'next-intl/server'
-import { DynamicBreadcrumb } from '~/components/ui/breadcrumb'
 import styles from '../pages.module.css'
 
 export default async function SiteMap() {
   const t = await getTranslations('siteMap')
+  const breadcrumbT = await getTranslations('breadcrumbs')
   return (
     <div className={fr.cx('fr-container')}>
-      <DynamicBreadcrumb margin={false} />
+      <Breadcrumb
+        currentPageLabel={breadcrumbT('sitemap')}
+        homeLinkProps={{ href: '/' }}
+        segments={[]}
+        classes={{ root: 'fr-mt-0 fr-mb-2w fr-pt-4w' }}
+      />
 
       <div className={styles.borderBottom}>
         <h1>{t('title')}</h1>

@@ -1,11 +1,11 @@
 'use client'
 
 import { fr } from '@codegouvfr/react-dsfr'
+import { Breadcrumb } from '@codegouvfr/react-dsfr/Breadcrumb'
 import { useTranslations } from 'next-intl'
 import { parseAsBoolean, useQueryState } from 'nuqs'
 import { FC } from 'react'
 import { tss } from 'tss-react'
-import { DynamicBreadcrumb } from '~/components/ui/breadcrumb'
 import { formatCityWithA } from '~/utils/french-contraction'
 
 interface FindStudentAccommodationTitleProps {
@@ -21,7 +21,7 @@ export const FindStudentAccommodationTitle: FC<FindStudentAccommodationTitleProp
 
   return (
     <>
-      <DynamicBreadcrumb title={title} />
+      <Breadcrumb currentPageLabel={title} homeLinkProps={{ href: '/' }} segments={[]} classes={{ root: 'fr-mt-0 fr-mb-2w fr-pt-4w' }} />
       <h1 className={classes.title}>{title}</h1>
     </>
   )

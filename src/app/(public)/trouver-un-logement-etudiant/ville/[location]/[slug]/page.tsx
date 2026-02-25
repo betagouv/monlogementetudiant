@@ -1,4 +1,5 @@
 import { fr, RiIconClassName } from '@codegouvfr/react-dsfr'
+import { Breadcrumb } from '@codegouvfr/react-dsfr/Breadcrumb'
 import { Tag, TagProps } from '@codegouvfr/react-dsfr/Tag'
 import { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
@@ -13,7 +14,6 @@ import { NearbyAccommodations } from '~/components/accommodation/nearby-accommod
 import { SaveAccommodationFavoriteButton } from '~/components/favorites/save-accommodation-favorite-button'
 import { OwnerDetails } from '~/components/find-student-accomodation/owner-details/owner-details'
 import { expandBbox } from '~/components/map/map-utils'
-import { DynamicBreadcrumb } from '~/components/ui/breadcrumb'
 import { TTerritories } from '~/schemas/territories'
 import { getAccommodationById } from '~/server-only/get-accommodation-by-id'
 import { getAccommodations } from '~/server-only/get-accommodations'
@@ -97,7 +97,19 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
   })
   return (
     <div className={fr.cx('fr-container')}>
-      <DynamicBreadcrumb title={breadCrumbTitle} city={city} cityBbox={cityBbox} />
+      <Breadcrumb
+        currentPageLabel={breadCrumbTitle}
+        homeLinkProps={{ href: '/' }}
+        segments={[
+          {
+            label: commonT('breadcrumbs.findAccomodationWithLocation', { locationFormatted: formatCityWithA(city) }),
+            linkProps: {
+              href: `/trouver-un-logement-etudiant/ville/${encodeURIComponent(city)}?vue=carte&bbox=${cityBbox.west},${cityBbox.south},${cityBbox.east},${cityBbox.north}`,
+            },
+          },
+        ]}
+        classes={{ root: 'fr-mt-0 fr-mb-2w fr-pt-4w' }}
+      />
       <div className="fr-flex fr-justify-content-space-between fr-align-items-center">
         <h1 className="fr-h2">{t('title', { cityFormatted, title: name })}</h1>
         <SaveAccommodationFavoriteButton slug={slug} withLabel initialFavorites={favorites} />

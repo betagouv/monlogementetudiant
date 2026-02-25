@@ -1,19 +1,25 @@
 'use client'
 
+import { Breadcrumb } from '@codegouvfr/react-dsfr/Breadcrumb'
 import clsx from 'clsx'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import { FC, useMemo, useState } from 'react'
 import { HelpSimulator } from '~/components/helps-simulator/help-simulator'
-import { DynamicBreadcrumb } from '~/components/ui/breadcrumb'
 import homeHero from '~/images/home-bg.webp'
 import styles from './simuler-mes-aides-au-logement.module.css'
 
 const WrapperHeaderSimulator: FC = () => {
   const t = useTranslations('simulator')
+  const breadcrumbT = useTranslations('breadcrumbs')
   return (
     <div className={clsx('fr-container', styles.heroSection)}>
-      <DynamicBreadcrumb color="white" />
+      <Breadcrumb
+        currentPageLabel={breadcrumbT('home')}
+        homeLinkProps={{ href: '/', className: 'fr-text-inverted--grey' }}
+        segments={[]}
+        classes={{ link: 'fr-text-inverted--grey', root: 'fr-mt-0 fr-mb-2w fr-pt-4w breadcrumbInverted' }}
+      />
       <div className={clsx('fr-col-md-4', styles.heroContent)}>
         <h1 className={styles.heroTitle}>
           {t('titlePart1')} <span className={styles.heroHighlight}>{t('titlePart2')}&nbsp;</span>

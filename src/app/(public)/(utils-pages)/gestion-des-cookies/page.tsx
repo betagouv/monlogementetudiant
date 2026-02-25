@@ -1,10 +1,11 @@
 import { fr } from '@codegouvfr/react-dsfr'
+import { Breadcrumb } from '@codegouvfr/react-dsfr/Breadcrumb'
 import { getTranslations } from 'next-intl/server'
-import { DynamicBreadcrumb } from '~/components/ui/breadcrumb'
 import styles from '../pages.module.css'
 
 export default async function GestionDesCookiesPage() {
   const t = await getTranslations('cookies')
+  const breadcrumbT = await getTranslations('breadcrumbs')
   const items = [
     {
       description:
@@ -24,7 +25,12 @@ export default async function GestionDesCookiesPage() {
   ]
   return (
     <div className={fr.cx('fr-container')}>
-      <DynamicBreadcrumb margin={false} />
+      <Breadcrumb
+        currentPageLabel={breadcrumbT('cookies')}
+        homeLinkProps={{ href: '/' }}
+        segments={[]}
+        classes={{ root: 'fr-mt-0 fr-mb-2w fr-pt-4w' }}
+      />
       <div className={styles.borderBottom}>
         <h1>{t('title')}</h1>
         <p>

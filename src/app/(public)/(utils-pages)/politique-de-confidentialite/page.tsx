@@ -1,12 +1,19 @@
 import { fr } from '@codegouvfr/react-dsfr'
+import { Breadcrumb } from '@codegouvfr/react-dsfr/Breadcrumb'
 import { Table } from '@codegouvfr/react-dsfr/Table'
-import { DynamicBreadcrumb } from '~/components/ui/breadcrumb'
+import { getTranslations } from 'next-intl/server'
 import styles from '../pages.module.css'
 
-export default function PolitiqueDeConfidentialite() {
+export default async function PolitiqueDeConfidentialite() {
+  const breadcrumbT = await getTranslations('breadcrumbs')
   return (
     <div className={fr.cx('fr-container')}>
-      <DynamicBreadcrumb margin={false} />
+      <Breadcrumb
+        currentPageLabel={breadcrumbT('privacyPolicy')}
+        homeLinkProps={{ href: '/' }}
+        segments={[]}
+        classes={{ root: 'fr-mt-0 fr-mb-2w fr-pt-4w' }}
+      />
       <div className={styles.borderBottom}>
         <h1>Politique de confidentialité</h1>
         <p>

@@ -52,12 +52,7 @@ export const StudentAccommodationFavorite: FC<StudentAccommodationFavoriteProps>
     nb_t7_more_available,
   })
   const badgeAvailability = (
-    <AvailabilityBadge
-      nbAvailable={nbAvailable}
-      noAvailabilityText="Disponibilité non renseignée"
-      availabilityText="DISPONIBILITÉ"
-      as="span"
-    />
+    <AvailabilityBadge nbAvailable={nbAvailable} noAvailabilityText={t('noAvailability')} availabilityText={t('availability')} as="span" />
   )
 
   const handleCardClick = (event: React.MouseEvent) => {

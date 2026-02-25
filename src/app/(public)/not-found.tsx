@@ -1,15 +1,21 @@
 import { fr } from '@codegouvfr/react-dsfr'
+import { Breadcrumb } from '@codegouvfr/react-dsfr/Breadcrumb'
 import Button from '@codegouvfr/react-dsfr/Button'
 import Image from 'next/image'
 import { getTranslations } from 'next-intl/server'
-import { DynamicBreadcrumb } from '~/components/ui/breadcrumb'
 import notFoundImage from '~/images/404.svg'
 
 export default async function NotFound() {
   const t = await getTranslations('notFound')
+  const breadcrumbT = await getTranslations('breadcrumbs')
   return (
     <div className={fr.cx('fr-container')}>
-      <DynamicBreadcrumb />
+      <Breadcrumb
+        currentPageLabel={breadcrumbT('notFound')}
+        homeLinkProps={{ href: '/' }}
+        segments={[]}
+        classes={{ root: 'fr-mt-0 fr-mb-2w fr-pt-4w' }}
+      />
 
       <div className={fr.cx('fr-py-3w')}>
         <h1>{t('title')}</h1>
