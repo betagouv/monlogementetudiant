@@ -114,7 +114,7 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
             <h1 className="fr-mb-0">{accommodation.properties.name}</h1>
             <Tag>{`${city} (${accommodation.properties.postal_code})`}</Tag>
           </div>
-          <UpdateResidencePublication onSubmit={onSubmit} />
+          <UpdateResidencePublication onSubmit={onSubmit} slug={accommodation.properties.slug} />
         </div>
         <div className="fr-flex fr-direction-md-row fr-direction-column fr-justify-content-space-between fr-py-4w fr-flex-gap-4v">
           <div className={clsx(styles.container, 'fr-col-md-8 boxShadow')}>
@@ -134,7 +134,15 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
               <Button type="submit" iconId="ri-save-line" disabled={updateMutation.isPending}>
                 Enregistrer
               </Button>
-              <Button priority="secondary" linkProps={{ href: redirectUri, target: '_blank' }}>
+              <Button
+                priority="secondary"
+                linkProps={{
+                  href: redirectUri,
+                  target: '_blank',
+                  onClick: () =>
+                    trackEvent({ category: 'Espace Gestionnaire', action: 'decouvrir-offre', name: accommodation.properties.slug }),
+                }}
+              >
                 Voir la fiche
               </Button>
             </div>

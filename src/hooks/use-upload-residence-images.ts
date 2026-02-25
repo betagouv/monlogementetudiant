@@ -66,7 +66,7 @@ export const useUploadResidenceImages = (slug: string, name: string) => {
       return { images_urls: allImages }
     },
     onSuccess: async (_data, variables) => {
-      trackEvent({ category: 'Espace Gestionnaire', action: 'upload images', name: slug, value: variables.files.length })
+      trackEvent({ category: 'Espace Gestionnaire', action: 'upload images', name: slug })
       await queryClient.refetchQueries({
         queryKey: ['my-accommodations'],
         exact: false,

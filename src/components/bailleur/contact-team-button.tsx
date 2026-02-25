@@ -1,0 +1,21 @@
+'use client'
+
+import Button from '@codegouvfr/react-dsfr/Button'
+import { trackEvent } from '~/lib/tracking'
+
+export const ContactTeamButton = () => {
+  return (
+    <Button
+      iconId="ri-search-line"
+      priority="secondary"
+      linkProps={{
+        href: 'mailto:contact@monlogementetudiant.beta.gouv.fr',
+        onClick: () => {
+          trackEvent({ category: 'Espace Gestionnaire', action: 'contacter equipe', name: 'email' })
+        },
+      }}
+    >
+      Contacter l'équipe
+    </Button>
+  )
+}

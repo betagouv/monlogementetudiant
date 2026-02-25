@@ -10,6 +10,7 @@ import { getTranslations } from 'next-intl/server'
 import { z } from 'zod'
 import { ResidenceChart } from '~/app/(authenticated)/(gestion-bailleur)/bailleur/tableau-de-bord/chart'
 import { getServerSession } from '~/auth'
+import { CalendlyLink } from '~/components/bailleur/calendly-link'
 import avatarCecilia from '~/images/avatar-cecilia.svg'
 import avatarYasmine from '~/images/avatar-yasmine.svg'
 import { getMyAccommodations } from '~/server-only/bailleur/get-my-accommodations'
@@ -101,9 +102,9 @@ export default async function TableauDeBordPage({ searchParams }: TableauDeBordP
                 <span className="fr-hidden fr-unhidden-md ri-discuss-line" />
                 <div className="fr-flex fr-direction-column fr-flex-gap-2v">
                   <span className="fr-text--bold">{t('dashboard.helpSection.contact.title')}</span>
-                  <Link className="fr-link" target="_blank" href={calendlyUrl}>
+                  <CalendlyLink className="fr-link" href={calendlyUrl}>
                     {t('dashboard.helpSection.contact.link')}
-                  </Link>
+                  </CalendlyLink>
                 </div>
               </div>
             </div>
