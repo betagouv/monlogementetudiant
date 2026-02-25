@@ -3,9 +3,10 @@
 import { SegmentedControl } from '@codegouvfr/react-dsfr/SegmentedControl'
 import { useTranslations } from 'next-intl'
 import { Controller, useFormContext } from 'react-hook-form'
+import { trackEvent } from '~/lib/tracking'
 import { TUpdateResidence } from '~/schemas/accommodations/update-residence'
 
-export const UpdateResidencePublication = ({ onSubmit }: { onSubmit: (data: TUpdateResidence) => void }) => {
+export const UpdateResidencePublication = ({ onSubmit, slug }: { onSubmit: (data: TUpdateResidence) => void; slug: string }) => {
   const t = useTranslations('bailleur.residences.details')
   const { control, getValues } = useFormContext<TUpdateResidence>()
 
@@ -17,6 +18,11 @@ export const UpdateResidencePublication = ({ onSubmit }: { onSubmit: (data: TUpd
         const handleOnChange = (value: boolean) => {
           field.onChange(value)
           onSubmit(getValues())
+          trackEvent({
+            category: 'Espace Gestionnaire',
+            action: value ? 'publication residence' : 'depublication residence',
+            name: slug,
+          })
         }
 
         return (

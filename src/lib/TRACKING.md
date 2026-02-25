@@ -145,9 +145,13 @@ type MatomoEventCategory =
 
 | ID | Action | Name | Value | Fichier |
 |----|--------|------|-------|---------|
-| G1 | `creation residence` | Nom | — | `create-residence-form.tsx` 
-| G2 | `mise a jour residence` | Slug | — | `update-residence-form.tsx` 
-| G3 | `upload images` | Slug | Nb images | `use-upload-residence-images.ts` 
+| G1 | `creation residence` | Nom | — | `create-residence-form.tsx`
+| G2 | `mise a jour residence` | Slug | — | `update-residence-form.tsx`
+| G3 | `upload images` | Slug | Nb images | `use-upload-residence-images.ts`
+| G4 | `publication residence` / `depublication residence` | Slug | — | `update-residence-publication.tsx`
+| G5 | `contacter equipe` | `email` | — | `contact-team-button.tsx`
+| G6 | `reservation calendly` | — | — | `calendly-link.tsx`
+| G7 | `connexion` | — | Email utilisateur | `track-effective-connection.tsx`
 
 ### Navigation
 
