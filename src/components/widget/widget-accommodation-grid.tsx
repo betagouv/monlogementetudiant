@@ -10,16 +10,14 @@ import { AccomodationCard } from '~/components/find-student-accomodation/card/fi
 import { CardSkeleton } from '~/components/ui/skeleton/card-skeleton'
 import { useAccomodations } from '~/hooks/use-accomodations'
 import { trackEvent } from '~/lib/tracking'
-import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
 import { sPluriel } from '~/utils/sPluriel'
 import styles from './widget-accommodation-grid.module.css'
 
 type WidgetAccommodationGridProps = {
-  data: TGetAccomodationsResponse
   cityName?: string
 }
 
-export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = ({ data }) => {
+export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = () => {
   const t = useTranslations('findAccomodation.results')
   const [queryStates] = useQueryStates({
     bbox: parseAsString,
@@ -31,8 +29,7 @@ export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = ({ data
     crous: parseAsString,
   })
 
-  const { data: queryData, isLoading } = useAccomodations({ pageSize: 6 })
-  const accommodations = queryData ?? data
+  const { data: accommodations, isLoading } = useAccomodations({ pageSize: 6 })
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
