@@ -38,7 +38,7 @@ export default async function TableauDeBordPage({ searchParams }: TableauDeBordP
         currentPageLabel={<>{t('dashboard.breadcrumb.title', { name: auth.user.name ?? '' })}</>}
         segments={[]}
         className="fr-mt-0 fr-pt-2w"
-        classes={{ root: 'fr-mb-0' }}
+        classes={{ root: 'fr-mt-0 fr-mb-2w fr-pt-4w' }}
       />
       <div className="fr-flex fr-align-items-center fr-flex-gap-4v fr-my-4w fr-mt-md-0 fr-mb-md-4w">
         <DataVisualization width={62} height={66} />

@@ -1,17 +1,23 @@
+import { Breadcrumb } from '@codegouvfr/react-dsfr/Breadcrumb'
 import { getTranslations } from 'next-intl/server'
 import { BudgetSimulatorProvider } from '~/components/budget-simulation/budget-simulator-context'
-import { DynamicBreadcrumb } from '~/components/ui/breadcrumb'
 import { BudgetSimulatorContent } from './budget-simulator-content'
 import styles from './simuler-budget.module.css'
 
 export default async function BudgetSimulatorPage() {
   const t = await getTranslations('budgetSimulator')
-  // todo - extract translations
+  const breadcrumbT = await getTranslations('breadcrumbs')
+
   return (
     <>
       <div className="primaryBackgroundColor">
         <div className="fr-container">
-          <DynamicBreadcrumb color="white" />
+          <Breadcrumb
+            currentPageLabel={breadcrumbT('budgetSimulator')}
+            homeLinkProps={{ href: '/', className: 'fr-text-inverted--grey' }}
+            segments={[]}
+            classes={{ root: 'fr-mt-0 fr-mb-2w fr-pt-4w breadcrumbInverted', link: 'fr-text-inverted--grey' }}
+          />
           <div className="fr-mb-4w">
             <h1 className="fr-mb-0">
               <span className="fr-text-inverted--grey">{t('titlePart1')}</span> <span className={styles.highlight}>{t('titlePart2')}</span>

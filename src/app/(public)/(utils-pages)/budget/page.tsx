@@ -1,15 +1,21 @@
 import { fr } from '@codegouvfr/react-dsfr'
+import { Breadcrumb } from '@codegouvfr/react-dsfr/Breadcrumb'
 import { Table } from '@codegouvfr/react-dsfr/Table'
 import clsx from 'clsx'
 import { getTranslations } from 'next-intl/server'
-import { DynamicBreadcrumb } from '~/components/ui/breadcrumb'
 import styles from './budget.module.css'
 
 export default async function BudgetPage() {
   const t = await getTranslations('budget')
+  const breadcrumbT = await getTranslations('breadcrumbs')
   return (
     <div className={fr.cx('fr-container')}>
-      <DynamicBreadcrumb />
+      <Breadcrumb
+        currentPageLabel={breadcrumbT('budget')}
+        homeLinkProps={{ href: '/' }}
+        segments={[]}
+        classes={{ root: 'fr-mt-0 fr-mb-2w fr-pt-4w' }}
+      />
       <div className={fr.cx('fr-container')}>
         <h1>{t('title')}</h1>
         <p>

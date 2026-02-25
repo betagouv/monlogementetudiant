@@ -31,3 +31,15 @@ span[class^="fr-"]::before {
 .primaryBackgroundColor {
   background-color: #5858ad;
 }
+
+.breadcrumbInverted .fr-breadcrumb__link[aria-current]:not([aria-current="false"]) {
+  color: white;
+}
+
+.breadcrumbInverted .fr-breadcrumb__button {
+  color: white;
+}
+
+.breadcrumbInverted .fr-breadcrumb__list li:not(:first-child):before {
+  color: white;
+}

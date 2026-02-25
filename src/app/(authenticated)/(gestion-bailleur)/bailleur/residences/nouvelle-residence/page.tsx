@@ -13,8 +13,7 @@ export default async function CreateResidenceDetailsPage() {
           { label: 'Tableau de bord', linkProps: { href: '/bailleur/tableau-de-bord' } },
           { label: 'Gestion des résidences', linkProps: { href: '/bailleur/residences' } },
         ]}
-        className="fr-mt-0 fr-pt-2w"
-        classes={{ root: 'fr-mb-2w' }}
+        classes={{ root: 'fr-mt-0 fr-mb-2w fr-pt-4w' }}
       />
       <CreateResidenceForm />
     </div>

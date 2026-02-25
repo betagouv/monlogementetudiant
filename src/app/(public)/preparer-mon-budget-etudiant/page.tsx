@@ -1,9 +1,9 @@
 import { fr } from '@codegouvfr/react-dsfr'
+import { Breadcrumb } from '@codegouvfr/react-dsfr/Breadcrumb'
 import clsx from 'clsx'
 import { getTranslations } from 'next-intl/server'
 import PrepareBudgetContent from '~/app/(public)/preparer-mon-budget-etudiant/components/prepare-budget-content'
 import { PrepareBudgetSidemenu } from '~/app/(public)/preparer-mon-budget-etudiant/components/prepare-budget-sidemenu'
-import { DynamicBreadcrumb } from '~/components/ui/breadcrumb'
 import styles from './preparer-mon-budget-etudiant.module.css'
 
 export const generateMetadata = async () => {
@@ -16,10 +16,16 @@ export const generateMetadata = async () => {
 
 export default async function PrepareBudgetPage() {
   const t = await getTranslations('prepareBudget')
+  const breadcrumbT = await getTranslations('breadcrumbs')
   return (
-    <div className={fr.cx('fr-container')}>
+    <div className="fr-container">
       <div>
-        <DynamicBreadcrumb />
+        <Breadcrumb
+          currentPageLabel={breadcrumbT('prepareBudget')}
+          homeLinkProps={{ href: '/' }}
+          segments={[]}
+          classes={{ root: 'fr-mt-0 fr-mb-2w fr-pt-4w fr-pt-2w' }}
+        />
         <h1>{t('title')}</h1>
         <div className={clsx(styles.mainContainer, fr.cx('fr-col-12'))}>
           <PrepareBudgetSidemenu />

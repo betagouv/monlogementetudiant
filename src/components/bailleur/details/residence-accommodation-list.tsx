@@ -2,6 +2,7 @@
 
 import Input from '@codegouvfr/react-dsfr/Input'
 import Select from '@codegouvfr/react-dsfr/Select'
+import { useTranslations } from 'next-intl'
 import { useFormContext } from 'react-hook-form'
 import { AvailabilityBadge } from '~/components/shared/availability-badge'
 import { TAccomodationMy } from '~/schemas/accommodations/accommodations'
@@ -9,6 +10,8 @@ import { TUpdateResidence } from '~/schemas/accommodations/update-residence'
 import { calculateAvailability } from '~/utils/calculateAvailability'
 
 export const ResidenceAccommodationList = ({ accommodation }: { accommodation: TAccomodationMy }) => {
+  const t = useTranslations('findAccomodation.card')
+
   const {
     register,
     watch,
@@ -44,12 +47,7 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
     nb_t7_more_available,
   })
   const badgeAvailability = (
-    <AvailabilityBadge
-      nbAvailable={nbAvailable}
-      noAvailabilityText="Disponibilité non communiquée"
-      availabilityText="DISPONIBILITÉ"
-      as="span"
-    />
+    <AvailabilityBadge nbAvailable={nbAvailable} noAvailabilityText={t('noAvailability')} availabilityText={t('availability')} as="span" />
   )
   return (
     <div className="fr-border-bottom">

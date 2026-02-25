@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { getServerSession } from '~/auth'
 import { StudentSpaceNavigation } from '~/components/student-space/navigation/student-space-navigation'
-import { DynamicBreadcrumb } from '~/components/ui/breadcrumb'
+import { StudentBreadcrumb } from '~/components/student-space/student-breadcrumb'
 import { CommonFooter } from '~/components/ui/footer/footer'
 import { CommonHeader } from '~/components/ui/header/common-header'
 
@@ -34,7 +34,7 @@ export default async function WorkspaceLayout({
       <CommonHeader withNavigation={false} />
       <main className="primaryBackgroundColor">
         <div className="fr-container fr-pb-12w">
-          <DynamicBreadcrumb color="white" />
+          <StudentBreadcrumb />
           <div className="fr-col-md-12 fr-flex fr-direction-column fr-direction-md-row fr-background-default--grey">
             <div className="fr-border fr-col-md-4">
               <StudentSpaceNavigation />
