@@ -8,23 +8,21 @@ import { FC } from 'react'
 import { tss } from 'tss-react'
 import { useAccomodations } from '~/hooks/use-accomodations'
 import { trackEvent } from '~/lib/tracking'
-import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
 import { TTerritory } from '~/schemas/territories'
 import { formatCityWithA } from '~/utils/french-contraction'
 import { sPluriel } from '~/utils/sPluriel'
 
 type FindStudentAccomodationSortViewProps = {
-  data: TGetAccomodationsResponse
   territory?: TTerritory
 }
-export const FindStudentAccomodationSortView: FC<FindStudentAccomodationSortViewProps> = ({ data, territory }) => {
+export const FindStudentAccomodationSortView: FC<FindStudentAccomodationSortViewProps> = ({ territory }) => {
   const [queryStates, setQueryStates] = useQueryStates({
     bbox: parseAsString,
     ['recherche-par-carte']: parseAsBoolean.withDefault(false),
     vue: parseAsString.withDefault('grille'),
   })
   const t = useTranslations('findAccomodation.filters')
-  const { data: accommodations } = useAccomodations({ initialData: data })
+  const { data: accommodations } = useAccomodations()
 
   const { classes } = useStyles({ hasResults: accommodations && accommodations.count > 0 })
 

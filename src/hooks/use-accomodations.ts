@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
+import { useQueryStates } from 'nuqs'
+import { accommodationsParsers, accommodationsQueryKey } from '~/lib/accommodations-search-params'
 import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
 
 export const fetchAccomodations = async (
@@ -40,27 +41,17 @@ export const fetchAccomodations = async (
 }
 
 interface UseAccomodationsOptions {
-  initialData?: TGetAccomodationsResponse
   pageSize?: number
 }
 
-export const useAccomodations = ({ initialData, pageSize }: UseAccomodationsOptions = {}) => {
-  const [queryStates] = useQueryStates({
-    academie: parseAsString,
-    accessible: parseAsString,
-    bbox: parseAsString,
-    colocation: parseAsString,
-    page: parseAsInteger,
-    prix: parseAsInteger,
-    crous: parseAsString,
-  })
-  const { accessible, bbox, colocation, page, prix, crous, academie } = queryStates
+export const useAccomodations = ({ pageSize }: UseAccomodationsOptions = {}) => {
+  const [queryStates] = useQueryStates(accommodationsParsers)
+  const { bbox, academie, accessible, colocation, page, prix, crous } = queryStates
   const enabled = !!bbox || !!accessible || !!page || !!colocation || !!prix || !!crous || !!academie
 
   return useQuery<TGetAccomodationsResponse>({
     enabled,
-    initialData,
     queryFn: () => fetchAccomodations(bbox, page, accessible, colocation, prix, crous, academie, pageSize),
-    queryKey: ['accomodations', { accessible, bbox, colocation, page, prix, crous, academie, pageSize }],
+    queryKey: accommodationsQueryKey({ accessible, bbox, colocation, page, prix, crous, academie, pageSize }),
   })
 }

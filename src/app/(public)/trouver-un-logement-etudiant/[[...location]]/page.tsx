@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { fr } from '@codegouvfr/react-dsfr'
+import { HydrationBoundary } from '@tanstack/react-query'
 import { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
@@ -11,8 +12,9 @@ import FindStudentAccommodationQA from '~/components/find-student-accomodation/q
 import { FindStudentAccomodationResults } from '~/components/find-student-accomodation/results/find-student-accomodation-results'
 import { FindStudentAccomodationSortView } from '~/components/find-student-accomodation/sort-view/find-student-accomodation-sort-view'
 import { expandBbox } from '~/components/map/map-utils'
+import { SearchParamsSync } from '~/components/search-params-sync'
 import { TTerritories } from '~/schemas/territories'
-import { getAccommodations } from '~/server-only/get-accommodations'
+import { prefetchAccommodations } from '~/server-only/get-accommodations'
 import { getTerritories } from '~/server-only/get-territories'
 import { formatCityWithA } from '~/utils/french-contraction'
 
@@ -67,17 +69,7 @@ export default async function FindStudentAccommodationPage({
   searchParams,
 }: {
   params: Promise<{ location: string }>
-  searchParams: Promise<{
-    accessible: string
-    academie?: string
-    prix?: string
-    bbox?: string
-    content_type?: string
-    colocation?: string
-    object_id?: string
-    page?: string
-    crous?: string
-  }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const awaitedParams = await params
   const awaitedSearchParams = await searchParams
@@ -98,31 +90,28 @@ export default async function FindStudentAccommodationPage({
     ? expandBbox(territory.bbox.xmin, territory.bbox.ymin, territory.bbox.xmax, territory.bbox.ymax)
     : undefined
 
-  // do not use bbox while fetching if user searching by academy
   const isAcademy = routeCategoryKey === 'academie'
 
   const serverBbox =
     !isAcademy && territoryBbox ? `${territoryBbox.west},${territoryBbox.south},${territoryBbox.east},${territoryBbox.north}` : undefined
+  const serverAcademie = isAcademy && territory ? territory.id.toString() : undefined
 
-  const accommodationsParams = {
-    ...awaitedSearchParams,
-    ...(isAcademy && territory ? { academie: territory.id.toString() } : {}),
-    ...(!isAcademy && territoryBbox
-      ? { bbox: `${territoryBbox.west},${territoryBbox.south},${territoryBbox.east},${territoryBbox.north}` }
-      : {}),
-  }
-  const accommodations = await getAccommodations(accommodationsParams)
+  const dehydratedState = await prefetchAccommodations(awaitedSearchParams, {
+    bbox: serverBbox,
+    academie: serverAcademie,
+  })
 
   return (
-    <>
+    <HydrationBoundary state={dehydratedState}>
+      <SearchParamsSync bbox={serverBbox} academie={serverAcademie} />
       <div className={fr.cx('fr-container')}>
         <FindStudentAccommodationTitle location={territory?.name} />
-        <FindStudentAccomodationHeader data={accommodations} />
-        <FindStudentAccomodationSortView data={accommodations} territory={territory} />
+        <FindStudentAccomodationHeader />
+        <FindStudentAccomodationSortView territory={territory} />
         {!!territory && <FindStudentAccommodationBanner territory={territory} categoryKey={routeCategoryKey} />}
-        <FindStudentAccomodationResults data={accommodations} territory={territory} isAcademy={isAcademy} serverBbox={serverBbox} />
+        <FindStudentAccomodationResults territory={territory} isAcademy={isAcademy} />
       </div>
       <FindStudentAccommodationQA />
-    </>
+    </HydrationBoundary>
   )
 }

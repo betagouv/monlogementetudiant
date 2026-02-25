@@ -13,18 +13,15 @@ import { MapSkeleton } from '~/components/map/map-skeleton'
 import { CardSkeleton } from '~/components/ui/skeleton/card-skeleton'
 import { useAccomodations } from '~/hooks/use-accomodations'
 import { trackEvent } from '~/lib/tracking'
-import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
 import { TTerritory } from '~/schemas/territories'
 
 type FindStudentAccomodationResultsProps = {
-  data: TGetAccomodationsResponse
   territory?: TTerritory
   isAcademy?: boolean
-  serverBbox?: string
 }
-export const FindStudentAccomodationResults: FC<FindStudentAccomodationResultsProps> = ({ data, territory, isAcademy, serverBbox }) => {
+export const FindStudentAccomodationResults: FC<FindStudentAccomodationResultsProps> = ({ territory, isAcademy }) => {
   const t = useTranslations('findAccomodation.results')
-  const [queryStates, setQueryStates] = useQueryStates({
+  const [queryStates] = useQueryStates({
     academie: parseAsString,
     vue: parseAsString,
     page: parseAsInteger,
@@ -36,13 +33,7 @@ export const FindStudentAccomodationResults: FC<FindStudentAccomodationResultsPr
     ['recherche-par-carte']: parseAsString,
   })
 
-  useEffect(() => {
-    if (serverBbox && !queryStates.bbox) {
-      setQueryStates({ bbox: serverBbox })
-    }
-  }, [])
-
-  const { data: accommodations, isFetching } = useAccomodations({ initialData: data })
+  const { data: accommodations, isFetching } = useAccomodations()
 
   useEffect(() => {
     if (!!accommodations?.results?.features && accommodations.results.features.length < 6) {
@@ -63,7 +54,7 @@ export const FindStudentAccomodationResults: FC<FindStudentAccomodationResultsPr
 
   const card = (
     <Suspense fallback={<MapSkeleton height={700} />}>
-      <AccomodationsMap data={data} />
+      <AccomodationsMap />
     </Suspense>
   )
   return (

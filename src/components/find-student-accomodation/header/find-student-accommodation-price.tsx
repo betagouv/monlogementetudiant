@@ -3,20 +3,21 @@
 import Range from '@codegouvfr/react-dsfr/Range'
 import { useTranslations } from 'next-intl'
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
+import { useAccomodations } from '~/hooks/use-accomodations'
 import { trackEvent } from '~/lib/tracking'
-import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
 
 type FindStudentAccommodationPriceProps = {
-  initialData?: TGetAccomodationsResponse
+  pageSize?: number
   widget?: boolean
 }
 
-export const FindStudentAccommodationPrice = ({ initialData, widget }: FindStudentAccommodationPriceProps) => {
+export const FindStudentAccommodationPrice = ({ pageSize, widget }: FindStudentAccommodationPriceProps) => {
   const t = useTranslations('findAccomodation')
+  const { data } = useAccomodations({ pageSize })
 
   const step = 50
-  const min = Math.floor((initialData?.min_price || 150) / step) * step
-  const rawMax = initialData?.max_price ?? 1000
+  const min = Math.floor((data?.min_price || 150) / step) * step
+  const rawMax = data?.max_price ?? 1000
   const max = Math.ceil(rawMax / 100) * 100
 
   const [queryStates, setQueryStates] = useQueryStates({

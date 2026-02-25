@@ -1,4 +1,6 @@
-import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
+import { dehydrate, QueryClient } from '@tanstack/react-query'
+import { accommodationsQueryKey, accommodationsSearchParamsCache } from '~/lib/accommodations-search-params'
+import type { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
 
 export const getAccommodations = async (searchParams: {
   accessible?: string
@@ -41,4 +43,45 @@ export const getAccommodations = async (searchParams: {
   }
   const data = await response.json()
   return data as TGetAccomodationsResponse
+}
+
+export const prefetchAccommodations = async (
+  awaitedSearchParams: Record<string, string | string[] | undefined>,
+  overrides?: { bbox?: string; academie?: string; pageSize?: number },
+) => {
+  const parsedParams = accommodationsSearchParamsCache.parse(awaitedSearchParams)
+  const queryKeyParams = {
+    ...parsedParams,
+    bbox: overrides?.bbox ?? parsedParams.bbox,
+    academie: overrides?.academie ?? parsedParams.academie,
+    pageSize: overrides?.pageSize,
+  }
+
+  const searchParams: Record<string, string> = {}
+  if (queryKeyParams.bbox) searchParams.bbox = queryKeyParams.bbox
+  if (queryKeyParams.academie) searchParams.academie = queryKeyParams.academie
+  if (parsedParams.accessible) searchParams.accessible = parsedParams.accessible
+  if (parsedParams.colocation) searchParams.colocation = parsedParams.colocation
+  if (parsedParams.prix) searchParams.prix = parsedParams.prix.toString()
+  if (parsedParams.page) searchParams.page = parsedParams.page.toString()
+  if (parsedParams.crous) searchParams.crous = parsedParams.crous
+  if (overrides?.pageSize) searchParams.page_size = overrides.pageSize.toString()
+
+  const queryClient = new QueryClient()
+  await queryClient.prefetchQuery({
+    queryKey: accommodationsQueryKey(queryKeyParams),
+    queryFn: () => getAccommodations(searchParams),
+  })
+
+  const hasOverrides =
+    (overrides?.bbox && overrides.bbox !== parsedParams.bbox) || (overrides?.academie && overrides.academie !== parsedParams.academie)
+
+  if (hasOverrides) {
+    const data = queryClient.getQueryData(accommodationsQueryKey(queryKeyParams))
+    if (data) {
+      queryClient.setQueryData(accommodationsQueryKey({ ...parsedParams, pageSize: overrides?.pageSize }), data)
+    }
+  }
+
+  return dehydrate(queryClient)
 }
