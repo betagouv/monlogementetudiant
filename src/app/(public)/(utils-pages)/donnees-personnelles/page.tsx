@@ -4,8 +4,7 @@ import { getTranslations } from 'next-intl/server'
 import styles from '../pages.module.css'
 
 export default async function DonneesPersonnellesPage() {
-  const t = await getTranslations('personalData')
-  const breadcrumbT = await getTranslations('breadcrumbs')
+  const [t, breadcrumbT] = await Promise.all([getTranslations('personalData'), getTranslations('breadcrumbs')])
   const items = [
     {
       description:

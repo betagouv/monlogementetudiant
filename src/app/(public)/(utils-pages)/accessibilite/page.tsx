@@ -4,8 +4,7 @@ import { getTranslations } from 'next-intl/server'
 import styles from '../pages.module.css'
 
 export default async function AccessibilitePage() {
-  const t = await getTranslations('accessibilite')
-  const breadcrumbT = await getTranslations('breadcrumbs')
+  const [t, breadcrumbT] = await Promise.all([getTranslations('accessibilite'), getTranslations('breadcrumbs')])
   const items = [
     {
       description:

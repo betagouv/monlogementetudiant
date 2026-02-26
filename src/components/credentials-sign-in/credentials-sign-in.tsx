@@ -51,6 +51,7 @@ export const CredentialsSignInForm: FC = () => {
           message: 'Vous êtes connecté avec succès !',
         })
         router.push(result.callbackUrl || '/mon-espace')
+        router.refresh()
       } else {
         trackEvent({ category: 'Authentification', action: 'connexion etudiant', name: 'erreur' })
         createToast({

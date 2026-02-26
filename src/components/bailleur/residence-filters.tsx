@@ -4,7 +4,6 @@ import { Input } from '@codegouvfr/react-dsfr/Input'
 import ToggleSwitch from '@codegouvfr/react-dsfr/ToggleSwitch'
 import { parseAsBoolean, parseAsString, useQueryStates } from 'nuqs'
 import { useMyAccommodations } from '~/hooks/use-my-accommodations'
-import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
 
 const ResidenceFiltersSkeleton = () => {
   return (
@@ -18,12 +17,8 @@ const ResidenceFiltersSkeleton = () => {
   )
 }
 
-interface ResidenceFiltersProps {
-  initialData: TGetAccomodationsResponse
-}
-
-export const ResidenceFilters = ({ initialData }: ResidenceFiltersProps) => {
-  const { data: accommodations, isLoading } = useMyAccommodations({ initialData })
+export const ResidenceFilters = () => {
+  const { data: accommodations, isLoading } = useMyAccommodations()
   const [queryStates, setQueryStates] = useQueryStates({
     disponible: parseAsBoolean.withDefault(false),
     recherche: parseAsString.withDefault(''),

@@ -9,12 +9,11 @@ import { notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { z } from 'zod'
 import { ResidenceChart } from '~/app/(authenticated)/(gestion-bailleur)/bailleur/tableau-de-bord/chart'
-import { getServerSession } from '~/auth'
 import { CalendlyLink } from '~/components/bailleur/calendly-link'
 import avatarCecilia from '~/images/avatar-cecilia.svg'
 import avatarYasmine from '~/images/avatar-yasmine.svg'
-import { getMyAccommodations } from '~/server-only/bailleur/get-my-accommodations'
 import { calculateAvailability } from '~/utils/calculateAvailability'
+import { getBailleurDashboardPageContext } from './get-bailleur-dashboard-page-context'
 import styles from './tableau-de-bord.module.css'
 
 type TableauDeBordPageProps = {
@@ -23,26 +22,25 @@ type TableauDeBordPageProps = {
 
 export default async function TableauDeBordPage({ searchParams }: TableauDeBordPageProps) {
   const calendlyUrl = z.string().parse(process.env.NEXT_PUBLIC_CALENDLY_URL)
+  const awaitedSearchParams = await searchParams
   const t = await getTranslations('bailleur')
-  const auth = await getServerSession()
+  const { session, accommodations } = await getBailleurDashboardPageContext(awaitedSearchParams)
 
-  if (!auth || !auth.user) {
+  if (!session || !session.user) {
     return notFound()
   }
-  const awaitedSearchParams = await searchParams
-  const accommodations = await getMyAccommodations({ page: awaitedSearchParams.page })
 
   return (
     <div className="fr-container fr-pb-12w">
       <Breadcrumb
-        currentPageLabel={<>{t('dashboard.breadcrumb.title', { name: auth.user.name ?? '' })}</>}
+        currentPageLabel={<>{t('dashboard.breadcrumb.title', { name: session.user.name ?? '' })}</>}
         segments={[]}
         className="fr-mt-0 fr-pt-2w"
         classes={{ root: 'fr-mt-0 fr-mb-2w fr-pt-4w' }}
       />
       <div className="fr-flex fr-align-items-center fr-flex-gap-4v fr-my-4w fr-mt-md-0 fr-mb-md-4w">
         <DataVisualization width={62} height={66} />
-        <h1 className="fr-mb-0">{t('dashboard.welcome.title', { firstname: auth.user.firstname })}</h1>
+        <h1 className="fr-mb-0">{t('dashboard.welcome.title', { firstname: session.user.firstname })}</h1>
       </div>
       <div className="fr-flex fr-direction-column fr-direction-md-row fr-flex-gap-4v">
         <div

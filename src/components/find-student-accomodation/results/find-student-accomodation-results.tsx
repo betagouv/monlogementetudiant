@@ -12,14 +12,16 @@ import { AccomodationCard } from '~/components/find-student-accomodation/card/fi
 import { MapSkeleton } from '~/components/map/map-skeleton'
 import { CardSkeleton } from '~/components/ui/skeleton/card-skeleton'
 import { useAccomodations } from '~/hooks/use-accomodations'
+import { TUser } from '~/lib/external-auth-plugin'
 import { trackEvent } from '~/lib/tracking'
 import { TTerritory } from '~/schemas/territories'
 
 type FindStudentAccomodationResultsProps = {
   territory?: TTerritory
   isAcademy?: boolean
+  user?: TUser
 }
-export const FindStudentAccomodationResults: FC<FindStudentAccomodationResultsProps> = ({ territory, isAcademy }) => {
+export const FindStudentAccomodationResults: FC<FindStudentAccomodationResultsProps> = ({ territory, isAcademy, user }) => {
   const t = useTranslations('findAccomodation.results')
   const [queryStates] = useQueryStates({
     academie: parseAsString,
@@ -64,7 +66,7 @@ export const FindStudentAccomodationResults: FC<FindStudentAccomodationResultsPr
         <div className={classes.accomodationsContainer}>
           <div className={classes.accommodationGrid}>
             {(accommodations?.results.features || []).map((accommodation) => (
-              <AccomodationCard key={accommodation.id} accomodation={accommodation} />
+              <AccomodationCard key={accommodation.id} accomodation={accommodation} user={user} />
             ))}
             {!accommodations?.results.features?.length &&
               isFetching &&
