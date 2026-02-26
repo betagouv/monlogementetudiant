@@ -1,5 +1,9 @@
+import { QueryClient } from '@tanstack/react-query'
 import { getServerSession } from '~/auth'
 import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
+
+export const myAccommodationsQueryKey = (page?: string | null, disponible?: string | null, recherche?: string | null) =>
+  ['my-accommodations', page ? Number(page) : null, disponible === 'true' ? true : null, recherche || null] as const
 
 export const getMyAccommodations = async (searchParams?: { page?: string; disponible?: string; recherche?: string }) => {
   const auth = await getServerSession()
@@ -25,4 +29,15 @@ export const getMyAccommodations = async (searchParams?: { page?: string; dispon
   }
   const data = await response.json()
   return data as TGetAccomodationsResponse
+}
+
+export const prefetchMyAccommodations = async (searchParams?: { page?: string; disponible?: string; recherche?: string }) => {
+  const queryClient = new QueryClient()
+
+  await queryClient.prefetchQuery({
+    queryKey: myAccommodationsQueryKey(searchParams?.page, searchParams?.disponible, searchParams?.recherche),
+    queryFn: () => getMyAccommodations(searchParams),
+  })
+
+  return queryClient
 }

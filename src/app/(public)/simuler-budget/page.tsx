@@ -5,8 +5,7 @@ import { BudgetSimulatorContent } from './budget-simulator-content'
 import styles from './simuler-budget.module.css'
 
 export default async function BudgetSimulatorPage() {
-  const t = await getTranslations('budgetSimulator')
-  const breadcrumbT = await getTranslations('breadcrumbs')
+  const [t, breadcrumbT] = await Promise.all([getTranslations('budgetSimulator'), getTranslations('breadcrumbs')])
 
   return (
     <>

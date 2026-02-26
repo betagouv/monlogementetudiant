@@ -5,8 +5,7 @@ import { getTranslations } from 'next-intl/server'
 import styles from '../pages.module.css'
 
 export default async function SiteMap() {
-  const t = await getTranslations('siteMap')
-  const breadcrumbT = await getTranslations('breadcrumbs')
+  const [t, breadcrumbT] = await Promise.all([getTranslations('sitemap'), getTranslations('breadcrumbs')])
   return (
     <div className={fr.cx('fr-container')}>
       <Breadcrumb

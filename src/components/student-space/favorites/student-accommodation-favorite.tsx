@@ -15,13 +15,15 @@ import {
 } from '~/components/find-student-accomodation/card/find-student-accommodation-image-card'
 import { AvailabilityBadge } from '~/components/shared/availability-badge'
 import { TooltipHoverOnly } from '~/components/tooltip-hover-only'
+import { TUser } from '~/lib/external-auth-plugin'
 import { TAccomodationCard } from '~/schemas/accommodations/accommodations'
 import { calculateAvailability } from '~/utils/calculateAvailability'
 
 type StudentAccommodationFavoriteProps = {
   accomodation: TAccomodationCard
+  user?: TUser
 }
-export const StudentAccommodationFavorite: FC<StudentAccommodationFavoriteProps> = ({ accomodation }) => {
+export const StudentAccommodationFavorite: FC<StudentAccommodationFavoriteProps> = ({ accomodation, user }) => {
   const t = useTranslations('findAccomodation.card')
   const router = useRouter()
   const { classes } = useStyles()
@@ -123,7 +125,7 @@ export const StudentAccommodationFavorite: FC<StudentAccommodationFavoriteProps>
               <Tag>{`${city} (${postal_code})`}</Tag>
             </li>
           </ul>
-          <SaveAccommodationFavoriteButton slug={accomodation.properties.slug} />
+          <SaveAccommodationFavoriteButton slug={accomodation.properties.slug} user={user} />
         </div>
       }
       size="small"

@@ -23,11 +23,10 @@ export const fetchMyAccommodations = async (
 }
 
 interface UseMyAccommodationsOptions {
-  initialData?: TGetAccomodationsResponse
   debounceTime?: number
 }
 
-export const useMyAccommodations = ({ initialData, debounceTime = 300 }: UseMyAccommodationsOptions = {}) => {
+export const useMyAccommodations = ({ debounceTime = 300 }: UseMyAccommodationsOptions = {}) => {
   const [queryStates] = useQueryStates({
     page: parseAsInteger,
     disponible: parseAsBoolean,
@@ -43,7 +42,6 @@ export const useMyAccommodations = ({ initialData, debounceTime = 300 }: UseMyAc
 
   return useQuery<TGetAccomodationsResponse>({
     enabled,
-    initialData: enabled ? undefined : initialData,
     queryFn: () => fetchMyAccommodations(page, disponible, debouncedRecherche),
     queryKey: ['my-accommodations', page, disponible, debouncedRecherche],
   })

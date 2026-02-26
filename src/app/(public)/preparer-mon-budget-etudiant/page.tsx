@@ -15,8 +15,7 @@ export const generateMetadata = async () => {
 }
 
 export default async function PrepareBudgetPage() {
-  const t = await getTranslations('prepareBudget')
-  const breadcrumbT = await getTranslations('breadcrumbs')
+  const [t, breadcrumbT] = await Promise.all([getTranslations('prepareBudget'), getTranslations('breadcrumbs')])
   return (
     <div className="fr-container">
       <div>
