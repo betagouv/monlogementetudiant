@@ -17,6 +17,7 @@ import {
 import { AvailabilityBadge } from '~/components/shared/availability-badge'
 import { WaitingListBadge } from '~/components/shared/waiting-list-badge'
 import { TooltipHoverOnly } from '~/components/tooltip-hover-only'
+import { TUser } from '~/lib/external-auth-plugin'
 import { trackEvent } from '~/lib/tracking'
 import { TAccomodationCard } from '~/schemas/accommodations/accommodations'
 import { calculateAvailability } from '~/utils/calculateAvailability'
@@ -27,6 +28,7 @@ type AccomodationCardProps = {
   className?: string
   showFavorite?: boolean
   targetBlank?: boolean
+  user?: TUser
 }
 
 export const AccomodationCard: FC<AccomodationCardProps> = ({
@@ -35,6 +37,7 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
   href,
   showFavorite = true,
   targetBlank = false,
+  user,
 }) => {
   const router = useRouter()
   const [selectedAccommodation] = useQueryState('id', parseAsString)
@@ -160,7 +163,7 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
               <Tag>{`${city} (${postal_code})`}</Tag>
             </li>
           </ul>
-          {showFavorite && <SaveAccommodationFavoriteButton slug={accomodation.properties.slug} />}
+          {showFavorite && <SaveAccommodationFavoriteButton slug={accomodation.properties.slug} user={user} />}
         </div>
       }
       end={waitingListBadge}

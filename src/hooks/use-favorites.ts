@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
-import { authClient } from '~/auth-client'
+import { TUser } from '~/lib/external-auth-plugin'
 import { TGetFavoritesResponse } from '~/schemas/favorites/get-favorites'
+
+export const favoritesQueryKey = (userId?: string) => ['favorites', userId] as const
 
 export const getFavorites = async (): Promise<TGetFavoritesResponse> => {
   const response = await fetch('/api/accommodations/favorites', {
@@ -17,14 +19,11 @@ export const getFavorites = async (): Promise<TGetFavoritesResponse> => {
   return response.json()
 }
 
-export const useFavorites = (initialData?: TGetFavoritesResponse | null) => {
-  const { data: session } = authClient.useSession()
-
+export const useFavorites = (user?: TUser) => {
   const { data, isPending } = useQuery({
-    enabled: !!session?.user,
+    enabled: !!user,
     queryFn: getFavorites,
-    queryKey: ['favorites', session?.user?.id],
-    initialData: initialData ?? undefined,
+    queryKey: favoritesQueryKey(user?.id),
   })
 
   return {

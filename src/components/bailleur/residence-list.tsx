@@ -9,7 +9,6 @@ import { ResidenceCard } from '~/components/bailleur/residence-card'
 import { UpdateResidenceList } from '~/components/bailleur/update-residence-list'
 import { AvailabilityBadge } from '~/components/shared/availability-badge'
 import { useMyAccommodations } from '~/hooks/use-my-accommodations'
-import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
 import { calculateAvailability } from '~/utils/calculateAvailability'
 
 const ResidenceListSkeleton = () => (
@@ -50,13 +49,9 @@ const ResidenceListSkeleton = () => (
   </div>
 )
 
-interface ResidenceListProps {
-  initialData: TGetAccomodationsResponse
-}
-
-export const ResidenceList: FC<ResidenceListProps> = ({ initialData }) => {
+export const ResidenceList: FC = () => {
   const t = useTranslations('findAccomodation.card')
-  const { data: accommodations, isLoading, isFetching } = useMyAccommodations({ initialData })
+  const { data: accommodations, isLoading, isFetching } = useMyAccommodations()
   const [queryStates] = useQueryStates({
     page: parseAsInteger.withDefault(1),
     disponible: parseAsBoolean.withDefault(false),

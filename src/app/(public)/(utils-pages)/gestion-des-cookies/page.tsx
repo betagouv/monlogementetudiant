@@ -4,8 +4,7 @@ import { getTranslations } from 'next-intl/server'
 import styles from '../pages.module.css'
 
 export default async function GestionDesCookiesPage() {
-  const t = await getTranslations('cookies')
-  const breadcrumbT = await getTranslations('breadcrumbs')
+  const [t, breadcrumbT] = await Promise.all([getTranslations('cookies'), getTranslations('breadcrumbs')])
   const items = [
     {
       description:

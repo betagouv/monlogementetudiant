@@ -6,8 +6,7 @@ import { getTranslations } from 'next-intl/server'
 import styles from './budget.module.css'
 
 export default async function BudgetPage() {
-  const t = await getTranslations('budget')
-  const breadcrumbT = await getTranslations('breadcrumbs')
+  const [t, breadcrumbT] = await Promise.all([getTranslations('budget'), getTranslations('breadcrumbs')])
   return (
     <div className={fr.cx('fr-container')}>
       <Breadcrumb

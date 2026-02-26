@@ -48,6 +48,7 @@ export const getAccommodations = async (searchParams: {
 export const prefetchAccommodations = async (
   awaitedSearchParams: Record<string, string | string[] | undefined>,
   overrides?: { bbox?: string; academie?: string; pageSize?: number },
+  queryClient?: QueryClient,
 ) => {
   const parsedParams = accommodationsSearchParamsCache.parse(awaitedSearchParams)
   const queryKeyParams = {
@@ -67,8 +68,8 @@ export const prefetchAccommodations = async (
   if (parsedParams.crous) searchParams.crous = parsedParams.crous
   if (overrides?.pageSize) searchParams.page_size = overrides.pageSize.toString()
 
-  const queryClient = new QueryClient()
-  await queryClient.prefetchQuery({
+  const client = queryClient ?? new QueryClient()
+  await client.prefetchQuery({
     queryKey: accommodationsQueryKey(queryKeyParams),
     queryFn: () => getAccommodations(searchParams),
   })
@@ -77,11 +78,11 @@ export const prefetchAccommodations = async (
     (overrides?.bbox && overrides.bbox !== parsedParams.bbox) || (overrides?.academie && overrides.academie !== parsedParams.academie)
 
   if (hasOverrides) {
-    const data = queryClient.getQueryData(accommodationsQueryKey(queryKeyParams))
+    const data = client.getQueryData(accommodationsQueryKey(queryKeyParams))
     if (data) {
-      queryClient.setQueryData(accommodationsQueryKey({ ...parsedParams, pageSize: overrides?.pageSize }), data)
+      client.setQueryData(accommodationsQueryKey({ ...parsedParams, pageSize: overrides?.pageSize }), data)
     }
   }
 
-  return dehydrate(queryClient)
+  return dehydrate(client)
 }
