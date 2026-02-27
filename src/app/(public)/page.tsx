@@ -50,11 +50,7 @@ export default async function Home() {
               <h1 className={styles.heroTitle}>
                 {tHome('hero.title')} <span className={styles.heroHighlight}>{tHome('hero.highlight')}</span>
               </h1>
-              <h2 className={styles.heroSubtitle}>
-                {tHome.rich('hero.subtitle', {
-                  aides: (chunks) => <span className={fr.cx('fr-text--bold')}>{chunks}</span>,
-                })}
-              </h2>
+              <h2 className={styles.heroSubtitle}>{tHome('hero.subtitle')}</h2>
             </div>
             <div className={clsx(fr.cx('fr-col-md-5'), 'boxShadow', styles.simulatorCard)}>
               <h3 className="fr-h2">{tHome('title')}</h3>
