@@ -10,13 +10,20 @@ import { tss } from 'tss-react'
 import { FindStudentAccessibleAccomodationSwitch } from '~/components/find-student-accomodation/header/find-student-accessible-accomodation-switch'
 import { FindStudentColivingAccomodationSwitch } from '~/components/find-student-accomodation/header/find-student-coliving-accomodation'
 import { FindStudentAccommodationCitiesAutocompleteInput } from '~/components/find-student-accomodation/home/autocomplete/find-student-accommodations-cities-autocomplete-input'
+import { useAccomodations } from '~/hooks/use-accomodations'
 import { trackEvent } from '~/lib/tracking'
 
 export const FindAccommodationForm: FC = () => {
   const t = useTranslations('home')
   const { classes } = useStyles()
+  const { data, isLoading } = useAccomodations()
+
+  const step = 50
+  const min = data?.min_price ? Math.floor(data.min_price / step) * step : undefined
+  const max = data?.max_price ? Math.ceil(data.max_price / 100) * 100 : undefined
+
   const [queryStates, setQueryStates] = useQueryStates({
-    prix: parseAsInteger.withDefault(1000),
+    prix: parseAsInteger.withDefault(max ?? 1000),
     q: parseAsString,
     bbox: parseAsString,
     colocation: parseAsBoolean.withDefault(false),
@@ -43,18 +50,21 @@ export const FindAccommodationForm: FC = () => {
     vue: 'carte',
   })
 
-  const href = `/trouver-un-logement-etudiant?${searchParams.toString()}`
+  const city = queryStates.q
+  const basePath = city ? `/trouver-un-logement-etudiant/ville/${encodeURIComponent(city)}` : '/trouver-un-logement-etudiant'
+  const href = `${basePath}?${searchParams.toString()}`
   return (
     <>
       <FindStudentAccommodationCitiesAutocompleteInput />
       <Range
         label={t('header.rangeLabel')}
-        max={1000}
-        min={150}
+        max={max ?? 1000}
+        min={min ?? 0}
         hideMinMax
-        step={50}
+        disabled={isLoading}
+        step={step}
         suffix=" €"
-        nativeInputProps={{ onChange: handleOnChangeBudget, value: queryStates.prix }}
+        nativeInputProps={{ onChange: handleOnChangeBudget, value: Math.min(queryStates.prix, max ?? 1000) }}
       />
       <div className={classes.switchContainer}>
         <FindStudentColivingAccomodationSwitch />
