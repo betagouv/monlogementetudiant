@@ -1,6 +1,5 @@
 import Footer, { type FooterProps } from '@codegouvfr/react-dsfr/Footer'
 import { getTranslations } from 'next-intl/server'
-import { z } from 'zod'
 import { expandBbox } from '~/components/map/map-utils'
 import { BrandTop } from '~/components/ui/brand-top'
 import { getPopularCities } from '~/server-only/get-popular-cities'
@@ -102,13 +101,6 @@ export const CommonFooter = async () => {
         title: 'Simulateur de budget étudiant',
       },
       text: 'Simulateur de budget étudiant',
-    },
-    {
-      linkProps: {
-        href: z.string().parse(process.env.NEXT_PUBLIC_GITBOOK_URL),
-        title: 'Notre Gitbook',
-      },
-      text: 'Notre Gitbook',
     },
     {
       linkProps: {

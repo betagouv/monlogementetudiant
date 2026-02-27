@@ -47,10 +47,8 @@ interface UseAccomodationsOptions {
 export const useAccomodations = ({ pageSize }: UseAccomodationsOptions = {}) => {
   const [queryStates] = useQueryStates(accommodationsParsers)
   const { bbox, academie, accessible, colocation, page, prix, crous } = queryStates
-  const enabled = !!bbox || !!accessible || !!page || !!colocation || !!prix || !!crous || !!academie
 
   return useQuery<TGetAccomodationsResponse>({
-    enabled,
     queryFn: () => fetchAccomodations(bbox, page, accessible, colocation, prix, crous, academie, pageSize),
     queryKey: accommodationsQueryKey({ accessible, bbox, colocation, page, prix, crous, academie, pageSize }),
   })

@@ -1,4 +1,3 @@
-import { fr } from '@codegouvfr/react-dsfr'
 import { Breadcrumb } from '@codegouvfr/react-dsfr/Breadcrumb'
 import clsx from 'clsx'
 import { getTranslations } from 'next-intl/server'
@@ -26,7 +25,7 @@ export default async function PrepareBudgetPage() {
           classes={{ root: 'fr-mt-0 fr-mb-2w fr-pt-4w fr-pt-2w' }}
         />
         <h1>{t('title')}</h1>
-        <div className={clsx(styles.mainContainer, fr.cx('fr-col-12'))}>
+        <div className={clsx(styles.mainContainer, 'fr-col-12 fr-py-4w')}>
           <PrepareBudgetSidemenu />
           <PrepareBudgetContent />
         </div>
