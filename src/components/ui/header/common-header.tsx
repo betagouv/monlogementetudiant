@@ -1,4 +1,3 @@
-import { fr } from '@codegouvfr/react-dsfr'
 import { Button } from '@codegouvfr/react-dsfr/Button'
 import { Header } from '@codegouvfr/react-dsfr/Header'
 import { getTranslations } from 'next-intl/server'
@@ -53,7 +52,7 @@ export const CommonHeader: FC<CommonHeaderProps> = async ({ withNavigation = tru
           </>
         }
         {...(!!withNavigation && { navigation: <HeaderNavigation /> })}
-        className={fr.cx('fr-header')}
+        className="fr-header"
       />
       <Banner />
     </div>
