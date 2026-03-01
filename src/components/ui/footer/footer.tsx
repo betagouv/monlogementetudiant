@@ -98,9 +98,9 @@ export const CommonFooter = async () => {
     {
       linkProps: {
         href: '/simuler-budget',
-        title: 'Simulateur de budget étudiant',
+        title: 'Calculatrice de budget étudiant',
       },
-      text: 'Simulateur de budget étudiant',
+      text: 'Calculatrice de budget étudiant',
     },
     {
       linkProps: {
