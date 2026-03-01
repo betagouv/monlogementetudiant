@@ -33,6 +33,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ sl
     })
 
     if (!response.ok) {
+      console.log('response', validatedData, await response.json())
       return NextResponse.json({ error: `Failed to update accommodation with slug: ${slug}` }, { status: response.status })
     }
 
