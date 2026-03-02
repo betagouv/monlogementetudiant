@@ -125,6 +125,7 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
                       CC
                     </span>
                   </div>
+                  <span className="fr-text--xs fr-mb-0">{t('charges')}</span>
                 </div>
               ))}
             </div>

@@ -133,6 +133,7 @@
       "accessible": "Accessible",
       "priceFrom": "À partir de {price} €"
     },
+    "charges": "Charges comprises",
     "availableAccommodations": "Logements de la résidence étudiante",
     "location": {
       "title": "Localisation"
