@@ -177,7 +177,6 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
                         iconId="fr-icon-money-euro-circle-line"
                         nativeInputProps={{
                           type: 'number',
-                          placeholder: '0',
                           ...register(typology.priceMinField, numberTransform),
                         }}
                       />
@@ -189,7 +188,6 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
                         iconId="fr-icon-money-euro-circle-line"
                         nativeInputProps={{
                           type: 'number',
-                          placeholder: '0',
                           ...register(typology.priceMaxField, numberTransform),
                         }}
                       />
@@ -217,7 +215,6 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
                     stateRelatedMessage={errors[typology.availableField]?.message}
                     nativeInputProps={{
                       type: 'number',
-                      placeholder: '0',
                       disabled: !watch(typology.totalField),
                       ...register(typology.availableField, numberTransform),
                     }}
