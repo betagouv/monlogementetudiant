@@ -3,6 +3,7 @@ import { TGetAlertsResponse } from '~/schemas/alerts/get-alerts'
 
 export const getAlerts = async (): Promise<TGetAlertsResponse> => {
   const auth = await getServerSession()
+
   if (!auth || !auth.session || !auth.session.accessToken) {
     throw new Error('Unauthorized')
   }

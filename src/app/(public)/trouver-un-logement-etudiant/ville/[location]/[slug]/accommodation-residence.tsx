@@ -114,7 +114,7 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
                 >
                   <div className="fr-flex fr-flex-gap-2v">
                     <span className="ri-user-line fr-text--bold">{accommodation.title}</span>
-                    <TooltipHoverOnly title={accommodation.tooltip} />
+                    <TooltipHoverOnly id={`tooltip-residence-${accommodation.type}`} title={accommodation.tooltip} />
                   </div>
 
                   <div className={styles.pricesTiles}>

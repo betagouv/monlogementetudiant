@@ -1,4 +1,3 @@
-import { fr } from '@codegouvfr/react-dsfr'
 import clsx from 'clsx'
 import Image from 'next/image'
 import { getTranslations } from 'next-intl/server'
@@ -61,7 +60,7 @@ export const OwnerDetails = async ({
         {owner?.image_base64 ? (
           <Image className={styles.image} src={owner.image_base64} alt={owner.name} width={201} height={90} quality={100} />
         ) : (
-          <h3 className={fr.cx('fr-m-0')}>{owner?.name}</h3>
+          <h3 className="fr-m-0">{owner?.name}</h3>
         )}
       </div>
       <div className="fr-flex fr-flex-gap-2v fr-direction-column fr-align-items-center fr-justify-content-center">
@@ -72,7 +71,7 @@ export const OwnerDetails = async ({
         <>
           <br />
           <span>
-            <TooltipHoverOnly title={t('unknownAvailabilityTooltip')}>
+            <TooltipHoverOnly id={`tooltip-availability-${slug}`} title={t('unknownAvailabilityTooltip')}>
               <span className={clsx('ri-information-line')} />
             </TooltipHoverOnly>
             {t('unknownAvailability')}
