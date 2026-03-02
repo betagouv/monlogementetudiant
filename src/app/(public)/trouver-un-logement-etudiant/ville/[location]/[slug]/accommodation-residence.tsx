@@ -118,18 +118,11 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
                   </div>
 
                   <div className={styles.pricesTiles}>
-                    <span
-                      style={{
-                        backgroundColor: fr.colors.options.yellowTournesol._950_100.default,
-                        borderRadius: '4px',
-                        color: fr.colors.options.yellowTournesol.sun407moon922.default,
-                        padding: '0 0.5rem',
-                      }}
-                      className="fr-text--bold"
-                    >
+                    <span className="fr-text--bold">
                       {accommodation.min && accommodation.max && accommodation.min !== accommodation.max
                         ? `DE ${accommodation.min} À ${accommodation.max} €`
-                        : `${accommodation.min} €`}
+                        : `${accommodation.min} €`}{' '}
+                      CC
                     </span>
                   </div>
                 </div>

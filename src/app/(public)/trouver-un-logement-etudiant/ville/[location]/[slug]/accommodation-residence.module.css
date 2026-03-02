@@ -50,8 +50,14 @@
 }
 
 .pricesTiles {
-  display: flex;
+  display: inline-flex;
+  align-items: baseline;
   gap: 0.25rem;
+  background-color: var(--yellow-tournesol-950-100);
+  border-radius: 4px;
+  color: var(--yellow-tournesol-sun-407-moon-922);
+  padding: 0 0.5rem;
+  width: fit-content;
 }
 
 .appartmentsContainer {

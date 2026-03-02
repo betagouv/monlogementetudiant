@@ -149,7 +149,7 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
             },
           ].map((typology, index) => (
             <div key={typology.type} className={`fr-p-4w ${index !== 4 ? 'fr-border-bottom' : ''}`}>
-              <div className="fr-grid-row fr-grid-row--gutters fr-flex fr-direction-md-row fr-direction-column">
+              <div className="fr-grid-row fr-grid-row--gutters fr-flex fr-direction-md-row fr-direction-column fr-align-items-end">
                 <div className="fr-col-md-6">
                   <Select
                     label="Type de Logement"
@@ -167,27 +167,34 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
                     <option value="T7+">Logement T7+</option>
                   </Select>
                 </div>
-                <div className="fr-col-md-3">
-                  <Input
-                    label="Loyer min."
-                    iconId="fr-icon-money-euro-circle-line"
-                    nativeInputProps={{
-                      type: 'number',
-                      placeholder: '0',
-                      ...register(typology.priceMinField, numberTransform),
-                    }}
-                  />
-                </div>
-                <div className="fr-col-md-3">
-                  <Input
-                    label="Loyer max."
-                    iconId="fr-icon-money-euro-circle-line"
-                    nativeInputProps={{
-                      type: 'number',
-                      placeholder: '0',
-                      ...register(typology.priceMaxField, numberTransform),
-                    }}
-                  />
+                <div className="fr-col-md-6">
+                  <label className="fr-label fr-mb-0">Loyer CC par personne</label>
+                  <div className="fr-grid-row fr-grid-row--gutters">
+                    <div className="fr-col-6">
+                      <Input
+                        label=""
+                        hintText="Minimum"
+                        iconId="fr-icon-money-euro-circle-line"
+                        nativeInputProps={{
+                          type: 'number',
+                          placeholder: '0',
+                          ...register(typology.priceMinField, numberTransform),
+                        }}
+                      />
+                    </div>
+                    <div className="fr-col-6">
+                      <Input
+                        label=""
+                        hintText="Maximum"
+                        iconId="fr-icon-money-euro-circle-line"
+                        nativeInputProps={{
+                          type: 'number',
+                          placeholder: '0',
+                          ...register(typology.priceMaxField, numberTransform),
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
