@@ -8,7 +8,6 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { parseAsString, useQueryState } from 'nuqs'
 import { FC } from 'react'
-import { tss } from 'tss-react'
 import { FAVORITE_BUTTON_TITLES, SaveAccommodationFavoriteButton } from '~/components/favorites/save-accommodation-favorite-button'
 import {
   FindStudentAccommodationImageCard,
@@ -21,6 +20,7 @@ import { TUser } from '~/lib/external-auth-plugin'
 import { trackEvent } from '~/lib/tracking'
 import { TAccomodationCard } from '~/schemas/accommodations/accommodations'
 import { calculateAvailability } from '~/utils/calculateAvailability'
+import styles from './find-student-accomodation-card.module.css'
 
 type AccomodationCardProps = {
   accomodation: TAccomodationCard
@@ -42,7 +42,7 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
   const router = useRouter()
   const [selectedAccommodation] = useQueryState('id', parseAsString)
   const t = useTranslations('findAccomodation.card')
-  const { classes } = useStyles()
+  const classes = styles
   const {
     city,
     images_urls,
@@ -147,7 +147,7 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
             <>
               <br />
               <span>
-                <TooltipHoverOnly title={t('unknownAvailabilityTooltip')}>
+                <TooltipHoverOnly id={`tooltip-availability-${accomodation.id}`} title={t('unknownAvailabilityTooltip')}>
                   <span className={clsx('ri-information-line', classes.description)} />
                 </TooltipHoverOnly>
                 {t('unknownAvailability')}
@@ -173,24 +173,3 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
     />
   )
 }
-
-export const useStyles = tss.create({
-  header: {
-    overflow: 'hidden',
-  },
-  hover: {
-    '&:hover': {
-      cursor: 'pointer',
-    },
-  },
-  active: {
-    border: '2px solid #3B7FF6',
-  },
-  otherBadge: {
-    backgroundColor: '#fee7fc',
-    color: '#6e445a',
-  },
-  description: {
-    color: '#666666',
-  },
-})

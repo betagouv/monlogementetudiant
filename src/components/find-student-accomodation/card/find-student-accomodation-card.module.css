@@ -1,0 +1,20 @@
+.header {
+  overflow: hidden;
+}
+
+.hover:hover {
+  cursor: pointer;
+}
+
+.active {
+  border: 2px solid #3b7ff6;
+}
+
+.otherBadge {
+  background-color: #fee7fc;
+  color: #6e445a;
+}
+
+.description {
+  color: #666666;
+}

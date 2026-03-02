@@ -109,7 +109,7 @@ export const StudentAccommodationFavorite: FC<StudentAccommodationFavoriteProps>
             <>
               <br />
               <span>
-                <TooltipHoverOnly title={t('unknownAvailabilityTooltip')}>
+                <TooltipHoverOnly id={`tooltip-availability-${accomodation.id}`} title={t('unknownAvailabilityTooltip')}>
                   <span className={clsx('ri-information-line', classes.description)} />
                 </TooltipHoverOnly>
                 {t('unknownAvailability')}

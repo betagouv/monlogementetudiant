@@ -1,6 +1,5 @@
 export const dynamic = 'force-dynamic'
 
-import { fr } from '@codegouvfr/react-dsfr'
 import { HydrationBoundary } from '@tanstack/react-query'
 import { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
@@ -61,7 +60,7 @@ export default async function FindStudentAccommodationPage({
   return (
     <HydrationBoundary state={dehydratedState}>
       <SearchParamsSync bbox={serverBbox} academie={serverAcademie} />
-      <div className={fr.cx('fr-container')}>
+      <div className="fr-container">
         <FindStudentAccommodationTitle location={territory?.name} />
         <FindStudentAccomodationHeader />
         <FindStudentAccomodationSortView territory={territory} />
