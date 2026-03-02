@@ -41,7 +41,7 @@ export const CreateResidenceAccommodationList = () => {
         <div className="fr-border fr-border-radius--8">
           {fields.map((field, index) => (
             <div key={field.id} className="fr-position-relative fr-p-4w fr-border-bottom">
-              <div className="fr-flex fr-justify-content-space-between fr-align-items-center fr-flex-gap-4v">
+              <div className="fr-flex fr-justify-content-space-between fr-align-items-end fr-flex-gap-4v">
                 <div className="fr-col-6">
                   <Select
                     label="Type de logement"
@@ -63,32 +63,37 @@ export const CreateResidenceAccommodationList = () => {
                   </Select>
                 </div>
 
-                <div className="fr-flex fr-align-items-center fr-flex-gap-4v">
-                  <div className="fr-col-5">
-                    <Input
-                      label="Loyer min."
-                      iconId="fr-icon-money-euro-circle-line"
-                      state={errors.typologies?.[index]?.price_min ? 'error' : 'default'}
-                      stateRelatedMessage={errors.typologies?.[index]?.price_min?.message}
-                      nativeInputProps={{
-                        type: 'number',
-                        min: 0,
-                        ...register(`typologies.${index}.price_min`, numberTransform),
-                      }}
-                    />
-                  </div>
-                  <div className="fr-col-5">
-                    <Input
-                      label="Loyer max."
-                      iconId="fr-icon-money-euro-circle-line"
-                      state={errors.typologies?.[index]?.price_max ? 'error' : 'default'}
-                      stateRelatedMessage={errors.typologies?.[index]?.price_max?.message}
-                      nativeInputProps={{
-                        type: 'number',
-                        min: 0,
-                        ...register(`typologies.${index}.price_max`, numberTransform),
-                      }}
-                    />
+                <div>
+                  <label className="fr-label fr-mb-1w">Loyer CC par personne</label>
+                  <div className="fr-flex fr-flex-gap-4v">
+                    <div>
+                      <Input
+                        label=""
+                        hintText="Minimum"
+                        iconId="fr-icon-money-euro-circle-line"
+                        state={errors.typologies?.[index]?.price_min ? 'error' : 'default'}
+                        stateRelatedMessage={errors.typologies?.[index]?.price_min?.message}
+                        nativeInputProps={{
+                          type: 'number',
+                          min: 0,
+                          ...register(`typologies.${index}.price_min`, numberTransform),
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        label=""
+                        hintText="Maximum"
+                        iconId="fr-icon-money-euro-circle-line"
+                        state={errors.typologies?.[index]?.price_max ? 'error' : 'default'}
+                        stateRelatedMessage={errors.typologies?.[index]?.price_max?.message}
+                        nativeInputProps={{
+                          type: 'number',
+                          min: 0,
+                          ...register(`typologies.${index}.price_max`, numberTransform),
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
                 <Button
