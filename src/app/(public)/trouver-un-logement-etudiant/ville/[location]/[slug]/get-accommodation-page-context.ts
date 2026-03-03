@@ -1,8 +1,9 @@
-import { dehydrate, QueryClient } from '@tanstack/react-query'
+import { dehydrate } from '@tanstack/react-query'
 import { cache } from 'react'
 import { getServerSession } from '~/auth'
 import { expandBbox } from '~/components/map/map-utils'
 import { TTerritories } from '~/schemas/territories'
+import { getQueryClient } from '~/server/trpc/server'
 import { getAccommodationById } from '~/server-only/get-accommodation-by-id'
 import { getAccommodations } from '~/server-only/get-accommodations'
 import { getCityDetails } from '~/server-only/get-city-details'
@@ -29,7 +30,7 @@ export const getAccommodationPageContext = cache(async (slug: string, location: 
   const { coordinates } = accommodation.geom
   const [longitude, latitude] = coordinates
 
-  const queryClient = new QueryClient()
+  const queryClient = getQueryClient()
   const [nearbyAccommodations] = await Promise.all([
     getAccommodations({ center: `${longitude},${latitude}` }),
     prefetchFavorites(queryClient),
