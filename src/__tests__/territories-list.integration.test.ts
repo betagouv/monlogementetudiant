@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { createAccommodation, createAcademy, createCity, createDepartment } from './fixtures/factories'
+import { createAcademy, createAccommodation, createCity, createDepartment } from './fixtures/factories'
 import { caller } from './helpers/test-caller'
 
 describe('territories.listAcademies', () => {
@@ -103,9 +103,7 @@ describe('territories.getCityDetails', () => {
   })
 
   it('throws if slug is unknown', async () => {
-    await expect(
-      caller.territories.getCityDetails({ slug: 'unknown-city' }),
-    ).rejects.toThrow('City not found')
+    await expect(caller.territories.getCityDetails({ slug: 'unknown-city' })).rejects.toThrow('City not found')
   })
 })
 
