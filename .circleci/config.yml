@@ -6,7 +6,7 @@ orbs:
 executors:
   node:
     docker:
-      - image: cimg/node:22.10.0
+      - image: cimg/node:24.11.1
 
 parameters:
   lockfile:
@@ -85,7 +85,7 @@ jobs:
 
   test_integration:
     docker:
-      - image: cimg/node:22.10.0
+      - image: cimg/node:24.11.1
       - image: postgis/postgis:16-3.4
         environment:
           POSTGRES_USER: test
