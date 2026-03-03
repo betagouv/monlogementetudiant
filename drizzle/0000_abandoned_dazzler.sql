@@ -58,5 +58,35 @@ CREATE TABLE IF NOT EXISTS "territories_department" (
 	"academy_id" bigint NOT NULL
 );
 --> statement-breakpoint
-ALTER TABLE "territories_city" ADD CONSTRAINT "territories_city_department_id_territories_department_id_fk" FOREIGN KEY ("department_id") REFERENCES "public"."territories_department"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "territories_department" ADD CONSTRAINT "territories_department_academy_id_territories_academy_id_fk" FOREIGN KEY ("academy_id") REFERENCES "public"."territories_academy"("id") ON DELETE no action ON UPDATE no action;
+DO $$
+BEGIN
+	IF NOT EXISTS (
+		SELECT 1
+		FROM pg_constraint
+		WHERE conname = 'territories_city_department_id_territories_department_id_fk'
+	) THEN
+		ALTER TABLE "territories_city"
+		ADD CONSTRAINT "territories_city_department_id_territories_department_id_fk"
+		FOREIGN KEY ("department_id")
+		REFERENCES "public"."territories_department"("id")
+		ON DELETE no action
+		ON UPDATE no action;
+	END IF;
+END
+$$;--> statement-breakpoint
+DO $$
+BEGIN
+	IF NOT EXISTS (
+		SELECT 1
+		FROM pg_constraint
+		WHERE conname = 'territories_department_academy_id_territories_academy_id_fk'
+	) THEN
+		ALTER TABLE "territories_department"
+		ADD CONSTRAINT "territories_department_academy_id_territories_academy_id_fk"
+		FOREIGN KEY ("academy_id")
+		REFERENCES "public"."territories_academy"("id")
+		ON DELETE no action
+		ON UPDATE no action;
+	END IF;
+END
+$$;
