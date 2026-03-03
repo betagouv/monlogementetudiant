@@ -1,30 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
 import { useQueryState } from 'nuqs'
-import { TCity } from '~/schemas/territories'
-
-export const fetchCitiesByDepartmentCode = async (code: string | null): Promise<TCity[]> => {
-  const baseUrl = '/api/territories/cities'
-  const searchParams = new URLSearchParams()
-  if (!code) {
-    searchParams.set('popular', 'true')
-  } else {
-    searchParams.set('department', code)
-  }
-
-  const response = await fetch(`${baseUrl}?${searchParams.toString()}`)
-  if (!response.ok) {
-    throw new Error('Error occurred calling API retrieving territories')
-  }
-  return response.json() as Promise<TCity[]>
-}
+import { useTRPC } from '~/server/trpc/client'
 
 export const useCities = () => {
+  const trpc = useTRPC()
   const [departmentCode] = useQueryState('department')
 
-  const { data, isError, isLoading } = useQuery<TCity[]>({
+  const { data, isError, isLoading } = useQuery({
+    ...trpc.territories.listCities.queryOptions(departmentCode ? { departmentCode } : { popular: true }),
     enabled: !!departmentCode,
-    queryFn: () => fetchCitiesByDepartmentCode(departmentCode),
-    queryKey: ['cities-by-department', departmentCode],
   })
   return {
     data,
