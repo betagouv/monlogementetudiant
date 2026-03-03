@@ -12,7 +12,6 @@ export const ZBbox = z.object({
 const ZAcademyOrDepartment = z.object({
   id: z.number(),
   name: z.string(),
-  slug: z.string(),
   ...ZBbox.shape,
 })
 
