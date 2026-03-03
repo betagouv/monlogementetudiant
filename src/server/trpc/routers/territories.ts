@@ -9,6 +9,7 @@ import { academies } from '~/server/db/schema/academies'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { cities } from '~/server/db/schema/cities'
 import { departments } from '~/server/db/schema/departments'
+import { normalizeCitySearch, tokenizeQuery } from '~/server/utils/normalize-city-search'
 import { baseProcedure, createTRPCRouter } from '../init'
 
 let rentDataCache: Record<string, number> | null = null
@@ -31,6 +32,20 @@ const bboxSelect = (table: { boundary: AnyColumn }) =>
       'ymax', ST_YMax(ST_Envelope(${table.boundary}))
     )
   `
+
+function buildWhere(nameCol: AnyColumn, tokens: string[]): SQL {
+  const conditions = tokens.map(
+    (token) => sql`immutable_unaccent(${nameCol}) ILIKE ${'%' + token + '%'}`,
+  )
+  return and(...conditions)!
+}
+
+function buildRank(nameCol: AnyColumn, normalized: string): SQL {
+  return sql`GREATEST(
+    CASE WHEN immutable_unaccent(${nameCol}) ILIKE ${normalized + '%'} THEN 1.0 ELSE 0.0 END,
+    ts_rank(to_tsvector('simple', immutable_unaccent(${nameCol})), plainto_tsquery('simple', ${normalized}))
+  ) DESC, ${nameCol} ASC`
+}
 
 const accommodationSubqueries = (cityName: typeof cities.name) => ({
   nbTotalApartments: sql<number>`
@@ -58,7 +73,9 @@ export const territoriesRouter = createTRPCRouter({
   search: baseProcedure.input(z.object({ q: z.string() })).query(async ({ input }) => {
     const { q } = input
     const empty = { academies: [], departments: [], cities: [] }
-    if (q.length < 2) return empty
+    const normalized = normalizeCitySearch(q)
+    const tokens = tokenizeQuery(normalized)
+    if (tokens.length === 0) return empty
 
     const accomSubs = accommodationSubqueries(cities.name)
 
@@ -71,8 +88,8 @@ export const territoriesRouter = createTRPCRouter({
           bbox: bboxSelect(academies),
         })
         .from(academies)
-        .where(sql`unaccent(${academies.name}) % unaccent(${q})`)
-        .orderBy(sql`similarity(unaccent(${academies.name}), unaccent(${q})) DESC`)
+        .where(buildWhere(academies.name, tokens))
+        .orderBy(buildRank(academies.name, normalized))
         .limit(10),
 
       db
@@ -83,8 +100,8 @@ export const territoriesRouter = createTRPCRouter({
           bbox: bboxSelect(departments),
         })
         .from(departments)
-        .where(sql`unaccent(${departments.name}) % unaccent(${q})`)
-        .orderBy(sql`similarity(unaccent(${departments.name}), unaccent(${q})) DESC`)
+        .where(buildWhere(departments.name, tokens))
+        .orderBy(buildRank(departments.name, normalized))
         .limit(10),
 
       db
@@ -106,8 +123,8 @@ export const territoriesRouter = createTRPCRouter({
         })
         .from(cities)
         .leftJoin(departments, eq(cities.departmentId, departments.id))
-        .where(sql`unaccent(${cities.name}) % unaccent(${q})`)
-        .orderBy(sql`similarity(unaccent(${cities.name}), unaccent(${q})) DESC`)
+        .where(buildWhere(cities.name, tokens))
+        .orderBy(buildRank(cities.name, normalized))
         .limit(10),
     ])
 
@@ -351,7 +368,6 @@ export const territoriesRouter = createTRPCRouter({
     }
   }),
 
-  // 4.6 — Rent search (from local JSON file)
   rentSearch: baseProcedure.input(z.object({ q: z.string().min(1) })).query(({ input }) => {
     const rentData = getRentData()
     const searchTerm = input.q.toLowerCase()
@@ -367,12 +383,10 @@ export const territoriesRouter = createTRPCRouter({
         const cityA = a.city.toLowerCase()
         const cityB = b.city.toLowerCase()
 
-        // 1. Match exact
         if (cityA === searchTerm && cityB !== searchTerm) return -1
         if (cityB === searchTerm && cityA !== searchTerm) return 1
         if (cityA === searchTerm && cityB === searchTerm) return 0
 
-        // 2. Arrondissements (e.g., "Paris 1er", "Paris 2e", etc.)
         const escapedSearchTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
         const arrondissementRegex = new RegExp(`^${escapedSearchTerm}\\s+(\\d+)(?:er|e|ème)`, 'i')
         const arrondA = cityA.match(arrondissementRegex)
@@ -384,14 +398,12 @@ export const territoriesRouter = createTRPCRouter({
         if (arrondA && !arrondB) return -1
         if (!arrondA && arrondB) return 1
 
-        // 3. Cities that begin with search term
         const startsA = cityA.startsWith(searchTerm)
         const startsB = cityB.startsWith(searchTerm)
 
         if (startsA && !startsB) return -1
         if (!startsA && startsB) return 1
 
-        // 4. Within same category, sort alphabetically
         return cityA.localeCompare(cityB)
       })
 
@@ -401,7 +413,6 @@ export const territoriesRouter = createTRPCRouter({
     }
   }),
 
-  // 4.7 — Subscribe to newsletter (proxy to Django for now)
   subscribeNewsletter: baseProcedure.input(ZAlertAccommodationFormSchema).mutation(async ({ input }) => {
     const response = await fetch(`${process.env.API_URL}/territories/newsletter/subscribe/`, {
       body: JSON.stringify(input),
