@@ -10,6 +10,7 @@ export const accommodations = pgTable('accommodation_accommodation', {
   city: varchar({ length: 150 }).notNull(),
   postalCode: varchar('postal_code', { length: 5 }).notNull(),
   residenceType: varchar('residence_type', { length: 100 }),
+  target_audience: varchar('target_audience', { length: 100 }),
   published: boolean().notNull(),
   available: boolean().notNull(),
   geom: geometry({ type: 'point', srid: 4326 }),

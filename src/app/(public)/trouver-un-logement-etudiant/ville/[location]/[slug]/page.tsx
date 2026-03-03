@@ -99,9 +99,11 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
           <div className={styles.infosContainer}>
             {images_urls && images_urls.length > 0 && <AccommodationImages images={images_urls} title={name} />}
             <div className={styles.section}>
-              <span className={clsx(styles.accommodationType, 'fr-text--bold fr-text--uppercase')}>
-                {RESIDENCE_TYPE_LABELS[accommodation.residence_type]}
-              </span>
+              {accommodation.residence_type && (
+                <span className={clsx(styles.accommodationType, 'fr-text--bold fr-text--uppercase')}>
+                  {RESIDENCE_TYPE_LABELS[accommodation.residence_type]}
+                </span>
+              )}
 
               <h2>{name}</h2>
               <div className={styles.tagContainer}>

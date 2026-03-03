@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { cache } from 'react'
 import { getServerSession } from '~/auth'
 import { expandBbox } from '~/components/map/map-utils'
-import { TTerritories } from '~/schemas/territories'
+import { TTerritories, TTerritory } from '~/schemas/territories'
 import { getQueryClient } from '~/server/trpc/server'
 import { prefetchAccommodations } from '~/server-only/get-accommodations'
 import { getTerritories } from '~/server-only/get-territories'
@@ -28,12 +28,12 @@ export const getStudentAccommodationPageContext = cache(
     }
 
     const territories = await getTerritories(routeLocation)
-    const territory = (territories[getTerritoriesCategoryKey(routeCategoryKey as 'ville' | 'academie' | 'departement')] || []).find(
-      (territory) => {
-        const slug = 'slug' in territory ? territory.slug : territory.name
-        return slug === routeLocation || territory.name === routeLocation
-      },
-    )
+    const territory = (
+      (territories[getTerritoriesCategoryKey(routeCategoryKey as 'ville' | 'academie' | 'departement')] || []) as TTerritory[]
+    ).find((territory) => {
+      const slug = 'slug' in territory ? territory.slug : territory.name
+      return slug === routeLocation || territory.name === routeLocation
+    })
 
     if (routeCategoryKey && routeLocation && !territory) {
       redirect(`/trouver-un-logement-etudiant`)

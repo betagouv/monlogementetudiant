@@ -16,7 +16,7 @@ import { UpdateResidencePublication } from '~/components/bailleur/details/update
 import { useUpdateResidenceDetails } from '~/hooks/use-update-residence-details'
 import { trackEvent } from '~/lib/tracking'
 import { TAccomodationMy } from '~/schemas/accommodations/accommodations'
-import { createUpdateResidenceSchema, TUpdateResidence } from '~/schemas/accommodations/update-residence'
+import { createUpdateResidenceSchema, EResidenceType, ETargetAudience, TUpdateResidence } from '~/schemas/accommodations/update-residence'
 import { formatRelativeTime } from '~/utils/formatRelativeTime'
 import { sanitizeHTML } from '~/utils/sanitize-html'
 import styles from './update-residence-form.module.css'
@@ -43,8 +43,8 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
     ),
     defaultValues: {
       name: accommodation.properties.name || '',
-      residence_type: accommodation.properties.residence_type || '',
-      target_audience: accommodation.properties.target_audience || '',
+      residence_type: (accommodation.properties.residence_type as EResidenceType) || '',
+      target_audience: (accommodation.properties.target_audience as ETargetAudience) || '',
       address: accommodation.properties.address || '',
       city: accommodation.properties.city || '',
       postal_code: accommodation.properties.postal_code || '',

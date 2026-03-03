@@ -1,9 +1,8 @@
 import { dehydrate, QueryClient } from '@tanstack/react-query'
 import { accommodationsSearchParamsCache } from '~/lib/accommodations-search-params'
-import type { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
 import { getQueryClient, trpc } from '~/server/trpc/server'
 
-export const getAccommodations = async (searchParams: {
+export const getAccommodations = (searchParams: {
   accessible?: string
   academie?: string
   bbox?: string
@@ -13,8 +12,8 @@ export const getAccommodations = async (searchParams: {
   page?: string
   page_size?: string
   crous?: string
-}): Promise<TGetAccomodationsResponse> => {
-  const result = await getQueryClient().fetchQuery(
+}) =>
+  getQueryClient().fetchQuery(
     trpc.accommodations.list.queryOptions({
       bbox: searchParams.bbox ?? undefined,
       center: searchParams.center ?? undefined,
@@ -27,9 +26,6 @@ export const getAccommodations = async (searchParams: {
       academyId: searchParams.academie ? Number(searchParams.academie) : undefined,
     }),
   )
-
-  return result as TGetAccomodationsResponse
-}
 
 export const prefetchAccommodations = async (
   awaitedSearchParams: Record<string, string | string[] | undefined>,

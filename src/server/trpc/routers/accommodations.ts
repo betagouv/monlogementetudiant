@@ -1,7 +1,8 @@
 import { TRPCError } from '@trpc/server'
 import { and, desc, eq, type SQL, sql } from 'drizzle-orm'
 import { z } from 'zod'
-import { EResidence } from '~/schemas/accommodations/accommodations'
+import { EResidenceType } from '~/enums/residence-type'
+import { ETargetAudience } from '~/enums/target-audience'
 import { db } from '~/server/db'
 import { academies } from '~/server/db/schema/academies'
 import { accommodations } from '~/server/db/schema/accommodations'
@@ -63,10 +64,15 @@ const priceMaxComputed = sql<number | null>`GREATEST(
   ${accommodations.priceMaxT7More}
 )`
 
-const residenceTypeValues = new Set<string>(Object.values(EResidence))
+const residenceTypeValues = new Set<string>(Object.values(EResidenceType))
+const targetAudienceValues = new Set<string>(Object.values(ETargetAudience))
 
-function toResidenceType(value: string | null): EResidence {
-  return value && residenceTypeValues.has(value) ? (value as EResidence) : EResidence.autre
+function toResidenceType(value: string | null): EResidenceType | null {
+  return value && residenceTypeValues.has(value) ? (value as EResidenceType) : null
+}
+
+function toTargetAudience(value: string | null): ETargetAudience | null {
+  return value && targetAudienceValues.has(value) ? (value as ETargetAudience) : null
 }
 
 function mapToGeoJsonFeature(row: Record<string, unknown>) {
@@ -84,6 +90,7 @@ function mapToGeoJsonFeature(row: Record<string, unknown>) {
       city: row.city as string,
       postal_code: row.postalCode as string,
       residence_type: toResidenceType((row.residenceType as string | null) ?? null),
+      target_audience: toTargetAudience((row.targetAudience as string | null) ?? null),
       published: row.published as boolean,
       available: row.available as boolean,
       accept_waiting_list: (row.acceptWaitingList as boolean) ?? false,
@@ -249,6 +256,7 @@ export const accommodationsRouter = createTRPCRouter({
             city: accommodations.city,
             postalCode: accommodations.postalCode,
             residenceType: accommodations.residenceType,
+            targetAudience: accommodations.target_audience,
             published: accommodations.published,
             available: accommodations.available,
             nbTotalApartments: accommodations.nbTotalApartments,
@@ -334,6 +342,7 @@ export const accommodationsRouter = createTRPCRouter({
         city: accommodations.city,
         postalCode: accommodations.postalCode,
         residenceType: accommodations.residenceType,
+        targetAudience: accommodations.target_audience,
         published: accommodations.published,
         available: accommodations.available,
         nbTotalApartments: accommodations.nbTotalApartments,
@@ -415,6 +424,7 @@ export const accommodationsRouter = createTRPCRouter({
       city: row.city,
       postal_code: row.postalCode,
       residence_type: toResidenceType(row.residenceType),
+      target_audience: toTargetAudience(row.targetAudience),
       published: row.published,
       available: row.available,
       accept_waiting_list: row.acceptWaitingList ?? false,
@@ -474,8 +484,8 @@ export const accommodationsRouter = createTRPCRouter({
       price_max_t7_more: row.priceMaxT7More,
       refrigerator: row.refrigerator,
       laundry_room: row.laundryRoom,
-      bathroom: row.bathroom,
-      kitchen_type: row.kitchenType,
+      bathroom: row.bathroom as 'private' | 'shared' | null,
+      kitchen_type: row.kitchenType as 'private' | 'shared' | null,
       microwave: row.microwave,
       secure_access: row.secureAccess,
       parking: row.parking,
