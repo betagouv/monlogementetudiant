@@ -68,11 +68,12 @@ export const FindStudentAccomodationAutocompleteResults: FC<FindStudentAccomodat
                   if (isAcademy) {
                     searchParams.set('academie', item.id.toString())
                   }
+                  const slug = 'slug' in item ? item.slug : item.name
                   return (
                     <Link
                       key={item.id}
                       href={{
-                        pathname: `/trouver-un-logement-etudiant/${getCategoryKeySingular(categoryKey)}/${item.name}`,
+                        pathname: `/trouver-un-logement-etudiant/${getCategoryKeySingular(categoryKey)}/${slug}`,
                         search: searchParams.toString(),
                       }}
                     >
