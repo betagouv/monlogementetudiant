@@ -30,7 +30,13 @@ workflows:
       - build:
           requires:
             - prepare_workspace_dependencies
-    
+      - test_unit:
+          requires:
+            - prepare_workspace_dependencies
+      - test_integration:
+          requires:
+            - prepare_workspace_dependencies
+
 jobs:
   prepare_workspace_dependencies:
     executor: node
@@ -66,7 +72,39 @@ jobs:
       - create_dotenv_file
       - run:
           name: 'Build'
-          command: pnpm build 
+          command: pnpm build
+
+  test_unit:
+    executor: node
+    steps:
+      - checkout
+      - install_dependencies
+      - run:
+          name: 'Run unit tests'
+          command: pnpm test:unit
+
+  test_integration:
+    docker:
+      - image: cimg/node:22.10.0
+      - image: postgis/postgis:16-3.4
+        environment:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: jde_test
+    environment:
+      DATABASE_URL_TEST: postgres://test:test@localhost:5432/jde_test
+    steps:
+      - checkout
+      - install_dependencies
+      - run:
+          name: 'Wait for PostgreSQL'
+          command: for i in $(seq 1 30); do pg_isready -h localhost -U test && break; sleep 2; done
+      - run:
+          name: 'Run Drizzle migrations'
+          command: DATABASE_URL="$DATABASE_URL_TEST" pnpm drizzle-kit migrate
+      - run:
+          name: 'Run integration tests'
+          command: pnpm test:integration
 
 commands:
   install_pnpm:
