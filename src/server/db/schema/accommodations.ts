@@ -1,15 +1,23 @@
-import { bigint, boolean, geometry, integer, pgTable, varchar } from 'drizzle-orm/pg-core'
+import { bigint, boolean, geometry, integer, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core'
+import { owners } from './owners'
 
 export const accommodations = pgTable('accommodation_accommodation', {
   id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   name: varchar({ length: 200 }).notNull(),
   slug: varchar({ length: 255 }).notNull(),
+  description: text(),
+  address: varchar({ length: 255 }),
   city: varchar({ length: 150 }).notNull(),
   postalCode: varchar('postal_code', { length: 5 }).notNull(),
+  residenceType: varchar('residence_type', { length: 100 }),
   published: boolean().notNull(),
   available: boolean().notNull(),
   geom: geometry({ type: 'point', srid: 4326 }),
+
+  // Apartment counts
   nbTotalApartments: integer('nb_total_apartments'),
+  nbAccessibleApartments: integer('nb_accessible_apartments'),
+  nbColivingApartments: integer('nb_coliving_apartments'),
   nbT1: integer('nb_t1'),
   nbT1Bis: integer('nb_t1_bis'),
   nbT2: integer('nb_t2'),
@@ -18,6 +26,63 @@ export const accommodations = pgTable('accommodation_accommodation', {
   nbT5: integer('nb_t5'),
   nbT6: integer('nb_t6'),
   nbT7More: integer('nb_t7_more'),
+
+  // Availability
+  nbT1Available: integer('nb_t1_available'),
+  nbT1BisAvailable: integer('nb_t1_bis_available'),
+  nbT2Available: integer('nb_t2_available'),
+  nbT3Available: integer('nb_t3_available'),
+  nbT4Available: integer('nb_t4_available'),
+  nbT5Available: integer('nb_t5_available'),
+  nbT6Available: integer('nb_t6_available'),
+  nbT7MoreAvailable: integer('nb_t7_more_available'),
+
+  // Pricing
   priceMin: integer('price_min'),
+  priceMinT1: integer('price_min_t1'),
+  priceMaxT1: integer('price_max_t1'),
+  priceMinT1Bis: integer('price_min_t1_bis'),
+  priceMaxT1Bis: integer('price_max_t1_bis'),
+  priceMinT2: integer('price_min_t2'),
+  priceMaxT2: integer('price_max_t2'),
+  priceMinT3: integer('price_min_t3'),
+  priceMaxT3: integer('price_max_t3'),
+  priceMinT4: integer('price_min_t4'),
+  priceMaxT4: integer('price_max_t4'),
+  priceMinT5: integer('price_min_t5'),
+  priceMaxT5: integer('price_max_t5'),
+  priceMinT6: integer('price_min_t6'),
+  priceMaxT6: integer('price_max_t6'),
+  priceMinT7More: integer('price_min_t7_more'),
+  priceMaxT7More: integer('price_max_t7_more'),
+
+  // Amenities
+  laundryRoom: boolean('laundry_room'),
+  commonAreas: boolean('common_areas'),
+  bikeStorage: boolean('bike_storage'),
+  parking: boolean('parking'),
+  secureAccess: boolean('secure_access'),
+  residenceManager: boolean('residence_manager'),
+  kitchenType: varchar('kitchen_type', { length: 50 }),
+  desk: boolean('desk'),
+  cookingPlates: boolean('cooking_plates'),
+  microwave: boolean('microwave'),
+  refrigerator: boolean('refrigerator'),
+  wifi: boolean('wifi'),
+  bathroom: varchar('bathroom', { length: 50 }),
+  acceptWaitingList: boolean('accept_waiting_list'),
+  scholarshipHoldersPriority: boolean('scholarship_holders_priority'),
+
+  // Media/URLs
+  imagesUrls: text('images_urls').array(),
   imagesCount: integer('images_count').notNull(),
+  externalUrl: varchar('external_url', { length: 255 }),
+  externalReference: varchar('external_reference', { length: 255 }),
+
+  // Relations
+  ownerId: bigint('owner_id', { mode: 'number' }).references(() => owners.id),
+
+  // Timestamps
+  createdAt: timestamp('created_at'),
+  updatedAt: timestamp('updated_at'),
 })

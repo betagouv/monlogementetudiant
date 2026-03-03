@@ -39,7 +39,10 @@ export async function cleanTables() {
       territories_academy,
       territories_department,
       territories_city,
-      accommodation_accommodation
+      accommodation_accommodation,
+      account_owner,
+      accommodation_externalsource,
+      accommodation_favoriteaccommodation
     RESTART IDENTITY CASCADE
   `)
 }

@@ -11,14 +11,3 @@ export const accommodationsParsers = {
 }
 
 export const accommodationsSearchParamsCache = createSearchParamsCache(accommodationsParsers)
-
-export const accommodationsQueryKey = (params: {
-  academie: string | null
-  accessible: string | null
-  bbox: string | null
-  colocation: string | null
-  page: number | null
-  prix: number | null
-  crous: string | null
-  pageSize?: number
-}) => ['accomodations', { ...params }] as const

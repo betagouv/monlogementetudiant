@@ -3,6 +3,22 @@ import { EResidenceType } from '~/enums/residence-type'
 import { ETargetAudience } from '~/enums/target-audience'
 import { EResidenceType, ETargetAudience } from './update-residence'
 
+export enum EResidence {
+  autre = 'autre',
+  ecole = 'ecole',
+  'foyer-soleil' = 'foyer-soleil',
+  'hoteliere-sociale' = 'hoteliere-sociale',
+  intergenerationnelle = 'intergenerationnelle',
+  internat = 'internat',
+  'jeunes-travailleurs' = 'jeunes-travailleurs',
+  'mixte-actifs-etudiants' = 'mixte-actifs-etudiants',
+  'service-logement' = 'service-logement',
+  'service-universitaire-privee' = 'service-universitaire-privee',
+  'sociale-jeunes-actifs' = 'sociale-jeunes-actifs',
+  'u-crous' = 'u-crous',
+  'universitaire-conventionnee' = 'universitaire-conventionnee',
+}
+
 export enum AccommodationHouseRoomType {
   private = 'private',
   shared = 'shared',

@@ -1,6 +1,7 @@
 import { dehydrate, QueryClient } from '@tanstack/react-query'
-import { accommodationsQueryKey, accommodationsSearchParamsCache } from '~/lib/accommodations-search-params'
+import { accommodationsSearchParamsCache } from '~/lib/accommodations-search-params'
 import type { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
+import { getQueryClient, trpc } from '~/server/trpc/server'
 
 export const getAccommodations = async (searchParams: {
   accessible?: string
@@ -12,37 +13,22 @@ export const getAccommodations = async (searchParams: {
   page?: string
   page_size?: string
   crous?: string
-}) => {
-  const params = new URLSearchParams()
-  if (searchParams.page) params.append('page', searchParams.page)
-  if (searchParams.page_size) params.append('page_size', searchParams.page_size)
-  if (searchParams.bbox) params.append('bbox', searchParams.bbox)
-  if (searchParams.center) {
-    params.append('center', searchParams.center)
-    params.append('radius', '10')
-  }
-  if (searchParams.accessible) params.append('is_accessible', searchParams.accessible)
-  if (searchParams.colocation) params.append('coliving', searchParams.colocation)
-  if (searchParams.prix) params.append('price_max', searchParams.prix)
-  if (searchParams.crous) params.append('view_crous', searchParams.crous)
-  if (searchParams.academie) params.append('academy_id', searchParams.academie)
+}): Promise<TGetAccomodationsResponse> => {
+  const result = await getQueryClient().fetchQuery(
+    trpc.accommodations.list.queryOptions({
+      bbox: searchParams.bbox ?? undefined,
+      center: searchParams.center ?? undefined,
+      page: searchParams.page ? Number(searchParams.page) : 1,
+      pageSize: searchParams.page_size ? Number(searchParams.page_size) : 30,
+      isAccessible: searchParams.accessible === 'true' ? true : undefined,
+      hasColiving: searchParams.colocation === 'true' ? true : undefined,
+      priceMax: searchParams.prix ? Number(searchParams.prix) : undefined,
+      viewCrous: searchParams.crous === 'true' ? true : false,
+      academyId: searchParams.academie ? Number(searchParams.academie) : undefined,
+    }),
+  )
 
-  const response = await fetch(`${process.env.API_URL}/accommodations/${params.size > 0 ? `?${params.toString()}` : ''}`)
-  if (!response.ok) {
-    return {
-      count: 0,
-      next: null,
-      previous: null,
-      min_price: null,
-      max_price: null,
-      page_size: 15,
-      results: {
-        features: [],
-      },
-    }
-  }
-  const data = await response.json()
-  return data as TGetAccomodationsResponse
+  return result as TGetAccomodationsResponse
 }
 
 export const prefetchAccommodations = async (
@@ -58,29 +44,40 @@ export const prefetchAccommodations = async (
     pageSize: overrides?.pageSize,
   }
 
-  const searchParams: Record<string, string> = {}
-  if (queryKeyParams.bbox) searchParams.bbox = queryKeyParams.bbox
-  if (queryKeyParams.academie) searchParams.academie = queryKeyParams.academie
-  if (parsedParams.accessible) searchParams.accessible = parsedParams.accessible
-  if (parsedParams.colocation) searchParams.colocation = parsedParams.colocation
-  if (parsedParams.prix) searchParams.prix = parsedParams.prix.toString()
-  if (parsedParams.page) searchParams.page = parsedParams.page.toString()
-  if (parsedParams.crous) searchParams.crous = parsedParams.crous
-  if (overrides?.pageSize) searchParams.page_size = overrides.pageSize.toString()
+  const queryInput = {
+    bbox: queryKeyParams.bbox ?? undefined,
+    page: queryKeyParams.page ?? 1,
+    pageSize: queryKeyParams.pageSize ?? 30,
+    isAccessible: queryKeyParams.accessible === 'true' ? true : undefined,
+    hasColiving: queryKeyParams.colocation === 'true' ? true : undefined,
+    priceMax: queryKeyParams.prix ?? undefined,
+    viewCrous: queryKeyParams.crous === 'true' ? true : false,
+    academyId: queryKeyParams.academie ? Number(queryKeyParams.academie) : undefined,
+  }
 
   const client = queryClient ?? new QueryClient()
-  await client.prefetchQuery({
-    queryKey: accommodationsQueryKey(queryKeyParams),
-    queryFn: () => getAccommodations(searchParams),
-  })
+  await client.prefetchQuery(trpc.accommodations.list.queryOptions(queryInput))
 
   const hasOverrides =
     (overrides?.bbox && overrides.bbox !== parsedParams.bbox) || (overrides?.academie && overrides.academie !== parsedParams.academie)
 
   if (hasOverrides) {
-    const data = client.getQueryData(accommodationsQueryKey(queryKeyParams))
+    const originalQueryInput = {
+      bbox: parsedParams.bbox ?? undefined,
+      page: parsedParams.page ?? 1,
+      pageSize: overrides?.pageSize ?? 30,
+      isAccessible: parsedParams.accessible === 'true' ? true : undefined,
+      hasColiving: parsedParams.colocation === 'true' ? true : undefined,
+      priceMax: parsedParams.prix ?? undefined,
+      viewCrous: parsedParams.crous === 'true' ? true : false,
+      academyId: parsedParams.academie ? Number(parsedParams.academie) : undefined,
+    }
+
+    const overriddenQueryKey = trpc.accommodations.list.queryOptions(queryInput).queryKey
+    const originalQueryKey = trpc.accommodations.list.queryOptions(originalQueryInput).queryKey
+    const data = client.getQueryData(overriddenQueryKey)
     if (data) {
-      client.setQueryData(accommodationsQueryKey({ ...parsedParams, pageSize: overrides?.pageSize }), data)
+      client.setQueryData(originalQueryKey, data)
     }
   }
 
