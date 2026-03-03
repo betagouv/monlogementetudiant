@@ -1,8 +1,8 @@
-import { getTestDb } from '../helpers/test-db'
 import { academies } from '../../server/db/schema/academies'
 import { accommodations } from '../../server/db/schema/accommodations'
 import { cities } from '../../server/db/schema/cities'
 import { departments } from '../../server/db/schema/departments'
+import { getTestDb } from '../helpers/test-db'
 
 type AcademyInsert = typeof academies.$inferInsert
 type DepartmentInsert = typeof departments.$inferInsert
