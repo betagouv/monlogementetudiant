@@ -68,7 +68,9 @@ export const ResidencePictures = ({ accommodation }: { accommodation: TAccomodat
     const newIndex = direction === 'left' ? index - 1 : index + 1
     ;[newImages[index], newImages[newIndex]] = [newImages[newIndex], newImages[index]]
     updateMutation.mutate(
-      { images_urls: newImages, name: accommodation.properties.name },
+      {
+        images_urls: newImages,
+      },
       {
         onSuccess: () => {
           setValue('images_urls', newImages)
@@ -118,7 +120,7 @@ export const ResidencePictures = ({ accommodation }: { accommodation: TAccomodat
             <>
               {field.value && field.value.length > 0 && (
                 <div className="fr-my-4w">
-                  <div className="fr-flex fr-direction-row fr-justify-content-space-between fr-flex-wrap ">
+                  <div className="fr-flex fr-direction-row fr-flex-wrap fr-flex-gap-4v">
                     {field.value.map((imageUrl, index) => (
                       <div key={index} className="fr-flex fr-direction-column fr-align-items-center">
                         <AccommodationImage src={imageUrl} width={100} height={100} withModal={false} />

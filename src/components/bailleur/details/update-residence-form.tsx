@@ -43,6 +43,8 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
     ),
     defaultValues: {
       name: accommodation.properties.name || '',
+      residence_type: accommodation.properties.residence_type || '',
+      target_audience: accommodation.properties.target_audience || '',
       address: accommodation.properties.address || '',
       city: accommodation.properties.city || '',
       postal_code: accommodation.properties.postal_code || '',

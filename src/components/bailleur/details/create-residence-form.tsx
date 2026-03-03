@@ -25,6 +25,8 @@ export const CreateResidenceForm = () => {
     resolver: zodResolver(ZCreateResidence),
     defaultValues: {
       name: '',
+      residence_type: '' as TCreateResidence['residence_type'],
+      target_audience: '' as TCreateResidence['target_audience'],
       description: '',
       external_url: '',
       accept_waiting_list: false,
