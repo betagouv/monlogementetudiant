@@ -1,7 +1,8 @@
-import { fr, RiIconClassName } from '@codegouvfr/react-dsfr'
+import { RiIconClassName } from '@codegouvfr/react-dsfr'
 import { Breadcrumb } from '@codegouvfr/react-dsfr/Breadcrumb'
 import { Tag, TagProps } from '@codegouvfr/react-dsfr/Tag'
 import { HydrationBoundary } from '@tanstack/react-query'
+import clsx from 'clsx'
 import { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 import { AccommodationAvailability } from '~/app/(public)/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-availability'
@@ -14,6 +15,7 @@ import { AccommodationImages } from '~/components/accommodation/accommodation-im
 import { NearbyAccommodations } from '~/components/accommodation/nearby-accommodations'
 import { SaveAccommodationFavoriteButton } from '~/components/favorites/save-accommodation-favorite-button'
 import { OwnerDetails } from '~/components/find-student-accomodation/owner-details/owner-details'
+import { RESIDENCE_TYPE_LABELS } from '~/enums/residence-type'
 import { formatCityWithA } from '~/utils/french-contraction'
 import { getAccommodationPageContext } from './get-accommodation-page-context'
 import styles from './logement.module.css'
@@ -73,7 +75,7 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
 
   return (
     <HydrationBoundary state={dehydratedState}>
-      <div className={fr.cx('fr-container')}>
+      <div className="fr-container">
         <Breadcrumb
           currentPageLabel={breadCrumbTitle}
           homeLinkProps={{ href: '/' }}
@@ -88,13 +90,19 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
           classes={{ root: 'fr-mt-0 fr-mb-2w fr-pt-4w' }}
         />
         <div className="fr-flex fr-justify-content-space-between fr-align-items-center">
-          <h1 className="fr-h2">{t('title', { cityFormatted, title: name })}</h1>
+          <div className="fr-col-md-10">
+            <h1 className="fr-h2">{t('title', { cityFormatted, title: name })}</h1>
+          </div>
           <SaveAccommodationFavoriteButton slug={slug} withLabel user={user} />
         </div>
         <div className={styles.container}>
           <div className={styles.infosContainer}>
             {images_urls && images_urls.length > 0 && <AccommodationImages images={images_urls} title={name} />}
             <div className={styles.section}>
+              <span className={clsx(styles.accommodationType, 'fr-text--bold fr-text--uppercase')}>
+                {RESIDENCE_TYPE_LABELS[accommodation.residence_type]}
+              </span>
+
               <h2>{name}</h2>
               <div className={styles.tagContainer}>
                 {tags.map((t) => (
@@ -110,7 +118,7 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
             <AccommodationLocalisation address={address} city={city} latitude={latitude} longitude={longitude} postalCode={postal_code} />
             <AccommodationDescription title={name} description={description} />
           </div>
-          <div className={fr.cx('fr-hidden-sm')}>{<AccommodationMap latitude={latitude} longitude={longitude} />}</div>
+          <div className="fr-hidden-sm">{<AccommodationMap latitude={latitude} longitude={longitude} />}</div>
           <div className={styles.stickyColumn}>
             <OwnerDetails
               acceptWaitingList={accept_waiting_list}

@@ -77,8 +77,8 @@ export const MagicLinkSignInForm: FC = () => {
               }}
             />
           </div>
-          <Button type="submit" iconPosition="right" iconId="ri-arrow-right-line">
-            {t('labels.cta')}
+          <Button type="submit" iconPosition="left" iconId="ri-mail-send-line">
+            {t('labels.magicLinkCta')}
           </Button>
         </div>
       </form>

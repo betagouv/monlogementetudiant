@@ -1,5 +1,6 @@
 import { z } from 'zod'
-import { EResidenceType, ETargetAudience } from './update-residence'
+import { EResidenceType } from '~/enums/residence-type'
+import { ETargetAudience } from '~/enums/target-audience'
 
 export enum AccommodationHouseRoomType {
   private = 'private',

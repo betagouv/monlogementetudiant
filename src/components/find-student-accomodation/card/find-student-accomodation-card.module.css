@@ -18,3 +18,12 @@
 .description {
   color: #666666;
 }
+
+.arrow::before {
+  --icon-size: 1.5rem !important;
+  margin-right: 0rem !important;
+}
+
+.endDetail {
+  margin-top: auto;
+}

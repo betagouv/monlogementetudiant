@@ -85,7 +85,7 @@ export const SaveAccommodationFavoriteButton = ({ slug, withLabel = false, user 
         disabled={isLoading}
         nativeButtonProps={{ onClick: handleSave }}
       >
-        Ajouter aux favoris
+        Ajouter en favoris
       </Button>
     )
   }

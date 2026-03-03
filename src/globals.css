@@ -8,6 +8,7 @@
 @import url("./helpers/skeleton.css");
 @import url("./helpers/colors.css");
 @import url("./helpers/link.css");
+@import url("./helpers/cursor.css");
 
 span[class^="ri-"]::before,
 span[class^="fr-"]::before {
