@@ -3,27 +3,6 @@ import { EResidenceType } from '~/enums/residence-type'
 import { ETargetAudience } from '~/enums/target-audience'
 import { EResidenceType, ETargetAudience } from './update-residence'
 
-export enum EResidence {
-  autre = 'autre',
-  ecole = 'ecole',
-  'foyer-soleil' = 'foyer-soleil',
-  'hoteliere-sociale' = 'hoteliere-sociale',
-  intergenerationnelle = 'intergenerationnelle',
-  internat = 'internat',
-  'jeunes-travailleurs' = 'jeunes-travailleurs',
-  'mixte-actifs-etudiants' = 'mixte-actifs-etudiants',
-  'service-logement' = 'service-logement',
-  'service-universitaire-privee' = 'service-universitaire-privee',
-  'sociale-jeunes-actifs' = 'sociale-jeunes-actifs',
-  'u-crous' = 'u-crous',
-  'universitaire-conventionnee' = 'universitaire-conventionnee',
-}
-
-export enum AccommodationHouseRoomType {
-  private = 'private',
-  shared = 'shared',
-}
-
 export const ZGeometry = z.object({
   coordinates: z.array(z.number()),
   type: z.string(),
@@ -35,8 +14,8 @@ const ZBaseAccommodationInfo = z.object({
   city: z.string().max(150),
   name: z.string().max(250),
   postal_code: z.string().max(5),
-  residence_type: z.nativeEnum(EResidenceType),
-  target_audience: z.nativeEnum(ETargetAudience),
+  residence_type: z.enum(EResidenceType).nullable(),
+  target_audience: z.enum(ETargetAudience).nullable(),
   slug: z.string().max(250),
   accept_waiting_list: z.boolean(),
   images_urls: z.array(z.string()).nullable(),
@@ -103,8 +82,8 @@ const ZPricing = z.object({
 const ZAmenities = z.object({
   refrigerator: z.boolean().nullable(),
   laundry_room: z.boolean().nullable(),
-  bathroom: z.nativeEnum(AccommodationHouseRoomType).nullable(),
-  kitchen_type: z.nativeEnum(AccommodationHouseRoomType).nullable(),
+  bathroom: z.enum(['private', 'shared']).nullable(),
+  kitchen_type: z.enum(['private', 'shared']).nullable(),
   microwave: z.boolean().nullable(),
   secure_access: z.boolean().nullable(),
   parking: z.boolean().nullable(),
