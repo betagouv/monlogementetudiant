@@ -148,8 +148,8 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
               priceMinField: 'price_min_t7_more' as const,
               priceMaxField: 'price_max_t7_more' as const,
             },
-          ].map((typology, index) => (
-            <div key={typology.type} className={`fr-p-4w ${index !== 4 ? 'fr-border-bottom' : ''}`}>
+          ].map((typology, index, arr) => (
+            <div key={typology.type} className={`fr-p-4w ${index !== arr.length - 1 ? 'fr-border-bottom' : ''}`}>
               <div className="fr-grid-row fr-grid-row--gutters fr-flex fr-direction-md-row fr-direction-column fr-align-items-end">
                 <div className="fr-col-md-6">
                   <Select
