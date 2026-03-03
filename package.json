@@ -9,7 +9,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "biome check src",
-    "lint:format": "biome check src --fix"
+    "lint:format": "biome check src --fix",
+    "test": "vitest",
+    "test:unit": "vitest --project unit",
+    "test:integration": "vitest --project integration --run"
   },
   "dependencies": {
     "@codegouvfr/react-dsfr": "^1.31.0",
@@ -56,6 +59,7 @@
     "@types/react-dom": "^19",
     "drizzle-kit": "^0.31.9",
     "sass": "^1.97.1",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.0.18"
   }
 }

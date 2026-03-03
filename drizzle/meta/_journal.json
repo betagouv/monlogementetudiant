@@ -1,5 +1,13 @@
 {
   "version": "7",
   "dialect": "postgresql",
-  "entries": []
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1772567600318,
+      "tag": "0000_abandoned_dazzler",
+      "breakpoints": true
+    }
+  ]
 }
