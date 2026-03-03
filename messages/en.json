@@ -859,7 +859,9 @@
         "waitingList": "La résidence accepte les candidatures sur dépôt de dossier",
         "accessible": "Nombre de logements adaptés PMR",
         "coliving": "Nombre de logements en colocation dans la résidence",
-        "scholarship": "Les étudiants boursiers sont prioritaires dans la résidence"
+        "scholarship": "Les étudiants boursiers sont prioritaires dans la résidence",
+        "accommodationType": "Typologie de logements",
+        "targetAudience": "Public dans la résidence"
       }
     }
   }
