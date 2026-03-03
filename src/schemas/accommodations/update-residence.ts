@@ -5,6 +5,35 @@ import { ETargetAudience } from '~/enums/target-audience'
 export { EResidenceType, RESIDENCE_TYPE_LABELS } from '~/enums/residence-type'
 export { ETargetAudience } from '~/enums/target-audience'
 
+export enum EResidenceType {
+  UNIVERSITAIRE_CONVENTIONNEE = 'universitaire-conventionnee',
+  SOCIALE_JEUNES_ACTIFS = 'sociale-jeunes-actifs',
+  INTERGENERATIONNELLE = 'intergenerationnelle',
+  JEUNES_TRAVAILLEURS = 'jeunes-travailleurs',
+  SOCIAL_FLECHE_JEUNE = 'social-fleche-jeune',
+  SOCIAL_CLASSIQUE = 'social-classique',
+  ECOLE = 'ecole',
+  RESIDENCE_ETUDIANTE = 'residence-etudiante',
+  SOUS_LOCATION = 'sous-location',
+}
+
+export const RESIDENCE_TYPE_LABELS: Record<EResidenceType, string> = {
+  [EResidenceType.UNIVERSITAIRE_CONVENTIONNEE]: 'Résidence Universitaire conventionnée',
+  [EResidenceType.SOCIALE_JEUNES_ACTIFS]: 'Résidence sociale Jeunes Actifs (RSJA, Habitat Jeunes)',
+  [EResidenceType.INTERGENERATIONNELLE]: 'Cohabitation intergénérationnelle',
+  [EResidenceType.JEUNES_TRAVAILLEURS]: 'Foyer Jeunes Travailleurs (FJT)',
+  [EResidenceType.SOCIAL_FLECHE_JEUNE]: 'Logement social fléché vers les jeunes (loi ELAN - article 109)',
+  [EResidenceType.SOCIAL_CLASSIQUE]: 'Logement social classique commercialisé en partie aux étudiants',
+  [EResidenceType.ECOLE]: "Résidence d'école ou d'établissement d'enseignement",
+  [EResidenceType.RESIDENCE_ETUDIANTE]: 'Résidence étudiante',
+  [EResidenceType.SOUS_LOCATION]: 'Logements sociaux sous-loués aux étudiants par une association',
+}
+
+export enum ETargetAudience {
+  ETUDIANTS = 'etudiants',
+  MIXTE = 'mixte-etudiants-jeunes-actifs',
+}
+
 export const ZUpdateResidence = z.object({
   name: z.string().min(1, 'Le nom de la résidence est requis').optional(),
   residence_type: z.enum(EResidenceType, { error: 'La typologie de logements est requise' }).optional(),
