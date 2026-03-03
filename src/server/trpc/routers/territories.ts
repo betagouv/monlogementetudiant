@@ -34,9 +34,7 @@ const bboxSelect = (table: { boundary: AnyColumn }) =>
   `
 
 function buildWhere(nameCol: AnyColumn, tokens: string[]): SQL {
-  const conditions = tokens.map(
-    (token) => sql`immutable_unaccent(${nameCol}) ILIKE ${'%' + token + '%'}`,
-  )
+  const conditions = tokens.map((token) => sql`immutable_unaccent(${nameCol}) ILIKE ${'%' + token + '%'}`)
   return and(...conditions)!
 }
 

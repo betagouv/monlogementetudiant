@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { createAccommodation, createAcademy, createCity, createDepartment } from './fixtures/factories'
+import { createAcademy, createCity, createDepartment } from './fixtures/factories'
 import { caller } from './helpers/test-caller'
 
 describe('territories.search', () => {
@@ -31,11 +31,7 @@ describe('territories.search', () => {
   })
 
   describe('case/accent insensitive', () => {
-    it.each([
-      'saint etienne',
-      'SAINT ETIENNE',
-      'saint étienne',
-    ])('finds "Saint-Étienne" with query "%s"', async (q) => {
+    it.each(['saint etienne', 'SAINT ETIENNE', 'saint étienne'])('finds "Saint-Étienne" with query "%s"', async (q) => {
       const result = await caller.territories.search({ q })
       const cityNames = result.cities.map((c) => c.name)
       expect(cityNames).toContain('Saint-Étienne')
@@ -43,11 +39,7 @@ describe('territories.search', () => {
   })
 
   describe('academies search', () => {
-    it.each([
-      'Academie de Lyon',
-      'académie de lyon',
-      'ACADEMIE',
-    ])('finds "Académie de Lyon" with query "%s"', async (q) => {
+    it.each(['Academie de Lyon', 'académie de lyon', 'ACADEMIE'])('finds "Académie de Lyon" with query "%s"', async (q) => {
       const result = await caller.territories.search({ q })
       const academyNames = result.academies.map((a) => a.name)
       expect(academyNames).toContain('Académie de Lyon')
@@ -55,11 +47,7 @@ describe('territories.search', () => {
   })
 
   describe('departments search', () => {
-    it.each([
-      'loire',
-      'Loire',
-      'LOIRE',
-    ])('finds "Loire" with query "%s"', async (q) => {
+    it.each(['loire', 'Loire', 'LOIRE'])('finds "Loire" with query "%s"', async (q) => {
       const result = await caller.territories.search({ q })
       const departmentNames = result.departments.map((d) => d.name)
       expect(departmentNames).toContain('Loire')
@@ -71,11 +59,7 @@ describe('territories.search', () => {
       await createCity({ departmentId, name: 'Luçon', slug: 'lucon' })
     })
 
-    it.each([
-      'lucon',
-      'Luçon',
-      'LUCON',
-    ])('finds "Luçon" with query "%s"', async (q) => {
+    it.each(['lucon', 'Luçon', 'LUCON'])('finds "Luçon" with query "%s"', async (q) => {
       const result = await caller.territories.search({ q })
       const cityNames = result.cities.map((c) => c.name)
       expect(cityNames).toContain('Luçon')
