@@ -6,7 +6,9 @@ import Select from '@codegouvfr/react-dsfr/Select'
 import ToggleSwitch from '@codegouvfr/react-dsfr/ToggleSwitch'
 import { useTranslations } from 'next-intl'
 import { Controller, useFormContext } from 'react-hook-form'
-import { EResidenceType, ETargetAudience, RESIDENCE_TYPE_LABELS, TUpdateResidence } from '~/schemas/accommodations/update-residence'
+import { EResidenceType, RESIDENCE_TYPE_LABELS } from '~/enums/residence-type'
+import { ETargetAudience } from '~/enums/target-audience'
+import { TUpdateResidence } from '~/schemas/accommodations/update-residence'
 
 export const ResidenceDetails = () => {
   const {
