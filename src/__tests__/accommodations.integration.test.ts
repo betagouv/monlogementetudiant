@@ -261,7 +261,7 @@ describe('accommodations.getBySlug', () => {
       name: 'Résidence Détail',
       description: 'A nice residence',
       address: '42 rue de la Paix',
-      residenceType: 'u-crous',
+      residenceType: 'residence-universitaire-conventionnee',
       ownerId: owner.id,
       nbTotalApartments: 100,
       priceMinT1: 200,
@@ -276,7 +276,7 @@ describe('accommodations.getBySlug', () => {
     expect(result.name).toBe('Résidence Détail')
     expect(result.description).toBe('A nice residence')
     expect(result.address).toBe('42 rue de la Paix')
-    expect(result.residence_type).toBe('u-crous')
+    expect(result.residence_type).toBe('residence-universitaire-conventionnee')
     expect(result.nb_total_apartments).toBe(100)
     expect(result.price_min_t1).toBe(200)
     expect(result.price_max_t1).toBe(400)
@@ -347,7 +347,7 @@ describe('accommodations.getBySlug', () => {
   })
 
   it('throws NOT_FOUND for unknown slug', async () => {
-    await expect(caller.accommodations.getBySlug({ slug: 'nonexistent' })).rejects.toThrow('NOT_FOUND')
+    await expect(caller.accommodations.getBySlug({ slug: 'nonexistent' })).rejects.toThrow('Accommodation not found')
   })
 
   it('throws NOT_FOUND for unpublished accommodation', async () => {
@@ -357,7 +357,7 @@ describe('accommodations.getBySlug', () => {
       geom: { type: 'Point', coordinates: [2.35, 48.85] },
     })
 
-    await expect(caller.accommodations.getBySlug({ slug: 'unpublished-detail' })).rejects.toThrow('NOT_FOUND')
+    await expect(caller.accommodations.getBySlug({ slug: 'unpublished-detail' })).rejects.toThrow('Accommodation not found')
   })
 })
 
@@ -435,7 +435,9 @@ describe('accommodations.addFavorite', () => {
   })
 
   it('throws NOT_FOUND for unknown accommodation', async () => {
-    await expect(authenticatedCaller.accommodations.addFavorite({ accommodationSlug: 'nonexistent' })).rejects.toThrow('NOT_FOUND')
+    await expect(authenticatedCaller.accommodations.addFavorite({ accommodationSlug: 'nonexistent' })).rejects.toThrow(
+      'Accommodation not found',
+    )
   })
 })
 

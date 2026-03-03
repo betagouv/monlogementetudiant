@@ -16,15 +16,18 @@ type OwnerInsert = typeof owners.$inferInsert
 type ExternalSourceInsert = typeof externalSources.$inferInsert
 type FavoriteAccommodationInsert = typeof favoriteAccommodations.$inferInsert
 
-export async function createAcademy(overrides: Partial<AcademyInsert> = {}) {
+export async function createAcademy(overrides: Partial<AcademyInsert> & { boundary?: { type: string; coordinates: number[][][][] } } = {}) {
   const db = getTestDb()
+  const { boundary, ...rest } = overrides
+  const values = {
+    name: 'Académie de Lyon',
+    ...rest,
+    ...(boundary ? { boundary: sql`ST_SetSRID(ST_GeomFromGeoJSON(${JSON.stringify(boundary)}), 4326)` } : {}),
+  }
   const [row] = await db
     .insert(academies)
-    .values({
-      name: 'Académie de Lyon',
-      ...overrides,
-    })
-    .returning()
+    .values(values as typeof academies.$inferInsert)
+    .returning({ id: academies.id, name: academies.name })
   return row
 }
 
