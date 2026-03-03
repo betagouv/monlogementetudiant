@@ -123,6 +123,7 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
       classes={{
         root: clsx(className, selectedAccommodation === accomodation.id.toString() && classes.active, classes.hover),
         header: classes.header,
+        endDetail: clsx('fr-justify-content-end', classes.endDetail),
       }}
       id={`accomodation-${accomodation.id}`}
       background
@@ -160,15 +161,16 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
         <div className="fr-flex fr-justify-content-space-between">
           <ul className="fr-tags-group">
             <li>
-              <Tag>{`${city} (${postal_code})`}</Tag>
+              <Tag nativeButtonProps={{ className: 'fr-cursor-default' }}>{`${city} (${postal_code})`}</Tag>
             </li>
           </ul>
           {showFavorite && <SaveAccommodationFavoriteButton slug={accomodation.properties.slug} user={user} />}
         </div>
       }
       end={waitingListBadge}
+      endDetail={<span className={clsx('ri-arrow-right-line fr-text-title--blue-france', classes.arrow)} />}
       size="small"
-      title={name}
+      title={<span className="fr-text-title--blue-france fr-mb-0">{name}</span>}
       titleAs="h2"
     />
   )

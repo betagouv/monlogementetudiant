@@ -30,7 +30,7 @@ export const getStudentAccommodationPageContext = cache(
     const territory = (territories[getTerritoriesCategoryKey(routeCategoryKey as 'ville' | 'academie' | 'departement')] || []).find(
       (territory) => {
         const slug = 'slug' in territory ? territory.slug : territory.name
-        return slug === routeLocation
+        return slug === routeLocation || territory.name === routeLocation
       },
     )
 

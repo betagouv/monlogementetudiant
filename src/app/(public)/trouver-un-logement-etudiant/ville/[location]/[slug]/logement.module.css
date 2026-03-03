@@ -121,6 +121,14 @@
   align-items: center;
 }
 
+.accommodationType {
+  color: #5757ad;
+}
+
+.locationLink {
+  overflow-wrap: anywhere;
+}
+
 .stickyColumn {
   position: sticky;
   top: 2rem;

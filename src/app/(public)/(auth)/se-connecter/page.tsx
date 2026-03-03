@@ -6,7 +6,6 @@ import { getTranslations } from 'next-intl/server'
 import { CredentialsSignInForm } from '~/components/credentials-sign-in/credentials-sign-in'
 import background from '~/images/background-credentials.webp'
 import authStyles from '../auth.module.css'
-import styles from './login.module.css'
 
 export default async function LoginPage() {
   const t = await getTranslations('login')
@@ -23,10 +22,10 @@ export default async function LoginPage() {
           &nbsp;{t('subTitlePart2')}
         </p>
         <CredentialsSignInForm />
-        <div className={styles.dividerContainer}>
-          <span className={styles.divider}>{t('labels.or')}</span>
+        <div className={authStyles.dividerContainer}>
+          <span className={authStyles.divider}>{t('labels.or')}</span>
         </div>
-        <div className={styles.firstVisitContainer}>
+        <div className={authStyles.firstVisitContainer}>
           <h2>{t('firstVisit.title')}</h2>
           <p>{t('firstVisit.description')}</p>
           <Button priority="secondary" iconPosition="left" iconId="ri-user-line" linkProps={{ href: '/s-inscrire' }}>

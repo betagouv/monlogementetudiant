@@ -123,7 +123,7 @@
       "maximiseChancesDescription": "Cette résidence n’a pas communiqué de disponibilités pour le moment. Nous vous invitons à consulter l'offre et à déposer votre dossier sur le site du bailleur, afin qu’il soit examiné dès qu’un logement se libère."
     },
     "equipments": {
-      "title": "Equipements"
+      "title": "Équipements"
     },
     "descriptionTitle": "À propos du logement étudiant {title}",
     "title": "Logement étudiant {title} {cityFormatted}",
@@ -135,6 +135,7 @@
     },
     "charges": "Charges comprises",
     "availableAccommodations": "Logements de la résidence étudiante",
+    "availableAccommodationsCount": "{count} logements dans la résidence étudiante",
     "location": {
       "title": "Localisation"
     },
@@ -583,13 +584,17 @@
       "email": "Email",
       "password": "Mot de passe",
       "cta": "Se connecter",
+      "magicLinkCta": "Recevoir un lien de connexion",
       "forgotPassword": "Mot de passe oublié",
       "or": "OU"
     },
     "firstVisit": {
       "title": "Première visite ?",
       "description": "Créez votre compte dès maintenant pour accèder votre espace Mon Logement Etudiant",
-      "cta": "Créer un compte"
+      "cta": "Créer un compte",
+      "ownerTitle": "Vous n'êtes pas encore partenaire ?",
+      "ownerDescription": "Rejoignez le mouvement en échangeant avec notre équipe",
+      "ownerCta": "Prendre rendez-vous"
     },
     "success": "Si un compte est associé à cette adresse e-mail, vous recevrez un lien sur cette adresse."
   },

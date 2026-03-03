@@ -67,12 +67,6 @@
   justify-content: flex-start;
 }
 
-.simulatorContainer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
 .sectionContent {
   display: flex;
   flex-direction: column;
@@ -89,4 +83,10 @@
   .borderRightGrid {
     border-right: none;
   }
+}
+
+.simulatorIcon::before {
+  --icon-size: 1.5rem !important;
+  margin-right: 0 !important;
+  color: #5757ad;
 }

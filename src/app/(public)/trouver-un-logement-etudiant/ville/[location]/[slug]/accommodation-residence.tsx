@@ -1,4 +1,3 @@
-import { fr } from '@codegouvfr/react-dsfr'
 import Alert from '@codegouvfr/react-dsfr/Alert'
 import Button from '@codegouvfr/react-dsfr/Button'
 import clsx from 'clsx'
@@ -86,7 +85,11 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
   if (!hasAccommodations) {
     return (
       <div className={styles.section}>
-        <h4>{t('availableAccommodations')}</h4>
+        {accommodation.nb_total_apartments ? (
+          <h4>{t('availableAccommodationsCount', { count: accommodation.nb_total_apartments })}</h4>
+        ) : (
+          <h4>{t('availableAccommodations')}</h4>
+        )}{' '}
         <Alert
           severity="warning"
           title="Informations à venir"
@@ -100,7 +103,11 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
   return (
     <div className={styles.section}>
       <div className={styles.sectionContent}>
-        <h4 className={fr.cx('fr-mb-0')}>{t('availableAccommodations')}</h4>
+        {accommodation.nb_total_apartments ? (
+          <h4 className="fr-mb-0">{t('availableAccommodationsCount', { count: accommodation.nb_total_apartments })}</h4>
+        ) : (
+          <h4 className="fr-mb-0">{t('availableAccommodations')}</h4>
+        )}
         <div className={styles.accommodationsContainer}>
           <div>
             <div className={styles.mainContainer}>
@@ -131,19 +138,13 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
             </div>
           </div>
         </div>
-        <div className={styles.simulatorContainer}>
-          <p className="fr-mb-0">
-            <span className="ri-information-line fr-mr-1v" aria-hidden />
+        <div className="fr-flex fr-justify-content-space-between fr-align-items-center fr-border fr-border-radius--8 fr-px-3w fr-py-2w">
+          <span className={clsx('ri-calculator-line', styles.simulatorIcon)} aria-hidden />
+          <p className="fr-mb-0 fr-flex fr-direction-column">
             <span className="fr-text--bold">{t('simulator')}</span>
-            <p className="fr-mb-0">{t('simulatorDescription')}</p>
+            <span className="fr-mb-0">{t('simulatorDescription')}</span>
           </p>
-          <Button
-            size="small"
-            iconId="fr-icon-money-euro-circle-fill"
-            iconPosition="left"
-            linkProps={{ href: '/simuler-mes-aides-au-logement' }}
-            priority="tertiary"
-          >
+          <Button size="small" linkProps={{ href: '/simuler-mes-aides-au-logement' }} priority="secondary">
             {t('simulatorButton')}
           </Button>
         </div>
