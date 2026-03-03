@@ -1,0 +1,24 @@
+.equipmentsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.equipmentsToggle {
+  display: flex;
+  border: 1px solid var(--border-default-grey);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.equipmentsToggleButton {
+  border: none;
+  border-radius: 0;
+  box-shadow: none !important;
+}
+
+.equipmentsToggleButtonActive {
+  border: 1px solid var(--border-active-blue-france);
+  border-radius: 4px;
+}
