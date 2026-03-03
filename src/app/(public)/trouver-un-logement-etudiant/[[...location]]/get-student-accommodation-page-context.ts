@@ -1,9 +1,10 @@
-import { dehydrate, QueryClient } from '@tanstack/react-query'
+import { dehydrate } from '@tanstack/react-query'
 import { redirect } from 'next/navigation'
 import { cache } from 'react'
 import { getServerSession } from '~/auth'
 import { expandBbox } from '~/components/map/map-utils'
 import { TTerritories } from '~/schemas/territories'
+import { getQueryClient } from '~/server/trpc/server'
 import { prefetchAccommodations } from '~/server-only/get-accommodations'
 import { getTerritories } from '~/server-only/get-territories'
 import { prefetchFavorites } from '~/server-only/student/get-favorites'
@@ -47,7 +48,7 @@ export const getStudentAccommodationPageContext = cache(
       !isAcademy && territoryBbox ? `${territoryBbox.west},${territoryBbox.south},${territoryBbox.east},${territoryBbox.north}` : undefined
     const serverAcademie = isAcademy && territory ? territory.id.toString() : undefined
 
-    const queryClient = new QueryClient()
+    const queryClient = getQueryClient()
     const [, , session] = await Promise.all([
       prefetchAccommodations(awaitedSearchParams, { bbox: serverBbox, academie: serverAcademie }, queryClient),
       prefetchFavorites(queryClient),
