@@ -1,20 +1,5 @@
 import { z } from 'zod'
-
-export enum EResidence {
-  autre = 'Autre',
-  ecole = "Résidence d'école",
-  'foyer-soleil' = 'Foyer soleil',
-  'hoteliere-sociale' = 'Résidence Hôtelière à vocation sociale',
-  intergenerationnelle = 'Résidence intergénérationnelle',
-  internat = 'Internat',
-  'jeunes-travailleurs' = 'Résidence jeunes travailleurs',
-  'mixte-actifs-etudiants' = 'Résidence mixte jeunes actifs/étudiants',
-  'service-logement' = 'Service logement',
-  'service-universitaire-privee' = 'Résidence service / Résidence universitaire privée',
-  'sociale-jeunes-actifs' = 'Résidence sociale jeunes actifs',
-  'u-crous' = 'Cité U / résidence traditionnelle CROUS',
-  'universitaire-conventionnee' = 'Résidence Universitaire conventionnée',
-}
+import { EResidenceType, ETargetAudience } from './update-residence'
 
 export enum AccommodationHouseRoomType {
   private = 'private',
@@ -32,7 +17,8 @@ const ZBaseAccommodationInfo = z.object({
   city: z.string().max(150),
   name: z.string().max(250),
   postal_code: z.string().max(5),
-  residence_type: z.nativeEnum(EResidence),
+  residence_type: z.nativeEnum(EResidenceType),
+  target_audience: z.nativeEnum(ETargetAudience),
   slug: z.string().max(250),
   accept_waiting_list: z.boolean(),
   images_urls: z.array(z.string()).nullable(),
