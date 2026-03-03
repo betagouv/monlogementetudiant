@@ -2,9 +2,6 @@ import { z } from 'zod'
 
 export const ZUpdateResidence = z.object({
   name: z.string().min(1, 'Le nom de la résidence est requis'),
-  address: z.string().min(1, "L'adresse est requise").optional(),
-  city: z.string().min(1, 'La ville est requise').optional(),
-  postal_code: z.string().min(1, 'Le code postal est requis').optional(),
   description: z.string().optional(),
   external_url: z.string().url('Veuillez saisir une URL valide').optional().or(z.literal('')),
 
