@@ -70,6 +70,7 @@ ALTER TABLE "accommodation_accommodation" ADD COLUMN IF NOT EXISTS "images_urls"
 ALTER TABLE "accommodation_accommodation" ADD COLUMN IF NOT EXISTS "external_url" varchar(255);--> statement-breakpoint
 ALTER TABLE "accommodation_accommodation" ADD COLUMN IF NOT EXISTS "external_reference" varchar(255);--> statement-breakpoint
 ALTER TABLE "accommodation_accommodation" ADD COLUMN IF NOT EXISTS "owner_id" bigint;--> statement-breakpoint
+ALTER TABLE "accommodation_accommodation" ADD COLUMN IF NOT EXISTS "target_audience" varchar(100);--> statement-breakpoint
 ALTER TABLE "accommodation_accommodation" ADD COLUMN IF NOT EXISTS "created_at" timestamp;--> statement-breakpoint
 ALTER TABLE "accommodation_accommodation" ADD COLUMN IF NOT EXISTS "updated_at" timestamp;--> statement-breakpoint
 DO $$
