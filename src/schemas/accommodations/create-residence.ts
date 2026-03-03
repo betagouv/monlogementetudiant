@@ -90,7 +90,7 @@ export const ZCreateResidence = ZUpdateResidence.omit({
   address: z.string().min(1, "L'adresse est requise"),
   city: z.string().min(1, 'La ville est requise'),
   postal_code: z.string().min(1, 'Le code postal est requis'),
-  external_url: z.string().url('Veuillez saisir une URL valide').min(1, "L'URL de redirection est requise"),
+  external_url: z.url('Veuillez saisir une URL valide').min(1, "L'URL de redirection est requise"),
   images_files: z.array(z.instanceof(File)).optional(),
   typologies: z
     .array(ZTypology)
