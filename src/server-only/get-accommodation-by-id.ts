@@ -1,13 +1,12 @@
 import { notFound } from 'next/navigation'
-import { TAccomodationDetails } from '~/schemas/accommodations/accommodations'
+import type { TAccomodationDetails } from '~/schemas/accommodations/accommodations'
+import { getQueryClient, trpc } from '~/server/trpc/server'
 
 export const getAccommodationById = async (slug: string) => {
-  const response = await fetch(`${process.env.API_URL}/accommodations/${slug}/`, { cache: 'no-store' })
-
-  if (!response.ok) {
+  try {
+    const data = await getQueryClient().fetchQuery(trpc.accommodations.getBySlug.queryOptions({ slug }))
+    return data as TAccomodationDetails
+  } catch {
     notFound()
   }
-  const data = await response.json()
-
-  return data as TAccomodationDetails
 }
