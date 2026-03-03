@@ -1,7 +1,7 @@
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages, getTranslations } from 'next-intl/server'
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
-import { TanstackQueryClientProvider } from '~/providers/tanstack-client'
+import { TRPCReactProvider } from '~/providers/trpc-client'
 import '~/globals.css'
 import { Suspense } from 'react'
 import { NextAppDirEmotionCacheProvider } from 'tss-react/next'
@@ -44,13 +44,13 @@ export default async function RootLayout({
           <StartDsfrOnHydration />
           <NextIntlClientProvider messages={messages}>
             <DsfrProvider lang={locale}>
-              <TanstackQueryClientProvider>
+              <TRPCReactProvider>
                 <NuqsAdapter>
                   {children}
                   <Signout />
                   <Toaster />
                 </NuqsAdapter>
-              </TanstackQueryClientProvider>
+              </TRPCReactProvider>
             </DsfrProvider>
           </NextIntlClientProvider>
         </NextAppDirEmotionCacheProvider>
