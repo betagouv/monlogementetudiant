@@ -17,7 +17,6 @@ import { ZResetPasswordForm } from '~/schemas/reset-password/reset-password'
 
 export const ResetPasswordForm: FC = () => {
   const searchParams = useSearchParams()
-  const uid = searchParams.get('uid')
   const token = searchParams.get('token')
 
   const [passwordState, setPasswordState] = useState({ password: false, confirmPassword: false })
@@ -35,15 +34,14 @@ export const ResetPasswordForm: FC = () => {
   const { getValues, handleSubmit, register } = resetPasswordForm
 
   const onSubmit = async () => {
-    if (!uid || !token) {
-      console.error('Missing uid or token parameters')
+    if (!token) {
+      console.error('Missing token parameter')
       return
     }
 
     const formData = getValues()
     try {
       await mutateAsync({
-        id: uid,
         token,
         password: formData.password,
         confirmPassword: formData.confirmPassword,
@@ -112,11 +110,11 @@ export const ResetPasswordForm: FC = () => {
             />
           </div>
 
-          <Button type="submit" iconPosition="right" iconId="ri-arrow-right-line" disabled={isLoading || !uid || !token}>
+          <Button type="submit" iconPosition="right" iconId="ri-arrow-right-line" disabled={isLoading || !token}>
             {isLoading ? t('labels.resetting') : t('labels.cta')}
           </Button>
           {isSuccess && <Alert description={t('success.description')} severity="success" small />}
-          {(!uid || !token) && <Alert description="Paramètres manquants pour réinitialiser le mot de passe" severity="error" small />}
+          {!token && <Alert description="Paramètres manquants pour réinitialiser le mot de passe" severity="error" small />}
         </div>
       </form>
     </FormProvider>

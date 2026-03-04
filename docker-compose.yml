@@ -1,0 +1,23 @@
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    ports:
+      - '5490:5432'
+    environment:
+      POSTGRES_USER: mle
+      POSTGRES_PASSWORD: mle
+      POSTGRES_DB: mle_dev
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  db-test:
+    image: postgis/postgis:16-3.4
+    ports:
+      - '5434:5432'
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: mle_test
+
+volumes:
+  pgdata:

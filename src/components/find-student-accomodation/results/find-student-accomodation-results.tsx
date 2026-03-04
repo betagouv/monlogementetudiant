@@ -12,8 +12,8 @@ import { AccomodationCard } from '~/components/find-student-accomodation/card/fi
 import { MapSkeleton } from '~/components/map/map-skeleton'
 import { CardSkeleton } from '~/components/ui/skeleton/card-skeleton'
 import { useAccomodations } from '~/hooks/use-accomodations'
-import { TUser } from '~/lib/external-auth-plugin'
 import { trackEvent } from '~/lib/tracking'
+import { TUser } from '~/lib/types'
 import { TTerritory } from '~/schemas/territories'
 
 type FindStudentAccomodationResultsProps = {

@@ -9,6 +9,7 @@ import { academies } from '~/server/db/schema/academies'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { cities } from '~/server/db/schema/cities'
 import { departments } from '~/server/db/schema/departments'
+import { newsletterSubscriptions } from '~/server/db/schema/newsletter-subscriptions'
 import { normalizeCitySearch, tokenizeQuery } from '~/server/utils/normalize-city-search'
 import { baseProcedure, createTRPCRouter } from '../init'
 
@@ -412,18 +413,14 @@ export const territoriesRouter = createTRPCRouter({
   }),
 
   subscribeNewsletter: baseProcedure.input(ZAlertAccommodationFormSchema).mutation(async ({ input }) => {
-    const response = await fetch(`${process.env.API_URL}/territories/newsletter/subscribe/`, {
-      body: JSON.stringify(input),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      method: 'POST',
-    })
+    const [row] = await db
+      .insert(newsletterSubscriptions)
+      .values({
+        email: input.email,
+        payload: input,
+      })
+      .returning()
 
-    if (!response.ok) {
-      throw new Error('Failed to subscribe to newsletter')
-    }
-
-    return response.json()
+    return { id: row.id, email: row.email }
   }),
 })

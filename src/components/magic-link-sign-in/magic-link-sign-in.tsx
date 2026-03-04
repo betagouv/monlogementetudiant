@@ -9,6 +9,7 @@ import { useTranslations } from 'next-intl'
 import { FC } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { tss } from 'tss-react'
+import { authClient } from '~/auth-client'
 import { createToast } from '~/components/ui/createToast'
 import { trackEvent } from '~/lib/tracking'
 import { TMagicLinkSignInForm, ZMagicLinkSignInForm } from '~/schemas/magic-link-sign-in/magic-link-sign-in'
@@ -28,27 +29,25 @@ export const MagicLinkSignInForm: FC = () => {
   const onSubmit = async () => {
     const { email } = getValues()
     try {
-      const response = await fetch('/api/admin-auth/magic-link', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
+      const result = await authClient.signIn.magicLink({
+        email,
+        callbackURL: '/bailleur/tableau-de-bord',
       })
 
-      if (response.ok) {
-        trackEvent({ category: 'Authentification', action: 'connexion gestionnaire', name: 'succes' })
-        createToast({
-          priority: 'success',
-          message: t('success'),
-        })
-      } else {
+      if (result.error) {
         trackEvent({ category: 'Authentification', action: 'connexion gestionnaire', name: 'erreur' })
         createToast({
           priority: 'error',
           message: 'Une erreur est survenue lors de la connexion, veuillez réessayé ultérieurement',
         })
+        return
       }
+
+      trackEvent({ category: 'Authentification', action: 'connexion gestionnaire', name: 'succes' })
+      createToast({
+        priority: 'success',
+        message: t('success'),
+      })
     } catch {
       trackEvent({ category: 'Authentification', action: 'connexion gestionnaire', name: 'erreur' })
       createToast({

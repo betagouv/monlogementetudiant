@@ -4,8 +4,8 @@ import { SearchParamsSync } from '~/components/search-params-sync'
 import { WidgetAccommodationFilters } from '~/components/widget/widget-accommodation-filters'
 import { WidgetAccommodationGrid } from '~/components/widget/widget-accommodation-grid'
 import { WidgetBodyStyle } from '~/components/widget/widget-body-style'
-import { prefetchAccommodations } from '~/server-only/get-accommodations'
-import { getTerritories } from '~/server-only/get-territories'
+import { prefetchAccommodations } from '~/server/accommodations/get-accommodations'
+import { getTerritories } from '~/server/territories/get-territories'
 
 export const dynamic = 'force-dynamic'
 

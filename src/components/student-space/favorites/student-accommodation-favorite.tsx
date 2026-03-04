@@ -15,7 +15,7 @@ import {
 } from '~/components/find-student-accomodation/card/find-student-accommodation-image-card'
 import { AvailabilityBadge } from '~/components/shared/availability-badge'
 import { TooltipHoverOnly } from '~/components/tooltip-hover-only'
-import { TUser } from '~/lib/external-auth-plugin'
+import { TUser } from '~/lib/types'
 import { TAccomodationCard } from '~/schemas/accommodations/accommodations'
 import { calculateAvailability } from '~/utils/calculateAvailability'
 
