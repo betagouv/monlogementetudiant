@@ -1,22 +1,17 @@
 import { useMutation } from '@tanstack/react-query'
+import { authClient } from '~/auth-client'
 import { createToast } from '~/components/ui/createToast'
 import { TForgotPasswordForm } from '~/schemas/forgot-password/forgot-password'
 
 export const postForgotPassword = async (body: TForgotPasswordForm): Promise<void> => {
-  const response = await fetch('/api/accounts/students/request-password-reset', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
+  const result = await authClient.requestPasswordReset({
+    email: body.email,
+    redirectTo: '/reinitialiser-son-mot-de-passe',
   })
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: 'Password reset request failed' }))
-    throw new Error(errorData.error || 'Password reset request failed')
+  if (result.error) {
+    throw new Error(result.error.message || 'Password reset request failed')
   }
-
-  return response.json()
 }
 
 export const useForgotPassword = () => {

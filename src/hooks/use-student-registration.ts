@@ -1,23 +1,21 @@
 import { useMutation } from '@tanstack/react-query'
+import { authClient } from '~/auth-client'
 import { createToast } from '~/components/ui/createToast'
 import { trackEvent } from '~/lib/tracking'
 import { TSignUpForm } from '~/schemas/sign-up/sign-up'
 
 export const postStudentRegistration = async (body: TSignUpForm): Promise<void> => {
-  const response = await fetch('/api/accounts/students/register', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
+  const result = await authClient.signUp.email({
+    email: body.email,
+    password: body.password,
+    name: `${body.firstname} ${body.lastname}`.trim(),
+    firstname: body.firstname,
+    lastname: body.lastname,
   })
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: 'Registration failed' }))
-    throw new Error(errorData.error || 'Registration failed')
+  if (result.error) {
+    throw new Error(result.error.message || 'Registration failed')
   }
-
-  return response.json()
 }
 
 export const useStudentRegistration = () => {

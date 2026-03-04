@@ -1,6 +1,6 @@
 import { getServerSession } from '~/auth'
 import { StudentAccommodationFavorite } from '~/components/student-space/favorites/student-accommodation-favorite'
-import { getFavorites } from '~/server-only/student/get-favorites'
+import { getFavorites } from '~/server/student/get-favorites'
 import styles from './student-favorites.module.css'
 
 export const StudentFavorites = async () => {

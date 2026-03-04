@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { z } from 'zod'
-import { getAccommodations } from '~/server-only/get-accommodations'
-import { getPopularCities } from '~/server-only/get-popular-cities'
+import { getAccommodations } from '~/server/accommodations/get-accommodations'
+import { getPopularCities } from '~/server/territories/get-popular-cities'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const popularCities = await getPopularCities()

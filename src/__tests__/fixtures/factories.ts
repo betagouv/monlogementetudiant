@@ -1,13 +1,16 @@
 import { sql } from 'drizzle-orm'
 import { academies } from '../../server/db/schema/academies'
 import { accommodations } from '../../server/db/schema/accommodations'
+import { user } from '../../server/db/schema/auth'
 import { cities } from '../../server/db/schema/cities'
 import { departments } from '../../server/db/schema/departments'
 import { externalSources } from '../../server/db/schema/external-sources'
 import { favoriteAccommodations } from '../../server/db/schema/favorite-accommodations'
 import { owners } from '../../server/db/schema/owners'
+import { studentAlerts } from '../../server/db/schema/student-alerts'
 import { getTestDb } from '../helpers/test-db'
 
+type UserInsert = typeof user.$inferInsert
 type AcademyInsert = typeof academies.$inferInsert
 type DepartmentInsert = typeof departments.$inferInsert
 type CityInsert = typeof cities.$inferInsert
@@ -15,6 +18,23 @@ type AccommodationInsert = typeof accommodations.$inferInsert
 type OwnerInsert = typeof owners.$inferInsert
 type ExternalSourceInsert = typeof externalSources.$inferInsert
 type FavoriteAccommodationInsert = typeof favoriteAccommodations.$inferInsert
+type StudentAlertInsert = typeof studentAlerts.$inferInsert
+
+export async function createUser(overrides: Partial<UserInsert> & { id: string }) {
+  const db = getTestDb()
+  const [row] = await db
+    .insert(user)
+    .values({
+      email: `${overrides.id}@test.com`,
+      name: 'Test User',
+      emailVerified: true,
+      role: 'user',
+      ...overrides,
+    })
+    .onConflictDoNothing()
+    .returning()
+  return row
+}
 
 export async function createAcademy(overrides: Partial<AcademyInsert> & { boundary?: { type: string; coordinates: number[][][][] } } = {}) {
   const db = getTestDb()
@@ -118,5 +138,22 @@ export async function createFavoriteAccommodation(
 ) {
   const db = getTestDb()
   const [row] = await db.insert(favoriteAccommodations).values(overrides).returning()
+  return row
+}
+
+export async function createAlert(
+  overrides: Omit<Partial<StudentAlertInsert>, 'userId' | 'maxPrice'> & {
+    userId: string
+    maxPrice: number
+  },
+) {
+  const db = getTestDb()
+  const [row] = await db
+    .insert(studentAlerts)
+    .values({
+      name: 'Alerte Test',
+      ...overrides,
+    })
+    .returning()
   return row
 }

@@ -1,5 +1,5 @@
 import { StudentAlert } from '~/components/student-space/alerts/student-alert'
-import { getAlerts } from '~/server-only/student/get-alerts'
+import { getAlerts } from '~/server/student/get-alerts'
 
 export const StudentAlerts = async () => {
   const alertsResponse = await getAlerts()

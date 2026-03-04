@@ -14,7 +14,7 @@ import { ResidenceRedirection } from '~/components/bailleur/details/residence-re
 import { ResidenceSummary } from '~/components/bailleur/details/residence-summary'
 import { useCreateResidence } from '~/hooks/use-create-residence'
 import { trackEvent } from '~/lib/tracking'
-import { TCreateResidence, transformTypologiesToFlat, ZCreateResidence } from '~/schemas/accommodations/create-residence'
+import { TCreateResidence, ZCreateResidence } from '~/schemas/accommodations/create-residence'
 import { sanitizeHTML } from '~/utils/sanitize-html'
 import styles from './update-residence-form.module.css'
 
@@ -65,17 +65,10 @@ export const CreateResidenceForm = () => {
   })
 
   const onSubmit = async (data: TCreateResidence) => {
-    const { typologies, images_files, ...rest } = data
-    const flatTypologies = transformTypologiesToFlat(typologies)
-
-    const payload = {
-      ...rest,
-      ...flatTypologies,
-      images_files,
+    await createMutation.mutateAsync({
+      ...data,
       description: data.description ? sanitizeHTML(data.description) : data.description,
-    }
-
-    await createMutation.mutateAsync(payload)
+    })
     trackEvent({ category: 'Espace Gestionnaire', action: 'creation residence', name: data.name })
   }
 
