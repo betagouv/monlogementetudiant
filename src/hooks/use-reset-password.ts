@@ -1,27 +1,21 @@
 import { useMutation } from '@tanstack/react-query'
+import { authClient } from '~/auth-client'
 import { createToast } from '~/components/ui/createToast'
 import { TResetPasswordForm } from '~/schemas/reset-password/reset-password'
 
 interface ResetPasswordPayload extends TResetPasswordForm {
-  id: string
   token: string
 }
 
-export const postResetPassword = async ({ id, token, password }: ResetPasswordPayload): Promise<void> => {
-  const response = await fetch(`/api/accounts/students/password-reset-confirm/${id}/${token}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ new_password: password }),
+export const postResetPassword = async ({ token, password }: ResetPasswordPayload): Promise<void> => {
+  const result = await authClient.resetPassword({
+    newPassword: password,
+    token,
   })
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: 'Password reset failed' }))
-    throw new Error(errorData.error || 'Password reset failed')
+  if (result.error) {
+    throw new Error(result.error.message || 'Password reset failed')
   }
-
-  return response.json()
 }
 
 export const useResetPassword = () => {

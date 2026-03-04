@@ -1,67 +1,76 @@
-import { BetterAuthOptions, betterAuth } from 'better-auth'
+import { betterAuth } from 'better-auth'
+import { drizzleAdapter } from 'better-auth/adapters/drizzle'
+import { verifyPassword as verifyScryptPassword } from 'better-auth/crypto'
 import { nextCookies } from 'better-auth/next-js'
-import { customSession } from 'better-auth/plugins'
+import { magicLink } from 'better-auth/plugins'
 import { headers } from 'next/headers'
 import { cache } from 'react'
-import { externalAuthPlugin, type TUser } from '~/lib/external-auth-plugin'
+import { verifyDjangoPassword } from '~/lib/django-password'
+import { sendMagicLinkEmail, sendResetPasswordEmail, sendVerificationEmail } from '~/lib/email'
+import { db } from '~/server/db'
+import * as schema from '~/server/db/schema'
 
-export const ACCESS_TOKEN_EXPIRATION = 5 * 60 // 5 min
 export const oneDay = 24 * 60 * 60
 
-const options = {
+export const auth = betterAuth({
   secret: process.env.AUTH_SECRET,
   baseURL: process.env.BASE_URL,
   trustedOrigins: [process.env.BASE_URL!, 'http://localhost:3000'],
+  database: drizzleAdapter(db, { provider: 'pg', schema }),
   session: {
     expiresIn: oneDay,
     updateAge: oneDay,
-    freshAge: ACCESS_TOKEN_EXPIRATION,
-    cookieCache: {
-      enabled: true,
-      maxAge: oneDay,
-      strategy: 'jwe',
-      refreshCache: {
-        updateAge: 60,
+  },
+  emailAndPassword: {
+    enabled: true,
+    minPasswordLength: 12,
+    sendResetPassword: async ({ user, url }) => {
+      await sendResetPasswordEmail(user.email, url)
+    },
+    password: {
+      verify: async ({ hash, password }) => {
+        // 1. Try scrypt (better-auth default) first
+        const scryptMatch = await verifyScryptPassword({ hash, password }).catch(() => false)
+        if (scryptMatch) return true
+
+        // 2. If scrypt fails, try PBKDF2-SHA256 (Django format)
+        if (hash.startsWith('pbkdf2_sha256$')) {
+          const djangoMatch = verifyDjangoPassword(password, hash)
+          if (djangoMatch) {
+            // 3. Re-hash in scrypt will happen automatically —
+            // better-auth calls hash() after verify() returns true
+            // and updates account.password if the hash changed.
+            // We return true so better-auth proceeds with re-hashing.
+            return true
+          }
+        }
+
+        return false
       },
     },
-    storeSessionInDatabase: false,
   },
-  account: {
-    storeStateStrategy: 'cookie',
-    storeAccountCookie: true,
+  emailVerification: {
+    sendVerificationEmail: async ({ user, url }) => {
+      await sendVerificationEmail(user.email, url)
+    },
+    sendOnSignUp: true,
+    autoSignInAfterVerification: true,
   },
-  plugins: [externalAuthPlugin()],
-} satisfies BetterAuthOptions
-
-export const auth = betterAuth({
-  ...options,
   plugins: [
-    ...(options.plugins ?? []),
-    customSession(async ({ user, session }) => {
-      const sessionData = session as typeof session & {
-        accessToken: string
-        refreshToken: string
-        firstname: string
-        lastname: string
-        name: string
-        role: TUser['role']
-      }
-      return {
-        user: {
-          ...user,
-          firstname: sessionData.firstname,
-          lastname: sessionData.lastname,
-          role: sessionData.role,
-        },
-        session: {
-          ...session,
-          accessToken: sessionData.accessToken,
-          refreshToken: sessionData.refreshToken,
-        },
-      }
+    magicLink({
+      sendMagicLink: async ({ email, url }) => {
+        await sendMagicLinkEmail(email, url)
+      },
     }),
     nextCookies(),
   ],
+  user: {
+    additionalFields: {
+      firstname: { type: 'string', defaultValue: '', input: true },
+      lastname: { type: 'string', defaultValue: '', input: true },
+      role: { type: 'string', defaultValue: 'user', input: false },
+    },
+  },
 })
 
 export const getServerSession = cache(async () => {

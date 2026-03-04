@@ -20,7 +20,7 @@ import mmn from '~/images/mmn.svg'
 import prepareBudget from '~/images/prepare-budget.webp'
 import sogima from '~/images/sogima.svg'
 import studefi from '~/images/studefi.svg'
-import { getPopularCities } from '~/server-only/get-popular-cities'
+import { getPopularCities } from '~/server/territories/get-popular-cities'
 import styles from './home.module.css'
 
 export const generateMetadata = async () => {

@@ -4,7 +4,7 @@ import Button from '@codegouvfr/react-dsfr/Button'
 import { signOut } from '~/auth-client'
 import { createToast } from '~/components/ui/createToast'
 import { Dropdown } from '~/components/ui/dropdown'
-import { TUser } from '~/lib/external-auth-plugin'
+import { TUser } from '~/lib/types'
 
 export const UserConnectedDropdown = ({ user }: { user: TUser }) => {
   const handleSignout = async () => {

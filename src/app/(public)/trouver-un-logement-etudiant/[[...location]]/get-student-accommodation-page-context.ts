@@ -4,9 +4,9 @@ import { cache } from 'react'
 import { getServerSession } from '~/auth'
 import { expandBbox } from '~/components/map/map-utils'
 import { TTerritories, TTerritory } from '~/schemas/territories'
+import { prefetchAccommodations } from '~/server/accommodations/get-accommodations'
+import { getTerritories } from '~/server/territories/get-territories'
 import { getQueryClient, trpc } from '~/server/trpc/server'
-import { prefetchAccommodations } from '~/server-only/get-accommodations'
-import { getTerritories } from '~/server-only/get-territories'
 
 const getTerritoriesCategoryKey = (categoryKey: 'ville' | 'academie' | 'departement') => {
   const keys = {

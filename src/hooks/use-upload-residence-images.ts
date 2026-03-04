@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { createToast } from '~/components/ui/createToast'
 import { trackEvent } from '~/lib/tracking'
+import { useTRPC, useTRPCClient } from '~/server/trpc/client'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
@@ -11,7 +12,7 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 export const validateFiles = (files: File[]): string | null => {
   for (const file of files) {
     if (!ALLOWED_TYPES.includes(file.type)) {
-      return `Type de fichier non supporté: ${file.name}. Types acceptés: JPEG, PNG, WebP`
+      return `Type de fichier non supporte: ${file.name}. Types acceptes: JPEG, PNG, WebP`
     }
 
     if (file.size > MAX_FILE_SIZE) {
@@ -24,6 +25,8 @@ export const validateFiles = (files: File[]): string | null => {
 export const useUploadResidenceImages = (slug: string, name: string) => {
   const queryClient = useQueryClient()
   const router = useRouter()
+  const trpc = useTRPC()
+  const trpcClient = useTRPCClient()
 
   return useMutation({
     mutationFn: async ({ files, currentImages }: { files: File[]; currentImages: string[] }) => {
@@ -51,29 +54,24 @@ export const useUploadResidenceImages = (slug: string, name: string) => {
       const newImageUrls = uploadData.images_urls || []
       const allImages = [...currentImages, ...newImageUrls]
 
-      const patchResponse = await fetch(`/api/accommodations/my/${slug}?type=details`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ images_urls: allImages, name }),
+      // Save image URLs via tRPC update
+      await trpcClient.bailleur.update.mutate({
+        slug,
+        images_urls: allImages,
+        name,
       })
-
-      if (!patchResponse.ok) {
-        throw new Error('Failed to save image URLs to accommodation')
-      }
 
       return { images_urls: allImages }
     },
-    onSuccess: async (_data, variables) => {
+    onSuccess: async () => {
       trackEvent({ category: 'Espace Gestionnaire', action: 'upload images', name: slug })
       await queryClient.refetchQueries({
-        queryKey: ['my-accommodations'],
+        queryKey: trpc.bailleur.list.queryKey(),
         exact: false,
       })
       createToast({
         priority: 'success',
-        message: 'Images uploadées avec succès',
+        message: 'Images uploadees avec succes',
       })
       router.refresh()
     },
@@ -89,28 +87,22 @@ export const useUploadResidenceImages = (slug: string, name: string) => {
 export const useDeleteResidenceImage = (slug: string, name: string) => {
   const queryClient = useQueryClient()
   const router = useRouter()
+  const trpc = useTRPC()
+  const trpcClient = useTRPCClient()
 
   return useMutation({
     mutationFn: async (remainingImages: string[]) => {
-      const response = await fetch(`/api/accommodations/my/${slug}?type=details`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ images_urls: remainingImages, name }),
+      return trpcClient.bailleur.update.mutate({
+        slug,
+        images_urls: remainingImages,
+        name,
       })
-
-      if (!response.ok) {
-        throw new Error('Failed to delete image')
-      }
-
-      return response.json()
     },
     onSuccess: () => {
-      queryClient.refetchQueries({ queryKey: ['my-accommodations'] })
+      queryClient.refetchQueries({ queryKey: trpc.bailleur.list.queryKey() })
       createToast({
         priority: 'success',
-        message: 'Image supprimée avec succès',
+        message: 'Image supprimee avec succes',
       })
       router.refresh()
     },

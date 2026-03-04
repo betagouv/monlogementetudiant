@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useCreateFavorite } from '~/hooks/use-create-favorite'
 import { useDeleteFavorite } from '~/hooks/use-delete-favorite'
 import { useFavorites } from '~/hooks/use-favorites'
-import { TUser } from '~/lib/external-auth-plugin'
 import { trackEvent } from '~/lib/tracking'
+import { TUser } from '~/lib/types'
 
 export const FAVORITE_BUTTON_TITLES = {
   ADD: 'Enregistrer en favoris',
