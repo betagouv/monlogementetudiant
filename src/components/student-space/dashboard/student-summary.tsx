@@ -1,7 +1,7 @@
 import Tile from '@codegouvfr/react-dsfr/Tile'
 import { getTranslations } from 'next-intl/server'
-import { getAlerts } from '~/server-only/student/get-alerts'
-import { getFavorites } from '~/server-only/student/get-favorites'
+import { getAlerts } from '~/server/student/get-alerts'
+import { getFavorites } from '~/server/student/get-favorites'
 import styles from './student-summary.module.css'
 
 export const StudentSummary = async () => {

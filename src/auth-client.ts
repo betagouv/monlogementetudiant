@@ -1,43 +1,33 @@
-import { customSessionClient } from 'better-auth/client/plugins'
+import { inferAdditionalFields, magicLinkClient } from 'better-auth/client/plugins'
 import { createAuthClient } from 'better-auth/react'
 import type { auth } from '~/auth'
 import { trackEvent } from '~/lib/tracking'
 
 export const authClient = createAuthClient({
-  plugins: [customSessionClient<typeof auth>()],
+  plugins: [magicLinkClient(), inferAdditionalFields<typeof auth>()],
 })
 
 export async function signInCredentials(email: string, password: string, callbackUrl = '/mon-espace') {
-  const response = await fetch('/api/auth/external-auth/signin/credentials', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password, callbackUrl }),
-  })
+  const result = await authClient.signIn.email({ email, password, callbackURL: callbackUrl })
 
-  const data = await response.json()
-
-  if (!response.ok || data.error) {
-    return { error: data.error || 'Authentication failed' }
+  if (result.error) {
+    return { error: result.error.message || 'Authentication failed' }
   }
 
-  return { success: true, callbackUrl: data.callbackUrl, user: data.user }
+  return { success: true, callbackUrl, user: result.data?.user }
 }
 
 export async function signOut(options: { callbackUrl?: string; redirect?: boolean } = {}) {
   const { callbackUrl = '/', redirect = true } = options
   trackEvent({ category: 'Authentification', action: 'deconnexion' })
 
-  const response = await fetch('/api/auth/external-auth/signout', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ callbackUrl }),
-  })
+  await authClient.signOut()
 
-  const data = await response.json()
-
-  if (redirect && data.callbackUrl) {
-    window.location.href = data.callbackUrl
+  if (redirect) {
+    window.location.href = callbackUrl
   }
 
   return { success: true }
 }
+
+export type AuthClient = typeof authClient

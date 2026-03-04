@@ -2,7 +2,7 @@ import Footer, { type FooterProps } from '@codegouvfr/react-dsfr/Footer'
 import { getTranslations } from 'next-intl/server'
 import { expandBbox } from '~/components/map/map-utils'
 import { BrandTop } from '~/components/ui/brand-top'
-import { getPopularCities } from '~/server-only/get-popular-cities'
+import { getPopularCities } from '~/server/territories/get-popular-cities'
 import styles from './footer.module.css'
 
 export const CommonFooter = async () => {

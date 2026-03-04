@@ -1,4 +1,4 @@
-import { TUser } from '~/lib/external-auth-plugin'
+import { TUser } from '~/lib/types'
 
 export const StudentWelcome = ({ user }: { user: TUser }) => (
   <div className="fr-border-right fr-border-top fr-border-bottom fr-px-6w fr-py-5w">

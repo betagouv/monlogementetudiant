@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { TUser } from '~/lib/external-auth-plugin'
+import { TUser } from '~/lib/types'
 import { useTRPC } from '~/server/trpc/client'
 
 export const useFavorites = (user?: TUser) => {
