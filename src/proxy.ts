@@ -16,7 +16,6 @@ const AUTHENTICATED_ROUTES = [
   '/mon-espace',
   // API routes using access token
   '/api/accommodations/my',
-  '/api/accommodations/favorites',
 ]
 
 export const config = {

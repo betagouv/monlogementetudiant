@@ -7,7 +7,7 @@ import { getGlobalQuestionsAnswers } from '~/server-only/get-global-questions-an
 import styles from './simuler-mes-aides-au-logement.module.css'
 
 export default async function SimulateAccommodationAids() {
-  const qa = await getGlobalQuestionsAnswers()
+  const questionsAnswers = await getGlobalQuestionsAnswers()
   return (
     <>
       <WrapperSimulator />
@@ -28,7 +28,7 @@ export default async function SimulateAccommodationAids() {
             </div>
             <div className={fr.cx('fr-col-md-8')}>
               <div className={clsx(fr.cx('fr-accordions-group'), styles.faqContent)}>
-                {qa.map((qa, index) => (
+                {questionsAnswers.map((qa, index) => (
                   <Accordion key={index} label={qa.title_fr}>
                     <div dangerouslySetInnerHTML={{ __html: qa.content_fr }} />
                   </Accordion>

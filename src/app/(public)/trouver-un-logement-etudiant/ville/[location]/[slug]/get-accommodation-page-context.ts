@@ -3,12 +3,11 @@ import { cache } from 'react'
 import { getServerSession } from '~/auth'
 import { expandBbox } from '~/components/map/map-utils'
 import { TTerritories } from '~/schemas/territories'
-import { getQueryClient } from '~/server/trpc/server'
+import { getQueryClient, trpc } from '~/server/trpc/server'
 import { getAccommodationById } from '~/server-only/get-accommodation-by-id'
 import { getAccommodations } from '~/server-only/get-accommodations'
 import { getCityDetails } from '~/server-only/get-city-details'
 import { getTerritories } from '~/server-only/get-territories'
-import { prefetchFavorites } from '~/server-only/student/get-favorites'
 import { calculateAvailability } from '~/utils/calculateAvailability'
 
 export const getAccommodationPageContext = cache(async (slug: string, location: string) => {
@@ -33,7 +32,7 @@ export const getAccommodationPageContext = cache(async (slug: string, location: 
   const queryClient = getQueryClient()
   const [nearbyAccommodations] = await Promise.all([
     getAccommodations({ center: `${longitude},${latitude}` }),
-    prefetchFavorites(queryClient),
+    queryClient.prefetchQuery(trpc.favorites.list.queryOptions()),
   ])
 
   const nbAvailable = calculateAvailability({
