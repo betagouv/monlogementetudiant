@@ -1,11 +1,18 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from '~/auth'
+import { generateAccommodationKey, uploadFile } from '~/server/services/s3'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
+const MIME_TO_EXT: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+}
+
 export async function POST(request: Request, { params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params
+  await params
   const auth = await getServerSession()
   if (!auth || !auth.session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -24,26 +31,17 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
       }
     }
 
-    const backendFormData = new FormData()
-    files.forEach((file) => {
-      backendFormData.append('images', file)
-    })
+    const imagesUrls: string[] = []
 
-    const response = await fetch(`${process.env.API_URL}/accommodations/my/${slug}/upload/`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${auth.session.accessToken}`,
-      },
-      body: backendFormData,
-    })
-
-    if (!response.ok) {
-      const errorData = await response.text()
-      return NextResponse.json({ error: `Failed to upload images: ${errorData}` }, { status: response.status })
+    for (const file of files) {
+      const buffer = Buffer.from(await file.arrayBuffer())
+      const ext = MIME_TO_EXT[file.type] ?? 'jpg'
+      const key = generateAccommodationKey(ext)
+      const url = await uploadFile({ key, body: buffer, contentType: file.type })
+      imagesUrls.push(url)
     }
 
-    const data = await response.json()
-    return NextResponse.json(data)
+    return NextResponse.json({ images_urls: imagesUrls })
   } catch (error) {
     if (error instanceof Error) {
       return NextResponse.json({ error: error.message }, { status: 400 })

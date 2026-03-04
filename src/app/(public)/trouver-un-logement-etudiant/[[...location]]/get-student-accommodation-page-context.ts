@@ -4,10 +4,9 @@ import { cache } from 'react'
 import { getServerSession } from '~/auth'
 import { expandBbox } from '~/components/map/map-utils'
 import { TTerritories, TTerritory } from '~/schemas/territories'
-import { getQueryClient } from '~/server/trpc/server'
+import { getQueryClient, trpc } from '~/server/trpc/server'
 import { prefetchAccommodations } from '~/server-only/get-accommodations'
 import { getTerritories } from '~/server-only/get-territories'
-import { prefetchFavorites } from '~/server-only/student/get-favorites'
 
 const getTerritoriesCategoryKey = (categoryKey: 'ville' | 'academie' | 'departement') => {
   const keys = {
@@ -51,7 +50,7 @@ export const getStudentAccommodationPageContext = cache(
     const queryClient = getQueryClient()
     const [, , session] = await Promise.all([
       prefetchAccommodations(awaitedSearchParams, { bbox: serverBbox, academie: serverAcademie }, queryClient),
-      prefetchFavorites(queryClient),
+      queryClient.prefetchQuery(trpc.favorites.list.queryOptions()),
       getServerSession(),
     ])
 
