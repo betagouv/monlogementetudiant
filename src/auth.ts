@@ -6,9 +6,9 @@ import { magicLink } from 'better-auth/plugins'
 import { headers } from 'next/headers'
 import { cache } from 'react'
 import { verifyDjangoPassword } from '~/lib/django-password'
-import { sendMagicLinkEmail, sendResetPasswordEmail, sendVerificationEmail } from '~/lib/email'
 import { db } from '~/server/db'
 import * as schema from '~/server/db/schema'
+import { sendMagicLinkEmail, sendResetPasswordEmail, sendVerificationEmail } from '~/server/services/brevo'
 
 export const oneDay = 24 * 60 * 60
 
@@ -69,6 +69,7 @@ export const auth = betterAuth({
       firstname: { type: 'string', defaultValue: '', input: true },
       lastname: { type: 'string', defaultValue: '', input: true },
       role: { type: 'string', defaultValue: 'user', input: false },
+      legacyUser: { type: 'boolean', defaultValue: false, input: false },
     },
   },
 })

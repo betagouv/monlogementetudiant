@@ -45,6 +45,8 @@ export async function cleanTables() {
       accommodation_favoriteaccommodation,
       newsletter_subscription,
       student_alert,
+      stats_stats,
+      stats_eventstats,
       "user",
       "session",
       "account",

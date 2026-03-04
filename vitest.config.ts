@@ -19,8 +19,8 @@ export default defineConfig({
         },
         test: {
           name: 'unit',
-          include: ['src/**/*.test.ts'],
-          exclude: ['src/**/*.integration.test.ts'],
+          include: ['src/**/*.test.ts', 'cli/**/*.test.ts'],
+          exclude: ['src/**/*.integration.test.ts', 'cli/**/*.integration.test.ts'],
         },
       },
       {
@@ -32,7 +32,7 @@ export default defineConfig({
         },
         test: {
           name: 'integration',
-          include: ['src/**/*.integration.test.ts'],
+          include: ['src/**/*.integration.test.ts', 'cli/**/*.integration.test.ts'],
           testTimeout: 30_000,
           hookTimeout: 60_000,
           setupFiles: ['src/__tests__/helpers/setup-integration.ts'],
