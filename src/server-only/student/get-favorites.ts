@@ -1,51 +1,20 @@
-import { dehydrate, QueryClient } from '@tanstack/react-query'
 import { getServerSession } from '~/auth'
-import { favoritesQueryKey } from '~/hooks/use-favorites'
-import { TGetFavoritesResponse } from '~/schemas/favorites/get-favorites'
+import { getQueryClient, trpc } from '~/server/trpc/server'
 
-export const getFavorites = async (): Promise<TGetFavoritesResponse> => {
+export const getFavorites = async () => {
   const auth = await getServerSession()
   if (!auth || !auth.session || !auth.session.accessToken) {
     return {
       count: 0,
-      results: [],
-      next: null,
-      previous: null,
-      page_size: 0,
+      results: [] as Awaited<ReturnType<typeof fetchFavorites>>,
     }
   }
 
-  const response = await fetch(`${process.env.API_URL}/accommodations/favorites/`, {
-    cache: 'no-store',
-    headers: {
-      Authorization: `Bearer ${auth.session.accessToken}`,
-      'Content-Type': 'application/json',
-    },
-  })
-
-  if (!response.ok) {
-    return {
-      count: 0,
-      results: [],
-      next: null,
-      previous: null,
-      page_size: 0,
-    }
+  const favorites = await fetchFavorites()
+  return {
+    count: favorites.length,
+    results: favorites,
   }
-
-  const data = await response.json()
-
-  return data as TGetFavoritesResponse
 }
 
-export const prefetchFavorites = async (queryClient?: QueryClient) => {
-  const auth = await getServerSession()
-  const client = queryClient ?? new QueryClient()
-
-  await client.prefetchQuery({
-    queryKey: favoritesQueryKey(auth?.user?.id),
-    queryFn: () => getFavorites(),
-  })
-
-  return dehydrate(client)
-}
+const fetchFavorites = () => getQueryClient().fetchQuery(trpc.favorites.list.queryOptions())

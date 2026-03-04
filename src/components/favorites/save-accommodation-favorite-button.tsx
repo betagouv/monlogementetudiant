@@ -1,15 +1,12 @@
 'use client'
 
 import Button from '@codegouvfr/react-dsfr/Button'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
-import { useForm } from 'react-hook-form'
 import { useCreateFavorite } from '~/hooks/use-create-favorite'
 import { useDeleteFavorite } from '~/hooks/use-delete-favorite'
 import { useFavorites } from '~/hooks/use-favorites'
 import { TUser } from '~/lib/external-auth-plugin'
 import { trackEvent } from '~/lib/tracking'
-import { TPostFavorite, ZPostFavorite } from '~/schemas/favorites/create-favorite'
 
 export const FAVORITE_BUTTON_TITLES = {
   ADD: 'Enregistrer en favoris',
@@ -21,13 +18,6 @@ export const SaveAccommodationFavoriteButton = ({ slug, withLabel = false, user 
 
   const { data: favorites } = useFavorites(user)
 
-  const { getValues } = useForm<TPostFavorite>({
-    defaultValues: {
-      accommodation_slug: slug,
-    },
-    resolver: zodResolver(ZPostFavorite),
-  })
-
   const { mutateAsync, isLoading } = useCreateFavorite()
   const { mutateAsync: mutationDelete, isLoading: isLoadingDelete } = useDeleteFavorite()
 
@@ -36,15 +26,15 @@ export const SaveAccommodationFavoriteButton = ({ slug, withLabel = false, user 
       router.push('/s-inscrire')
       return
     }
-    await mutateAsync(getValues())
+    await mutateAsync({ accommodationSlug: slug })
     trackEvent({ category: 'Favoris', action: 'ajout favori', name: slug })
   }
   const handleDelete = async () => {
-    await mutationDelete(slug)
+    await mutationDelete({ slug })
     trackEvent({ category: 'Favoris', action: 'suppression favori', name: slug })
   }
 
-  if (favorites?.results.find((favorite) => favorite.accommodation.properties.slug === slug)) {
+  if (favorites?.find((favorite) => favorite.accommodation.properties.slug === slug)) {
     if (withLabel) {
       return (
         <Button
