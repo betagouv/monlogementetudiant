@@ -12,6 +12,7 @@ export const user = pgTable('user', {
   firstname: text().notNull().default(''),
   lastname: text().notNull().default(''),
   role: text().notNull().default('user'), // 'user' | 'owner' | 'admin'
+  legacyUser: boolean('legacy_user').notNull().default(false),
 })
 
 export const session = pgTable('session', {

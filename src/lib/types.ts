@@ -7,4 +7,5 @@ export interface TUser {
   lastname: string
   name: string
   role: string
+  legacyUser: boolean
 }

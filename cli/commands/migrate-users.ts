@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs'
 import { randomUUID } from 'crypto'
-import { eq } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import * as schema from '../../src/server/db/schema'
@@ -48,6 +48,7 @@ export async function migrateUsers(opts: { file: string }) {
         firstname: djangoUser.first_name || '',
         lastname: djangoUser.last_name || '',
         role: djangoUser.role || 'user',
+        legacyUser: true,
         createdAt: new Date(djangoUser.date_joined),
         updatedAt: new Date(),
       }).onConflictDoNothing()
@@ -88,6 +89,15 @@ export async function migrateUsers(opts: { file: string }) {
     }
   }
   console.log(`✓ ${linked} owners liés`)
+
+  // Flag students from Django account_student table
+  console.log('🎓 Liaison des étudiants...')
+  const studentResult = await db.execute(sql`
+    UPDATE "user" SET role = 'student'
+    WHERE id IN (SELECT user_id::text FROM account_student)
+    AND role = 'user'
+  `)
+  console.log(`✓ ${studentResult.count} étudiants flaggés`)
 
   await conn.end()
   console.log('\n✓ Migration terminée !')
