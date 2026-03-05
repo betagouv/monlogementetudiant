@@ -11,8 +11,8 @@ import { cities } from '~/server/db/schema/cities'
 import { departments } from '~/server/db/schema/departments'
 import { newsletterSubscriptions } from '~/server/db/schema/newsletter-subscriptions'
 import { normalizeCitySearch, tokenizeQuery } from '~/server/utils/normalize-city-search'
-import { baseProcedure, createTRPCRouter } from '../init'
 import { sortCitiesByRelevance } from '~/server/utils/sort-cities-by-relevance'
+import { baseProcedure, createTRPCRouter } from '../init'
 
 let rentDataCache: Record<string, number> | null = null
 

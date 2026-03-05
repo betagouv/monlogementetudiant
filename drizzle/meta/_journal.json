@@ -71,6 +71,13 @@
       "when": 1772960000000,
       "tag": "0011_set_default_now",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1773000000000,
+      "tag": "0012_add-owner-id-to-user",
+      "breakpoints": true
     }
   ]
 }

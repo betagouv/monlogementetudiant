@@ -5,6 +5,7 @@ import { ETargetAudience } from '~/enums/target-audience'
 import { TAccomodationMy } from '~/schemas/accommodations/accommodations'
 import { db } from '~/server/db'
 import { accommodations } from '~/server/db/schema/accommodations'
+import { user } from '~/server/db/schema/auth'
 import { owners } from '~/server/db/schema/owners'
 import { getServerSession } from '~/services/better-auth'
 
@@ -27,7 +28,8 @@ export const getAccommodationMyById = async (slug: string): Promise<TAccomodatio
 
   const userId = auth.user.id
 
-  const [owner] = await db.select().from(owners).where(eq(owners.userId, userId)).limit(1)
+  const usr = await db.query.user.findFirst({ where: eq(user.id, userId), with: { owner: true } })
+  const owner = usr?.owner
   if (!owner) {
     return notFound()
   }

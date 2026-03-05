@@ -1,4 +1,4 @@
-import { sql } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 import { academies } from '../../server/db/schema/academies'
 import { accommodations } from '../../server/db/schema/accommodations'
 import { user } from '../../server/db/schema/auth'
@@ -80,16 +80,23 @@ export async function createCity(overrides: Omit<Partial<CityInsert>, 'departmen
   return row
 }
 
-export async function createOwner(overrides: Partial<OwnerInsert> = {}) {
+export async function createOwner(overrides: Partial<OwnerInsert> & { userId?: string } = {}) {
   const db = getTestDb()
+  const { userId, ...ownerFields } = overrides
   const [row] = await db
     .insert(owners)
     .values({
       name: 'Bailleur Test',
       slug: 'bailleur-test',
-      ...overrides,
+      ...ownerFields,
     })
     .returning()
+
+  // Link user to owner if userId provided
+  if (userId && row) {
+    await db.update(user).set({ ownerId: row.id }).where(eq(user.id, userId))
+  }
+
   return row
 }
 
