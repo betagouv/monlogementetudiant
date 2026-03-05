@@ -2,9 +2,6 @@ import { execSync } from 'child_process'
 import { existsSync, readdirSync, rmSync, statSync } from 'fs'
 import { mkdir } from 'fs/promises'
 import path from 'path'
-import { drizzle } from 'drizzle-orm/postgres-js'
-import { migrate } from 'drizzle-orm/postgres-js/migrator'
-import postgres from 'postgres'
 import { ScalingoBackupService } from '../lib/scalingo-backup'
 import { cleanDatabase, ensureExtensions, restoreBackup } from '../lib/db-utils'
 
@@ -82,13 +79,8 @@ export async function importBackup(opts: ImportBackupOpts) {
   restoreBackup(databaseUrl, dumpFile)
   console.log('✓ Backup restauré avec succès')
 
-  // Apply Drizzle migrations to bring schema up to date
-  console.log('→ Application des migrations Drizzle...')
-  const migrationConn = postgres(databaseUrl, { prepare: false, max: 1 })
-  const db = drizzle(migrationConn)
-  await migrate(db, { migrationsFolder: './drizzle' })
-  await migrationConn.end()
-  console.log('✓ Migrations appliquées')
+  // Note: Drizzle migrations are NOT applied here.
+  // Workflow: import-backup → migrate-users → pnpm drizzle-kit migrate
 
   // Clean up extracted files (keep the archive for --skip-download)
   rmSync(extractDir, { recursive: true, force: true })

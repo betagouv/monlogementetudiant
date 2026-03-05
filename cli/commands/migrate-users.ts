@@ -1,6 +1,7 @@
-import { randomUUID } from 'crypto'
+import { generateId } from 'better-auth'
 import { sql } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
+import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
 import * as schema from '../../src/server/db/schema'
 
@@ -25,6 +26,13 @@ export async function migrateUsers() {
 
   console.log("✓ Variables d'environnement chargées")
 
+  // Apply Drizzle migrations (0000-0009) before user migration
+  console.log('→ Application des migrations Drizzle (pré-cleanup)...')
+  const migrationConn = postgres(databaseUrl, { prepare: false, max: 1 })
+  await migrate(drizzle(migrationConn), { migrationsFolder: './drizzle' })
+  await migrationConn.end()
+  console.log('✓ Migrations appliquées')
+
   const conn = postgres(databaseUrl, { prepare: false })
   const db = drizzle(conn, { schema })
 
@@ -42,7 +50,7 @@ export async function migrateUsers() {
     const name = `${djangoUser.first_name} ${djangoUser.last_name}`.trim() || djangoUser.email
 
     try {
-      const newId = randomUUID()
+      const newId = generateId()
       const inserted = await db.insert(schema.user).values({
         id: newId,
         legacyId: Number(djangoUser.id),
@@ -59,7 +67,7 @@ export async function migrateUsers() {
 
       if (inserted.length > 0) {
         await db.insert(schema.account).values({
-          id: randomUUID(),
+          id: generateId(),
           userId: inserted[0].id,
           accountId: djangoUser.email,
           providerId: 'credential',
@@ -147,6 +155,39 @@ export async function migrateUsers() {
     AND role = 'user'
   `)
   console.log(`✓ ${studentResult.count} étudiants flaggés`)
+
+  // Cleanup: drop Django legacy tables
+  console.log('→ Suppression des tables Django...')
+  await db.execute(sql`
+    DROP TABLE IF EXISTS "auth_user_user_permissions" CASCADE;
+    DROP TABLE IF EXISTS "auth_user_groups" CASCADE;
+    DROP TABLE IF EXISTS "auth_group_permissions" CASCADE;
+    DROP TABLE IF EXISTS "auth_permission" CASCADE;
+    DROP TABLE IF EXISTS "auth_group" CASCADE;
+    DROP TABLE IF EXISTS "account_owner_users" CASCADE;
+    DROP TABLE IF EXISTS "account_student" CASCADE;
+    DROP TABLE IF EXISTS "account_studentregistrationtoken" CASCADE;
+    DROP TABLE IF EXISTS "auth_user" CASCADE;
+    DROP TABLE IF EXISTS "django_admin_log" CASCADE;
+    DROP TABLE IF EXISTS "django_session" CASCADE;
+    DROP TABLE IF EXISTS "django_migrations" CASCADE;
+    DROP TABLE IF EXISTS "django_summernote_attachment" CASCADE;
+    DROP TABLE IF EXISTS "token_blacklist_blacklistedtoken" CASCADE;
+    DROP TABLE IF EXISTS "token_blacklist_outstandingtoken" CASCADE;
+    DROP TABLE IF EXISTS "admin_two_factor_twofactorverification" CASCADE;
+    DROP TABLE IF EXISTS "accommodation_accommodationapplication" CASCADE;
+    DROP TABLE IF EXISTS "alerts_accommodationalert" CASCADE;
+    DROP TABLE IF EXISTS "dossier_facile_dossierfacileapplication" CASCADE;
+    DROP TABLE IF EXISTS "dossier_facile_dossierfacileoauthstate" CASCADE;
+    DROP TABLE IF EXISTS "dossier_facile_dossierfaciletenant" CASCADE;
+    DROP TABLE IF EXISTS "institution_educationalinstitution" CASCADE;
+    DROP TABLE IF EXISTS "qa_questionanswer" CASCADE;
+    DROP TABLE IF EXISTS "qa_questionanswerglobal" CASCADE;
+    DROP TABLE IF EXISTS "stats_accommodationchangelog" CASCADE;
+    DROP TABLE IF EXISTS "stats_gestionnaireloginevent" CASCADE;
+    DROP TABLE IF EXISTS "territories_country" CASCADE
+  `)
+  console.log('✓ Tables Django supprimées')
 
   await conn.end()
   console.log('\n✓ Migration terminée !')

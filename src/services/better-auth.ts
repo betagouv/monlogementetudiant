@@ -1,8 +1,9 @@
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
-import { verifyPassword as verifyScryptPassword } from 'better-auth/crypto'
+import { hashPassword, verifyPassword as verifyScryptPassword } from 'better-auth/crypto'
 import { nextCookies } from 'better-auth/next-js'
 import { magicLink } from 'better-auth/plugins'
+import { and, eq } from 'drizzle-orm'
 import { headers } from 'next/headers'
 import { cache } from 'react'
 import { verifyDjangoPassword } from '~/lib/django-password'
@@ -37,10 +38,12 @@ export const auth = betterAuth({
         if (hash.startsWith('pbkdf2_sha256$')) {
           const djangoMatch = verifyDjangoPassword(password, hash)
           if (djangoMatch) {
-            // 3. Re-hash in scrypt will happen automatically —
-            // better-auth calls hash() after verify() returns true
-            // and updates account.password if the hash changed.
-            // We return true so better-auth proceeds with re-hashing.
+            // Rehash to scrypt — better-auth does NOT do this automatically
+            const newHash = await hashPassword(password)
+            await db
+              .update(schema.account)
+              .set({ password: newHash })
+              .where(and(eq(schema.account.password, hash), eq(schema.account.providerId, 'credential')))
             return true
           }
         }
