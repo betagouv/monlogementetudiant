@@ -9,5 +9,15 @@ export { favoriteAccommodations } from './favorite-accommodations'
 export { newsletterSubscriptions } from './newsletter-subscriptions'
 export { owners } from './owners'
 export { questionsAnswers } from './questions-answers'
+export {
+  academiesRelations,
+  accommodationsRelations,
+  citiesRelations,
+  departmentsRelations,
+  externalSourcesRelations,
+  favoriteAccommodationsRelations,
+  ownersRelations,
+  studentAlertsRelations,
+} from './relations'
 export { stats } from './stats'
 export { studentAlerts } from './student-alerts'

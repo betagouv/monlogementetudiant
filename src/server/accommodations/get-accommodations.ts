@@ -1,4 +1,4 @@
-import { dehydrate, QueryClient } from '@tanstack/react-query'
+import { dehydrate, type QueryClient } from '@tanstack/react-query'
 import { accommodationsSearchParamsCache } from '~/lib/accommodations-search-params'
 import { getQueryClient, trpc } from '~/server/trpc/server'
 
@@ -51,7 +51,7 @@ export const prefetchAccommodations = async (
     academyId: queryKeyParams.academie ? Number(queryKeyParams.academie) : undefined,
   }
 
-  const client = queryClient ?? new QueryClient()
+  const client = queryClient ?? getQueryClient()
   await client.prefetchQuery(trpc.accommodations.list.queryOptions(queryInput))
 
   const hasOverrides =
