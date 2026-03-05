@@ -49,6 +49,24 @@ export async function cleanDatabase(databaseUrl: string): Promise<void> {
     console.log(`  ✓ ${functions.length} fonctions supprimées`)
   }
 
+  // Drop custom text search configurations (e.g. french_unaccent from prod)
+  const tsConfigs = await sql`
+    SELECT cfgname FROM pg_ts_config
+    WHERE cfgnamespace = 'public'::regnamespace
+  `
+  for (const c of tsConfigs) {
+    await sql.unsafe(`DROP TEXT SEARCH CONFIGURATION IF EXISTS "public"."${c.cfgname}" CASCADE`)
+  }
+  if (tsConfigs.length > 0) {
+    console.log(`  ✓ ${tsConfigs.length} text search configs supprimées`)
+  }
+
+  // Drop non-PostGIS extensions so ensureExtensions can recreate them cleanly
+  // (avoids stale state where extension "exists" but its functions were dropped)
+  await sql.unsafe(`DROP EXTENSION IF EXISTS "unaccent" CASCADE`)
+  await sql.unsafe(`DROP EXTENSION IF EXISTS "pg_trgm" CASCADE`)
+  console.log('  ✓ Extensions unaccent/pg_trgm supprimées')
+
   await sql.end()
 }
 
@@ -67,7 +85,7 @@ export async function ensureExtensions(databaseUrl: string): Promise<void> {
 export function restoreBackup(databaseUrl: string, dumpPath: string): void {
   try {
     execSync(
-      `pg_restore --clean --if-exists --no-owner --no-privileges -d "${databaseUrl}" "${dumpPath}"`,
+      `pg_restore --no-owner --no-privileges -d "${databaseUrl}" "${dumpPath}"`,
       { stdio: 'inherit' }
     )
   } catch {
