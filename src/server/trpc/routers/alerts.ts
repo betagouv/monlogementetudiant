@@ -1,4 +1,4 @@
-import { type AnyColumn, and, eq, sql } from 'drizzle-orm'
+import { type AnyColumn, and, eq, inArray, type SQL, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { ZCreateAlertRequest } from '~/schemas/alerts/create-alert'
 import { ZUpdateAlertRequest } from '~/schemas/alerts/update-alert'
@@ -20,15 +20,17 @@ const bboxSelect = (table: { boundary: AnyColumn }) =>
     )
   `
 
-function countQuery(alert: {
+type AlertMatchInput = {
   cityId: number | null
   departmentId: number | null
   academyId: number | null
   hasColiving: boolean
   isAccessible: boolean
   maxPrice: number
-}) {
-  const conditions = [eq(accommodations.published, true), sql`${accommodations.priceMin} <= ${alert.maxPrice}`]
+}
+
+function buildAlertMatchConditions(alert: AlertMatchInput): SQL[] {
+  const conditions: SQL[] = [eq(accommodations.published, true), sql`${accommodations.priceMin} <= ${alert.maxPrice}`]
 
   if (alert.hasColiving) {
     conditions.push(sql`${accommodations.nbColivingApartments} > 0`)
@@ -51,10 +53,14 @@ function countQuery(alert: {
     )
   }
 
+  return conditions
+}
+
+function countQuery(alert: AlertMatchInput) {
   return db
     .select({ count: sql<number>`count(*)::int` })
     .from(accommodations)
-    .where(and(...conditions))
+    .where(and(...buildAlertMatchConditions(alert)))
 }
 
 export const alertsRouter = createTRPCRouter({
@@ -76,14 +82,13 @@ export const alertsRouter = createTRPCRouter({
       .from(studentAlerts)
       .where(eq(studentAlerts.userId, userId))
 
-    const results = await Promise.all(
-      alerts.map(async (alert) => {
-        const [countResult] = await countQuery(alert)
-        const count = countResult?.count ?? 0
+    const cityIds = [...new Set(alerts.map((a) => a.cityId).filter((id): id is number => id != null))]
+    const deptIds = [...new Set([...alerts.map((a) => a.departmentId).filter((id): id is number => id != null)])]
+    const academyIds = [...new Set(alerts.map((a) => a.academyId).filter((id): id is number => id != null))]
 
-        let city = null
-        if (alert.cityId) {
-          const [c] = await db
+    const [cityRows, deptRows, academyRows] = await Promise.all([
+      cityIds.length > 0
+        ? db
             .select({
               id: cities.id,
               name: cities.name,
@@ -92,19 +97,62 @@ export const alertsRouter = createTRPCRouter({
               departmentId: cities.departmentId,
             })
             .from(cities)
-            .where(eq(cities.id, alert.cityId))
+            .where(inArray(cities.id, cityIds))
+        : [],
+      deptIds.length > 0
+        ? db
+            .select({
+              id: departments.id,
+              name: departments.name,
+              code: departments.code,
+              bbox: bboxSelect(departments),
+            })
+            .from(departments)
+            .where(inArray(departments.id, deptIds))
+        : [],
+      academyIds.length > 0
+        ? db
+            .select({
+              id: academies.id,
+              name: academies.name,
+              bbox: bboxSelect(academies),
+            })
+            .from(academies)
+            .where(inArray(academies.id, academyIds))
+        : [],
+    ])
 
+    // Also fetch departments for cities (for the nested department in city)
+    const cityDeptIds = [...new Set(cityRows.map((c) => c.departmentId).filter((id): id is number => id != null))]
+    const missingDeptIds = cityDeptIds.filter((id) => !deptRows.some((d) => d.id === id))
+    const extraDeptRows =
+      missingDeptIds.length > 0
+        ? await db
+            .select({
+              id: departments.id,
+              name: departments.name,
+              code: departments.code,
+              bbox: bboxSelect(departments),
+            })
+            .from(departments)
+            .where(inArray(departments.id, missingDeptIds))
+        : []
+
+    const allDepts = [...deptRows, ...extraDeptRows]
+    const cityMap = new Map(cityRows.map((c) => [c.id, c]))
+    const deptMap = new Map(allDepts.map((d) => [d.id, d]))
+    const academyMap = new Map(academyRows.map((a) => [a.id, a]))
+
+    const results = await Promise.all(
+      alerts.map(async (alert) => {
+        const [countResult] = await countQuery(alert)
+        const count = countResult?.count ?? 0
+
+        let city = null
+        if (alert.cityId) {
+          const c = cityMap.get(alert.cityId)
           if (c) {
-            const [dep] = await db
-              .select({
-                id: departments.id,
-                name: departments.name,
-                code: departments.code,
-                bbox: bboxSelect(departments),
-              })
-              .from(departments)
-              .where(eq(departments.id, c.departmentId))
-
+            const dep = deptMap.get(c.departmentId)
             city = {
               id: c.id,
               name: c.name,
@@ -117,38 +165,11 @@ export const alertsRouter = createTRPCRouter({
           }
         }
 
-        let department = null
-        if (alert.departmentId) {
-          const [dep] = await db
-            .select({
-              id: departments.id,
-              name: departments.name,
-              code: departments.code,
-              bbox: bboxSelect(departments),
-            })
-            .from(departments)
-            .where(eq(departments.id, alert.departmentId))
+        const dep = alert.departmentId ? deptMap.get(alert.departmentId) : null
+        const department = dep ? { id: dep.id, name: dep.name, code: dep.code, bbox: dep.bbox } : null
 
-          if (dep) {
-            department = { id: dep.id, name: dep.name, code: dep.code, bbox: dep.bbox }
-          }
-        }
-
-        let academy = null
-        if (alert.academyId) {
-          const [acad] = await db
-            .select({
-              id: academies.id,
-              name: academies.name,
-              bbox: bboxSelect(academies),
-            })
-            .from(academies)
-            .where(eq(academies.id, alert.academyId))
-
-          if (acad) {
-            academy = { id: acad.id, name: acad.name, bbox: acad.bbox }
-          }
-        }
+        const acad = alert.academyId ? academyMap.get(alert.academyId) : null
+        const academy = acad ? { id: acad.id, name: acad.name, bbox: acad.bbox } : null
 
         return {
           id: alert.id,

@@ -104,7 +104,7 @@ function snakeToCamelUpdate(input: z.infer<typeof ZUpdateResidence>) {
 }
 
 async function getOrCreateOwner(userId: string, userName: string) {
-  const [existing] = await db.select().from(owners).where(eq(owners.userId, userId)).limit(1)
+  const existing = await db.query.owners.findFirst({ where: eq(owners.userId, userId) })
   if (existing) return existing
 
   const [created] = await db
@@ -119,8 +119,7 @@ async function getOrCreateOwner(userId: string, userName: string) {
 }
 
 async function getOwnerForUser(userId: string) {
-  const [owner] = await db.select().from(owners).where(eq(owners.userId, userId)).limit(1)
-  return owner ?? null
+  return (await db.query.owners.findFirst({ where: eq(owners.userId, userId) })) ?? null
 }
 
 async function verifyOwnership(slug: string, userId: string) {

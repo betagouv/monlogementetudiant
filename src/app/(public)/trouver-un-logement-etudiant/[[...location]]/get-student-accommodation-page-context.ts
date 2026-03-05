@@ -27,9 +27,9 @@ export const getStudentAccommodationPageContext = cache(
     }
 
     const territories = await getTerritories(routeLocation)
-    const territory = (
-      (territories[getTerritoriesCategoryKey(routeCategoryKey as 'ville' | 'academie' | 'departement')] || []) as TTerritory[]
-    ).find((territory) => {
+    const territoryList: TTerritory[] =
+      territories[getTerritoriesCategoryKey(routeCategoryKey as 'ville' | 'academie' | 'departement')] || []
+    const territory = territoryList.find((territory) => {
       const slug = 'slug' in territory ? territory.slug : territory.name
       return slug === routeLocation || territory.name === routeLocation
     })

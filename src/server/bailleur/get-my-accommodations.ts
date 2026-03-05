@@ -1,10 +1,10 @@
-import { QueryClient } from '@tanstack/react-query'
 import { and, eq, ilike, sql } from 'drizzle-orm'
 import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
 import { db } from '~/server/db'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { owners } from '~/server/db/schema/owners'
 import { mapToGeoJsonFeature, priceMaxComputed } from '~/server/trpc/routers/accommodations'
+import { getQueryClient } from '~/server/trpc/server'
 import { getServerSession } from '~/services/better-auth'
 
 const PAGE_SIZE = 20
@@ -25,7 +25,6 @@ export const getMyAccommodations = async (searchParams?: {
 
   const userId = auth.user.id
 
-  // Find owner for this user
   const [owner] = await db.select().from(owners).where(eq(owners.userId, userId)).limit(1)
 
   if (!owner) {
@@ -154,7 +153,7 @@ export const getMyAccommodations = async (searchParams?: {
 }
 
 export const prefetchMyAccommodations = async (searchParams?: { page?: string; disponible?: string; recherche?: string }) => {
-  const queryClient = new QueryClient()
+  const queryClient = getQueryClient()
 
   await queryClient.prefetchQuery({
     queryKey: myAccommodationsQueryKey(searchParams?.page, searchParams?.disponible, searchParams?.recherche),
