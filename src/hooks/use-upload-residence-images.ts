@@ -2,6 +2,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { createToast } from '~/components/ui/createToast'
 import { trackEvent } from '~/lib/tracking'
 import { useTRPC, useTRPCClient } from '~/server/trpc/client'
@@ -27,6 +28,7 @@ export const useUploadResidenceImages = (slug: string, name: string) => {
   const router = useRouter()
   const trpc = useTRPC()
   const trpcClient = useTRPCClient()
+  const t = useTranslations('toast')
 
   return useMutation({
     mutationFn: async ({ files, currentImages }: { files: File[]; currentImages: string[] }) => {
@@ -71,14 +73,14 @@ export const useUploadResidenceImages = (slug: string, name: string) => {
       })
       createToast({
         priority: 'success',
-        message: 'Images uploadees avec succes',
+        message: t('imagesUploaded'),
       })
       router.refresh()
     },
     onError: (error: Error) => {
       createToast({
         priority: 'error',
-        message: error.message || "Erreur lors de l'upload des images",
+        message: error.message || t('imagesUploadError'),
       })
     },
   })
@@ -89,6 +91,7 @@ export const useDeleteResidenceImage = (slug: string, name: string) => {
   const router = useRouter()
   const trpc = useTRPC()
   const trpcClient = useTRPCClient()
+  const t = useTranslations('toast')
 
   return useMutation({
     mutationFn: async (remainingImages: string[]) => {
@@ -102,14 +105,14 @@ export const useDeleteResidenceImage = (slug: string, name: string) => {
       queryClient.refetchQueries({ queryKey: trpc.bailleur.list.queryKey() })
       createToast({
         priority: 'success',
-        message: 'Image supprimee avec succes',
+        message: t('imageDeleted'),
       })
       router.refresh()
     },
     onError: () => {
       createToast({
         priority: 'error',
-        message: "Erreur lors de la suppression de l'image",
+        message: t('imageDeleteError'),
       })
     },
   })

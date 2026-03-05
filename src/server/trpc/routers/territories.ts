@@ -13,6 +13,34 @@ import { newsletterSubscriptions } from '~/server/db/schema/newsletter-subscript
 import { normalizeCitySearch, tokenizeQuery } from '~/server/utils/normalize-city-search'
 import { baseProcedure, createTRPCRouter } from '../init'
 
+export function sortCitiesByRelevance<T extends { city: string }>(cities: T[], searchTerm: string): T[] {
+  const term = searchTerm.toLowerCase()
+  return [...cities].sort((a, b) => {
+    const cityA = a.city.toLowerCase()
+    const cityB = b.city.toLowerCase()
+
+    if (cityA === term && cityB !== term) return -1
+    if (cityB === term && cityA !== term) return 1
+    if (cityA === term && cityB === term) return 0
+
+    const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const arrondissementRegex = new RegExp(`^${escapedTerm}\\s+(\\d+)(?:er|e|ème)`, 'i')
+    const arrondA = cityA.match(arrondissementRegex)
+    const arrondB = cityB.match(arrondissementRegex)
+
+    if (arrondA && arrondB) return parseInt(arrondA[1]) - parseInt(arrondB[1])
+    if (arrondA && !arrondB) return -1
+    if (!arrondA && arrondB) return 1
+
+    const startsA = cityA.startsWith(term)
+    const startsB = cityB.startsWith(term)
+    if (startsA && !startsB) return -1
+    if (!startsA && startsB) return 1
+
+    return cityA.localeCompare(cityB)
+  })
+}
+
 let rentDataCache: Record<string, number> | null = null
 
 function getRentData(): Record<string, number> {
@@ -371,40 +399,16 @@ export const territoriesRouter = createTRPCRouter({
     const rentData = getRentData()
     const searchTerm = input.q.toLowerCase()
 
-    const filteredCities = Object.entries(rentData)
-      .filter(([city]) => city.toLowerCase().includes(searchTerm))
-      .map(([city, rentPerM2]) => ({
-        city,
-        rentPerM2,
-        rentFor20M2: rentPerM2 * 20,
-      }))
-      .sort((a, b) => {
-        const cityA = a.city.toLowerCase()
-        const cityB = b.city.toLowerCase()
-
-        if (cityA === searchTerm && cityB !== searchTerm) return -1
-        if (cityB === searchTerm && cityA !== searchTerm) return 1
-        if (cityA === searchTerm && cityB === searchTerm) return 0
-
-        const escapedSearchTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-        const arrondissementRegex = new RegExp(`^${escapedSearchTerm}\\s+(\\d+)(?:er|e|ème)`, 'i')
-        const arrondA = cityA.match(arrondissementRegex)
-        const arrondB = cityB.match(arrondissementRegex)
-
-        if (arrondA && arrondB) {
-          return parseInt(arrondA[1]) - parseInt(arrondB[1])
-        }
-        if (arrondA && !arrondB) return -1
-        if (!arrondA && arrondB) return 1
-
-        const startsA = cityA.startsWith(searchTerm)
-        const startsB = cityB.startsWith(searchTerm)
-
-        if (startsA && !startsB) return -1
-        if (!startsA && startsB) return 1
-
-        return cityA.localeCompare(cityB)
-      })
+    const filteredCities = sortCitiesByRelevance(
+      Object.entries(rentData)
+        .filter(([city]) => city.toLowerCase().includes(searchTerm))
+        .map(([city, rentPerM2]) => ({
+          city,
+          rentPerM2,
+          rentFor20M2: rentPerM2 * 20,
+        })),
+      searchTerm,
+    )
 
     return {
       cities: filteredCities,

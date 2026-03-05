@@ -2,6 +2,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { createToast } from '~/components/ui/createToast'
 import { TCreateResidence } from '~/schemas/accommodations/create-residence'
 import { useTRPC, useTRPCClient } from '~/server/trpc/client'
@@ -11,6 +12,7 @@ export const useCreateResidence = () => {
   const router = useRouter()
   const trpc = useTRPC()
   const trpcClient = useTRPCClient()
+  const t = useTranslations('toast')
 
   return useMutation({
     mutationFn: async (data: TCreateResidence) => {
@@ -55,7 +57,7 @@ export const useCreateResidence = () => {
       })
       createToast({
         priority: 'success',
-        message: 'Residence creee avec succes',
+        message: t('residenceCreated'),
       })
       if (data?.slug) {
         router.push(`/bailleur/residences/${data.slug}`)
@@ -66,7 +68,7 @@ export const useCreateResidence = () => {
     onError: () => {
       createToast({
         priority: 'error',
-        message: 'Erreur lors de la creation de la residence',
+        message: t('residenceCreateError'),
       })
     },
   })

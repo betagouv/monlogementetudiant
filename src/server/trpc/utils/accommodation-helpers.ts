@@ -76,7 +76,8 @@ export function computeDerivedFields(data: {
 
 export async function geocodeAddress(address: string, city: string, postalCode: string): Promise<{ lon: number; lat: number } | null> {
   const query = `${address} ${postalCode} ${city}`
-  const url = `https://data.geopf.fr/geocodage/search?q=${encodeURIComponent(query)}&limit=1`
+  const baseUrl = process.env.GEOCODING_API_URL ?? 'https://data.geopf.fr/geocodage/search'
+  const url = `${baseUrl}?q=${encodeURIComponent(query)}&limit=1`
 
   try {
     const response = await fetch(url)

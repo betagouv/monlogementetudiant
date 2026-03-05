@@ -802,6 +802,19 @@
       "description": "Complétez votre to-do list pour mettre toutes les chances de votre côté"
     }
   },
+  "toast": {
+    "residenceCreated": "Résidence créée avec succès",
+    "residenceCreateError": "Erreur lors de la création de la résidence",
+    "residenceUpdated": "Résidence mise à jour avec succès",
+    "residenceUpdateError": "Erreur lors de la mise à jour de la résidence",
+    "imagesUploaded": "Images uploadées avec succès",
+    "imagesUploadError": "Erreur lors de l'upload des images",
+    "imageDeleted": "Image supprimée avec succès",
+    "imageDeleteError": "Erreur lors de la suppression de l'image",
+    "unsupportedFileType": "Type de fichier non supporté: {fileName}. Types acceptés: JPEG, PNG, WebP",
+    "fileTooLarge": "Fichier trop volumineux: {fileName}. Taille maximale: 10MB",
+    "uploadFailed": "Échec de l'upload des images"
+  },
   "bailleur": {
     "header": {
       "title": "Espace gestionnaire"
