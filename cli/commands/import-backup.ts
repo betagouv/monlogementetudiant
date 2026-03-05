@@ -80,7 +80,7 @@ export async function importBackup(opts: ImportBackupOpts) {
   console.log('✓ Backup restauré avec succès')
 
   // Note: Drizzle migrations are NOT applied here.
-  // Workflow: import-backup → migrate-users → pnpm drizzle-kit migrate
+  // Workflow: import-backup → migrate-users (applies 0000 schema) → drizzle-kit migrate (applies 0001 cleanup)
 
   // Clean up extracted files (keep the archive for --skip-download)
   rmSync(extractDir, { recursive: true, force: true })

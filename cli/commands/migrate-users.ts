@@ -1,7 +1,8 @@
+import { readFileSync } from 'fs'
+import path from 'path'
 import { generateId } from 'better-auth'
 import { sql } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
-import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
 import * as schema from '../../src/server/db/schema'
 
@@ -26,169 +27,154 @@ export async function migrateUsers() {
 
   console.log("✓ Variables d'environnement chargées")
 
-  // Apply Drizzle migrations (0000-0009) before user migration
-  console.log('→ Application des migrations Drizzle (pré-cleanup)...')
-  const migrationConn = postgres(databaseUrl, { prepare: false, max: 1 })
-  await migrate(drizzle(migrationConn), { migrationsFolder: './drizzle' })
-  await migrationConn.end()
-  console.log('✓ Migrations appliquées')
-
   const conn = postgres(databaseUrl, { prepare: false })
   const db = drizzle(conn, { schema })
 
-  const users = (await db.execute(sql`
-    SELECT id, email, first_name, last_name, password, is_active, is_staff, is_superuser, date_joined
-    FROM auth_user
-  `)) as unknown as DjangoUser[]
+  try {
+    // Apply 0000_initial.sql directly (schema only, no cleanup)
+    // This creates better-auth tables without dropping Django tables needed for migration
+    console.log('→ Application du schema initial (0000_initial.sql)...')
+    const initialSql = readFileSync(path.resolve('./drizzle/0000_initial.sql'), 'utf-8')
+    // Split on drizzle statement breakpoints and execute each statement
+    const statements = initialSql.split('--> statement-breakpoint').map(s => s.trim()).filter(Boolean)
+    for (const stmt of statements) {
+      await conn.unsafe(stmt)
+    }
+    console.log('✓ Schema initial appliqué')
 
-  console.log(`→ Migration de ${users.length} utilisateurs...`)
+    const users = (await db.execute(sql`
+      SELECT id, email, first_name, last_name, password, is_active, is_staff, is_superuser, date_joined
+      FROM auth_user
+    `)) as unknown as DjangoUser[]
 
-  let migrated = 0
-  let skipped = 0
+    console.log(`→ Migration de ${users.length} utilisateurs...`)
 
-  for (const djangoUser of users) {
-    const name = `${djangoUser.first_name} ${djangoUser.last_name}`.trim() || djangoUser.email
+    let migrated = 0
+    let skipped = 0
 
-    try {
-      const newId = generateId()
-      const inserted = await db.insert(schema.user).values({
-        id: newId,
-        legacyId: Number(djangoUser.id),
-        email: djangoUser.email,
-        emailVerified: djangoUser.is_active,
-        name,
-        firstname: djangoUser.first_name || '',
-        lastname: djangoUser.last_name || '',
-        role: djangoUser.is_staff || djangoUser.is_superuser ? 'admin' : 'user',
-        legacyUser: true,
-        createdAt: new Date(djangoUser.date_joined),
-        updatedAt: new Date(),
-      }).onConflictDoNothing().returning({ id: schema.user.id })
+    for (const djangoUser of users) {
+      const name = `${djangoUser.first_name} ${djangoUser.last_name}`.trim() || djangoUser.email
 
-      if (inserted.length > 0) {
-        await db.insert(schema.account).values({
-          id: generateId(),
-          userId: inserted[0].id,
-          accountId: djangoUser.email,
-          providerId: 'credential',
-          password: djangoUser.password,
+      try {
+        const newId = generateId()
+        const inserted = await db.insert(schema.user).values({
+          id: newId,
+          legacyId: Number(djangoUser.id),
+          email: djangoUser.email,
+          emailVerified: djangoUser.is_active,
+          name,
+          firstname: djangoUser.first_name || '',
+          lastname: djangoUser.last_name || '',
+          role: 'user',
+          legacyUser: true,
           createdAt: new Date(djangoUser.date_joined),
           updatedAt: new Date(),
-        }).onConflictDoNothing()
-        migrated++
-      } else {
-        console.log(`  ⏭ ${djangoUser.email || `(no email, id=${djangoUser.id})`} ignoré (doublon)`)
+        }).onConflictDoNothing().returning({ id: schema.user.id })
+
+        if (inserted.length > 0) {
+          await db.insert(schema.account).values({
+            id: generateId(),
+            userId: inserted[0].id,
+            accountId: djangoUser.email,
+            providerId: 'credential',
+            password: djangoUser.password,
+            createdAt: new Date(djangoUser.date_joined),
+            updatedAt: new Date(),
+          }).onConflictDoNothing()
+          migrated++
+        } else {
+          console.log(`  ⏭ ${djangoUser.email || `(no email, id=${djangoUser.id})`} ignoré (doublon)`)
+          skipped++
+        }
+      } catch (error) {
+        console.error(`  ✗ Échec pour ${djangoUser.email}:`, error)
         skipped++
       }
-    } catch (error) {
-      console.error(`  ✗ Échec pour ${djangoUser.email}:`, error)
-      skipped++
     }
+
+    console.log(`✓ Migration terminée : ${migrated} migrés, ${skipped} ignorés`)
+
+    // Link owners to users via Django's account_owner_users junction table
+    console.log('→ Liaison des owners aux utilisateurs...')
+    const linkResult = await db.execute(sql`
+      UPDATE "user" SET owner_id = aou.owner_id
+      FROM account_owner_users aou
+      WHERE "user".legacy_id = aou.user_id
+      AND "user".owner_id IS NULL
+    `)
+    console.log(`✓ ${linkResult.count} owners liés`)
+
+    // Drop Django FK constraints and convert user_id columns from integer to text
+    console.log('→ Conversion des colonnes user_id en text...')
+    // Drop all FK constraints on user_id referencing auth_user
+    const fkConstraints = await db.execute(sql`
+      SELECT tc.table_name, tc.constraint_name
+      FROM information_schema.table_constraints tc
+      JOIN information_schema.key_column_usage kcu ON tc.constraint_name = kcu.constraint_name
+      JOIN information_schema.constraint_column_usage ccu ON tc.constraint_name = ccu.constraint_name
+      WHERE tc.constraint_type = 'FOREIGN KEY'
+      AND ccu.table_name = 'auth_user'
+      AND kcu.column_name = 'user_id'
+    `) as unknown as { table_name: string; constraint_name: string }[]
+    for (const fk of fkConstraints) {
+      console.log(`  Dropping FK ${fk.constraint_name} on ${fk.table_name}`)
+      await db.execute(sql.raw(`ALTER TABLE "${fk.table_name}" DROP CONSTRAINT "${fk.constraint_name}"`))
+    }
+    await db.execute(sql`ALTER TABLE accommodation_favoriteaccommodation ALTER COLUMN user_id TYPE varchar(255) USING user_id::varchar`)
+    console.log('✓ Colonnes converties')
+
+    // Update legacy user_id references to UUIDs
+    console.log('→ Mise à jour des user_id dans les favoris...')
+    const favResult = await db.execute(sql`
+      UPDATE accommodation_favoriteaccommodation SET user_id = u.id
+      FROM "user" u
+      WHERE u.legacy_id = accommodation_favoriteaccommodation.user_id::integer
+      AND u.legacy_id IS NOT NULL
+    `)
+    console.log(`✓ ${favResult.count} favoris mis à jour`)
+
+    // Migrate alerts from Django alerts_accommodationalert → student_alert
+    // Django uses student_id (FK to account_student) which itself has user_id (FK to auth_user)
+    console.log('→ Migration des alertes...')
+    const alertResult = await db.execute(sql`
+      INSERT INTO student_alert (id, user_id, name, city_id, department_id, academy_id, has_coliving, is_accessible, max_price, receive_notifications, created_at)
+      SELECT a.id, u.id, a.name, a.city_id, a.department_id, a.academy_id, a.has_coliving, a.is_accessible, a.max_price, a.receive_notifications, a.created_at
+      FROM alerts_accommodationalert a
+      JOIN account_student s ON s.id = a.student_id
+      JOIN "user" u ON u.legacy_id = s.user_id
+      ON CONFLICT (id) DO NOTHING
+    `)
+    console.log(`✓ ${alertResult.count} alertes migrées`)
+
+    // Flag roles: owner by default via junction table, then admin wins at the end
+    console.log('→ Flagging owners...')
+    const ownerResult = await db.execute(sql`
+      UPDATE "user" SET role = 'owner'
+      WHERE legacy_id IN (SELECT user_id FROM account_owner_users)
+    `)
+    console.log(`✓ ${ownerResult.count} owners flaggés`)
+
+    console.log('→ Flagging étudiants...')
+    const studentResult = await db.execute(sql`
+      UPDATE "user" SET role = 'student'
+      WHERE legacy_id IN (SELECT user_id FROM account_student)
+    `)
+    console.log(`✓ ${studentResult.count} étudiants flaggés`)
+
+    // Admin wins: only is_superuser = admin (is_staff = owner, already flagged above)
+    console.log('→ Flagging admins...')
+    const adminResult = await db.execute(sql`
+      UPDATE "user" SET role = 'admin'
+      WHERE legacy_id IN (
+        SELECT id FROM auth_user WHERE is_superuser = true
+      )
+      AND role != 'admin'
+    `)
+    console.log(`✓ ${adminResult.count} admins flaggés`)
+    console.log(`✓ ${ownerResult.count} owners flaggés`)
+  } finally {
+    await conn.end()
   }
 
-  console.log(`✓ Migration terminée : ${migrated} migrés, ${skipped} ignorés`)
-
-  // Link owners to users via Django's account_owner_users junction table
-  console.log('→ Liaison des owners aux utilisateurs...')
-  const linkResult = await db.execute(sql`
-    UPDATE account_owner SET user_id = u.id
-    FROM account_owner_users aou
-    JOIN "user" u ON u.legacy_id = aou.user_id
-    WHERE account_owner.id = aou.owner_id
-    AND account_owner.user_id IS NULL
-  `)
-  console.log(`✓ ${linkResult.count} owners liés`)
-
-  // Drop Django FK constraints and convert user_id columns from integer to text
-  console.log('→ Conversion des colonnes user_id en text...')
-  // Drop all FK constraints on user_id referencing auth_user
-  const fkConstraints = await db.execute(sql`
-    SELECT tc.table_name, tc.constraint_name
-    FROM information_schema.table_constraints tc
-    JOIN information_schema.key_column_usage kcu ON tc.constraint_name = kcu.constraint_name
-    JOIN information_schema.constraint_column_usage ccu ON tc.constraint_name = ccu.constraint_name
-    WHERE tc.constraint_type = 'FOREIGN KEY'
-    AND ccu.table_name = 'auth_user'
-    AND kcu.column_name = 'user_id'
-  `) as unknown as { table_name: string; constraint_name: string }[]
-  for (const fk of fkConstraints) {
-    console.log(`  Dropping FK ${fk.constraint_name} on ${fk.table_name}`)
-    await db.execute(sql.raw(`ALTER TABLE "${fk.table_name}" DROP CONSTRAINT "${fk.constraint_name}"`))
-  }
-  await db.execute(sql`ALTER TABLE accommodation_favoriteaccommodation ALTER COLUMN user_id TYPE varchar(255) USING user_id::varchar`)
-  await db.execute(sql`ALTER TABLE student_alert ALTER COLUMN user_id TYPE varchar(255) USING user_id::varchar`)
-  console.log('✓ Colonnes converties')
-
-  // Update legacy user_id references to UUIDs
-  console.log('→ Mise à jour des user_id dans les favoris...')
-  const favResult = await db.execute(sql`
-    UPDATE accommodation_favoriteaccommodation SET user_id = u.id
-    FROM "user" u
-    WHERE u.legacy_id = accommodation_favoriteaccommodation.user_id::integer
-    AND u.legacy_id IS NOT NULL
-  `)
-  console.log(`✓ ${favResult.count} favoris mis à jour`)
-
-  console.log('→ Mise à jour des user_id dans les alertes...')
-  const alertResult = await db.execute(sql`
-    UPDATE student_alert SET user_id = u.id
-    FROM "user" u
-    WHERE u.legacy_id = student_alert.user_id::integer
-    AND u.legacy_id IS NOT NULL
-  `)
-  console.log(`✓ ${alertResult.count} alertes mises à jour`)
-
-  // Flag owners (via account_owner_users junction table)
-  console.log('→ Flagging owners...')
-  const ownerResult = await db.execute(sql`
-    UPDATE "user" SET role = 'owner'
-    WHERE legacy_id IN (SELECT user_id FROM account_owner_users)
-    AND role = 'user'
-  `)
-  console.log(`✓ ${ownerResult.count} owners flaggés`)
-
-  // Flag students from Django account_student table
-  console.log('→ Flagging étudiants...')
-  const studentResult = await db.execute(sql`
-    UPDATE "user" SET role = 'student'
-    WHERE legacy_id IN (SELECT user_id FROM account_student)
-    AND role = 'user'
-  `)
-  console.log(`✓ ${studentResult.count} étudiants flaggés`)
-
-  // Cleanup: drop Django legacy tables
-  console.log('→ Suppression des tables Django...')
-  await db.execute(sql`
-    DROP TABLE IF EXISTS "auth_user_user_permissions" CASCADE;
-    DROP TABLE IF EXISTS "auth_user_groups" CASCADE;
-    DROP TABLE IF EXISTS "auth_group_permissions" CASCADE;
-    DROP TABLE IF EXISTS "auth_permission" CASCADE;
-    DROP TABLE IF EXISTS "auth_group" CASCADE;
-    DROP TABLE IF EXISTS "account_owner_users" CASCADE;
-    DROP TABLE IF EXISTS "account_student" CASCADE;
-    DROP TABLE IF EXISTS "account_studentregistrationtoken" CASCADE;
-    DROP TABLE IF EXISTS "auth_user" CASCADE;
-    DROP TABLE IF EXISTS "django_admin_log" CASCADE;
-    DROP TABLE IF EXISTS "django_session" CASCADE;
-    DROP TABLE IF EXISTS "django_migrations" CASCADE;
-    DROP TABLE IF EXISTS "django_summernote_attachment" CASCADE;
-    DROP TABLE IF EXISTS "token_blacklist_blacklistedtoken" CASCADE;
-    DROP TABLE IF EXISTS "token_blacklist_outstandingtoken" CASCADE;
-    DROP TABLE IF EXISTS "admin_two_factor_twofactorverification" CASCADE;
-    DROP TABLE IF EXISTS "accommodation_accommodationapplication" CASCADE;
-    DROP TABLE IF EXISTS "alerts_accommodationalert" CASCADE;
-    DROP TABLE IF EXISTS "dossier_facile_dossierfacileapplication" CASCADE;
-    DROP TABLE IF EXISTS "dossier_facile_dossierfacileoauthstate" CASCADE;
-    DROP TABLE IF EXISTS "dossier_facile_dossierfaciletenant" CASCADE;
-    DROP TABLE IF EXISTS "institution_educationalinstitution" CASCADE;
-    DROP TABLE IF EXISTS "qa_questionanswer" CASCADE;
-    DROP TABLE IF EXISTS "qa_questionanswerglobal" CASCADE;
-    DROP TABLE IF EXISTS "stats_accommodationchangelog" CASCADE;
-    DROP TABLE IF EXISTS "stats_gestionnaireloginevent" CASCADE;
-    DROP TABLE IF EXISTS "territories_country" CASCADE
-  `)
-  console.log('✓ Tables Django supprimées')
-
-  await conn.end()
   console.log('\n✓ Migration terminée !')
 }
