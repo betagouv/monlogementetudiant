@@ -3,6 +3,10 @@ import { createAccommodation, createOwner, createUser } from './fixtures/factori
 import { adminCaller, authenticatedCaller, caller, ownerCaller } from './helpers/test-caller'
 import './helpers/setup-integration'
 
+type AccommodationOverrides = NonNullable<Parameters<typeof createAccommodation>[0]>
+type AccommodationGeom = NonNullable<AccommodationOverrides['geom']>
+const parisPoint = { type: 'Point', coordinates: [2.3522, 48.8566] } as AccommodationGeom
+
 // Create user records before each test
 beforeEach(async () => {
   await createUser({ id: 'test-owner-id', name: 'Test Owner', email: 'owner@test.com', role: 'owner' })
@@ -129,7 +133,7 @@ describe('bailleur.getBySlug', () => {
       laundryRoom: true,
       wifi: true,
       parking: false,
-      geom: { type: 'Point', coordinates: [2.3522, 48.8566] },
+      geom: parisPoint,
     })
 
     const result = await ownerCaller.bailleur.getBySlug({ slug: 'residence-detail' })
@@ -155,7 +159,7 @@ describe('bailleur.update', () => {
       name: 'Before Update',
       slug: 'to-update',
       ownerId: owner.id,
-      geom: { type: 'Point', coordinates: [2.3522, 48.8566] },
+      geom: parisPoint,
     })
 
     const result = await ownerCaller.bailleur.update({
@@ -189,7 +193,7 @@ describe('bailleur.updateAvailability', () => {
       nbT1: 10,
       nbT2: 5,
       available: false,
-      geom: { type: 'Point', coordinates: [2.3522, 48.8566] },
+      geom: parisPoint,
     })
 
     const result = await ownerCaller.bailleur.updateAvailability({
