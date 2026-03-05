@@ -1,4 +1,4 @@
-import { eq, sql } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { db } from '../lib/db'
 import { cities, departments } from '../../src/server/db/schema'
 import type { SyncCommand, SyncOptions, SyncResult } from '../types'

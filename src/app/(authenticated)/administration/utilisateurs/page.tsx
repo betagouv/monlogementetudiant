@@ -26,6 +26,7 @@ const columns: ColumnDef<UserRow, unknown>[] = [
   {
     accessorKey: 'email',
     header: 'Email',
+    enableSorting: true,
     cell: ({ row }) => (
       <Link href={`/administration/utilisateurs/${row.original.id}`} className="fr-link">
         {row.original.email}
@@ -35,24 +36,30 @@ const columns: ColumnDef<UserRow, unknown>[] = [
   {
     accessorKey: 'firstname',
     header: 'Prenom',
+    enableSorting: true,
   },
   {
     accessorKey: 'lastname',
     header: 'Nom',
+    enableSorting: true,
   },
   {
     accessorKey: 'role',
     header: 'Role',
+    enableSorting: true,
     cell: ({ row }) => <RoleBadge role={row.original.role} />,
   },
   {
     id: 'owner',
     header: 'Bailleur',
+    enableSorting: true,
+    accessorFn: (row) => row.ownerId ?? '',
     cell: ({ row }) => (row.original.ownerId ? `#${row.original.ownerId}` : '-'),
   },
   {
     id: 'actions',
     header: '',
+    enableSorting: false,
     cell: ({ row }) => (
       <Button priority="tertiary no outline" size="small" linkProps={{ href: `/administration/utilisateurs/${row.original.id}` }}>
         Voir
@@ -88,7 +95,7 @@ export default function UsersPage() {
   }
 
   const title = useMemo(() => {
-    if (role === 'user') return 'Comptes etudiants'
+    if (role === 'user') return 'Comptes étudiants'
     if (role === 'owner') return 'Comptes bailleurs'
     if (role === 'admin') return 'Administrateurs'
     return 'Utilisateurs'
@@ -143,6 +150,7 @@ export default function UsersPage() {
         page={page}
         onPageChange={handlePageChange}
         isLoading={isLoading}
+        enableSorting
       />
     </>
   )

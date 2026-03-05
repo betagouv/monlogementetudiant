@@ -208,8 +208,8 @@ const ownersRouter = createTRPCRouter({
             name: owners.name,
             slug: owners.slug,
             url: owners.url,
-            accommodationCount: sql<number>`(SELECT count(*)::int FROM accommodation_accommodation WHERE owner_id = ${owners.id})`,
-            userCount: sql<number>`(SELECT count(*)::int FROM "user" WHERE owner_id = ${owners.id})`,
+            accommodationCount: sql<number>`(SELECT count(*)::int FROM accommodation_accommodation WHERE owner_id = "account_owner"."id")`,
+            userCount: sql<number>`(SELECT count(*)::int FROM "user" WHERE owner_id = "account_owner"."id")`,
           })
           .from(owners)
           .where(where)

@@ -1,6 +1,7 @@
 'use client'
 
-import { ColumnDef, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
+import { ColumnDef, flexRender, getCoreRowModel, getSortedRowModel, SortingState, useReactTable } from '@tanstack/react-table'
+import { useState } from 'react'
 
 interface AdminDataTableProps<T> {
   columns: ColumnDef<T, unknown>[]
@@ -9,28 +10,63 @@ interface AdminDataTableProps<T> {
   page: number
   onPageChange: (page: number) => void
   isLoading?: boolean
+  isError?: boolean
+  enableSorting?: boolean
 }
 
-export function AdminDataTable<T>({ columns, data, pageCount, page, onPageChange, isLoading }: AdminDataTableProps<T>) {
+export function AdminDataTable<T>({
+  columns,
+  data,
+  pageCount,
+  page,
+  onPageChange,
+  isLoading,
+  isError,
+  enableSorting = false,
+}: AdminDataTableProps<T>) {
+  const [sorting, setSorting] = useState<SortingState>([])
+
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    ...(enableSorting
+      ? {
+          getSortedRowModel: getSortedRowModel(),
+          onSortingChange: setSorting,
+          state: { sorting },
+        }
+      : {}),
     manualPagination: true,
     pageCount,
   })
 
   return (
-    <div className="fr-table" style={{ overflow: 'auto' }}>
-      <table>
+    <div className="fr-table" style={{ overflow: 'auto', width: '100%' }}>
+      <table style={{ width: '100%' }}>
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <th key={header.id} scope="col">
-                  {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                </th>
-              ))}
+              {headerGroup.headers.map((header) => {
+                const canSort = enableSorting && header.column.getCanSort()
+                return (
+                  <th
+                    key={header.id}
+                    scope="col"
+                    onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
+                    style={canSort ? { cursor: 'pointer', userSelect: 'none' } : undefined}
+                  >
+                    <div className="fr-flex fr-align-items-center fr-flex-gap-1v">
+                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                      {canSort && (
+                        <span aria-hidden="true" style={{ fontSize: '0.75rem', opacity: header.column.getIsSorted() ? 1 : 0.3 }}>
+                          {{ asc: ' \u2191', desc: ' \u2193' }[header.column.getIsSorted() as string] ?? ' \u2195'}
+                        </span>
+                      )}
+                    </div>
+                  </th>
+                )
+              })}
             </tr>
           ))}
         </thead>
@@ -41,6 +77,12 @@ export function AdminDataTable<T>({ columns, data, pageCount, page, onPageChange
                 Chargement...
               </td>
             </tr>
+          ) : isError ? (
+            <tr>
+              <td colSpan={columns.length} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-default-error)' }}>
+                Erreur lors du chargement des donnees
+              </td>
+            </tr>
           ) : data.length === 0 ? (
             <tr>
               <td colSpan={columns.length} style={{ textAlign: 'center', padding: '2rem' }}>
@@ -49,7 +91,7 @@ export function AdminDataTable<T>({ columns, data, pageCount, page, onPageChange
             </tr>
           ) : (
             table.getRowModel().rows.map((row) => (
-              <tr key={row.id}>
+              <tr key={row.id} style={{ transition: 'background 0.1s ease' }}>
                 {row.getVisibleCells().map((cell) => (
                   <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
                 ))}
