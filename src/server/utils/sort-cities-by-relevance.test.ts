@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { sortCitiesByRelevance } from './territories'
+import { sortCitiesByRelevance } from '~/server/utils/sort-cities-by-relevance'
 
 function makeCities(names: string[]) {
   return names.map((city) => ({ city, rentPerM2: 10, rentFor20M2: 200 }))
