@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import { AdminNavigation } from '~/components/administration/admin-navigation'
 import { CommonFooter } from '~/components/ui/footer/footer'
 import { WorkspaceHeaderComponent } from '~/components/ui/header/workspace-header'
@@ -17,19 +17,35 @@ export default async function AdministrationLayout({
   const session = await getServerSession()
 
   if (!session || session.user.role !== 'admin') {
-    return notFound()
+    redirect('/administration/se-connecter')
   }
 
   return (
     <>
       <WorkspaceHeaderComponent />
-      <main className="primaryBackgroundColor">
-        <div className="fr-container fr-pb-12w">
-          <div className="fr-col-md-12 fr-flex fr-direction-column fr-direction-md-row fr-background-default--grey fr-mt-3w">
-            <div className="fr-border fr-col-md-3">
+      <main className="primaryBackgroundColor" style={{ minHeight: '80vh' }}>
+        <div className="fr-container fr-py-4w">
+          <div
+            className="fr-flex fr-direction-column fr-direction-md-row"
+            style={{
+              background: 'var(--background-default-grey)',
+              borderRadius: '8px',
+              boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)',
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              className="fr-col-md-3"
+              style={{
+                borderRight: '1px solid var(--border-default-grey)',
+                minWidth: '240px',
+              }}
+            >
               <AdminNavigation />
             </div>
-            <div className="fr-col-md-9 fr-p-3w">{children}</div>
+            <div className="fr-col-md-9 fr-p-4w" style={{ flex: 1, minWidth: 0 }}>
+              {children}
+            </div>
           </div>
         </div>
       </main>
