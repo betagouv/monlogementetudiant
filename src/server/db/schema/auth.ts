@@ -1,4 +1,4 @@
-import { boolean, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
+import { bigint, boolean, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
 
 export const user = pgTable('user', {
   id: text().primaryKey(),
@@ -14,6 +14,7 @@ export const user = pgTable('user', {
   role: text().notNull().default('user'), // 'user' | 'owner' | 'admin'
   legacyUser: boolean('legacy_user').notNull().default(false),
   legacyId: integer('legacy_id'),
+  ownerId: bigint('owner_id', { mode: 'number' }),
 })
 
 export const session = pgTable('session', {

@@ -3,7 +3,7 @@ import { createAccommodation, createOwner, createUser } from './fixtures/factori
 import { adminCaller, authenticatedCaller, caller, ownerCaller } from './helpers/test-caller'
 import './helpers/setup-integration'
 
-// Create user records before each test (FK constraint on owners.userId)
+// Create user records before each test
 beforeEach(async () => {
   await createUser({ id: 'test-owner-id', name: 'Test Owner', email: 'owner@test.com', role: 'owner' })
   await createUser({ id: 'test-owner-id-2', name: 'Test Owner 2', email: 'owner2@test.com', role: 'owner' })

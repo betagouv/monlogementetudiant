@@ -1,6 +1,7 @@
 import { relations } from 'drizzle-orm'
 import { academies } from './academies'
 import { accommodations } from './accommodations'
+import { user } from './auth'
 import { cities } from './cities'
 import { departments } from './departments'
 import { externalSources } from './external-sources'
@@ -21,8 +22,13 @@ export const citiesRelations = relations(cities, ({ one }) => ({
   department: one(departments, { fields: [cities.departmentId], references: [departments.id] }),
 }))
 
+export const userRelations = relations(user, ({ one }) => ({
+  owner: one(owners, { fields: [user.ownerId], references: [owners.id] }),
+}))
+
 export const ownersRelations = relations(owners, ({ many }) => ({
   accommodations: many(accommodations),
+  users: many(user),
 }))
 
 export const accommodationsRelations = relations(accommodations, ({ one, many }) => ({

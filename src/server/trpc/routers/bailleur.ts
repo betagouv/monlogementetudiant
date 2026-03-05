@@ -6,6 +6,7 @@ import { ZUpdateResidence } from '~/schemas/accommodations/update-residence'
 import { ZUpdateResidenceList } from '~/schemas/accommodations/update-residence-list'
 import { db } from '~/server/db'
 import { accommodations } from '~/server/db/schema/accommodations'
+import { user } from '~/server/db/schema/auth'
 import { owners } from '~/server/db/schema/owners'
 import { computeDerivedFields, generateSlug, geocodeAddress } from '~/server/trpc/utils/accommodation-helpers'
 import { createTRPCRouter, ownerProcedure } from '../init'
@@ -104,22 +105,31 @@ function snakeToCamelUpdate(input: z.infer<typeof ZUpdateResidence>) {
 }
 
 async function getOrCreateOwner(userId: string, userName: string) {
-  const existing = await db.query.owners.findFirst({ where: eq(owners.userId, userId) })
-  if (existing) return existing
+  const usr = await db.query.user.findFirst({
+    where: eq(user.id, userId),
+    with: { owner: true },
+  })
+  if (usr?.owner) return usr.owner
 
   const [created] = await db
     .insert(owners)
     .values({
       name: userName,
       slug: generateSlug(userName),
-      userId,
     })
     .returning()
+
+  await db.update(user).set({ ownerId: created.id }).where(eq(user.id, userId))
+
   return created
 }
 
 async function getOwnerForUser(userId: string) {
-  return (await db.query.owners.findFirst({ where: eq(owners.userId, userId) })) ?? null
+  const usr = await db.query.user.findFirst({
+    where: eq(user.id, userId),
+    with: { owner: true },
+  })
+  return usr?.owner ?? null
 }
 
 async function verifyOwnership(slug: string, userId: string) {

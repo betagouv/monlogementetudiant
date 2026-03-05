@@ -1,6 +1,6 @@
 {
-  "id": "459f5a14-0f1f-44cf-8019-1bf662a3dbe9",
-  "prevId": "ce6cfc6a-225a-4db5-80ee-ee5f6f5d4780",
+  "id": "8aaf4301-7820-4007-8a8b-bd72abb4827e",
+  "prevId": "459f5a14-0f1f-44cf-8019-1bf662a3dbe9",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -778,6 +778,12 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": false
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
@@ -1335,30 +1341,10 @@
           "type": "varchar(500)",
           "primaryKey": false,
           "notNull": false
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
         }
       },
       "indexes": {},
-      "foreignKeys": {
-        "account_owner_user_id_user_id_fk": {
-          "name": "account_owner_user_id_user_id_fk",
-          "tableFrom": "account_owner",
-          "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "account_owner_slug_unique": {
