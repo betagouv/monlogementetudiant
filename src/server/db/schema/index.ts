@@ -18,6 +18,7 @@ export {
   favoriteAccommodationsRelations,
   ownersRelations,
   studentAlertsRelations,
+  userRelations,
 } from './relations'
 export { stats } from './stats'
 export { studentAlerts } from './student-alerts'
