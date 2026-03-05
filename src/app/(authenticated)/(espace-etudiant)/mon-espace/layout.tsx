@@ -1,10 +1,10 @@
 import { notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
-import { getServerSession } from '~/auth'
 import { StudentSpaceNavigation } from '~/components/student-space/navigation/student-space-navigation'
 import { StudentBreadcrumb } from '~/components/student-space/student-breadcrumb'
 import { CommonFooter } from '~/components/ui/footer/footer'
 import { CommonHeader } from '~/components/ui/header/common-header'
+import { getServerSession } from '~/services/better-auth'
 
 export const generateMetadata = async () => {
   const t = await getTranslations('metadata')

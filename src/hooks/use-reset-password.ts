@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query'
-import { authClient } from '~/auth-client'
 import { createToast } from '~/components/ui/createToast'
 import { TResetPasswordForm } from '~/schemas/reset-password/reset-password'
+import { authClient } from '~/services/better-auth-client'
 
 interface ResetPasswordPayload extends TResetPasswordForm {
   token: string

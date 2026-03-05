@@ -6,7 +6,7 @@ import { drizzle } from 'drizzle-orm/postgres-js'
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
 import { ScalingoBackupService } from '../lib/scalingo-backup'
-import { cleanDatabase, restoreBackup } from '../lib/db-utils'
+import { cleanDatabase, ensureExtensions, restoreBackup } from '../lib/db-utils'
 
 const BACKUP_DIR = '/tmp/jde-backup'
 
@@ -71,7 +71,11 @@ export async function importBackup(opts: ImportBackupOpts) {
   // Clean the local database
   console.log('→ Nettoyage de la base de données locale...')
   await cleanDatabase(databaseUrl)
-  console.log('✓ Tables et enums supprimés')
+  console.log('✓ Tables, enums et fonctions supprimés')
+
+  // Ensure required extensions are installed before restore
+  console.log('→ Installation des extensions PostgreSQL...')
+  await ensureExtensions(databaseUrl)
 
   // Restore the backup
   console.log('→ Restauration du backup...')

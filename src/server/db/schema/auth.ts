@@ -1,4 +1,4 @@
-import { boolean, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
+import { boolean, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
 
 export const user = pgTable('user', {
   id: text().primaryKey(),
@@ -13,6 +13,7 @@ export const user = pgTable('user', {
   lastname: text().notNull().default(''),
   role: text().notNull().default('user'), // 'user' | 'owner' | 'admin'
   legacyUser: boolean('legacy_user').notNull().default(false),
+  legacyId: integer('legacy_id'),
 })
 
 export const session = pgTable('session', {

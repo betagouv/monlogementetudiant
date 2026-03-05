@@ -45,13 +45,6 @@
       "breakpoints": true
     },
     {
-      "idx": 6,
-      "version": "7",
-      "when": 1772640918423,
-      "tag": "0006_bent_spyke",
-      "breakpoints": true
-    },
-    {
       "idx": 7,
       "version": "7",
       "when": 1772813000000,
@@ -63,6 +56,13 @@
       "version": "7",
       "when": 1772900000000,
       "tag": "0008_legacy_user_cleanup",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1772704492731,
+      "tag": "0009_dizzy_revanche",
       "breakpoints": true
     }
   ]

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from '~/auth'
 import { generateAccommodationKey, uploadFile } from '~/server/services/s3'
+import { getServerSession } from '~/services/better-auth'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']

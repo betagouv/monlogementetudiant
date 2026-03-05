@@ -96,7 +96,7 @@ cli/
 pnpm cli migrate-users
 ```
 
-Lit les tables Django existantes dans la BDD locale (typiquement après un `import-backup`) et traduit les utilisateurs vers le schéma better-auth : insertion dans les tables `user` et `account`, puis liaison des owners existants par correspondance de nom.
+Lit les tables Django existantes dans la BDD locale (typiquement après un `import-backup`) et traduit les utilisateurs vers le schéma better-auth : insertion dans les tables `user` et `account`, puis liaison des owners existants par correspondance de nom, et liaisons des utilisateurs students.
 
 À utiliser une seule fois après la migration Django → tRPC/Drizzle.
 
