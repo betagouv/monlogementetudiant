@@ -11,7 +11,6 @@ program
 program
   .command('migrate-users')
   .description('Migrate Django users to better-auth')
-  .requiredOption('--file <path>', 'Path to Django users JSON dump')
   .action(migrateUsers)
 
 program

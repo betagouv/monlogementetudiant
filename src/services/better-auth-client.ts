@@ -1,7 +1,7 @@
 import { inferAdditionalFields, magicLinkClient } from 'better-auth/client/plugins'
 import { createAuthClient } from 'better-auth/react'
-import type { auth } from '~/auth'
 import { trackEvent } from '~/lib/tracking'
+import type { auth } from '~/services/better-auth'
 
 export const authClient = createAuthClient({
   plugins: [magicLinkClient(), inferAdditionalFields<typeof auth>()],

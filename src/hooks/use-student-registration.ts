@@ -1,8 +1,8 @@
 import { useMutation } from '@tanstack/react-query'
-import { authClient } from '~/auth-client'
 import { createToast } from '~/components/ui/createToast'
 import { trackEvent } from '~/lib/tracking'
 import { TSignUpForm } from '~/schemas/sign-up/sign-up'
+import { authClient } from '~/services/better-auth-client'
 
 export const postStudentRegistration = async (body: TSignUpForm): Promise<void> => {
   const result = await authClient.signUp.email({

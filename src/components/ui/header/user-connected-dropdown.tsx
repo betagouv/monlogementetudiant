@@ -1,10 +1,10 @@
 'use client'
 
 import Button from '@codegouvfr/react-dsfr/Button'
-import { signOut } from '~/auth-client'
 import { createToast } from '~/components/ui/createToast'
 import { Dropdown } from '~/components/ui/dropdown'
 import { TUser } from '~/lib/types'
+import { signOut } from '~/services/better-auth-client'
 
 export const UserConnectedDropdown = ({ user }: { user: TUser }) => {
   const handleSignout = async () => {

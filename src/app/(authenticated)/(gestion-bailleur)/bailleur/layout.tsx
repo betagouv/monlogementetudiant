@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
-import { getServerSession } from '~/auth'
 import { CommonFooter } from '~/components/ui/footer/footer'
 import { WorkspaceHeaderComponent } from '~/components/ui/header/workspace-header'
+import { getServerSession } from '~/services/better-auth'
 import styles from './layout.module.css'
 
 export const generateMetadata = async () => {

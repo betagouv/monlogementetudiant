@@ -2,12 +2,12 @@ import { Button } from '@codegouvfr/react-dsfr/Button'
 import { Header } from '@codegouvfr/react-dsfr/Header'
 import { getTranslations } from 'next-intl/server'
 import { FC } from 'react'
-import { getServerSession } from '~/auth'
 import { BrandTop } from '~/components/ui/brand-top'
 import { Banner } from '~/components/ui/header/banner/banner'
 import { HeaderNavigation } from '~/components/ui/header/navigation'
 import { UserConnectedDropdown } from '~/components/ui/header/user-connected-dropdown'
 import { UserSignInDropdown } from '~/components/ui/header/user-sign-in-dropdown'
+import { getServerSession } from '~/services/better-auth'
 
 type CommonHeaderProps = {
   withNavigation?: boolean

@@ -1,7 +1,7 @@
 import { initTRPC, TRPCError } from '@trpc/server'
 import { cache } from 'react'
 import superjson from 'superjson'
-import { getServerSession } from '~/auth'
+import { getServerSession } from '~/services/better-auth'
 
 export const createTRPCContext = cache(async () => {
   const session = await getServerSession()

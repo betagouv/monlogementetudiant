@@ -11,10 +11,10 @@ import { useTranslations } from 'next-intl'
 import { FC, useState } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { tss } from 'tss-react'
-import { signInCredentials } from '~/auth-client'
 import { createToast } from '~/components/ui/createToast'
 import { trackEvent } from '~/lib/tracking'
 import { ZCredentialsSignInForm } from '~/schemas/credentials-sign-in/credentials-sign-in'
+import { signInCredentials } from '~/services/better-auth-client'
 
 export const CredentialsSignInForm: FC = () => {
   const t = useTranslations('login')

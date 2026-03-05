@@ -1,12 +1,12 @@
 import { and, eq, sql } from 'drizzle-orm'
 import { notFound } from 'next/navigation'
-import { getServerSession } from '~/auth'
 import { EResidenceType } from '~/enums/residence-type'
 import { ETargetAudience } from '~/enums/target-audience'
 import { TAccomodationMy } from '~/schemas/accommodations/accommodations'
 import { db } from '~/server/db'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { owners } from '~/server/db/schema/owners'
+import { getServerSession } from '~/services/better-auth'
 
 const residenceTypeValues = new Set<string>(Object.values(EResidenceType))
 const targetAudienceValues = new Set<string>(Object.values(ETargetAudience))

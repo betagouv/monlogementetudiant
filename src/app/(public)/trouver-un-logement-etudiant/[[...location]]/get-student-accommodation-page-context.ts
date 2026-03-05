@@ -1,12 +1,12 @@
 import { dehydrate } from '@tanstack/react-query'
 import { redirect } from 'next/navigation'
 import { cache } from 'react'
-import { getServerSession } from '~/auth'
 import { expandBbox } from '~/components/map/map-utils'
 import { TTerritories, TTerritory } from '~/schemas/territories'
 import { prefetchAccommodations } from '~/server/accommodations/get-accommodations'
 import { getTerritories } from '~/server/territories/get-territories'
 import { getQueryClient, trpc } from '~/server/trpc/server'
+import { getServerSession } from '~/services/better-auth'
 
 const getTerritoriesCategoryKey = (categoryKey: 'ville' | 'academie' | 'departement') => {
   const keys = {

@@ -1,6 +1,5 @@
 import { dehydrate } from '@tanstack/react-query'
 import { cache } from 'react'
-import { getServerSession } from '~/auth'
 import { expandBbox } from '~/components/map/map-utils'
 import { TTerritories } from '~/schemas/territories'
 import { getAccommodationById } from '~/server/accommodations/get-accommodation-by-id'
@@ -8,6 +7,7 @@ import { getAccommodations } from '~/server/accommodations/get-accommodations'
 import { getCityDetails } from '~/server/territories/get-city-details'
 import { getTerritories } from '~/server/territories/get-territories'
 import { getQueryClient, trpc } from '~/server/trpc/server'
+import { getServerSession } from '~/services/better-auth'
 import { calculateAvailability } from '~/utils/calculateAvailability'
 
 export const getAccommodationPageContext = cache(async (slug: string, location: string) => {
