@@ -3,10 +3,10 @@ import { Header } from '@codegouvfr/react-dsfr/Header'
 import { notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { FC } from 'react'
-import { getServerSession } from '~/auth'
 import { BrandTop } from '~/components/ui/brand-top'
 import { UserConnectedDropdown } from '~/components/ui/header/user-connected-dropdown'
 import { WorkspaceHeaderNavigation } from '~/components/ui/header/workspace-navigation'
+import { getServerSession } from '~/services/better-auth'
 
 export const WorkspaceHeaderComponent: FC = async () => {
   const t = await getTranslations()

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { authClient, signOut } from '~/auth-client'
+import { authClient, signOut } from '~/services/better-auth-client'
 
 export const Signout = () => {
   const { data: session, error } = authClient.useSession()

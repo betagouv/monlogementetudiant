@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query'
-import { authClient } from '~/auth-client'
 import { createToast } from '~/components/ui/createToast'
 import { TForgotPasswordForm } from '~/schemas/forgot-password/forgot-password'
+import { authClient } from '~/services/better-auth-client'
 
 export const postForgotPassword = async (body: TForgotPasswordForm): Promise<void> => {
   const result = await authClient.requestPasswordReset({

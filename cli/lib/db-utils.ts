@@ -30,6 +30,37 @@ export async function cleanDatabase(databaseUrl: string): Promise<void> {
     console.log(`  ✓ ${enums.length} types enum supprimés`)
   }
 
+  // Drop all custom functions (e.g. immutable_unaccent from prod backup)
+  // Exclude functions that belong to extensions (like PostGIS)
+  const functions = await sql`
+    SELECT p.proname, pg_get_function_identity_arguments(p.oid) AS args
+    FROM pg_proc p
+    WHERE p.pronamespace = 'public'::regnamespace
+      AND NOT EXISTS (
+        SELECT 1 FROM pg_depend d
+        WHERE d.objid = p.oid
+          AND d.deptype = 'e'
+      )
+  `
+  for (const f of functions) {
+    await sql.unsafe(`DROP FUNCTION IF EXISTS "public"."${f.proname}"(${f.args}) CASCADE`)
+  }
+  if (functions.length > 0) {
+    console.log(`  ✓ ${functions.length} fonctions supprimées`)
+  }
+
+  await sql.end()
+}
+
+export async function ensureExtensions(databaseUrl: string): Promise<void> {
+  const sql = postgres(databaseUrl, { prepare: false })
+
+  const extensions = ['postgis', 'postgis_topology', 'postgis_tiger_geocoder', 'unaccent', 'pg_trgm']
+  for (const ext of extensions) {
+    await sql.unsafe(`CREATE EXTENSION IF NOT EXISTS "${ext}" CASCADE`)
+  }
+  console.log(`  ✓ Extensions installées: ${extensions.join(', ')}`)
+
   await sql.end()
 }
 

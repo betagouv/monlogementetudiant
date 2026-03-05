@@ -1,11 +1,11 @@
 import { QueryClient } from '@tanstack/react-query'
 import { and, eq, ilike, sql } from 'drizzle-orm'
-import { getServerSession } from '~/auth'
 import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
 import { db } from '~/server/db'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { owners } from '~/server/db/schema/owners'
 import { mapToGeoJsonFeature, priceMaxComputed } from '~/server/trpc/routers/accommodations'
+import { getServerSession } from '~/services/better-auth'
 
 const PAGE_SIZE = 20
 
