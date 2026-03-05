@@ -14,7 +14,7 @@ import { trackEvent } from '~/lib/tracking'
 import { TMagicLinkSignInForm, ZMagicLinkSignInForm } from '~/schemas/magic-link-sign-in/magic-link-sign-in'
 import { authClient } from '~/services/better-auth-client'
 
-export const MagicLinkSignInForm: FC = () => {
+export const MagicLinkSignInForm: FC<{ callbackURL?: string }> = ({ callbackURL = '/bailleur/tableau-de-bord' }) => {
   const t = useTranslations('login')
   const { classes } = useStyles()
 
@@ -31,7 +31,7 @@ export const MagicLinkSignInForm: FC = () => {
     try {
       const result = await authClient.signIn.magicLink({
         email,
-        callbackURL: '/bailleur/tableau-de-bord',
+        callbackURL,
       })
 
       if (result.error) {

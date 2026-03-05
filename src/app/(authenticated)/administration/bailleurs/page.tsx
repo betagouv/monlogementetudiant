@@ -1,5 +1,6 @@
 'use client'
 
+import { Alert } from '@codegouvfr/react-dsfr/Alert'
 import Button from '@codegouvfr/react-dsfr/Button'
 import Input from '@codegouvfr/react-dsfr/Input'
 import { ColumnDef } from '@tanstack/react-table'
@@ -21,6 +22,7 @@ const columns: ColumnDef<OwnerRow, unknown>[] = [
   {
     accessorKey: 'name',
     header: 'Nom',
+    enableSorting: true,
     cell: ({ row }) => (
       <Link href={`/administration/bailleurs/${row.original.id}`} className="fr-link">
         {row.original.name}
@@ -30,18 +32,22 @@ const columns: ColumnDef<OwnerRow, unknown>[] = [
   {
     accessorKey: 'slug',
     header: 'Slug',
+    enableSorting: true,
   },
   {
     accessorKey: 'accommodationCount',
     header: 'Residences',
+    enableSorting: true,
   },
   {
     accessorKey: 'userCount',
     header: 'Utilisateurs',
+    enableSorting: true,
   },
   {
     id: 'actions',
     header: '',
+    enableSorting: false,
     cell: ({ row }) => (
       <Button priority="tertiary no outline" size="small" linkProps={{ href: `/administration/bailleurs/${row.original.id}` }}>
         Voir
@@ -54,7 +60,7 @@ export default function OwnersPage() {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
 
-  const { data, isLoading } = useAdminOwners({
+  const { data, isLoading, isError, error } = useAdminOwners({
     page,
     search: search || undefined,
   })
@@ -67,6 +73,15 @@ export default function OwnersPage() {
           Nouveau bailleur
         </Button>
       </div>
+
+      {isError && (
+        <Alert
+          severity="error"
+          title="Erreur de chargement"
+          description={error?.message ?? 'Impossible de charger la liste des bailleurs. Verifiez la connexion a la base de donnees.'}
+          className="fr-mb-3w"
+        />
+      )}
 
       <div className="fr-grid-row fr-grid-row--gutters fr-mb-2w">
         <div className="fr-col-md-6">
@@ -91,6 +106,8 @@ export default function OwnersPage() {
         page={page}
         onPageChange={setPage}
         isLoading={isLoading}
+        isError={isError}
+        enableSorting
       />
     </>
   )

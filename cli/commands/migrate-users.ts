@@ -156,7 +156,7 @@ export async function migrateUsers() {
 
     console.log('→ Flagging étudiants...')
     const studentResult = await db.execute(sql`
-      UPDATE "user" SET role = 'student'
+      UPDATE "user" SET role = 'user'
       WHERE legacy_id IN (SELECT user_id FROM account_student)
     `)
     console.log(`✓ ${studentResult.count} étudiants flaggés`)
