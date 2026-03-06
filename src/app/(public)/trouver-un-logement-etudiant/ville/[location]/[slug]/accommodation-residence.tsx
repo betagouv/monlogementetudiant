@@ -93,7 +93,7 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
         <Alert
           severity="warning"
           title="Informations à venir"
-          description="Le bailleur n'a pas encore partagé les informations au sujet des logements de la résidence."
+          description="Le gestionnaire n'a pas encore partagé les informations au sujet des logements de la résidence."
         />
       </div>
     )

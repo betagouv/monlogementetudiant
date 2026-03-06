@@ -403,6 +403,7 @@ export const accommodationsRouter = createTRPCRouter({
         ownerName: owners.name,
         ownerSlug: owners.slug,
         ownerUrl: owners.url,
+        ownerImage: owners.image,
       })
       .from(accommodations)
       .leftJoin(owners, eq(accommodations.ownerId, owners.id))
@@ -502,7 +503,7 @@ export const accommodationsRouter = createTRPCRouter({
             name: row.ownerName,
             slug: row.ownerSlug ?? '',
             url: row.ownerUrl ?? '',
-            image_base64: null,
+            image_base64: row.ownerImage ? `data:image/jpeg;base64,${Buffer.from(row.ownerImage).toString('base64')}` : null,
           }
         : null,
     }

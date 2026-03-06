@@ -3,7 +3,7 @@ import { bigint, date, doublePrecision, integer, jsonb, pgTable, timestamp } fro
 export const stats = pgTable('stats_stats', {
   id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   date: date().notNull().unique(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 
   uniqueVisitors: integer('unique_visitors'),
   newVisitsPercentage: doublePrecision('new_visits_percentage'),

@@ -10,7 +10,7 @@ type NavItem = {
   label: string
   icon: string
   href: string
-  badgeKey?: 'owners' | 'users'
+  badgeKey?: 'owners' | 'users' | 'ownerAccounts'
 }
 
 type NavSection = {
@@ -27,6 +27,12 @@ const navSections: NavSection[] = [
     title: 'Utilisateurs',
     items: [
       { label: 'Gestionnaires', icon: 'fr-icon-building-line', href: '/administration/bailleurs', badgeKey: 'owners' },
+      {
+        label: 'Comptes gestionnaires',
+        icon: 'fr-icon-account-circle-line',
+        href: '/administration/comptes-gestionnaires',
+        badgeKey: 'ownerAccounts',
+      },
       { label: 'Étudiants', icon: 'fr-icon-user-line', href: '/administration/utilisateurs', badgeKey: 'users' },
     ],
   },
@@ -50,6 +56,7 @@ export const AdminNavigation = () => {
   const getBadgeValue = (key?: string) => {
     if (!stats || !key) return null
     if (key === 'owners') return stats.owners
+    if (key === 'ownerAccounts') return stats.users.owners
     if (key === 'users') return stats.users.students
     return null
   }

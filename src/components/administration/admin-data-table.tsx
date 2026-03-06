@@ -62,11 +62,12 @@ export function AdminDataTable<T>({
                         <span
                           aria-hidden="true"
                           className={clsx(
+                            styles.sortIcon,
                             header.column.getIsSorted() ? styles.sortIndicator : styles.sortIndicatorInactive,
                             header.column.getIsSorted() === 'asc'
-                              ? 'fr-icon-arrow-up-s-line'
+                              ? 'fr-icon-arrow-up-line'
                               : header.column.getIsSorted() === 'desc'
-                                ? 'fr-icon-arrow-down-s-line'
+                                ? 'fr-icon-arrow-down-line'
                                 : 'fr-icon-arrow-up-down-line',
                           )}
                         />
