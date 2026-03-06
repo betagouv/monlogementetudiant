@@ -1,55 +1,87 @@
 'use client'
 
-import Button from '@codegouvfr/react-dsfr/Button'
+import clsx from 'clsx'
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import styles from '~/app/(authenticated)/administration/administration.module.css'
+import { useAdminStats } from '~/hooks/use-admin-stats'
 
-const navItems = [
-  { label: 'Tableau de bord', icon: 'fr-icon-dashboard-3-line' as const, href: '/administration/tableau-de-bord' },
-  { label: 'Utilisateurs', icon: 'fr-icon-user-line' as const, href: '/administration/utilisateurs' },
-  { label: 'Bailleurs', icon: 'fr-icon-building-line' as const, href: '/administration/bailleurs' },
+type NavItem = {
+  label: string
+  icon: string
+  href: string
+  badgeKey?: 'owners' | 'users'
+}
+
+type NavSection = {
+  title: string
+  items: NavItem[]
+}
+
+const navSections: NavSection[] = [
+  {
+    title: 'Navigation',
+    items: [{ label: 'Tableau de bord', icon: 'fr-icon-dashboard-3-line', href: '/administration/tableau-de-bord' }],
+  },
+  {
+    title: 'Utilisateurs',
+    items: [
+      { label: 'Gestionnaires', icon: 'fr-icon-building-line', href: '/administration/bailleurs', badgeKey: 'owners' },
+      { label: 'Étudiants', icon: 'fr-icon-user-line', href: '/administration/utilisateurs', badgeKey: 'users' },
+    ],
+  },
+  {
+    title: 'Contenu',
+    items: [
+      { label: 'Résidences', icon: 'fr-icon-home-4-line', href: '/administration/residences' },
+      { label: 'Candidatures', icon: 'fr-icon-file-text-line', href: '/administration/candidatures' },
+    ],
+  },
+  {
+    title: 'Système',
+    items: [{ label: 'Journaux', icon: 'fr-icon-article-line', href: '/administration/journaux' }],
+  },
 ]
 
 export const AdminNavigation = () => {
   const pathname = usePathname()
+  const { data: stats } = useAdminStats()
+
+  const getBadgeValue = (key?: string) => {
+    if (!stats || !key) return null
+    if (key === 'owners') return stats.owners
+    if (key === 'users') return stats.users.students
+    return null
+  }
 
   return (
-    <>
-      <div className="fr-py-3w fr-px-2w" style={{ background: 'var(--background-action-high-blue-france)', color: 'white' }}>
-        <div className="fr-text--bold fr-text--sm fr-mb-0" style={{ color: 'white', letterSpacing: '0.1em' }}>
-          ESPACE GESTIONNAIRE
-        </div>
-      </div>
-      <div className="fr-py-2w fr-px-1w">
-        <Button iconPosition="left" iconId="fr-icon-arrow-left-line" priority="tertiary no outline" size="small" linkProps={{ href: '/' }}>
-          Retour a l'accueil
-        </Button>
-      </div>
-      <nav className="fr-flex fr-direction-column fr-flex-gap-1v fr-px-1w fr-pb-3w">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-          return (
-            <Button
-              key={item.href}
-              priority="tertiary no outline"
-              iconPosition="left"
-              iconId={item.icon}
-              size="small"
-              linkProps={{ href: item.href }}
-              style={
-                isActive
-                  ? {
-                      background: 'var(--background-action-low-blue-france)',
-                      borderRadius: '4px',
-                      fontWeight: 700,
-                    }
-                  : { borderRadius: '4px' }
-              }
-            >
-              {item.label}
-            </Button>
-          )
-        })}
+    <aside className={styles.sidebar}>
+      <nav className={styles.sidebarNav}>
+        {navSections.map((section) => (
+          <div key={section.title}>
+            <div className={styles.navSectionTitle}>{section.title}</div>
+            {section.items.map((item) => {
+              const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+              const badgeValue = getBadgeValue(item.badgeKey)
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={clsx('fr-link--no-underline', isActive ? styles.navItemActive : styles.navItem)}
+                >
+                  <span className={item.icon} aria-hidden="true" />
+                  {item.label}
+                  {badgeValue !== null && <span className={styles.navBadge}>{badgeValue}</span>}
+                </Link>
+              )
+            })}
+          </div>
+        ))}
       </nav>
-    </>
+      <div className={styles.sidebarFooter}>
+        <div className="fr-text--bold">Mon Logement Etudiant</div>
+        <div>Administration</div>
+      </div>
+    </aside>
   )
 }

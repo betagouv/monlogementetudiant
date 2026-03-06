@@ -1,8 +1,8 @@
-import { readFileSync } from 'fs'
-import path from 'path'
 import { generateId } from 'better-auth'
 import { sql } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
+import { readFileSync } from 'fs'
+import path from 'path'
 import postgres from 'postgres'
 import * as schema from '../../src/server/db/schema'
 
@@ -36,7 +36,10 @@ export async function migrateUsers() {
     console.log('→ Application du schema initial (0000_initial.sql)...')
     const initialSql = readFileSync(path.resolve('./drizzle/0000_initial.sql'), 'utf-8')
     // Split on drizzle statement breakpoints and execute each statement
-    const statements = initialSql.split('--> statement-breakpoint').map(s => s.trim()).filter(Boolean)
+    const statements = initialSql
+      .split('--> statement-breakpoint')
+      .map((s) => s.trim())
+      .filter(Boolean)
     for (const stmt of statements) {
       await conn.unsafe(stmt)
     }
@@ -57,30 +60,37 @@ export async function migrateUsers() {
 
       try {
         const newId = generateId()
-        const inserted = await db.insert(schema.user).values({
-          id: newId,
-          legacyId: Number(djangoUser.id),
-          email: djangoUser.email,
-          emailVerified: djangoUser.is_active,
-          name,
-          firstname: djangoUser.first_name || '',
-          lastname: djangoUser.last_name || '',
-          role: 'user',
-          legacyUser: true,
-          createdAt: new Date(djangoUser.date_joined),
-          updatedAt: new Date(),
-        }).onConflictDoNothing().returning({ id: schema.user.id })
-
-        if (inserted.length > 0) {
-          await db.insert(schema.account).values({
-            id: generateId(),
-            userId: inserted[0].id,
-            accountId: djangoUser.email,
-            providerId: 'credential',
-            password: djangoUser.password,
+        const inserted = await db
+          .insert(schema.user)
+          .values({
+            id: newId,
+            legacyId: Number(djangoUser.id),
+            email: djangoUser.email,
+            emailVerified: djangoUser.is_active,
+            name,
+            firstname: djangoUser.first_name || '',
+            lastname: djangoUser.last_name || '',
+            role: 'user',
+            legacyUser: true,
             createdAt: new Date(djangoUser.date_joined),
             updatedAt: new Date(),
-          }).onConflictDoNothing()
+          })
+          .onConflictDoNothing()
+          .returning({ id: schema.user.id })
+
+        if (inserted.length > 0) {
+          await db
+            .insert(schema.account)
+            .values({
+              id: generateId(),
+              userId: inserted[0].id,
+              accountId: djangoUser.email,
+              providerId: 'credential',
+              password: djangoUser.password,
+              createdAt: new Date(djangoUser.date_joined),
+              updatedAt: new Date(),
+            })
+            .onConflictDoNothing()
           migrated++
         } else {
           console.log(`  ⏭ ${djangoUser.email || `(no email, id=${djangoUser.id})`} ignoré (doublon)`)
@@ -107,7 +117,7 @@ export async function migrateUsers() {
     // Drop Django FK constraints and convert user_id columns from integer to text
     console.log('→ Conversion des colonnes user_id en text...')
     // Drop all FK constraints on user_id referencing auth_user
-    const fkConstraints = await db.execute(sql`
+    const fkConstraints = (await db.execute(sql`
       SELECT tc.table_name, tc.constraint_name
       FROM information_schema.table_constraints tc
       JOIN information_schema.key_column_usage kcu ON tc.constraint_name = kcu.constraint_name
@@ -115,7 +125,7 @@ export async function migrateUsers() {
       WHERE tc.constraint_type = 'FOREIGN KEY'
       AND ccu.table_name = 'auth_user'
       AND kcu.column_name = 'user_id'
-    `) as unknown as { table_name: string; constraint_name: string }[]
+    `)) as unknown as { table_name: string; constraint_name: string }[]
     for (const fk of fkConstraints) {
       console.log(`  Dropping FK ${fk.constraint_name} on ${fk.table_name}`)
       await db.execute(sql.raw(`ALTER TABLE "${fk.table_name}" DROP CONSTRAINT "${fk.constraint_name}"`))
@@ -171,7 +181,6 @@ export async function migrateUsers() {
       AND role != 'admin'
     `)
     console.log(`✓ ${adminResult.count} admins flaggés`)
-    console.log(`✓ ${ownerResult.count} owners flaggés`)
   } finally {
     await conn.end()
   }

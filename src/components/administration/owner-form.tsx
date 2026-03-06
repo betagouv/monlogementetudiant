@@ -37,7 +37,7 @@ export const OwnerForm = ({ defaultValues, onSubmit, isPending, submitLabel = 'E
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Input
-        label="Nom du bailleur"
+        label="Nom du gestionnaire"
         nativeInputProps={register('name')}
         state={errors.name ? 'error' : 'default'}
         stateRelatedMessage={errors.name?.message}
