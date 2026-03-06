@@ -8,6 +8,9 @@ import { Tabs } from '@codegouvfr/react-dsfr/Tabs'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import clsx from 'clsx'
 import dynamic from 'next/dynamic'
+import Image from 'next/image'
+import { useState } from 'react'
+import { LinkUserToOwnerDialog } from '~/components/administration/link-user-to-owner-dialog'
 import { OwnerForm, OwnerFormData } from '~/components/administration/owner-form'
 import { RoleBadge } from '~/components/administration/role-badge'
 import { createToast } from '~/components/ui/createToast'
@@ -15,13 +18,16 @@ import { useAdminDeleteOwner } from '~/hooks/use-admin-delete-owner'
 import { useAdminOwner } from '~/hooks/use-admin-owner'
 import { useAdminUpdateOwner } from '~/hooks/use-admin-update-owner'
 import { useTRPC, useTRPCClient } from '~/server/trpc/client'
+import { sPluriel } from '~/utils/sPluriel'
 import styles from '../../administration.module.css'
 
 const OwnerMapTab = dynamic<{
   accommodations: Array<{
     id: number
     name: string
+    slug: string
     city: string
+    citySlug: string | null
     available: boolean
     nbTotalApartments: number | null
     nbAvailableApartments: number
@@ -45,6 +51,39 @@ function getInitials(name: string) {
     .join('')
     .slice(0, 2)
     .toUpperCase()
+}
+
+function getFaviconUrl(url: string) {
+  try {
+    const origin = new URL(url).origin
+    return `${origin}/favicon.ico`
+  } catch {
+    return null
+  }
+}
+
+function OwnerDetailAvatar({ name, url, imageBase64 }: { name: string; url: string | null; imageBase64: string | null }) {
+  const [faviconError, setFaviconError] = useState(false)
+  const [dbImageError, setDbImageError] = useState(false)
+  const faviconUrl = url ? getFaviconUrl(url) : null
+
+  if (faviconUrl && !faviconError) {
+    return (
+      <div className={styles.gestionnaireAvatar} style={{ background: '#fff', overflow: 'hidden' }}>
+        <Image src={faviconUrl} alt={name} width={40} height={40} onError={() => setFaviconError(true)} unoptimized />
+      </div>
+    )
+  }
+
+  if (imageBase64 && !dbImageError) {
+    return (
+      <div className={styles.gestionnaireAvatar} style={{ background: '#fff', overflow: 'hidden' }}>
+        <Image src={imageBase64} alt={name} width={40} height={40} onError={() => setDbImageError(true)} unoptimized />
+      </div>
+    )
+  }
+
+  return <div className={styles.gestionnaireAvatar}>{getInitials(name)}</div>
 }
 
 export function OwnerDetail({ id }: { id: string }) {
@@ -81,7 +120,7 @@ export function OwnerDetail({ id }: { id: string }) {
 
       <div className={clsx(styles.card, 'fr-mb-3w')}>
         <div className={styles.gestionnaireHeader}>
-          <div className={styles.gestionnaireAvatar}>{getInitials(ownerData.name)}</div>
+          <OwnerDetailAvatar name={ownerData.name} url={ownerData.url} imageBase64={ownerData.imageBase64} />
           <div className={styles.gestionnaireInfo}>
             <h2>{ownerData.name}</h2>
             <div className={styles.gestionnaireOrg}>
@@ -90,30 +129,31 @@ export function OwnerDetail({ id }: { id: string }) {
             <div className={styles.gestionnaireMeta}>
               <span>
                 <span className="fr-icon-home-4-line fr-icon--sm" aria-hidden="true" />
-                {accCount} résidences
+                {accCount} résidence{sPluriel(accCount)}
               </span>
               <span>
                 <span className="fr-icon-user-line fr-icon--sm" aria-hidden="true" />
-                {userCount} utilisateurs
+                {userCount} utilisateur{sPluriel(userCount)}
               </span>
             </div>
-          </div>
-          <div className="fr-ml-auto">
-            <Badge severity="success">Actif</Badge>
           </div>
         </div>
         <div className={styles.kpiRow}>
           <div className={styles.kpiItem}>
             <div className={styles.kpiValue}>{accCount}</div>
-            <div className={styles.kpiLabel}>Résidences</div>
+            <div className={styles.kpiLabel}>Résidence{sPluriel(accCount)}</div>
           </div>
           <div className={styles.kpiItem}>
             <div className={styles.kpiValue}>{userCount}</div>
-            <div className={styles.kpiLabel}>Utilisateurs rattachés</div>
+            <div className={styles.kpiLabel}>
+              Utilisateur{sPluriel(userCount)} rattaché{sPluriel(userCount)}
+            </div>
           </div>
           <div className={styles.kpiItem}>
             <div className={styles.kpiValue}>{(accommodationsData ?? []).reduce((sum, a) => sum + (a.nbAvailableApartments ?? 0), 0)}</div>
-            <div className={styles.kpiLabel}>Disponibles</div>
+            <div className={styles.kpiLabel}>
+              Disponible{sPluriel((accommodationsData ?? []).reduce((sum, a) => sum + (a.nbAvailableApartments ?? 0), 0))}
+            </div>
           </div>
         </div>
       </div>
@@ -121,12 +161,12 @@ export function OwnerDetail({ id }: { id: string }) {
       <Tabs
         tabs={[
           {
-            label: `Utilisateurs (${userCount})`,
+            label: `Utilisateur${sPluriel(userCount)} (${userCount})`,
             iconId: 'fr-icon-user-line',
-            content: <UsersTab users={ownerData.users ?? []} ownerId={ownerId} />,
+            content: <UsersTab users={ownerData.users ?? []} ownerId={ownerId} ownerName={ownerData.name} />,
           },
           {
-            label: `Résidences (${accCount})`,
+            label: `Résidence${sPluriel(accCount)} (${accCount})`,
             iconId: 'fr-icon-home-4-line',
             content: <ResidencesTab accommodations={accommodationsData ?? []} />,
           },
@@ -193,9 +233,11 @@ export function OwnerDetail({ id }: { id: string }) {
 function UsersTab({
   users,
   ownerId,
+  ownerName,
 }: {
   users: Array<{ id: string; email: string; firstname: string; lastname: string; role: string }>
   ownerId: number
+  ownerName: string
 }) {
   const queryClient = useQueryClient()
   const trpc = useTRPC()
@@ -212,56 +254,58 @@ function UsersTab({
     },
   })
 
-  if (users.length === 0) {
-    return <p className="fr-text--sm fr-text-mention--grey">Aucun utilisateur rattaché</p>
-  }
-
   return (
-    <div className={clsx('fr-table', styles.tableWrapper)}>
-      <table>
-        <thead>
-          <tr>
-            <th scope="col">Utilisateur</th>
-            <th scope="col">Rôle</th>
-            <th scope="col">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((u) => (
-            <tr key={u.id}>
-              <td>
-                <div className="fr-text--bold">
-                  {u.firstname} {u.lastname}
-                </div>
-                <div className="fr-text--xs fr-text-mention--grey">{u.email}</div>
-              </td>
-              <td>
-                <RoleBadge role={u.role} />
-              </td>
-              <td>
-                <div className="fr-flex fr-flex-gap-1v">
-                  <Button priority="tertiary no outline" size="small" linkProps={{ href: `/administration/utilisateurs/${u.id}` }}>
-                    Voir
-                  </Button>
-                  <Button
-                    priority="tertiary no outline"
-                    size="small"
-                    onClick={() => {
-                      if (window.confirm(`Délier ${u.firstname} ${u.lastname} de ce gestionnaire ?`)) {
-                        unlinkMutation.mutate(u.id)
-                      }
-                    }}
-                    disabled={unlinkMutation.isPending}
-                  >
-                    Délier
-                  </Button>
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <>
+      <div className="fr-flex fr-justify-content-end fr-mb-2w">
+        <LinkUserToOwnerDialog ownerId={ownerId} ownerName={ownerName} />
+      </div>
+
+      {users.length === 0 ? (
+        <p className="fr-text--sm fr-text-mention--grey">Aucun utilisateur rattaché</p>
+      ) : (
+        <div className={clsx('fr-table', styles.tableWrapper)}>
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Utilisateur</th>
+                <th scope="col">Rôle</th>
+                <th scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((u) => (
+                <tr key={u.id}>
+                  <td>
+                    <div className="fr-text--bold">
+                      {u.firstname} {u.lastname}
+                    </div>
+                    <div className="fr-text--xs fr-text-mention--grey">{u.email}</div>
+                  </td>
+                  <td>
+                    <RoleBadge role={u.role} />
+                  </td>
+                  <td>
+                    <div className="fr-flex fr-flex-gap-1v">
+                      <Button priority="tertiary no outline" size="small" linkProps={{ href: `/administration/utilisateurs/${u.id}` }}>
+                        Voir
+                      </Button>
+                      <Button
+                        priority="tertiary no outline"
+                        size="small"
+                        onClick={() => unlinkMutation.mutate(u.id)}
+                        disabled={unlinkMutation.isPending}
+                      >
+                        Délier
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </>
   )
 }
 
@@ -271,7 +315,9 @@ function ResidencesTab({
   accommodations: Array<{
     id: number
     name: string
+    slug: string
     city: string
+    citySlug: string | null
     nbTotalApartments: number | null
     nbAvailableApartments: number
     available: boolean
@@ -292,6 +338,7 @@ function ResidencesTab({
             <th scope="col">Logements</th>
             <th scope="col">Dispo.</th>
             <th scope="col">Statut</th>
+            <th scope="col">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -304,6 +351,20 @@ function ResidencesTab({
                 {acc.nbAvailableApartments} / {acc.nbTotalApartments ?? '-'}
               </td>
               <td>{acc.published ? <Badge severity="success">Publiée</Badge> : <Badge severity="warning">Dépubliée</Badge>}</td>
+              <td>
+                <div className="fr-flex fr-flex-gap-1v">
+                  <Button
+                    priority="tertiary"
+                    size="small"
+                    linkProps={{ href: `/trouver-un-logement-etudiant/ville/${acc.citySlug}/${acc.slug}`, target: '_blank' }}
+                  >
+                    Voir
+                  </Button>
+                  <Button priority="tertiary" size="small" linkProps={{ href: `/bailleur/residences/${acc.slug}` }}>
+                    Modifier
+                  </Button>
+                </div>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -349,7 +410,9 @@ function StatsTab({ stats }: { stats: StatsData | null }) {
           <div key={t.key}>
             <div className="fr-flex fr-justify-content-between fr-mb-1v">
               <span className="fr-mb-0 fr-text--sm">{t.label}</span>
-              <span className="fr-mb-0 fr-text--sm fr-text--bold">&nbsp;{stats[t.key]} logements</span>
+              <span className="fr-mb-0 fr-text--sm fr-text--bold">
+                &nbsp;{stats[t.key]} logement{sPluriel(stats[t.key])}
+              </span>
             </div>
             <div className={styles.progressTrack}>
               <div

@@ -1,14 +1,17 @@
 import { TRPCError } from '@trpc/server'
-import { and, count, eq, ilike, or, sql } from 'drizzle-orm'
+import { and, count, eq, ilike, isNull, or, sql } from 'drizzle-orm'
+import { getTranslations } from 'next-intl/server'
 import { z } from 'zod'
 import { db } from '~/server/db'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { user } from '~/server/db/schema/auth'
+import { cities } from '~/server/db/schema/cities'
 import { owners } from '~/server/db/schema/owners'
 import { generateSlug } from '~/server/trpc/utils/accommodation-helpers'
 import { adminProcedure, createTRPCRouter } from '../init'
 
 const PAGE_SIZE = 20
+const getAdminErrorTranslations = () => getTranslations('trpc.admin.errors')
 
 const usersRouter = createTRPCRouter({
   list: adminProcedure
@@ -16,10 +19,13 @@ const usersRouter = createTRPCRouter({
       z.object({
         page: z.number().default(1),
         search: z.string().optional(),
+        role: z.enum(['user', 'owner', 'admin']).optional(),
+        unlinked: z.boolean().optional(),
       }),
     )
     .query(async ({ input }) => {
-      const conditions = [eq(user.role, 'user')]
+      const roleFilter = eq(user.role, input.role ?? 'user')
+      const conditions = [input.unlinked ? and(isNull(user.ownerId), eq(user.role, 'owner')) : roleFilter]
 
       if (input.search && input.search.length >= 2) {
         const searchCondition = or(
@@ -47,8 +53,11 @@ const usersRouter = createTRPCRouter({
             lastLoginAt: sql<Date | null>`(SELECT max(created_at) FROM "session" WHERE user_id = "user"."id")`,
             favoritesCount: sql<number>`(SELECT count(*)::int FROM accommodation_favoriteaccommodation WHERE user_id = "user"."id")`,
             alertsCount: sql<number>`(SELECT count(*)::int FROM student_alert WHERE user_id = "user"."id")`,
+            ownerId: user.ownerId,
+            ownerName: owners.name,
           })
           .from(user)
+          .leftJoin(owners, eq(user.ownerId, owners.id))
           .where(where)
           .orderBy(user.createdAt)
           .limit(PAGE_SIZE)
@@ -72,7 +81,7 @@ const usersRouter = createTRPCRouter({
     })
 
     if (!result) {
-      throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' })
+      throw new TRPCError({ code: 'NOT_FOUND', message: (await getAdminErrorTranslations())('userNotFound') })
     }
 
     return result
@@ -90,7 +99,7 @@ const usersRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       const existing = await db.query.user.findFirst({ where: eq(user.email, input.email) })
       if (existing) {
-        throw new TRPCError({ code: 'CONFLICT', message: 'Un utilisateur avec cet email existe deja' })
+        throw new TRPCError({ code: 'CONFLICT', message: (await getAdminErrorTranslations())('userAlreadyExists') })
       }
 
       const id = crypto.randomUUID()
@@ -138,7 +147,7 @@ const usersRouter = createTRPCRouter({
 
       const [updated] = await db.update(user).set(updateData).where(eq(user.id, id)).returning()
       if (!updated) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' })
+        throw new TRPCError({ code: 'NOT_FOUND', message: (await getAdminErrorTranslations())('userNotFound') })
       }
 
       return updated
@@ -147,7 +156,7 @@ const usersRouter = createTRPCRouter({
   delete: adminProcedure.input(z.object({ id: z.string() })).mutation(async ({ input }) => {
     const [deleted] = await db.delete(user).where(eq(user.id, input.id)).returning({ id: user.id })
     if (!deleted) {
-      throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' })
+      throw new TRPCError({ code: 'NOT_FOUND', message: (await getAdminErrorTranslations())('userNotFound') })
     }
     return deleted
   }),
@@ -160,7 +169,7 @@ const usersRouter = createTRPCRouter({
       .returning()
 
     if (!updated) {
-      throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' })
+      throw new TRPCError({ code: 'NOT_FOUND', message: (await getAdminErrorTranslations())('userNotFound') })
     }
 
     return updated
@@ -170,7 +179,7 @@ const usersRouter = createTRPCRouter({
     const [updated] = await db.update(user).set({ ownerId: null, updatedAt: new Date() }).where(eq(user.id, input.userId)).returning()
 
     if (!updated) {
-      throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' })
+      throw new TRPCError({ code: 'NOT_FOUND', message: (await getAdminErrorTranslations())('userNotFound') })
     }
 
     return updated
@@ -203,6 +212,7 @@ const ownersRouter = createTRPCRouter({
             name: owners.name,
             slug: owners.slug,
             url: owners.url,
+            image: owners.image,
             accommodationCount: sql<number>`(SELECT count(*)::int FROM accommodation_accommodation WHERE owner_id = "account_owner"."id")`,
             userCount: sql<number>`(SELECT count(*)::int FROM "user" WHERE owner_id = "account_owner"."id")`,
             availableApartments: sql<number>`(
@@ -228,7 +238,10 @@ const ownersRouter = createTRPCRouter({
       const total = countResult[0]?.count ?? 0
 
       return {
-        items: results,
+        items: results.map(({ image, ...r }) => ({
+          ...r,
+          imageBase64: image ? `data:image/jpeg;base64,${Buffer.from(image).toString('base64')}` : null,
+        })),
         total,
         pageCount: Math.ceil(total / PAGE_SIZE),
         page: input.page,
@@ -246,10 +259,14 @@ const ownersRouter = createTRPCRouter({
     })
 
     if (!result) {
-      throw new TRPCError({ code: 'NOT_FOUND', message: 'Owner not found' })
+      throw new TRPCError({ code: 'NOT_FOUND', message: (await getAdminErrorTranslations())('ownerNotFound') })
     }
 
-    return result
+    const { image, ...rest } = result
+    return {
+      ...rest,
+      imageBase64: image ? `data:image/jpeg;base64,${Buffer.from(image).toString('base64')}` : null,
+    }
   }),
 
   create: adminProcedure
@@ -291,7 +308,7 @@ const ownersRouter = createTRPCRouter({
 
       const [updated] = await db.update(owners).set(updateData).where(eq(owners.id, id)).returning()
       if (!updated) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Owner not found' })
+        throw new TRPCError({ code: 'NOT_FOUND', message: (await getAdminErrorTranslations())('ownerNotFound') })
       }
 
       return updated
@@ -303,8 +320,7 @@ const ownersRouter = createTRPCRouter({
     if ((accomCount[0]?.count ?? 0) > 0) {
       throw new TRPCError({
         code: 'PRECONDITION_FAILED',
-        message:
-          'Ce gestionnaire est lié à des résidences. Vous devez les supprimer, ou les réassigner pour permettre la suppression du gestionnaire.',
+        message: (await getAdminErrorTranslations())('ownerDeleteHasAccommodations'),
       })
     }
 
@@ -313,7 +329,7 @@ const ownersRouter = createTRPCRouter({
 
     const [deleted] = await db.delete(owners).where(eq(owners.id, input.id)).returning({ id: owners.id })
     if (!deleted) {
-      throw new TRPCError({ code: 'NOT_FOUND', message: 'Owner not found' })
+      throw new TRPCError({ code: 'NOT_FOUND', message: (await getAdminErrorTranslations())('ownerNotFound') })
     }
 
     return deleted
@@ -326,6 +342,7 @@ const ownersRouter = createTRPCRouter({
         name: accommodations.name,
         slug: accommodations.slug,
         city: accommodations.city,
+        citySlug: sql<string | null>`(SELECT ${cities.slug} FROM ${cities} WHERE ${cities.name} = ${accommodations.city} LIMIT 1)`,
         available: accommodations.available,
         published: accommodations.published,
         nbTotalApartments: accommodations.nbTotalApartments,
@@ -374,7 +391,13 @@ const residencesRouter = createTRPCRouter({
       const conditions = []
 
       if (input.search && input.search.length >= 2) {
-        conditions.push(or(ilike(accommodations.name, `%${input.search}%`), ilike(accommodations.city, `%${input.search}%`)))
+        conditions.push(
+          or(
+            ilike(accommodations.name, `%${input.search}%`),
+            ilike(accommodations.city, `%${input.search}%`),
+            ilike(owners.name, `%${input.search}%`),
+          ),
+        )
       }
 
       const where = conditions.length > 0 ? and(...conditions) : undefined
@@ -385,6 +408,7 @@ const residencesRouter = createTRPCRouter({
           name: accommodations.name,
           slug: accommodations.slug,
           city: accommodations.city,
+          citySlug: sql<string | null>`(SELECT ${cities.slug} FROM ${cities} WHERE ${cities.name} = ${accommodations.city} LIMIT 1)`,
           available: accommodations.available,
           published: accommodations.published,
           nbTotalApartments: accommodations.nbTotalApartments,

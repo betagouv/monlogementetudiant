@@ -825,6 +825,16 @@
     "ownerDeleted": "Gestionnaire supprimé",
     "ownerDeleteError": "Erreur lors de la suppression du gestionnaire"
   },
+  "trpc": {
+    "admin": {
+      "errors": {
+        "userNotFound": "Utilisateur introuvable",
+        "userAlreadyExists": "Un utilisateur avec cet email existe déjà",
+        "ownerNotFound": "Gestionnaire introuvable",
+        "ownerDeleteHasAccommodations": "Ce gestionnaire est lié à des résidences. Vous devez les supprimer, ou les réassigner pour permettre la suppression du gestionnaire."
+      }
+    }
+  },
   "bailleur": {
     "header": {
       "title": "Espace gestionnaire"

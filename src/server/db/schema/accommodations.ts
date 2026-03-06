@@ -84,6 +84,6 @@ export const accommodations = pgTable('accommodation_accommodation', {
   ownerId: bigint('owner_id', { mode: 'number' }).references(() => owners.id),
 
   // Timestamps
-  createdAt: timestamp('created_at'),
-  updatedAt: timestamp('updated_at'),
+  createdAt: timestamp('created_at', { withTimezone: true }),
+  updatedAt: timestamp('updated_at', { withTimezone: true }),
 })

@@ -1,12 +1,14 @@
 'use client'
 
+import Button from '@codegouvfr/react-dsfr/Button'
 import L from 'leaflet'
-import { FC, useMemo, useState } from 'react'
+import { parseAsString, parseAsStringLiteral, useQueryStates } from 'nuqs'
+import { FC, useMemo } from 'react'
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css'
 import 'leaflet-defaulticon-compatibility'
-import clsx from 'clsx'
+import { sPluriel } from '~/utils/sPluriel'
 import styles from '../../administration.module.css'
 
 type Accommodation = {
@@ -39,8 +41,10 @@ const redIcon = new L.Icon({
 })
 
 export const OwnerMapTab: FC<{ accommodations: Accommodation[] }> = ({ accommodations }) => {
-  const [filter, setFilter] = useState<'all' | 'available' | 'full'>('all')
-  const [cityFilter, setCityFilter] = useState('')
+  const [queryStates, setQueryStates] = useQueryStates({
+    statut: parseAsStringLiteral(['all', 'available', 'full']).withDefault('all'),
+    ville: parseAsString.withDefault(''),
+  })
 
   const cities = useMemo(() => {
     const set = new Set(accommodations.map((a) => a.city))
@@ -53,11 +57,11 @@ export const OwnerMapTab: FC<{ accommodations: Accommodation[] }> = ({ accommoda
 
   const filtered = useMemo(() => {
     let result = geoAccommodations
-    if (filter === 'available') result = result.filter((a) => a.nbAvailableApartments > 0)
-    if (filter === 'full') result = result.filter((a) => a.nbAvailableApartments === 0)
-    if (cityFilter) result = result.filter((a) => a.city === cityFilter)
+    if (queryStates.statut === 'available') result = result.filter((a) => a.nbAvailableApartments > 0)
+    if (queryStates.statut === 'full') result = result.filter((a) => a.nbAvailableApartments === 0)
+    if (queryStates.ville) result = result.filter((a) => a.city === queryStates.ville)
     return result
-  }, [geoAccommodations, filter, cityFilter])
+  }, [geoAccommodations, queryStates.statut, queryStates.ville])
 
   const center = useMemo<[number, number]>(() => {
     if (filtered.length === 0) return [46.5, 2.4]
@@ -70,33 +74,35 @@ export const OwnerMapTab: FC<{ accommodations: Accommodation[] }> = ({ accommoda
     <div>
       <div className="fr-flex fr-flex-gap-2v fr-mb-2w fr-align-items-end fr-flex-wrap">
         <div className="fr-flex fr-flex-gap-1v">
-          <button
-            type="button"
-            className={clsx('fr-btn fr-btn--sm', filter === 'all' ? '' : 'fr-btn--tertiary')}
-            onClick={() => setFilter('all')}
+          <Button
+            size="small"
+            priority={queryStates.statut === 'all' ? 'primary' : 'tertiary'}
+            onClick={() => setQueryStates({ statut: 'all', ville: '' })}
           >
             Toutes ({geoAccommodations.length})
-          </button>
-          <button
-            type="button"
-            className={clsx('fr-btn fr-btn--sm', filter === 'available' ? 'fr-btn--icon-left fr-icon-check-line' : 'fr-btn--tertiary')}
-            onClick={() => setFilter(filter === 'available' ? 'all' : 'available')}
+          </Button>
+          <Button
+            size="small"
+            iconId={queryStates.statut === 'available' ? 'ri-check-line' : undefined}
+            priority={queryStates.statut === 'available' ? 'primary' : 'tertiary'}
+            onClick={() => setQueryStates({ statut: queryStates.statut === 'available' ? 'all' : 'available' })}
           >
             Disponible
-          </button>
-          <button
-            type="button"
-            className={clsx('fr-btn fr-btn--sm', filter === 'full' ? 'fr-btn--icon-left fr-icon-close-line' : 'fr-btn--tertiary')}
-            onClick={() => setFilter(filter === 'full' ? 'all' : 'full')}
+          </Button>
+          <Button
+            size="small"
+            iconId={queryStates.statut === 'full' ? 'ri-close-line' : undefined}
+            priority={queryStates.statut === 'full' ? 'primary' : 'tertiary'}
+            onClick={() => setQueryStates({ statut: queryStates.statut === 'full' ? 'all' : 'full' })}
           >
             Complet
-          </button>
+          </Button>
         </div>
         <div>
           <select
             className="fr-select fr-select--sm"
-            value={cityFilter}
-            onChange={(e) => setCityFilter(e.target.value)}
+            value={queryStates.ville}
+            onChange={(e) => setQueryStates({ ville: e.target.value })}
             style={{ minWidth: 200 }}
           >
             <option value="">Toutes les villes</option>
@@ -131,7 +137,7 @@ export const OwnerMapTab: FC<{ accommodations: Accommodation[] }> = ({ accommoda
                   <br />
                   {acc.city}
                   <br />
-                  {acc.nbAvailableApartments} / {acc.nbTotalApartments ?? '?'} disponibles
+                  {acc.nbAvailableApartments} / {acc.nbTotalApartments ?? '?'} disponible{sPluriel(acc.nbAvailableApartments)}
                 </Popup>
               </Marker>
             ))}
