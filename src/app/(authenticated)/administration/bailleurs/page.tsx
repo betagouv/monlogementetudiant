@@ -7,11 +7,13 @@ import Pagination from '@codegouvfr/react-dsfr/Pagination'
 import { SegmentedControl } from '@codegouvfr/react-dsfr/SegmentedControl'
 import { ColumnDef } from '@tanstack/react-table'
 import clsx from 'clsx'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
 import { useDebounce } from 'use-debounce'
 import { AdminDataTable } from '~/components/administration/admin-data-table'
 import { useAdminOwners } from '~/hooks/use-admin-owners'
+import { sPluriel } from '~/utils/sPluriel'
 import styles from '../administration.module.css'
 
 type OwnerRow = {
@@ -19,6 +21,7 @@ type OwnerRow = {
   name: string
   slug: string
   url: string | null
+  imageBase64: string | null
   accommodationCount: number
   userCount: number
   availableApartments: number
@@ -37,6 +40,43 @@ function getInitials(name: string) {
 
 function getColor(index: number) {
   return AVATAR_COLORS[index % AVATAR_COLORS.length]
+}
+
+function getFaviconUrl(url: string) {
+  try {
+    const origin = new URL(url).origin
+    return `${origin}/favicon.ico`
+  } catch {
+    return null
+  }
+}
+
+function OwnerAvatar({ name, url, imageBase64, index }: { name: string; url: string | null; imageBase64: string | null; index: number }) {
+  const [faviconError, setFaviconError] = useState(false)
+  const [dbImageError, setDbImageError] = useState(false)
+  const faviconUrl = url ? getFaviconUrl(url) : null
+
+  if (faviconUrl && !faviconError) {
+    return (
+      <div className={styles.gCardAvatar} style={{ background: '#fff', overflow: 'hidden' }}>
+        <Image src={faviconUrl} alt={name} width={32} height={32} onError={() => setFaviconError(true)} unoptimized />
+      </div>
+    )
+  }
+
+  if (imageBase64 && !dbImageError) {
+    return (
+      <div className={styles.gCardAvatar} style={{ background: '#fff', overflow: 'hidden' }}>
+        <Image src={imageBase64} alt={name} width={32} height={32} onError={() => setDbImageError(true)} unoptimized />
+      </div>
+    )
+  }
+
+  return (
+    <div className={styles.gCardAvatar} style={{ background: getColor(index) }}>
+      {getInitials(name)}
+    </div>
+  )
 }
 
 const columns: ColumnDef<OwnerRow, unknown>[] = [
@@ -163,9 +203,7 @@ export default function OwnersPage() {
               {data!.items.map((owner, i) => (
                 <Link key={owner.id} href={`/administration/bailleurs/${owner.id}`} className={styles.gCard}>
                   <div className={styles.gCardTop}>
-                    <div className={styles.gCardAvatar} style={{ background: getColor(i) }}>
-                      {getInitials(owner.name)}
-                    </div>
+                    <OwnerAvatar name={owner.name} url={owner.url} imageBase64={owner.imageBase64} index={i} />
                     <div className={styles.flexFill}>
                       <div className={styles.gCardName}>{owner.name}</div>
                       <div className={styles.gCardOrg}>{owner.slug}</div>
@@ -174,15 +212,15 @@ export default function OwnersPage() {
                   <div className={styles.gCardStats}>
                     <div>
                       <div className={styles.gCardStatVal}>{owner.accommodationCount}</div>
-                      <div className={styles.gCardStatLbl}>Résidences</div>
+                      <div className={styles.gCardStatLbl}>Résidence{sPluriel(owner.accommodationCount)}</div>
                     </div>
                     <div>
                       <div className={styles.gCardStatVal}>{owner.userCount}</div>
-                      <div className={styles.gCardStatLbl}>Utilisateurs</div>
+                      <div className={styles.gCardStatLbl}>Utilisateur{sPluriel(owner.userCount)}</div>
                     </div>
                     <div>
                       <div className={styles.gCardStatVal}>{owner.availableApartments}</div>
-                      <div className={styles.gCardStatLbl}>Disponibles</div>
+                      <div className={styles.gCardStatLbl}>Disponible{sPluriel(owner.availableApartments)}</div>
                     </div>
                   </div>
                   <div className={styles.gCardBottom}>

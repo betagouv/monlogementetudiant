@@ -14,5 +14,5 @@ export const studentAlerts = pgTable('student_alert', {
   isAccessible: boolean('is_accessible').notNull().default(false),
   maxPrice: integer('max_price').notNull(),
   receiveNotifications: boolean('receive_notifications').notNull().default(false),
-  createdAt: timestamp('created_at').defaultNow(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 })

@@ -3,7 +3,7 @@ import { bigint, date, doublePrecision, integer, pgTable, timestamp, varchar } f
 export const eventStats = pgTable('stats_eventstats', {
   id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   date: date().notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 
   category: varchar({ length: 255 }).notNull(),
   action: varchar({ length: 255 }).notNull(),

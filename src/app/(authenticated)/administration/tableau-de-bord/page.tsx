@@ -4,33 +4,39 @@ import Alert from '@codegouvfr/react-dsfr/Alert'
 import clsx from 'clsx'
 import { Cell, Label, Pie, PieChart, ResponsiveContainer } from 'recharts'
 import { useAdminStats } from '~/hooks/use-admin-stats'
+import { sPluriel } from '~/utils/sPluriel'
 import styles from '../administration.module.css'
 
 export default function DashboardPage() {
   const { data, isLoading } = useAdminStats()
 
+  const students = data?.users.students ?? 0
+  const accommodations = data?.accommodations ?? 0
+  const availableAccommodations = data?.availableAccommodations ?? 0
+  const owners = data?.owners ?? 0
+
   const statCards = [
     {
-      label: 'Étudiants inscrits',
-      value: data?.users.students ?? 0,
+      label: `Étudiant${sPluriel(students)} inscrit${sPluriel(students)}`,
+      value: students,
       icon: 'fr-icon-user-line',
       colorClass: styles.statCardBlue,
     },
     {
-      label: 'Résidences',
-      value: data?.accommodations ?? 0,
+      label: `Résidence${sPluriel(accommodations)}`,
+      value: accommodations,
       icon: 'fr-icon-home-4-line',
       colorClass: styles.statCardGreen,
     },
     {
-      label: 'Logements disponibles',
-      value: data?.availableAccommodations ?? 0,
+      label: `Logement${sPluriel(availableAccommodations)} disponible${sPluriel(availableAccommodations)}`,
+      value: availableAccommodations,
       icon: 'fr-icon-checkbox-circle-line',
       colorClass: styles.statCardOrange,
     },
     {
-      label: 'Gestionnaires',
-      value: data?.owners ?? 0,
+      label: `Gestionnaire${sPluriel(owners)}`,
+      value: owners,
       icon: 'fr-icon-building-line',
       colorClass: styles.statCardPurple,
     },
@@ -75,9 +81,9 @@ function RoleBreakdown({ data }: { data: ReturnType<typeof useAdminStats>['data'
 
   const total = data.users.total || 1
   const roles = [
-    { label: 'Administrateurs', count: data.users.admins, color: 'var(--background-flat-error)' },
-    { label: 'Gestionnaires', count: data.users.owners, color: 'var(--background-action-high-blue-france)' },
-    { label: 'Étudiants', count: data.users.students, color: 'var(--background-flat-success)' },
+    { label: `Administrateur${sPluriel(data.users.admins)}`, count: data.users.admins, color: 'var(--background-flat-error)' },
+    { label: `Gestionnaire${sPluriel(data.users.owners)}`, count: data.users.owners, color: 'var(--background-action-high-blue-france)' },
+    { label: `Étudiant${sPluriel(data.users.students)}`, count: data.users.students, color: 'var(--background-flat-success)' },
   ]
 
   return (
@@ -115,11 +121,11 @@ function OccupationChart({ data }: { data: ReturnType<typeof useAdminStats>['dat
   const { total, occupied, available } = data.occupation
   if (total === 0) return null
 
-  const occupiedPct = Math.round((occupied / total) * 100)
+  const occupiedPct = Math.round((occupied / total) * 1000) / 10
 
   const chartData = [
-    { name: 'Occupés', value: occupied, color: OCCUPATION_COLORS[0] },
-    { name: 'Disponibles', value: available, color: OCCUPATION_COLORS[2] },
+    { name: `Occupé${sPluriel(occupied)}`, value: occupied, color: OCCUPATION_COLORS[0] },
+    { name: `Disponible${sPluriel(available)}`, value: available, color: OCCUPATION_COLORS[2] },
   ]
 
   return (
@@ -131,7 +137,16 @@ function OccupationChart({ data }: { data: ReturnType<typeof useAdminStats>['dat
         <div style={{ width: 180, height: 180, flexShrink: 0 }}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
-              <Pie data={chartData} dataKey="value" innerRadius={55} outerRadius={80} startAngle={90} endAngle={-270} paddingAngle={2}>
+              <Pie
+                data={chartData}
+                dataKey="value"
+                innerRadius={55}
+                outerRadius={80}
+                startAngle={90}
+                endAngle={-270}
+                paddingAngle={2}
+                minAngle={5}
+              >
                 {chartData.map((entry) => (
                   <Cell key={entry.name} fill={entry.color} />
                 ))}
@@ -143,7 +158,7 @@ function OccupationChart({ data }: { data: ReturnType<typeof useAdminStats>['dat
                         {occupiedPct}%
                       </tspan>
                       <tspan x="50%" dy="1.4em" style={{ fontSize: '0.75rem', fill: '#666' }}>
-                        occupés
+                        occupé{sPluriel(occupied)}
                       </tspan>
                     </text>
                   )}
@@ -154,7 +169,7 @@ function OccupationChart({ data }: { data: ReturnType<typeof useAdminStats>['dat
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           {chartData.map((entry) => {
-            const pct = Math.round((entry.value / total) * 100)
+            const pct = Math.round((entry.value / total) * 1000) / 10
             return (
               <div key={entry.name} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <div style={{ width: 12, height: 12, borderRadius: 2, background: entry.color, flexShrink: 0 }} />

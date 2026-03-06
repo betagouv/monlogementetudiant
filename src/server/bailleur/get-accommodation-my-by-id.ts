@@ -26,12 +26,15 @@ export const getAccommodationMyById = async (slug: string): Promise<TAccomodatio
     return notFound()
   }
 
-  const userId = auth.user.id
-
-  const usr = await db.query.user.findFirst({ where: eq(user.id, userId), with: { owner: true } })
-  const owner = usr?.owner
-  if (!owner) {
-    return notFound()
+  let ownerId: number | null = null
+  if (auth.user.role !== 'admin') {
+    const userId = auth.user.id
+    const usr = await db.query.user.findFirst({ where: eq(user.id, userId), with: { owner: true } })
+    const owner = usr?.owner
+    if (!owner) {
+      return notFound()
+    }
+    ownerId = owner.id
   }
 
   const rows = await db
@@ -108,7 +111,7 @@ export const getAccommodationMyById = async (slug: string): Promise<TAccomodatio
     })
     .from(accommodations)
     .leftJoin(owners, eq(accommodations.ownerId, owners.id))
-    .where(and(eq(accommodations.slug, slug), eq(accommodations.ownerId, owner.id)))
+    .where(ownerId != null ? and(eq(accommodations.slug, slug), eq(accommodations.ownerId, ownerId)) : eq(accommodations.slug, slug))
     .limit(1)
 
   const row = rows[0]

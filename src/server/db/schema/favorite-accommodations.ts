@@ -9,7 +9,7 @@ export const favoriteAccommodations = pgTable(
     accommodationId: bigint('accommodation_id', { mode: 'number' })
       .notNull()
       .references(() => accommodations.id),
-    createdAt: timestamp('created_at').defaultNow(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   },
   (t) => [unique().on(t.userId, t.accommodationId)],
 )

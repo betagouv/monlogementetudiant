@@ -16,6 +16,7 @@ type ResidenceRow = {
   name: string
   slug: string
   city: string
+  citySlug: string | null
   available: boolean
   published: boolean
   nbTotalApartments: number | null
@@ -31,7 +32,7 @@ const columns: ColumnDef<ResidenceRow, unknown>[] = [
   },
   {
     accessorKey: 'ownerName',
-    header: 'Bailleur',
+    header: 'Gesttionaire',
   },
   {
     accessorKey: 'city',
@@ -56,14 +57,18 @@ const columns: ColumnDef<ResidenceRow, unknown>[] = [
     id: 'actions',
     header: '',
     cell: ({ row }) => (
-      <Button
-        priority="tertiary no outline"
-        size="small"
-        iconId="fr-icon-external-link-line"
-        linkProps={{ href: `/residences/${row.original.slug}`, target: '_blank' }}
-      >
-        Voir
-      </Button>
+      <div className="fr-flex fr-flex-gap-1v">
+        <Button
+          priority="tertiary"
+          size="small"
+          linkProps={{ href: `/trouver-un-logement-etudiant/ville/${row.original.citySlug}/${row.original.slug}`, target: '_blank' }}
+        >
+          Voir
+        </Button>
+        <Button priority="tertiary" size="small" linkProps={{ href: `/bailleur/residences/${row.original.slug}` }}>
+          Modifier
+        </Button>
+      </div>
     ),
   },
 ]

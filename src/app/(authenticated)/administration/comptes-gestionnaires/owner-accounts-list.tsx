@@ -14,7 +14,7 @@ import { formatDateTime } from '~/utils/formatDate'
 import { sPluriel } from '~/utils/sPluriel'
 import styles from '../administration.module.css'
 
-type UserRow = {
+type OwnerAccountRow = {
   id: string
   email: string
   name: string
@@ -22,14 +22,14 @@ type UserRow = {
   lastname: string
   createdAt: Date
   lastLoginAt: Date | null
-  favoritesCount: number
-  alertsCount: number
+  ownerId: number | null
+  ownerName: string | null
 }
 
-const columns: ColumnDef<UserRow, unknown>[] = [
+const columns: ColumnDef<OwnerAccountRow, unknown>[] = [
   {
     accessorKey: 'email',
-    header: 'Etudiant',
+    header: 'Gestionnaire',
     enableSorting: true,
     cell: ({ row }) => (
       <div>
@@ -53,14 +53,10 @@ const columns: ColumnDef<UserRow, unknown>[] = [
     cell: ({ row }) => (row.original.lastLoginAt ? formatDateTime(row.original.lastLoginAt) : '-'),
   },
   {
-    accessorKey: 'favoritesCount',
-    header: 'Favoris',
+    accessorKey: 'ownerName',
+    header: 'Bailleur',
     enableSorting: true,
-  },
-  {
-    accessorKey: 'alertsCount',
-    header: 'Alertes',
-    enableSorting: true,
+    cell: ({ row }) => row.original.ownerName ?? 'Non rattaché',
   },
   {
     id: 'actions',
@@ -74,7 +70,7 @@ const columns: ColumnDef<UserRow, unknown>[] = [
   },
 ]
 
-export function UsersList() {
+export function OwnerAccountsList() {
   const searchParams = useSearchParams()
   const router = useRouter()
 
@@ -87,6 +83,7 @@ export function UsersList() {
   const { data, isLoading } = useAdminUsers({
     page,
     search: debouncedSearch.length >= 2 ? debouncedSearch : undefined,
+    role: 'owner',
   })
 
   const handlePageChange = (newPage: number) => {
@@ -94,7 +91,7 @@ export function UsersList() {
     const params = new URLSearchParams()
     if (search) params.set('search', search)
     params.set('page', String(newPage))
-    router.push(`/administration/utilisateurs?${params.toString()}`)
+    router.push(`/administration/comptes-gestionnaires?${params.toString()}`)
   }
 
   return (
@@ -102,12 +99,12 @@ export function UsersList() {
       <div className="fr-mb-3w">
         <div className="fr-flex fr-align-items-center fr-flex-gap-2v">
           <div className={styles.pageIcon}>
-            <span className={clsx(styles.pageIconBadge, 'fr-icon-user-line')} aria-hidden="true" />
+            <span className={clsx(styles.pageIconBadge, 'fr-icon-account-circle-line')} aria-hidden="true" />
           </div>
-          <h1 className="fr-h3 fr-mb-0">Étudiants</h1>
+          <h1 className="fr-h3 fr-mb-0">Comptes gestionnaires</h1>
         </div>
         <p className="fr-text--sm fr-text-mention--grey fr-mt-1v">
-          {data?.total ?? 0} étudiant{sPluriel(data?.total ?? 0)} inscrit{sPluriel(data?.total ?? 0)} sur la plateforme
+          {data?.total ?? 0} compte{sPluriel(data?.total ?? 0)} gestionnaire{sPluriel(data?.total ?? 0)} sur la plateforme
         </p>
       </div>
 

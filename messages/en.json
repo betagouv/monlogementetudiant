@@ -825,6 +825,16 @@
     "ownerDeleted": "Manager deleted",
     "ownerDeleteError": "Error deleting manager"
   },
+  "trpc": {
+    "admin": {
+      "errors": {
+        "userNotFound": "User not found",
+        "userAlreadyExists": "A user with this email already exists",
+        "ownerNotFound": "Owner not found",
+        "ownerDeleteHasAccommodations": "This owner is linked to residences. You must delete or reassign them before deleting the owner."
+      }
+    }
+  },
   "bailleur": {
     "header": {
       "title": "Espace gestionnaire"
