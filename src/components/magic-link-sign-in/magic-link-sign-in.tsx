@@ -13,8 +13,9 @@ import { createToast } from '~/components/ui/createToast'
 import { trackEvent } from '~/lib/tracking'
 import { TMagicLinkSignInForm, ZMagicLinkSignInForm } from '~/schemas/magic-link-sign-in/magic-link-sign-in'
 import { authClient } from '~/services/better-auth-client'
+import { sendAdminMagicLink } from './actions'
 
-export const MagicLinkSignInForm: FC<{ callbackURL?: string }> = ({ callbackURL = '/bailleur/tableau-de-bord' }) => {
+export const MagicLinkSignInForm: FC<{ callbackURL?: string; type?: 'owner' | 'admin' }> = ({ callbackURL, type = 'owner' }) => {
   const t = useTranslations('login')
   const { classes } = useStyles()
 
@@ -29,6 +30,15 @@ export const MagicLinkSignInForm: FC<{ callbackURL?: string }> = ({ callbackURL 
   const onSubmit = async () => {
     const { email } = getValues()
     try {
+      if (type === 'admin') {
+        await sendAdminMagicLink(email, callbackURL)
+        createToast({
+          priority: 'success',
+          message: t('success'),
+        })
+        return
+      }
+
       const result = await authClient.signIn.magicLink({
         email,
         callbackURL,

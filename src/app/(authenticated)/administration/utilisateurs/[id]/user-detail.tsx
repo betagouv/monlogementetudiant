@@ -39,9 +39,6 @@ export function UserDetail({ id }: { id: string }) {
           </h1>
           <RoleBadge role={userData.role} />
         </div>
-        <Button priority="tertiary" iconId="fr-icon-arrow-left-line" linkProps={{ href: '/administration/utilisateurs' }}>
-          Retour
-        </Button>
       </div>
 
       <div className="fr-grid-row fr-grid-row--gutters">
@@ -63,21 +60,23 @@ export function UserDetail({ id }: { id: string }) {
         </div>
 
         <div className="fr-col-md-4">
-          <div className="fr-card fr-card--no-border fr-p-3w fr-mb-3w">
-            <h2 className="fr-h5 fr-mb-2w">Gestionnaire associé</h2>
-            {userData.owner ? (
-              <div className="fr-mb-2w">
-                <p className="fr-text--bold fr-mb-0">{userData.owner.name}</p>
-                <p className="fr-text--sm fr-text-mention--grey">{userData.owner.slug}</p>
-                <Button priority="tertiary" size="small" linkProps={{ href: `/administration/bailleurs/${userData.owner.id}` }}>
-                  Voir le gestionnaire
-                </Button>
-              </div>
-            ) : (
-              <p className="fr-text--sm fr-text-mention--grey fr-mb-2w">Aucun gestionnaire associé</p>
-            )}
-            <LinkUserOwnerDialog userId={id} currentOwnerId={userData.ownerId ?? null} />
-          </div>
+          {userData.role === 'owner' && (
+            <div className="fr-card fr-card--no-border fr-p-3w fr-mb-3w">
+              <h2 className="fr-h5 fr-mb-2w">Gestionnaire associé</h2>
+              {userData.owner ? (
+                <div className="fr-mb-2w">
+                  <p className="fr-text--bold fr-mb-0">{userData.owner.name}</p>
+                  <p className="fr-text--sm fr-text-mention--grey">{userData.owner.slug}</p>
+                  <Button priority="tertiary" size="small" linkProps={{ href: `/administration/bailleurs/${userData.owner.id}` }}>
+                    Voir le gestionnaire
+                  </Button>
+                </div>
+              ) : (
+                <p className="fr-text--sm fr-text-mention--grey fr-mb-2w">Aucun gestionnaire associé</p>
+              )}
+              <LinkUserOwnerDialog userId={id} currentOwnerId={userData.ownerId ?? null} currentOwnerName={userData.owner?.name ?? null} />
+            </div>
+          )}
 
           <div className="fr-card fr-card--no-border fr-p-3w">
             <h2 className="fr-h5 fr-mb-2w">Zone de danger</h2>

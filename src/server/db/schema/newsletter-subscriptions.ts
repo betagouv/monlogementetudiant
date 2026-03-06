@@ -4,5 +4,5 @@ export const newsletterSubscriptions = pgTable('newsletter_subscription', {
   id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   email: varchar({ length: 255 }).notNull(),
   payload: jsonb().notNull(),
-  createdAt: timestamp('created_at').defaultNow(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 })
