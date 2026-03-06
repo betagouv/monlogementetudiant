@@ -48,7 +48,7 @@ export const UserForm = ({ defaultValues, onSubmit, isPending, submitLabel = 'En
         stateRelatedMessage={errors.email?.message}
       />
       <Input
-        label="Prenom"
+        label="Prénom"
         nativeInputProps={register('firstname')}
         state={errors.firstname ? 'error' : 'default'}
         stateRelatedMessage={errors.firstname?.message}
@@ -60,13 +60,13 @@ export const UserForm = ({ defaultValues, onSubmit, isPending, submitLabel = 'En
         stateRelatedMessage={errors.lastname?.message}
       />
       <Select
-        label="Role"
+        label="Rôle"
         nativeSelectProps={register('role')}
         state={errors.role ? 'error' : 'default'}
         stateRelatedMessage={errors.role?.message}
       >
-        <option value="user">Etudiant</option>
-        <option value="owner">Bailleur</option>
+        <option value="user">Étudiant</option>
+        <option value="owner">Gestionnaire</option>
         <option value="admin">Administrateur</option>
       </Select>
       <Button type="submit" disabled={isPending}>

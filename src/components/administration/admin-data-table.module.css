@@ -1,0 +1,33 @@
+.wrapper {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.wrapper table {
+  display: table;
+  width: 100%;
+}
+
+.sortableHeader {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sortIndicator {
+  font-size: 0.75rem;
+}
+
+.sortIndicatorInactive {
+  composes: sortIndicator;
+  opacity: 0.3;
+}
+
+.centerCell {
+  text-align: center;
+  padding: 2rem;
+}
+
+.errorCell {
+  composes: centerCell;
+  color: var(--text-default-error);
+}

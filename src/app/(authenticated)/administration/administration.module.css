@@ -1,0 +1,500 @@
+.sidebarHeaderTitle {
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: white;
+  letter-spacing: 0.1em;
+  margin: 0;
+}
+
+.sidebar {
+  width: 260px;
+  background: var(--background-default-grey);
+  border-right: 1px solid var(--border-default-grey);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 64px);
+}
+
+.sidebarNav {
+  padding: 1rem 0;
+  flex: 1;
+}
+
+.navSectionTitle {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-mention-grey);
+  padding: 0.75rem 1.25rem 0.375rem;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  color: var(--text-default-grey);
+  text-decoration: none;
+  transition: all 0.15s;
+}
+
+.navItemActive {
+  composes: navItem;
+  background: var(--background-action-low-blue-france);
+  color: var(--text-action-high-blue-france);
+  border-left-color: var(--background-action-high-blue-france);
+  font-weight: 600;
+}
+
+.navBadge {
+  margin-left: auto;
+  background: var(--background-action-high-blue-france);
+  color: white;
+  font-size: 0.625rem;
+  font-weight: 700;
+  min-width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 0.5625rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.3125rem;
+}
+
+.navBadgeWarning {
+  composes: navBadge;
+  background: var(--background-flat-warning);
+}
+
+.sidebarFooter {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--border-default-grey);
+  font-size: 0.75rem;
+  color: var(--text-mention-grey);
+}
+
+.content {
+  flex: 1;
+  overflow: auto;
+  padding: 2rem;
+  background: var(--background-alt-grey);
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.statCard {
+  background: var(--background-default-grey);
+  border: 1px solid var(--border-default-grey);
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.statCard::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+}
+
+.statCardBlue::before {
+  background: var(--background-action-high-blue-france);
+}
+
+.statCardGreen::before {
+  background: var(--background-flat-success);
+}
+
+.statCardOrange::before {
+  background: var(--background-flat-warning);
+}
+
+.statCardPurple::before {
+  background: var(--background-flat-info);
+}
+
+.statLabel {
+  font-size: 0.75rem;
+  color: var(--text-mention-grey);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.statValue {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.statIcon {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.5rem;
+  opacity: 0.12;
+}
+
+/* ─── CARD (custom admin card, not fr-card) ─── */
+.card {
+  background: var(--background-default-grey);
+  border: 1px solid var(--border-default-grey);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.cardHeader {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-default-grey);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cardTitle {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+/* ─── GRID 2 COLS ─── */
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+/* ─── ACTIVITY LIST ─── */
+.activityItem {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--border-default-grey);
+  align-items: flex-start;
+}
+
+.activityItem:last-child {
+  border-bottom: none;
+}
+
+.activityDot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  margin-top: 0.3125rem;
+  flex-shrink: 0;
+}
+
+.activityDotWarning {
+  composes: activityDot;
+  background: var(--background-flat-warning);
+}
+
+.activityDotError {
+  composes: activityDot;
+  background: var(--background-flat-error);
+}
+
+.activityDotInfo {
+  composes: activityDot;
+  background: var(--background-action-high-blue-france);
+}
+
+.activityDotSuccess {
+  composes: activityDot;
+  background: var(--background-flat-success);
+}
+
+.activityDotNeutral {
+  composes: activityDot;
+  background: var(--text-mention-grey);
+}
+
+/* ─── GESTIONNAIRE CARDS ─── */
+.gestionnaireCards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.gCard {
+  background: var(--background-default-grey);
+  border: 1px solid var(--border-default-grey);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.gCard:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 9, 0.12);
+  border-color: var(--border-action-high-blue-france);
+}
+
+.gCardTop {
+  padding: 1.25rem;
+  display: flex;
+  gap: 0.875rem;
+  align-items: flex-start;
+}
+
+.gCardAvatar {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.gCardName {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--text-action-high-blue-france);
+}
+
+.gCardOrg {
+  font-size: 0.75rem;
+  color: var(--text-mention-grey);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gCardStats {
+  padding: 0.75rem 1.25rem 1rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  text-align: center;
+  border-top: 1px solid var(--border-default-grey);
+}
+
+.gCardStatVal {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text-action-high-blue-france);
+}
+
+.gCardStatLbl {
+  font-size: 0.625rem;
+  color: var(--text-mention-grey);
+  text-transform: uppercase;
+}
+
+.gCardBottom {
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid var(--border-default-grey);
+  background: var(--background-alt-grey);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text-mention-grey);
+}
+
+.gCardAdd {
+  composes: gCard;
+  border: 2px dashed var(--border-default-grey);
+  box-shadow: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 12.5rem;
+  flex-direction: column;
+  gap: 0.75rem;
+  color: var(--text-mention-grey);
+}
+
+.gCardAdd:hover {
+  border-color: var(--border-action-high-blue-france);
+  color: var(--text-action-high-blue-france);
+}
+
+/* ─── GESTIONNAIRE DETAIL HEADER ─── */
+.gestionnaireHeader {
+  background: linear-gradient(135deg, var(--background-action-high-blue-france) 0%, #1400bd 100%);
+  border-radius: 0.5rem 0.5rem 0 0;
+  padding: 1.75rem;
+  color: white;
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+}
+
+.gestionnaireAvatar {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+}
+
+.gestionnaireInfo h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem;
+  color: white;
+}
+
+.gestionnaireOrg {
+  font-size: 0.875rem;
+  opacity: 0.8;
+}
+
+.gestionnaireMeta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.8125rem;
+  opacity: 0.85;
+  flex-wrap: wrap;
+}
+
+.kpiRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--border-default-grey);
+}
+
+.kpiItem {
+  padding: 1rem 1.25rem;
+  text-align: center;
+  border-right: 1px solid var(--border-default-grey);
+}
+
+.kpiItem:last-child {
+  border-right: none;
+}
+
+.kpiValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-action-high-blue-france);
+}
+
+.kpiLabel {
+  font-size: 0.6875rem;
+  color: var(--text-mention-grey);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.pageIcon {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: var(--background-action-low-blue-france);
+  border-radius: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-action-high-blue-france);
+}
+
+.pageIconBadge::before {
+  margin-right: 0 !important;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.tableWrapper table {
+  display: table;
+  width: 100%;
+}
+
+.tableCenterCell {
+  text-align: center;
+}
+
+.flexFill {
+  flex: 1;
+  min-width: 0;
+}
+
+.activityText {
+  flex: 1;
+}
+
+.progressTrack {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--background-contrast-grey);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.dangerButton {
+  background-color: var(--background-flat-error);
+}
+
+.dangerZone {
+  background: var(--background-alt-grey);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.dangerZoneTitle {
+  color: var(--text-default-error);
+}
+
+/* ─── MAP FIX (DSFR adds background-image on [href]) ─── */
+.mapContainer [href] {
+  background-image: unset !important;
+}
+
+@media (max-width: 1100px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .gestionnaireCards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .kpiRow {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    min-height: auto;
+  }
+
+  .grid2 {
+    grid-template-columns: 1fr;
+  }
+
+  .gestionnaireCards {
+    grid-template-columns: 1fr;
+  }
+}
