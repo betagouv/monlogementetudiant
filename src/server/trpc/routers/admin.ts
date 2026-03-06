@@ -15,29 +15,23 @@ const usersRouter = createTRPCRouter({
     .input(
       z.object({
         page: z.number().default(1),
-        role: z.enum(['admin', 'owner', 'user']).optional(),
         search: z.string().optional(),
       }),
     )
     .query(async ({ input }) => {
-      const conditions = []
-
-      if (input.role) {
-        conditions.push(eq(user.role, input.role))
-      }
+      const conditions = [eq(user.role, 'user')]
 
       if (input.search && input.search.length >= 2) {
-        conditions.push(
-          or(
-            ilike(user.email, `%${input.search}%`),
-            ilike(user.firstname, `%${input.search}%`),
-            ilike(user.lastname, `%${input.search}%`),
-            ilike(user.name, `%${input.search}%`),
-          ),
+        const searchCondition = or(
+          ilike(user.email, `%${input.search}%`),
+          ilike(user.firstname, `%${input.search}%`),
+          ilike(user.lastname, `%${input.search}%`),
+          ilike(user.name, `%${input.search}%`),
         )
+        if (searchCondition) conditions.push(searchCondition)
       }
 
-      const where = conditions.length > 0 ? and(...conditions) : undefined
+      const where = and(...conditions)
       const offset = (input.page - 1) * PAGE_SIZE
 
       const [countResult, results] = await Promise.all([
@@ -49,9 +43,10 @@ const usersRouter = createTRPCRouter({
             name: user.name,
             firstname: user.firstname,
             lastname: user.lastname,
-            role: user.role,
-            ownerId: user.ownerId,
             createdAt: user.createdAt,
+            lastLoginAt: sql<Date | null>`(SELECT max(created_at) FROM "session" WHERE user_id = "user"."id")`,
+            favoritesCount: sql<number>`(SELECT count(*)::int FROM accommodation_favoriteaccommodation WHERE user_id = "user"."id")`,
+            alertsCount: sql<number>`(SELECT count(*)::int FROM student_alert WHERE user_id = "user"."id")`,
           })
           .from(user)
           .where(where)
@@ -210,6 +205,18 @@ const ownersRouter = createTRPCRouter({
             url: owners.url,
             accommodationCount: sql<number>`(SELECT count(*)::int FROM accommodation_accommodation WHERE owner_id = "account_owner"."id")`,
             userCount: sql<number>`(SELECT count(*)::int FROM "user" WHERE owner_id = "account_owner"."id")`,
+            availableApartments: sql<number>`(
+              WITH available_counts AS (
+                SELECT
+                  coalesce(nb_t1_available, 0) + coalesce(nb_t1_bis_available, 0) +
+                  coalesce(nb_t2_available, 0) + coalesce(nb_t3_available, 0) +
+                  coalesce(nb_t4_available, 0) + coalesce(nb_t5_available, 0) +
+                  coalesce(nb_t6_available, 0) + coalesce(nb_t7_more_available, 0) as total_available
+                FROM accommodation_accommodation
+                WHERE owner_id = "account_owner"."id"
+              )
+              SELECT coalesce(sum(total_available), 0)::int FROM available_counts
+            )`,
           })
           .from(owners)
           .where(where)
@@ -296,7 +303,8 @@ const ownersRouter = createTRPCRouter({
     if ((accomCount[0]?.count ?? 0) > 0) {
       throw new TRPCError({
         code: 'PRECONDITION_FAILED',
-        message: 'Ce bailleur a des residences associees. Supprimez-les ou reassignez-les avant.',
+        message:
+          'Ce gestionnaire est lié à des résidences. Vous devez les supprimer, ou les réassigner pour permettre la suppression du gestionnaire.',
       })
     }
 
@@ -321,16 +329,89 @@ const ownersRouter = createTRPCRouter({
         available: accommodations.available,
         published: accommodations.published,
         nbTotalApartments: accommodations.nbTotalApartments,
+        nbAvailableApartments: sql<number>`(
+          coalesce(nb_t1_available, 0) + coalesce(nb_t1_bis_available, 0) +
+          coalesce(nb_t2_available, 0) + coalesce(nb_t3_available, 0) +
+          coalesce(nb_t4_available, 0) + coalesce(nb_t5_available, 0) +
+          coalesce(nb_t6_available, 0) + coalesce(nb_t7_more_available, 0)
+        )::int`,
+        lat: sql<number | null>`ST_Y(${accommodations.geom}::geometry)`,
+        lng: sql<number | null>`ST_X(${accommodations.geom}::geometry)`,
       })
       .from(accommodations)
       .where(eq(accommodations.ownerId, input.ownerId))
       .orderBy(accommodations.name)
   }),
+
+  stats: adminProcedure.input(z.object({ ownerId: z.number() })).query(async ({ input }) => {
+    const result = await db
+      .select({
+        nbT1: sql<number>`coalesce(sum(coalesce(nb_t1, 0)), 0)::int`,
+        nbT1Bis: sql<number>`coalesce(sum(coalesce(nb_t1_bis, 0)), 0)::int`,
+        nbT2: sql<number>`coalesce(sum(coalesce(nb_t2, 0)), 0)::int`,
+        nbT3: sql<number>`coalesce(sum(coalesce(nb_t3, 0)), 0)::int`,
+        nbT4: sql<number>`coalesce(sum(coalesce(nb_t4, 0)), 0)::int`,
+        nbT5: sql<number>`coalesce(sum(coalesce(nb_t5, 0)), 0)::int`,
+        nbT6: sql<number>`coalesce(sum(coalesce(nb_t6, 0)), 0)::int`,
+        nbT7More: sql<number>`coalesce(sum(coalesce(nb_t7_more, 0)), 0)::int`,
+        nbColiving: sql<number>`coalesce(sum(coalesce(nb_coliving_apartments, 0)), 0)::int`,
+      })
+      .from(accommodations)
+      .where(eq(accommodations.ownerId, input.ownerId))
+
+    return result[0]!
+  }),
+})
+
+const residencesRouter = createTRPCRouter({
+  list: adminProcedure
+    .input(
+      z.object({
+        search: z.string().optional(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const conditions = []
+
+      if (input.search && input.search.length >= 2) {
+        conditions.push(or(ilike(accommodations.name, `%${input.search}%`), ilike(accommodations.city, `%${input.search}%`)))
+      }
+
+      const where = conditions.length > 0 ? and(...conditions) : undefined
+
+      const results = await db
+        .select({
+          id: accommodations.id,
+          name: accommodations.name,
+          slug: accommodations.slug,
+          city: accommodations.city,
+          available: accommodations.available,
+          published: accommodations.published,
+          nbTotalApartments: accommodations.nbTotalApartments,
+          nbAvailableApartments: sql<number>`(
+            coalesce(nb_t1_available, 0) + coalesce(nb_t1_bis_available, 0) +
+            coalesce(nb_t2_available, 0) + coalesce(nb_t3_available, 0) +
+            coalesce(nb_t4_available, 0) + coalesce(nb_t5_available, 0) +
+            coalesce(nb_t6_available, 0) + coalesce(nb_t7_more_available, 0)
+          )::int`,
+          ownerName: owners.name,
+        })
+        .from(accommodations)
+        .leftJoin(owners, eq(accommodations.ownerId, owners.id))
+        .where(where)
+        .orderBy(accommodations.name)
+        .limit(100)
+
+      return results.map((r) => ({
+        ...r,
+        ownerName: r.ownerName ?? '-',
+      }))
+    }),
 })
 
 const statsRouter = createTRPCRouter({
   overview: adminProcedure.query(async () => {
-    const [usersCount, ownersCount, accommodationsCount, availableCount] = await Promise.all([
+    const [usersCount, ownersCount, accommodationsCount, apartmentsStats] = await Promise.all([
       db
         .select({
           total: count(),
@@ -341,8 +422,21 @@ const statsRouter = createTRPCRouter({
         .from(user),
       db.select({ count: count() }).from(owners),
       db.select({ count: count() }).from(accommodations),
-      db.select({ count: count() }).from(accommodations).where(eq(accommodations.available, true)),
+      db
+        .select({
+          totalApartments: sql<number>`coalesce(sum(coalesce(nb_total_apartments, 0)), 0)::int`,
+          availableApartments: sql<number>`coalesce(sum(
+            coalesce(nb_t1_available, 0) + coalesce(nb_t1_bis_available, 0) +
+            coalesce(nb_t2_available, 0) + coalesce(nb_t3_available, 0) +
+            coalesce(nb_t4_available, 0) + coalesce(nb_t5_available, 0) +
+            coalesce(nb_t6_available, 0) + coalesce(nb_t7_more_available, 0)
+          ), 0)::int`,
+        })
+        .from(accommodations),
     ])
+
+    const totalApartments = apartmentsStats[0]?.totalApartments ?? 0
+    const availableApartments = apartmentsStats[0]?.availableApartments ?? 0
 
     return {
       users: {
@@ -353,7 +447,12 @@ const statsRouter = createTRPCRouter({
       },
       owners: ownersCount[0]?.count ?? 0,
       accommodations: accommodationsCount[0]?.count ?? 0,
-      availableAccommodations: availableCount[0]?.count ?? 0,
+      availableAccommodations: availableApartments,
+      occupation: {
+        total: totalApartments,
+        available: availableApartments,
+        occupied: totalApartments - availableApartments,
+      },
     }
   }),
 })
@@ -361,5 +460,6 @@ const statsRouter = createTRPCRouter({
 export const adminRouter = createTRPCRouter({
   users: usersRouter,
   owners: ownersRouter,
+  residences: residencesRouter,
   stats: statsRouter,
 })

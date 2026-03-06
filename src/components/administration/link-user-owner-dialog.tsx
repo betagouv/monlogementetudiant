@@ -50,18 +50,18 @@ export const LinkUserOwnerDialog = ({ userId, currentOwnerId }: LinkUserOwnerDia
   return (
     <>
       <Button priority="secondary" size="small" onClick={() => linkModal.open()}>
-        {currentOwnerId ? 'Modifier le bailleur' : 'Lier a un bailleur'}
+        {currentOwnerId ? 'Modifier le lien gestionnaire' : "Lier l'utilisateur à un gestionnaire"}
       </Button>
 
-      <linkModal.Component title={currentOwnerId ? 'Modifier le lien bailleur' : 'Lier a un bailleur'}>
+      <linkModal.Component title={currentOwnerId ? 'Modifier le lien utilisateur - gestionnaire' : "Lier l'utilisateur à un gestionnaire"}>
         <Select
-          label="Bailleur"
+          label="Gestionnaire"
           nativeSelectProps={{
             value: selectedOwnerId,
             onChange: (e) => setSelectedOwnerId(e.target.value),
           }}
         >
-          <option value="">Aucun bailleur</option>
+          <option value="">Aucun gestionnaire</option>
           {ownersList?.items.map((owner) => (
             <option key={owner.id} value={owner.id}>
               {owner.name}
