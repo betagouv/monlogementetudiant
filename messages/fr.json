@@ -813,7 +813,17 @@
     "imageDeleteError": "Erreur lors de la suppression de l'image",
     "unsupportedFileType": "Type de fichier non supporté: {fileName}. Types acceptés: JPEG, PNG, WebP",
     "fileTooLarge": "Fichier trop volumineux: {fileName}. Taille maximale: 10MB",
-    "uploadFailed": "Échec de l'upload des images"
+    "uploadFailed": "Échec de l'upload des images",
+    "userCreated": "Utilisateur créé avec succès",
+    "userCreateError": "Erreur lors de la création de l'utilisateur",
+    "userUpdated": "Utilisateur mis à jour",
+    "userUpdateError": "Erreur lors de la mise à jour de l'utilisateur",
+    "userDeleted": "Utilisateur supprimé",
+    "userDeleteError": "Erreur lors de la suppression de l'utilisateur",
+    "ownerUpdated": "Gestionnaire mis à jour",
+    "ownerUpdateError": "Erreur lors de la mise à jour du gestionnaire",
+    "ownerDeleted": "Gestionnaire supprimé",
+    "ownerDeleteError": "Erreur lors de la suppression du gestionnaire"
   },
   "bailleur": {
     "header": {

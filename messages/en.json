@@ -813,7 +813,17 @@
     "imageDeleteError": "Error deleting image",
     "unsupportedFileType": "Unsupported file type: {fileName}. Accepted types: JPEG, PNG, WebP",
     "fileTooLarge": "File too large: {fileName}. Maximum size: 10MB",
-    "uploadFailed": "Failed to upload images"
+    "uploadFailed": "Failed to upload images",
+    "userCreated": "User created successfully",
+    "userCreateError": "Error creating user",
+    "userUpdated": "User updated",
+    "userUpdateError": "Error updating user",
+    "userDeleted": "User deleted",
+    "userDeleteError": "Error deleting user",
+    "ownerUpdated": "Manager updated",
+    "ownerUpdateError": "Error updating manager",
+    "ownerDeleted": "Manager deleted",
+    "ownerDeleteError": "Error deleting manager"
   },
   "bailleur": {
     "header": {

@@ -4,7 +4,7 @@ import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import * as schema from '../../server/db/schema'
 
-const DATABASE_URL_TEST = process.env.DATABASE_URL_TEST || 'postgres://test:test@localhost:5434/mle_test'
+const DATABASE_URL_TEST = process.env.DATABASE_URL_TEST || 'postgres://test:test@localhost:5491/mle_test'
 
 let testDb: ReturnType<typeof drizzle<typeof schema>> | null = null
 let testConn: postgres.Sql | null = null
