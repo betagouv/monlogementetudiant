@@ -1,8 +1,8 @@
-import { eq, and, isNull, isNotNull } from 'drizzle-orm'
-import { db } from '../lib/db'
-import { fillCityFromApi, fetchCityFromGeoApi } from '../lib/geocoder'
-import { generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
+import { eq } from 'drizzle-orm'
 import { accommodations, cities, departments } from '../../src/server/db/schema'
+import { generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
+import { db } from '../lib/db'
+import { fetchCityFromGeoApi, fillCityFromApi } from '../lib/geocoder'
 import type { SyncCommand, SyncOptions, SyncResult } from '../types'
 
 // Paris, Marseille, Lyon — arrondissements hardcodés (même données que Django)
@@ -10,8 +10,26 @@ const SPECIAL_CITIES = [
   {
     name: 'Paris',
     postalCodes: [
-      '75001', '75002', '75003', '75004', '75005', '75006', '75007', '75008', '75009', '75010',
-      '75011', '75012', '75013', '75014', '75015', '75016', '75017', '75018', '75019', '75020',
+      '75001',
+      '75002',
+      '75003',
+      '75004',
+      '75005',
+      '75006',
+      '75007',
+      '75008',
+      '75009',
+      '75010',
+      '75011',
+      '75012',
+      '75013',
+      '75014',
+      '75015',
+      '75016',
+      '75017',
+      '75018',
+      '75019',
+      '75020',
     ],
     inseeCodes: ['75056'],
     departmentCode: '75',
@@ -19,17 +37,29 @@ const SPECIAL_CITIES = [
   {
     name: 'Marseille',
     postalCodes: [
-      '13001', '13002', '13003', '13004', '13005', '13006', '13007', '13008',
-      '13009', '13010', '13011', '13012', '13013', '13014', '13015', '13016',
+      '13001',
+      '13002',
+      '13003',
+      '13004',
+      '13005',
+      '13006',
+      '13007',
+      '13008',
+      '13009',
+      '13010',
+      '13011',
+      '13012',
+      '13013',
+      '13014',
+      '13015',
+      '13016',
     ],
     inseeCodes: ['13055'],
     departmentCode: '13',
   },
   {
     name: 'Lyon',
-    postalCodes: [
-      '69001', '69002', '69003', '69004', '69005', '69006', '69007', '69008', '69009',
-    ],
+    postalCodes: ['69001', '69002', '69003', '69004', '69005', '69006', '69007', '69008', '69009'],
     inseeCodes: ['69123'],
     departmentCode: '69',
   },
@@ -118,10 +148,7 @@ const command: SyncCommand = {
       .from(accommodations)
       .where(eq(accommodations.published, true))
 
-    const existingPostalCodes = new Set(
-      (await db.select({ postalCodes: cities.postalCodes }).from(cities))
-        .flatMap((c) => c.postalCodes),
-    )
+    const existingPostalCodes = new Set((await db.select({ postalCodes: cities.postalCodes }).from(cities)).flatMap((c) => c.postalCodes))
 
     const missingPostalCodes = new Map<string, string>()
     for (const acc of publishedAccommodations) {
@@ -141,11 +168,7 @@ const command: SyncCommand = {
           continue
         }
 
-        const dept = await db
-          .select()
-          .from(departments)
-          .where(eq(departments.code, apiCity.codeDepartement))
-          .limit(1)
+        const dept = await db.select().from(departments).where(eq(departments.code, apiCity.codeDepartement)).limit(1)
         if (!dept[0]) {
           result.errors.push(`Département ${apiCity.codeDepartement} introuvable`)
           continue

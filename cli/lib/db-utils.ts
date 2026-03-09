@@ -84,10 +84,7 @@ export async function ensureExtensions(databaseUrl: string): Promise<void> {
 
 export function restoreBackup(databaseUrl: string, dumpPath: string): void {
   try {
-    execSync(
-      `pg_restore --no-owner --no-privileges -d "${databaseUrl}" "${dumpPath}"`,
-      { stdio: 'inherit' }
-    )
+    execSync(`pg_restore --no-owner --no-privileges -d "${databaseUrl}" "${dumpPath}"`, { stdio: 'inherit' })
   } catch {
     // pg_restore often exits with non-zero even on success (warnings about pre-existing objects)
     console.log('  ⚠ Avertissements pg_restore ignorés (normal)')

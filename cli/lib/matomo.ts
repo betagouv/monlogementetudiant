@@ -78,7 +78,13 @@ export async function getAllEvents(date: string): Promise<EventData[]> {
     period: 'day',
     flat: '1',
     filter_limit: '-1',
-  })) as { label: string; nb_events: number; nb_events_with_value: number; sum_event_value: number; subtable?: { label: string; nb_events: number; nb_events_with_value: number; sum_event_value: number }[] }[]
+  })) as {
+    label: string
+    nb_events: number
+    nb_events_with_value: number
+    sum_event_value: number
+    subtable?: { label: string; nb_events: number; nb_events_with_value: number; sum_event_value: number }[]
+  }[]
 
   const events: EventData[] = []
 

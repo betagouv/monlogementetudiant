@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm'
-import { db } from '../lib/db'
 import { cities, departments } from '../../src/server/db/schema'
+import { db } from '../lib/db'
 import type { SyncCommand, SyncOptions, SyncResult } from '../types'
 
 const DATA_URL =
@@ -19,7 +19,7 @@ interface StudentRecord {
 
 const command: SyncCommand = {
   name: 'students',
-  description: 'Sync du nombre d\'étudiants depuis data.enseignementsup',
+  description: "Sync du nombre d'étudiants depuis data.enseignementsup",
 
   async execute(options: SyncOptions): Promise<SyncResult> {
     const result: SyncResult = { updated: 0, skipped: 0, errors: [] }

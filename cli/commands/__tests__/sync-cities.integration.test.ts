@@ -1,7 +1,7 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+import { createAcademy, createDepartment } from '../../../src/__tests__/fixtures/factories'
 import { getTestDb } from '../../../src/__tests__/helpers/test-db'
 import { cities } from '../../../src/server/db/schema'
-import { createAcademy, createDepartment } from '../../../src/__tests__/fixtures/factories'
 
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
@@ -25,14 +25,16 @@ describe('sync-cities integration', () => {
     // Mock geo API calls for fillCityFromApi (postalCode lookup for each city)
     mockFetch.mockResolvedValue({
       ok: true,
-      json: async () => [{
-        nom: 'Paris',
-        code: '75056',
-        codesPostaux: ['75001'],
-        codeDepartement: '75',
-        codeEpci: '200054781',
-        population: 2100000,
-      }],
+      json: async () => [
+        {
+          nom: 'Paris',
+          code: '75056',
+          codesPostaux: ['75001'],
+          codeDepartement: '75',
+          codeEpci: '200054781',
+          population: 2100000,
+        },
+      ],
     })
 
     const result = await command.execute({ dryRun: true, verbose: true })
@@ -63,14 +65,16 @@ describe('sync-cities integration', () => {
 
     mockFetch.mockResolvedValue({
       ok: true,
-      json: async () => [{
-        nom: 'Marseille',
-        code: '13055',
-        codesPostaux: ['13001'],
-        codeDepartement: '13',
-        codeEpci: '200054807',
-        population: 870000,
-      }],
+      json: async () => [
+        {
+          nom: 'Marseille',
+          code: '13055',
+          codesPostaux: ['13001'],
+          codeDepartement: '13',
+          codeEpci: '200054807',
+          population: 870000,
+        },
+      ],
     })
 
     const result = await command.execute({ dryRun: true, verbose: true })

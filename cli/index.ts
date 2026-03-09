@@ -1,17 +1,12 @@
 import { program } from 'commander'
-import { migrateUsers } from './commands/migrate-users'
 import { importBackup } from './commands/import-backup'
+import { migrateUsers } from './commands/migrate-users'
 import { runImport, runSync } from './factory'
 
-program
-  .name('mle')
-  .description('MLE CLI tools')
+program.name('mle').description('MLE CLI tools')
 
 // Existing commands
-program
-  .command('migrate-users')
-  .description('Migrate Django users to better-auth')
-  .action(migrateUsers)
+program.command('migrate-users').description('Migrate Django users to better-auth').action(migrateUsers)
 
 program
   .command('import-backup')
@@ -26,7 +21,7 @@ program
   .description('Import de données (arpej-ibail)')
   .option('--dry-run', 'Simuler sans modifier la BDD')
   .option('--verbose', 'Afficher les détails')
-  .option('--limit <n>', 'Limiter le nombre d\'éléments', parseInt)
+  .option('--limit <n>', "Limiter le nombre d'éléments", parseInt)
   .option('--file <path>', 'Chemin vers un fichier JSON local')
   .option('--source <name>', 'Identifiant de la source externe')
   .action((type, opts) => runImport(type, opts))
