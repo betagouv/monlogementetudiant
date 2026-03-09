@@ -9,6 +9,7 @@ export interface ImportOptions {
   verbose?: boolean
   limit?: number
   file?: string
+  source?: string
 }
 
 export interface ImportResult {
