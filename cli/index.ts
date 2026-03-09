@@ -28,6 +28,7 @@ program
   .option('--verbose', 'Afficher les détails')
   .option('--limit <n>', 'Limiter le nombre d\'éléments', parseInt)
   .option('--file <path>', 'Chemin vers un fichier JSON local')
+  .option('--source <name>', 'Identifiant de la source externe')
   .action((type, opts) => runImport(type, opts))
 
 // Sync commands (cities, rents, students, stats)
