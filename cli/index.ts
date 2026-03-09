@@ -27,6 +27,7 @@ program
   .option('--dry-run', 'Simuler sans modifier la BDD')
   .option('--verbose', 'Afficher les détails')
   .option('--limit <n>', 'Limiter le nombre d\'éléments', parseInt)
+  .option('--file <path>', 'Chemin vers un fichier JSON local')
   .action((type, opts) => runImport(type, opts))
 
 // Sync commands (cities, rents, students, stats)
