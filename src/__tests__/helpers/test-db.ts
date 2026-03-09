@@ -47,6 +47,8 @@ export async function cleanTables() {
       student_alert,
       stats_stats,
       stats_eventstats,
+      dossier_facile_tenant,
+      dossier_facile_application,
       "user",
       "session",
       "account",
