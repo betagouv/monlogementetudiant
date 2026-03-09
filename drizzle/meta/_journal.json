@@ -15,6 +15,20 @@
       "when": 1772720413064,
       "tag": "0001_cleanup",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773044726851,
+      "tag": "0002_silky_virginia_dare",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1773060590751,
+      "tag": "0003_redundant_pestilence",
+      "breakpoints": true
     }
   ]
 }

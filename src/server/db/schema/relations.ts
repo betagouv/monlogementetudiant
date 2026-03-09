@@ -4,6 +4,7 @@ import { accommodations } from './accommodations'
 import { user } from './auth'
 import { cities } from './cities'
 import { departments } from './departments'
+import { dossierFacileApplications, dossierFacileTenants } from './dossier-facile'
 import { externalSources } from './external-sources'
 import { favoriteAccommodations } from './favorite-accommodations'
 import { owners } from './owners'
@@ -24,6 +25,16 @@ export const citiesRelations = relations(cities, ({ one }) => ({
 
 export const userRelations = relations(user, ({ one }) => ({
   owner: one(owners, { fields: [user.ownerId], references: [owners.id] }),
+  dossierFacileTenant: one(dossierFacileTenants, { fields: [user.id], references: [dossierFacileTenants.userId] }),
+}))
+
+export const dossierFacileTenantsRelations = relations(dossierFacileTenants, ({ one, many }) => ({
+  user: one(user, { fields: [dossierFacileTenants.userId], references: [user.id] }),
+  applications: many(dossierFacileApplications),
+}))
+
+export const dossierFacileApplicationsRelations = relations(dossierFacileApplications, ({ one }) => ({
+  tenant: one(dossierFacileTenants, { fields: [dossierFacileApplications.tenantId], references: [dossierFacileTenants.id] }),
 }))
 
 export const ownersRelations = relations(owners, ({ many }) => ({
