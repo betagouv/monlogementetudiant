@@ -15,6 +15,7 @@ import { AccommodationImages } from '~/components/accommodation/accommodation-im
 import { NearbyAccommodations } from '~/components/accommodation/nearby-accommodations'
 import { SaveAccommodationFavoriteButton } from '~/components/favorites/save-accommodation-favorite-button'
 import { OwnerDetails } from '~/components/find-student-accomodation/owner-details/owner-details'
+import { getAvailableApartmentTypes } from '~/enums/apartment-type'
 import { RESIDENCE_TYPE_LABELS } from '~/enums/residence-type'
 import { formatCityWithA } from '~/utils/french-contraction'
 import { getAccommodationPageContext } from './get-accommodation-page-context'
@@ -132,6 +133,9 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
               title={name}
               location={city}
               slug={slug}
+              isAuthenticated={!!user}
+              accommodationSlug={slug}
+              availableApartmentTypes={getAvailableApartmentTypes(accommodation)}
             />
             <NearbyAccommodations nearbyAccommodations={nearbyAccommodations} accommodation={accommodation} />
           </div>

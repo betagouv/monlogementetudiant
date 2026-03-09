@@ -121,20 +121,17 @@ const command: ImportCommand = {
       try {
         if (options.verbose) console.log(`  🏠 ${residence.title} (${residence.key})`)
 
-        // Check if already exists via external source
         const existingSource = await db
           .select({ accommodationId: externalSources.accommodationId })
           .from(externalSources)
           .where(and(eq(externalSources.source, IBAIL_SOURCE), eq(externalSources.sourceId, residence.key)))
           .limit(1)
 
-        // Geocode
         const fullAddress = [residence.address, residence.address_complement, `${residence.zip_code} ${residence.city}`]
           .filter(Boolean)
           .join(', ')
         const geo = await geocodeAddress(fullAddress)
 
-        // Upload images
         let imageUrls: string[] = []
         if (residence.images?.length && !options.dryRun) {
           imageUrls = await uploadImages(residence.images, options.verbose ?? false)
@@ -183,11 +180,9 @@ const command: ImportCommand = {
         }
 
         if (existingSource[0]) {
-          // Update existing
           await db.update(accommodations).set(accommodationData).where(eq(accommodations.id, existingSource[0].accommodationId))
           result.updated++
         } else {
-          // Create new
           const [newAccommodation] = await db
             .insert(accommodations)
             .values({ ...accommodationData, createdAt: new Date() })

@@ -5,7 +5,6 @@ import { runImport, runSync } from './factory'
 
 program.name('mle').description('MLE CLI tools')
 
-// Existing commands
 program.command('migrate-users').description('Migrate Django users to better-auth').action(migrateUsers)
 
 program

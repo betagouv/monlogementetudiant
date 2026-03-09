@@ -4,7 +4,6 @@ import { expandBbox } from '~/components/map/map-utils'
 import { TTerritories } from '~/schemas/territories'
 import { getAccommodationById } from '~/server/accommodations/get-accommodation-by-id'
 import { getAccommodations } from '~/server/accommodations/get-accommodations'
-import { getCityDetails } from '~/server/territories/get-city-details'
 import { getTerritories } from '~/server/territories/get-territories'
 import { getQueryClient, trpc } from '~/server/trpc/server'
 import { getServerSession } from '~/services/better-auth'
@@ -23,17 +22,20 @@ export const getAccommodationPageContext = cache(async (slug: string, location: 
     (territory) => territory.name === decodedLocationUri || territory.slug === decodedLocationUri,
   ) as TTerritories['cities'][0]
 
-  const cityDetails = await getCityDetails(territory.slug)
-  const cityBbox = expandBbox(cityDetails.bbox.xmin, cityDetails.bbox.ymin, cityDetails.bbox.xmax, cityDetails.bbox.ymax)
+  const cityBbox = expandBbox(territory.bbox.xmin, territory.bbox.ymin, territory.bbox.xmax, territory.bbox.ymax)
 
   const { coordinates } = accommodation.geom
   const [longitude, latitude] = coordinates
 
   const queryClient = getQueryClient()
-  const [nearbyAccommodations] = await Promise.all([
-    getAccommodations({ center: `${longitude},${latitude}` }),
-    queryClient.prefetchQuery(trpc.favorites.list.queryOptions()),
-  ])
+  const prefetchPromises: Promise<unknown>[] = [queryClient.prefetchQuery(trpc.favorites.list.queryOptions())]
+  if (session) {
+    prefetchPromises.push(
+      queryClient.prefetchQuery(trpc.dossierFacile.tenant.queryOptions()),
+      queryClient.prefetchQuery(trpc.dossierFacile.listApplications.queryOptions({ accommodationSlug: slug })),
+    )
+  }
+  const [nearbyAccommodations] = await Promise.all([getAccommodations({ center: `${longitude},${latitude}` }), ...prefetchPromises])
 
   const nbAvailable = calculateAvailability({
     nb_t1_available: accommodation.nb_t1_available,

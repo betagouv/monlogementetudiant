@@ -2,11 +2,13 @@ import clsx from 'clsx'
 import Image from 'next/image'
 import { getTranslations } from 'next-intl/server'
 import { ConsultOfferButton } from '~/components/find-student-accomodation/owner-details/consult-offer-button'
+import { DossierFacileLinkButton } from '~/components/find-student-accomodation/owner-details/dossier-facile-candidate-button'
 import { OwnerDetailsActions } from '~/components/find-student-accomodation/owner-details/owner-details-actions'
 import { OwnerDetailsAlert } from '~/components/find-student-accomodation/owner-details/owner-details-alert'
 import { AvailabilityBadge } from '~/components/shared/availability-badge'
 import { WaitingListBadge } from '~/components/shared/waiting-list-badge'
 import { TooltipHoverOnly } from '~/components/tooltip-hover-only'
+import { type ApartmentType } from '~/enums/apartment-type'
 import { TAccomodationDetails } from '~/schemas/accommodations/accommodations'
 import styles from './owner-details.module.css'
 
@@ -20,6 +22,9 @@ interface OwnerDetailsProps {
   nbAvailable: number | null
   acceptWaitingList: boolean
   slug?: string
+  isAuthenticated: boolean
+  accommodationSlug: string
+  availableApartmentTypes: ApartmentType[]
 }
 
 export const OwnerDetails = async ({
@@ -32,6 +37,9 @@ export const OwnerDetails = async ({
   location,
   acceptWaitingList,
   slug,
+  isAuthenticated,
+  accommodationSlug,
+  availableApartmentTypes,
 }: OwnerDetailsProps) => {
   const t = await getTranslations('accomodation')
   const ownerUrl = externalUrl || owner?.url
@@ -78,6 +86,11 @@ export const OwnerDetails = async ({
           </span>
         </>
       )}
+      <DossierFacileLinkButton
+        accommodationSlug={accommodationSlug}
+        availableApartmentTypes={availableApartmentTypes}
+        isAuthenticated={isAuthenticated}
+      />
       <div className={styles.sidebarOwner}>{!!ownerUrl && available && <ConsultOfferButton href={ownerUrl} slug={slug ?? ''} />}</div>
       {nbAvailable === 0 && (
         <>
