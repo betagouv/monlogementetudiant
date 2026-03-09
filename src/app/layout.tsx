@@ -6,6 +6,7 @@ import '~/globals.css'
 import { Suspense } from 'react'
 import { NextAppDirEmotionCacheProvider } from 'tss-react/next'
 import Matomo from '~/app/matomo'
+import { DossierFacileSuccessToast } from '~/components/dossier-facile/dossier-facile-success-toast'
 import { Signout } from '~/components/signout'
 import Toaster from '~/components/ui/toaster'
 import { DsfrHead, getHtmlAttributes } from '~/dsfr/dsfr-head'
@@ -49,6 +50,9 @@ export default async function RootLayout({
                   {children}
                   <Signout />
                   <Toaster />
+                  <Suspense fallback={null}>
+                    <DossierFacileSuccessToast />
+                  </Suspense>
                 </NuqsAdapter>
               </TRPCReactProvider>
             </DsfrProvider>
