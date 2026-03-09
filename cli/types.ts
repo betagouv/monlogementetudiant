@@ -8,6 +8,7 @@ export interface ImportOptions {
   dryRun?: boolean
   verbose?: boolean
   limit?: number
+  file?: string
 }
 
 export interface ImportResult {

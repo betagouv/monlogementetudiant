@@ -1,0 +1,310 @@
+import * as fs from 'node:fs'
+import * as os from 'node:os'
+import * as path from 'node:path'
+import { and, eq } from 'drizzle-orm'
+import SftpClient from 'ssh2-sftp-client'
+import { accommodations, externalSources, owners } from '../../src/server/db/schema'
+import { computeDerivedFields, generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
+import { db } from '../lib/db'
+import { geocodeAddress } from '../lib/geocoder'
+import type { ImportCommand, ImportOptions, ImportResult } from '../types'
+
+const SOURCE = 'fac-habitat'
+const OWNER_NAME = 'FAC HABITAT'
+const DEFAULT_REMOTE_PATH = '/export/monlogementetudiant.json'
+
+interface FacHabitatResidence {
+  id: number | string
+  name: string
+  address: string
+  city: string
+  postal_code: string
+  marque?: string
+  nb_t1?: number
+  nb_t1_bis?: number
+  nb_t1_prime?: number
+  nb_studio_double?: number
+  nb_t2?: number
+  nb_t2_duplex?: number
+  nb_duplex?: number
+  nb_t3?: number
+  nb_duo?: number
+  nb_t4?: number
+  nb_t5?: number
+  nb_t5_en_colocation?: number
+  nb_t1_rent_min?: number
+  nb_t1_rent_max?: number
+  nb_t1_bis_rent_min?: number
+  nb_t1_bis_rent_max?: number
+  nb_t1_prime_rent_min?: number
+  nb_t1_prime_rent_max?: number
+  nb_studio_double_rent_min?: number
+  nb_studio_double_rent_max?: number
+  nb_t2_rent_min?: number
+  nb_t2_rent_max?: number
+  nb_t2_duplex_rent_min?: number
+  nb_t2_duplex_rent_max?: number
+  nb_duplex_rent_min?: number
+  nb_duplex_rent_max?: number
+  nb_t3_rent_min?: number
+  nb_t3_rent_max?: number
+  nb_duo_rent_min?: number
+  nb_duo_rent_max?: number
+  nb_t4_rent_min?: number
+  nb_t4_rent_max?: number
+  nb_t5_rent_min?: number
+  nb_t5_rent_max?: number
+  nb_t5_en_colocation_rent_min?: number
+  nb_t5_en_colocation_rent_max?: number
+  accept_waiting_list?: boolean
+  laundry_room?: boolean
+  parking?: boolean
+  residence_manager?: boolean
+  kitchen_type?: string
+  refrigerator?: boolean
+  bathroom?: string
+  nb_accessible_apartments?: number
+  nb_coliving_apartments?: number
+  nb_total_apartments?: number
+}
+
+async function downloadFromSftp(verbose?: boolean): Promise<string> {
+  const host = process.env.FAC_HABITAT_SFTP_HOST
+  const username = process.env.FAC_HABITAT_SFTP_USERNAME
+  const port = Number(process.env.FAC_HABITAT_SFTP_PORT) || 22
+  const password = process.env.FAC_HABITAT_SFTP_PASSWORD
+  const remotePath = process.env.FAC_HABITAT_SFTP_REMOTE_PATH || DEFAULT_REMOTE_PATH
+
+  if (!host || !username) {
+    throw new Error('Variables manquantes : FAC_HABITAT_SFTP_HOST, FAC_HABITAT_SFTP_USERNAME')
+  }
+  if (!password) {
+    throw new Error('Variable manquante : FAC_HABITAT_SFTP_PASSWORD')
+  }
+
+  const sftp = new SftpClient()
+  const tmpFile = path.join(os.tmpdir(), `fac-habitat-${Date.now()}.json`)
+
+  try {
+    if (verbose) console.log(`  SFTP ${username}@${host}:${port}${remotePath}`)
+
+    await sftp.connect({ host, port, username, password })
+    await sftp.fastGet(remotePath, tmpFile)
+
+    if (verbose) console.log(`  Fichier téléchargé : ${tmpFile}`)
+    return tmpFile
+  } catch (error) {
+    // biome-ignore lint/suspicious/noEmptyBlockStatements: silent 
+    try { fs.unlinkSync(tmpFile) } catch     {}
+    throw error
+  } finally {
+    await sftp.end()
+  }
+}
+
+function buildTypologyValues(item: FacHabitatResidence) {
+  const nbT1 = item.nb_t1 ?? 0
+  const nbT1Bis = (item.nb_t1_bis ?? 0) + (item.nb_t1_prime ?? 0) + (item.nb_studio_double ?? 0)
+  const nbT2 = (item.nb_t2 ?? 0) + (item.nb_t2_duplex ?? 0) + (item.nb_duplex ?? 0)
+  const nbT3 = (item.nb_t3 ?? 0) + (item.nb_duo ?? 0)
+  const nbT4 = item.nb_t4 ?? 0
+  const nbT5 = (item.nb_t5 ?? 0) + (item.nb_t5_en_colocation ?? 0)
+
+  const minOf = (...vals: (number | undefined | null)[]) => {
+    const nums = vals.filter((v): v is number => v != null && v > 0)
+    return nums.length > 0 ? Math.min(...nums) : null
+  }
+  const maxOf = (...vals: (number | undefined | null)[]) => {
+    const nums = vals.filter((v): v is number => v != null && v > 0)
+    return nums.length > 0 ? Math.max(...nums) : null
+  }
+
+  return {
+    nbT1: nbT1 || null,
+    nbT1Bis: nbT1Bis || null,
+    nbT2: nbT2 || null,
+    nbT3: nbT3 || null,
+    nbT4: nbT4 || null,
+    nbT5: nbT5 || null,
+    priceMinT1: minOf(item.nb_t1_rent_min),
+    priceMaxT1: maxOf(item.nb_t1_rent_max),
+    priceMinT1Bis: minOf(item.nb_t1_bis_rent_min, item.nb_t1_prime_rent_min, item.nb_studio_double_rent_min),
+    priceMaxT1Bis: maxOf(item.nb_t1_bis_rent_max, item.nb_t1_prime_rent_max, item.nb_studio_double_rent_max),
+    priceMinT2: minOf(item.nb_t2_rent_min, item.nb_t2_duplex_rent_min, item.nb_duplex_rent_min),
+    priceMaxT2: maxOf(item.nb_t2_rent_max, item.nb_t2_duplex_rent_max, item.nb_duplex_rent_max),
+    priceMinT3: minOf(item.nb_t3_rent_min, item.nb_duo_rent_min),
+    priceMaxT3: maxOf(item.nb_t3_rent_max, item.nb_duo_rent_max),
+    priceMinT4: minOf(item.nb_t4_rent_min),
+    priceMaxT4: maxOf(item.nb_t4_rent_max),
+    priceMinT5: minOf(item.nb_t5_rent_min, item.nb_t5_en_colocation_rent_min),
+    priceMaxT5: maxOf(item.nb_t5_rent_max, item.nb_t5_en_colocation_rent_max),
+  }
+}
+
+async function getOrCreateOwner(): Promise<number> {
+  const existing = await db.select().from(owners).where(eq(owners.name, OWNER_NAME)).limit(1)
+  if (existing[0]) return existing[0].id
+
+  const slug = OWNER_NAME.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+  const [created] = await db
+    .insert(owners)
+    .values({ name: OWNER_NAME, slug })
+    .returning({ id: owners.id })
+  return created.id
+}
+
+async function loadResidences(options: ImportOptions): Promise<FacHabitatResidence[]> {
+  let filePath: string
+  let tmpFile = false
+
+  if (options.file) {
+    filePath = options.file
+  } else {
+    filePath = await downloadFromSftp(options.verbose)
+    tmpFile = true
+  }
+
+  try {
+    const raw = fs.readFileSync(filePath, 'utf-8')
+    const data: FacHabitatResidence[] = JSON.parse(raw)
+    return options.limit ? data.slice(0, options.limit) : data
+  } finally {
+    if (tmpFile) {
+      // biome-ignore lint/suspicious/noEmptyBlockStatements: silent catch
+      try { fs.unlinkSync(filePath) } catch {}
+    }
+  }
+}
+
+const command: ImportCommand = {
+  name: 'fac-habitat',
+  description: 'Import des résidences FAC HABITAT (SFTP ou fichier local)',
+
+  async execute(options: ImportOptions): Promise<ImportResult> {
+    const result: ImportResult = { created: 0, updated: 0, skipped: 0, errors: [] }
+
+    const ownerId = await getOrCreateOwner()
+    if (options.verbose) console.log(`  Owner FAC HABITAT id=${ownerId}`)
+
+    const residences = await loadResidences(options)
+    console.log(`  ${residences.length} résidences chargées`)
+
+    for (const item of residences) {
+      try {
+        const sourceId = String(item.id)
+        if (options.verbose) console.log(`  ${item.name} (${sourceId})`)
+
+        const existingSource = await db
+          .select({ accommodationId: externalSources.accommodationId })
+          .from(externalSources)
+          .where(and(eq(externalSources.source, SOURCE), eq(externalSources.sourceId, sourceId)))
+          .limit(1)
+
+        const fullAddress = `${item.address}, ${item.postal_code} ${item.city}`
+        const geo = await geocodeAddress(fullAddress)
+
+        const typology = buildTypologyValues(item)
+
+        const derived = computeDerivedFields({
+          nb_t1: typology.nbT1,
+          nb_t1_bis: typology.nbT1Bis,
+          nb_t2: typology.nbT2,
+          nb_t3: typology.nbT3,
+          nb_t4: typology.nbT4,
+          nb_t5: typology.nbT5,
+          price_min_t1: typology.priceMinT1,
+          price_min_t1_bis: typology.priceMinT1Bis,
+          price_min_t2: typology.priceMinT2,
+          price_min_t3: typology.priceMinT3,
+          price_min_t4: typology.priceMinT4,
+          price_min_t5: typology.priceMinT5,
+        })
+
+        const accommodationData = {
+          name: item.name,
+          slug: generateSlug(item.name),
+          address: geo?.address ?? item.address,
+          city: geo?.city ?? item.city,
+          postalCode: geo?.postalCode ?? item.postal_code,
+          residenceType: 'residence-etudiante',
+          targetAudience: 'etudiants',
+          published: true,
+          available: derived.available,
+          geom: geo ? ([geo.lng, geo.lat] as [number, number]) : null,
+          nbT1: typology.nbT1,
+          nbT1Bis: typology.nbT1Bis,
+          nbT2: typology.nbT2,
+          nbT3: typology.nbT3,
+          nbT4: typology.nbT4,
+          nbT5: typology.nbT5,
+          priceMinT1: typology.priceMinT1,
+          priceMaxT1: typology.priceMaxT1,
+          priceMinT1Bis: typology.priceMinT1Bis,
+          priceMaxT1Bis: typology.priceMaxT1Bis,
+          priceMinT2: typology.priceMinT2,
+          priceMaxT2: typology.priceMaxT2,
+          priceMinT3: typology.priceMinT3,
+          priceMaxT3: typology.priceMaxT3,
+          priceMinT4: typology.priceMinT4,
+          priceMaxT4: typology.priceMaxT4,
+          priceMinT5: typology.priceMinT5,
+          priceMaxT5: typology.priceMaxT5,
+          priceMin: derived.priceMin,
+          nbTotalApartments: item.nb_total_apartments ?? derived.nbTotalApartments,
+          nbAccessibleApartments: item.nb_accessible_apartments ?? null,
+          nbColivingApartments: item.nb_coliving_apartments ?? null,
+          laundryRoom: item.laundry_room ?? null,
+          parking: item.parking ?? null,
+          residenceManager: item.residence_manager ?? null,
+          kitchenType: item.kitchen_type ?? null,
+          refrigerator: item.refrigerator ?? null,
+          bathroom: item.bathroom ?? null,
+          acceptWaitingList: item.accept_waiting_list ?? null,
+          imagesCount: 0,
+          externalReference: sourceId,
+          ownerId,
+          updatedAt: new Date(),
+        }
+
+        if (options.dryRun) {
+          if (existingSource[0]) {
+            if (options.verbose) console.log(`    [dry-run] Mise à jour id=${existingSource[0].accommodationId}`)
+            result.updated++
+          } else {
+            if (options.verbose) console.log(`    [dry-run] Création`)
+            result.created++
+          }
+          continue
+        }
+
+        if (existingSource[0]) {
+          await db
+            .update(accommodations)
+            .set(accommodationData)
+            .where(eq(accommodations.id, existingSource[0].accommodationId))
+          result.updated++
+        } else {
+          const [newAccommodation] = await db
+            .insert(accommodations)
+            .values({ ...accommodationData, createdAt: new Date() })
+            .returning({ id: accommodations.id })
+
+          await db.insert(externalSources).values({
+            accommodationId: newAccommodation.id,
+            source: SOURCE,
+            sourceId,
+          })
+          result.created++
+        }
+      } catch (error) {
+        const msg = `${item.name} (${item.id}): ${error instanceof Error ? error.message : String(error)}`
+        result.errors.push(msg)
+        if (options.verbose) console.log(`    ${msg}`)
+      }
+    }
+
+    return result
+  },
+}
+
+export default command
