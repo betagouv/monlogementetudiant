@@ -59,6 +59,40 @@ function parseCsvLine(line: string): string[] {
   return fields
 }
 
+function splitCsvRows(content: string): string[] {
+  const rows: string[] = []
+  let current = ''
+  let inQuotes = false
+  for (let i = 0; i < content.length; i++) {
+    const ch = content[i]
+    if (inQuotes) {
+      if (ch === '"') {
+        if (i + 1 < content.length && content[i + 1] === '"') {
+          current += '""'
+          i++
+        } else {
+          inQuotes = false
+          current += ch
+        }
+      } else {
+        current += ch
+      }
+    } else if (ch === '"') {
+      inQuotes = true
+      current += ch
+    } else if (ch === '\n') {
+      const trimmed = current.replace(/\r$/, '')
+      if (trimmed !== '') rows.push(trimmed)
+      current = ''
+    } else {
+      current += ch
+    }
+  }
+  const trimmed = current.replace(/\r$/, '')
+  if (trimmed !== '') rows.push(trimmed)
+  return rows
+}
+
 function parseCsv(filePath: string, limit?: number): CsvRow[] {
   let content = fs.readFileSync(filePath, 'utf-8')
   // Strip BOM
@@ -66,7 +100,7 @@ function parseCsv(filePath: string, limit?: number): CsvRow[] {
     content = content.slice(1)
   }
 
-  const lines = content.split(/\r?\n/).filter((l) => l.trim() !== '')
+  const lines = splitCsvRows(content)
   if (lines.length < 2) return []
 
   const headers = parseCsvLine(lines[0]).map((h) => h.trim())
