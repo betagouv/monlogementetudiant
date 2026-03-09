@@ -90,9 +90,9 @@ jobs:
         environment:
           POSTGRES_USER: test
           POSTGRES_PASSWORD: test
-          POSTGRES_DB: jde_test
+          POSTGRES_DB: mle_test
     environment:
-      DATABASE_URL_TEST: postgres://test:test@localhost:5432/jde_test
+      DATABASE_URL_TEST: postgres://test:test@localhost:5432/mle_test
     steps:
       - checkout
       - install_dependencies
