@@ -1,28 +1,65 @@
+import { and, eq } from 'drizzle-orm'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
-import { and, eq } from 'drizzle-orm'
 import { accommodations, externalSources, owners } from '../../src/server/db/schema'
-import { computeDerivedFields, generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
 import { generateAccommodationKey, uploadFile } from '../../src/server/services/s3'
+import { computeDerivedFields, generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
 import { db } from '../lib/db'
 import { geocodeAddress } from '../lib/geocoder'
 import type { ImportCommand, ImportOptions, ImportResult } from '../types'
 
 const CSV_COLUMNS = [
-  'name', 'description', 'address', 'city', 'postal_code', 'residence_type',
-  'latitude', 'longitude', 'owner_name', 'owner_url',
-  'nb_total_apartments', 'nb_accessible_apartments', 'nb_coliving_apartments',
-  'nb_t1', 't1_rent_min', 't1_rent_max',
-  'nb_t1_bis', 't1_bis_rent_min', 't1_bis_rent_max',
-  'nb_t2', 't2_rent_min', 't2_rent_max',
-  'nb_t3', 't3_rent_min', 't3_rent_max',
-  'nb_t4', 't4_rent_min', 't4_rent_max',
-  'nb_t5', 't5_rent_min', 't5_rent_max',
-  'nb_t6', 't6_rent_min', 't6_rent_max',
-  'nb_t7_more', 't7_more_rent_min', 't7_more_rent_max',
-  'pictures', 'laundry_room', 'common_areas', 'bike_storage', 'parking',
-  'secure_access', 'residence_manager', 'kitchen_type', 'desk', 'cooking_plates',
-  'microwave', 'refrigerator', 'bathroom', 'accept_waiting_list',
+  'name',
+  'description',
+  'address',
+  'city',
+  'postal_code',
+  'residence_type',
+  'latitude',
+  'longitude',
+  'owner_name',
+  'owner_url',
+  'nb_total_apartments',
+  'nb_accessible_apartments',
+  'nb_coliving_apartments',
+  'nb_t1',
+  't1_rent_min',
+  't1_rent_max',
+  'nb_t1_bis',
+  't1_bis_rent_min',
+  't1_bis_rent_max',
+  'nb_t2',
+  't2_rent_min',
+  't2_rent_max',
+  'nb_t3',
+  't3_rent_min',
+  't3_rent_max',
+  'nb_t4',
+  't4_rent_min',
+  't4_rent_max',
+  'nb_t5',
+  't5_rent_min',
+  't5_rent_max',
+  'nb_t6',
+  't6_rent_min',
+  't6_rent_max',
+  'nb_t7_more',
+  't7_more_rent_min',
+  't7_more_rent_max',
+  'pictures',
+  'laundry_room',
+  'common_areas',
+  'bike_storage',
+  'parking',
+  'secure_access',
+  'residence_manager',
+  'kitchen_type',
+  'desk',
+  'cooking_plates',
+  'microwave',
+  'refrigerator',
+  'bathroom',
+  'accept_waiting_list',
 ] as const
 
 interface CsvRow {
@@ -106,7 +143,12 @@ async function getOrCreateOwner(name: string, url?: string): Promise<number> {
   const existing = await db.select().from(owners).where(eq(owners.name, name)).limit(1)
   if (existing[0]) return existing[0].id
 
-  const slug = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+  const slug = name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
   const [created] = await db
     .insert(owners)
     .values({ name, slug, url: url || null })
@@ -149,7 +191,7 @@ async function processImages(picturesRaw: string, verbose?: boolean): Promise<st
   for (const url of urls) {
     try {
       const host = new URL(url).hostname
-      if (host.endsWith('.s3.gra.io.cloud.ovh.net') && host.startsWith('monlogementetudiant')) {
+      if (host === 's3.gra.io.cloud.ovh.net' || host.endsWith('.s3.gra.io.cloud.ovh.net')) {
         result.push(url)
       } else {
         if (verbose) console.log(`    Téléchargement image : ${url}`)
@@ -190,10 +232,10 @@ const command: ImportCommand = {
     const result: ImportResult = { created: 0, updated: 0, skipped: 0, errors: [] }
 
     if (!options.file) {
-      throw new Error('Option --file requise pour l\'import CSV')
+      throw new Error("Option --file requise pour l'import CSV")
     }
     if (!options.source) {
-      throw new Error('Option --source requise pour l\'import CSV')
+      throw new Error("Option --source requise pour l'import CSV")
     }
 
     const source = options.source
@@ -353,10 +395,7 @@ const command: ImportCommand = {
         }
 
         if (existingSource[0]) {
-          await db
-            .update(accommodations)
-            .set(accommodationData)
-            .where(eq(accommodations.id, existingSource[0].accommodationId))
+          await db.update(accommodations).set(accommodationData).where(eq(accommodations.id, existingSource[0].accommodationId))
           result.updated++
         } else {
           const [newAccommodation] = await db
