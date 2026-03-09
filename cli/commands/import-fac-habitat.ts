@@ -94,8 +94,11 @@ async function downloadFromSftp(verbose?: boolean): Promise<string> {
     if (verbose) console.log(`  Fichier téléchargé : ${tmpFile}`)
     return tmpFile
   } catch (error) {
-    // biome-ignore lint/suspicious/noEmptyBlockStatements: silent 
-    try { fs.unlinkSync(tmpFile) } catch     {}
+    try {
+      fs.unlinkSync(tmpFile)
+    } catch {
+      // cleanup best-effort
+    }
     throw error
   } finally {
     await sftp.end()
@@ -146,10 +149,7 @@ async function getOrCreateOwner(): Promise<number> {
   if (existing[0]) return existing[0].id
 
   const slug = OWNER_NAME.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-  const [created] = await db
-    .insert(owners)
-    .values({ name: OWNER_NAME, slug })
-    .returning({ id: owners.id })
+  const [created] = await db.insert(owners).values({ name: OWNER_NAME, slug }).returning({ id: owners.id })
   return created.id
 }
 
@@ -170,8 +170,11 @@ async function loadResidences(options: ImportOptions): Promise<FacHabitatResiden
     return options.limit ? data.slice(0, options.limit) : data
   } finally {
     if (tmpFile) {
-      // biome-ignore lint/suspicious/noEmptyBlockStatements: silent catch
-      try { fs.unlinkSync(filePath) } catch {}
+      try {
+        fs.unlinkSync(filePath)
+      } catch {
+        // cleanup best-effort
+      }
     }
   }
 }
@@ -278,10 +281,7 @@ const command: ImportCommand = {
         }
 
         if (existingSource[0]) {
-          await db
-            .update(accommodations)
-            .set(accommodationData)
-            .where(eq(accommodations.id, existingSource[0].accommodationId))
+          await db.update(accommodations).set(accommodationData).where(eq(accommodations.id, existingSource[0].accommodationId))
           result.updated++
         } else {
           const [newAccommodation] = await db

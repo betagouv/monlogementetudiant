@@ -1,66 +1,12 @@
-import { and, eq } from 'drizzle-orm'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
+import { and, eq } from 'drizzle-orm'
 import { accommodations, externalSources, owners } from '../../src/server/db/schema'
 import { generateAccommodationKey, uploadFile } from '../../src/server/services/s3'
 import { computeDerivedFields, generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
 import { db } from '../lib/db'
 import { geocodeAddress } from '../lib/geocoder'
 import type { ImportCommand, ImportOptions, ImportResult } from '../types'
-
-const CSV_COLUMNS = [
-  'name',
-  'description',
-  'address',
-  'city',
-  'postal_code',
-  'residence_type',
-  'latitude',
-  'longitude',
-  'owner_name',
-  'owner_url',
-  'nb_total_apartments',
-  'nb_accessible_apartments',
-  'nb_coliving_apartments',
-  'nb_t1',
-  't1_rent_min',
-  't1_rent_max',
-  'nb_t1_bis',
-  't1_bis_rent_min',
-  't1_bis_rent_max',
-  'nb_t2',
-  't2_rent_min',
-  't2_rent_max',
-  'nb_t3',
-  't3_rent_min',
-  't3_rent_max',
-  'nb_t4',
-  't4_rent_min',
-  't4_rent_max',
-  'nb_t5',
-  't5_rent_min',
-  't5_rent_max',
-  'nb_t6',
-  't6_rent_min',
-  't6_rent_max',
-  'nb_t7_more',
-  't7_more_rent_min',
-  't7_more_rent_max',
-  'pictures',
-  'laundry_room',
-  'common_areas',
-  'bike_storage',
-  'parking',
-  'secure_access',
-  'residence_manager',
-  'kitchen_type',
-  'desk',
-  'cooking_plates',
-  'microwave',
-  'refrigerator',
-  'bathroom',
-  'accept_waiting_list',
-] as const
 
 interface CsvRow {
   [key: string]: string

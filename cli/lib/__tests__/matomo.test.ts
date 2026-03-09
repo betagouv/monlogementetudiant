@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
@@ -87,16 +87,12 @@ describe('getAllEvents', () => {
     // First call: getCategory
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => [
-        { label: 'click', nb_events: 10, nb_events_with_value: 5, sum_event_value: 100, subtable: [{}] },
-      ],
+      json: async () => [{ label: 'click', nb_events: 10, nb_events_with_value: 5, sum_event_value: 100, subtable: [{}] }],
     })
     // Second call: getActionFromCategoryId
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => [
-        { label: 'button_search', nb_events: 8, nb_events_with_value: 3, sum_event_value: 50 },
-      ],
+      json: async () => [{ label: 'button_search', nb_events: 8, nb_events_with_value: 3, sum_event_value: 50 }],
     })
 
     const events = await getAllEvents('2025-03-01')
@@ -114,9 +110,7 @@ describe('getAllEvents', () => {
   it('falls back to category data when no actions array', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => [
-        { label: 'download', nb_events: 5, nb_events_with_value: 2, sum_event_value: 10 },
-      ],
+      json: async () => [{ label: 'download', nb_events: 5, nb_events_with_value: 2, sum_event_value: 10 }],
     })
     mockFetch.mockResolvedValueOnce({
       ok: true,

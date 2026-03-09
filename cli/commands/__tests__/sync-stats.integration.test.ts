@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { eq } from 'drizzle-orm'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { getTestDb } from '../../../src/__tests__/helpers/test-db'
-import { stats, eventStats } from '../../../src/server/db/schema'
+import { eventStats, stats } from '../../../src/server/db/schema'
 
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)

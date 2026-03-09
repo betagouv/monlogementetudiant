@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm'
-import { db } from '../lib/db'
 import { cities } from '../../src/server/db/schema'
+import { db } from '../lib/db'
 import type { SyncCommand, SyncOptions, SyncResult } from '../types'
 
 const CSV_URL = 'https://www.data.gouv.fr/fr/datasets/r/89956da9-5b9b-41d7-8703-18dbec4d54a2'

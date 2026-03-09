@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('../../lib/db', () => ({
   db: {
@@ -88,9 +88,15 @@ describe('sync-stats', () => {
     } as never)
 
     vi.mocked(getCompleteStats).mockResolvedValue({
-      uniqueVisitors: 0, newVisitsPercentage: 0, averageDuration: 0,
-      bounceRatePercentage: 0, pageViews: 0, visitorsPerPage: 0,
-      topPages: [], mainEntryPages: [], mainSources: [],
+      uniqueVisitors: 0,
+      newVisitsPercentage: 0,
+      averageDuration: 0,
+      bounceRatePercentage: 0,
+      pageViews: 0,
+      visitorsPerPage: 0,
+      topPages: [],
+      mainEntryPages: [],
+      mainSources: [],
     })
     vi.mocked(getAllEvents).mockResolvedValue([])
 

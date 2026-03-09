@@ -1,14 +1,41 @@
-import { randomBytes } from 'crypto'
+import slugify from 'slugify'
+
+slugify.extend({
+  '&': 'et',
+  "'": '-',
+  '\u2019': '-',
+  ' : ': '-',
+  ':': '-',
+  '"': '',
+  '.': '-',
+  '\u275D': '',
+  '\u275E': '',
+  '\u201C': '',
+  '\u201D': '',
+  '\u00AB': '',
+  '\u00BB': '',
+  '(': '',
+  ')': '',
+  '[': '',
+  ']': '',
+  '{': '',
+  '}': '',
+  '\u00BF': '',
+  '?': '',
+  '!': '',
+  '/': '',
+  '\\': '',
+  ',': '-',
+  ';': '-',
+  '<': '',
+  '>': '',
+  '@': '-',
+  '*': '',
+  '+': ' plus ',
+})
 
 export function generateSlug(name: string): string {
-  const base = name
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-  const suffix = randomBytes(4).toString('hex')
-  return `${base}-${suffix}`
+  return slugify(name, { lower: true })
 }
 
 export function computeDerivedFields(data: {

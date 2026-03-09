@@ -1,9 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { geocodeAddress, fetchCityFromGeoApi, fetchCityByInsee } from '../geocoder'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { fetchCityByInsee, fetchCityFromGeoApi, geocodeAddress } from '../geocoder'
 
 vi.mock('../db', () => ({
   db: {
-    select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue({ where: vi.fn().mockReturnValue({ limit: vi.fn().mockResolvedValue([]) }) }) }),
+    select: vi
+      .fn()
+      .mockReturnValue({ from: vi.fn().mockReturnValue({ where: vi.fn().mockReturnValue({ limit: vi.fn().mockResolvedValue([]) }) }) }),
     update: vi.fn().mockReturnValue({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) }),
   },
 }))
@@ -68,9 +70,7 @@ describe('fetchCityFromGeoApi', () => {
   it('returns the first city for a postal code', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => [
-        { nom: 'Paris', code: '75056', codesPostaux: ['75001'], codeDepartement: '75', codeEpci: '200054781' },
-      ],
+      json: async () => [{ nom: 'Paris', code: '75056', codesPostaux: ['75001'], codeDepartement: '75', codeEpci: '200054781' }],
     })
 
     const result = await fetchCityFromGeoApi('75001')

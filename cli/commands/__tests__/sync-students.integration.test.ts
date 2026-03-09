@@ -1,8 +1,8 @@
-import { describe, it, expect, vi } from 'vitest'
 import { eq } from 'drizzle-orm'
+import { describe, expect, it, vi } from 'vitest'
+import { createAcademy, createCity, createDepartment } from '../../../src/__tests__/fixtures/factories'
 import { getTestDb } from '../../../src/__tests__/helpers/test-db'
 import { cities } from '../../../src/server/db/schema'
-import { createAcademy, createDepartment, createCity } from '../../../src/__tests__/fixtures/factories'
 
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
@@ -63,16 +63,14 @@ describe('sync-students integration', () => {
       inseeCodes: ['99999'], // Wrong INSEE to force fallback
     })
 
-    const records = [
-      { annee_universitaire: '2023-24', com_code: '42218', com_nom: 'saint-étienne', dp_code: '42', effectif: 500 },
-    ]
+    const records = [{ annee_universitaire: '2023-24', com_code: '42218', com_nom: 'saint-étienne', dp_code: '42', effectif: 500 }]
 
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => records,
     })
 
-    const result = await command.execute({})
+    const _result = await command.execute({})
 
     const updatedCity = await db.select().from(cities).where(eq(cities.id, city.id))
     expect(updatedCity[0].nbStudents).toBe(500)
