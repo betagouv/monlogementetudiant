@@ -4,6 +4,7 @@ import { accommodations } from '../../server/db/schema/accommodations'
 import { user } from '../../server/db/schema/auth'
 import { cities } from '../../server/db/schema/cities'
 import { departments } from '../../server/db/schema/departments'
+import { dossierFacileApplications, dossierFacileTenants } from '../../server/db/schema/dossier-facile'
 import { externalSources } from '../../server/db/schema/external-sources'
 import { favoriteAccommodations } from '../../server/db/schema/favorite-accommodations'
 import { owners } from '../../server/db/schema/owners'
@@ -19,6 +20,8 @@ type OwnerInsert = typeof owners.$inferInsert
 type ExternalSourceInsert = typeof externalSources.$inferInsert
 type FavoriteAccommodationInsert = typeof favoriteAccommodations.$inferInsert
 type StudentAlertInsert = typeof studentAlerts.$inferInsert
+type DossierFacileTenantInsert = typeof dossierFacileTenants.$inferInsert
+type DossierFacileApplicationInsert = typeof dossierFacileApplications.$inferInsert
 
 export async function createUser(overrides: Partial<UserInsert> & { id: string }) {
   const db = getTestDb()
@@ -162,5 +165,30 @@ export async function createAlert(
       ...overrides,
     })
     .returning()
+  return row
+}
+
+export async function createDossierFacileTenant(overrides: Omit<Partial<DossierFacileTenantInsert>, 'userId'> & { userId: string }) {
+  const db = getTestDb()
+  const [row] = await db
+    .insert(dossierFacileTenants)
+    .values({
+      tenantId: `df-tenant-${crypto.randomUUID().slice(0, 8)}`,
+      status: 'verified',
+      ...overrides,
+    })
+    .returning()
+  return row
+}
+
+export async function createDossierFacileApplication(
+  overrides: Omit<Partial<DossierFacileApplicationInsert>, 'tenantId' | 'accommodationSlug' | 'apartmentType'> & {
+    tenantId: number
+    accommodationSlug: string
+    apartmentType: string
+  },
+) {
+  const db = getTestDb()
+  const [row] = await db.insert(dossierFacileApplications).values(overrides).returning()
   return row
 }
