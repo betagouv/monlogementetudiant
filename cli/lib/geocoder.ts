@@ -1,6 +1,6 @@
 import { eq, sql } from 'drizzle-orm'
-import { db } from './db'
 import { cities } from '../../src/server/db/schema'
+import { db } from './db'
 
 interface GeocodeResult {
   lat: number
@@ -50,9 +50,15 @@ export async function fetchCityFromGeoApi(postalCode: string, name?: string): Pr
     const results: GeoApiCity[] = await response.json()
     if (results.length === 0) return null
     if (name && results.length > 1) {
-      const normalized = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      const normalized = name
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
       const match = results.find((c) => {
-        const n = c.nom.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        const n = c.nom
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
         return n === normalized || n.includes(normalized) || normalized.includes(n)
       })
       return match ?? results[0]

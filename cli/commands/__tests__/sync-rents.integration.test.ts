@@ -1,8 +1,8 @@
-import { describe, it, expect, vi } from 'vitest'
 import { eq } from 'drizzle-orm'
+import { describe, expect, it, vi } from 'vitest'
+import { createAcademy, createCity, createDepartment } from '../../../src/__tests__/fixtures/factories'
 import { getTestDb } from '../../../src/__tests__/helpers/test-db'
 import { cities } from '../../../src/server/db/schema'
-import { createAcademy, createDepartment, createCity } from '../../../src/__tests__/fixtures/factories'
 
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
@@ -38,7 +38,7 @@ describe('sync-rents integration', () => {
       postalCodes: ['42100'],
       inseeCodes: ['42002'],
     })
-    const cityNoEpci = await createCity({
+    const _cityNoEpci = await createCity({
       departmentId: dept.id,
       name: 'Ville C',
       slug: 'ville-c',

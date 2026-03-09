@@ -2,8 +2,8 @@ import { execSync } from 'child_process'
 import { existsSync, readdirSync, rmSync, statSync } from 'fs'
 import { mkdir } from 'fs/promises'
 import path from 'path'
-import { ScalingoBackupService } from '../lib/scalingo-backup'
 import { cleanDatabase, ensureExtensions, restoreBackup } from '../lib/db-utils'
+import { ScalingoBackupService } from '../lib/scalingo-backup'
 
 const BACKUP_DIR = '/tmp/jde-backup'
 

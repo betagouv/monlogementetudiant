@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { eq, and } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { createAccommodation, createExternalSource, createOwner } from '../../../src/__tests__/fixtures/factories'
 import { getTestDb } from '../../../src/__tests__/helpers/test-db'
 import { accommodations, externalSources } from '../../../src/server/db/schema'
-import { createOwner, createAccommodation, createExternalSource } from '../../../src/__tests__/fixtures/factories'
 
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
@@ -24,14 +24,16 @@ function mockGeocoder(overrides: { city?: string; address?: string; postcode?: s
   mockFetch.mockResolvedValueOnce({
     ok: true,
     json: async () => ({
-      features: [{
-        geometry: { coordinates: overrides.coordinates ?? [2.3522, 48.8566] },
-        properties: {
-          city: overrides.city ?? 'Paris',
-          name: overrides.address ?? '10 Rue du Test',
-          postcode: overrides.postcode ?? '75001',
+      features: [
+        {
+          geometry: { coordinates: overrides.coordinates ?? [2.3522, 48.8566] },
+          properties: {
+            city: overrides.city ?? 'Paris',
+            name: overrides.address ?? '10 Rue du Test',
+            postcode: overrides.postcode ?? '75001',
+          },
         },
-      }],
+      ],
     }),
   })
 }
@@ -137,16 +139,10 @@ describe('import-fac-habitat integration', () => {
     expect(result.updated).toBe(1)
     expect(result.created).toBe(0)
 
-    const sources = await db
-      .select()
-      .from(externalSources)
-      .where(eq(externalSources.sourceId, '42'))
+    const sources = await db.select().from(externalSources).where(eq(externalSources.sourceId, '42'))
     expect(sources).toHaveLength(1)
 
-    const acc = await db
-      .select()
-      .from(accommodations)
-      .where(eq(accommodations.id, sources[0].accommodationId))
+    const acc = await db.select().from(accommodations).where(eq(accommodations.id, sources[0].accommodationId))
     expect(acc[0].name).toBe('Résidence Lune Rénovée')
     expect(acc[0].nbT1).toBe(20)
   })
@@ -161,12 +157,10 @@ describe('import-fac-habitat integration', () => {
 
     expect(result.created).toBe(1)
 
-    const ownerRows = await db.select().from(
-      (await import('../../../src/server/db/schema')).owners,
-    ).where(eq(
-      (await import('../../../src/server/db/schema')).owners.name,
-      'FAC HABITAT',
-    ))
+    const ownerRows = await db
+      .select()
+      .from((await import('../../../src/server/db/schema')).owners)
+      .where(eq((await import('../../../src/server/db/schema')).owners.name, 'FAC HABITAT'))
     expect(ownerRows).toHaveLength(1)
     expect(ownerRows[0].slug).toBe('fac-habitat')
   })
@@ -233,19 +227,12 @@ describe('import-fac-habitat integration', () => {
 
     expect(result.created).toBe(2)
 
-    const sources = await db
-      .select()
-      .from(externalSources)
-      .where(eq(externalSources.source, 'fac-habitat'))
+    const sources = await db.select().from(externalSources).where(eq(externalSources.source, 'fac-habitat'))
     expect(sources).toHaveLength(0)
   })
 
   it('respects --limit option', async () => {
-    const filePath = writeTmpJson([
-      makeResidence({ id: 301 }),
-      makeResidence({ id: 302 }),
-      makeResidence({ id: 303 }),
-    ])
+    const filePath = writeTmpJson([makeResidence({ id: 301 }), makeResidence({ id: 302 }), makeResidence({ id: 303 })])
     mockGeocoder()
 
     const result = await command.execute({ file: filePath, dryRun: true, limit: 1 })
@@ -281,20 +268,14 @@ describe('import-fac-habitat integration', () => {
     expect(result.updated).toBe(1)
     expect(result.created).toBe(1)
 
-    const updated = await db
-      .select()
-      .from(accommodations)
-      .where(eq(accommodations.id, existing.id))
+    const updated = await db.select().from(accommodations).where(eq(accommodations.id, existing.id))
     expect(updated[0].name).toBe('Résidence Existante MAJ')
   })
 
   it('records errors without stopping the import', async () => {
     await createOwner({ name: 'FAC HABITAT', slug: 'fac-habitat-err' })
 
-    const filePath = writeTmpJson([
-      makeResidence({ id: 601 }),
-      makeResidence({ id: 602 }),
-    ])
+    const filePath = writeTmpJson([makeResidence({ id: 601 }), makeResidence({ id: 602 })])
 
     mockFetch.mockResolvedValueOnce({ ok: false })
     mockGeocoder()

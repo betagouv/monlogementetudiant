@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm'
+import { eventStats, stats } from '../../src/server/db/schema'
 import { db } from '../lib/db'
-import { getCompleteStats, getAllEvents } from '../lib/matomo'
-import { stats, eventStats } from '../../src/server/db/schema'
+import { getAllEvents, getCompleteStats } from '../lib/matomo'
 import type { SyncCommand, SyncOptions, SyncResult } from '../types'
 
 function getYesterday(): string {
@@ -24,11 +24,7 @@ const command: SyncCommand = {
     const date = options.date ?? getYesterday()
 
     // Check if stats already exist for this date
-    const existing = await db
-      .select({ id: stats.id })
-      .from(stats)
-      .where(eq(stats.date, date))
-      .limit(1)
+    const existing = await db.select({ id: stats.id }).from(stats).where(eq(stats.date, date)).limit(1)
 
     if (existing[0] && !options.force) {
       console.log(`  ⏭️ Stats du ${date} existent déjà (--force pour écraser)`)

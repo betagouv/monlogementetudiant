@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { and, eq } from 'drizzle-orm'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { createAccommodation, createExternalSource, createOwner } from '../../../src/__tests__/fixtures/factories'
 import { getTestDb } from '../../../src/__tests__/helpers/test-db'
 import { accommodations, externalSources, owners } from '../../../src/server/db/schema'
-import { createOwner, createAccommodation, createExternalSource } from '../../../src/__tests__/fixtures/factories'
 
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
@@ -27,20 +27,57 @@ function writeTmpCsv(rows: string[][], headers?: string[]): string {
   const path = require('node:path')
 
   const defaultHeaders = [
-    'name', 'description', 'address', 'city', 'postal_code', 'residence_type',
-    'latitude', 'longitude', 'owner_name', 'owner_url',
-    'nb_total_apartments', 'nb_accessible_apartments', 'nb_coliving_apartments',
-    'nb_t1', 't1_rent_min', 't1_rent_max',
-    'nb_t1_bis', 't1_bis_rent_min', 't1_bis_rent_max',
-    'nb_t2', 't2_rent_min', 't2_rent_max',
-    'nb_t3', 't3_rent_min', 't3_rent_max',
-    'nb_t4', 't4_rent_min', 't4_rent_max',
-    'nb_t5', 't5_rent_min', 't5_rent_max',
-    'nb_t6', 't6_rent_min', 't6_rent_max',
-    'nb_t7_more', 't7_more_rent_min', 't7_more_rent_max',
-    'pictures', 'laundry_room', 'common_areas', 'bike_storage', 'parking',
-    'secure_access', 'residence_manager', 'kitchen_type', 'desk', 'cooking_plates',
-    'microwave', 'refrigerator', 'bathroom', 'accept_waiting_list',
+    'name',
+    'description',
+    'address',
+    'city',
+    'postal_code',
+    'residence_type',
+    'latitude',
+    'longitude',
+    'owner_name',
+    'owner_url',
+    'nb_total_apartments',
+    'nb_accessible_apartments',
+    'nb_coliving_apartments',
+    'nb_t1',
+    't1_rent_min',
+    't1_rent_max',
+    'nb_t1_bis',
+    't1_bis_rent_min',
+    't1_bis_rent_max',
+    'nb_t2',
+    't2_rent_min',
+    't2_rent_max',
+    'nb_t3',
+    't3_rent_min',
+    't3_rent_max',
+    'nb_t4',
+    't4_rent_min',
+    't4_rent_max',
+    'nb_t5',
+    't5_rent_min',
+    't5_rent_max',
+    'nb_t6',
+    't6_rent_min',
+    't6_rent_max',
+    'nb_t7_more',
+    't7_more_rent_min',
+    't7_more_rent_max',
+    'pictures',
+    'laundry_room',
+    'common_areas',
+    'bike_storage',
+    'parking',
+    'secure_access',
+    'residence_manager',
+    'kitchen_type',
+    'desk',
+    'cooking_plates',
+    'microwave',
+    'refrigerator',
+    'bathroom',
+    'accept_waiting_list',
   ]
 
   const h = headers ?? defaultHeaders
@@ -108,20 +145,57 @@ function makeRow(overrides: Record<string, string> = {}): string[] {
   const merged = { ...defaults, ...overrides }
 
   const headers = [
-    'name', 'description', 'address', 'city', 'postal_code', 'residence_type',
-    'latitude', 'longitude', 'owner_name', 'owner_url',
-    'nb_total_apartments', 'nb_accessible_apartments', 'nb_coliving_apartments',
-    'nb_t1', 't1_rent_min', 't1_rent_max',
-    'nb_t1_bis', 't1_bis_rent_min', 't1_bis_rent_max',
-    'nb_t2', 't2_rent_min', 't2_rent_max',
-    'nb_t3', 't3_rent_min', 't3_rent_max',
-    'nb_t4', 't4_rent_min', 't4_rent_max',
-    'nb_t5', 't5_rent_min', 't5_rent_max',
-    'nb_t6', 't6_rent_min', 't6_rent_max',
-    'nb_t7_more', 't7_more_rent_min', 't7_more_rent_max',
-    'pictures', 'laundry_room', 'common_areas', 'bike_storage', 'parking',
-    'secure_access', 'residence_manager', 'kitchen_type', 'desk', 'cooking_plates',
-    'microwave', 'refrigerator', 'bathroom', 'accept_waiting_list',
+    'name',
+    'description',
+    'address',
+    'city',
+    'postal_code',
+    'residence_type',
+    'latitude',
+    'longitude',
+    'owner_name',
+    'owner_url',
+    'nb_total_apartments',
+    'nb_accessible_apartments',
+    'nb_coliving_apartments',
+    'nb_t1',
+    't1_rent_min',
+    't1_rent_max',
+    'nb_t1_bis',
+    't1_bis_rent_min',
+    't1_bis_rent_max',
+    'nb_t2',
+    't2_rent_min',
+    't2_rent_max',
+    'nb_t3',
+    't3_rent_min',
+    't3_rent_max',
+    'nb_t4',
+    't4_rent_min',
+    't4_rent_max',
+    'nb_t5',
+    't5_rent_min',
+    't5_rent_max',
+    'nb_t6',
+    't6_rent_min',
+    't6_rent_max',
+    'nb_t7_more',
+    't7_more_rent_min',
+    't7_more_rent_max',
+    'pictures',
+    'laundry_room',
+    'common_areas',
+    'bike_storage',
+    'parking',
+    'secure_access',
+    'residence_manager',
+    'kitchen_type',
+    'desk',
+    'cooking_plates',
+    'microwave',
+    'refrigerator',
+    'bathroom',
+    'accept_waiting_list',
   ]
 
   return headers.map((h) => merged[h] ?? '')
@@ -172,10 +246,7 @@ describe('import-csv integration', () => {
     expect(created!.acceptWaitingList).toBe(true)
     expect(created!.externalUrl).toBe('https://monbailleur.fr')
 
-    const sources = await db
-      .select()
-      .from(externalSources)
-      .where(eq(externalSources.source, 'test-source'))
+    const sources = await db.select().from(externalSources).where(eq(externalSources.source, 'test-source'))
     expect(sources).toHaveLength(1)
     expect(sources[0].accommodationId).toBe(created!.id)
   })
@@ -216,16 +287,10 @@ describe('import-csv integration', () => {
     expect(result.updated).toBe(1)
     expect(result.created).toBe(0)
 
-    const sources = await db
-      .select()
-      .from(externalSources)
-      .where(eq(externalSources.source, 'test-update'))
+    const sources = await db.select().from(externalSources).where(eq(externalSources.source, 'test-update'))
     expect(sources).toHaveLength(1)
 
-    const acc = await db
-      .select()
-      .from(accommodations)
-      .where(eq(accommodations.id, sources[0].accommodationId))
+    const acc = await db.select().from(accommodations).where(eq(accommodations.id, sources[0].accommodationId))
     expect(acc[0].nbT1).toBe(20)
   })
 
@@ -249,14 +314,16 @@ describe('import-csv integration', () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
-        features: [{
-          geometry: { coordinates: [2.3522, 48.8566] },
-          properties: {
-            city: 'Paris',
-            name: '10 Rue du Soleil',
-            postcode: '75001',
+        features: [
+          {
+            geometry: { coordinates: [2.3522, 48.8566] },
+            properties: {
+              city: 'Paris',
+              name: '10 Rue du Soleil',
+              postcode: '75001',
+            },
           },
-        }],
+        ],
       }),
     })
 
@@ -279,10 +346,7 @@ describe('import-csv integration', () => {
 
     expect(result.created).toBe(2)
 
-    const sources = await db
-      .select()
-      .from(externalSources)
-      .where(eq(externalSources.source, 'test-dry'))
+    const sources = await db.select().from(externalSources).where(eq(externalSources.source, 'test-dry'))
     expect(sources).toHaveLength(0)
 
     const ownerRows = await db.select().from(owners)
@@ -290,11 +354,7 @@ describe('import-csv integration', () => {
   })
 
   it('respects --limit option', async () => {
-    const filePath = writeTmpCsv([
-      makeRow({ name: 'Résidence A' }),
-      makeRow({ name: 'Résidence B' }),
-      makeRow({ name: 'Résidence C' }),
-    ])
+    const filePath = writeTmpCsv([makeRow({ name: 'Résidence A' }), makeRow({ name: 'Résidence B' }), makeRow({ name: 'Résidence C' })])
 
     const result = await command.execute({ file: filePath, source: 'test-limit', dryRun: true, limit: 1 })
 
@@ -302,8 +362,6 @@ describe('import-csv integration', () => {
   })
 
   it('handles mixed create/update', async () => {
-    const db = getTestDb()
-
     const owner = await createOwner({ name: 'Mon Bailleur', slug: 'mon-bailleur-mix' })
 
     // Create an existing accommodation with known sourceId
@@ -318,14 +376,9 @@ describe('import-csv integration', () => {
       sourceId: existing.externalReference ?? undefined,
     })
 
-    // Re-import same sourceId + a new one — use the existing sourceId
-    const existingSourceId = existing.externalReference
     // We need to generate the same sourceId, which is hash of name+address+postal_code
     // Simpler: just import two new rows under test-mix source
-    const filePath = writeTmpCsv([
-      makeRow({ name: 'Résidence Nouvelle 1' }),
-      makeRow({ name: 'Résidence Nouvelle 2' }),
-    ])
+    const filePath = writeTmpCsv([makeRow({ name: 'Résidence Nouvelle 1' }), makeRow({ name: 'Résidence Nouvelle 2' })])
 
     const result = await command.execute({ file: filePath, source: 'test-mix', verbose: true })
 
@@ -335,14 +388,16 @@ describe('import-csv integration', () => {
   it('parses boolean values correctly', async () => {
     const db = getTestDb()
 
-    const filePath = writeTmpCsv([makeRow({
-      laundry_room: 'vrai',
-      common_areas: 'true',
-      bike_storage: '1',
-      parking: 'yes',
-      secure_access: 'non',
-      residence_manager: 'false',
-    })])
+    const filePath = writeTmpCsv([
+      makeRow({
+        laundry_room: 'vrai',
+        common_areas: 'true',
+        bike_storage: '1',
+        parking: 'yes',
+        secure_access: 'non',
+        residence_manager: 'false',
+      }),
+    ])
 
     await command.execute({ file: filePath, source: 'test-bool' })
 
@@ -359,11 +414,13 @@ describe('import-csv integration', () => {
   it('parses digit values with euro sign and commas', async () => {
     const db = getTestDb()
 
-    const filePath = writeTmpCsv([makeRow({
-      t1_rent_min: '400€',
-      t1_rent_max: '500,00',
-      nb_t1: '10',
-    })])
+    const filePath = writeTmpCsv([
+      makeRow({
+        t1_rent_min: '400€',
+        t1_rent_max: '500,00',
+        nb_t1: '10',
+      }),
+    ])
 
     await command.execute({ file: filePath, source: 'test-digit' })
 
@@ -427,20 +484,57 @@ describe('import-csv integration', () => {
     const path = require('node:path')
 
     const headers = [
-      'name', 'description', 'address', 'city', 'postal_code', 'residence_type',
-      'latitude', 'longitude', 'owner_name', 'owner_url',
-      'nb_total_apartments', 'nb_accessible_apartments', 'nb_coliving_apartments',
-      'nb_t1', 't1_rent_min', 't1_rent_max',
-      'nb_t1_bis', 't1_bis_rent_min', 't1_bis_rent_max',
-      'nb_t2', 't2_rent_min', 't2_rent_max',
-      'nb_t3', 't3_rent_min', 't3_rent_max',
-      'nb_t4', 't4_rent_min', 't4_rent_max',
-      'nb_t5', 't5_rent_min', 't5_rent_max',
-      'nb_t6', 't6_rent_min', 't6_rent_max',
-      'nb_t7_more', 't7_more_rent_min', 't7_more_rent_max',
-      'pictures', 'laundry_room', 'common_areas', 'bike_storage', 'parking',
-      'secure_access', 'residence_manager', 'kitchen_type', 'desk', 'cooking_plates',
-      'microwave', 'refrigerator', 'bathroom', 'accept_waiting_list',
+      'name',
+      'description',
+      'address',
+      'city',
+      'postal_code',
+      'residence_type',
+      'latitude',
+      'longitude',
+      'owner_name',
+      'owner_url',
+      'nb_total_apartments',
+      'nb_accessible_apartments',
+      'nb_coliving_apartments',
+      'nb_t1',
+      't1_rent_min',
+      't1_rent_max',
+      'nb_t1_bis',
+      't1_bis_rent_min',
+      't1_bis_rent_max',
+      'nb_t2',
+      't2_rent_min',
+      't2_rent_max',
+      'nb_t3',
+      't3_rent_min',
+      't3_rent_max',
+      'nb_t4',
+      't4_rent_min',
+      't4_rent_max',
+      'nb_t5',
+      't5_rent_min',
+      't5_rent_max',
+      'nb_t6',
+      't6_rent_min',
+      't6_rent_max',
+      'nb_t7_more',
+      't7_more_rent_min',
+      't7_more_rent_max',
+      'pictures',
+      'laundry_room',
+      'common_areas',
+      'bike_storage',
+      'parking',
+      'secure_access',
+      'residence_manager',
+      'kitchen_type',
+      'desk',
+      'cooking_plates',
+      'microwave',
+      'refrigerator',
+      'bathroom',
+      'accept_waiting_list',
     ]
 
     const row = makeRow({ name: 'Résidence BOM' })
@@ -460,12 +554,14 @@ describe('import-csv integration', () => {
   it('derives nbTotalApartments from typology when not in CSV', async () => {
     const db = getTestDb()
 
-    const filePath = writeTmpCsv([makeRow({
-      nb_total_apartments: '',
-      nb_t1: '10',
-      nb_t1_bis: '5',
-      nb_t2: '3',
-    })])
+    const filePath = writeTmpCsv([
+      makeRow({
+        nb_total_apartments: '',
+        nb_t1: '10',
+        nb_t1_bis: '5',
+        nb_t2: '3',
+      }),
+    ])
 
     await command.execute({ file: filePath, source: 'test-derived' })
 
@@ -482,8 +578,6 @@ describe('import-csv integration', () => {
   })
 
   it('records errors without stopping the import', async () => {
-    const db = getTestDb()
-
     const filePath = writeTmpCsv([
       makeRow({ name: 'Bonne Résidence' }),
       makeRow({ name: '' }), // will be skipped (empty name)
@@ -500,20 +594,58 @@ describe('import-csv integration', () => {
     const db = getTestDb()
 
     const headers = [
-      'code', 'name', 'description', 'address', 'city', 'postal_code', 'residence_type',
-      'latitude', 'longitude', 'owner_name', 'owner_url',
-      'nb_total_apartments', 'nb_accessible_apartments', 'nb_coliving_apartments',
-      'nb_t1', 't1_rent_min', 't1_rent_max',
-      'nb_t1_bis', 't1_bis_rent_min', 't1_bis_rent_max',
-      'nb_t2', 't2_rent_min', 't2_rent_max',
-      'nb_t3', 't3_rent_min', 't3_rent_max',
-      'nb_t4', 't4_rent_min', 't4_rent_max',
-      'nb_t5', 't5_rent_min', 't5_rent_max',
-      'nb_t6', 't6_rent_min', 't6_rent_max',
-      'nb_t7_more', 't7_more_rent_min', 't7_more_rent_max',
-      'pictures', 'laundry_room', 'common_areas', 'bike_storage', 'parking',
-      'secure_access', 'residence_manager', 'kitchen_type', 'desk', 'cooking_plates',
-      'microwave', 'refrigerator', 'bathroom', 'accept_waiting_list',
+      'code',
+      'name',
+      'description',
+      'address',
+      'city',
+      'postal_code',
+      'residence_type',
+      'latitude',
+      'longitude',
+      'owner_name',
+      'owner_url',
+      'nb_total_apartments',
+      'nb_accessible_apartments',
+      'nb_coliving_apartments',
+      'nb_t1',
+      't1_rent_min',
+      't1_rent_max',
+      'nb_t1_bis',
+      't1_bis_rent_min',
+      't1_bis_rent_max',
+      'nb_t2',
+      't2_rent_min',
+      't2_rent_max',
+      'nb_t3',
+      't3_rent_min',
+      't3_rent_max',
+      'nb_t4',
+      't4_rent_min',
+      't4_rent_max',
+      'nb_t5',
+      't5_rent_min',
+      't5_rent_max',
+      'nb_t6',
+      't6_rent_min',
+      't6_rent_max',
+      'nb_t7_more',
+      't7_more_rent_min',
+      't7_more_rent_max',
+      'pictures',
+      'laundry_room',
+      'common_areas',
+      'bike_storage',
+      'parking',
+      'secure_access',
+      'residence_manager',
+      'kitchen_type',
+      'desk',
+      'cooking_plates',
+      'microwave',
+      'refrigerator',
+      'bathroom',
+      'accept_waiting_list',
     ]
 
     const row = ['ABC-123', ...makeRow()]

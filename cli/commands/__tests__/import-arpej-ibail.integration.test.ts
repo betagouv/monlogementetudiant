@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { eq, and } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { createOwner } from '../../../src/__tests__/fixtures/factories'
 import { getTestDb } from '../../../src/__tests__/helpers/test-db'
 import { accommodations, externalSources } from '../../../src/server/db/schema'
-import { createOwner } from '../../../src/__tests__/fixtures/factories'
 
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
@@ -65,10 +65,12 @@ describe('import-arpej-ibail integration', () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
-        features: [{
-          geometry: { coordinates: [2.3522, 48.8566] },
-          properties: { city: 'Paris', name: '10 Rue du Soleil', postcode: '75001' },
-        }],
+        features: [
+          {
+            geometry: { coordinates: [2.3522, 48.8566] },
+            properties: { city: 'Paris', name: '10 Rue du Soleil', postcode: '75001' },
+          },
+        ],
       }),
     })
 
@@ -103,13 +105,15 @@ describe('import-arpej-ibail integration', () => {
     await createOwner({ name: 'ARPEJ', slug: 'arpej-2', url: 'https://www.arpej.fr/fr/' })
 
     // First import
-    const residences = [{
-      key: 'res-002',
-      title: 'Résidence Lune',
-      address: '20 Rue de la Lune',
-      zip_code: '75002',
-      city: 'Paris',
-    }]
+    const residences = [
+      {
+        key: 'res-002',
+        title: 'Résidence Lune',
+        address: '20 Rue de la Lune',
+        zip_code: '75002',
+        city: 'Paris',
+      },
+    ]
 
     // First API call
     mockFetch.mockResolvedValueOnce({
@@ -121,23 +125,27 @@ describe('import-arpej-ibail integration', () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
-        features: [{
-          geometry: { coordinates: [2.35, 48.86] },
-          properties: { city: 'Paris', name: '20 Rue de la Lune', postcode: '75002' },
-        }],
+        features: [
+          {
+            geometry: { coordinates: [2.35, 48.86] },
+            properties: { city: 'Paris', name: '20 Rue de la Lune', postcode: '75002' },
+          },
+        ],
       }),
     })
 
     await command.execute({})
 
     // Second import with updated data
-    const updated = [{
-      key: 'res-002',
-      title: 'Résidence Lune Renovée',
-      address: '20 Rue de la Lune',
-      zip_code: '75002',
-      city: 'Paris',
-    }]
+    const updated = [
+      {
+        key: 'res-002',
+        title: 'Résidence Lune Renovée',
+        address: '20 Rue de la Lune',
+        zip_code: '75002',
+        city: 'Paris',
+      },
+    ]
 
     mockFetch.mockResolvedValueOnce({
       ok: true,
@@ -147,10 +155,12 @@ describe('import-arpej-ibail integration', () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
-        features: [{
-          geometry: { coordinates: [2.35, 48.86] },
-          properties: { city: 'Paris', name: '20 Rue de la Lune', postcode: '75002' },
-        }],
+        features: [
+          {
+            geometry: { coordinates: [2.35, 48.86] },
+            properties: { city: 'Paris', name: '20 Rue de la Lune', postcode: '75002' },
+          },
+        ],
       }),
     })
 
@@ -159,16 +169,10 @@ describe('import-arpej-ibail integration', () => {
     expect(result.updated).toBe(1)
 
     // Verify accommodation was updated
-    const sources = await db
-      .select()
-      .from(externalSources)
-      .where(eq(externalSources.sourceId, 'res-002'))
+    const sources = await db.select().from(externalSources).where(eq(externalSources.sourceId, 'res-002'))
     expect(sources).toHaveLength(1)
 
-    const acc = await db
-      .select()
-      .from(accommodations)
-      .where(eq(accommodations.id, sources[0].accommodationId))
+    const acc = await db.select().from(accommodations).where(eq(accommodations.id, sources[0].accommodationId))
     expect(acc[0].name).toBe('Résidence Lune Renovée')
   })
 })

@@ -1,5 +1,5 @@
-import type { ImportCommand, ImportOptions, ImportResult, SyncCommand, SyncOptions, SyncResult } from './types'
 import { closeDb } from './lib/db'
+import type { ImportCommand, ImportOptions, ImportResult, SyncCommand, SyncOptions, SyncResult } from './types'
 
 type ImportLoader = () => Promise<{ default: ImportCommand }>
 type SyncLoader = () => Promise<{ default: SyncCommand }>

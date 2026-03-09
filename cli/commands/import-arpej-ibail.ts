@@ -1,9 +1,9 @@
-import { eq, and } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
+import { accommodations, externalSources, owners } from '../../src/server/db/schema'
+import { generateAccommodationKey, uploadFile } from '../../src/server/services/s3'
+import { computeDerivedFields, generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
 import { db } from '../lib/db'
 import { geocodeAddress } from '../lib/geocoder'
-import { generateSlug, computeDerivedFields } from '../../src/server/trpc/utils/accommodation-helpers'
-import { uploadFile, generateAccommodationKey } from '../../src/server/services/s3'
-import { accommodations, externalSources, owners } from '../../src/server/db/schema'
 import type { ImportCommand, ImportOptions, ImportResult } from '../types'
 
 const IBAIL_SOURCE = 'arpej'
@@ -31,10 +31,7 @@ async function getOrCreateOwner(): Promise<number> {
   if (existing[0]) return existing[0].id
 
   const slug = OWNER_NAME.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-  const [created] = await db
-    .insert(owners)
-    .values({ name: OWNER_NAME, slug, url: OWNER_URL })
-    .returning({ id: owners.id })
+  const [created] = await db.insert(owners).values({ name: OWNER_NAME, slug, url: OWNER_URL }).returning({ id: owners.id })
   return created.id
 }
 
@@ -160,7 +157,7 @@ const command: ImportCommand = {
           residenceType: 'universitaire-conventionnee',
           published: true,
           available: derived.available,
-          geom: geo ? [geo.lng, geo.lat] as [number, number] : null,
+          geom: geo ? ([geo.lng, geo.lat] as [number, number]) : null,
           nbT1: residence.accommodation_quantity ?? null,
           nbT1Available: residence.available_accommodation_quantity ?? null,
           priceMinT1: residence.rent_amount_from ?? null,
@@ -187,10 +184,7 @@ const command: ImportCommand = {
 
         if (existingSource[0]) {
           // Update existing
-          await db
-            .update(accommodations)
-            .set(accommodationData)
-            .where(eq(accommodations.id, existingSource[0].accommodationId))
+          await db.update(accommodations).set(accommodationData).where(eq(accommodations.id, existingSource[0].accommodationId))
           result.updated++
         } else {
           // Create new
