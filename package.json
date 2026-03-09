@@ -40,6 +40,7 @@
     "dayjs": "^1.11.19",
     "dompurify": "^3.3.1",
     "drizzle-orm": "^0.45.1",
+    "jose": "^6.2.1",
     "leaflet": "^1.9.4",
     "leaflet-defaulticon-compatibility": "^0.1.2",
     "next": "^16.1.1",
