@@ -80,6 +80,8 @@ cli/
     migrate-users.ts     # Migration users Django
     import-backup.ts     # Import backup Scalingo
     import-arpej-ibail.ts # Import résidences ARPEJ (API iBAIL)
+    import-csv.ts        # Import générique depuis CSV
+    import-fac-habitat.ts # Import résidences FAC HABITAT (SFTP)
     sync-cities.ts       # Sync villes (geo.api.gouv.fr)
     sync-rents.ts        # Sync loyers moyens (data.gouv.fr)
     sync-students.ts     # Sync nb étudiants (enseignementsup)
@@ -138,6 +140,40 @@ pnpm cli import arpej-ibail --limit 10 --verbose
 Récupère les résidences ARPEJ via l'API iBAIL (pagination automatique), géocode les adresses, télécharge et uploade les images sur S3, puis upsert les accommodations en BDD. Le matching se fait via la table `external_sources` (source=`arpej`, sourceId=clé iBAIL).
 
 Variables d'env requises : `IBAIL_API_HOST`, `IBAIL_API_AUTH_KEY`, `IBAIL_API_AUTH_SECRET`
+
+#### `import csv` — Import générique depuis un fichier CSV
+
+```bash
+pnpm cli import csv --file /chemin/vers/fichier.csv --source mon-source
+pnpm cli import csv --file data.csv --source crous --dry-run --verbose
+pnpm cli import csv --file data.csv --source crous --limit 10
+```
+
+Importe des résidences depuis un fichier CSV (délimiteur `;`). Géocode les adresses, télécharge et uploade les images sur S3, puis upsert les accommodations en BDD via la table `external_sources`.
+
+Le CSV doit contenir au minimum : `name`, `owner_name`, `address`, `city`, `postal_code`. Colonnes optionnelles : `pictures` (URLs séparées par `|` ou retour à la ligne), types d'appartements (T1–T7), loyers, équipements (parking, laverie, cuisine…), coordonnées GPS, etc.
+
+Options spécifiques :
+- `--file <path>` (requis) : chemin vers le fichier CSV
+- `--source <name>` (requis) : identifiant de la source externe
+
+Variables d'env requises : `S3_*` (upload images)
+
+#### `import fac-habitat` — Import résidences FAC HABITAT
+
+```bash
+pnpm cli import fac-habitat
+pnpm cli import fac-habitat --file /chemin/vers/export.json
+pnpm cli import fac-habitat --dry-run --verbose
+pnpm cli import fac-habitat --limit 5
+```
+
+Récupère les résidences FAC HABITAT depuis un serveur SFTP (ou un fichier JSON local), géocode les adresses, mappe les typologies (Studio → T1 Bis, Duplex → T2, Duo → T3, etc.), puis upsert les accommodations en BDD.
+
+Options spécifiques :
+- `--file <path>` : utiliser un fichier JSON local au lieu du SFTP
+
+Variables d'env requises : `FAC_HABITAT_SFTP_HOST`, `FAC_HABITAT_SFTP_USERNAME`, `FAC_HABITAT_SFTP_PASSWORD`, `FAC_HABITAT_SFTP_PORT` (défaut : 22), `S3_*` (upload images)
 
 ---
 
@@ -236,7 +272,11 @@ Toutes les variables sont dans `.env.dist`. Celles spécifiques au CLI :
 | `MATOMO_URL` | `sync stats` |
 | `MATOMO_TOKEN` | `sync stats` |
 | `MATOMO_ID_SITE` | `sync stats` |
-| `S3_*` | `import arpej-ibail` (upload images) |
+| `FAC_HABITAT_SFTP_HOST` | `import fac-habitat` |
+| `FAC_HABITAT_SFTP_USERNAME` | `import fac-habitat` |
+| `FAC_HABITAT_SFTP_PASSWORD` | `import fac-habitat` |
+| `FAC_HABITAT_SFTP_PORT` | `import fac-habitat` |
+| `S3_*` | `import arpej-ibail`, `import csv`, `import fac-habitat` (upload images) |
 
 ## Architecture
 
