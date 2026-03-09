@@ -73,7 +73,6 @@ export const dossierFacileRouter = createTRPCRouter({
   }),
 
   tenant: protectedProcedure.query(async ({ ctx }) => {
-    console.log('test', ctx.session.user.id)
     const tenant = await db.query.dossierFacileTenants.findFirst({
       where: eq(dossierFacileTenants.userId, ctx.session.user.id),
     })
