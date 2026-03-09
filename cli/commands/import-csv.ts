@@ -148,7 +148,8 @@ async function processImages(picturesRaw: string, verbose?: boolean): Promise<st
 
   for (const url of urls) {
     try {
-      if (url.includes('s3.gra.io.cloud.ovh.net')) {
+      const host = new URL(url).hostname
+      if (host.endsWith('.s3.gra.io.cloud.ovh.net') && host.startsWith('monlogementetudiant')) {
         result.push(url)
       } else {
         if (verbose) console.log(`    Téléchargement image : ${url}`)
