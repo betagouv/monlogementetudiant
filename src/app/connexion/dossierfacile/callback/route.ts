@@ -63,6 +63,9 @@ export async function GET(request: Request) {
     })
 
     const redirectUrl = new URL(returnTo || '/', baseUrl)
+    if (redirectUrl.origin !== new URL(baseUrl).origin) {
+      redirectUrl.href = new URL('/', baseUrl).href
+    }
     redirectUrl.searchParams.set('df_success', '1')
     return NextResponse.redirect(redirectUrl.toString())
   } catch (error) {

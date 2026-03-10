@@ -63,7 +63,7 @@ describe('import-arpej-ibail integration', () => {
       json: async () => ({
         features: [
           {
-            geometry: { coordinates: [2.3522, 48.8566] },
+            geometry: { type: 'Point', coordinates: [2.3522, 48.8566] },
             properties: { city: 'Paris', name: '10 Rue du Soleil', postcode: '75001' },
           },
         ],
@@ -118,7 +118,7 @@ describe('import-arpej-ibail integration', () => {
       json: async () => ({
         features: [
           {
-            geometry: { coordinates: [2.35, 48.86] },
+            geometry: { type: 'Point', coordinates: [2.35, 48.86] },
             properties: { city: 'Paris', name: '20 Rue de la Lune', postcode: '75002' },
           },
         ],
@@ -147,7 +147,7 @@ describe('import-arpej-ibail integration', () => {
       json: async () => ({
         features: [
           {
-            geometry: { coordinates: [2.35, 48.86] },
+            geometry: { type: 'Point', coordinates: [2.35, 48.86] },
             properties: { city: 'Paris', name: '20 Rue de la Lune', postcode: '75002' },
           },
         ],

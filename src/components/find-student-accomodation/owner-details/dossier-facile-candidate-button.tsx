@@ -43,7 +43,7 @@ export const DossierFacileLinkButton = ({ accommodationSlug, availableApartmentT
   const handleConnect = async () => {
     trackEvent({ category: 'Dossier Facile', action: 'Candidater avec Dossier Facile' })
     const { authorizationUrl } = await trpcClient.dossierFacile.connectUrl.mutate({
-      returnTo: window.location.href,
+      returnTo: window.location.pathname + window.location.search,
     })
     window.location.href = authorizationUrl
   }

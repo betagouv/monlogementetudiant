@@ -42,35 +42,37 @@ const availabilityKey: Record<
 }
 
 export const dossierFacileRouter = createTRPCRouter({
-  connectUrl: protectedProcedure.input(z.object({ returnTo: z.url().optional() }).optional()).mutation(async ({ ctx, input }) => {
-    if (ctx.session.user.role !== 'user') {
-      throw new TRPCError({ code: 'FORBIDDEN', message: 'Only students can connect DossierFacile' })
-    }
+  connectUrl: protectedProcedure
+    .input(z.object({ returnTo: z.string().startsWith('/').optional() }).optional())
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.session.user.role !== 'user') {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Only students can connect DossierFacile' })
+      }
 
-    validateConfig()
+      validateConfig()
 
-    const state = crypto.randomUUID()
-    const expiresAt = new Date(Date.now() + STATE_TTL_SECONDS * 1000)
+      const state = crypto.randomUUID()
+      const expiresAt = new Date(Date.now() + STATE_TTL_SECONDS * 1000)
 
-    const token = await new SignJWT({ state, userId: ctx.session.user.id, returnTo: input?.returnTo })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setExpirationTime(expiresAt)
-      .setIssuedAt()
-      .sign(getJwtSecret())
+      const token = await new SignJWT({ state, userId: ctx.session.user.id, returnTo: input?.returnTo })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setExpirationTime(expiresAt)
+        .setIssuedAt()
+        .sign(getJwtSecret())
 
-    const cookieStore = await cookies()
-    cookieStore.set(STATE_COOKIE_NAME, token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: STATE_TTL_SECONDS,
-    })
+      const cookieStore = await cookies()
+      cookieStore.set(STATE_COOKIE_NAME, token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: STATE_TTL_SECONDS,
+      })
 
-    const authorizationUrl = buildAuthorizationUrl(state, ctx.session.user.email)
+      const authorizationUrl = buildAuthorizationUrl(state, ctx.session.user.email)
 
-    return { authorizationUrl, expiresAt: expiresAt.toISOString() }
-  }),
+      return { authorizationUrl, expiresAt: expiresAt.toISOString() }
+    }),
 
   tenant: protectedProcedure.query(async ({ ctx }) => {
     const tenant = await db.query.dossierFacileTenants.findFirst({
