@@ -4,7 +4,7 @@ import { departments } from './departments'
 export const cities = pgTable('territories_city', {
   id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   name: varchar({ length: 200 }).notNull(),
-  slug: varchar({ length: 255 }).notNull(),
+  slug: varchar({ length: 255 }).notNull().unique(),
   postalCodes: varchar('postal_codes', { length: 5 }).array().notNull(),
   inseeCodes: varchar('insee_codes', { length: 5 }).array().notNull(),
   epciCode: varchar('epci_code', { length: 9 }),

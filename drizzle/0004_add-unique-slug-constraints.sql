@@ -1,0 +1,2 @@
+ALTER TABLE "accommodation_accommodation" ADD CONSTRAINT "accommodation_accommodation_slug_unique" UNIQUE("slug");--> statement-breakpoint
+ALTER TABLE "territories_city" ADD CONSTRAINT "territories_city_slug_unique" UNIQUE("slug");

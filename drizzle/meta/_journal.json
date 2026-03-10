@@ -29,6 +29,13 @@
       "when": 1773060590751,
       "tag": "0003_redundant_pestilence",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1773132722897,
+      "tag": "0004_add-unique-slug-constraints",
+      "breakpoints": true
     }
   ]
 }

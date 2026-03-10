@@ -4,7 +4,7 @@ import { owners } from './owners'
 export const accommodations = pgTable('accommodation_accommodation', {
   id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   name: varchar({ length: 200 }).notNull(),
-  slug: varchar({ length: 255 }).notNull(),
+  slug: varchar({ length: 255 }).notNull().unique(),
   description: text(),
   address: varchar({ length: 255 }),
   city: varchar({ length: 150 }).notNull(),

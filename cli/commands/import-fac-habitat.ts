@@ -1,12 +1,13 @@
 import * as fs from 'node:fs'
 import * as os from 'node:os'
 import * as path from 'node:path'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 import SftpClient from 'ssh2-sftp-client'
 import { accommodations, externalSources, owners } from '../../src/server/db/schema'
 import { computeDerivedFields, generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
+import { findAvailableSlug } from '../../src/server/utils/slug'
 import { db } from '../lib/db'
-import { geocodeAddress } from '../lib/geocoder'
+import { ensureCity, geocodeAddress } from '../lib/geocoder'
 import type { ImportCommand, ImportOptions, ImportResult } from '../types'
 
 const SOURCE = 'fac-habitat'
@@ -192,10 +193,11 @@ const command: ImportCommand = {
     const residences = await loadResidences(options)
     console.log(`  ${residences.length} résidences chargées`)
 
-    for (const item of residences) {
+    for (let i = 0; i < residences.length; i++) {
+      const item = residences[i]
       try {
         const sourceId = String(item.id)
-        if (options.verbose) console.log(`  ${item.name} (${sourceId})`)
+        if (options.verbose) console.log(`  [${i + 1}/${residences.length}] ${item.name} (${sourceId})`)
 
         const existingSource = await db
           .select({ accommodationId: externalSources.accommodationId })
@@ -205,6 +207,15 @@ const command: ImportCommand = {
 
         const fullAddress = `${item.address}, ${item.postal_code} ${item.city}`
         const geo = await geocodeAddress(fullAddress)
+        if (!geo && options.verbose) {
+          console.warn(`    ⚠ Geocoding returned null for "${fullAddress}"`)
+        }
+
+        let resolvedCity = geo?.city ?? item.city
+        const resolvedPostalCode = geo?.postalCode ?? item.postal_code
+        if (resolvedPostalCode && resolvedCity) {
+          resolvedCity = await ensureCity(resolvedPostalCode, resolvedCity)
+        }
 
         const typology = buildTypologyValues(item)
 
@@ -225,15 +236,15 @@ const command: ImportCommand = {
 
         const accommodationData = {
           name: item.name,
-          slug: generateSlug(item.name),
+          slug: await findAvailableSlug(generateSlug(item.name), db, accommodations),
           address: geo?.address ?? item.address,
-          city: geo?.city ?? item.city,
-          postalCode: geo?.postalCode ?? item.postal_code,
+          city: resolvedCity,
+          postalCode: resolvedPostalCode,
           residenceType: 'residence-etudiante',
           targetAudience: 'etudiants',
           published: true,
           available: derived.available,
-          geom: geo ? ([geo.lng, geo.lat] as [number, number]) : null,
+          geom: geo ? sql`ST_SetSRID(ST_MakePoint(${geo.lng}, ${geo.lat}), 4326)` : sql`NULL::geometry`,
           nbT1: typology.nbT1,
           nbT1Bis: typology.nbT1Bis,
           nbT2: typology.nbT2,
@@ -297,9 +308,29 @@ const command: ImportCommand = {
           result.created++
         }
       } catch (error) {
-        const msg = `${item.name} (${item.id}): ${error instanceof Error ? error.message : String(error)}`
+        const rowNum = i + 1
+        const cause = error instanceof Error ? (error as unknown as { cause?: unknown }).cause : null
+        const dbError = cause && typeof cause === 'object' && 'message' in cause ? String((cause as { message: string }).message) : null
+        const rawMessage = error instanceof Error ? error.message : String(error)
+        const cleanMessage = rawMessage.replace(/Failed query:[\s\S]*/i, '').trim()
+        const displayError = dbError || cleanMessage || rawMessage
+
+        const rowContext = [
+          item.address ? `address="${item.address}"` : null,
+          item.city ? `city="${item.city}"` : null,
+          item.postal_code ? `postal_code="${item.postal_code}"` : null,
+          item.nb_total_apartments != null ? `nb_total=${item.nb_total_apartments}` : null,
+        ]
+          .filter(Boolean)
+          .join(', ')
+
+        const msg = `Ligne ${rowNum} - ${item.name} (${item.id}): ${displayError}`
         result.errors.push(msg)
-        if (options.verbose) console.log(`    ${msg}`)
+        console.error(`    ❌ ${msg}`)
+        console.error(`       Contexte: ${rowContext}`)
+        if (options.verbose) {
+          console.error(`       Message complet: ${rawMessage.slice(0, 500)}`)
+        }
       }
     }
 

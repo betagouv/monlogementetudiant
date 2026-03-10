@@ -24,7 +24,8 @@ export async function uploadFile(input: { key: string; body: Buffer; contentType
     }),
   )
 
-  return `${process.env.S3_ENDPOINT}/${bucket}/${input.key}`
+  const endpoint = process.env.S3_ENDPOINT!.replace(/\/$/, '')
+  return `${endpoint.replace('://', `://${bucket}.`)}/${input.key}`
 }
 
 export function generateAccommodationKey(ext: string): string {
