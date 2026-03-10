@@ -262,7 +262,7 @@ const command: ImportCommand = {
         // Geocoding: use lat/lng from CSV, fallback to API
         const lat = Number.parseFloat(row.latitude ?? '')
         const lng = Number.parseFloat(row.longitude ?? '')
-        let geom: ReturnType<typeof sql> = sql`NULL::geometry`
+        let geom: ReturnType<typeof sql> | null = null
         let resolvedAddress = row.address?.trim() ?? ''
         let resolvedCity = row.city?.trim() ?? ''
         let resolvedPostalCode = row.postal_code?.trim() ?? ''
@@ -338,7 +338,7 @@ const command: ImportCommand = {
           target_audience: 'etudiants' as const,
           published: true,
           available: derived.available,
-          geom,
+          ...(geom ? { geom } : {}),
           nbT1: toDigit(row.nb_t1),
           nbT1Bis: toDigit(row.nb_t1_bis),
           nbT2: toDigit(row.nb_t2),

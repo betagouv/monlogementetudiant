@@ -155,7 +155,7 @@ const command: ImportCommand = {
           residenceType: 'universitaire-conventionnee',
           published: true,
           available: derived.available,
-          geom: geo ? sql`ST_SetSRID(ST_MakePoint(${geo.lng}, ${geo.lat}), 4326)` : sql`NULL::geometry`,
+          ...(geo ? { geom: sql`ST_SetSRID(ST_MakePoint(${geo.lng}, ${geo.lat}), 4326)` } : {}),
           nbT1: residence.accommodation_quantity ?? null,
           nbT1Available: residence.available_accommodation_quantity ?? null,
           priceMinT1: residence.rent_amount_from ?? null,
