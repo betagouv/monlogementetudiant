@@ -1,7 +1,8 @@
-import { and, eq } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 import { accommodations, externalSources, owners } from '../../src/server/db/schema'
 import { generateAccommodationKey, uploadFile } from '../../src/server/services/s3'
 import { computeDerivedFields, generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
+import { findAvailableSlug } from '../../src/server/utils/slug'
 import { db } from '../lib/db'
 import { geocodeAddress } from '../lib/geocoder'
 import type { ImportCommand, ImportOptions, ImportResult } from '../types'
@@ -146,7 +147,7 @@ const command: ImportCommand = {
 
         const accommodationData = {
           name: residence.title,
-          slug: generateSlug(residence.title),
+          slug: await findAvailableSlug(generateSlug(residence.title), db, accommodations),
           description: (residence.description as string) ?? null,
           address: geo?.address ?? residence.address,
           city: geo?.city ?? residence.city,
@@ -154,7 +155,7 @@ const command: ImportCommand = {
           residenceType: 'universitaire-conventionnee',
           published: true,
           available: derived.available,
-          geom: geo ? ([geo.lng, geo.lat] as [number, number]) : null,
+          geom: geo ? sql`ST_SetSRID(ST_MakePoint(${geo.lng}, ${geo.lat}), 4326)` : sql`NULL::geometry`,
           nbT1: residence.accommodation_quantity ?? null,
           nbT1Available: residence.available_accommodation_quantity ?? null,
           priceMinT1: residence.rent_amount_from ?? null,

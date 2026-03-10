@@ -1,11 +1,12 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 import { accommodations, externalSources, owners } from '../../src/server/db/schema'
 import { generateAccommodationKey, uploadFile } from '../../src/server/services/s3'
 import { computeDerivedFields, generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
+import { findAvailableSlug } from '../../src/server/utils/slug'
 import { db } from '../lib/db'
-import { geocodeAddress } from '../lib/geocoder'
+import { ensureCity, geocodeAddress, reverseGeocode } from '../lib/geocoder'
 import type { ImportCommand, ImportOptions, ImportResult } from '../types'
 
 interface CsvRow {
@@ -239,7 +240,8 @@ const command: ImportCommand = {
       console.log(`  [dry-run] Owner "${ownerName}"`)
     }
 
-    for (const row of rows) {
+    for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+      const row = rows[rowIndex]
       try {
         const name = row.name?.trim()
         if (!name) {
@@ -248,7 +250,7 @@ const command: ImportCommand = {
         }
 
         const sourceId = generateSourceId(row)
-        if (options.verbose) console.log(`  ${name} (${sourceId})`)
+        if (options.verbose) console.log(`  [${rowIndex + 1}/${rows.length}] ${name} (${sourceId})`)
 
         // Check existing
         const existingSource = await db
@@ -260,22 +262,46 @@ const command: ImportCommand = {
         // Geocoding: use lat/lng from CSV, fallback to API
         const lat = Number.parseFloat(row.latitude ?? '')
         const lng = Number.parseFloat(row.longitude ?? '')
-        let geom: [number, number] | null = null
+        let geom: ReturnType<typeof sql> = sql`NULL::geometry`
         let resolvedAddress = row.address?.trim() ?? ''
         let resolvedCity = row.city?.trim() ?? ''
         let resolvedPostalCode = row.postal_code?.trim() ?? ''
 
         if (!Number.isNaN(lat) && !Number.isNaN(lng) && lat !== 0 && lng !== 0) {
-          geom = [lng, lat]
+          geom = sql`ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)`
+          // Reverse geocode to fill missing city/address/postalCode
+          if (!resolvedCity) {
+            const rev = await reverseGeocode(lat, lng)
+            if (rev) {
+              resolvedCity = rev.city || resolvedCity
+              resolvedAddress = rev.address || resolvedAddress
+              resolvedPostalCode = rev.postalCode || resolvedPostalCode
+              if (options.verbose) console.log(`    Reverse geocode → ${resolvedCity}`)
+            }
+          }
+          // Forward geocode to fix ALL-CAPS city name
+          if (resolvedCity && resolvedCity === resolvedCity.toUpperCase() && resolvedCity !== resolvedCity.toLowerCase()) {
+            const fullAddress = `${resolvedAddress}, ${resolvedPostalCode} ${resolvedCity}`
+            const geo = await geocodeAddress(fullAddress)
+            if (geo?.city) {
+              resolvedCity = geo.city
+              if (options.verbose) console.log(`    Casse corrigée → ${resolvedCity}`)
+            }
+          }
         } else {
           const fullAddress = `${row.address ?? ''}, ${row.postal_code ?? ''} ${row.city ?? ''}`
           const geo = await geocodeAddress(fullAddress)
           if (geo) {
-            geom = [geo.lng, geo.lat]
+            geom = sql`ST_SetSRID(ST_MakePoint(${geo.lng}, ${geo.lat}), 4326)`
             resolvedAddress = geo.address || resolvedAddress
             resolvedCity = geo.city || resolvedCity
             resolvedPostalCode = geo.postalCode || resolvedPostalCode
           }
+        }
+
+        // Ensure city exists in DB with correct casing
+        if (resolvedPostalCode && resolvedCity) {
+          resolvedCity = await ensureCity(resolvedPostalCode, resolvedCity)
         }
 
         // Images
@@ -303,7 +329,7 @@ const command: ImportCommand = {
 
         const accommodationData = {
           name,
-          slug: generateSlug(name),
+          slug: await findAvailableSlug(generateSlug(name), db, accommodations),
           description: row.description?.trim() || null,
           address: resolvedAddress,
           city: resolvedCity,
@@ -391,9 +417,35 @@ const command: ImportCommand = {
           result.created++
         }
       } catch (error) {
-        const msg = `${row.name ?? '?'}: ${error instanceof Error ? error.message : String(error)}`
+        const rowNum = rowIndex + 1
+        // Extract the real DB error from error.cause (postgres-js / drizzle wrap the original error)
+        const cause = error instanceof Error ? (error as unknown as { cause?: unknown }).cause : null
+        const dbError = cause && typeof cause === 'object' && 'message' in cause ? String((cause as { message: string }).message) : null
+        // Strip the SQL query dump from drizzle's error message
+        const rawMessage = error instanceof Error ? error.message : String(error)
+        const cleanMessage = rawMessage.replace(/Failed query:[\s\S]*/i, '').trim()
+        const displayError = dbError || cleanMessage || rawMessage
+
+        const rowContext = [
+          row.address ? `address="${row.address}"` : null,
+          row.city ? `city="${row.city}"` : null,
+          row.postal_code ? `postal_code="${row.postal_code}"` : null,
+          row.latitude ? `lat=${row.latitude}` : null,
+          row.longitude ? `lng=${row.longitude}` : null,
+          row.nb_total_apartments ? `nb_total=${row.nb_total_apartments}` : null,
+          row.owner_name ? `owner="${row.owner_name}"` : null,
+        ]
+          .filter(Boolean)
+          .join(', ')
+
+        const msg = `Ligne ${rowNum} - ${row.name ?? '?'}: ${displayError}`
         result.errors.push(msg)
-        if (options.verbose) console.log(`    ❌ ${msg}`)
+        console.error(`    ❌ ${msg}`)
+        console.error(`       Contexte: ${rowContext}`)
+        if (options.verbose) {
+          // In verbose mode, show the full original error for deep debugging
+          console.error(`       Message complet: ${rawMessage.slice(0, 500)}`)
+        }
       }
     }
 

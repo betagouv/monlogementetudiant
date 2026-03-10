@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { accommodations, cities, departments } from '../../src/server/db/schema'
 import { generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
+import { findAvailableSlug } from '../../src/server/utils/slug'
 import { db } from '../lib/db'
 import { fetchCityFromGeoApi, fillCityFromApi } from '../lib/geocoder'
 import type { SyncCommand, SyncOptions, SyncResult } from '../types'
@@ -91,7 +92,7 @@ async function ensureSpecialCities(options: SyncOptions, result: SyncResult): Pr
       .insert(cities)
       .values({
         name: sc.name,
-        slug: generateSlug(sc.name),
+        slug: await findAvailableSlug(generateSlug(sc.name), db, cities),
         postalCodes: sc.postalCodes,
         inseeCodes: sc.inseeCodes,
         departmentId: dept[0].id,
@@ -184,7 +185,7 @@ const command: SyncCommand = {
           .insert(cities)
           .values({
             name: apiCity.nom,
-            slug: generateSlug(apiCity.nom),
+            slug: await findAvailableSlug(generateSlug(apiCity.nom), db, cities),
             postalCodes: apiCity.codesPostaux,
             inseeCodes: [apiCity.code],
             departmentId: dept[0].id,

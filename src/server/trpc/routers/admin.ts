@@ -8,6 +8,7 @@ import { user } from '~/server/db/schema/auth'
 import { cities } from '~/server/db/schema/cities'
 import { owners } from '~/server/db/schema/owners'
 import { generateSlug } from '~/server/trpc/utils/accommodation-helpers'
+import { findAvailableSlug } from '~/server/utils/slug'
 import { adminProcedure, createTRPCRouter } from '../init'
 
 const PAGE_SIZE = 20
@@ -277,7 +278,7 @@ const ownersRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ input }) => {
-      const slug = generateSlug(input.name)
+      const slug = await findAvailableSlug(generateSlug(input.name), db, owners)
 
       const [created] = await db
         .insert(owners)

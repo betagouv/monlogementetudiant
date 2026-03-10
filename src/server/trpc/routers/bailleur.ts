@@ -9,6 +9,7 @@ import { accommodations } from '~/server/db/schema/accommodations'
 import { user } from '~/server/db/schema/auth'
 import { owners } from '~/server/db/schema/owners'
 import { computeDerivedFields, generateSlug, geocodeAddress } from '~/server/trpc/utils/accommodation-helpers'
+import { findAvailableSlug } from '~/server/utils/slug'
 import { createTRPCRouter, ownerProcedure } from '../init'
 import { mapToGeoJsonFeature, priceMaxComputed } from './accommodations'
 
@@ -115,7 +116,7 @@ async function getOrCreateOwner(userId: string, userName: string) {
     .insert(owners)
     .values({
       name: userName,
-      slug: generateSlug(userName),
+      slug: await findAvailableSlug(generateSlug(userName), db, owners),
     })
     .returning()
 
@@ -364,7 +365,7 @@ export const bailleurRouter = createTRPCRouter({
       const { typologies, ...fields } = input
       const flatTypologies = transformTypologiesToFlat(typologies)
 
-      const slug = generateSlug(fields.name)
+      const slug = await findAvailableSlug(generateSlug(fields.name), db, accommodations)
 
       // Geocode address
       const coords = await geocodeAddress(fields.address, fields.city, fields.postal_code)
