@@ -68,6 +68,7 @@ export const getMyAccommodations = async (searchParams?: {
       .where(where),
     db.query.accommodations.findMany({
       where,
+      columns: { geom: false },
       with: { owner: true },
       extras: {
         priceMaxComputed: priceMaxComputed.as('priceMaxComputed'),
