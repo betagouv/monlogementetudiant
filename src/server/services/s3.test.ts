@@ -89,7 +89,7 @@ describe('s3 service', () => {
           ACL: 'public-read',
         }),
       )
-      expect(url).toBe('https://s3.test.example.com/test-bucket/accommodations/abc123.jpg')
+      expect(url).toBe('https://test-bucket.s3.test.example.com/accommodations/abc123.jpg')
     })
   })
 

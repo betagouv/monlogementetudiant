@@ -39,7 +39,9 @@ export async function createUser(overrides: Partial<UserInsert> & { id: string }
   return row
 }
 
-export async function createAcademy(overrides: Partial<AcademyInsert> & { boundary?: { type: string; coordinates: number[][][][] } } = {}) {
+export async function createAcademy(
+  overrides: Partial<Omit<AcademyInsert, 'boundary'>> & { boundary?: { type: string; coordinates: number[][][][] } } = {},
+) {
   const db = getTestDb()
   const { boundary, ...rest } = overrides
   const values = {
@@ -104,7 +106,7 @@ export async function createOwner(overrides: Partial<OwnerInsert> & { userId?: s
 }
 
 export async function createAccommodation(
-  overrides: Partial<AccommodationInsert> & { geom?: { type: string; coordinates: [number, number] } } = {},
+  overrides: Partial<Omit<AccommodationInsert, 'geom'>> & { geom?: { type: string; coordinates: [number, number] | number[][][][] } } = {},
 ) {
   const db = getTestDb()
   const { geom, ...rest } = overrides
