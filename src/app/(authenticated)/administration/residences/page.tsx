@@ -6,7 +6,7 @@ import Input from '@codegouvfr/react-dsfr/Input'
 import { useQuery } from '@tanstack/react-query'
 import { ColumnDef, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
 import clsx from 'clsx'
-import { useState } from 'react'
+import { parseAsString, useQueryState } from 'nuqs'
 import { useDebounce } from 'use-debounce'
 import { useTRPC } from '~/server/trpc/client'
 import styles from '../administration.module.css'
@@ -74,7 +74,7 @@ const columns: ColumnDef<ResidenceRow, unknown>[] = [
 ]
 
 export default function ResidencesPage() {
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useQueryState('search', parseAsString.withDefault(''))
   const [debouncedSearch] = useDebounce(search, 300)
   const trpc = useTRPC()
 

@@ -9,10 +9,12 @@ import { ColumnDef } from '@tanstack/react-table'
 import clsx from 'clsx'
 import Image from 'next/image'
 import Link from 'next/link'
+import { parseAsInteger, parseAsString, parseAsStringLiteral, useQueryState } from 'nuqs'
 import { useState } from 'react'
 import { useDebounce } from 'use-debounce'
 import { AdminDataTable } from '~/components/administration/admin-data-table'
 import { useAdminOwners } from '~/hooks/use-admin-owners'
+import { getFaviconUrl } from '~/utils/get-favicon-url'
 import { sPluriel } from '~/utils/sPluriel'
 import styles from '../administration.module.css'
 
@@ -40,15 +42,6 @@ function getInitials(name: string) {
 
 function getColor(index: number) {
   return AVATAR_COLORS[index % AVATAR_COLORS.length]
-}
-
-function getFaviconUrl(url: string) {
-  try {
-    const origin = new URL(url).origin
-    return `${origin}/favicon.ico`
-  } catch {
-    return null
-  }
 }
 
 function OwnerAvatar({ name, url, imageBase64, index }: { name: string; url: string | null; imageBase64: string | null; index: number }) {
@@ -118,10 +111,10 @@ const columns: ColumnDef<OwnerRow, unknown>[] = [
 ]
 
 export default function OwnersPage() {
-  const [view, setView] = useState<'grid' | 'table'>('grid')
-  const [search, setSearch] = useState('')
+  const [view, setView] = useQueryState('view', parseAsStringLiteral(['grid', 'table']).withDefault('grid'))
+  const [search, setSearch] = useQueryState('search', parseAsString.withDefault(''))
   const [debouncedSearch] = useDebounce(search, 300)
-  const [page, setPage] = useState(1)
+  const [page, setPage] = useQueryState('page', parseAsInteger.withDefault(1))
 
   const { data, isLoading, isError, error } = useAdminOwners({
     page,

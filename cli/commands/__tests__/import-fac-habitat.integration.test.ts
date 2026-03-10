@@ -2,7 +2,7 @@ import { and, eq } from 'drizzle-orm'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createAccommodation, createExternalSource, createOwner } from '../../../src/__tests__/fixtures/factories'
 import { getTestDb } from '../../../src/__tests__/helpers/test-db'
-import { accommodations, externalSources } from '../../../src/server/db/schema'
+import { accommodations, externalSources, owners } from '../../../src/server/db/schema'
 
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
@@ -92,8 +92,7 @@ describe('import-fac-habitat integration', () => {
     expect(result.created).toBe(1)
     expect(result.errors).toHaveLength(0)
 
-    const accs = await db.select().from(accommodations)
-    const created = accs.find((a) => a.name === 'Résidence Soleil')
+    const [created] = await db.select().from(accommodations).where(eq(accommodations.name, 'Résidence Soleil'))
     expect(created).toBeDefined()
     expect(created!.postalCode).toBe('75001')
     expect(created!.residenceType).toBe('residence-etudiante')
@@ -157,10 +156,7 @@ describe('import-fac-habitat integration', () => {
 
     expect(result.created).toBe(1)
 
-    const ownerRows = await db
-      .select()
-      .from((await import('../../../src/server/db/schema')).owners)
-      .where(eq((await import('../../../src/server/db/schema')).owners.name, 'FAC HABITAT'))
+    const ownerRows = await db.select().from(owners).where(eq(owners.name, 'FAC HABITAT'))
     expect(ownerRows).toHaveLength(1)
     expect(ownerRows[0].slug).toBe('fac-habitat')
   })

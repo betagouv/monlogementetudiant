@@ -18,6 +18,7 @@ import { useAdminDeleteOwner } from '~/hooks/use-admin-delete-owner'
 import { useAdminOwner } from '~/hooks/use-admin-owner'
 import { useAdminUpdateOwner } from '~/hooks/use-admin-update-owner'
 import { useTRPC, useTRPCClient } from '~/server/trpc/client'
+import { getFaviconUrl } from '~/utils/get-favicon-url'
 import { sPluriel } from '~/utils/sPluriel'
 import styles from '../../administration.module.css'
 
@@ -51,15 +52,6 @@ function getInitials(name: string) {
     .join('')
     .slice(0, 2)
     .toUpperCase()
-}
-
-function getFaviconUrl(url: string) {
-  try {
-    const origin = new URL(url).origin
-    return `${origin}/favicon.ico`
-  } catch {
-    return null
-  }
 }
 
 function OwnerDetailAvatar({ name, url, imageBase64 }: { name: string; url: string | null; imageBase64: string | null }) {

@@ -3,12 +3,13 @@ import * as os from 'node:os'
 import * as path from 'node:path'
 import { and, eq, sql } from 'drizzle-orm'
 import SftpClient from 'ssh2-sftp-client'
-import { accommodations, externalSources, owners } from '../../src/server/db/schema'
+import { accommodations, externalSources } from '../../src/server/db/schema'
 import { computeDerivedFields, generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
 import { findAvailableSlug } from '../../src/server/utils/slug'
 import { db } from '../lib/db'
 import { ensureCity, geocodeAddress } from '../lib/geocoder'
 import type { ImportCommand, ImportOptions, ImportResult } from '../types'
+import { getOrCreateOwner } from '../utils/get-or-create-owner'
 
 const SOURCE = 'fac-habitat'
 const OWNER_NAME = 'FAC HABITAT'
@@ -145,15 +146,6 @@ function buildTypologyValues(item: FacHabitatResidence) {
   }
 }
 
-async function getOrCreateOwner(): Promise<number> {
-  const existing = await db.select().from(owners).where(eq(owners.name, OWNER_NAME)).limit(1)
-  if (existing[0]) return existing[0].id
-
-  const slug = OWNER_NAME.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-  const [created] = await db.insert(owners).values({ name: OWNER_NAME, slug }).returning({ id: owners.id })
-  return created.id
-}
-
 async function loadResidences(options: ImportOptions): Promise<FacHabitatResidence[]> {
   let filePath: string
   let tmpFile = false
@@ -187,7 +179,7 @@ const command: ImportCommand = {
   async execute(options: ImportOptions): Promise<ImportResult> {
     const result: ImportResult = { created: 0, updated: 0, skipped: 0, errors: [] }
 
-    const ownerId = await getOrCreateOwner()
+    const ownerId = await getOrCreateOwner(OWNER_NAME)
     if (options.verbose) console.log(`  Owner FAC HABITAT id=${ownerId}`)
 
     const residences = await loadResidences(options)

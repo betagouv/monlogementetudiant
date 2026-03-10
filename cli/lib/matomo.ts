@@ -1,6 +1,6 @@
-const MATOMO_URL = () => process.env.MATOMO_URL!
-const MATOMO_TOKEN = () => process.env.MATOMO_TOKEN!
-const MATOMO_ID_SITE = () => process.env.MATOMO_ID_SITE!
+const MATOMO_URL = process.env.MATOMO_URL!
+const MATOMO_TOKEN = process.env.MATOMO_TOKEN!
+const MATOMO_ID_SITE = process.env.MATOMO_ID_SITE!
 
 interface MatomoParams {
   method: string
@@ -10,11 +10,11 @@ interface MatomoParams {
 }
 
 async function matomoRequest(params: MatomoParams): Promise<unknown> {
-  const url = new URL(MATOMO_URL())
+  const url = new URL(MATOMO_URL)
   url.searchParams.set('module', 'API')
   url.searchParams.set('format', 'JSON')
-  url.searchParams.set('idSite', MATOMO_ID_SITE())
-  url.searchParams.set('token_auth', MATOMO_TOKEN())
+  url.searchParams.set('idSite', MATOMO_ID_SITE)
+  url.searchParams.set('token_auth', MATOMO_TOKEN)
   for (const [key, value] of Object.entries(params)) {
     if (value != null) url.searchParams.set(key, value)
   }

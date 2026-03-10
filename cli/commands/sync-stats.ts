@@ -23,7 +23,6 @@ const command: SyncCommand = {
 
     const date = options.date ?? getYesterday()
 
-    // Check if stats already exist for this date
     const existing = await db.select({ id: stats.id }).from(stats).where(eq(stats.date, date)).limit(1)
 
     if (existing[0] && !options.force) {
@@ -38,7 +37,6 @@ const command: SyncCommand = {
       return result
     }
 
-    // Collect stats
     console.log(`  📊 Collecte stats du ${date}...`)
     const completeStats = await getCompleteStats(date)
 
@@ -62,12 +60,10 @@ const command: SyncCommand = {
     }
     result.updated++
 
-    // Collect events
     console.log(`  📈 Collecte events du ${date}...`)
     const events = await getAllEvents(date)
     console.log(`  ✓ ${events.length} events récupérés`)
 
-    // Delete existing events for this date if force
     if (existing[0]) {
       await db.delete(eventStats).where(eq(eventStats.date, date))
     }

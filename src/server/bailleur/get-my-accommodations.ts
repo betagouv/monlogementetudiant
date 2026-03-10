@@ -3,7 +3,6 @@ import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommod
 import { db } from '~/server/db'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { user } from '~/server/db/schema/auth'
-import { owners } from '~/server/db/schema/owners'
 import { mapToGeoJsonFeature, priceMaxComputed } from '~/server/trpc/routers/accommodations'
 import { getQueryClient } from '~/server/trpc/server'
 import { getServerSession } from '~/services/better-auth'
@@ -24,9 +23,7 @@ export const getMyAccommodations = async (searchParams?: {
     throw new Error('Unauthorized')
   }
 
-  const userId = auth.user.id
-
-  const usr = await db.query.user.findFirst({ where: eq(user.id, userId), with: { owner: true } })
+  const usr = await db.query.user.findFirst({ where: eq(user.id, auth.user.id), with: { owner: true } })
   const owner = usr?.owner
 
   if (!owner) {
@@ -69,73 +66,18 @@ export const getMyAccommodations = async (searchParams?: {
       })
       .from(accommodations)
       .where(where),
-    db
-      .select({
-        id: accommodations.id,
-        name: accommodations.name,
-        slug: accommodations.slug,
-        description: accommodations.description,
-        address: accommodations.address,
-        city: accommodations.city,
-        postalCode: accommodations.postalCode,
-        residenceType: accommodations.residenceType,
-        targetAudience: accommodations.target_audience,
-        published: accommodations.published,
-        available: accommodations.available,
-        nbTotalApartments: accommodations.nbTotalApartments,
-        nbAccessibleApartments: accommodations.nbAccessibleApartments,
-        nbColivingApartments: accommodations.nbColivingApartments,
-        nbT1: accommodations.nbT1,
-        nbT1Bis: accommodations.nbT1Bis,
-        nbT2: accommodations.nbT2,
-        nbT3: accommodations.nbT3,
-        nbT4: accommodations.nbT4,
-        nbT5: accommodations.nbT5,
-        nbT6: accommodations.nbT6,
-        nbT7More: accommodations.nbT7More,
-        nbT1Available: accommodations.nbT1Available,
-        nbT1BisAvailable: accommodations.nbT1BisAvailable,
-        nbT2Available: accommodations.nbT2Available,
-        nbT3Available: accommodations.nbT3Available,
-        nbT4Available: accommodations.nbT4Available,
-        nbT5Available: accommodations.nbT5Available,
-        nbT6Available: accommodations.nbT6Available,
-        nbT7MoreAvailable: accommodations.nbT7MoreAvailable,
-        priceMin: accommodations.priceMin,
-        priceMinT1: accommodations.priceMinT1,
-        priceMaxT1: accommodations.priceMaxT1,
-        priceMinT1Bis: accommodations.priceMinT1Bis,
-        priceMaxT1Bis: accommodations.priceMaxT1Bis,
-        priceMinT2: accommodations.priceMinT2,
-        priceMaxT2: accommodations.priceMaxT2,
-        priceMinT3: accommodations.priceMinT3,
-        priceMaxT3: accommodations.priceMaxT3,
-        priceMinT4: accommodations.priceMinT4,
-        priceMaxT4: accommodations.priceMaxT4,
-        priceMinT5: accommodations.priceMinT5,
-        priceMaxT5: accommodations.priceMaxT5,
-        priceMinT6: accommodations.priceMinT6,
-        priceMaxT6: accommodations.priceMaxT6,
-        priceMinT7More: accommodations.priceMinT7More,
-        priceMaxT7More: accommodations.priceMaxT7More,
-        priceMaxComputed,
-        acceptWaitingList: accommodations.acceptWaitingList,
-        scholarshipHoldersPriority: accommodations.scholarshipHoldersPriority,
-        wifi: accommodations.wifi,
-        imagesUrls: accommodations.imagesUrls,
-        externalUrl: accommodations.externalUrl,
-        updatedAt: accommodations.updatedAt,
-        ownerName: owners.name,
-        ownerUrl: owners.url,
-        lat: sql<number>`ST_Y(${accommodations.geom}::geometry)`,
-        lng: sql<number>`ST_X(${accommodations.geom}::geometry)`,
-      })
-      .from(accommodations)
-      .leftJoin(owners, eq(accommodations.ownerId, owners.id))
-      .where(where)
-      .orderBy(accommodations.name)
-      .limit(PAGE_SIZE)
-      .offset(offset),
+    db.query.accommodations.findMany({
+      where,
+      with: { owner: true },
+      extras: {
+        priceMaxComputed: priceMaxComputed.as('priceMaxComputed'),
+        lat: sql<number>`ST_Y(${accommodations.geom}::geometry)`.as('lat'),
+        lng: sql<number>`ST_X(${accommodations.geom}::geometry)`.as('lng'),
+      },
+      orderBy: accommodations.name,
+      limit: PAGE_SIZE,
+      offset,
+    }),
   ])
 
   const count = countResult[0]?.count ?? 0
@@ -149,7 +91,13 @@ export const getMyAccommodations = async (searchParams?: {
     min_price: priceBounds[0]?.minPrice != null ? Number(priceBounds[0].minPrice) : null,
     max_price: priceBounds[0]?.maxPrice != null ? Number(priceBounds[0].maxPrice) : null,
     results: {
-      features: results.map(mapToGeoJsonFeature),
+      features: results.map((row) =>
+        mapToGeoJsonFeature({
+          ...row,
+          ownerName: row.owner?.name ?? null,
+          ownerUrl: row.owner?.url ?? null,
+        }),
+      ),
     },
   }
 }

@@ -46,7 +46,6 @@ describe('sync-students', () => {
       json: async () => records,
     })
 
-    // Mock db.select calls: allCities then allDepts
     const allCities = [
       { id: 1, name: 'Paris', inseeCodes: ['75056'], departmentId: 1 },
       { id: 2, name: 'Lyon', inseeCodes: ['69123'], departmentId: 2 },

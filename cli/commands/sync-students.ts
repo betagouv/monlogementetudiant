@@ -31,16 +31,13 @@ const command: SyncCommand = {
     const records: StudentRecord[] = await response.json()
     console.log(`  ✓ ${records.length} enregistrements récupérés`)
 
-    // Filter by academic year
     const filtered = records.filter((r) => r.annee_universitaire === ACADEMIC_YEAR)
     console.log(`  🎓 ${filtered.length} pour l'année ${ACADEMIC_YEAR}`)
 
-    // Reset all student counts
     if (!options.dryRun) {
       await db.update(cities).set({ nbStudents: 0 })
     }
 
-    // Aggregate students by city
     const studentsByInsee = new Map<string, number>()
     const studentsByNameDept = new Map<string, number>()
 
@@ -60,7 +57,6 @@ const command: SyncCommand = {
       }
     }
 
-    // Get all cities with their departments
     const allCities = await db
       .select({
         id: cities.id,

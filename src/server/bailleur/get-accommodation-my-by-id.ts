@@ -6,7 +6,6 @@ import { TAccomodationMy } from '~/schemas/accommodations/accommodations'
 import { db } from '~/server/db'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { user } from '~/server/db/schema/auth'
-import { owners } from '~/server/db/schema/owners'
 import { getServerSession } from '~/services/better-auth'
 
 const residenceTypeValues = new Set<string>(Object.values(EResidenceType))
@@ -20,105 +19,7 @@ function toTargetAudience(value: string | null): ETargetAudience | null {
   return value && targetAudienceValues.has(value) ? (value as ETargetAudience) : null
 }
 
-export const getAccommodationMyById = async (slug: string): Promise<TAccomodationMy> => {
-  const auth = await getServerSession()
-  if (!auth) {
-    return notFound()
-  }
-
-  let ownerId: number | null = null
-  if (auth.user.role !== 'admin') {
-    const userId = auth.user.id
-    const usr = await db.query.user.findFirst({ where: eq(user.id, userId), with: { owner: true } })
-    const owner = usr?.owner
-    if (!owner) {
-      return notFound()
-    }
-    ownerId = owner.id
-  }
-
-  const rows = await db
-    .select({
-      id: accommodations.id,
-      name: accommodations.name,
-      slug: accommodations.slug,
-      description: accommodations.description,
-      address: accommodations.address,
-      city: accommodations.city,
-      postalCode: accommodations.postalCode,
-      residenceType: accommodations.residenceType,
-      targetAudience: accommodations.target_audience,
-      published: accommodations.published,
-      available: accommodations.available,
-      nbTotalApartments: accommodations.nbTotalApartments,
-      nbAccessibleApartments: accommodations.nbAccessibleApartments,
-      nbColivingApartments: accommodations.nbColivingApartments,
-      nbT1: accommodations.nbT1,
-      nbT1Bis: accommodations.nbT1Bis,
-      nbT2: accommodations.nbT2,
-      nbT3: accommodations.nbT3,
-      nbT4: accommodations.nbT4,
-      nbT5: accommodations.nbT5,
-      nbT6: accommodations.nbT6,
-      nbT7More: accommodations.nbT7More,
-      nbT1Available: accommodations.nbT1Available,
-      nbT1BisAvailable: accommodations.nbT1BisAvailable,
-      nbT2Available: accommodations.nbT2Available,
-      nbT3Available: accommodations.nbT3Available,
-      nbT4Available: accommodations.nbT4Available,
-      nbT5Available: accommodations.nbT5Available,
-      nbT6Available: accommodations.nbT6Available,
-      nbT7MoreAvailable: accommodations.nbT7MoreAvailable,
-      priceMin: accommodations.priceMin,
-      priceMinT1: accommodations.priceMinT1,
-      priceMaxT1: accommodations.priceMaxT1,
-      priceMinT1Bis: accommodations.priceMinT1Bis,
-      priceMaxT1Bis: accommodations.priceMaxT1Bis,
-      priceMinT2: accommodations.priceMinT2,
-      priceMaxT2: accommodations.priceMaxT2,
-      priceMinT3: accommodations.priceMinT3,
-      priceMaxT3: accommodations.priceMaxT3,
-      priceMinT4: accommodations.priceMinT4,
-      priceMaxT4: accommodations.priceMaxT4,
-      priceMinT5: accommodations.priceMinT5,
-      priceMaxT5: accommodations.priceMaxT5,
-      priceMinT6: accommodations.priceMinT6,
-      priceMaxT6: accommodations.priceMaxT6,
-      priceMinT7More: accommodations.priceMinT7More,
-      priceMaxT7More: accommodations.priceMaxT7More,
-      acceptWaitingList: accommodations.acceptWaitingList,
-      scholarshipHoldersPriority: accommodations.scholarshipHoldersPriority,
-      wifi: accommodations.wifi,
-      imagesUrls: accommodations.imagesUrls,
-      externalUrl: accommodations.externalUrl,
-      updatedAt: accommodations.updatedAt,
-      laundryRoom: accommodations.laundryRoom,
-      commonAreas: accommodations.commonAreas,
-      bikeStorage: accommodations.bikeStorage,
-      parking: accommodations.parking,
-      secureAccess: accommodations.secureAccess,
-      residenceManager: accommodations.residenceManager,
-      kitchenType: accommodations.kitchenType,
-      desk: accommodations.desk,
-      cookingPlates: accommodations.cookingPlates,
-      microwave: accommodations.microwave,
-      refrigerator: accommodations.refrigerator,
-      bathroom: accommodations.bathroom,
-      ownerName: owners.name,
-      ownerUrl: owners.url,
-      lat: sql<number>`ST_Y(${accommodations.geom}::geometry)`,
-      lng: sql<number>`ST_X(${accommodations.geom}::geometry)`,
-    })
-    .from(accommodations)
-    .leftJoin(owners, eq(accommodations.ownerId, owners.id))
-    .where(ownerId != null ? and(eq(accommodations.slug, slug), eq(accommodations.ownerId, ownerId)) : eq(accommodations.slug, slug))
-    .limit(1)
-
-  const row = rows[0]
-  if (!row) {
-    return notFound()
-  }
-
+function computePriceMax(row: typeof accommodations.$inferSelect): number | null {
   const priceMaxes = [
     row.priceMaxT1,
     row.priceMaxT1Bis,
@@ -130,6 +31,16 @@ export const getAccommodationMyById = async (slug: string): Promise<TAccomodatio
     row.priceMaxT7More,
   ].filter((v): v is number => v != null && v > 0)
 
+  return priceMaxes.length > 0 ? Math.max(...priceMaxes) : null
+}
+
+type AccommodationWithOwnerAndExtras = typeof accommodations.$inferSelect & {
+  owner: { name: string; url: string | null } | null
+  lat: number
+  lng: number
+}
+
+function mapToAccommodationMy(row: AccommodationWithOwnerAndExtras): TAccomodationMy {
   return {
     geometry: {
       type: 'Point',
@@ -144,7 +55,7 @@ export const getAccommodationMyById = async (slug: string): Promise<TAccomodatio
       city: row.city,
       postal_code: row.postalCode,
       residence_type: toResidenceType(row.residenceType),
-      target_audience: toTargetAudience(row.targetAudience),
+      target_audience: toTargetAudience(row.target_audience),
       published: row.published,
       available: row.available,
       accept_waiting_list: row.acceptWaitingList ?? false,
@@ -181,7 +92,7 @@ export const getAccommodationMyById = async (slug: string): Promise<TAccomodatio
       price_min_t5: row.priceMinT5,
       price_min_t6: row.priceMinT6,
       price_min_t7_more: row.priceMinT7More,
-      price_max: priceMaxes.length > 0 ? Math.max(...priceMaxes) : null,
+      price_max: computePriceMax(row),
       price_max_t1: row.priceMaxT1,
       price_max_t1_bis: row.priceMaxT1Bis,
       price_max_t2: row.priceMaxT2,
@@ -190,8 +101,8 @@ export const getAccommodationMyById = async (slug: string): Promise<TAccomodatio
       price_max_t5: row.priceMaxT5,
       price_max_t6: row.priceMaxT6,
       price_max_t7_more: row.priceMaxT7More,
-      owner_name: row.ownerName ?? null,
-      owner_url: row.ownerUrl ?? null,
+      owner_name: row.owner?.name ?? null,
+      owner_url: row.owner?.url ?? null,
       refrigerator: row.refrigerator ?? null,
       laundry_room: row.laundryRoom ?? null,
       bathroom: row.bathroom as 'private' | 'shared' | null,
@@ -206,4 +117,37 @@ export const getAccommodationMyById = async (slug: string): Promise<TAccomodatio
       cooking_plates: row.cookingPlates ?? null,
     },
   }
+}
+
+export const getAccommodationMyById = async (slug: string): Promise<TAccomodationMy> => {
+  const auth = await getServerSession()
+  if (!auth) {
+    return notFound()
+  }
+
+  let ownerId: number | null = null
+  if (auth.user.role !== 'admin') {
+    const userId = auth.user.id
+    const usr = await db.query.user.findFirst({ where: eq(user.id, userId), with: { owner: true } })
+    const owner = usr?.owner
+    if (!owner) {
+      return notFound()
+    }
+    ownerId = owner.id
+  }
+
+  const row = await db.query.accommodations.findFirst({
+    where: ownerId != null ? and(eq(accommodations.slug, slug), eq(accommodations.ownerId, ownerId)) : eq(accommodations.slug, slug),
+    with: { owner: true },
+    extras: {
+      lat: sql<number>`ST_Y(${accommodations.geom}::geometry)`.as('lat'),
+      lng: sql<number>`ST_X(${accommodations.geom}::geometry)`.as('lng'),
+    },
+  })
+
+  if (!row) {
+    return notFound()
+  }
+
+  return mapToAccommodationMy(row)
 }

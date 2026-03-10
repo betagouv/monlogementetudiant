@@ -1,3 +1,6 @@
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 import { and, eq } from 'drizzle-orm'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createAccommodation, createExternalSource, createOwner } from '../../../src/__tests__/fixtures/factories'
@@ -30,10 +33,6 @@ vi.mock('../../lib/geocoder', async (importOriginal) => {
 const { default: command } = await import('../import-csv')
 
 function writeTmpCsv(rows: string[][], headers?: string[]): string {
-  const fs = require('node:fs')
-  const os = require('node:os')
-  const path = require('node:path')
-
   const defaultHeaders = [
     'name',
     'description',
@@ -224,8 +223,7 @@ describe('import-csv integration', () => {
     expect(result.created).toBe(1)
     expect(result.errors).toHaveLength(0)
 
-    const accs = await db.select().from(accommodations)
-    const created = accs.find((a) => a.name === 'Résidence Soleil')
+    const [created] = await db.select().from(accommodations).where(eq(accommodations.name, 'Résidence Soleil'))
     expect(created).toBeDefined()
     expect(created!.postalCode).toBe('75001')
     expect(created!.residenceType).toBe('residence-etudiante')
@@ -487,10 +485,6 @@ describe('import-csv integration', () => {
   })
 
   it('handles BOM-encoded CSV', async () => {
-    const fs = require('node:fs')
-    const os = require('node:os')
-    const path = require('node:path')
-
     const headers = [
       'name',
       'description',

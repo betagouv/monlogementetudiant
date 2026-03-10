@@ -9,101 +9,10 @@ import { accommodations } from '~/server/db/schema/accommodations'
 import { user } from '~/server/db/schema/auth'
 import { owners } from '~/server/db/schema/owners'
 import { computeDerivedFields, generateSlug, geocodeAddress } from '~/server/trpc/utils/accommodation-helpers'
+import { AVAILABILITY_FIELD_MAP, mapFields, UPDATE_FIELD_MAP } from '~/server/trpc/utils/field-mapping'
 import { findAvailableSlug } from '~/server/utils/slug'
 import { createTRPCRouter, ownerProcedure } from '../init'
 import { mapToGeoJsonFeature, priceMaxComputed } from './accommodations'
-
-// --- snake_case input → camelCase DB helpers ---
-
-function snakeToCamelAvailability(input: z.infer<typeof ZUpdateResidenceList>) {
-  return {
-    nbT1Available: input.nb_t1_available,
-    nbT1BisAvailable: input.nb_t1_bis_available,
-    nbT2Available: input.nb_t2_available,
-    nbT3Available: input.nb_t3_available,
-    nbT4Available: input.nb_t4_available,
-    nbT5Available: input.nb_t5_available,
-    nbT6Available: input.nb_t6_available,
-    nbT7MoreAvailable: input.nb_t7_more_available,
-  }
-}
-
-function snakeToCamelUpdate(input: z.infer<typeof ZUpdateResidence>) {
-  const result: Record<string, unknown> = {}
-
-  if (input.name !== undefined) result.name = input.name
-  if (input.residence_type !== undefined) result.residenceType = input.residence_type
-  if (input.target_audience !== undefined) result.target_audience = input.target_audience
-  if (input.address !== undefined) result.address = input.address
-  if (input.city !== undefined) result.city = input.city
-  if (input.postal_code !== undefined) result.postalCode = input.postal_code
-  if (input.description !== undefined) result.description = input.description
-  if (input.external_url !== undefined) result.externalUrl = input.external_url
-  if (input.accept_waiting_list !== undefined) result.acceptWaitingList = input.accept_waiting_list
-  if (input.published !== undefined) result.published = input.published
-  if (input.scholarship_holders_priority !== undefined) result.scholarshipHoldersPriority = input.scholarship_holders_priority
-  if (input.images_urls !== undefined) result.imagesUrls = input.images_urls
-
-  // Typology fields
-  if (input.nb_t1 !== undefined) result.nbT1 = input.nb_t1
-  if (input.nb_t1_available !== undefined) result.nbT1Available = input.nb_t1_available
-  if (input.price_min_t1 !== undefined) result.priceMinT1 = input.price_min_t1
-  if (input.price_max_t1 !== undefined) result.priceMaxT1 = input.price_max_t1
-
-  if (input.nb_t1_bis !== undefined) result.nbT1Bis = input.nb_t1_bis
-  if (input.nb_t1_bis_available !== undefined) result.nbT1BisAvailable = input.nb_t1_bis_available
-  if (input.price_min_t1_bis !== undefined) result.priceMinT1Bis = input.price_min_t1_bis
-  if (input.price_max_t1_bis !== undefined) result.priceMaxT1Bis = input.price_max_t1_bis
-
-  if (input.nb_t2 !== undefined) result.nbT2 = input.nb_t2
-  if (input.nb_t2_available !== undefined) result.nbT2Available = input.nb_t2_available
-  if (input.price_min_t2 !== undefined) result.priceMinT2 = input.price_min_t2
-  if (input.price_max_t2 !== undefined) result.priceMaxT2 = input.price_max_t2
-
-  if (input.nb_t3 !== undefined) result.nbT3 = input.nb_t3
-  if (input.nb_t3_available !== undefined) result.nbT3Available = input.nb_t3_available
-  if (input.price_min_t3 !== undefined) result.priceMinT3 = input.price_min_t3
-  if (input.price_max_t3 !== undefined) result.priceMaxT3 = input.price_max_t3
-
-  if (input.nb_t4 !== undefined) result.nbT4 = input.nb_t4
-  if (input.nb_t4_available !== undefined) result.nbT4Available = input.nb_t4_available
-  if (input.price_min_t4 !== undefined) result.priceMinT4 = input.price_min_t4
-  if (input.price_max_t4 !== undefined) result.priceMaxT4 = input.price_max_t4
-
-  if (input.nb_t5 !== undefined) result.nbT5 = input.nb_t5
-  if (input.nb_t5_available !== undefined) result.nbT5Available = input.nb_t5_available
-  if (input.price_min_t5 !== undefined) result.priceMinT5 = input.price_min_t5
-  if (input.price_max_t5 !== undefined) result.priceMaxT5 = input.price_max_t5
-
-  if (input.nb_t6 !== undefined) result.nbT6 = input.nb_t6
-  if (input.nb_t6_available !== undefined) result.nbT6Available = input.nb_t6_available
-  if (input.price_min_t6 !== undefined) result.priceMinT6 = input.price_min_t6
-  if (input.price_max_t6 !== undefined) result.priceMaxT6 = input.price_max_t6
-
-  if (input.nb_t7_more !== undefined) result.nbT7More = input.nb_t7_more
-  if (input.nb_t7_more_available !== undefined) result.nbT7MoreAvailable = input.nb_t7_more_available
-  if (input.price_min_t7_more !== undefined) result.priceMinT7More = input.price_min_t7_more
-  if (input.price_max_t7_more !== undefined) result.priceMaxT7More = input.price_max_t7_more
-
-  if (input.nb_accessible_apartments !== undefined) result.nbAccessibleApartments = input.nb_accessible_apartments
-  if (input.nb_coliving_apartments !== undefined) result.nbColivingApartments = input.nb_coliving_apartments
-
-  // Amenities
-  if (input.refrigerator !== undefined) result.refrigerator = input.refrigerator
-  if (input.laundry_room !== undefined) result.laundryRoom = input.laundry_room
-  if (input.bathroom !== undefined) result.bathroom = input.bathroom
-  if (input.kitchen_type !== undefined) result.kitchenType = input.kitchen_type
-  if (input.microwave !== undefined) result.microwave = input.microwave
-  if (input.secure_access !== undefined) result.secureAccess = input.secure_access
-  if (input.parking !== undefined) result.parking = input.parking
-  if (input.common_areas !== undefined) result.commonAreas = input.common_areas
-  if (input.bike_storage !== undefined) result.bikeStorage = input.bike_storage
-  if (input.desk !== undefined) result.desk = input.desk
-  if (input.residence_manager !== undefined) result.residenceManager = input.residence_manager
-  if (input.cooking_plates !== undefined) result.cookingPlates = input.cooking_plates
-
-  return result
-}
 
 async function getOrCreateOwner(userId: string, userName: string) {
   const usr = await db.query.user.findFirst({
@@ -384,7 +293,7 @@ export const bailleurRouter = createTRPCRouter({
     const { slug, ...fields } = input
     await verifyOwnership(slug, ctx.session.user.id)
 
-    const camelFields = snakeToCamelUpdate(fields)
+    const camelFields = mapFields(fields, UPDATE_FIELD_MAP)
 
     // Recompute derived fields
     const derived = computeDerivedFields(fields)
@@ -428,7 +337,7 @@ export const bailleurRouter = createTRPCRouter({
     const { slug, ...availFields } = input
     await verifyOwnership(slug, ctx.session.user.id)
 
-    const camelFields = snakeToCamelAvailability(availFields)
+    const camelFields = mapFields(availFields, AVAILABILITY_FIELD_MAP)
 
     // Recompute available flag
     const available = Object.values(camelFields).some((v) => v != null && (v as number) > 0)

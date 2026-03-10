@@ -5,8 +5,7 @@ import Input from '@codegouvfr/react-dsfr/Input'
 import { ColumnDef } from '@tanstack/react-table'
 import clsx from 'clsx'
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { useState } from 'react'
+import { parseAsInteger, parseAsString, useQueryState } from 'nuqs'
 import { useDebounce } from 'use-debounce'
 import { AdminDataTable } from '~/components/administration/admin-data-table'
 import { useAdminUsers } from '~/hooks/use-admin-users'
@@ -75,27 +74,14 @@ const columns: ColumnDef<UserRow, unknown>[] = [
 ]
 
 export function UsersList() {
-  const searchParams = useSearchParams()
-  const router = useRouter()
-
-  const pageParam = Number(searchParams.get('page')) || 1
-
-  const [search, setSearch] = useState(searchParams.get('search') ?? '')
+  const [search, setSearch] = useQueryState('search', parseAsString.withDefault(''))
   const [debouncedSearch] = useDebounce(search, 300)
-  const [page, setPage] = useState(pageParam)
+  const [page, setPage] = useQueryState('page', parseAsInteger.withDefault(1))
 
   const { data, isLoading } = useAdminUsers({
     page,
     search: debouncedSearch.length >= 2 ? debouncedSearch : undefined,
   })
-
-  const handlePageChange = (newPage: number) => {
-    setPage(newPage)
-    const params = new URLSearchParams()
-    if (search) params.set('search', search)
-    params.set('page', String(newPage))
-    router.push(`/administration/utilisateurs?${params.toString()}`)
-  }
 
   return (
     <>
@@ -137,7 +123,7 @@ export function UsersList() {
         data={data?.items ?? []}
         pageCount={data?.pageCount ?? 0}
         page={page}
-        onPageChange={handlePageChange}
+        onPageChange={setPage}
         isLoading={isLoading}
       />
     </>

@@ -1,6 +1,7 @@
 'use client'
 
 import Button from '@codegouvfr/react-dsfr/Button'
+import { useTranslations } from 'next-intl'
 import { useRef, useState } from 'react'
 import { Controller, useFormContext } from 'react-hook-form'
 import { AccommodationImage } from '~/components/accommodation/accommodation-image'
@@ -16,6 +17,7 @@ export const ResidencePictures = ({ accommodation }: { accommodation: TAccomodat
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [fileError, setFileError] = useState<string | null>(null)
+  const t = useTranslations('toast')
 
   const uploadMutation = useUploadResidenceImages(accommodation.properties.slug, accommodation.properties.name)
   const deleteMutation = useDeleteResidenceImage(accommodation.properties.slug, accommodation.properties.name)
@@ -27,7 +29,7 @@ export const ResidencePictures = ({ accommodation }: { accommodation: TAccomodat
     setFileError(null)
 
     if (files.length > 0) {
-      const validationError = validateFiles(files)
+      const validationError = validateFiles(files, t)
       if (validationError) {
         setFileError(validationError)
         return

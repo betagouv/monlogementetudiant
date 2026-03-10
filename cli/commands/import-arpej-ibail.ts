@@ -1,11 +1,12 @@
 import { and, eq, sql } from 'drizzle-orm'
-import { accommodations, externalSources, owners } from '../../src/server/db/schema'
+import { accommodations, externalSources } from '../../src/server/db/schema'
 import { generateAccommodationKey, uploadFile } from '../../src/server/services/s3'
 import { computeDerivedFields, generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
 import { findAvailableSlug } from '../../src/server/utils/slug'
 import { db } from '../lib/db'
 import { geocodeAddress } from '../lib/geocoder'
 import type { ImportCommand, ImportOptions, ImportResult } from '../types'
+import { getOrCreateOwner } from '../utils/get-or-create-owner'
 
 const IBAIL_SOURCE = 'arpej'
 const OWNER_NAME = 'ARPEJ'
@@ -25,15 +26,6 @@ interface IbailResidence {
   description?: string
   images?: { url: string }[]
   [key: string]: unknown
-}
-
-async function getOrCreateOwner(): Promise<number> {
-  const existing = await db.select().from(owners).where(eq(owners.name, OWNER_NAME)).limit(1)
-  if (existing[0]) return existing[0].id
-
-  const slug = OWNER_NAME.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-  const [created] = await db.insert(owners).values({ name: OWNER_NAME, slug, url: OWNER_URL }).returning({ id: owners.id })
-  return created.id
 }
 
 async function fetchResidences(options: ImportOptions): Promise<IbailResidence[]> {
@@ -112,7 +104,7 @@ const command: ImportCommand = {
   async execute(options: ImportOptions): Promise<ImportResult> {
     const result: ImportResult = { created: 0, updated: 0, skipped: 0, errors: [] }
 
-    const ownerId = await getOrCreateOwner()
+    const ownerId = await getOrCreateOwner(OWNER_NAME, OWNER_URL)
     if (options.verbose) console.log(`  🏢 Owner ARPEJ id=${ownerId}`)
 
     const residences = await fetchResidences(options)

@@ -832,6 +832,8 @@
     "userDeleteError": "Erreur lors de la suppression de l'utilisateur",
     "ownerUpdated": "Gestionnaire mis à jour",
     "ownerUpdateError": "Erreur lors de la mise à jour du gestionnaire",
+    "ownerCreated": "Gestionnaire créé avec succès",
+    "ownerCreateError": "Erreur lors de la création du gestionnaire",
     "ownerDeleted": "Gestionnaire supprimé",
     "ownerDeleteError": "Erreur lors de la suppression du gestionnaire"
   },

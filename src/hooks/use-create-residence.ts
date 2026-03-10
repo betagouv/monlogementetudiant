@@ -18,13 +18,11 @@ export const useCreateResidence = () => {
     mutationFn: async (data: TCreateResidence) => {
       const { images_files, ...fields } = data
 
-      // 1. Create residence via tRPC (name is always provided by the form)
       const result = await trpcClient.bailleur.create.mutate({
         ...fields,
         name: fields.name!,
       })
 
-      // 2. Upload images via S3 route if provided
       if (images_files?.length && result.slug) {
         const formData = new FormData()
         images_files.forEach((file) => formData.append('images', file))
@@ -38,7 +36,6 @@ export const useCreateResidence = () => {
           const uploadData = await uploadResponse.json()
           const imageUrls: string[] = uploadData.images_urls || []
           if (imageUrls.length > 0) {
-            // 3. Save image URLs via tRPC update
             await trpcClient.bailleur.update.mutate({
               slug: result.slug,
               images_urls: imageUrls,

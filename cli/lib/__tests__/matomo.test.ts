@@ -1,9 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
 
-// Set env vars before importing
 process.env.MATOMO_URL = 'https://matomo.example.com/'
 process.env.MATOMO_TOKEN = 'test-token'
 process.env.MATOMO_ID_SITE = '1'
@@ -12,6 +11,15 @@ const { getCompleteStats, getAllEvents } = await import('../matomo')
 
 beforeEach(() => {
   mockFetch.mockReset()
+  process.env.MATOMO_URL = 'https://matomo.example.com/'
+  process.env.MATOMO_TOKEN = 'test-token'
+  process.env.MATOMO_ID_SITE = '1'
+})
+
+afterEach(() => {
+  delete process.env.MATOMO_URL
+  delete process.env.MATOMO_TOKEN
+  delete process.env.MATOMO_ID_SITE
 })
 
 describe('getCompleteStats', () => {
@@ -59,7 +67,6 @@ describe('getCompleteStats', () => {
     expect(result.mainEntryPages).toEqual([{ label: '/login', nbVisits: 80 }])
     expect(result.mainSources).toEqual([{ label: 'google.com', nbVisits: 60 }])
 
-    // Verify URL construction
     const firstCall = mockFetch.mock.calls[0][0]
     const url = new URL(firstCall)
     expect(url.searchParams.get('period')).toBe('day')
