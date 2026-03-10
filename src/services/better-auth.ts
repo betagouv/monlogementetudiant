@@ -22,6 +22,10 @@ export const auth = betterAuth({
     expiresIn: oneDay,
     updateAge: oneDay,
   },
+  advanced: {
+    // force la suppression des cookies (django)
+    cookiePrefix: 'monlogementetudiant',
+  },
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 12,

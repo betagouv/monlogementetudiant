@@ -19,7 +19,7 @@ function toTargetAudience(value: string | null): ETargetAudience | null {
   return value && targetAudienceValues.has(value) ? (value as ETargetAudience) : null
 }
 
-function computePriceMax(row: typeof accommodations.$inferSelect): number | null {
+function computePriceMax(row: Pick<typeof accommodations.$inferSelect, 'priceMaxT1' | 'priceMaxT1Bis' | 'priceMaxT2' | 'priceMaxT3' | 'priceMaxT4' | 'priceMaxT5' | 'priceMaxT6' | 'priceMaxT7More'>): number | null {
   const priceMaxes = [
     row.priceMaxT1,
     row.priceMaxT1Bis,
@@ -34,7 +34,7 @@ function computePriceMax(row: typeof accommodations.$inferSelect): number | null
   return priceMaxes.length > 0 ? Math.max(...priceMaxes) : null
 }
 
-type AccommodationWithOwnerAndExtras = typeof accommodations.$inferSelect & {
+type AccommodationWithOwnerAndExtras = Omit<typeof accommodations.$inferSelect, 'geom'> & {
   owner: { name: string; url: string | null } | null
   lat: number
   lng: number
@@ -138,6 +138,7 @@ export const getAccommodationMyById = async (slug: string): Promise<TAccomodatio
 
   const row = await db.query.accommodations.findFirst({
     where: ownerId != null ? and(eq(accommodations.slug, slug), eq(accommodations.ownerId, ownerId)) : eq(accommodations.slug, slug),
+    columns: { geom: false },
     with: { owner: true },
     extras: {
       lat: sql<number>`ST_Y(${accommodations.geom}::geometry)`.as('lat'),

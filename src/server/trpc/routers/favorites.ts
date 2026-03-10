@@ -16,6 +16,7 @@ export const favoritesRouter = createTRPCRouter({
       orderBy: desc(favoriteAccommodations.createdAt),
       with: {
         accommodation: {
+          columns: { geom: false },
           with: { owner: true },
           extras: {
             priceMaxComputed: priceMaxComputed.as('priceMaxComputed'),
