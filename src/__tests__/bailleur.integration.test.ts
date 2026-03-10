@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createAccommodation, createOwner, createUser } from './fixtures/factories'
-import { adminCaller, authenticatedCaller, caller, ownerCaller } from './helpers/test-caller'
 import './helpers/setup-integration'
+import { adminCaller, authenticatedCaller, caller, ownerCaller } from './helpers/test-caller'
 
 type AccommodationOverrides = NonNullable<Parameters<typeof createAccommodation>[0]>
 type AccommodationGeom = NonNullable<AccommodationOverrides['geom']>
@@ -123,35 +123,6 @@ describe('bailleur.list', () => {
   })
 })
 
-describe('bailleur.getBySlug', () => {
-  it('returns accommodation details with amenities', async () => {
-    const owner = await createOwner({ name: 'Owner Detail', slug: 'owner-detail', userId: 'test-owner-id' })
-    await createAccommodation({
-      name: 'Résidence Détail',
-      slug: 'residence-detail',
-      ownerId: owner.id,
-      laundryRoom: true,
-      wifi: true,
-      parking: false,
-      geom: parisPoint,
-    })
-
-    const result = await ownerCaller.bailleur.getBySlug({ slug: 'residence-detail' })
-    expect(result.properties.name).toBe('Résidence Détail')
-    expect(result.properties.laundry_room).toBe(true)
-    expect(result.properties.wifi).toBe(true)
-    expect(result.properties.parking).toBe(false)
-    expect(result.geometry.type).toBe('Point')
-  })
-
-  it('rejects access to accommodation owned by another user', async () => {
-    const otherOwner = await createOwner({ name: 'Other Owner', slug: 'other-owner', userId: 'test-owner-id-2' })
-    await createAccommodation({ name: 'Not Mine', slug: 'not-mine', ownerId: otherOwner.id })
-
-    await expect(ownerCaller.bailleur.getBySlug({ slug: 'not-mine' })).rejects.toThrow('Accommodation not found')
-  })
-})
-
 describe('bailleur.update', () => {
   it('updates accommodation details', async () => {
     const owner = await createOwner({ name: 'Owner Update', slug: 'owner-update', userId: 'test-owner-id' })
@@ -170,9 +141,10 @@ describe('bailleur.update', () => {
 
     expect(result.slug).toBe('to-update')
 
-    const detail = await ownerCaller.bailleur.getBySlug({ slug: 'to-update' })
-    expect(detail.properties.name).toBe('After Update')
-    expect(detail.properties.description).toBe('Updated description')
+    const list = await ownerCaller.bailleur.list({ page: 1 })
+    const detail = list.results.features.find((f) => f.properties.slug === 'to-update')
+    expect(detail?.properties.name).toBe('After Update')
+    expect(detail?.properties.description).toBe('Updated description')
   })
 
   it('rejects update of accommodation owned by another user', async () => {
@@ -210,9 +182,10 @@ describe('bailleur.updateAvailability', () => {
 
     expect(result.slug).toBe('avail-test')
 
-    const detail = await ownerCaller.bailleur.getBySlug({ slug: 'avail-test' })
-    expect(detail.properties.nb_t1_available).toBe(3)
-    expect(detail.properties.nb_t2_available).toBe(2)
-    expect(detail.properties.available).toBe(true)
+    const list = await ownerCaller.bailleur.list({ page: 1 })
+    const detail = list.results.features.find((f) => f.properties.slug === 'avail-test')
+    expect(detail?.properties.nb_t1_available).toBe(3)
+    expect(detail?.properties.nb_t2_available).toBe(2)
+    expect(detail?.properties.available).toBe(true)
   })
 })

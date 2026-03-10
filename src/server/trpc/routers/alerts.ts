@@ -1,4 +1,4 @@
-import { type AnyColumn, and, eq, inArray, type SQL, sql } from 'drizzle-orm'
+import { and, eq, inArray, type SQL, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { ZCreateAlertRequest } from '~/schemas/alerts/create-alert'
 import { ZUpdateAlertRequest } from '~/schemas/alerts/update-alert'
@@ -8,17 +8,8 @@ import { accommodations } from '~/server/db/schema/accommodations'
 import { cities } from '~/server/db/schema/cities'
 import { departments } from '~/server/db/schema/departments'
 import { studentAlerts } from '~/server/db/schema/student-alerts'
+import { bboxSelect } from '~/server/trpc/utils/spatial-helpers'
 import { createTRPCRouter, protectedProcedure } from '../init'
-
-const bboxSelect = (table: { boundary: AnyColumn }) =>
-  sql<{ xmin: number; xmax: number; ymin: number; ymax: number }>`
-    json_build_object(
-      'xmin', ST_XMin(ST_Envelope(${table.boundary})),
-      'xmax', ST_XMax(ST_Envelope(${table.boundary})),
-      'ymin', ST_YMin(ST_Envelope(${table.boundary})),
-      'ymax', ST_YMax(ST_Envelope(${table.boundary}))
-    )
-  `
 
 type AlertMatchInput = {
   cityId: number | null

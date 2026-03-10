@@ -12,6 +12,13 @@ import { findAvailableSlug } from '~/server/utils/slug'
 import { adminProcedure, createTRPCRouter } from '../init'
 
 const PAGE_SIZE = 20
+
+const nbAvailableApartmentsSum = sql<number>`(
+  coalesce(nb_t1_available, 0) + coalesce(nb_t1_bis_available, 0) +
+  coalesce(nb_t2_available, 0) + coalesce(nb_t3_available, 0) +
+  coalesce(nb_t4_available, 0) + coalesce(nb_t5_available, 0) +
+  coalesce(nb_t6_available, 0) + coalesce(nb_t7_more_available, 0)
+)::int`
 const getAdminErrorTranslations = () => getTranslations('trpc.admin.errors')
 
 const usersRouter = createTRPCRouter({
@@ -218,11 +225,7 @@ const ownersRouter = createTRPCRouter({
             userCount: sql<number>`(SELECT count(*)::int FROM "user" WHERE owner_id = "account_owner"."id")`,
             availableApartments: sql<number>`(
               WITH available_counts AS (
-                SELECT
-                  coalesce(nb_t1_available, 0) + coalesce(nb_t1_bis_available, 0) +
-                  coalesce(nb_t2_available, 0) + coalesce(nb_t3_available, 0) +
-                  coalesce(nb_t4_available, 0) + coalesce(nb_t5_available, 0) +
-                  coalesce(nb_t6_available, 0) + coalesce(nb_t7_more_available, 0) as total_available
+                SELECT ${nbAvailableApartmentsSum} as total_available
                 FROM accommodation_accommodation
                 WHERE owner_id = "account_owner"."id"
               )
@@ -347,12 +350,7 @@ const ownersRouter = createTRPCRouter({
         available: accommodations.available,
         published: accommodations.published,
         nbTotalApartments: accommodations.nbTotalApartments,
-        nbAvailableApartments: sql<number>`(
-          coalesce(nb_t1_available, 0) + coalesce(nb_t1_bis_available, 0) +
-          coalesce(nb_t2_available, 0) + coalesce(nb_t3_available, 0) +
-          coalesce(nb_t4_available, 0) + coalesce(nb_t5_available, 0) +
-          coalesce(nb_t6_available, 0) + coalesce(nb_t7_more_available, 0)
-        )::int`,
+        nbAvailableApartments: nbAvailableApartmentsSum,
         lat: sql<number | null>`ST_Y(${accommodations.geom}::geometry)`,
         lng: sql<number | null>`ST_X(${accommodations.geom}::geometry)`,
       })
@@ -413,12 +411,7 @@ const residencesRouter = createTRPCRouter({
           available: accommodations.available,
           published: accommodations.published,
           nbTotalApartments: accommodations.nbTotalApartments,
-          nbAvailableApartments: sql<number>`(
-            coalesce(nb_t1_available, 0) + coalesce(nb_t1_bis_available, 0) +
-            coalesce(nb_t2_available, 0) + coalesce(nb_t3_available, 0) +
-            coalesce(nb_t4_available, 0) + coalesce(nb_t5_available, 0) +
-            coalesce(nb_t6_available, 0) + coalesce(nb_t7_more_available, 0)
-          )::int`,
+          nbAvailableApartments: nbAvailableApartmentsSum,
           ownerName: owners.name,
         })
         .from(accommodations)
@@ -450,12 +443,7 @@ const statsRouter = createTRPCRouter({
       db
         .select({
           totalApartments: sql<number>`coalesce(sum(coalesce(nb_total_apartments, 0)), 0)::int`,
-          availableApartments: sql<number>`coalesce(sum(
-            coalesce(nb_t1_available, 0) + coalesce(nb_t1_bis_available, 0) +
-            coalesce(nb_t2_available, 0) + coalesce(nb_t3_available, 0) +
-            coalesce(nb_t4_available, 0) + coalesce(nb_t5_available, 0) +
-            coalesce(nb_t6_available, 0) + coalesce(nb_t7_more_available, 0)
-          ), 0)::int`,
+          availableApartments: sql<number>`coalesce(sum(${nbAvailableApartmentsSum}), 0)::int`,
         })
         .from(accommodations),
     ])
