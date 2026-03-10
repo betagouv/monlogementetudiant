@@ -1,4 +1,4 @@
-import { dehydrate, type QueryClient } from '@tanstack/react-query'
+import { dehydrate } from '@tanstack/react-query'
 import { accommodationsSearchParamsCache } from '~/lib/accommodations-search-params'
 import { getQueryClient, trpc } from '~/server/trpc/server'
 
@@ -30,7 +30,6 @@ export const getAccommodations = (searchParams: {
 export const prefetchAccommodations = async (
   awaitedSearchParams: Record<string, string | string[] | undefined>,
   overrides?: { bbox?: string; academie?: string; pageSize?: number },
-  queryClient?: QueryClient,
 ) => {
   const parsedParams = accommodationsSearchParamsCache.parse(awaitedSearchParams)
   const queryKeyParams = {
@@ -51,31 +50,8 @@ export const prefetchAccommodations = async (
     academyId: queryKeyParams.academie ? Number(queryKeyParams.academie) : undefined,
   }
 
-  const client = queryClient ?? getQueryClient()
+  const client = getQueryClient()
   await client.prefetchQuery(trpc.accommodations.list.queryOptions(queryInput))
-
-  const hasOverrides =
-    (overrides?.bbox && overrides.bbox !== parsedParams.bbox) || (overrides?.academie && overrides.academie !== parsedParams.academie)
-
-  if (hasOverrides) {
-    const originalQueryInput = {
-      bbox: parsedParams.bbox ?? undefined,
-      page: parsedParams.page ?? 1,
-      pageSize: overrides?.pageSize ?? 30,
-      isAccessible: parsedParams.accessible === 'true' ? true : undefined,
-      hasColiving: parsedParams.colocation === 'true' ? true : undefined,
-      priceMax: parsedParams.prix ?? undefined,
-      viewCrous: parsedParams.crous === 'true' ? true : false,
-      academyId: parsedParams.academie ? Number(parsedParams.academie) : undefined,
-    }
-
-    const overriddenQueryKey = trpc.accommodations.list.queryOptions(queryInput).queryKey
-    const originalQueryKey = trpc.accommodations.list.queryOptions(originalQueryInput).queryKey
-    const data = client.getQueryData(overriddenQueryKey)
-    if (data) {
-      client.setQueryData(originalQueryKey, data)
-    }
-  }
 
   return dehydrate(client)
 }

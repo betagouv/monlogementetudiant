@@ -113,11 +113,9 @@ const command: SyncCommand = {
   async execute(options: SyncOptions): Promise<SyncResult> {
     const result: SyncResult = { updated: 0, skipped: 0, errors: [] }
 
-    // Step 1: Ensure Paris/Marseille/Lyon exist
     console.log('  🏙️ Vérification des villes spéciales...')
     await ensureSpecialCities(options, result)
 
-    // Step 2: Update existing cities with API data
     console.log('  🔄 Mise à jour des villes existantes...')
     const allCities = await db.select({ id: cities.id, name: cities.name }).from(cities)
     for (const city of allCities) {
@@ -139,7 +137,6 @@ const command: SyncCommand = {
       }
     }
 
-    // Step 3: Create missing cities from published accommodations
     console.log('  🔍 Recherche de villes manquantes...')
     const publishedAccommodations = await db
       .select({

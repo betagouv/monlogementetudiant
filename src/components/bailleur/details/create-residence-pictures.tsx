@@ -1,6 +1,7 @@
 'use client'
 
 import Button from '@codegouvfr/react-dsfr/Button'
+import { useTranslations } from 'next-intl'
 import { useRef, useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { validateFiles } from '~/hooks/use-upload-residence-images'
@@ -10,6 +11,7 @@ export const CreateResidencePictures = () => {
   const { setValue, watch } = useFormContext<TCreateResidence>()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [fileError, setFileError] = useState<string | null>(null)
+  const t = useTranslations('toast')
   const selectedFiles = watch('images_files') || []
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -17,7 +19,7 @@ export const CreateResidencePictures = () => {
     setFileError(null)
 
     if (files.length > 0) {
-      const validationError = validateFiles(files)
+      const validationError = validateFiles(files, t)
       if (validationError) {
         setFileError(validationError)
         return

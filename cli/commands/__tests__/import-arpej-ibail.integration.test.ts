@@ -80,8 +80,7 @@ describe('import-arpej-ibail integration', () => {
 
     expect(result.created).toBe(1)
 
-    const accs = await db.select().from(accommodations)
-    const created = accs.find((a) => a.name === 'Résidence Soleil')
+    const [created] = await db.select().from(accommodations).where(eq(accommodations.name, 'Résidence Soleil'))
     expect(created).toBeDefined()
     expect(created!.postalCode).toBe('75001')
 

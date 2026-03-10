@@ -53,13 +53,11 @@ const command: SyncCommand = {
     const rows = parseCSV(text)
     console.log(`  ✓ ${rows.length} lignes parsées`)
 
-    // Build EPCI -> rent map
     const rentByEpci = new Map<string, number>()
     for (const row of rows) {
       rentByEpci.set(row.epci, row.loypredm2)
     }
 
-    // Get all cities with EPCI codes
     const allCities = await db.select({ id: cities.id, epciCode: cities.epciCode }).from(cities)
 
     for (const city of allCities) {

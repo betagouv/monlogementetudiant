@@ -8,13 +8,11 @@ vi.stubGlobal('fetch', mockFetch)
 
 const testDb = getTestDb()
 
-// Mock cli/lib/db to use test DB
 vi.mock('../../lib/db', () => ({
   db: testDb,
   closeDb: vi.fn(),
 }))
 
-// Mock matomo to avoid real API calls
 vi.mock('../../lib/matomo', () => ({
   getCompleteStats: vi.fn(),
   getAllEvents: vi.fn(),

@@ -1,13 +1,14 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { and, eq, sql } from 'drizzle-orm'
-import { accommodations, externalSources, owners } from '../../src/server/db/schema'
+import { accommodations, externalSources } from '../../src/server/db/schema'
 import { generateAccommodationKey, uploadFile } from '../../src/server/services/s3'
 import { computeDerivedFields, generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
 import { findAvailableSlug } from '../../src/server/utils/slug'
 import { db } from '../lib/db'
 import { ensureCity, geocodeAddress, reverseGeocode } from '../lib/geocoder'
 import type { ImportCommand, ImportOptions, ImportResult } from '../types'
+import { getOrCreateOwner } from '../utils/get-or-create-owner'
 
 interface CsvRow {
   [key: string]: string
@@ -118,23 +119,6 @@ function parseCsv(filePath: string, limit?: number): CsvRow[] {
   }
 
   return rows
-}
-
-async function getOrCreateOwner(name: string, url?: string): Promise<number> {
-  const existing = await db.select().from(owners).where(eq(owners.name, name)).limit(1)
-  if (existing[0]) return existing[0].id
-
-  const slug = name
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-  const [created] = await db
-    .insert(owners)
-    .values({ name, slug, url: url || null })
-    .returning({ id: owners.id })
-  return created.id
 }
 
 function getExtFromUrl(url: string): string {

@@ -10,14 +10,14 @@ import { useTRPC, useTRPCClient } from '~/server/trpc/client'
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
-export const validateFiles = (files: File[]): string | null => {
+export const validateFiles = (files: File[], t: (key: string, params?: Record<string, string>) => string): string | null => {
   for (const file of files) {
     if (!ALLOWED_TYPES.includes(file.type)) {
-      return `Type de fichier non supporte: ${file.name}. Types acceptes: JPEG, PNG, WebP`
+      return t('unsupportedFileType', { fileName: file.name })
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      return `Fichier trop volumineux: ${file.name}. Taille maximale: 10MB`
+      return t('fileTooLarge', { fileName: file.name })
     }
   }
   return null
@@ -32,7 +32,7 @@ export const useUploadResidenceImages = (slug: string, name: string) => {
 
   return useMutation({
     mutationFn: async ({ files, currentImages }: { files: File[]; currentImages: string[] }) => {
-      const validationError = validateFiles(files)
+      const validationError = validateFiles(files, t)
       if (validationError) {
         throw new Error(validationError)
       }
@@ -56,7 +56,6 @@ export const useUploadResidenceImages = (slug: string, name: string) => {
       const newImageUrls = uploadData.images_urls || []
       const allImages = [...currentImages, ...newImageUrls]
 
-      // Save image URLs via tRPC update
       await trpcClient.bailleur.update.mutate({
         slug,
         images_urls: allImages,

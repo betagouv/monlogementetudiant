@@ -26,6 +26,10 @@ export const getStudentAccommodationPageContext = cache(
       redirect(`/trouver-un-logement-etudiant`)
     }
 
+    if (!['ville', 'academie', 'departement'].includes(routeCategoryKey)) {
+      redirect(`/trouver-un-logement-etudiant`)
+    }
+
     const territories = await getTerritories(routeLocation)
     const territoryList: TTerritory[] =
       territories[getTerritoriesCategoryKey(routeCategoryKey as 'ville' | 'academie' | 'departement')] || []
@@ -49,7 +53,7 @@ export const getStudentAccommodationPageContext = cache(
 
     const queryClient = getQueryClient()
     const [, , session] = await Promise.all([
-      prefetchAccommodations(awaitedSearchParams, { bbox: serverBbox, academie: serverAcademie }, queryClient),
+      prefetchAccommodations(awaitedSearchParams, { bbox: serverBbox, academie: serverAcademie }),
       queryClient.prefetchQuery(trpc.favorites.list.queryOptions()),
       getServerSession(),
     ])

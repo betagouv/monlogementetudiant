@@ -1,4 +1,4 @@
-const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email'
+const BREVO_API_URL = process.env.BREVO_API_URL ?? 'https://api.brevo.com/v3/smtp/email'
 
 const BREVO_TEMPLATE_MAGIC_LINK = Number(process.env.BREVO_TEMPLATE_MAGIC_LINK)
 const BREVO_TEMPLATE_VALIDATION = Number(process.env.BREVO_TEMPLATE_VALIDATION)
