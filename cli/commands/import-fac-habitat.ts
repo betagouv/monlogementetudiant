@@ -233,7 +233,7 @@ const command: ImportCommand = {
           city: resolvedCity,
           postalCode: resolvedPostalCode,
           residenceType: 'residence-etudiante',
-          targetAudience: 'etudiants',
+          target_audience: 'etudiants',
           published: true,
           available: derived.available,
           ...(geo ? { geom: sql`ST_SetSRID(ST_MakePoint(${geo.lng}, ${geo.lat}), 4326)` } : {}),

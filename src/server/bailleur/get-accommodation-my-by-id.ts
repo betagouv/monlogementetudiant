@@ -19,7 +19,12 @@ function toTargetAudience(value: string | null): ETargetAudience | null {
   return value && targetAudienceValues.has(value) ? (value as ETargetAudience) : null
 }
 
-function computePriceMax(row: Pick<typeof accommodations.$inferSelect, 'priceMaxT1' | 'priceMaxT1Bis' | 'priceMaxT2' | 'priceMaxT3' | 'priceMaxT4' | 'priceMaxT5' | 'priceMaxT6' | 'priceMaxT7More'>): number | null {
+function computePriceMax(
+  row: Pick<
+    typeof accommodations.$inferSelect,
+    'priceMaxT1' | 'priceMaxT1Bis' | 'priceMaxT2' | 'priceMaxT3' | 'priceMaxT4' | 'priceMaxT5' | 'priceMaxT6' | 'priceMaxT7More'
+  >,
+): number | null {
   const priceMaxes = [
     row.priceMaxT1,
     row.priceMaxT1Bis,
