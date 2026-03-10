@@ -11,8 +11,7 @@ const MIME_TO_EXT: Record<string, string> = {
   'image/webp': 'webp',
 }
 
-export async function POST(request: Request, { params }: { params: Promise<{ slug: string }> }) {
-  await params
+export async function POST(request: Request) {
   const auth = await getServerSession()
   if (!auth || !auth.session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

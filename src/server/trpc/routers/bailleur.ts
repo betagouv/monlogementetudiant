@@ -152,29 +152,6 @@ async function verifyOwnership(slug: string, userId: string) {
   return { owner, accommodationId: accommodation.id }
 }
 
-// Build GeoJSON Feature for "my" accommodation (includes amenities)
-function mapToMyGeoJsonFeature(row: Record<string, unknown>) {
-  const base = mapToGeoJsonFeature(row)
-  return {
-    geometry: base.geometry,
-    properties: {
-      ...base.properties,
-      refrigerator: (row.refrigerator as boolean) ?? null,
-      laundry_room: (row.laundryRoom as boolean) ?? null,
-      bathroom: (row.bathroom as string) ?? null,
-      kitchen_type: (row.kitchenType as string) ?? null,
-      microwave: (row.microwave as boolean) ?? null,
-      secure_access: (row.secureAccess as boolean) ?? null,
-      parking: (row.parking as boolean) ?? null,
-      common_areas: (row.commonAreas as boolean) ?? null,
-      bike_storage: (row.bikeStorage as boolean) ?? null,
-      desk: (row.desk as boolean) ?? null,
-      residence_manager: (row.residenceManager as boolean) ?? null,
-      cooking_plates: (row.cookingPlates as boolean) ?? null,
-    },
-  }
-}
-
 const PAGE_SIZE = 20
 
 const accommodationSelectFields = {
@@ -236,22 +213,6 @@ const accommodationSelectFields = {
   ownerUrl: owners.url,
   lat: sql<number>`ST_Y(${accommodations.geom}::geometry)`,
   lng: sql<number>`ST_X(${accommodations.geom}::geometry)`,
-} as const
-
-const accommodationSelectFieldsWithAmenities = {
-  ...accommodationSelectFields,
-  laundryRoom: accommodations.laundryRoom,
-  commonAreas: accommodations.commonAreas,
-  bikeStorage: accommodations.bikeStorage,
-  parking: accommodations.parking,
-  secureAccess: accommodations.secureAccess,
-  residenceManager: accommodations.residenceManager,
-  kitchenType: accommodations.kitchenType,
-  desk: accommodations.desk,
-  cookingPlates: accommodations.cookingPlates,
-  microwave: accommodations.microwave,
-  refrigerator: accommodations.refrigerator,
-  bathroom: accommodations.bathroom,
 } as const
 
 export const bailleurRouter = createTRPCRouter({
@@ -328,30 +289,6 @@ export const bailleurRouter = createTRPCRouter({
         },
       }
     }),
-
-  getBySlug: ownerProcedure.input(z.object({ slug: z.string() })).query(async ({ ctx, input }) => {
-    const userId = ctx.session.user.id
-    const owner = await getOwnerForUser(userId)
-
-    if (!owner) {
-      throw new TRPCError({ code: 'NOT_FOUND', message: 'Accommodation not found' })
-    }
-
-    const rows = await db
-      .select(accommodationSelectFieldsWithAmenities)
-      .from(accommodations)
-      .leftJoin(owners, eq(accommodations.ownerId, owners.id))
-      .where(and(eq(accommodations.slug, input.slug), eq(accommodations.ownerId, owner.id)))
-      .limit(1)
-
-    const row = rows[0]
-    if (!row) {
-      throw new TRPCError({ code: 'NOT_FOUND', message: 'Accommodation not found or not owned by you' })
-    }
-
-    return mapToMyGeoJsonFeature(row as Record<string, unknown>)
-  }),
-
   create: ownerProcedure
     .input(
       ZCreateResidence.omit({ images_files: true }).extend({

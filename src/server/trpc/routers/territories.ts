@@ -10,6 +10,7 @@ import { accommodations } from '~/server/db/schema/accommodations'
 import { cities } from '~/server/db/schema/cities'
 import { departments } from '~/server/db/schema/departments'
 import { newsletterSubscriptions } from '~/server/db/schema/newsletter-subscriptions'
+import { bboxSelect } from '~/server/trpc/utils/spatial-helpers'
 import { normalizeCitySearch, tokenizeQuery } from '~/server/utils/normalize-city-search'
 import { sortCitiesByRelevance } from '~/server/utils/sort-cities-by-relevance'
 import { baseProcedure, createTRPCRouter } from '../init'
@@ -25,16 +26,6 @@ function getRentData(): Record<string, number> {
   return rentDataCache!
 }
 
-const bboxSelect = (table: { boundary: AnyColumn }) =>
-  sql<{ xmin: number; xmax: number; ymin: number; ymax: number }>`
-    json_build_object(
-      'xmin', ST_XMin(ST_Envelope(${table.boundary})),
-      'xmax', ST_XMax(ST_Envelope(${table.boundary})),
-      'ymin', ST_YMin(ST_Envelope(${table.boundary})),
-      'ymax', ST_YMax(ST_Envelope(${table.boundary}))
-    )
-  `
-
 function buildWhere(nameCol: AnyColumn, tokens: string[]): SQL {
   const conditions = tokens.map((token) => sql`immutable_unaccent(${nameCol}) ILIKE ${'%' + token + '%'}`)
   return and(...conditions)!
@@ -45,6 +36,64 @@ function buildRank(nameCol: AnyColumn, normalized: string): SQL {
     CASE WHEN immutable_unaccent(${nameCol}) ILIKE ${normalized + '%'} THEN 1.0 ELSE 0.0 END,
     ts_rank(to_tsvector('simple', immutable_unaccent(${nameCol})), plainto_tsquery('simple', ${normalized}))
   ) DESC, ${nameCol} ASC`
+}
+
+type CityRow = {
+  id: number
+  name: string
+  slug: string
+  departmentCode: string | null
+  postalCodes: string[] | null
+  epciCode: string
+  inseeCodes: string[] | null
+  averageIncome: string | number | null
+  averageRent: string | number | null
+  popular: boolean
+  nbStudents: number
+  nbTotalApartments?: number | null
+  priceMin?: number | null
+  bbox: { xmin: number; xmax: number; ymin: number; ymax: number }
+}
+
+type CityStats = {
+  nbTotalApartments?: number | null
+  priceMin?: number | null
+  nbT1?: number | null
+  nbT1Bis?: number | null
+  nbT2?: number | null
+  nbT3?: number | null
+  nbT4?: number | null
+  nbT5?: number | null
+  nbT6?: number | null
+  nbT7More?: number | null
+}
+
+function mapCityRow(c: CityRow, stats?: CityStats, nearbyCities: { name: string; slug: string }[] = []) {
+  return {
+    id: c.id,
+    name: c.name,
+    slug: c.slug,
+    department_code: c.departmentCode ?? '',
+    postal_codes: c.postalCodes ?? [],
+    epci_code: c.epciCode ?? '',
+    insee_codes: c.inseeCodes ?? [],
+    average_income: Number(c.averageIncome) || 0,
+    average_rent: Number(c.averageRent) || 0,
+    popular: c.popular,
+    nb_students: c.nbStudents ?? 0,
+    nb_total_apartments: stats ? Number(stats.nbTotalApartments) || 0 : Number(c.nbTotalApartments) || 0,
+    price_min: stats?.priceMin != null ? Number(stats.priceMin) : c.priceMin != null ? Number(c.priceMin) : null,
+    nb_t1: stats?.nbT1 ?? null,
+    nb_t1_bis: stats?.nbT1Bis ?? null,
+    nb_t2: stats?.nbT2 ?? null,
+    nb_t3: stats?.nbT3 ?? null,
+    nb_t4: stats?.nbT4 ?? null,
+    nb_t5: stats?.nbT5 ?? null,
+    nb_t6: stats?.nbT6 ?? null,
+    nb_t7_more: stats?.nbT7More ?? null,
+    nearby_cities: nearbyCities,
+    bbox: c.bbox,
+  }
 }
 
 const accommodationSubqueries = (cityName: typeof cities.name) => ({
@@ -141,31 +190,7 @@ export const territoriesRouter = createTRPCRouter({
         slug: d.slug,
         bbox: d.bbox,
       })),
-      cities: cityResults.map((c) => ({
-        id: c.id,
-        name: c.name,
-        slug: c.slug,
-        department_code: c.departmentCode ?? '',
-        postal_codes: c.postalCodes ?? [],
-        epci_code: c.epciCode ?? '',
-        insee_codes: c.inseeCodes ?? [],
-        average_income: Number(c.averageIncome) || 0,
-        average_rent: Number(c.averageRent) || 0,
-        popular: c.popular,
-        nb_students: c.nbStudents ?? 0,
-        nb_total_apartments: Number(c.nbTotalApartments) || 0,
-        price_min: c.priceMin != null ? Number(c.priceMin) : null,
-        nb_t1: null,
-        nb_t1_bis: null,
-        nb_t2: null,
-        nb_t3: null,
-        nb_t4: null,
-        nb_t5: null,
-        nb_t6: null,
-        nb_t7_more: null,
-        nearby_cities: [],
-        bbox: c.bbox,
-      })),
+      cities: cityResults.map((c) => mapCityRow(c)),
     }
   }),
 
@@ -246,31 +271,7 @@ export const territoriesRouter = createTRPCRouter({
         .where(conditions.length ? and(...conditions) : undefined)
         .orderBy(asc(cities.name))
 
-      return results.map((c) => ({
-        id: c.id,
-        name: c.name,
-        slug: c.slug,
-        department_code: c.departmentCode ?? '',
-        postal_codes: c.postalCodes ?? [],
-        epci_code: c.epciCode ?? '',
-        insee_codes: c.inseeCodes ?? [],
-        average_income: Number(c.averageIncome) || 0,
-        average_rent: Number(c.averageRent) || 0,
-        popular: c.popular,
-        nb_students: c.nbStudents ?? 0,
-        nb_total_apartments: Number(c.nbTotalApartments) || 0,
-        price_min: c.priceMin != null ? Number(c.priceMin) : null,
-        nb_t1: null,
-        nb_t1_bis: null,
-        nb_t2: null,
-        nb_t3: null,
-        nb_t4: null,
-        nb_t5: null,
-        nb_t6: null,
-        nb_t7_more: null,
-        nearby_cities: [],
-        bbox: c.bbox,
-      }))
+      return results.map((c) => mapCityRow(c))
     }),
 
   getCityDetails: baseProcedure.input(z.object({ slug: z.string() })).query(async ({ input }) => {
@@ -336,36 +337,11 @@ export const territoriesRouter = createTRPCRouter({
       throw new Error(`City not found: ${slug}`)
     }
 
-    const stats = accommodationStats[0]
-
-    return {
-      id: city.id,
-      name: city.name,
-      slug: city.slug,
-      department_code: city.departmentCode ?? '',
-      postal_codes: city.postalCodes ?? [],
-      epci_code: city.epciCode ?? '',
-      insee_codes: city.inseeCodes ?? [],
-      average_income: Number(city.averageIncome) || 0,
-      average_rent: Number(city.averageRent) || 0,
-      popular: city.popular,
-      nb_students: city.nbStudents ?? 0,
-      nb_total_apartments: stats ? Number(stats.nbTotalApartments) : 0,
-      price_min: stats?.priceMin != null ? Number(stats.priceMin) : null,
-      nb_t1: stats?.nbT1 ?? null,
-      nb_t1_bis: stats?.nbT1Bis ?? null,
-      nb_t2: stats?.nbT2 ?? null,
-      nb_t3: stats?.nbT3 ?? null,
-      nb_t4: stats?.nbT4 ?? null,
-      nb_t5: stats?.nbT5 ?? null,
-      nb_t6: stats?.nbT6 ?? null,
-      nb_t7_more: stats?.nbT7More ?? null,
-      nearby_cities: nearbyCities.map((nc) => ({
-        name: nc.name,
-        slug: nc.slug,
-      })),
-      bbox: city.bbox,
-    }
+    return mapCityRow(
+      city,
+      accommodationStats[0] ?? undefined,
+      nearbyCities.map((nc) => ({ name: nc.name, slug: nc.slug })),
+    )
   }),
 
   rentSearch: baseProcedure.input(z.object({ q: z.string().min(1) })).query(({ input }) => {
