@@ -19,6 +19,14 @@ vi.mock('../../../src/server/services/s3', () => ({
   generateAccommodationKey: vi.fn((ext: string) => `accommodations/mock-uuid.${ext}`),
 }))
 
+vi.mock('../../lib/geocoder', async (importOriginal) => {
+  const original = await importOriginal<typeof import('../../lib/geocoder')>()
+  return {
+    ...original,
+    ensureCity: vi.fn(async (_postalCode: string, cityName: string) => cityName),
+  }
+})
+
 const { default: command } = await import('../import-csv')
 
 function writeTmpCsv(rows: string[][], headers?: string[]): string {
@@ -316,7 +324,7 @@ describe('import-csv integration', () => {
       json: async () => ({
         features: [
           {
-            geometry: { coordinates: [2.3522, 48.8566] },
+            geometry: { type: 'Point', coordinates: [2.3522, 48.8566] },
             properties: {
               city: 'Paris',
               name: '10 Rue du Soleil',

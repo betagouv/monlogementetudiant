@@ -105,14 +105,17 @@ export async function createOwner(overrides: Partial<OwnerInsert> & { userId?: s
   return row
 }
 
+let accommodationCounter = 0
+
 export async function createAccommodation(
   overrides: Partial<Omit<AccommodationInsert, 'geom'>> & { geom?: { type: string; coordinates: [number, number] | number[][][][] } } = {},
 ) {
   const db = getTestDb()
   const { geom, ...rest } = overrides
+  const suffix = ++accommodationCounter
   const values = {
     name: 'Résidence Test',
-    slug: 'residence-test',
+    slug: `residence-test-${suffix}`,
     city: 'Saint-Étienne',
     postalCode: '42000',
     published: true,

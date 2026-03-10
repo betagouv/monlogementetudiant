@@ -26,7 +26,7 @@ function mockGeocoder(overrides: { city?: string; address?: string; postcode?: s
     json: async () => ({
       features: [
         {
-          geometry: { coordinates: overrides.coordinates ?? [2.3522, 48.8566] },
+          geometry: { type: 'Point', coordinates: overrides.coordinates ?? [2.3522, 48.8566] },
           properties: {
             city: overrides.city ?? 'Paris',
             name: overrides.address ?? '10 Rue du Test',
