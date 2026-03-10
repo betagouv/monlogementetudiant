@@ -21,10 +21,11 @@ describe('geocodeAddress', () => {
   it('returns coordinates from geocoding API', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
+      status: 200,
       json: async () => ({
         features: [
           {
-            geometry: { coordinates: [2.3522, 48.8566] },
+            geometry: { type: 'Point', coordinates: [2.3522, 48.8566] },
             properties: { city: 'Paris', name: '1 Rue de Rivoli', postcode: '75001' },
           },
         ],
@@ -42,27 +43,38 @@ describe('geocodeAddress', () => {
   })
 
   it('returns null when no features found', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ features: [] }),
-    })
+    vi.useFakeTimers()
+    const emptyResponse = { ok: true, status: 200, json: async () => ({ features: [] }) }
+    mockFetch.mockResolvedValueOnce(emptyResponse).mockResolvedValueOnce(emptyResponse)
 
-    const result = await geocodeAddress('adresse inexistante')
+    const promise = geocodeAddress('adresse inexistante')
+    await vi.runAllTimersAsync()
+    const result = await promise
     expect(result).toBeNull()
+    vi.useRealTimers()
   })
 
   it('returns null on API error', async () => {
-    mockFetch.mockResolvedValueOnce({ ok: false, status: 500 })
+    vi.useFakeTimers()
+    const errorResponse = { ok: false, status: 500 }
+    mockFetch.mockResolvedValueOnce(errorResponse).mockResolvedValueOnce(errorResponse)
 
-    const result = await geocodeAddress('test')
+    const promise = geocodeAddress('test')
+    await vi.runAllTimersAsync()
+    const result = await promise
     expect(result).toBeNull()
+    vi.useRealTimers()
   })
 
   it('returns null on network error', async () => {
-    mockFetch.mockRejectedValueOnce(new Error('Network error'))
+    vi.useFakeTimers()
+    mockFetch.mockRejectedValueOnce(new Error('Network error')).mockRejectedValueOnce(new Error('Network error'))
 
-    const result = await geocodeAddress('test')
+    const promise = geocodeAddress('test')
+    await vi.runAllTimersAsync()
+    const result = await promise
     expect(result).toBeNull()
+    vi.useRealTimers()
   })
 })
 
