@@ -1,7 +1,6 @@
 import { z } from 'zod'
 import { EResidenceType } from '~/enums/residence-type'
 import { ETargetAudience } from '~/enums/target-audience'
-import { EResidenceType, ETargetAudience } from './update-residence'
 
 export const ZGeometry = z.object({
   coordinates: z.array(z.number()),
