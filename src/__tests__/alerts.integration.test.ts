@@ -1,7 +1,12 @@
-import { describe, expect, it } from 'vitest'
-import { createAcademy, createAlert, createCity, createDepartment } from './fixtures/factories'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { createAcademy, createAlert, createCity, createDepartment, createUser } from './fixtures/factories'
 import { authenticatedCaller, authenticatedCaller2, caller } from './helpers/test-caller'
 import './helpers/setup-integration'
+
+beforeEach(async () => {
+  await createUser({ id: 'test-user-id' })
+  await createUser({ id: 'test-user-id-2' })
+})
 
 describe('alerts.list', () => {
   it('requires authentication', async () => {

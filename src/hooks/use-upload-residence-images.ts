@@ -59,7 +59,6 @@ export const useUploadResidenceImages = (slug: string, name: string) => {
       await trpcClient.bailleur.update.mutate({
         slug,
         images_urls: allImages,
-        name,
       })
 
       return { images_urls: allImages }

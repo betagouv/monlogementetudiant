@@ -75,7 +75,6 @@ async function ensureSpecialCities(options: SyncOptions, result: SyncResult): Pr
       continue
     }
 
-    // Find department
     const dept = await db.select().from(departments).where(eq(departments.code, sc.departmentCode)).limit(1)
     if (!dept[0]) {
       result.errors.push(`Département ${sc.departmentCode} introuvable pour ${sc.name}`)

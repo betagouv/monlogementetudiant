@@ -53,16 +53,13 @@ describe('sync-stats integration', () => {
 
     const result = await command.execute({ date: '2025-03-01' })
 
-    // 1 stats + 2 events
     expect(result.updated).toBe(3)
 
-    // Verify stats row
     const statsRows = await db.select().from(stats).where(eq(stats.date, '2025-03-01'))
     expect(statsRows).toHaveLength(1)
     expect(statsRows[0].uniqueVisitors).toBe(150)
     expect(statsRows[0].pageViews).toBe(500)
 
-    // Verify event rows
     const eventRows = await db.select().from(eventStats).where(eq(eventStats.date, '2025-03-01'))
     expect(eventRows).toHaveLength(2)
     expect(eventRows.map((e) => e.action).sort()).toEqual(['filter', 'search'])
@@ -71,7 +68,6 @@ describe('sync-stats integration', () => {
   it('skips when stats exist and no --force', async () => {
     const db = getTestDb()
 
-    // Pre-insert a stats row
     await db.insert(stats).values({
       date: '2025-03-02',
       uniqueVisitors: 10,
@@ -87,7 +83,6 @@ describe('sync-stats integration', () => {
   it('overwrites stats with --force', async () => {
     const db = getTestDb()
 
-    // Pre-insert
     await db.insert(stats).values({
       date: '2025-03-03',
       uniqueVisitors: 10,

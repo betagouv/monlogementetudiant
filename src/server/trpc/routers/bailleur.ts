@@ -8,6 +8,7 @@ import { db } from '~/server/db'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { user } from '~/server/db/schema/auth'
 import { owners } from '~/server/db/schema/owners'
+import { notifyAccommodationCreated, notifyAccommodationUpdated } from '~/server/services/mattermost'
 import { computeDerivedFields, generateSlug, geocodeAddress } from '~/server/trpc/utils/accommodation-helpers'
 import { AVAILABILITY_FIELD_MAP, mapFields, UPDATE_FIELD_MAP } from '~/server/trpc/utils/field-mapping'
 import { findAvailableSlug } from '~/server/utils/slug'
@@ -284,14 +285,22 @@ export const bailleurRouter = createTRPCRouter({
         ;(insertValues as Record<string, unknown>).geom = sql`ST_SetSRID(ST_MakePoint(${coords.lon}, ${coords.lat}), 4326)`
       }
 
-      const [created] = await db.insert(accommodations).values(insertValues).returning({ slug: accommodations.slug })
+      const [created] = await db
+        .insert(accommodations)
+        .values(insertValues)
+        .returning({ slug: accommodations.slug, name: accommodations.name })
+
+      notifyAccommodationCreated(created.name, owner.name, created.slug, ctx.session.user.name)
 
       return { slug: created.slug }
     }),
 
   update: ownerProcedure.input(z.object({ slug: z.string() }).merge(ZUpdateResidence)).mutation(async ({ ctx, input }) => {
     const { slug, ...fields } = input
-    await verifyOwnership(slug, ctx.session.user.id)
+    const { owner } = await verifyOwnership(slug, ctx.session.user.id)
+
+    // Snapshot current state for diff
+    const [snapshot] = await db.select().from(accommodations).where(eq(accommodations.slug, slug)).limit(1)
 
     const camelFields = mapFields(fields, UPDATE_FIELD_MAP)
 
@@ -328,29 +337,58 @@ export const bailleurRouter = createTRPCRouter({
       .update(accommodations)
       .set(camelFields)
       .where(eq(accommodations.slug, slug))
-      .returning({ slug: accommodations.slug })
+      .returning({ slug: accommodations.slug, name: accommodations.name })
+
+    if (snapshot) {
+      const diff: Record<string, { old: unknown; new: unknown }> = {}
+      for (const [key, value] of Object.entries(camelFields)) {
+        if (key === 'updatedAt' || key === 'geom') continue
+        const oldVal = (snapshot as Record<string, unknown>)[key]
+        if (oldVal !== value) {
+          diff[key] = { old: oldVal, new: value }
+        }
+      }
+      notifyAccommodationUpdated(updated.name, owner.name, updated.slug, ctx.session.user.name, diff)
+    }
 
     return updated
   }),
 
   updateAvailability: ownerProcedure.input(z.object({ slug: z.string() }).merge(ZUpdateResidenceList)).mutation(async ({ ctx, input }) => {
     const { slug, ...availFields } = input
-    await verifyOwnership(slug, ctx.session.user.id)
+    const { owner } = await verifyOwnership(slug, ctx.session.user.id)
+
+    // Snapshot current state for diff
+    const [snapshot] = await db.select().from(accommodations).where(eq(accommodations.slug, slug)).limit(1)
 
     const camelFields = mapFields(availFields, AVAILABILITY_FIELD_MAP)
 
     // Recompute available flag
     const available = Object.values(camelFields).some((v) => v != null && (v as number) > 0)
 
+    const setFields = {
+      ...camelFields,
+      available,
+      updatedAt: new Date(),
+    }
+
     const [updated] = await db
       .update(accommodations)
-      .set({
-        ...camelFields,
-        available,
-        updatedAt: new Date(),
-      })
+      .set(setFields)
       .where(eq(accommodations.slug, slug))
-      .returning({ slug: accommodations.slug })
+      .returning({ slug: accommodations.slug, name: accommodations.name })
+
+    if (snapshot) {
+      const diff: Record<string, { old: unknown; new: unknown }> = {}
+      for (const [key, value] of Object.entries(setFields)) {
+        if (key === 'updatedAt') continue
+        const oldVal = (snapshot as Record<string, unknown>)[key]
+        if (oldVal !== value) {
+          diff[key] = { old: oldVal, new: value }
+        }
+      }
+      notifyAccommodationUpdated(updated.name, owner.name, updated.slug, ctx.session.user.name, diff)
+    }
 
     return updated
   }),

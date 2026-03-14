@@ -1,21 +1,25 @@
-import { bigint, boolean, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
+import { bigint, boolean, index, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
 
-export const user = pgTable('user', {
-  id: text().primaryKey(),
-  email: text().notNull().unique(),
-  emailVerified: boolean('email_verified').notNull().default(false),
-  name: text().notNull(),
-  image: text(),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-  // Custom fields
-  firstname: text().notNull().default(''),
-  lastname: text().notNull().default(''),
-  role: text().notNull().default('user'), // 'user' | 'owner' | 'admin'
-  legacyUser: boolean('legacy_user').notNull().default(false),
-  legacyId: integer('legacy_id'),
-  ownerId: bigint('owner_id', { mode: 'number' }),
-})
+export const user = pgTable(
+  'user',
+  {
+    id: text().primaryKey(),
+    email: text().notNull().unique(),
+    emailVerified: boolean('email_verified').notNull().default(false),
+    name: text().notNull(),
+    image: text(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+    // Custom fields
+    firstname: text().notNull().default(''),
+    lastname: text().notNull().default(''),
+    role: text().notNull().default('user'), // 'user' | 'owner' | 'admin'
+    legacyUser: boolean('legacy_user').notNull().default(false),
+    legacyId: integer('legacy_id'),
+    ownerId: bigint('owner_id', { mode: 'number' }),
+  },
+  (t) => [index('user_owner_id_idx').on(t.ownerId)],
+)
 
 export const session = pgTable('session', {
   id: text().primaryKey(),
