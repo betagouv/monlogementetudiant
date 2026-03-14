@@ -48,7 +48,6 @@ export function LinkUserToOwnerDialog({ ownerId, ownerName }: LinkUserToOwnerDia
     ...trpc.admin.users.list.queryOptions({ page: 1, search: debouncedSearch, unlinked: true }),
     enabled: debouncedSearch.length >= 2,
   })
-  console.log('user data', usersData)
 
   const linkMutation = useMutation({
     mutationFn: async () => {
