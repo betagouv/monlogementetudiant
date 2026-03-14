@@ -9,7 +9,7 @@ import { ColumnDef } from '@tanstack/react-table'
 import clsx from 'clsx'
 import Image from 'next/image'
 import Link from 'next/link'
-import { parseAsInteger, parseAsString, parseAsStringLiteral, useQueryState } from 'nuqs'
+import { parseAsInteger, parseAsString, parseAsStringLiteral, useQueryStates } from 'nuqs'
 import { useState } from 'react'
 import { useDebounce } from 'use-debounce'
 import { AdminDataTable } from '~/components/administration/admin-data-table'
@@ -111,10 +111,12 @@ const columns: ColumnDef<OwnerRow, unknown>[] = [
 ]
 
 export default function OwnersPage() {
-  const [view, setView] = useQueryState('view', parseAsStringLiteral(['grid', 'table']).withDefault('grid'))
-  const [search, setSearch] = useQueryState('search', parseAsString.withDefault(''))
+  const [{ view, search, page }, setQueryStates] = useQueryStates({
+    view: parseAsStringLiteral(['grid', 'table']).withDefault('grid'),
+    search: parseAsString.withDefault(''),
+    page: parseAsInteger.withDefault(1),
+  })
   const [debouncedSearch] = useDebounce(search, 300)
-  const [page, setPage] = useQueryState('page', parseAsInteger.withDefault(1))
 
   const { data, isLoading, isError, error } = useAdminOwners({
     page,
@@ -141,8 +143,7 @@ export default function OwnersPage() {
               placeholder: 'Nom du gestionnaire...',
               value: search,
               onChange: (e) => {
-                setSearch(e.target.value)
-                setPage(1)
+                setQueryStates({ search: e.target.value, page: 1 })
               },
             }}
           />
@@ -157,7 +158,7 @@ export default function OwnersPage() {
                 iconId: 'fr-icon-layout-grid-line',
                 nativeInputProps: {
                   checked: view === 'grid',
-                  onChange: () => setView('grid'),
+                  onChange: () => setQueryStates({ view: 'grid' }),
                 },
               },
               {
@@ -165,7 +166,7 @@ export default function OwnersPage() {
                 iconId: 'fr-icon-table-line',
                 nativeInputProps: {
                   checked: view === 'table',
-                  onChange: () => setView('table'),
+                  onChange: () => setQueryStates({ view: 'table' }),
                 },
               },
             ]}
@@ -234,7 +235,7 @@ export default function OwnersPage() {
           data={data?.items ?? []}
           pageCount={data?.pageCount ?? 0}
           page={page}
-          onPageChange={setPage}
+          onPageChange={(p) => setQueryStates({ page: p })}
           isLoading={isLoading}
           isError={isError}
           hidePagination
@@ -250,7 +251,7 @@ export default function OwnersPage() {
             href: '#',
             onClick: (e) => {
               e.preventDefault()
-              setPage(pageNumber)
+              setQueryStates({ page: pageNumber })
             },
           })}
         />

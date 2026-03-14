@@ -36,6 +36,20 @@
       "when": 1773132722897,
       "tag": "0004_add-unique-slug-constraints",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1773495444059,
+      "tag": "0005_overrated_sentinels",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1773496062494,
+      "tag": "0006_productive_blur",
+      "breakpoints": true
     }
   ]
 }

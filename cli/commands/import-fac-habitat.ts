@@ -97,7 +97,7 @@ async function downloadFromSftp(verbose?: boolean): Promise<string> {
     return tmpFile
   } catch (error) {
     try {
-      fs.unlinkSync(tmpFile)
+      // fs.unlinkSync(tmpFile)
     } catch {
       // cleanup best-effort
     }
@@ -164,7 +164,7 @@ async function loadResidences(options: ImportOptions): Promise<FacHabitatResiden
   } finally {
     if (tmpFile) {
       try {
-        fs.unlinkSync(filePath)
+        // fs.unlinkSync(filePath)
       } catch {
         // cleanup best-effort
       }

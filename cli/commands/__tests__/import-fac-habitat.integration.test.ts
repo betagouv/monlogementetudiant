@@ -1,3 +1,6 @@
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 import { and, eq } from 'drizzle-orm'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createAccommodation, createExternalSource, createOwner } from '../../../src/__tests__/fixtures/factories'
@@ -39,9 +42,6 @@ function mockGeocoder(overrides: { city?: string; address?: string; postcode?: s
 }
 
 function writeTmpJson(data: unknown[]): string {
-  const fs = require('node:fs')
-  const os = require('node:os')
-  const path = require('node:path')
   const filePath = path.join(os.tmpdir(), `fac-habitat-test-${Date.now()}.json`)
   fs.writeFileSync(filePath, JSON.stringify(data))
   return filePath

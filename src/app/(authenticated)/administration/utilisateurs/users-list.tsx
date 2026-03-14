@@ -5,7 +5,7 @@ import Input from '@codegouvfr/react-dsfr/Input'
 import { ColumnDef } from '@tanstack/react-table'
 import clsx from 'clsx'
 import Link from 'next/link'
-import { parseAsInteger, parseAsString, useQueryState } from 'nuqs'
+import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
 import { useDebounce } from 'use-debounce'
 import { AdminDataTable } from '~/components/administration/admin-data-table'
 import { useAdminUsers } from '~/hooks/use-admin-users'
@@ -74,9 +74,11 @@ const columns: ColumnDef<UserRow, unknown>[] = [
 ]
 
 export function UsersList() {
-  const [search, setSearch] = useQueryState('search', parseAsString.withDefault(''))
+  const [{ search, page }, setQueryStates] = useQueryStates({
+    search: parseAsString.withDefault(''),
+    page: parseAsInteger.withDefault(1),
+  })
   const [debouncedSearch] = useDebounce(search, 300)
-  const [page, setPage] = useQueryState('page', parseAsInteger.withDefault(1))
 
   const { data, isLoading } = useAdminUsers({
     page,
@@ -105,8 +107,7 @@ export function UsersList() {
               placeholder: 'Email, nom, prénom...',
               value: search,
               onChange: (e) => {
-                setSearch(e.target.value)
-                setPage(1)
+                setQueryStates({ search: e.target.value, page: 1 })
               },
             }}
           />
@@ -123,7 +124,7 @@ export function UsersList() {
         data={data?.items ?? []}
         pageCount={data?.pageCount ?? 0}
         page={page}
-        onPageChange={setPage}
+        onPageChange={(p) => setQueryStates({ page: p })}
         isLoading={isLoading}
       />
     </>

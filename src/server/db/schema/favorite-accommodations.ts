@@ -1,4 +1,4 @@
-import { bigint, pgTable, timestamp, unique, varchar } from 'drizzle-orm/pg-core'
+import { bigint, index, pgTable, timestamp, unique, varchar } from 'drizzle-orm/pg-core'
 import { accommodations } from './accommodations'
 
 export const favoriteAccommodations = pgTable(
@@ -11,5 +11,5 @@ export const favoriteAccommodations = pgTable(
       .references(() => accommodations.id),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   },
-  (t) => [unique().on(t.userId, t.accommodationId)],
+  (t) => [unique().on(t.userId, t.accommodationId), index('favorite_accommodation_user_id_idx').on(t.userId)],
 )

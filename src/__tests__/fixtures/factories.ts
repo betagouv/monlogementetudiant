@@ -163,6 +163,7 @@ export async function createAlert(
   },
 ) {
   const db = getTestDb()
+  await createUser({ id: overrides.userId })
   const [row] = await db
     .insert(studentAlerts)
     .values({
