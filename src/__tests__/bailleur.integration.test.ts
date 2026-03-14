@@ -155,6 +155,65 @@ describe('bailleur.update', () => {
   })
 })
 
+describe('admin verifyOwnership bypass', () => {
+  it('admin can update accommodation owned by another user', async () => {
+    const otherOwner = await createOwner({ name: 'Other Admin', slug: 'other-admin', userId: 'test-owner-id-2' })
+    await createAccommodation({
+      name: 'Other Residence',
+      slug: 'other-admin-update',
+      ownerId: otherOwner.id,
+      geom: parisPoint,
+    })
+
+    const result = await adminCaller.bailleur.update({
+      slug: 'other-admin-update',
+      name: 'Admin Updated',
+    })
+
+    expect(result.slug).toBe('other-admin-update')
+  })
+
+  it('admin can updateAvailability on accommodation owned by another user', async () => {
+    const otherOwner = await createOwner({ name: 'Other Avail', slug: 'other-avail', userId: 'test-owner-id-2' })
+    await createAccommodation({
+      name: 'Other Avail Res',
+      slug: 'other-avail-update',
+      ownerId: otherOwner.id,
+      nbT1: 10,
+      available: false,
+      geom: parisPoint,
+    })
+
+    const result = await adminCaller.bailleur.updateAvailability({
+      slug: 'other-avail-update',
+      nb_t1_available: 5,
+      nb_t1_bis_available: null,
+      nb_t2_available: null,
+      nb_t3_available: null,
+      nb_t4_available: null,
+      nb_t5_available: null,
+      nb_t6_available: null,
+      nb_t7_more_available: null,
+    })
+
+    expect(result.slug).toBe('other-avail-update')
+  })
+
+  it('admin gets NOT_FOUND for nonexistent accommodation', async () => {
+    await expect(adminCaller.bailleur.update({ slug: 'nonexistent', name: 'Nope' })).rejects.toThrow('Accommodation not found')
+  })
+
+  it('owner still cannot update accommodation owned by another user', async () => {
+    await createOwner({ name: 'My Owner', slug: 'my-owner', userId: 'test-owner-id' })
+    const otherOwner = await createOwner({ name: 'Still Other', slug: 'still-other', userId: 'test-owner-id-2' })
+    await createAccommodation({ name: 'Still Not Mine', slug: 'still-not-mine', ownerId: otherOwner.id })
+
+    await expect(ownerCaller.bailleur.update({ slug: 'still-not-mine', name: 'Hacked' })).rejects.toThrow(
+      'Accommodation not found or not owned by you',
+    )
+  })
+})
+
 describe('bailleur.updateAvailability', () => {
   it('updates availability fields', async () => {
     const owner = await createOwner({ name: 'Owner Avail', slug: 'owner-avail', userId: 'test-owner-id' })

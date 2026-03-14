@@ -1,0 +1,1 @@
+ALTER TABLE "account_owner" ADD COLUMN IF NOT EXISTS "accept_dossier_facile_applications" boolean DEFAULT false NOT NULL;

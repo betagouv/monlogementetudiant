@@ -33,7 +33,7 @@ const usersRouter = createTRPCRouter({
     )
     .query(async ({ input }) => {
       const roleFilter = eq(user.role, input.role ?? 'user')
-      const conditions = [input.unlinked ? and(isNull(user.ownerId), eq(user.role, 'owner')) : roleFilter]
+      const conditions = [input.unlinked ? isNull(user.ownerId) : roleFilter]
 
       if (input.search && input.search.length >= 2) {
         const searchCondition = or(

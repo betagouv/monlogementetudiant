@@ -44,22 +44,47 @@ async function getOwnerForUser(userId: string) {
 }
 
 async function verifyOwnership(slug: string, userId: string) {
-  const owner = await getOwnerForUser(userId)
-  if (!owner) {
-    throw new TRPCError({ code: 'FORBIDDEN', message: 'No owner record for this user' })
+  const usr = await db.query.user.findFirst({
+    where: eq(user.id, userId),
+    with: { owner: true },
+  })
+
+  const isAdmin = usr?.role === 'admin'
+
+  if (!isAdmin) {
+    const owner = usr?.owner ?? null
+    if (!owner) {
+      throw new TRPCError({ code: 'FORBIDDEN', message: 'No owner record for this user' })
+    }
+
+    const [accommodation] = await db
+      .select({ id: accommodations.id })
+      .from(accommodations)
+      .where(and(eq(accommodations.slug, slug), eq(accommodations.ownerId, owner.id)))
+      .limit(1)
+
+    if (!accommodation) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Accommodation not found or not owned by you' })
+    }
+
+    return { owner, accommodationId: accommodation.id }
   }
 
+  // Admin: find accommodation without ownership check
   const [accommodation] = await db
-    .select({ id: accommodations.id })
+    .select({ id: accommodations.id, ownerId: accommodations.ownerId })
     .from(accommodations)
-    .where(and(eq(accommodations.slug, slug), eq(accommodations.ownerId, owner.id)))
+    .where(eq(accommodations.slug, slug))
     .limit(1)
 
   if (!accommodation) {
-    throw new TRPCError({ code: 'NOT_FOUND', message: 'Accommodation not found or not owned by you' })
+    throw new TRPCError({ code: 'NOT_FOUND', message: 'Accommodation not found' })
   }
 
-  return { owner, accommodationId: accommodation.id }
+  // Resolve the accommodation's owner for the return value
+  const owner = accommodation.ownerId ? await db.query.owners.findFirst({ where: eq(owners.id, accommodation.ownerId) }) : null
+
+  return { owner: owner ?? usr?.owner ?? null, accommodationId: accommodation.id }
 }
 
 const PAGE_SIZE = 20
@@ -348,7 +373,7 @@ export const bailleurRouter = createTRPCRouter({
           diff[key] = { old: oldVal, new: value }
         }
       }
-      notifyAccommodationUpdated(updated.name, owner.name, updated.slug, ctx.session.user.name, diff)
+      notifyAccommodationUpdated(updated.name, owner?.name ?? '-', updated.slug, ctx.session.user.name, diff)
     }
 
     return updated
@@ -387,7 +412,7 @@ export const bailleurRouter = createTRPCRouter({
           diff[key] = { old: oldVal, new: value }
         }
       }
-      notifyAccommodationUpdated(updated.name, owner.name, updated.slug, ctx.session.user.name, diff)
+      notifyAccommodationUpdated(updated.name, owner?.name ?? '-', updated.slug, ctx.session.user.name, diff)
     }
 
     return updated
