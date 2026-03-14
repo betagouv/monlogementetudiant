@@ -92,8 +92,8 @@ export default async function PolitiqueDeConfidentialite() {
           <ul className={fr.cx('fr-ml-6w', 'fr-mb-2w')}>
             <li>
               DPO :&nbsp;
-              <a href="mailto:clara@monlogementetudiant.beta.gouv.fr" className={fr.cx('fr-link')}>
-                clara@monlogementetudiant.beta.gouv.fr
+              <a href="mailto:dpo@monlogementetudiant.beta.gouv.fr" className="fr-link">
+                dpo@monlogementetudiant.beta.gouv.fr
               </a>
             </li>
             <li>
