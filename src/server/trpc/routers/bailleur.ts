@@ -259,7 +259,6 @@ export const bailleurRouter = createTRPCRouter({
         published: fields.published ?? false,
         scholarshipHoldersPriority: fields.scholarship_holders_priority ?? false,
         ownerId: owner.id,
-        available: derived.available,
         nbTotalApartments: derived.nbTotalApartments,
         priceMin: derived.priceMin,
         imagesCount: derived.imagesCount,
@@ -332,7 +331,6 @@ export const bailleurRouter = createTRPCRouter({
     // Recompute derived fields
     const derived = computeDerivedFields(fields)
     camelFields.nbTotalApartments = derived.nbTotalApartments
-    camelFields.available = derived.available
     camelFields.priceMin = derived.priceMin
     camelFields.imagesCount = derived.imagesCount
 
@@ -388,12 +386,8 @@ export const bailleurRouter = createTRPCRouter({
 
     const camelFields = mapFields(availFields, AVAILABILITY_FIELD_MAP)
 
-    // Recompute available flag
-    const available = Object.values(camelFields).some((v) => v != null && (v as number) > 0)
-
     const setFields = {
       ...camelFields,
-      available,
       updatedAt: new Date(),
     }
 

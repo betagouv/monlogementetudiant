@@ -47,14 +47,6 @@ export function computeDerivedFields(data: {
   nb_t5?: number | null
   nb_t6?: number | null
   nb_t7_more?: number | null
-  nb_t1_available?: number | null
-  nb_t1_bis_available?: number | null
-  nb_t2_available?: number | null
-  nb_t3_available?: number | null
-  nb_t4_available?: number | null
-  nb_t5_available?: number | null
-  nb_t6_available?: number | null
-  nb_t7_more_available?: number | null
   price_min_t1?: number | null
   price_min_t1_bis?: number | null
   price_min_t2?: number | null
@@ -71,18 +63,6 @@ export function computeDerivedFields(data: {
 
   const nbTotalApartments = counts.length > 0 ? counts.reduce((a, b) => a + b, 0) : null
 
-  const availables = [
-    data.nb_t1_available,
-    data.nb_t1_bis_available,
-    data.nb_t2_available,
-    data.nb_t3_available,
-    data.nb_t4_available,
-    data.nb_t5_available,
-    data.nb_t6_available,
-    data.nb_t7_more_available,
-  ]
-  const available = availables.some((v) => v != null && v > 0)
-
   const prices = [
     data.price_min_t1,
     data.price_min_t1_bis,
@@ -98,7 +78,7 @@ export function computeDerivedFields(data: {
 
   const imagesCount = data.images_urls?.length ?? 0
 
-  return { nbTotalApartments, available, priceMin, imagesCount }
+  return { nbTotalApartments, priceMin, imagesCount }
 }
 
 export async function geocodeAddress(address: string, city: string, postalCode: string): Promise<{ lon: number; lat: number } | null> {
