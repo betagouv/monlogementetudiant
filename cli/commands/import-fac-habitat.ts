@@ -34,30 +34,30 @@ interface FacHabitatResidence {
   nb_t4?: number
   nb_t5?: number
   nb_t5_en_colocation?: number
-  nb_t1_rent_min?: number
-  nb_t1_rent_max?: number
-  nb_t1_bis_rent_min?: number
-  nb_t1_bis_rent_max?: number
-  nb_t1_prime_rent_min?: number
-  nb_t1_prime_rent_max?: number
-  nb_studio_double_rent_min?: number
-  nb_studio_double_rent_max?: number
-  nb_t2_rent_min?: number
-  nb_t2_rent_max?: number
-  nb_t2_duplex_rent_min?: number
-  nb_t2_duplex_rent_max?: number
-  nb_duplex_rent_min?: number
-  nb_duplex_rent_max?: number
-  nb_t3_rent_min?: number
-  nb_t3_rent_max?: number
-  nb_duo_rent_min?: number
-  nb_duo_rent_max?: number
-  nb_t4_rent_min?: number
-  nb_t4_rent_max?: number
-  nb_t5_rent_min?: number
-  nb_t5_rent_max?: number
-  nb_t5_en_colocation_rent_min?: number
-  nb_t5_en_colocation_rent_max?: number
+  t1_rent_min?: number
+  t1_rent_max?: number
+  t1_bis_rent_min?: number
+  t1_bis_rent_max?: number
+  t1_prime_rent_min?: number
+  t1_prime_rent_max?: number
+  studio_double_rent_min?: number
+  studio_double_rent_max?: number
+  t2_rent_min?: number
+  t2_rent_max?: number
+  t2_duplex_rent_min?: number
+  t2_duplex_rent_max?: number
+  duplex_rent_min?: number
+  duplex_rent_max?: number
+  t3_rent_min?: number
+  t3_rent_max?: number
+  duo_rent_min?: number
+  duo_rent_max?: number
+  t4_rent_min?: number
+  t4_rent_max?: number
+  t5_rent_min?: number
+  t5_rent_max?: number
+  t5_en_colocation_rent_min?: number
+  t5_en_colocation_rent_max?: number
   accept_waiting_list?: boolean
   laundry_room?: boolean
   parking?: boolean
@@ -97,7 +97,7 @@ async function downloadFromSftp(verbose?: boolean): Promise<string> {
     return tmpFile
   } catch (error) {
     try {
-      // fs.unlinkSync(tmpFile)
+      fs.unlinkSync(tmpFile)
     } catch {
       // cleanup best-effort
     }
@@ -117,11 +117,11 @@ function buildTypologyValues(item: FacHabitatResidence) {
 
   const minOf = (...vals: (number | undefined | null)[]) => {
     const nums = vals.filter((v): v is number => v != null && v > 0)
-    return nums.length > 0 ? Math.min(...nums) : null
+    return nums.length > 0 ? Math.round(Math.min(...nums)) : null
   }
   const maxOf = (...vals: (number | undefined | null)[]) => {
     const nums = vals.filter((v): v is number => v != null && v > 0)
-    return nums.length > 0 ? Math.max(...nums) : null
+    return nums.length > 0 ? Math.round(Math.max(...nums)) : null
   }
 
   return {
@@ -131,18 +131,18 @@ function buildTypologyValues(item: FacHabitatResidence) {
     nbT3: nbT3 || null,
     nbT4: nbT4 || null,
     nbT5: nbT5 || null,
-    priceMinT1: minOf(item.nb_t1_rent_min),
-    priceMaxT1: maxOf(item.nb_t1_rent_max),
-    priceMinT1Bis: minOf(item.nb_t1_bis_rent_min, item.nb_t1_prime_rent_min, item.nb_studio_double_rent_min),
-    priceMaxT1Bis: maxOf(item.nb_t1_bis_rent_max, item.nb_t1_prime_rent_max, item.nb_studio_double_rent_max),
-    priceMinT2: minOf(item.nb_t2_rent_min, item.nb_t2_duplex_rent_min, item.nb_duplex_rent_min),
-    priceMaxT2: maxOf(item.nb_t2_rent_max, item.nb_t2_duplex_rent_max, item.nb_duplex_rent_max),
-    priceMinT3: minOf(item.nb_t3_rent_min, item.nb_duo_rent_min),
-    priceMaxT3: maxOf(item.nb_t3_rent_max, item.nb_duo_rent_max),
-    priceMinT4: minOf(item.nb_t4_rent_min),
-    priceMaxT4: maxOf(item.nb_t4_rent_max),
-    priceMinT5: minOf(item.nb_t5_rent_min, item.nb_t5_en_colocation_rent_min),
-    priceMaxT5: maxOf(item.nb_t5_rent_max, item.nb_t5_en_colocation_rent_max),
+    priceMinT1: minOf(item.t1_rent_min),
+    priceMaxT1: maxOf(item.t1_rent_max),
+    priceMinT1Bis: minOf(item.t1_bis_rent_min, item.t1_prime_rent_min, item.studio_double_rent_min),
+    priceMaxT1Bis: maxOf(item.t1_bis_rent_max, item.t1_prime_rent_max, item.studio_double_rent_max),
+    priceMinT2: minOf(item.t2_rent_min, item.t2_duplex_rent_min, item.duplex_rent_min),
+    priceMaxT2: maxOf(item.t2_rent_max, item.t2_duplex_rent_max, item.duplex_rent_max),
+    priceMinT3: minOf(item.t3_rent_min, item.duo_rent_min),
+    priceMaxT3: maxOf(item.t3_rent_max, item.duo_rent_max),
+    priceMinT4: minOf(item.t4_rent_min),
+    priceMaxT4: maxOf(item.t4_rent_max),
+    priceMinT5: minOf(item.t5_rent_min, item.t5_en_colocation_rent_min),
+    priceMaxT5: maxOf(item.t5_rent_max, item.t5_en_colocation_rent_max),
   }
 }
 
@@ -164,7 +164,7 @@ async function loadResidences(options: ImportOptions): Promise<FacHabitatResiden
   } finally {
     if (tmpFile) {
       try {
-        // fs.unlinkSync(filePath)
+        fs.unlinkSync(filePath)
       } catch {
         // cleanup best-effort
       }
