@@ -235,6 +235,67 @@ describe('accommodations.list', () => {
     expect(result.max_price).toBe(600)
   })
 
+  it('filters by ownerSlug', async () => {
+    const owner1 = await createOwner({ name: 'Promologis', slug: 'promologis' })
+    const owner2 = await createOwner({ name: 'Autre Bailleur', slug: 'autre-bailleur' })
+
+    await createAccommodation({
+      slug: 'owned-by-promologis',
+      ownerId: owner1.id,
+      geom: { type: 'Point', coordinates: [4.39, 45.44] },
+    })
+    await createAccommodation({
+      slug: 'owned-by-autre',
+      ownerId: owner2.id,
+      geom: { type: 'Point', coordinates: [4.39, 45.44] },
+    })
+    await createAccommodation({
+      slug: 'no-owner',
+      geom: { type: 'Point', coordinates: [4.39, 45.44] },
+    })
+
+    const result = await caller.accommodations.list({ ownerSlug: 'promologis' })
+    expect(result.count).toBe(1)
+    expect(result.results.features[0].properties.slug).toBe('owned-by-promologis')
+  })
+
+  it('filters by ownerSlug — count and price bounds reflect the filter', async () => {
+    const owner = await createOwner({ name: 'Bailleur Prix', slug: 'bailleur-prix' })
+
+    await createAccommodation({
+      slug: 'owner-cheap',
+      ownerId: owner.id,
+      priceMinT1: 200,
+      priceMaxT1: 400,
+      geom: { type: 'Point', coordinates: [4.39, 45.44] },
+    })
+    await createAccommodation({
+      slug: 'other-expensive',
+      priceMinT1: 800,
+      priceMaxT1: 1200,
+      geom: { type: 'Point', coordinates: [4.39, 45.44] },
+    })
+
+    const result = await caller.accommodations.list({ ownerSlug: 'bailleur-prix' })
+    expect(result.count).toBe(1)
+    expect(result.min_price).toBe(200)
+    expect(result.max_price).toBe(400)
+  })
+
+  it('falls back to all accommodations when ownerSlug does not match any owner', async () => {
+    await createAccommodation({
+      slug: 'accom-a',
+      geom: { type: 'Point', coordinates: [4.39, 45.44] },
+    })
+    await createAccommodation({
+      slug: 'accom-b',
+      geom: { type: 'Point', coordinates: [4.39, 45.44] },
+    })
+
+    const result = await caller.accommodations.list({ ownerSlug: 'slug-inexistant' })
+    expect(result.count).toBe(2)
+  })
+
   it('returns GeoJSON format', async () => {
     const owner = await createOwner({ name: 'CROUS', slug: 'crous', url: 'https://crous.fr' })
     await createAccommodation({

@@ -3,7 +3,7 @@
   if (!script) return
 
   var params = new URLSearchParams()
-  var attrs = ['city', 'bbox', 'prix', 'crous', 'colocation', 'accessible', 'filters', 'page']
+  var attrs = ['city', 'bbox', 'prix', 'crous', 'colocation', 'accessible', 'filters', 'page', 'gestionnaire']
   attrs.forEach(function (key) {
     var value = script.getAttribute('data-' + key)
     if (value) params.set(key, value)

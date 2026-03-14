@@ -6,6 +6,7 @@ export const getAccommodations = (searchParams: {
   accessible?: string
   academie?: string
   bbox?: string
+  gestionnaire?: string
   center?: string
   colocation?: string
   prix?: string
@@ -24,6 +25,7 @@ export const getAccommodations = (searchParams: {
       priceMax: searchParams.prix ? Number(searchParams.prix) : undefined,
       viewCrous: searchParams.crous === 'true' ? true : false,
       academyId: searchParams.academie ? Number(searchParams.academie) : undefined,
+      ownerSlug: searchParams.gestionnaire ?? undefined,
     }),
   )
 
@@ -36,6 +38,7 @@ export const prefetchAccommodations = async (
     ...parsedParams,
     bbox: overrides?.bbox ?? parsedParams.bbox,
     academie: overrides?.academie ?? parsedParams.academie,
+    gestionnaire: parsedParams.gestionnaire,
     pageSize: overrides?.pageSize,
   }
 
@@ -48,6 +51,7 @@ export const prefetchAccommodations = async (
     priceMax: queryKeyParams.prix ?? undefined,
     viewCrous: queryKeyParams.crous === 'true' ? true : false,
     academyId: queryKeyParams.academie ? Number(queryKeyParams.academie) : undefined,
+    ownerSlug: queryKeyParams.gestionnaire ?? undefined,
   }
 
   const client = getQueryClient()

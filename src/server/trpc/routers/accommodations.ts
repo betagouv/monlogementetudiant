@@ -157,11 +157,24 @@ export const accommodationsRouter = createTRPCRouter({
         priceMax: z.number().optional(),
         viewCrous: z.boolean().default(false),
         academyId: z.number().optional(),
+        ownerSlug: z.string().optional(),
       }),
     )
     .query(async ({ input }) => {
-      const { bbox, center, radius, page, pageSize, isAccessible, hasColiving, onlyWithAvailability, priceMax, viewCrous, academyId } =
-        input
+      const {
+        bbox,
+        center,
+        radius,
+        page,
+        pageSize,
+        isAccessible,
+        hasColiving,
+        onlyWithAvailability,
+        priceMax,
+        viewCrous,
+        academyId,
+        ownerSlug,
+      } = input
 
       const conditions: SQL[] = [eq(accommodations.published, true), sql`${accommodations.geom} IS NOT NULL`]
 
@@ -210,6 +223,14 @@ export const accommodationsRouter = createTRPCRouter({
         conditions.push(
           sql`ST_DWithin(${accommodations.geom}::geography, ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography, ${radiusMeters})`,
         )
+      }
+
+      if (ownerSlug) {
+        const ownerResult = await db.select({ id: owners.id }).from(owners).where(eq(owners.slug, ownerSlug)).limit(1)
+
+        if (ownerResult.length > 0) {
+          conditions.push(eq(accommodations.ownerId, ownerResult[0].id))
+        }
       }
 
       const where = and(...conditions)

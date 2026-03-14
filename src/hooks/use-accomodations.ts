@@ -9,7 +9,7 @@ interface UseAccomodationsOptions {
 
 export const useAccomodations = ({ pageSize }: UseAccomodationsOptions = {}) => {
   const [queryStates] = useQueryStates(accommodationsParsers)
-  const { bbox, academie, accessible, colocation, page, prix, crous } = queryStates
+  const { bbox, academie, accessible, colocation, gestionnaire, page, prix, crous } = queryStates
   const trpc = useTRPC()
 
   return useQuery({
@@ -22,6 +22,7 @@ export const useAccomodations = ({ pageSize }: UseAccomodationsOptions = {}) => 
       priceMax: prix ?? undefined,
       viewCrous: crous === 'true' ? true : false,
       academyId: academie ? Number(academie) : undefined,
+      ownerSlug: gestionnaire ?? undefined,
     }),
   })
 }

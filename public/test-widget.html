@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Widget Gestionnaire</title>
+  <style>
+    body { font-family: sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
+    section { margin-bottom: 40px; border: 1px solid #ccc; padding: 20px; }
+  </style>
+</head>
+<body>
+  <section>
+    <h2>Avec gestionnaire (remplacer le slug)</h2>
+    <script src="/widget/embed.js" data-gestionnaire="promologis-2"></script>
+  </section>
+
+  <section>
+    <h2>Sans gestionnaire (tous les logements)</h2>
+    <script src="/widget/embed.js"></script>
+  </section>
+
+  <section>
+    <h2>Slug inexistant (fallback → tous)</h2>
+    <script src="/widget/embed.js" data-gestionnaire="slug-bidon"></script>
+  </section>
+</body>
+</html>

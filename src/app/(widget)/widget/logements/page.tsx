@@ -19,6 +19,7 @@ export default async function WidgetLogementsPage({
     colocation?: string
     crous?: string
     filters?: string
+    gestionnaire?: string
     page?: string
     prix?: string
   }>
