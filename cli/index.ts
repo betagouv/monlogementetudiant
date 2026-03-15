@@ -17,7 +17,7 @@ program
 // Import commands (arpej-ibail)
 program
   .command('import <type>')
-  .description('Import de données (arpej-ibail, csv, fac-habitat)')
+  .description('Import de données (arpej-ibail, crous, csv, fac-habitat)')
   .option('--dry-run', 'Simuler sans modifier la BDD')
   .option('--verbose', 'Afficher les détails')
   .option('--limit <n>', "Limiter le nombre d'éléments", parseInt)

@@ -19,6 +19,7 @@ export function registerSync(name: string, loader: SyncLoader) {
 registerImport('arpej-ibail', () => import('./commands/import-arpej-ibail'))
 registerImport('fac-habitat', () => import('./commands/import-fac-habitat'))
 registerImport('csv', () => import('./commands/import-csv'))
+registerImport('crous', () => import('./commands/import-crous'))
 registerSync('cities', () => import('./commands/sync-cities'))
 registerSync('rents', () => import('./commands/sync-rents'))
 registerSync('students', () => import('./commands/sync-students'))

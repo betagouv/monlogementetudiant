@@ -62,37 +62,4 @@ describe('mattermost notifications', () => {
     expect(diff).toHaveProperty('name')
     expect(diff.name).toEqual({ old: 'Before Notif', new: 'After Notif' })
   })
-
-  it('notifies on availability update with diff', async () => {
-    const owner = await createOwner({ name: 'Owner Avail Notif', slug: 'owner-avail-notif', userId: 'test-owner-id' })
-    await createAccommodation({
-      name: 'Avail Notif',
-      slug: 'avail-notif',
-      ownerId: owner.id,
-      nbT1: 10,
-      available: false,
-      geom: parisPoint,
-    })
-
-    await ownerCaller.bailleur.updateAvailability({
-      slug: 'avail-notif',
-      nb_t1_available: 5,
-      nb_t1_bis_available: null,
-      nb_t2_available: null,
-      nb_t3_available: null,
-      nb_t4_available: null,
-      nb_t5_available: null,
-      nb_t6_available: null,
-      nb_t7_more_available: null,
-    })
-
-    expect(notifyAccommodationUpdated).toHaveBeenCalledOnce()
-    const [name, ownerName, slug, userName, diff] = notifyAccommodationUpdated.mock.calls[0]
-    expect(name).toBe('Avail Notif')
-    expect(ownerName).toBe('Owner Avail Notif')
-    expect(slug).toBe('avail-notif')
-    expect(userName).toBe('Test Owner')
-    expect(diff).toHaveProperty('available')
-    expect(diff.available).toEqual({ old: false, new: true })
-  })
 })

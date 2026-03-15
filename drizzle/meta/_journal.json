@@ -57,6 +57,13 @@
       "when": 1773503649586,
       "tag": "0007_curly_the_leader",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1773566809863,
+      "tag": "0008_icy_shiva",
+      "breakpoints": true
     }
   ]
 }

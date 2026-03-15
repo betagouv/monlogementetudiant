@@ -1,7 +1,7 @@
+import { and, eq, sql } from 'drizzle-orm'
 import * as fs from 'node:fs'
 import * as os from 'node:os'
 import * as path from 'node:path'
-import { and, eq, sql } from 'drizzle-orm'
 import SftpClient from 'ssh2-sftp-client'
 import { accommodations, externalSources } from '../../src/server/db/schema'
 import { computeDerivedFields, generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
@@ -235,7 +235,6 @@ const command: ImportCommand = {
           residenceType: 'residence-etudiante',
           target_audience: 'etudiants',
           published: true,
-          available: derived.available,
           ...(geo ? { geom: sql`ST_SetSRID(ST_MakePoint(${geo.lng}, ${geo.lat}), 4326)` } : {}),
           nbT1: typology.nbT1,
           nbT1Bis: typology.nbT1Bis,

@@ -39,16 +39,9 @@ export const getMyAccommodations = async (searchParams?: {
   }
 
   const page = searchParams?.page ? Number(searchParams.page) : 1
-  const hasAvailability = searchParams?.disponible === 'true' ? true : searchParams?.disponible === 'false' ? false : undefined
   const search = searchParams?.recherche
 
   const conditions = [eq(accommodations.ownerId, owner.id)]
-
-  if (hasAvailability === true) {
-    conditions.push(eq(accommodations.available, true))
-  } else if (hasAvailability === false) {
-    conditions.push(eq(accommodations.available, false))
-  }
 
   if (search && search.length >= 3) {
     conditions.push(ilike(accommodations.name, `%${search}%`))

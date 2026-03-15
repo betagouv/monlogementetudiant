@@ -1,0 +1,1 @@
+ALTER TABLE "accommodation_accommodation" ALTER COLUMN "available" SET DEFAULT true;

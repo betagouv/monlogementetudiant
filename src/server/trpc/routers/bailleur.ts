@@ -155,7 +155,6 @@ export const bailleurRouter = createTRPCRouter({
     .input(
       z.object({
         page: z.number().default(1),
-        hasAvailability: z.boolean().optional(),
         search: z.string().optional(),
       }),
     )
@@ -176,12 +175,6 @@ export const bailleurRouter = createTRPCRouter({
       }
 
       const conditions = [eq(accommodations.ownerId, owner.id)]
-
-      if (input.hasAvailability === true) {
-        conditions.push(eq(accommodations.available, true))
-      } else if (input.hasAvailability === false) {
-        conditions.push(eq(accommodations.available, false))
-      }
 
       if (input.search && input.search.length >= 3) {
         conditions.push(ilike(accommodations.name, `%${input.search}%`))
