@@ -132,7 +132,6 @@ const command: ImportCommand = {
 
         const derived = computeDerivedFields({
           nb_t1: residence.accommodation_quantity ?? null,
-          nb_t1_available: residence.available_accommodation_quantity ?? null,
           price_min_t1: residence.rent_amount_from ?? null,
           images_urls: imageUrls.length > 0 ? imageUrls : null,
         })
@@ -146,7 +145,6 @@ const command: ImportCommand = {
           postalCode: geo?.postalCode ?? residence.zip_code,
           residenceType: 'universitaire-conventionnee',
           published: true,
-          available: derived.available,
           ...(geo ? { geom: sql`ST_SetSRID(ST_MakePoint(${geo.lng}, ${geo.lat}), 4326)` } : {}),
           nbT1: residence.accommodation_quantity ?? null,
           nbT1Available: residence.available_accommodation_quantity ?? null,

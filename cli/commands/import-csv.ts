@@ -321,7 +321,6 @@ const command: ImportCommand = {
           residenceType: row.residence_type?.trim() || null,
           target_audience: 'etudiants' as const,
           published: true,
-          available: derived.available,
           ...(geom ? { geom } : {}),
           nbT1: toDigit(row.nb_t1),
           nbT1Bis: toDigit(row.nb_t1_bis),

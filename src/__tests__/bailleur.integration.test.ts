@@ -98,20 +98,6 @@ describe('bailleur.list', () => {
     expect(result.results.features.map((f) => f.properties.name)).toEqual(expect.arrayContaining(['Résidence A', 'Résidence B']))
   })
 
-  it('filters by availability', async () => {
-    const owner = await createOwner({ name: 'Owner Filter', slug: 'owner-filter', userId: 'test-owner-id' })
-    await createAccommodation({ name: 'Available', slug: 'available', ownerId: owner.id, available: true })
-    await createAccommodation({ name: 'Unavailable', slug: 'unavailable', ownerId: owner.id, available: false })
-
-    const availableResult = await ownerCaller.bailleur.list({ page: 1, hasAvailability: true })
-    expect(availableResult.count).toBe(1)
-    expect(availableResult.results.features[0].properties.name).toBe('Available')
-
-    const unavailableResult = await ownerCaller.bailleur.list({ page: 1, hasAvailability: false })
-    expect(unavailableResult.count).toBe(1)
-    expect(unavailableResult.results.features[0].properties.name).toBe('Unavailable')
-  })
-
   it('filters by search term', async () => {
     const owner = await createOwner({ name: 'Owner Search', slug: 'owner-search', userId: 'test-owner-id' })
     await createAccommodation({ name: 'Résidence Soleil', slug: 'soleil', ownerId: owner.id })
@@ -245,6 +231,5 @@ describe('bailleur.updateAvailability', () => {
     const detail = list.results.features.find((f) => f.properties.slug === 'avail-test')
     expect(detail?.properties.nb_t1_available).toBe(3)
     expect(detail?.properties.nb_t2_available).toBe(2)
-    expect(detail?.properties.available).toBe(true)
   })
 })
