@@ -22,12 +22,14 @@ export const getStudentAccommodationPageContext = cache(
     const routeCategoryKey = awaitedParams?.location?.[0] || ''
     const routeLocation = decodeURIComponent(awaitedParams?.location?.[1] || '')
 
-    if (awaitedParams && (awaitedParams?.location?.length < 2 || awaitedParams?.location?.length > 2)) {
-      redirect(`/trouver-un-logement-etudiant`)
-    }
+    if (awaitedParams?.location) {
+      if (awaitedParams.location.length !== 2) {
+        redirect(`/trouver-un-logement-etudiant`)
+      }
 
-    if (!['ville', 'academie', 'departement'].includes(routeCategoryKey)) {
-      redirect(`/trouver-un-logement-etudiant`)
+      if (!['ville', 'academie', 'departement'].includes(routeCategoryKey)) {
+        redirect(`/trouver-un-logement-etudiant`)
+      }
     }
 
     const territories = await getTerritories(routeLocation)

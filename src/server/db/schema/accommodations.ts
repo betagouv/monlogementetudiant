@@ -1,4 +1,4 @@
-import { bigint, boolean, geometry, index, integer, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core'
+import { bigint, boolean, geometry, index, integer, pgTable, text, timestamp, unique, varchar } from 'drizzle-orm/pg-core'
 import { owners } from './owners'
 
 export const accommodations = pgTable(
@@ -89,5 +89,9 @@ export const accommodations = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }),
     updatedAt: timestamp('updated_at', { withTimezone: true }),
   },
-  (t) => [index('accommodation_owner_id_idx').on(t.ownerId), index('accommodation_published_idx').on(t.published)],
+  (t) => [
+    index('accommodation_owner_id_idx').on(t.ownerId),
+    index('accommodation_published_idx').on(t.published),
+    unique('unique_owner_external_reference').on(t.ownerId, t.externalReference),
+  ],
 )

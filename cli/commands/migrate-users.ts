@@ -93,7 +93,6 @@ export async function migrateUsers() {
             .onConflictDoNothing()
           migrated++
         } else {
-          console.log(djangoUser)
           console.log(`  ⏭ ${djangoUser.email || `(no email, id=${djangoUser.id})`} ignoré (doublon)`)
           skipped++
         }
