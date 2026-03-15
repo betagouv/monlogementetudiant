@@ -1,5 +1,6 @@
 import { and, eq, sql } from 'drizzle-orm'
 import * as XLSX from 'xlsx'
+import { sanitizeHTML } from '~/utils/sanitize-html'
 import { accommodations, externalSources } from '../../src/server/db/schema'
 import { computeDerivedFields, generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
 import { findAvailableSlug } from '../../src/server/utils/slug'
@@ -277,7 +278,7 @@ const command: ImportCommand = {
         // Common fields for both insert and update
         const baseFields = {
           name,
-          description: item.description_residence,
+          description: item.description_residence ? sanitizeHTML(item.description_residence) : null,
           address: resolvedAddress,
           residenceType: 'residence-etudiante',
           target_audience: 'etudiants' as const,
