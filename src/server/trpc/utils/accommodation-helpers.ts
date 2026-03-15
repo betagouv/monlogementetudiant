@@ -58,7 +58,7 @@ export function computeDerivedFields(data: {
   images_urls?: string[] | null
 }) {
   const counts = [data.nb_t1, data.nb_t1_bis, data.nb_t2, data.nb_t3, data.nb_t4, data.nb_t5, data.nb_t6, data.nb_t7_more].filter(
-    (v): v is number => v != null,  
+    (v): v is number => v != null,
   )
 
   const nbTotalApartments = counts.length > 0 ? counts.reduce((a, b) => a + b, 0) : null
