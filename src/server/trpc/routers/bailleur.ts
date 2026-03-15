@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server'
-import { and, eq, ilike, sql } from 'drizzle-orm'
+import { and, eq, gt, ilike, or, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { transformTypologiesToFlat, ZCreateResidence } from '~/schemas/accommodations/create-residence'
 import { ZUpdateResidence } from '~/schemas/accommodations/update-residence'
@@ -156,6 +156,7 @@ export const bailleurRouter = createTRPCRouter({
       z.object({
         page: z.number().default(1),
         search: z.string().optional(),
+        hasAvailability: z.boolean().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -178,6 +179,21 @@ export const bailleurRouter = createTRPCRouter({
 
       if (input.search && input.search.length >= 3) {
         conditions.push(ilike(accommodations.name, `%${input.search}%`))
+      }
+
+      if (input.hasAvailability) {
+        conditions.push(
+          or(
+            gt(accommodations.nbT1Available, 0),
+            gt(accommodations.nbT1BisAvailable, 0),
+            gt(accommodations.nbT2Available, 0),
+            gt(accommodations.nbT3Available, 0),
+            gt(accommodations.nbT4Available, 0),
+            gt(accommodations.nbT5Available, 0),
+            gt(accommodations.nbT6Available, 0),
+            gt(accommodations.nbT7MoreAvailable, 0),
+          )!,
+        )
       }
 
       const where = and(...conditions)
