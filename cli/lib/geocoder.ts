@@ -95,7 +95,10 @@ export async function fetchCityFromGeoApi(postalCode: string, name?: string): Pr
     const response = await fetch(url)
     if (!response.ok) return null
     const results: GeoApiCity[] = await response.json()
-    if (results.length === 0) return null
+    if (results.length === 0) {
+      // Fallback: treat as INSEE code
+      return await fetchCityByInsee(postalCode)
+    }
     if (name && results.length > 1) {
       const normalized = name
         .toLowerCase()

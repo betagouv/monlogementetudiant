@@ -10,6 +10,7 @@ import { getOrCreateOwner } from '../utils/get-or-create-owner'
 
 const SOURCE = 'crous'
 const OWNER_NAME = 'CROUS'
+const CROUS_EXTERNAL_URL = 'https://trouverunlogement.lescrous.fr/'
 
 interface CrousResidence {
   code_crous: number
@@ -50,49 +51,22 @@ function mapTypologie(typo: string): TypoCategory {
   return 't1'
 }
 
-function stripHtml(html: string): string {
-  return html
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<\/p>/gi, '\n')
-    .replace(/<[^>]+>/g, '')
-    .replace(/&eacute;/gi, 'é')
-    .replace(/&egrave;/gi, 'è')
-    .replace(/&agrave;/gi, 'à')
-    .replace(/&acirc;/gi, 'â')
-    .replace(/&ecirc;/gi, 'ê')
-    .replace(/&ocirc;/gi, 'ô')
-    .replace(/&ucirc;/gi, 'û')
-    .replace(/&iuml;/gi, 'ï')
-    .replace(/&ccedil;/gi, 'ç')
-    .replace(/&rsquo;/gi, '\u2019')
-    .replace(/&lsquo;/gi, '\u2018')
-    .replace(/&ldquo;/gi, '\u201C')
-    .replace(/&rdquo;/gi, '\u201D')
-    .replace(/&ndash;/gi, '\u2013')
-    .replace(/&mdash;/gi, '\u2014')
-    .replace(/&amp;/gi, '&')
-    .replace(/&nbsp;/gi, ' ')
-    .replace(/&#39;/gi, "'")
-    .replace(/&quot;/gi, '"')
-    .replace(/&sup2;/gi, '\u00B2')
-    .replace(/&[a-z]+;/gi, '')
-    .replace(/\r\r\n/g, '\n')
-    .replace(/\n{3,}/g, '\n\n')
+function normalizeCity(city: string): string {
+  return city
+    .replace(/^\d{5}\s+/, '') // Strip leading INSEE code
+    .replace(/\s+c[ée]dex\s*\d*/i, '')
+    .replace(/\.+$/, '') // Strip trailing dots
     .trim()
 }
 
 function parseAddress(raw: string): { address: string; postalCode: string; city: string } {
-  // Formats: "564, avenue Gaston Berger - 13621 AIX-en-PROVENCE CEDEX 1"
-  //          "1 place du Recteur Jules Blache - 13013 Marseille"
-  //          "10 rue Henri Poincaré -13388 Marseille"
-  const match = raw.match(/^(.+?)\s*-\s*(\d{5})\s+(.+)$/)
-  if (match) {
-    let city = match[3].replace(/\s+cedex\s*\d*/i, '').trim()
-    // Fix ALL-CAPS city: capitalize first letter of each word
-    if (city === city.toUpperCase()) {
-      city = city.toLowerCase().replace(/(^|[\s-])(\w)/g, (_, sep, ch) => sep + ch.toUpperCase())
-    }
-    return { address: match[1].trim(), postalCode: match[2], city }
+  const matchDash = raw.match(/^(.+?)\s*-\s*(\d{5})\s+(.+)$/)
+  if (matchDash) {
+    return { address: matchDash[1].trim(), postalCode: matchDash[2], city: normalizeCity(matchDash[3]) }
+  }
+  const matchInline = raw.match(/^(.+?)\s+(\d{5})\s+(.+)$/)
+  if (matchInline) {
+    return { address: matchInline[1].trim(), postalCode: matchInline[2], city: normalizeCity(matchInline[3]) }
   }
   return { address: raw, postalCode: '', city: '' }
 }
@@ -137,15 +111,12 @@ function buildTypologyFromRows(rows: CrousTypology[]) {
 function loadXlsx(filePath: string): { residences: CrousResidence[]; typologiesByResidence: Map<number, CrousTypology[]> } {
   const wb = XLSX.readFile(filePath)
 
-  // Sheet 1: residences
   const wsResidences = wb.Sheets[wb.SheetNames[0]]
   const rawResidences = XLSX.utils.sheet_to_json<CrousResidence>(wsResidences)
 
-  // Sheet 2: typologies
   const wsTypologies = wb.Sheets[wb.SheetNames[1]]
   const rawTypologies = XLSX.utils.sheet_to_json<CrousTypology>(wsTypologies)
 
-  // Group typologies by code_residence
   const typologiesByResidence = new Map<number, CrousTypology[]>()
   for (const t of rawTypologies) {
     const code = t.code_residence
@@ -156,6 +127,65 @@ function loadXlsx(filePath: string): { residences: CrousResidence[]; typologiesB
   }
 
   return { residences: rawResidences, typologiesByResidence }
+}
+
+async function findExistingAccommodation(sourceId: string, name: string, ownerId: number): Promise<{ id: number; slug: string } | null> {
+  // 1. Match by external_sources table
+  const bySource = await db
+    .select({ accommodationId: externalSources.accommodationId })
+    .from(externalSources)
+    .where(and(eq(externalSources.source, SOURCE), eq(externalSources.sourceId, sourceId)))
+    .limit(1)
+
+  if (bySource[0]) {
+    const [acc] = await db
+      .select({ id: accommodations.id, slug: accommodations.slug })
+      .from(accommodations)
+      .where(eq(accommodations.id, bySource[0].accommodationId))
+      .limit(1)
+    if (acc) return acc
+  }
+
+  // 2. Match by externalReference + owner
+  const byRef = await db
+    .select({ id: accommodations.id, slug: accommodations.slug })
+    .from(accommodations)
+    .where(and(eq(accommodations.externalReference, sourceId), eq(accommodations.ownerId, ownerId)))
+    .limit(1)
+  if (byRef[0]) return byRef[0]
+
+  return null
+}
+
+async function healthCheck(entries: { slug: string; city: string }[], baseUrl: string, verbose: boolean): Promise<string[]> {
+  const failed: string[] = []
+  console.log(`\n  Healthcheck: ${entries.length} résidences...`)
+
+  const batchSize = 10
+  for (let i = 0; i < entries.length; i += batchSize) {
+    const batch = entries.slice(i, i + batchSize)
+    const results = await Promise.allSettled(
+      batch.map(async ({ slug, city }) => {
+        const url = `${baseUrl}/trouver-un-logement-etudiant/ville/${encodeURIComponent(city)}/${slug}`
+        const res = await fetch(url, { method: 'HEAD', redirect: 'follow' })
+        if (!res.ok) return { slug, city, status: res.status }
+        return null
+      }),
+    )
+
+    for (let j = 0; j < results.length; j++) {
+      const r = results[j]
+      if (r.status === 'fulfilled' && r.value) {
+        failed.push(r.value.slug)
+        if (verbose) console.log(`    ❌ ${r.value.slug} → ${r.value.status}`)
+      } else if (r.status === 'rejected') {
+        failed.push(batch[j].slug)
+        if (verbose) console.log(`    ❌ ${batch[j].slug} → ${r.reason}`)
+      }
+    }
+  }
+
+  return failed
 }
 
 const command: ImportCommand = {
@@ -173,8 +203,10 @@ const command: ImportCommand = {
     const items = options.limit ? residences.slice(0, options.limit) : residences
     console.log(`  ${items.length} résidences chargées (${typologiesByResidence.size} résidences avec typologies)`)
 
-    const ownerId = options.dryRun ? 0 : await getOrCreateOwner(OWNER_NAME)
+    const ownerId = await getOrCreateOwner(OWNER_NAME)
     if (options.verbose) console.log(`  Owner "${OWNER_NAME}" id=${ownerId}`)
+
+    const processedEntries: { slug: string; city: string }[] = []
 
     for (let i = 0; i < items.length; i++) {
       const item = items[i]
@@ -185,21 +217,13 @@ const command: ImportCommand = {
           continue
         }
 
-        const sourceId = String(item.code_residence)
+        const sourceId = item.uairne?.trim() || `${item.code_crous}-${item.code_residence}`
         if (options.verbose) console.log(`  [${i + 1}/${items.length}] ${name} (${sourceId})`)
-
-        // Check existing
-        const existingSource = await db
-          .select({ accommodationId: externalSources.accommodationId })
-          .from(externalSources)
-          .where(and(eq(externalSources.source, SOURCE), eq(externalSources.sourceId, sourceId)))
-          .limit(1)
 
         // Parse address
         const rawAddress = item.adresse_residence?.trim() ?? ''
         const parsed = parseAddress(rawAddress)
 
-        // Geocoding: use lat/lng from XLSX
         const lat = item.latitude ?? 0
         const lng = item.longitude ?? 0
         let geom: ReturnType<typeof sql> | null = null
@@ -209,27 +233,25 @@ const command: ImportCommand = {
 
         if (lat !== 0 && lng !== 0) {
           geom = sql`ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)`
-          // If address parsing failed, reverse geocode
-          if (!resolvedCity) {
-            const rev = await reverseGeocode(lat, lng)
-            if (rev) {
-              resolvedCity = rev.city || resolvedCity
-              resolvedAddress = rev.address || resolvedAddress
-              resolvedPostalCode = rev.postalCode || resolvedPostalCode
-              if (options.verbose) console.log(`    Reverse geocode → ${resolvedCity}`)
-            }
+          const rev = await reverseGeocode(lat, lng)
+          if (rev) {
+            if (!resolvedCity) resolvedCity = rev.city
+            if (!resolvedAddress) resolvedAddress = rev.address
+            if (!resolvedPostalCode) resolvedPostalCode = rev.postalCode
+            if (options.verbose && rev.city) console.log(`    Reverse geocode → ${rev.city}`)
           }
         }
 
-        // Ensure city exists in DB
-        if (resolvedPostalCode && resolvedCity) {
-          resolvedCity = await ensureCity(resolvedPostalCode, resolvedCity)
+        resolvedCity = normalizeCity(resolvedCity)
+
+        if (resolvedPostalCode) {
+          resolvedCity = await ensureCity(resolvedPostalCode, resolvedCity || name)
         }
 
-        // Description: strip HTML
-        const description = item.description_residence ? stripHtml(item.description_residence) : null
+        if (!resolvedCity && options.verbose) {
+          console.log(`    ⚠ Ville non résolue pour "${name}" (adresse: "${rawAddress}")`)
+        }
 
-        // Typology: aggregate from sheet 2
         const typoRows = typologiesByResidence.get(item.code_residence) ?? []
         const typology = buildTypologyFromRows(typoRows)
 
@@ -243,13 +265,20 @@ const command: ImportCommand = {
           price_min_t6: typology.priceMinT6,
         })
 
-        const accommodationData = {
+        // Check if residence already exists
+        const existing = options.dryRun ? null : await findExistingAccommodation(sourceId, name, ownerId)
+
+        if (options.dryRun) {
+          if (options.verbose) console.log(`    [dry-run] Création`)
+          result.created++
+          continue
+        }
+
+        // Common fields for both insert and update
+        const baseFields = {
           name,
-          slug: await findAvailableSlug(generateSlug(name), db, accommodations),
-          description,
+          description: item.description_residence,
           address: resolvedAddress,
-          city: resolvedCity,
-          postalCode: resolvedPostalCode,
           residenceType: 'residence-etudiante',
           target_audience: 'etudiants' as const,
           published: true,
@@ -270,37 +299,65 @@ const command: ImportCommand = {
           priceMinT6: typology.priceMinT6,
           priceMaxT6: typology.priceMaxT6,
           priceMin: derived.priceMin,
-          imagesCount: 0,
           externalReference: sourceId,
+          externalUrl: CROUS_EXTERNAL_URL,
           ownerId,
           updatedAt: new Date(),
         }
+        const slug = await findAvailableSlug(generateSlug(name), db, accommodations)
 
-        if (options.dryRun) {
-          if (existingSource[0]) {
-            if (options.verbose) console.log(`    [dry-run] Mise à jour id=${existingSource[0].accommodationId}`)
-            result.updated++
-          } else {
-            if (options.verbose) console.log(`    [dry-run] Création`)
-            result.created++
+        if (existing) {
+          // UPDATE — keep existing slug, images, etc.
+          const [updated] = await db
+            .update(accommodations)
+            .set({
+              ...baseFields,
+              ...(resolvedCity ? { city: resolvedCity } : {}),
+              ...(resolvedPostalCode ? { postalCode: resolvedPostalCode } : {}),
+            })
+            .where(eq(accommodations.id, existing.id))
+            .returning({
+              slug: accommodations.slug,
+              city: accommodations.city,
+              priceMinT1: accommodations.priceMinT1,
+              name: accommodations.name,
+            })
+
+          if (options.verbose) {
+            console.log(`    Mise à jour id=${existing.id}, name =${updated.name} slug=${updated.slug} priceMinT1=${updated.priceMinT1}`)
           }
-          continue
-        }
 
-        if (existingSource[0]) {
-          await db.update(accommodations).set(accommodationData).where(eq(accommodations.id, existingSource[0].accommodationId))
+          // Backfill external_sources if needed
+          await db.insert(externalSources).values({ accommodationId: existing.id, source: SOURCE, sourceId }).onConflictDoNothing()
+
+          const updatedCity = updated.city ?? resolvedCity
+          if (updatedCity) {
+            processedEntries.push({ slug: updated.slug, city: updatedCity })
+          }
           result.updated++
         } else {
-          const [newAccommodation] = await db
+          const [created] = await db
             .insert(accommodations)
-            .values({ ...accommodationData, createdAt: new Date() })
-            .returning({ id: accommodations.id })
+            .values({
+              ...baseFields,
+              slug,
+              city: resolvedCity || name,
+              postalCode: resolvedPostalCode || '00000',
+              imagesCount: 0,
+              createdAt: new Date(),
+            })
+            .returning({ id: accommodations.id, slug: accommodations.slug, city: accommodations.city })
 
           await db.insert(externalSources).values({
-            accommodationId: newAccommodation.id,
+            accommodationId: created.id,
             source: SOURCE,
             sourceId,
           })
+
+          const createdCity = created.city ?? resolvedCity
+          if (createdCity) {
+            processedEntries.push({ slug: created.slug, city: createdCity })
+          }
           result.created++
         }
       } catch (error) {
@@ -319,6 +376,24 @@ const command: ImportCommand = {
           console.error(`       Message complet: ${rawMessage.slice(0, 500)}`)
         }
       }
+    }
+
+    // Healthcheck
+    const baseUrl = process.env.BASE_URL
+    if (baseUrl && processedEntries.length > 0 && !options.dryRun) {
+      const failed = await healthCheck(processedEntries, baseUrl, options.verbose ?? false)
+      if (failed.length > 0) {
+        console.log(`\n  ⚠️  ${failed.length} résidences en erreur :`)
+        for (const slug of failed) {
+          const entry = processedEntries.find((e) => e.slug === slug)
+          const city = entry ? encodeURIComponent(entry.city) : '_'
+          console.log(`    - ${baseUrl}/trouver-un-logement-etudiant/ville/${city}/${slug}`)
+        }
+      } else {
+        console.log(`  ✅ Toutes les ${processedEntries.length} résidences répondent en 200`)
+      }
+    } else if (!baseUrl) {
+      console.log(`\n  ⚠️  BASE_URL non définie, healthcheck ignoré`)
     }
 
     return result

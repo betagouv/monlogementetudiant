@@ -1,6 +1,6 @@
 const MATTERMOST_WEBHOOK_URL = process.env.MATTERMOST_WEBHOOK_URL
 
-const BASE_URL = process.env.BASE_URL ?? 'https://monlogementetudiant.gouv.fr'
+const BASE_URL = process.env.BASE_URL ?? 'https://monlogementetudiant.beta.gouv.fr'
 
 function accommodationUrl(slug: string): string {
   return `${BASE_URL.replace(/\/$/, '')}/residences/${slug}`
