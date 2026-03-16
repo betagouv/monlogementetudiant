@@ -10,6 +10,7 @@ import { accommodations } from '~/server/db/schema/accommodations'
 import { cities } from '~/server/db/schema/cities'
 import { departments } from '~/server/db/schema/departments'
 import { newsletterSubscriptions } from '~/server/db/schema/newsletter-subscriptions'
+import { owners } from '~/server/db/schema/owners'
 import { bboxSelect } from '~/server/trpc/utils/spatial-helpers'
 import { normalizeCitySearch, tokenizeQuery } from '~/server/utils/normalize-city-search'
 import { sortCitiesByRelevance } from '~/server/utils/sort-cities-by-relevance'
@@ -51,6 +52,7 @@ type CityRow = {
   popular: boolean
   nbStudents: number
   nbTotalApartments?: number | null
+  nbCrousApartments?: number | null
   priceMin?: number | null
   bbox: { xmin: number; xmax: number; ymin: number; ymax: number }
 }
@@ -91,6 +93,7 @@ function mapCityRow(c: CityRow, stats?: CityStats, nearbyCities: { name: string;
     nb_t5: stats?.nbT5 ?? null,
     nb_t6: stats?.nbT6 ?? null,
     nb_t7_more: stats?.nbT7More ?? null,
+    majority_crous: (Number(c.nbCrousApartments) || 0) > (Number(c.nbTotalApartments) || 0) / 2,
     nearby_cities: nearbyCities,
     bbox: c.bbox,
   }
@@ -115,6 +118,17 @@ const accommodationSubqueries = (cityName: typeof cities.name) => ({
         AND ${accommodations.available} = true
         AND ${accommodations.priceMin} IS NOT NULL
     )
+  `,
+  nbCrousApartments: sql<number>`
+    COALESCE((
+      SELECT SUM(${accommodations.nbTotalApartments})
+      FROM ${accommodations}
+      JOIN ${owners} ON ${accommodations.ownerId} = ${owners.id}
+      WHERE ${accommodations.city} = ${cityName}
+        AND ${accommodations.published} = true
+        AND ${accommodations.available} = true
+        AND ${owners.name} = 'CROUS'
+    ), 0)::int
   `,
 })
 
@@ -263,6 +277,7 @@ export const territoriesRouter = createTRPCRouter({
           popular: cities.popular,
           nbStudents: sql<number>`COALESCE(${cities.nbStudents}, 0)`,
           nbTotalApartments: accomSubs.nbTotalApartments,
+          ...(popular ? { nbCrousApartments: accomSubs.nbCrousApartments } : {}),
           priceMin: accomSubs.priceMin,
           bbox: bboxSelect(cities),
         })

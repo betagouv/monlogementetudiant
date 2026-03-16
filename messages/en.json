@@ -149,14 +149,14 @@
       "buttons": {
         "consult": "Consulter le site du bailleur",
         "dossierFacile": "Candidater avec Dossier Facile",
-        "dossierFacileConnect": "Link my DossierFacile account",
-        "dossierFacileConnectDescription": "Link your certified rental file",
-        "dossierFacilePending": "File under review",
-        "dossierFacileIncomplete": "Complete your DossierFacile file",
-        "dossierFacileDenied": "DossierFacile file denied",
-        "dossierFacileApply": "Apply with DossierFacile",
-        "dossierFacileApplied": "Application sent",
-        "dossierFacileSelectType": "Housing type",
+        "dossierFacileConnect": "Lier mon compte Dossier Facile",
+        "dossierFacileConnectDescription": "Lier votre dossier facile certifié",
+        "dossierFacilePending": "Dossier en cours de vérification",
+        "dossierFacileIncomplete": "Complétez votre DossierFacile",
+        "dossierFacileDenied": "Votre DossierFacile a été refusé",
+        "dossierFacileApply": "Candidater avec DossierFacile",
+        "dossierFacileApplied": "Candidature envoyée",
+        "dossierFacileSelectType": "Type de logement",
         "consultDescription": "Vous serez redirigé vers le site du gestionnaire",
         "dossierFacileDescription": "Dossier de location numérique certifié",
         "link": "Copier le lien",
@@ -405,7 +405,7 @@
         "title": "A la recherche d’un logement en résidence étudiante ?",
         "description": "Mon Logement Etudiant facilite l'accès au logement et aux droits pour les étudiants.",
         "cta": "Trouver un logement étudiant",
-        "ctaDisclaimer": "Plus de 1200 résidences partout en France"
+        "ctaDisclaimer": "Plus de 1300 résidences partout en France"
       }
     }
   },
@@ -537,7 +537,7 @@
       "subtitle": "estimez votre budget et découvrez les aides auxquelles vous avez droit."
     },
     "cta": "Rechercher un logement",
-    "title": "Plus de 1200 résidences étudiantes",
+    "title": "Plus de 1300 résidences étudiantes",
     "description": "référencées partout en France",
     "mainSection": {
       "title": "Tout savoir pour bien se loger",
@@ -678,7 +678,7 @@
     "cta": {
       "titleLine1": "Trouvez votre prochain",
       "titleLine2": "logement étudiant",
-      "subtitle": "Plus de 1200 résidences étudiantes référencées partout en France",
+      "subtitle": "Plus de 1300 résidences étudiantes référencées partout en France",
       "button": "Trouver un logement"
     }
   },

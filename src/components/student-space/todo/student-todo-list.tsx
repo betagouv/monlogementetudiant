@@ -73,7 +73,12 @@ export const StudentTodoList = () => {
     }
   }
 
-  const renderSection = (title: string, items: typeof itemsTodo, borderStyle: string, showCompleteButton = false) => (
+  const markAsTodo = (todoId: string) => {
+    trackEvent({ category: 'Espace Etudiant', action: 'todo remis', name: todoId })
+    setCompletedTodos((prev) => prev.filter((id) => id !== todoId))
+  }
+
+  const renderSection = (title: string, items: typeof itemsTodo, borderStyle: string, action?: 'complete' | 'undo') => (
     <div className="fr-flex fr-direction-column">
       <span className="fr-text--lg fr-text-title--grey fr-text--bold">{title}</span>
       <div className="fr-flex fr-direction-column fr-flex-gap-6v">
@@ -84,8 +89,17 @@ export const StudentTodoList = () => {
           >
             <div className="fr-flex fr-align-items-center fr-justify-content-space-between">
               {item.pictogram}
-              {showCompleteButton && (
+              {action === 'complete' && (
                 <Button title="Terminé" size="small" priority="tertiary" iconId="ri-check-line" onClick={() => markAsCompleted(item.id)} />
+              )}
+              {action === 'undo' && (
+                <Button
+                  title="Remettre à faire"
+                  size="small"
+                  priority="tertiary"
+                  iconId="ri-arrow-go-back-line"
+                  onClick={() => markAsTodo(item.id)}
+                />
               )}
             </div>
             <span className="fr-h6 fr-mb-0">{item.label}</span>
@@ -103,8 +117,8 @@ export const StudentTodoList = () => {
 
   return (
     <>
-      {renderSection('À faire', itemsTodo, styles.itemToDoBorder, true)}
-      {renderSection('Terminé', itemsDone, styles.itemDoneBorder)}
+      {renderSection('À faire', itemsTodo, styles.itemToDoBorder, 'complete')}
+      {renderSection('Terminé', itemsDone, styles.itemDoneBorder, 'undo')}
     </>
   )
 }

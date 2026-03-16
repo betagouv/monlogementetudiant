@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { createAcademy, createAccommodation, createCity, createDepartment } from './fixtures/factories'
+import { createAcademy, createAccommodation, createCity, createDepartment, createOwner } from './fixtures/factories'
 import { caller } from './helpers/test-caller'
 
 describe('territories.listAcademies', () => {
@@ -60,6 +60,26 @@ describe('territories.listCities', () => {
     expect(names).toContain('Saint-Étienne')
     expect(names).toContain('Lyon')
     expect(names).not.toContain('Roanne')
+  })
+
+  it('sets majority_crous when most apartments belong to CROUS owner', async () => {
+    const crousOwner = await createOwner({ name: 'CROUS', slug: 'crous' })
+    const otherOwner = await createOwner({ name: 'Privé', slug: 'prive' })
+
+    // Saint-Étienne: 8 CROUS + 2 other = majority CROUS
+    await createAccommodation({ city: 'Saint-Étienne', ownerId: crousOwner.id, nbTotalApartments: 8 })
+    await createAccommodation({ city: 'Saint-Étienne', ownerId: otherOwner.id, nbTotalApartments: 2 })
+
+    // Lyon: 3 CROUS + 7 other = NOT majority CROUS
+    await createAccommodation({ city: 'Lyon', ownerId: crousOwner.id, nbTotalApartments: 3 })
+    await createAccommodation({ city: 'Lyon', ownerId: otherOwner.id, nbTotalApartments: 7 })
+
+    const result = await caller.territories.listCities({ popular: true })
+    const saintEtienne = result.find((c) => c.name === 'Saint-Étienne')
+    const lyon = result.find((c) => c.name === 'Lyon')
+
+    expect(saintEtienne?.majority_crous).toBe(true)
+    expect(lyon?.majority_crous).toBe(false)
   })
 })
 
