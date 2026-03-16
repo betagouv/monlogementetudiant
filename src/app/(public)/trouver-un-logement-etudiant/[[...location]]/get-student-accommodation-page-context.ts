@@ -17,6 +17,8 @@ const getTerritoriesCategoryKey = (categoryKey: 'ville' | 'academie' | 'departem
   return keys[categoryKey] as keyof TTerritories
 }
 
+const getSingleSearchParam = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value)
+
 export const getStudentAccommodationPageContext = cache(
   async (awaitedParams: { location: string }, awaitedSearchParams: Record<string, string | string[] | undefined>) => {
     const routeCategoryKey = awaitedParams?.location?.[0] || ''
@@ -54,11 +56,36 @@ export const getStudentAccommodationPageContext = cache(
     const serverAcademie = isAcademy && territory ? territory.id.toString() : undefined
 
     const queryClient = getQueryClient()
-    const [, , session] = await Promise.all([
+    const prefetchPromises: Promise<unknown>[] = [
       prefetchAccommodations(awaitedSearchParams, { bbox: serverBbox, academie: serverAcademie }),
       queryClient.prefetchQuery(trpc.favorites.list.queryOptions()),
-      getServerSession(),
-    ])
+    ]
+
+    const cityName = routeCategoryKey === 'ville' ? territory?.name : undefined
+    if (cityName) {
+      const rawPrice = Number(getSingleSearchParam(awaitedSearchParams.prix))
+      const expandedPriceMax = Number.isFinite(rawPrice) ? Math.round(rawPrice * 1.25) : undefined
+
+      prefetchPromises.push(
+        queryClient.prefetchQuery(
+          trpc.accommodations.listExpandedByCity.queryOptions({
+            city: cityName,
+            radius: 10,
+            page: 1,
+            pageSize: 24,
+            isAccessible: getSingleSearchParam(awaitedSearchParams.accessible) === 'true' ? true : undefined,
+            hasColiving: getSingleSearchParam(awaitedSearchParams.colocation) === 'true' ? true : undefined,
+            viewCrous: getSingleSearchParam(awaitedSearchParams.crous) === 'true',
+            ownerSlug: getSingleSearchParam(awaitedSearchParams.gestionnaire),
+            priceMax: expandedPriceMax,
+          }),
+        ),
+      )
+    }
+
+    const sessionPromise = getServerSession()
+    await Promise.all([...prefetchPromises, sessionPromise])
+    const session = await sessionPromise
 
     return {
       dehydratedState: dehydrate(queryClient),

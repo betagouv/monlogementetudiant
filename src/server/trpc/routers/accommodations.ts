@@ -6,6 +6,7 @@ import { ETargetAudience } from '~/enums/target-audience'
 import { db } from '~/server/db'
 import { academies } from '~/server/db/schema/academies'
 import { accommodations } from '~/server/db/schema/accommodations'
+import { cities } from '~/server/db/schema/cities'
 import { externalSources } from '~/server/db/schema/external-sources'
 import { owners } from '~/server/db/schema/owners'
 import { baseProcedure, createTRPCRouter } from '../init'
@@ -235,6 +236,202 @@ export const accommodationsRouter = createTRPCRouter({
 
       const where = and(...conditions)
 
+      const offset = (page - 1) * pageSize
+
+      const [countResult, priceBounds, results] = await Promise.all([
+        db.select({ count: sql<number>`count(*)::int` }).from(accommodations).where(where),
+
+        db
+          .select({
+            minPrice: sql<number | null>`MIN(LEAST(
+              NULLIF(${accommodations.priceMinT1}, 0),
+              NULLIF(${accommodations.priceMinT1Bis}, 0),
+              NULLIF(${accommodations.priceMinT2}, 0),
+              NULLIF(${accommodations.priceMinT3}, 0),
+              NULLIF(${accommodations.priceMinT4}, 0),
+              NULLIF(${accommodations.priceMinT5}, 0),
+              NULLIF(${accommodations.priceMinT6}, 0),
+              NULLIF(${accommodations.priceMinT7More}, 0)
+            ))`,
+            maxPrice: sql<number | null>`MAX(GREATEST(
+              NULLIF(${accommodations.priceMaxT1}, 0),
+              NULLIF(${accommodations.priceMaxT1Bis}, 0),
+              NULLIF(${accommodations.priceMaxT2}, 0),
+              NULLIF(${accommodations.priceMaxT3}, 0),
+              NULLIF(${accommodations.priceMaxT4}, 0),
+              NULLIF(${accommodations.priceMaxT5}, 0),
+              NULLIF(${accommodations.priceMaxT6}, 0),
+              NULLIF(${accommodations.priceMaxT7More}, 0)
+            ))`,
+          })
+          .from(accommodations)
+          .where(where),
+
+        db
+          .select({
+            id: accommodations.id,
+            name: accommodations.name,
+            slug: accommodations.slug,
+            description: accommodations.description,
+            address: accommodations.address,
+            city: accommodations.city,
+            postalCode: accommodations.postalCode,
+            residenceType: accommodations.residenceType,
+            targetAudience: accommodations.target_audience,
+            published: accommodations.published,
+            available: accommodations.available,
+            nbTotalApartments: accommodations.nbTotalApartments,
+            nbAccessibleApartments: accommodations.nbAccessibleApartments,
+            nbColivingApartments: accommodations.nbColivingApartments,
+            nbT1: accommodations.nbT1,
+            nbT1Bis: accommodations.nbT1Bis,
+            nbT2: accommodations.nbT2,
+            nbT3: accommodations.nbT3,
+            nbT4: accommodations.nbT4,
+            nbT5: accommodations.nbT5,
+            nbT6: accommodations.nbT6,
+            nbT7More: accommodations.nbT7More,
+            nbT1Available: accommodations.nbT1Available,
+            nbT1BisAvailable: accommodations.nbT1BisAvailable,
+            nbT2Available: accommodations.nbT2Available,
+            nbT3Available: accommodations.nbT3Available,
+            nbT4Available: accommodations.nbT4Available,
+            nbT5Available: accommodations.nbT5Available,
+            nbT6Available: accommodations.nbT6Available,
+            nbT7MoreAvailable: accommodations.nbT7MoreAvailable,
+            priceMin: accommodations.priceMin,
+            priceMinT1: accommodations.priceMinT1,
+            priceMaxT1: accommodations.priceMaxT1,
+            priceMinT1Bis: accommodations.priceMinT1Bis,
+            priceMaxT1Bis: accommodations.priceMaxT1Bis,
+            priceMinT2: accommodations.priceMinT2,
+            priceMaxT2: accommodations.priceMaxT2,
+            priceMinT3: accommodations.priceMinT3,
+            priceMaxT3: accommodations.priceMaxT3,
+            priceMinT4: accommodations.priceMinT4,
+            priceMaxT4: accommodations.priceMaxT4,
+            priceMinT5: accommodations.priceMinT5,
+            priceMaxT5: accommodations.priceMaxT5,
+            priceMinT6: accommodations.priceMinT6,
+            priceMaxT6: accommodations.priceMaxT6,
+            priceMinT7More: accommodations.priceMinT7More,
+            priceMaxT7More: accommodations.priceMaxT7More,
+            priceMaxComputed: priceMaxComputed,
+            acceptWaitingList: accommodations.acceptWaitingList,
+            scholarshipHoldersPriority: accommodations.scholarshipHoldersPriority,
+            wifi: accommodations.wifi,
+            imagesUrls: accommodations.imagesUrls,
+            externalUrl: accommodations.externalUrl,
+            updatedAt: accommodations.updatedAt,
+            ownerName: owners.name,
+            ownerUrl: owners.url,
+            lat: sql<number>`ST_Y(${accommodations.geom}::geometry)`,
+            lng: sql<number>`ST_X(${accommodations.geom}::geometry)`,
+          })
+          .from(accommodations)
+          .leftJoin(owners, eq(accommodations.ownerId, owners.id))
+          .where(where)
+          .orderBy(sql`${priorityOrder} ASC`, sql`${totalAvailable} DESC`)
+          .limit(pageSize)
+          .offset(offset),
+      ])
+
+      const count = countResult[0]?.count ?? 0
+      const totalPages = Math.ceil(count / pageSize)
+
+      return {
+        count,
+        page_size: pageSize,
+        min_price: priceBounds[0]?.minPrice != null ? Number(priceBounds[0].minPrice) : null,
+        max_price: priceBounds[0]?.maxPrice != null ? Number(priceBounds[0].maxPrice) : null,
+        next: page < totalPages ? String(page + 1) : null,
+        previous: page > 1 ? String(page - 1) : null,
+        results: {
+          features: results.map(mapToGeoJsonFeature),
+        },
+      }
+    }),
+
+  listExpandedByCity: baseProcedure
+    .input(
+      z.object({
+        city: z.string().min(1),
+        radius: z.number().default(10),
+        page: z.number().default(1),
+        pageSize: z.number().default(24),
+        isAccessible: z.boolean().optional(),
+        hasColiving: z.boolean().optional(),
+        onlyWithAvailability: z.boolean().optional(),
+        priceMax: z.number().optional(),
+        viewCrous: z.boolean().default(false),
+        ownerSlug: z.string().optional(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const citySlug = input.city.trim().toLowerCase()
+      const [cityRow] = await db
+        .select({
+          centerLat: sql<number>`ST_Y(ST_Centroid(${cities.boundary})::geometry)`,
+          centerLng: sql<number>`ST_X(ST_Centroid(${cities.boundary})::geometry)`,
+        })
+        .from(cities)
+        .where(sql`(${cities.slug} = ${citySlug} OR ${cities.name} = ${input.city}) AND ${cities.boundary} IS NOT NULL`)
+        .limit(1)
+
+      if (!cityRow) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'City not found',
+        })
+      }
+
+      const { page, pageSize, radius, isAccessible, hasColiving, onlyWithAvailability, priceMax, viewCrous, ownerSlug } = input
+      const center = `${cityRow.centerLng},${cityRow.centerLat}`
+
+      const conditions: SQL[] = [eq(accommodations.published, true), sql`${accommodations.geom} IS NOT NULL`]
+
+      if (isAccessible) {
+        conditions.push(sql`${accommodations.nbAccessibleApartments} > 0`)
+      }
+
+      if (hasColiving) {
+        conditions.push(sql`${accommodations.nbColivingApartments} > 0`)
+      }
+
+      if (onlyWithAvailability) {
+        const orAvailable = availabilityCols.map((col) => sql`${col} > 0`)
+        conditions.push(sql`(${sql.join(orAvailable, sql` OR `)})`)
+      }
+
+      if (priceMax) {
+        conditions.push(sql`${accommodations.priceMin} IS NOT NULL AND ${accommodations.priceMin} <= ${priceMax}`)
+      }
+
+      if (viewCrous) {
+        conditions.push(
+          sql`EXISTS (SELECT 1 FROM ${externalSources} WHERE ${externalSources.accommodationId} = ${accommodations.id} AND ${externalSources.source} = 'crous')`,
+        )
+      } else {
+        conditions.push(
+          sql`NOT EXISTS (SELECT 1 FROM ${externalSources} WHERE ${externalSources.accommodationId} = ${accommodations.id} AND ${externalSources.source} = 'crous')`,
+        )
+      }
+
+      const [lng, lat] = center.split(',').map(Number)
+      const radiusMeters = radius * 1000
+      conditions.push(
+        sql`ST_DWithin(${accommodations.geom}::geography, ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography, ${radiusMeters})`,
+      )
+
+      if (ownerSlug) {
+        const ownerResult = await db.select({ id: owners.id }).from(owners).where(eq(owners.slug, ownerSlug)).limit(1)
+
+        if (ownerResult.length > 0) {
+          conditions.push(eq(accommodations.ownerId, ownerResult[0].id))
+        }
+      }
+
+      const where = and(...conditions)
       const offset = (page - 1) * pageSize
 
       const [countResult, priceBounds, results] = await Promise.all([
