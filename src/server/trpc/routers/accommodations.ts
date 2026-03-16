@@ -599,7 +599,11 @@ export const accommodationsRouter = createTRPCRouter({
             slug: row.ownerSlug ?? '',
             url: row.ownerUrl ?? '',
             image_base64: row.ownerImage ? `data:image/jpeg;base64,${Buffer.from(row.ownerImage).toString('base64')}` : null,
+<<<<<<< HEAD
             accept_dossier_facile_applications: row.ownerAcceptDossierFacile ?? false,
+=======
+            accept_dossier_facile_applications: row.ownerAcceptDf ?? false,
+>>>>>>> cb9342d (feat: candidature)
           }
         : null,
     }

@@ -42,7 +42,6 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
   const router = useRouter()
   const [selectedAccommodation] = useQueryState('id', parseAsString)
   const t = useTranslations('findAccomodation.card')
-  const classes = styles
   const {
     city,
     images_urls,
@@ -90,7 +89,7 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
       acceptWaitingList={accept_waiting_list}
       nbAvailable={nbAvailable}
       waitingListText={t('waitingList')}
-      className={classes.otherBadge}
+      className={styles.otherBadge}
       as="span"
     />
   )
@@ -121,9 +120,9 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
       {...badgeProps}
       {...imageProps}
       classes={{
-        root: clsx(className, selectedAccommodation === accomodation.id.toString() && classes.active, classes.hover),
-        header: classes.header,
-        endDetail: clsx('fr-justify-content-end', classes.endDetail),
+        root: clsx(className, selectedAccommodation === accomodation.id.toString() && styles.active, styles.hover),
+        header: styles.header,
+        endDetail: clsx('fr-justify-content-end', styles.endDetail),
       }}
       id={`accomodation-${accomodation.id}`}
       background
@@ -132,11 +131,11 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
       desc={
         <>
           {accommodationsTypes.length > 0 && (
-            <span className={clsx('ri-group-line', classes.description)}>{accommodationsTypes.join(' • ')}</span>
+            <span className={clsx('ri-group-line', styles.description)}>{accommodationsTypes.join(' • ')}</span>
           )}
           <br />
           {!!nb_total_apartments && (
-            <span className={clsx('ri-community-line', classes.description)}>{`${nb_total_apartments} logements`}</span>
+            <span className={clsx('ri-community-line', styles.description)}>{`${nb_total_apartments} logements`}</span>
           )}
           {!!badgeAvailability && (
             <>
@@ -149,7 +148,7 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
               <br />
               <span>
                 <TooltipHoverOnly id={`tooltip-availability-${accomodation.id}`} title={t('unknownAvailabilityTooltip')}>
-                  <span className={clsx('ri-information-line', classes.description)} />
+                  <span className={clsx('ri-information-line', styles.description)} />
                 </TooltipHoverOnly>
                 {t('unknownAvailability')}
               </span>
@@ -168,7 +167,7 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
         </div>
       }
       end={waitingListBadge}
-      endDetail={<span className={clsx('ri-arrow-right-line fr-text-title--blue-france', classes.arrow)} />}
+      endDetail={<span className={clsx('ri-arrow-right-line fr-text-title--blue-france', styles.arrow)} />}
       size="small"
       title={<span className="fr-text-title--blue-france fr-mb-0">{name}</span>}
       titleAs="h2"
