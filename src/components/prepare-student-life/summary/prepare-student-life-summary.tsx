@@ -5,7 +5,7 @@ import Tag from '@codegouvfr/react-dsfr/Tag'
 import clsx from 'clsx'
 import { getTranslations } from 'next-intl/server'
 import PrepareStudentLifeMap from '~/components/map/prepare-student-life-map'
-import { applyFrenchContraction, formatCityWithA, formatCityWithDe } from '~/utils/french-contraction'
+import { formatCityWithA, formatCityWithDe } from '~/utils/french-contraction'
 import styles from './prepare-student-life-summary.module.css'
 
 interface PrepareStudentLifeSummaryProps {

@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl'
 import { parseAsBoolean, useQueryState } from 'nuqs'
 import { FC } from 'react'
 import { tss } from 'tss-react'
-import { applyFrenchContraction, formatCityWithA } from '~/utils/french-contraction'
+import { formatCityWithA } from '~/utils/french-contraction'
 
 interface FindStudentAccommodationTitleProps {
   location: string | undefined
