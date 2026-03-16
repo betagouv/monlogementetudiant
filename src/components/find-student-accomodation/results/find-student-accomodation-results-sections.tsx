@@ -1,11 +1,13 @@
 'use client'
 
+import { fr } from '@codegouvfr/react-dsfr'
 import { FC, useMemo } from 'react'
 import { useAccomodations } from '~/hooks/use-accomodations'
 import { TUser } from '~/lib/types'
 import { TTerritory } from '~/schemas/territories'
 import { FindStudentAccomodationNeighborsResults } from './find-student-accomodation-neighbors-results'
 import { FindStudentAccomodationResultsContent } from './find-student-accomodation-results'
+import clsx from 'clsx'
 
 type FindStudentAccomodationResultsSectionsProps = {
   isAcademy?: boolean
@@ -35,7 +37,9 @@ export const FindStudentAccomodationResultsSections: FC<FindStudentAccomodationR
         isFetching={isFetching}
       />
       {showNeighbors && (
-        <FindStudentAccomodationNeighborsResults territory={territory} user={user} mainAccommodationIds={mainAccommodationIds} />
+        <div className={clsx(accommodations && accommodations.count <= accommodations.page_size && 'fr-mt-4w')}>
+          <FindStudentAccomodationNeighborsResults territory={territory} user={user} mainAccommodationIds={mainAccommodationIds} />
+        </div>
       )}
     </>
   )
