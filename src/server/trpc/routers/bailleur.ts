@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server'
-import { and, eq, gt, ilike, or, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, gt, ilike, inArray, or, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { transformTypologiesToFlat, ZCreateResidence } from '~/schemas/accommodations/create-residence'
 import { ZUpdateResidence } from '~/schemas/accommodations/update-residence'
@@ -7,6 +7,7 @@ import { ZUpdateResidenceList } from '~/schemas/accommodations/update-residence-
 import { db } from '~/server/db'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { user } from '~/server/db/schema/auth'
+import { dossierFacileApplications, dossierFacileTenants } from '~/server/db/schema/dossier-facile'
 import { owners } from '~/server/db/schema/owners'
 import { notifyAccommodationCreated, notifyAccommodationUpdated } from '~/server/services/mattermost'
 import { computeDerivedFields, generateSlug, geocodeAddress } from '~/server/trpc/utils/accommodation-helpers'
@@ -420,4 +421,203 @@ export const bailleurRouter = createTRPCRouter({
 
     return updated
   }),
+
+  listCandidatures: ownerProcedure
+    .input(
+      z.object({
+        page: z.number().default(1),
+        status: z.enum(['pending', 'accepted', 'rejected']).optional(),
+        search: z.string().optional(),
+        sort: z.enum(['date_desc', 'date_asc']).default('date_desc'),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const owner = await getOwnerForUser(ctx.session.user.id)
+
+      if (!owner) {
+        return { items: [], total: 0, page: input.page, pageSize: PAGE_SIZE }
+      }
+
+      // Get all accommodation slugs for this owner
+      const ownerAccommodations = await db
+        .select({ slug: accommodations.slug })
+        .from(accommodations)
+        .where(eq(accommodations.ownerId, owner.id))
+
+      const slugs = ownerAccommodations.map((a) => a.slug)
+
+      if (slugs.length === 0) {
+        return { items: [], total: 0, page: input.page, pageSize: PAGE_SIZE }
+      }
+
+      const conditions = [inArray(dossierFacileApplications.accommodationSlug, slugs)]
+
+      if (input.status) {
+        conditions.push(eq(dossierFacileApplications.status, input.status))
+      }
+
+      if (input.search && input.search.length >= 2) {
+        conditions.push(or(ilike(user.name, `%${input.search}%`), ilike(accommodations.name, `%${input.search}%`))!)
+      }
+
+      const where = and(...conditions)
+      const offset = (input.page - 1) * PAGE_SIZE
+      const orderBy = input.sort === 'date_asc' ? asc(dossierFacileApplications.createdAt) : desc(dossierFacileApplications.createdAt)
+
+      const [countResult, results] = await Promise.all([
+        db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(dossierFacileApplications)
+          .leftJoin(dossierFacileTenants, eq(dossierFacileApplications.tenantId, dossierFacileTenants.id))
+          .leftJoin(user, eq(dossierFacileTenants.userId, user.id))
+          .leftJoin(accommodations, eq(dossierFacileApplications.accommodationSlug, accommodations.slug))
+          .where(where),
+        db
+          .select({
+            id: dossierFacileApplications.id,
+            studentName: user.name,
+            studentEmail: user.email,
+            residence: accommodations.name,
+            apartmentType: dossierFacileApplications.apartmentType,
+            status: dossierFacileApplications.status,
+            createdAt: dossierFacileApplications.createdAt,
+            pdfUrl: dossierFacileTenants.pdfUrl,
+            accommodationSlug: dossierFacileApplications.accommodationSlug,
+          })
+          .from(dossierFacileApplications)
+          .leftJoin(dossierFacileTenants, eq(dossierFacileApplications.tenantId, dossierFacileTenants.id))
+          .leftJoin(user, eq(dossierFacileTenants.userId, user.id))
+          .leftJoin(accommodations, eq(dossierFacileApplications.accommodationSlug, accommodations.slug))
+          .where(where)
+          .orderBy(orderBy)
+          .limit(PAGE_SIZE)
+          .offset(offset),
+      ])
+
+      const total = countResult[0]?.count ?? 0
+
+      return {
+        items: results,
+        total,
+        page: input.page,
+        pageSize: PAGE_SIZE,
+      }
+    }),
+
+  getCandidature: ownerProcedure.input(z.object({ id: z.number() })).query(async ({ ctx, input }) => {
+    const application = await db.query.dossierFacileApplications.findFirst({
+      where: eq(dossierFacileApplications.id, input.id),
+      with: {
+        tenant: {
+          with: {
+            documents: true,
+          },
+        },
+      },
+    })
+
+    if (!application) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Candidature not found' })
+    }
+
+    // Verify ownership
+    const usr = await db.query.user.findFirst({
+      where: eq(user.id, ctx.session.user.id),
+      with: { owner: true },
+    })
+
+    const isAdmin = usr?.role === 'admin'
+
+    const [accommodation] = await db
+      .select({ ...accommodationSelectFields, ownerId: accommodations.ownerId })
+      .from(accommodations)
+      .leftJoin(owners, eq(accommodations.ownerId, owners.id))
+      .where(eq(accommodations.slug, application.accommodationSlug))
+      .limit(1)
+
+    if (!accommodation) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Accommodation not found' })
+    }
+
+    if (!isAdmin && (!usr?.owner || accommodation.ownerId !== usr.owner.id)) {
+      throw new TRPCError({ code: 'FORBIDDEN', message: 'You do not own this accommodation' })
+    }
+
+    // Get user email from tenant
+    const tenantUser = await db.query.user.findFirst({
+      where: eq(user.id, application.tenant.userId),
+    })
+
+    const tenantDocs = application.tenant.documents ?? []
+
+    return {
+      id: application.id,
+      status: application.status,
+      apartmentType: application.apartmentType,
+      createdAt: application.createdAt,
+      reviewedAt: application.reviewedAt,
+      studentName: application.tenant.name ?? tenantUser?.name ?? null,
+      studentEmail: tenantUser?.email ?? null,
+      tenantUrl: application.tenant.url,
+      pdfUrl: application.tenant.pdfUrl,
+      tenantStatus: application.tenant.status,
+      guarantorCount: application.tenant.guarantorCount ?? 0,
+      documents: {
+        tenant: tenantDocs.filter((d) => d.ownerType === 'tenant'),
+        guarantor: tenantDocs.filter((d) => d.ownerType === 'guarantor'),
+      },
+      accommodation: mapToGeoJsonFeature(accommodation as unknown as Record<string, unknown>),
+    }
+  }),
+
+  updateCandidatureStatus: ownerProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        status: z.enum(['accepted', 'rejected']),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const application = await db.query.dossierFacileApplications.findFirst({
+        where: eq(dossierFacileApplications.id, input.id),
+      })
+
+      if (!application) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Candidature not found' })
+      }
+
+      // Verify ownership
+      const usr = await db.query.user.findFirst({
+        where: eq(user.id, ctx.session.user.id),
+        with: { owner: true },
+      })
+
+      const isAdmin = usr?.role === 'admin'
+
+      const [accommodation] = await db
+        .select({ ownerId: accommodations.ownerId })
+        .from(accommodations)
+        .where(eq(accommodations.slug, application.accommodationSlug))
+        .limit(1)
+
+      if (!accommodation) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Accommodation not found' })
+      }
+
+      if (!isAdmin && (!usr?.owner || accommodation.ownerId !== usr.owner.id)) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'You do not own this accommodation' })
+      }
+
+      const [updated] = await db
+        .update(dossierFacileApplications)
+        .set({
+          status: input.status,
+          reviewedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(dossierFacileApplications.id, input.id))
+        .returning()
+
+      return updated
+    }),
 })

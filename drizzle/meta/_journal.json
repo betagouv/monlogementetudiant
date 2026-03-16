@@ -64,6 +64,20 @@
       "when": 1773566809863,
       "tag": "0008_icy_shiva",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1773675010367,
+      "tag": "0009_bored_talon",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1773758128390,
+      "tag": "0010_tiresome_zeigeist",
+      "breakpoints": true
     }
   ]
 }

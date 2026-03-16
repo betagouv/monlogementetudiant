@@ -12,7 +12,8 @@ export const useAdminUpdateOwner = () => {
   const t = useTranslations('toast')
 
   return useMutation({
-    mutationFn: (data: { id: number; name?: string; url?: string | null }) => trpcClient.admin.owners.update.mutate(data),
+    mutationFn: (data: { id: number; name?: string; url?: string | null; acceptDossierFacileApplications?: boolean }) =>
+      trpcClient.admin.owners.update.mutate(data),
     onSuccess: async (updated) => {
       await queryClient.invalidateQueries({ queryKey: trpc.admin.owners.list.queryKey() })
       await queryClient.invalidateQueries({ queryKey: trpc.admin.owners.getById.queryKey({ id: updated.id }) })

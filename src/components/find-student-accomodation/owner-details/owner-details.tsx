@@ -90,6 +90,7 @@ export const OwnerDetails = async ({
         accommodationSlug={accommodationSlug}
         availableApartmentTypes={availableApartmentTypes}
         isAuthenticated={isAuthenticated}
+        acceptDossierFacile={owner?.accept_dossier_facile_applications ?? false}
       />
       <div className={styles.sidebarOwner}>{!!ownerUrl && available && <ConsultOfferButton href={ownerUrl} slug={slug ?? ''} />}</div>
       {nbAvailable === 0 && (

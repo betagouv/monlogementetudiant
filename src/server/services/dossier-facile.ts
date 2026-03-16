@@ -218,6 +218,80 @@ export async function syncTenantFromCode(userId: string, code: string, user: { f
   return syncTenantFromProfile(userId, profile, user)
 }
 
+export interface WebhookDocument {
+  ownerType: 'tenant' | 'guarantor'
+  documentCategory: string
+  documentSubCategory: string | null
+  documentStatus: string | null
+  monthlySum: number | null
+}
+
+export interface WebhookData {
+  status: string | null
+  url: string | null
+  pdfUrl: string | null
+  name: string | null
+  guarantorCount: number
+  documents: WebhookDocument[]
+}
+
+export function extractWebhookData(body: Record<string, unknown>): WebhookData {
+  const status = normalizeStatus(body.status as string | undefined)
+  const url = (body.dossierUrl as string) || null
+  const pdfUrl = (body.dossierPdfUrl as string) || null
+
+  const tenants = Array.isArray(body.tenants) ? body.tenants : []
+  const firstTenant = tenants[0] && typeof tenants[0] === 'object' ? (tenants[0] as Record<string, unknown>) : null
+
+  let name: string | null = null
+  const documents: WebhookDocument[] = []
+  let guarantorCount = 0
+
+  if (firstTenant) {
+    const firstName = (firstTenant.firstName as string) || ''
+    const lastName = (firstTenant.lastName as string) || ''
+    const fullName = `${firstName} ${lastName}`.trim()
+    if (fullName) name = fullName
+
+    const tenantDocs = Array.isArray(firstTenant.documents) ? firstTenant.documents : []
+    for (const doc of tenantDocs) {
+      if (doc && typeof doc === 'object') {
+        const d = doc as Record<string, unknown>
+        documents.push({
+          ownerType: 'tenant',
+          documentCategory: String(d.documentCategory ?? ''),
+          documentSubCategory: (d.documentSubCategory as string) || null,
+          documentStatus: (d.documentStatus as string) || null,
+          monthlySum: typeof d.monthlySum === 'number' ? d.monthlySum : null,
+        })
+      }
+    }
+
+    const guarantors = Array.isArray(firstTenant.guarantors) ? firstTenant.guarantors : []
+    guarantorCount = guarantors.length
+    for (const guarantor of guarantors) {
+      if (guarantor && typeof guarantor === 'object') {
+        const g = guarantor as Record<string, unknown>
+        const guarantorDocs = Array.isArray(g.documents) ? g.documents : []
+        for (const doc of guarantorDocs) {
+          if (doc && typeof doc === 'object') {
+            const d = doc as Record<string, unknown>
+            documents.push({
+              ownerType: 'guarantor',
+              documentCategory: String(d.documentCategory ?? ''),
+              documentSubCategory: (d.documentSubCategory as string) || null,
+              documentStatus: (d.documentStatus as string) || null,
+              monthlySum: typeof d.monthlySum === 'number' ? d.monthlySum : null,
+            })
+          }
+        }
+      }
+    }
+  }
+
+  return { status, url, pdfUrl, name, guarantorCount, documents }
+}
+
 async function safeJson(response: Response): Promise<Record<string, unknown>> {
   try {
     const data = await response.json()

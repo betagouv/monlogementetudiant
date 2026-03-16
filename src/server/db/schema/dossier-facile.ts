@@ -13,12 +13,26 @@ export const dossierFacileTenants = pgTable(
     status: text('status'),
     url: text('url'),
     pdfUrl: text('pdf_url'),
+    guarantorCount: integer('guarantor_count'),
     lastSyncedAt: timestamp('last_synced_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index('dossier_facile_tenant_user_id_idx').on(t.userId)],
 )
+
+export const dossierFacileDocuments = pgTable('dossier_facile_document', {
+  id: serial('id').primaryKey(),
+  tenantId: integer('tenant_id')
+    .notNull()
+    .references(() => dossierFacileTenants.id, { onDelete: 'cascade' }),
+  ownerType: text('owner_type').notNull(),
+  documentCategory: text('document_category').notNull(),
+  documentSubCategory: text('document_sub_category'),
+  documentStatus: text('document_status'),
+  monthlySum: integer('monthly_sum'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
 
 export const dossierFacileApplications = pgTable(
   'dossier_facile_application',
@@ -29,6 +43,8 @@ export const dossierFacileApplications = pgTable(
       .references(() => dossierFacileTenants.id, { onDelete: 'cascade' }),
     accommodationSlug: varchar('accommodation_slug', { length: 255 }).notNull(),
     apartmentType: text('apartment_type').notNull(),
+    status: text('status').notNull().default('pending'),
+    reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
