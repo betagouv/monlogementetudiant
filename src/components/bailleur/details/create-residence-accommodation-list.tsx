@@ -5,6 +5,7 @@ import Input from '@codegouvfr/react-dsfr/Input'
 import Select from '@codegouvfr/react-dsfr/Select'
 import { useFieldArray, useFormContext } from 'react-hook-form'
 import { TCreateResidence, TYPOLOGY_LABELS, TYPOLOGY_TYPES } from '~/schemas/accommodations/create-residence'
+import { isPerPersonTypology } from '~/utils/is-per-person-typology'
 import styles from './create-residence-accommodation-list.module.css'
 
 export const CreateResidenceAccommodationList = () => {
@@ -64,7 +65,9 @@ export const CreateResidenceAccommodationList = () => {
                 </div>
 
                 <div>
-                  <label className="fr-label fr-mb-1w">Loyer CC par personne</label>
+                  <label className="fr-label fr-mb-1w">
+                    {isPerPersonTypology(watchedTypologies?.[index]?.type) ? 'Loyer CC par personne' : 'Loyer CC'}
+                  </label>
                   <div className="fr-flex fr-flex-gap-4v">
                     <div>
                       <Input

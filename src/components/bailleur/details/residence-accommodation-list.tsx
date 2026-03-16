@@ -8,6 +8,7 @@ import { AvailabilityBadge } from '~/components/shared/availability-badge'
 import { TAccomodationMy } from '~/schemas/accommodations/accommodations'
 import { TUpdateResidence } from '~/schemas/accommodations/update-residence'
 import { calculateAvailability } from '~/utils/calculateAvailability'
+import { isPerPersonTypology } from '~/utils/is-per-person-typology'
 
 export const ResidenceAccommodationList = ({ accommodation }: { accommodation: TAccomodationMy }) => {
   const t = useTranslations('findAccomodation.card')
@@ -168,7 +169,7 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
                   </Select>
                 </div>
                 <div className="fr-col-md-6">
-                  <label className="fr-label fr-mb-0">Loyer CC par personne</label>
+                  <label className="fr-label fr-mb-0">{isPerPersonTypology(typology.type) ? 'Loyer CC par personne' : 'Loyer CC'}</label>
                   <div className="fr-grid-row fr-grid-row--gutters">
                     <div className="fr-col-6">
                       <Input

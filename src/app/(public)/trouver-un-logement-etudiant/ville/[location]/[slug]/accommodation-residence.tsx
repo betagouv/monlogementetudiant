@@ -4,6 +4,7 @@ import clsx from 'clsx'
 import { getTranslations } from 'next-intl/server'
 import { TooltipHoverOnly } from '~/components/tooltip-hover-only'
 import { TAccomodationDetails } from '~/schemas/accommodations/accommodations'
+import { isPerPersonTypology } from '~/utils/is-per-person-typology'
 import styles from './accommodation-residence.module.css'
 
 type AccommodationResidenceProps = {
@@ -127,9 +128,9 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
                   <div className={styles.pricesTiles}>
                     <span className="fr-text--bold">
                       {accommodation.min && accommodation.max && accommodation.min !== accommodation.max
-                        ? `DE ${accommodation.min} À ${accommodation.max} €`
-                        : `${accommodation.min} €`}{' '}
-                      par personne
+                        ? `De ${accommodation.min} à ${accommodation.max} €`
+                        : `${accommodation.min} €`}
+                      {isPerPersonTypology(accommodation.type) ? ' par personne' : ''}
                     </span>
                   </div>
                   <span className="fr-text--xs fr-mb-0">{t('charges')}</span>
