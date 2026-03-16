@@ -69,8 +69,14 @@ export async function createDepartment(overrides: Omit<Partial<DepartmentInsert>
   return row
 }
 
-export async function createCity(overrides: Omit<Partial<CityInsert>, 'departmentId'> & { departmentId: number }) {
+export async function createCity(
+  overrides: Omit<Partial<CityInsert>, 'departmentId' | 'boundary'> & {
+    departmentId: number
+    boundary?: { type: string; coordinates: number[][][][] }
+  },
+) {
   const db = getTestDb()
+  const { boundary, ...rest } = overrides
   const [row] = await db
     .insert(cities)
     .values({
@@ -79,7 +85,8 @@ export async function createCity(overrides: Omit<Partial<CityInsert>, 'departmen
       postalCodes: ['42000'],
       inseeCodes: ['42218'],
       popular: false,
-      ...overrides,
+      ...rest,
+      ...(boundary ? { boundary: sql`ST_SetSRID(ST_GeomFromGeoJSON(${JSON.stringify(boundary)}), 4326)` } : {}),
     })
     .returning()
   return row

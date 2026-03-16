@@ -257,7 +257,10 @@
     "results": {
       "noResult": "Aucun résultat pour votre recherche",
       "description": "Cela ne veut pas dire que l’offre n’existe pas, mais peut-être qu’elle n’est pas encore recensée sur ce site.",
-      "description2": "Vous pouvez modifier votre recherche ou consulter les questions fréquemment posées sur la page d'informations."
+      "description2": "Vous pouvez modifier votre recherche ou consulter les questions fréquemment posées sur la page d'informations.",
+      "expandedTitle": "Résultats élargis à proximité",
+      "expandedDescription": "Nous élargissons automatiquement la recherche autour de la ville (+10 km) et du budget (+25 %).",
+      "expandedNoResult": "Aucun résultat supplémentaire avec cette recherche élargie."
     }
   },
   "prepareStudentLife": {

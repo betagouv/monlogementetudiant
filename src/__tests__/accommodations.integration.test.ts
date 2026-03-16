@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createAcademy, createAccommodation, createExternalSource, createOwner } from './fixtures/factories'
+import { createAcademy, createAccommodation, createCity, createDepartment, createExternalSource, createOwner } from './fixtures/factories'
 import { caller } from './helpers/test-caller'
 import './helpers/setup-integration'
 
@@ -38,6 +38,43 @@ describe('accommodations.list', () => {
     const result = await caller.accommodations.list({ bbox: '2.0,48.5,3.0,49.0' })
     expect(result.count).toBe(1)
     expect(result.results.features[0].properties.slug).toBe('inside-bbox')
+  })
+
+  it('filters by city radius using listExpandedByCity', async () => {
+    const academy = await createAcademy({ name: 'Académie de Paris' })
+    const department = await createDepartment({ academyId: academy.id, code: '75', name: 'Paris' })
+    await createCity({
+      departmentId: department.id,
+      name: 'Paris',
+      slug: 'paris',
+      boundary: {
+        type: 'MultiPolygon',
+        coordinates: [
+          [
+            [
+              [2.30, 48.80],
+              [2.40, 48.80],
+              [2.40, 48.90],
+              [2.30, 48.90],
+              [2.30, 48.80],
+            ],
+          ],
+        ],
+      },
+    })
+
+    await createAccommodation({
+      slug: 'inside-city-radius',
+      geom: { type: 'Point', coordinates: [2.35, 48.85] },
+    })
+    await createAccommodation({
+      slug: 'outside-city-radius',
+      geom: { type: 'Point', coordinates: [5.0, 43.3] },
+    })
+
+    const result = await caller.accommodations.listExpandedByCity({ city: 'paris' })
+    expect(result.count).toBe(1)
+    expect(result.results.features[0].properties.slug).toBe('inside-city-radius')
   })
 
   it('filters by isAccessible', async () => {
