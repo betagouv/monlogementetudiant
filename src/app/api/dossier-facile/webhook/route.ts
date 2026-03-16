@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  let body: { partnerCallBackType?: string; tenantId?: string | number }
+  let body: { partnerCallBackType?: string; onTenantId?: string | number }
   try {
     body = await request.json()
   } catch {
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
 
   console.log('[DossierFacile Webhook] Received:', JSON.stringify(body))
 
-  const { partnerCallBackType, tenantId } = body
+  const { partnerCallBackType, onTenantId: tenantId } = body
   if (!partnerCallBackType || !tenantId) {
     console.warn('[DossierFacile Webhook] Missing partnerCallBackType or tenantId')
     return NextResponse.json({ error: 'Missing partnerCallBackType or tenantId' }, { status: 400 })

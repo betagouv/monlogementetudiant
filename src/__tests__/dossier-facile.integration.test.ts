@@ -2,9 +2,9 @@ import { eq } from 'drizzle-orm'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { dossierFacileApplications, dossierFacileTenants } from '../server/db/schema'
 import { createAccommodation, createDossierFacileApplication, createDossierFacileTenant, createUser } from './fixtures/factories'
+import './helpers/setup-integration'
 import { authenticatedCaller, caller, ownerCaller } from './helpers/test-caller'
 import { getTestDb } from './helpers/test-db'
-import './helpers/setup-integration'
 
 const WEBHOOK_API_KEY = 'test-webhook-secret'
 
@@ -38,7 +38,7 @@ beforeEach(async () => {
 describe('DossierFacile Webhook', () => {
   describe('authentication', () => {
     it('returns 401 with invalid API key', async () => {
-      const res = await callWebhook({ partnerCallBackType: 'VERIFIED_ACCOUNT', tenantId: '123' }, 'wrong-key')
+      const res = await callWebhook({ partnerCallBackType: 'VERIFIED_ACCOUNT', onTenantId: '123' }, 'wrong-key')
       expect(res.status).toBe(401)
       const json = await res.json()
       expect(json.error).toBe('Unauthorized')
@@ -49,7 +49,7 @@ describe('DossierFacile Webhook', () => {
       const req = new Request('http://localhost/api/dossier-facile/webhook', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ partnerCallBackType: 'VERIFIED_ACCOUNT', tenantId: '123' }),
+        body: JSON.stringify({ partnerCallBackType: 'VERIFIED_ACCOUNT', onTenantId: '123' }),
       })
       const res = await POST(req)
       expect(res.status).toBe(401)
@@ -61,7 +61,7 @@ describe('DossierFacile Webhook', () => {
       const req = new Request('http://localhost/api/dossier-facile/webhook', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Api-Key': 'any' },
-        body: JSON.stringify({ partnerCallBackType: 'VERIFIED_ACCOUNT', tenantId: '123' }),
+        body: JSON.stringify({ partnerCallBackType: 'VERIFIED_ACCOUNT', onTenantId: '123' }),
       })
       const res = await POST(req)
       expect(res.status).toBe(500)
@@ -83,19 +83,19 @@ describe('DossierFacile Webhook', () => {
     })
 
     it('returns 400 when partnerCallBackType is missing', async () => {
-      const res = await callWebhook({ tenantId: '123' })
+      const res = await callWebhook({ onTenantId: '123' })
       expect(res.status).toBe(400)
       const json = await res.json()
       expect(json.error).toContain('Missing')
     })
 
-    it('returns 400 when tenantId is missing', async () => {
+    it('returns 400 when onTenantId is missing', async () => {
       const res = await callWebhook({ partnerCallBackType: 'VERIFIED_ACCOUNT' })
       expect(res.status).toBe(400)
     })
 
     it('returns 400 for unknown callback type', async () => {
-      const res = await callWebhook({ partnerCallBackType: 'UNKNOWN_TYPE', tenantId: '123' })
+      const res = await callWebhook({ partnerCallBackType: 'UNKNOWN_TYPE', onTenantId: '123' })
       expect(res.status).toBe(400)
       const json = await res.json()
       expect(json.error).toContain('Unknown callback type')
@@ -106,7 +106,7 @@ describe('DossierFacile Webhook', () => {
     it('sets tenant status to verified', async () => {
       const tenant = await createDossierFacileTenant({ userId: 'test-user-id', tenantId: 'df-100', status: 'pending' })
 
-      const res = await callWebhook({ partnerCallBackType: 'VERIFIED_ACCOUNT', tenantId: 'df-100' })
+      const res = await callWebhook({ partnerCallBackType: 'VERIFIED_ACCOUNT', onTenantId: 'df-100' })
       expect(res.status).toBe(200)
 
       const db = getTestDb()
@@ -116,10 +116,10 @@ describe('DossierFacile Webhook', () => {
       expect(updated!.status).toBe('verified')
     })
 
-    it('handles numeric tenantId', async () => {
+    it('handles numeric onTenantId', async () => {
       await createDossierFacileTenant({ userId: 'test-user-id', tenantId: '42', status: 'pending' })
 
-      const res = await callWebhook({ partnerCallBackType: 'VERIFIED_ACCOUNT', tenantId: 42 })
+      const res = await callWebhook({ partnerCallBackType: 'VERIFIED_ACCOUNT', onTenantId: 42 })
       expect(res.status).toBe(200)
 
       const db = getTestDb()
@@ -134,7 +134,7 @@ describe('DossierFacile Webhook', () => {
     it('sets tenant status to denied', async () => {
       const tenant = await createDossierFacileTenant({ userId: 'test-user-id', tenantId: 'df-200', status: 'verified' })
 
-      const res = await callWebhook({ partnerCallBackType: 'DENIED_ACCOUNT', tenantId: 'df-200' })
+      const res = await callWebhook({ partnerCallBackType: 'DENIED_ACCOUNT', onTenantId: 'df-200' })
       expect(res.status).toBe(200)
 
       const db = getTestDb()
@@ -149,7 +149,7 @@ describe('DossierFacile Webhook', () => {
     it('sets tenant status to access_revoked', async () => {
       const tenant = await createDossierFacileTenant({ userId: 'test-user-id', tenantId: 'df-300', status: 'verified' })
 
-      const res = await callWebhook({ partnerCallBackType: 'ACCESS_REVOKED', tenantId: 'df-300' })
+      const res = await callWebhook({ partnerCallBackType: 'ACCESS_REVOKED', onTenantId: 'df-300' })
       expect(res.status).toBe(200)
 
       const db = getTestDb()
@@ -164,7 +164,7 @@ describe('DossierFacile Webhook', () => {
     it('deletes the tenant record', async () => {
       await createDossierFacileTenant({ userId: 'test-user-id', tenantId: 'df-400', status: 'verified' })
 
-      const res = await callWebhook({ partnerCallBackType: 'DELETED_ACCOUNT', tenantId: 'df-400' })
+      const res = await callWebhook({ partnerCallBackType: 'DELETED_ACCOUNT', onTenantId: 'df-400' })
       expect(res.status).toBe(200)
 
       const db = getTestDb()
@@ -183,7 +183,7 @@ describe('DossierFacile Webhook', () => {
         apartmentType: 't2',
       })
 
-      const res = await callWebhook({ partnerCallBackType: 'DELETED_ACCOUNT', tenantId: 'df-401' })
+      const res = await callWebhook({ partnerCallBackType: 'DELETED_ACCOUNT', onTenantId: 'df-401' })
       expect(res.status).toBe(200)
 
       const db = getTestDb()
@@ -194,7 +194,7 @@ describe('DossierFacile Webhook', () => {
     })
 
     it('succeeds even if tenant does not exist', async () => {
-      const res = await callWebhook({ partnerCallBackType: 'DELETED_ACCOUNT', tenantId: 'nonexistent' })
+      const res = await callWebhook({ partnerCallBackType: 'DELETED_ACCOUNT', onTenantId: 'nonexistent' })
       expect(res.status).toBe(200)
     })
   })
