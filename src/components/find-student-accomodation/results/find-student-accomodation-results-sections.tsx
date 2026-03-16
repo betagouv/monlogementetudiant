@@ -25,7 +25,6 @@ export const FindStudentAccomodationResultsSections: FC<FindStudentAccomodationR
     () => (accommodations?.results.features || []).map((feature) => feature.id),
     [accommodations?.results.features],
   )
-
   return (
     <>
       <FindStudentAccomodationResultsContent

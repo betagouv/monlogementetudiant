@@ -19,7 +19,7 @@ export const getAccommodations = (searchParams: {
       bbox: searchParams.bbox ?? undefined,
       center: searchParams.center ?? undefined,
       page: searchParams.page ? Number(searchParams.page) : 1,
-      pageSize: searchParams.page_size ? Number(searchParams.page_size) : 30,
+      pageSize: searchParams.page_size ? Number(searchParams.page_size) : 12,
       isAccessible: searchParams.accessible === 'true' ? true : undefined,
       hasColiving: searchParams.colocation === 'true' ? true : undefined,
       priceMax: searchParams.prix ? Number(searchParams.prix) : undefined,
@@ -45,7 +45,7 @@ export const prefetchAccommodations = async (
   const queryInput = {
     bbox: queryKeyParams.bbox ?? undefined,
     page: queryKeyParams.page ?? 1,
-    pageSize: queryKeyParams.pageSize ?? 30,
+    pageSize: queryKeyParams.pageSize ?? 12,
     isAccessible: queryKeyParams.accessible === 'true' ? true : undefined,
     hasColiving: queryKeyParams.colocation === 'true' ? true : undefined,
     priceMax: queryKeyParams.prix ?? undefined,
@@ -56,6 +56,22 @@ export const prefetchAccommodations = async (
 
   const client = getQueryClient()
   await client.prefetchQuery(trpc.accommodations.list.queryOptions(queryInput))
+
+  const hasOverrides =
+    (overrides?.bbox && overrides.bbox !== parsedParams.bbox) || (overrides?.academie && overrides.academie !== parsedParams.academie)
+
+  if (hasOverrides) {
+    const data = client.getQueryData(trpc.accommodations.list.queryOptions(queryInput).queryKey)
+    if (data) {
+      // Seed the cache key the client will use on first render (before SearchParamsSync updates the URL)
+      const clientQueryInput = {
+        ...queryInput,
+        bbox: parsedParams.bbox ?? undefined,
+        academyId: parsedParams.academie ? Number(parsedParams.academie) : undefined,
+      }
+      client.setQueryData(trpc.accommodations.list.queryOptions(clientQueryInput).queryKey, data)
+    }
+  }
 
   return dehydrate(client)
 }

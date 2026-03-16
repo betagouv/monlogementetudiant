@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { cache } from 'react'
 import { expandBbox } from '~/components/map/map-utils'
 import { computeExpandedPriceMax, EXPANDED_SEARCH_PAGE_SIZE, EXPANDED_SEARCH_RADIUS_KM } from '~/lib/accommodations-expanded-search'
+import { accommodationsSearchParamsCache } from '~/lib/accommodations-search-params'
 import { TTerritories, TTerritory } from '~/schemas/territories'
 import { prefetchAccommodations } from '~/server/accommodations/get-accommodations'
 import { getTerritories } from '~/server/territories/get-territories'
@@ -21,7 +22,7 @@ const getTerritoriesCategoryKey = (categoryKey: 'ville' | 'academie' | 'departem
 const getSingleSearchParam = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value)
 
 export const getStudentAccommodationPageContext = cache(
-  async (awaitedParams: { location: string }, awaitedSearchParams: Record<string, string | string[] | undefined>) => {
+  async (awaitedParams: { location: string[] }, awaitedSearchParams: Record<string, string | string[] | undefined>) => {
     const routeCategoryKey = awaitedParams?.location?.[0] || ''
     const routeLocation = decodeURIComponent(awaitedParams?.location?.[1] || '')
 
@@ -57,36 +58,50 @@ export const getStudentAccommodationPageContext = cache(
     const serverAcademie = isAcademy && territory ? territory.id.toString() : undefined
 
     const queryClient = getQueryClient()
-    const prefetchPromises: Promise<unknown>[] = [
-      prefetchAccommodations(awaitedSearchParams, { bbox: serverBbox, academie: serverAcademie }),
-      queryClient.prefetchQuery(trpc.favorites.list.queryOptions()),
-    ]
+
+    const sessionPromise = getServerSession()
+    const favoritesPromise = queryClient.prefetchQuery(trpc.favorites.list.queryOptions())
+
+    // Fetch main results first so we can extract IDs for the expanded search exclusion
+    await prefetchAccommodations(awaitedSearchParams, { bbox: serverBbox, academie: serverAcademie })
 
     const cityName = routeCategoryKey === 'ville' ? territory?.name : undefined
     if (cityName) {
       const rawPrice = Number(getSingleSearchParam(awaitedSearchParams.prix))
       const expandedPriceMax = computeExpandedPriceMax(Number.isFinite(rawPrice) ? rawPrice : undefined)
 
-      prefetchPromises.push(
-        queryClient.prefetchQuery(
-          trpc.accommodations.listExpandedByCity.queryOptions({
-            city: cityName,
-            radius: EXPANDED_SEARCH_RADIUS_KM,
-            page: 1,
-            pageSize: EXPANDED_SEARCH_PAGE_SIZE,
-            isAccessible: getSingleSearchParam(awaitedSearchParams.accessible) === 'true' ? true : undefined,
-            hasColiving: getSingleSearchParam(awaitedSearchParams.colocation) === 'true' ? true : undefined,
-            viewCrous: getSingleSearchParam(awaitedSearchParams.crous) === 'true',
-            ownerSlug: getSingleSearchParam(awaitedSearchParams.gestionnaire),
-            priceMax: expandedPriceMax,
-          }),
-        ),
+      const parsedParams = accommodationsSearchParamsCache.parse(awaitedSearchParams)
+      const serverQueryInput = {
+        bbox: serverBbox ?? parsedParams.bbox ?? undefined,
+        page: parsedParams.page ?? 1,
+        pageSize: 12,
+        isAccessible: parsedParams.accessible === 'true' ? true : undefined,
+        hasColiving: parsedParams.colocation === 'true' ? true : undefined,
+        priceMax: parsedParams.prix ?? undefined,
+        viewCrous: parsedParams.crous === 'true' ? true : false,
+        academyId: (serverAcademie ?? parsedParams.academie) ? Number(serverAcademie ?? parsedParams.academie) : undefined,
+        ownerSlug: parsedParams.gestionnaire ?? undefined,
+      }
+      const mainData = queryClient.getQueryData(trpc.accommodations.list.queryOptions(serverQueryInput).queryKey)
+      const excludeIds = (mainData as { results: { features: { id: number }[] } } | undefined)?.results.features.map((f) => f.id) ?? []
+
+      await queryClient.prefetchQuery(
+        trpc.accommodations.listExpandedByCity.queryOptions({
+          city: cityName,
+          radius: EXPANDED_SEARCH_RADIUS_KM,
+          page: 1,
+          pageSize: EXPANDED_SEARCH_PAGE_SIZE,
+          isAccessible: getSingleSearchParam(awaitedSearchParams.accessible) === 'true' ? true : undefined,
+          hasColiving: getSingleSearchParam(awaitedSearchParams.colocation) === 'true' ? true : undefined,
+          viewCrous: getSingleSearchParam(awaitedSearchParams.crous) === 'true',
+          ownerSlug: getSingleSearchParam(awaitedSearchParams.gestionnaire),
+          priceMax: expandedPriceMax,
+          excludeIds,
+        }),
       )
     }
 
-    const sessionPromise = getServerSession()
-    await Promise.all([...prefetchPromises, sessionPromise])
-    const session = await sessionPromise
+    const [_, session] = await Promise.all([favoritesPromise, sessionPromise])
 
     return {
       dehydratedState: dehydrate(queryClient),

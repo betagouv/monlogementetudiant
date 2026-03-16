@@ -149,11 +149,11 @@
       "buttons": {
         "consult": "Consulter le site du bailleur",
         "dossierFacile": "Candidater avec Dossier Facile",
-        "dossierFacileConnect": "Lier mon compte Dossier Facile",
-        "dossierFacileConnectDescription": "Lier votre dossier facile certifié",
+        "dossierFacileConnect": "Lier mon compte DossierFacile",
+        "dossierFacileConnectDescription": "Liez votre dossier de location certifié",
         "dossierFacilePending": "Dossier en cours de vérification",
-        "dossierFacileIncomplete": "Complétez votre DossierFacile",
-        "dossierFacileDenied": "Votre DossierFacile a été refusé",
+        "dossierFacileIncomplete": "Complétez votre dossier DossierFacile",
+        "dossierFacileDenied": "Dossier DossierFacile refusé",
         "dossierFacileApply": "Candidater avec DossierFacile",
         "dossierFacileApplied": "Candidature envoyée",
         "dossierFacileSelectType": "Type de logement",
@@ -258,7 +258,7 @@
       "noResult": "Aucun résultat pour votre recherche",
       "description": "Cela ne veut pas dire que l’offre n’existe pas, mais peut-être qu’elle n’est pas encore recensée sur ce site.",
       "description2": "Vous pouvez modifier votre recherche ou consulter les questions fréquemment posées sur la page d'informations.",
-      "expandedTitle": "Résultats élargis à proximité",
+      "expandedTitle": "Plus de résultats autour {city}",
       "expandedDescription": "Nous élargissons automatiquement la recherche autour de la ville (+10 km) et du budget (+25 %).",
       "expandedNoResult": "Aucun résultat supplémentaire avec cette recherche élargie."
     }

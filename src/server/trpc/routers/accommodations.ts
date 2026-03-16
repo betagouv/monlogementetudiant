@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server'
-import { and, eq, type SQL, sql } from 'drizzle-orm'
+import { and, eq, notInArray, type SQL, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { EResidenceType } from '~/enums/residence-type'
 import { ETargetAudience } from '~/enums/target-audience'
@@ -325,7 +325,7 @@ export const accommodationsRouter = createTRPCRouter({
         center: z.string().optional(), // "lng,lat"
         radius: z.number().default(10), // km
         page: z.number().default(1),
-        pageSize: z.number().default(30),
+        pageSize: z.number().default(12),
         isAccessible: z.boolean().optional(),
         hasColiving: z.boolean().optional(),
         onlyWithAvailability: z.boolean().optional(),
@@ -374,6 +374,7 @@ export const accommodationsRouter = createTRPCRouter({
         priceMax: z.number().optional(),
         viewCrous: z.boolean().default(false),
         ownerSlug: z.string().optional(),
+        excludeIds: z.array(z.number()).optional(),
       }),
     )
     .query(async ({ input }) => {
@@ -402,6 +403,9 @@ export const accommodationsRouter = createTRPCRouter({
       const conditions: SQL[] = [eq(accommodations.published, true), sql`${accommodations.geom} IS NOT NULL`]
       await applyCommonListFilters(conditions, input)
       applyCenterRadiusFilter(conditions, center, radius)
+      if (input.excludeIds?.length) {
+        conditions.push(notInArray(accommodations.id, input.excludeIds))
+      }
 
       const where = and(...conditions)
       return listAccommodationsWithConditions({ page, pageSize, where })

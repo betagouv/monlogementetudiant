@@ -16,7 +16,7 @@ export const useAccomodations = ({ pageSize }: UseAccomodationsOptions = {}) => 
     ...trpc.accommodations.list.queryOptions({
       bbox: bbox ?? undefined,
       page: page ?? 1,
-      pageSize: pageSize ?? 30,
+      pageSize: pageSize ?? 12,
       isAccessible: accessible === 'true' ? true : undefined,
       hasColiving: colocation === 'true' ? true : undefined,
       priceMax: prix ?? undefined,

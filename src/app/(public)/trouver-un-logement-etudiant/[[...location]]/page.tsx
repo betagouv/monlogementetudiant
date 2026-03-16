@@ -17,10 +17,12 @@ export async function generateMetadata({
   params,
   searchParams,
 }: {
-  params: Promise<{ location: string }>
+  params: Promise<{ location: string[] }>
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }): Promise<Metadata> {
-  const { routeCategoryKey, territory } = await getStudentAccommodationPageContext(await params, await searchParams)
+  const awaitedParams = await params
+  const awaitedSearchParams = await searchParams
+  const { routeCategoryKey, territory } = await getStudentAccommodationPageContext(awaitedParams, awaitedSearchParams)
 
   if (routeCategoryKey === 'academie') {
     return {
@@ -51,11 +53,13 @@ export default async function FindStudentAccommodationPage({
   params,
   searchParams,
 }: {
-  params: Promise<{ location: string }>
+  params: Promise<{ location: string[] }>
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
+  const awaitedParams = await params
+  const awaitedSearchParams = await searchParams
   const { dehydratedState, user, territory, isAcademy, serverBbox, serverAcademie, routeCategoryKey } =
-    await getStudentAccommodationPageContext(await params, await searchParams)
+    await getStudentAccommodationPageContext(awaitedParams, awaitedSearchParams)
 
   return (
     <HydrationBoundary state={dehydratedState}>
