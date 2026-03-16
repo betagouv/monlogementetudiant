@@ -1,5 +1,9 @@
 {
+<<<<<<< HEAD
   "id": "b193c97b-2c11-473b-92f5-dcbc3c811e65",
+=======
+  "id": "ae20b390-03a2-4179-b894-d31623ccb88c",
+>>>>>>> cb9342d (feat: candidature)
   "prevId": "197b8020-f63a-484a-80f6-4be0e5c7a340",
   "version": "7",
   "dialect": "postgresql",
@@ -1169,6 +1173,22 @@
           "primaryKey": false,
           "notNull": true
         },
+<<<<<<< HEAD
+=======
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "reviewed_at": {
+          "name": "reviewed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+>>>>>>> cb9342d (feat: candidature)
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",

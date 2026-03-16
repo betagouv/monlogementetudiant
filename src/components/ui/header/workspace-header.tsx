@@ -1,4 +1,3 @@
-import { fr } from '@codegouvfr/react-dsfr'
 import { Header } from '@codegouvfr/react-dsfr/Header'
 import { notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
@@ -42,7 +41,7 @@ export const WorkspaceHeaderComponent: FC = async () => {
           </>
         }
         navigation={<WorkspaceHeaderNavigation />}
-        className={fr.cx('fr-header')}
+        className="fr-header"
       />
     </div>
   )

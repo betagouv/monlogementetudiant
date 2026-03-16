@@ -1,0 +1,2 @@
+ALTER TABLE "dossier_facile_application" ADD COLUMN "status" text DEFAULT 'pending' NOT NULL;--> statement-breakpoint
+ALTER TABLE "dossier_facile_application" ADD COLUMN "reviewed_at" timestamp with time zone;

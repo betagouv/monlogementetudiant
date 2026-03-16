@@ -92,7 +92,12 @@ export function OwnerDetail({ id }: { id: string }) {
   if (!ownerData) return <p>Gestionnaire non trouvé</p>
 
   const handleSubmit = (data: OwnerFormData) => {
-    updateOwner.mutate({ id: ownerId, name: data.name, url: data.url || null })
+    updateOwner.mutate({
+      id: ownerId,
+      name: data.name,
+      url: data.url || null,
+      acceptDossierFacileApplications: data.acceptDossierFacileApplications,
+    })
   }
 
   const handleDelete = () => {
@@ -182,6 +187,7 @@ export function OwnerDetail({ id }: { id: string }) {
                     defaultValues={{
                       name: ownerData.name,
                       url: ownerData.url ?? '',
+                      acceptDossierFacileApplications: ownerData.acceptDossierFacileApplications,
                     }}
                     onSubmit={handleSubmit}
                     isPending={updateOwner.isPending}
