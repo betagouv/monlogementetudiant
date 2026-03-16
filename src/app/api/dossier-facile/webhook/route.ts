@@ -35,6 +35,16 @@ export async function POST(request: Request) {
   const tenantIdStr = String(tenantId)
 
   switch (partnerCallBackType) {
+    case 'CREATED_ACCOUNT': {
+      console.log(`[DossierFacile Webhook] CREATED_ACCOUNT for tenant ${tenantIdStr}`)
+      await db
+        .update(dossierFacileTenants)
+        .set({ status: 'to_process', updatedAt: new Date() })
+        .where(eq(dossierFacileTenants.tenantId, tenantIdStr))
+      console.log(`[DossierFacile Webhook] Tenant ${tenantIdStr} status set to to_process`)
+      return NextResponse.json({ ok: true })
+    }
+
     case 'DELETED_ACCOUNT': {
       console.log(`[DossierFacile Webhook] DELETED_ACCOUNT for tenant ${tenantIdStr}`)
       await db.delete(dossierFacileTenants).where(eq(dossierFacileTenants.tenantId, tenantIdStr))
@@ -69,6 +79,46 @@ export async function POST(request: Request) {
         .set({ status: 'denied', updatedAt: new Date() })
         .where(eq(dossierFacileTenants.tenantId, tenantIdStr))
       console.log(`[DossierFacile Webhook] Tenant ${tenantIdStr} status set to denied`)
+      return NextResponse.json({ ok: true })
+    }
+
+    case 'APPLICATION_TYPE_CHANGED': {
+      console.log(`[DossierFacile Webhook] APPLICATION_TYPE_CHANGED for tenant ${tenantIdStr}`)
+      await db
+        .update(dossierFacileTenants)
+        .set({ status: 'incomplete', updatedAt: new Date() })
+        .where(eq(dossierFacileTenants.tenantId, tenantIdStr))
+      console.log(`[DossierFacile Webhook] Tenant ${tenantIdStr} status set to incomplete`)
+      return NextResponse.json({ ok: true })
+    }
+
+    case 'ARCHIVED_ACCOUNT': {
+      console.log(`[DossierFacile Webhook] ARCHIVED_ACCOUNT for tenant ${tenantIdStr}`)
+      await db
+        .update(dossierFacileTenants)
+        .set({ status: 'inactive', updatedAt: new Date() })
+        .where(eq(dossierFacileTenants.tenantId, tenantIdStr))
+      console.log(`[DossierFacile Webhook] Tenant ${tenantIdStr} status set to inactive`)
+      return NextResponse.json({ ok: true })
+    }
+
+    case 'RETURNED_ACCOUNT': {
+      console.log(`[DossierFacile Webhook] RETURNED_ACCOUNT for tenant ${tenantIdStr}`)
+      await db
+        .update(dossierFacileTenants)
+        .set({ status: 'incomplete', updatedAt: new Date() })
+        .where(eq(dossierFacileTenants.tenantId, tenantIdStr))
+      console.log(`[DossierFacile Webhook] Tenant ${tenantIdStr} status set to incomplete`)
+      return NextResponse.json({ ok: true })
+    }
+
+    case 'MERGED_ACCOUNT': {
+      console.log(`[DossierFacile Webhook] MERGED_ACCOUNT for tenant ${tenantIdStr}`)
+      await db
+        .update(dossierFacileTenants)
+        .set({ status: 'inactive', updatedAt: new Date() })
+        .where(eq(dossierFacileTenants.tenantId, tenantIdStr))
+      console.log(`[DossierFacile Webhook] Tenant ${tenantIdStr} status set to inactive`)
       return NextResponse.json({ ok: true })
     }
 

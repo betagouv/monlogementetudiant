@@ -160,6 +160,81 @@ describe('DossierFacile Webhook', () => {
     })
   })
 
+  describe('CREATED_ACCOUNT', () => {
+    it('sets tenant status to to_process', async () => {
+      const tenant = await createDossierFacileTenant({ userId: 'test-user-id', tenantId: 'df-500', status: 'incomplete' })
+
+      const res = await callWebhook({ partnerCallBackType: 'CREATED_ACCOUNT', onTenantId: 'df-500' })
+      expect(res.status).toBe(200)
+
+      const db = getTestDb()
+      const updated = await db.query.dossierFacileTenants.findFirst({
+        where: eq(dossierFacileTenants.id, tenant.id),
+      })
+      expect(updated!.status).toBe('to_process')
+    })
+  })
+
+  describe('APPLICATION_TYPE_CHANGED', () => {
+    it('sets tenant status to incomplete', async () => {
+      const tenant = await createDossierFacileTenant({ userId: 'test-user-id', tenantId: 'df-600', status: 'verified' })
+
+      const res = await callWebhook({ partnerCallBackType: 'APPLICATION_TYPE_CHANGED', onTenantId: 'df-600' })
+      expect(res.status).toBe(200)
+
+      const db = getTestDb()
+      const updated = await db.query.dossierFacileTenants.findFirst({
+        where: eq(dossierFacileTenants.id, tenant.id),
+      })
+      expect(updated!.status).toBe('incomplete')
+    })
+  })
+
+  describe('ARCHIVED_ACCOUNT', () => {
+    it('sets tenant status to inactive', async () => {
+      const tenant = await createDossierFacileTenant({ userId: 'test-user-id', tenantId: 'df-700', status: 'verified' })
+
+      const res = await callWebhook({ partnerCallBackType: 'ARCHIVED_ACCOUNT', onTenantId: 'df-700' })
+      expect(res.status).toBe(200)
+
+      const db = getTestDb()
+      const updated = await db.query.dossierFacileTenants.findFirst({
+        where: eq(dossierFacileTenants.id, tenant.id),
+      })
+      expect(updated!.status).toBe('inactive')
+    })
+  })
+
+  describe('RETURNED_ACCOUNT', () => {
+    it('sets tenant status to incomplete', async () => {
+      const tenant = await createDossierFacileTenant({ userId: 'test-user-id', tenantId: 'df-800', status: 'inactive' })
+
+      const res = await callWebhook({ partnerCallBackType: 'RETURNED_ACCOUNT', onTenantId: 'df-800' })
+      expect(res.status).toBe(200)
+
+      const db = getTestDb()
+      const updated = await db.query.dossierFacileTenants.findFirst({
+        where: eq(dossierFacileTenants.id, tenant.id),
+      })
+      expect(updated!.status).toBe('incomplete')
+    })
+  })
+
+  describe('MERGED_ACCOUNT', () => {
+    it('sets tenant status to inactive', async () => {
+      const tenant = await createDossierFacileTenant({ userId: 'test-user-id', tenantId: 'df-900', status: 'verified' })
+
+      const res = await callWebhook({ partnerCallBackType: 'MERGED_ACCOUNT', onTenantId: 'df-900' })
+      expect(res.status).toBe(200)
+
+      const db = getTestDb()
+      const updated = await db.query.dossierFacileTenants.findFirst({
+        where: eq(dossierFacileTenants.id, tenant.id),
+      })
+      expect(updated!.status).toBe('inactive')
+    })
+  })
+
   describe('DELETED_ACCOUNT', () => {
     it('deletes the tenant record', async () => {
       await createDossierFacileTenant({ userId: 'test-user-id', tenantId: 'df-400', status: 'verified' })
