@@ -4,6 +4,7 @@ import { fr } from '@codegouvfr/react-dsfr'
 import { Pagination } from '@codegouvfr/react-dsfr/Pagination'
 import clsx from 'clsx'
 import dynamic from 'next/dynamic'
+import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
 import { FC, Suspense, useEffect, useMemo } from 'react'
@@ -50,6 +51,7 @@ export const FindStudentAccomodationResultsContent: FC<FindStudentAccomodationRe
   isFetching,
 }) => {
   const t = useTranslations('findAccomodation.results')
+  const pathname = usePathname()
   const [queryStates] = useQueryStates({
     academie: parseAsString,
     vue: parseAsString,
@@ -87,7 +89,7 @@ export const FindStudentAccomodationResultsContent: FC<FindStudentAccomodationRe
 
   return (
     <>
-      <div className={fr.cx('fr-hidden-sm')}>{card}</div>
+      <div className="fr-hidden-sm">{card}</div>
       <div className={classes.container}>
         <div className={classes.accomodationsContainer}>
           <div className={classes.accommodationGrid}>
@@ -141,7 +143,7 @@ export const FindStudentAccomodationResultsContent: FC<FindStudentAccomodationRe
                   }
                   params.set('page', page.toString())
                   return {
-                    href: `/trouver-un-logement-etudiant?${params.toString()}`,
+                    href: `${pathname}?${params.toString()}`,
                     onClick: () => trackEvent({ category: 'Recherche', action: 'pagination', value: page }),
                   }
                 }}
@@ -175,7 +177,6 @@ const useStyles = tss.withParams<{ view: string | null }>().create(({ view }) =>
   accomodationsContainer: {
     [fr.breakpoints.up('md')]: {
       flex: view === 'carte' ? '0 0 60%' : '0 0 100%',
-      marginBottom: '2rem',
       maxWidth: view === 'carte' ? '60%' : '100%',
       width: view === 'carte' ? '60%' : '100%',
     },
