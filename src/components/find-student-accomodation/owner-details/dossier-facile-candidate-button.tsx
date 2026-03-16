@@ -1,14 +1,13 @@
 'use client'
 
 import Button from '@codegouvfr/react-dsfr/Button'
-import Select from '@codegouvfr/react-dsfr/Select'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
-import { useState } from 'react'
 import z from 'zod'
-import { APARTMENT_TYPE_LABELS, type ApartmentType } from '~/enums/apartment-type'
+import type { ApartmentType } from '~/enums/apartment-type'
 import { trackEvent } from '~/lib/tracking'
 import { useTRPC, useTRPCClient } from '~/server/trpc/client'
+import { CandidatureModal, candidatureModal } from './candidature-modal'
 
 interface Props {
   accommodationSlug: string
@@ -21,8 +20,6 @@ export const DossierFacileLinkButton = ({ accommodationSlug, availableApartmentT
   const t = useTranslations('accomodation')
   const trpc = useTRPC()
   const trpcClient = useTRPCClient()
-  const queryClient = useQueryClient()
-  const [selectedType, setSelectedType] = useState<ApartmentType | ''>('')
 
   const { data: tenant, isLoading: isTenantLoading } = useQuery({
     ...trpc.dossierFacile.tenant.queryOptions(),
@@ -34,25 +31,12 @@ export const DossierFacileLinkButton = ({ accommodationSlug, availableApartmentT
     enabled: isAuthenticated && !!tenant,
   })
 
-  const applyMutation = useMutation({
-    mutationFn: (apartmentType: ApartmentType) => trpcClient.dossierFacile.application.mutate({ accommodationSlug, apartmentType }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: trpc.dossierFacile.listApplications.queryKey({ accommodationSlug }) })
-    },
-  })
-
   const handleConnect = async () => {
     trackEvent({ category: 'Dossier Facile', action: 'Candidater avec Dossier Facile' })
     const { authorizationUrl } = await trpcClient.dossierFacile.connectUrl.mutate({
       returnTo: window.location.pathname + window.location.search,
     })
     window.location.href = authorizationUrl
-  }
-
-  const handleApply = () => {
-    const type = availableApartmentTypes.length === 1 ? availableApartmentTypes[0] : selectedType
-    if (!type) return
-    applyMutation.mutate(type)
   }
 
   const tenantUrl = tenant?.url ?? z.string().parse(process.env.NEXT_PUBLIC_DOSSIERFACILE_LOCATAIRE_URL)
@@ -63,7 +47,7 @@ export const DossierFacileLinkButton = ({ accommodationSlug, availableApartmentT
     return (
       <div className="fr-flex fr-direction-column fr-align-items-center fr-mt-2w fr-width-full">
         <Button priority="primary" className="fr-width-full fr-flex fr-justify-content-center" disabled>
-          ...
+          Chargement en cours
         </Button>
       </div>
     )
@@ -143,34 +127,11 @@ export const DossierFacileLinkButton = ({ accommodationSlug, availableApartmentT
 
   return (
     <div className="fr-flex fr-direction-column fr-align-items-center fr-mt-2w fr-width-full">
-      {availableApartmentTypes.length > 1 && (
-        <Select
-          label={t('sidebar.buttons.dossierFacileSelectType')}
-          nativeSelectProps={{
-            value: selectedType,
-            onChange: (e) => setSelectedType(e.target.value as ApartmentType | ''),
-          }}
-          className="fr-width-full fr-mb-1w"
-        >
-          <option value="" disabled hidden>
-            {t('sidebar.buttons.dossierFacileSelectType')}
-          </option>
-          {availableApartmentTypes.map((type) => (
-            <option key={type} value={type}>
-              {APARTMENT_TYPE_LABELS[type]}
-            </option>
-          ))}
-        </Select>
-      )}
-      <Button
-        onClick={handleApply}
-        priority="primary"
-        className="fr-width-full fr-flex fr-justify-content-center"
-        disabled={applyMutation.isPending || (availableApartmentTypes.length > 1 && !selectedType)}
-      >
-        {applyMutation.isPending ? '...' : t('sidebar.buttons.dossierFacileApply')}
+      <Button {...candidatureModal.buttonProps} priority="primary" className="fr-width-full fr-flex fr-justify-content-center">
+        {t('sidebar.buttons.dossierFacileApply')}
       </Button>
       <span className="fr-text--xs fr-mb-0">{t('sidebar.buttons.dossierFacileDescription')}</span>
+      <CandidatureModal accommodationSlug={accommodationSlug} availableApartmentTypes={availableApartmentTypes} />
     </div>
   )
 }
