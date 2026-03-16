@@ -1,6 +1,8 @@
 {
   "id": "361124e1-d82b-47c9-877d-4220afb749f0",
   "prevId": "b193c97b-2c11-473b-92f5-dcbc3c811e65",
+  "id": "961d003f-1aef-4297-bb0d-3e390e65f78f",
+  "prevId": "ae20b390-03a2-4179-b894-d31623ccb88c",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1169,6 +1171,19 @@
           "primaryKey": false,
           "notNull": true
         },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "reviewed_at": {
+          "name": "reviewed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -1215,6 +1230,85 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+<<<<<<< HEAD
+=======
+    "public.dossier_facile_document": {
+      "name": "dossier_facile_document",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "tenant_id": {
+          "name": "tenant_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "owner_type": {
+          "name": "owner_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "document_category": {
+          "name": "document_category",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "document_sub_category": {
+          "name": "document_sub_category",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "document_status": {
+          "name": "document_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "monthly_sum": {
+          "name": "monthly_sum",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "dossier_facile_document_tenant_id_dossier_facile_tenant_id_fk": {
+          "name": "dossier_facile_document_tenant_id_dossier_facile_tenant_id_fk",
+          "tableFrom": "dossier_facile_document",
+          "tableTo": "dossier_facile_tenant",
+          "columnsFrom": [
+            "tenant_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+>>>>>>> cb9342d (feat: candidature)
     "public.dossier_facile_tenant": {
       "name": "dossier_facile_tenant",
       "schema": "",
@@ -1261,6 +1355,15 @@
           "primaryKey": false,
           "notNull": false
         },
+<<<<<<< HEAD
+=======
+        "guarantor_count": {
+          "name": "guarantor_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+>>>>>>> cb9342d (feat: candidature)
         "last_synced_at": {
           "name": "last_synced_at",
           "type": "timestamp with time zone",

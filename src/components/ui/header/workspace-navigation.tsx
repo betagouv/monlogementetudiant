@@ -27,14 +27,14 @@ export const WorkspaceHeaderNavigation: FC = () => {
       },
       text: t('residences'),
     },
-    // {
-    //   isActive: pathname === '/bailleur/candidatures',
-    //   linkProps: {
-    //     href: '/bailleur/candidatures',
-    //     target: '_self',
-    //   },
-    //   text: t('candidates'),
-    // },
+    {
+      isActive: pathname === '/bailleur/candidatures',
+      linkProps: {
+        href: '/bailleur/candidatures',
+        target: '_self',
+      },
+      text: t('candidates'),
+    },
     {
       isActive: pathname === '/bailleur/centre-d-aide',
       linkProps: {

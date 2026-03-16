@@ -302,6 +302,7 @@ const ownersRouter = createTRPCRouter({
         id: z.number(),
         name: z.string().min(1).optional(),
         url: z.string().url().nullable().optional(),
+        acceptDossierFacileApplications: z.boolean().optional(),
       }),
     )
     .mutation(async ({ input }) => {
@@ -310,6 +311,8 @@ const ownersRouter = createTRPCRouter({
 
       if (fields.name !== undefined) updateData.name = fields.name
       if (fields.url !== undefined) updateData.url = fields.url
+      if (fields.acceptDossierFacileApplications !== undefined)
+        updateData.acceptDossierFacileApplications = fields.acceptDossierFacileApplications
 
       const [updated] = await db.update(owners).set(updateData).where(eq(owners.id, id)).returning()
       if (!updated) {
