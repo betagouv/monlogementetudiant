@@ -44,7 +44,7 @@ export const ResidenceFilters = () => {
         <Input
           label=""
           nativeInputProps={{
-            placeholder: 'Rechercher',
+            placeholder: 'Nom résidence, ville...',
             value: queryStates.recherche,
             onChange: (e) => setQueryStates({ recherche: e.target.value }),
           }}

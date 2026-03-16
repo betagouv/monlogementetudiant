@@ -51,7 +51,7 @@ const ResidenceListSkeleton = () => (
 
 export const ResidenceList: FC = () => {
   const t = useTranslations('findAccomodation.card')
-  const { data: accommodations, isLoading, isFetching } = useMyAccommodations()
+  const { data: accommodations, isLoading } = useMyAccommodations()
   const [queryStates] = useQueryStates({
     page: parseAsInteger.withDefault(1),
     disponible: parseAsBoolean.withDefault(false),
@@ -60,7 +60,7 @@ export const ResidenceList: FC = () => {
 
   const accommodationsList = accommodations?.results.features || []
 
-  if (isLoading || (isFetching && accommodationsList.length === 0)) {
+  if (isLoading) {
     return <ResidenceListSkeleton />
   }
 

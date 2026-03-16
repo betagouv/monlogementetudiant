@@ -107,6 +107,34 @@ describe('bailleur.list', () => {
     expect(result.count).toBe(1)
     expect(result.results.features[0].properties.name).toBe('Résidence Soleil')
   })
+
+  it('filters by city name', async () => {
+    const owner = await createOwner({ name: 'Owner City', slug: 'owner-city', userId: 'test-owner-id' })
+    await createAccommodation({ name: 'Résidence A', slug: 'city-a', city: 'Marseille', ownerId: owner.id })
+    await createAccommodation({ name: 'Résidence B', slug: 'city-b', city: 'Lyon', ownerId: owner.id })
+
+    const result = await ownerCaller.bailleur.list({ page: 1, search: 'Marseille' })
+    expect(result.count).toBe(1)
+    expect(result.results.features[0].properties.name).toBe('Résidence A')
+  })
+
+  it('filters by partial city name (case insensitive)', async () => {
+    const owner = await createOwner({ name: 'Owner Partial', slug: 'owner-partial', userId: 'test-owner-id' })
+    await createAccommodation({ name: 'Résidence Stéphanoise', slug: 'partial-city', city: 'Saint-Étienne', ownerId: owner.id })
+
+    const result = await ownerCaller.bailleur.list({ page: 1, search: 'saint-ét' })
+    expect(result.count).toBe(1)
+    expect(result.results.features[0].properties.name).toBe('Résidence Stéphanoise')
+  })
+
+  it('filters by city or name', async () => {
+    const owner = await createOwner({ name: 'Owner CityOrName', slug: 'owner-city-or-name', userId: 'test-owner-id' })
+    await createAccommodation({ name: 'Résidence Lumière', slug: 'city-or-name-a', city: 'Bordeaux', ownerId: owner.id })
+    await createAccommodation({ name: 'Résidence Bordeaux', slug: 'city-or-name-b', city: 'Toulouse', ownerId: owner.id })
+
+    const result = await ownerCaller.bailleur.list({ page: 1, search: 'Bordeaux' })
+    expect(result.count).toBe(2)
+  })
 })
 
 describe('bailleur.update', () => {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { parseAsBoolean, parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
 import { useDebounce } from 'use-debounce'
 import { useTRPC } from '~/server/trpc/client'
@@ -30,7 +30,7 @@ export const useMyAccommodations = ({ debounceTime = 300 }: UseMyAccommodationsO
         hasAvailability: disponible ?? undefined,
         search: debouncedRecherche && debouncedRecherche.length >= 3 ? debouncedRecherche : undefined,
       },
-      { enabled },
+      { enabled, placeholderData: keepPreviousData },
     ),
   )
 }

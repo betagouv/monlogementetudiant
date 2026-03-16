@@ -178,7 +178,7 @@ export const bailleurRouter = createTRPCRouter({
       const conditions = [eq(accommodations.ownerId, owner.id)]
 
       if (input.search && input.search.length >= 3) {
-        conditions.push(ilike(accommodations.name, `%${input.search}%`))
+        conditions.push(or(ilike(accommodations.name, `%${input.search}%`), ilike(accommodations.city, `%${input.search}%`))!)
       }
 
       if (input.hasAvailability) {
