@@ -8,6 +8,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "db:test:up": "docker compose up -d --wait db-test",
+    "db:test:down": "docker compose stop db-test",
     "lint": "biome check src cli",
     "lint:format": "biome check src cli --fix",
     "test": "vitest",

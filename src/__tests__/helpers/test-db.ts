@@ -9,6 +9,8 @@ const DATABASE_URL_TEST = process.env.DATABASE_URL_TEST || 'postgres://test:test
 let testDb: ReturnType<typeof drizzle<typeof schema>> | null = null
 let testConn: postgres.Sql | null = null
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
 export function getTestDb() {
   if (!testDb) {
     testConn = postgres(DATABASE_URL_TEST, { prepare: false })
@@ -17,8 +19,31 @@ export function getTestDb() {
   return testDb
 }
 
+async function waitForTestDatabase(maxAttempts = 30, delayMs = 1000) {
+  let lastError: unknown
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const conn = postgres(DATABASE_URL_TEST, { prepare: false, max: 1 })
+    try {
+      await conn`select 1`
+      await conn.end()
+      return
+    } catch (error) {
+      lastError = error
+      await conn.end({ timeout: 1 })
+      if (attempt < maxAttempts) {
+        await sleep(delayMs)
+      }
+    }
+  }
+
+  throw new Error(`Database is not reachable at ${DATABASE_URL_TEST}`, { cause: lastError })
+}
+
 export async function setupTestDb() {
-  execSync(`DATABASE_URL="${DATABASE_URL_TEST}" npx drizzle-kit migrate`, {
+  await waitForTestDatabase()
+
+  execSync(`DATABASE_URL="${DATABASE_URL_TEST}" ./node_modules/.bin/drizzle-kit migrate`, {
     cwd: process.cwd(),
     stdio: 'pipe',
   })

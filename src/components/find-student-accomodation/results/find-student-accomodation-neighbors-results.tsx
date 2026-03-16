@@ -8,17 +8,22 @@ import { FC, useMemo } from 'react'
 import { tss } from 'tss-react'
 import { AccomodationCard } from '~/components/find-student-accomodation/card/find-student-accomodation-card'
 import { CardSkeleton } from '~/components/ui/skeleton/card-skeleton'
-import { useAccomodations } from '~/hooks/use-accomodations'
+import { EXPANDED_SEARCH_PAGE_SIZE, EXPANDED_SEARCH_RADIUS_KM, computeExpandedPriceMax } from '~/lib/accommodations-expanded-search'
 import { TUser } from '~/lib/types'
 import { TTerritory } from '~/schemas/territories'
 import { useTRPC } from '~/server/trpc/client'
 
 type FindStudentAccomodationNeighborsResultsProps = {
+  mainAccommodationIds: number[]
   territory?: TTerritory
   user?: TUser
 }
 
-export const FindStudentAccomodationNeighborsResults: FC<FindStudentAccomodationNeighborsResultsProps> = ({ territory, user }) => {
+export const FindStudentAccomodationNeighborsResults: FC<FindStudentAccomodationNeighborsResultsProps> = ({
+  territory,
+  user,
+  mainAccommodationIds,
+}) => {
   const t = useTranslations('findAccomodation.results')
   const trpc = useTRPC()
   const [queryStates] = useQueryStates({
@@ -30,17 +35,15 @@ export const FindStudentAccomodationNeighborsResults: FC<FindStudentAccomodation
   })
 
   const cityName = 'name' in (territory || {}) ? territory?.name : undefined
-  const expandedPriceMax = queryStates.prix ? Math.round(queryStates.prix * 1.25) : undefined
-
-  const { data: mainAccommodations } = useAccomodations()
+  const expandedPriceMax = computeExpandedPriceMax(queryStates.prix)
   const { classes } = useStyles()
 
   const { data: expandedAccommodations, isFetching } = useQuery({
     ...trpc.accommodations.listExpandedByCity.queryOptions({
       city: cityName ?? '',
-      radius: 10,
+      radius: EXPANDED_SEARCH_RADIUS_KM,
       page: 1,
-      pageSize: 24,
+      pageSize: EXPANDED_SEARCH_PAGE_SIZE,
       isAccessible: queryStates.accessible === 'true' ? true : undefined,
       hasColiving: queryStates.colocation === 'true' ? true : undefined,
       viewCrous: queryStates.crous === 'true',
@@ -50,14 +53,11 @@ export const FindStudentAccomodationNeighborsResults: FC<FindStudentAccomodation
     enabled: !!cityName,
   })
 
-  const mainAccommodationIds = useMemo(
-    () => new Set((mainAccommodations?.results.features || []).map((feature) => feature.id)),
-    [mainAccommodations?.results.features],
-  )
+  const mainAccommodationIdSet = useMemo(() => new Set(mainAccommodationIds), [mainAccommodationIds])
 
   const expandedFeatures = useMemo(
-    () => (expandedAccommodations?.results.features || []).filter((feature) => !mainAccommodationIds.has(feature.id)),
-    [expandedAccommodations?.results.features, mainAccommodationIds],
+    () => (expandedAccommodations?.results.features || []).filter((feature) => !mainAccommodationIdSet.has(feature.id)),
+    [expandedAccommodations?.results.features, mainAccommodationIdSet],
   )
 
   if (!cityName) {

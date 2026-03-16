@@ -88,7 +88,13 @@ export async function createCity(
       ...rest,
       ...(boundary ? { boundary: sql`ST_SetSRID(ST_GeomFromGeoJSON(${JSON.stringify(boundary)}), 4326)` } : {}),
     })
-    .returning()
+    .returning({
+      id: cities.id,
+      name: cities.name,
+      slug: cities.slug,
+      departmentId: cities.departmentId,
+      popular: cities.popular,
+    })
   return row
 }
 
