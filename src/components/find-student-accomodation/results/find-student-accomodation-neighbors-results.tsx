@@ -56,7 +56,7 @@ export const FindStudentAccomodationNeighborsResults: FC<FindStudentAccomodation
   const expandedFeatures = expandedAccommodations?.results.features || []
   const showLoadingState = !expandedAccommodations
 
-  if (!cityName) {
+  if (!cityName || (!showLoadingState && !isFetching && expandedFeatures.length === 0)) {
     return null
   }
 
@@ -71,8 +71,6 @@ export const FindStudentAccomodationNeighborsResults: FC<FindStudentAccomodation
         ))}
         {showLoadingState && Array.from({ length: 6 }).map((_, index) => <CardSkeleton key={index} />)}
       </div>
-
-      {!showLoadingState && !isFetching && expandedFeatures.length === 0 && <p className="fr-mb-0">{t('expandedNoResult')}</p>}
     </section>
   )
 }

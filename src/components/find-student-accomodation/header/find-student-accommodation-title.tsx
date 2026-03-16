@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl'
 import { parseAsBoolean, useQueryState } from 'nuqs'
 import { FC } from 'react'
 import { tss } from 'tss-react'
-import { applyFrenchContraction } from '~/utils/french-contraction'
+import { applyFrenchContraction, formatCityWithA } from '~/utils/french-contraction'
 
 interface FindStudentAccommodationTitleProps {
   location: string | undefined
@@ -17,7 +17,7 @@ export const FindStudentAccommodationTitle: FC<FindStudentAccommodationTitleProp
   const t = useTranslations('findAccomodation')
 
   const [mapSearch] = useQueryState('recherche-par-carte', parseAsBoolean.withDefault(false))
-  const title = location && !mapSearch ? t('titleWithLocation', { locationFormatted: applyFrenchContraction('à', location) }) : t('title')
+  const title = location && !mapSearch ? t('titleWithLocation', { locationFormatted: formatCityWithA(location) }) : t('title')
 
   return (
     <>
