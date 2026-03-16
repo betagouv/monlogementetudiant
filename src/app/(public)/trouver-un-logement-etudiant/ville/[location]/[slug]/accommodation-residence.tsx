@@ -129,7 +129,7 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
                       {accommodation.min && accommodation.max && accommodation.min !== accommodation.max
                         ? `DE ${accommodation.min} À ${accommodation.max} €`
                         : `${accommodation.min} €`}{' '}
-                      CC
+                      par personne
                     </span>
                   </div>
                   <span className="fr-text--xs fr-mb-0">{t('charges')}</span>
