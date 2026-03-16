@@ -7,8 +7,7 @@ import { FindStudentAccommodationBanner } from '~/components/find-student-accomo
 import { FindStudentAccommodationTitle } from '~/components/find-student-accomodation/header/find-student-accommodation-title'
 import { FindStudentAccomodationHeader } from '~/components/find-student-accomodation/header/find-student-accomodation-header'
 import FindStudentAccommodationQA from '~/components/find-student-accomodation/qa/find-student-accommodation-qa'
-import { FindStudentAccomodationNeighborsResults } from '~/components/find-student-accomodation/results/find-student-accomodation-neighbors-results'
-import { FindStudentAccomodationResults } from '~/components/find-student-accomodation/results/find-student-accomodation-results'
+import { FindStudentAccomodationResultsSections } from '~/components/find-student-accomodation/results/find-student-accomodation-results-sections'
 import { FindStudentAccomodationSortView } from '~/components/find-student-accomodation/sort-view/find-student-accomodation-sort-view'
 import { SearchParamsSync } from '~/components/search-params-sync'
 import { formatCityWithA } from '~/utils/french-contraction'
@@ -66,8 +65,12 @@ export default async function FindStudentAccommodationPage({
         <FindStudentAccomodationHeader />
         <FindStudentAccomodationSortView territory={territory} />
         {!!territory && <FindStudentAccommodationBanner territory={territory} categoryKey={routeCategoryKey} />}
-        <FindStudentAccomodationResults territory={territory} isAcademy={isAcademy} user={user} />
-        {routeCategoryKey === 'ville' && <FindStudentAccomodationNeighborsResults territory={territory} user={user} />}
+        <FindStudentAccomodationResultsSections
+          territory={territory}
+          isAcademy={isAcademy}
+          user={user}
+          showNeighbors={routeCategoryKey === 'ville'}
+        />
       </div>
       <FindStudentAccommodationQA />
     </HydrationBoundary>

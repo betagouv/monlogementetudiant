@@ -2,6 +2,7 @@ import { dehydrate } from '@tanstack/react-query'
 import { redirect } from 'next/navigation'
 import { cache } from 'react'
 import { expandBbox } from '~/components/map/map-utils'
+import { EXPANDED_SEARCH_PAGE_SIZE, EXPANDED_SEARCH_RADIUS_KM, computeExpandedPriceMax } from '~/lib/accommodations-expanded-search'
 import { TTerritories, TTerritory } from '~/schemas/territories'
 import { prefetchAccommodations } from '~/server/accommodations/get-accommodations'
 import { getTerritories } from '~/server/territories/get-territories'
@@ -64,15 +65,15 @@ export const getStudentAccommodationPageContext = cache(
     const cityName = routeCategoryKey === 'ville' ? territory?.name : undefined
     if (cityName) {
       const rawPrice = Number(getSingleSearchParam(awaitedSearchParams.prix))
-      const expandedPriceMax = Number.isFinite(rawPrice) ? Math.round(rawPrice * 1.25) : undefined
+      const expandedPriceMax = computeExpandedPriceMax(Number.isFinite(rawPrice) ? rawPrice : undefined)
 
       prefetchPromises.push(
         queryClient.prefetchQuery(
           trpc.accommodations.listExpandedByCity.queryOptions({
             city: cityName,
-            radius: 10,
+            radius: EXPANDED_SEARCH_RADIUS_KM,
             page: 1,
-            pageSize: 24,
+            pageSize: EXPANDED_SEARCH_PAGE_SIZE,
             isAccessible: getSingleSearchParam(awaitedSearchParams.accessible) === 'true' ? true : undefined,
             hasColiving: getSingleSearchParam(awaitedSearchParams.colocation) === 'true' ? true : undefined,
             viewCrous: getSingleSearchParam(awaitedSearchParams.crous) === 'true',

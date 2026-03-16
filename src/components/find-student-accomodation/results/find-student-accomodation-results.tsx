@@ -14,6 +14,7 @@ import { CardSkeleton } from '~/components/ui/skeleton/card-skeleton'
 import { useAccomodations } from '~/hooks/use-accomodations'
 import { trackEvent } from '~/lib/tracking'
 import { TUser } from '~/lib/types'
+import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
 import { TTerritory } from '~/schemas/territories'
 
 type FindStudentAccomodationResultsProps = {
@@ -21,7 +22,33 @@ type FindStudentAccomodationResultsProps = {
   isAcademy?: boolean
   user?: TUser
 }
+
+type FindStudentAccomodationResultsContentProps = FindStudentAccomodationResultsProps & {
+  accommodations?: TGetAccomodationsResponse
+  isFetching: boolean
+}
+
 export const FindStudentAccomodationResults: FC<FindStudentAccomodationResultsProps> = ({ territory, isAcademy, user }) => {
+  const { data, isFetching } = useAccomodations()
+
+  return (
+    <FindStudentAccomodationResultsContent
+      territory={territory}
+      isAcademy={isAcademy}
+      user={user}
+      accommodations={data}
+      isFetching={isFetching}
+    />
+  )
+}
+
+export const FindStudentAccomodationResultsContent: FC<FindStudentAccomodationResultsContentProps> = ({
+  territory,
+  isAcademy,
+  user,
+  accommodations,
+  isFetching,
+}) => {
   const t = useTranslations('findAccomodation.results')
   const [queryStates] = useQueryStates({
     academie: parseAsString,
@@ -34,8 +61,6 @@ export const FindStudentAccomodationResults: FC<FindStudentAccomodationResultsPr
     crous: parseAsString,
     ['recherche-par-carte']: parseAsString,
   })
-
-  const { data: accommodations, isFetching } = useAccomodations()
 
   useEffect(() => {
     if (!!accommodations?.results?.features && accommodations.results.features.length < 6) {
@@ -59,6 +84,7 @@ export const FindStudentAccomodationResults: FC<FindStudentAccomodationResultsPr
       <AccomodationsMap />
     </Suspense>
   )
+
   return (
     <>
       <div className={fr.cx('fr-hidden-sm')}>{card}</div>
