@@ -30,7 +30,7 @@ export const dossierFacileDocuments = pgTable('dossier_facile_document', {
   documentCategory: text('document_category').notNull(),
   documentSubCategory: text('document_sub_category'),
   documentStatus: text('document_status'),
-  monthlySum: integer('monthly_sum'),
+  url: text('url'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 

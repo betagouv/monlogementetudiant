@@ -1,12 +1,13 @@
 'use client'
 
-import { OwnerForm, OwnerFormData } from '~/components/administration/owner-form'
+import { OwnerForm } from '~/components/administration/owner-form'
 import { useAdminCreateOwner } from '~/hooks/use-admin-create-owner'
+import { TOwnerFormData } from '~/schemas/owner-form'
 
 export default function NewOwnerPage() {
   const createOwner = useAdminCreateOwner()
 
-  const handleSubmit = (data: OwnerFormData) => {
+  const handleSubmit = (data: TOwnerFormData) => {
     createOwner.mutate({ name: data.name, url: data.url || undefined })
   }
 

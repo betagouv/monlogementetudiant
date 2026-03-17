@@ -5,11 +5,11 @@ import Input from '@codegouvfr/react-dsfr/Input'
 import ToggleSwitch from '@codegouvfr/react-dsfr/ToggleSwitch'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { type OwnerFormData, ownerFormSchema } from '~/schemas/owner-form'
+import { type TOwnerFormData, ZOwnerFormSchema } from '~/schemas/owner-form'
 
 interface OwnerFormProps {
-  defaultValues?: Partial<OwnerFormData>
-  onSubmit: (data: OwnerFormData) => void
+  defaultValues?: Partial<TOwnerFormData>
+  onSubmit: (data: TOwnerFormData) => void
   isPending?: boolean
   submitLabel?: string
 }
@@ -21,8 +21,8 @@ export const OwnerForm = ({ defaultValues, onSubmit, isPending, submitLabel = 'E
     watch,
     setValue,
     formState: { errors },
-  } = useForm<OwnerFormData>({
-    resolver: zodResolver(ownerFormSchema),
+  } = useForm<TOwnerFormData>({
+    resolver: zodResolver(ZOwnerFormSchema),
     defaultValues: {
       name: '',
       url: '',
