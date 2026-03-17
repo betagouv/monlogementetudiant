@@ -292,7 +292,8 @@ const ownersRouter = createTRPCRouter({
         })
         .returning()
 
-      return created
+      const { image, ...rest } = created
+      return rest
     }),
 
   update: adminProcedure
@@ -315,7 +316,8 @@ const ownersRouter = createTRPCRouter({
         throw new TRPCError({ code: 'NOT_FOUND', message: (await getAdminErrorTranslations())('ownerNotFound') })
       }
 
-      return updated
+      const { image, ...rest } = updated
+      return rest
     }),
 
   delete: adminProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
