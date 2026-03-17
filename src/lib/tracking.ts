@@ -26,7 +26,7 @@ export function trackEvent({ category, action, name, value }: TrackEventParams) 
   if (!isProduction()) return
 
   if (name !== undefined && value !== undefined) {
-    sendEvent({ category, action, name, value: value })
+    sendEvent({ category, action, name, value: String(value) })
   } else if (name !== undefined) {
     sendEvent({ category, action, name })
   } else {
