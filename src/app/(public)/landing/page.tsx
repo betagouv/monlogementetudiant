@@ -97,7 +97,7 @@ export default async function LandingPage() {
       <div className={clsx(fr.cx('fr-container'), styles.mainSection)}>
         <h1 className={styles.mainTitle}>{t('features.mainTitle')}</h1>
         <div className={styles.featuresContainer}>
-          <div className={`${fr.cx('fr-col-md-4')} ${styles.featureCard}`}>
+          <div className={clsx('fr-col-md-4', styles.featureCard)}>
             <div className={styles.featureImageContainer}>
               <Image src={visibilityAvatar} quality={100} priority alt="Gagnez en visibilité" />
             </div>
@@ -165,10 +165,10 @@ export default async function LandingPage() {
               <div className={styles.stepBadge}>{t('steps.step2.badge')}</div>
               <h2>{t('steps.step2.title')}</h2>
               <p className={styles.noMargin}>{t('steps.step2.description')}</p>
-              <span className={fr.cx('ri-community-line')}>{t('steps.step2.features.info')}</span>
-              <span className={fr.cx('ri-line-chart-line')}>{t('steps.step2.features.pressure')}</span>
-              <span className={fr.cx('ri-money-dollar-circle-line')}>{t('steps.step2.features.price')}</span>
-              <span className={fr.cx('ri-shopping-bag-line')}>{t('steps.step2.features.cost')}</span>
+              <span className="ri-community-line">{t('steps.step2.features.info')}</span>
+              <span className="ri-line-chart-line">{t('steps.step2.features.pressure')}</span>
+              <span className="ri-money-dollar-circle-line">{t('steps.step2.features.price')}</span>
+              <span className="ri-shopping-bag-line">{t('steps.step2.features.cost')}</span>
             </div>
             <div className={clsx('primaryBackgroundColor', styles.secondStepImage)}>
               <Image
