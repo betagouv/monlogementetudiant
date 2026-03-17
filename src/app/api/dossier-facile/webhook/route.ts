@@ -1,8 +1,10 @@
 import { eq } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
+import { ZWebhookBodySchema } from '~/schemas/dossier-facile/dossier-facile-webhook'
 import { db } from '~/server/db'
 import { dossierFacileDocuments, dossierFacileTenants } from '~/server/db/schema'
-import { extractWebhookData, normalizeStatus } from '~/server/services/dossier-facile'
+import { normalizeStatus } from '~/server/services/dossier-facile/sync'
+import { extractWebhookData } from '~/server/services/dossier-facile/webhook'
 
 export async function POST(request: Request) {
   const apiKey = process.env.DOSSIERFACILE_WEBHOOK_API_KEY
@@ -27,14 +29,13 @@ export async function POST(request: Request) {
 
   console.log('[DossierFacile Webhook] Received:', JSON.stringify(body))
 
-  const partnerCallBackType = body.partnerCallBackType as string | undefined
-  const tenantId = body.onTenantId as string | number | undefined
-  if (!partnerCallBackType || !tenantId) {
-    console.warn('[DossierFacile Webhook] Missing partnerCallBackType or tenantId')
-    return NextResponse.json({ error: 'Missing partnerCallBackType or tenantId' }, { status: 400 })
+  const parsed = ZWebhookBodySchema.safeParse(body)
+  if (!parsed.success) {
+    console.warn('[DossierFacile Webhook] Invalid payload:', parsed.error.issues)
+    return NextResponse.json({ error: 'Invalid webhook payload' }, { status: 400 })
   }
 
-  const tenantIdStr = String(tenantId)
+  const { partnerCallBackType, onTenantId: tenantIdStr } = parsed.data
 
   // DELETED_ACCOUNT: delete the tenant row entirely
   if (partnerCallBackType === 'DELETED_ACCOUNT') {
@@ -44,16 +45,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true })
   }
 
-  // For all other callback types, try to extract full data from webhook body
   const now = new Date()
 
   try {
-    const data = extractWebhookData(body)
+    const data = extractWebhookData(parsed.data)
 
-    // Determine status: use extracted status if available, otherwise fall back to normalizing the callback type
-    const status = data.status ?? normalizeStatus(partnerCallBackType)
-
-    // Find existing tenant row
     const [existingTenant] = await db
       .select({ id: dossierFacileTenants.id })
       .from(dossierFacileTenants)
@@ -65,20 +61,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true })
     }
 
-    // Update tenant data
-    const updateSet: Record<string, unknown> = {
-      status,
-      updatedAt: now,
-      lastSyncedAt: now,
-    }
-    if (data.url) updateSet.url = data.url
-    if (data.pdfUrl) updateSet.pdfUrl = data.pdfUrl
-    if (data.name) updateSet.name = data.name
-    if (data.guarantorCount > 0) updateSet.guarantorCount = data.guarantorCount
+    await db
+      .update(dossierFacileTenants)
+      .set({
+        status: data.status,
+        url: data.url,
+        pdfUrl: data.pdfUrl,
+        name: data.name,
+        guarantorCount: data.guarantorCount,
+        updatedAt: now,
+        lastSyncedAt: now,
+      })
+      .where(eq(dossierFacileTenants.tenantId, tenantIdStr))
 
-    await db.update(dossierFacileTenants).set(updateSet).where(eq(dossierFacileTenants.tenantId, tenantIdStr))
-
-    // Replace documents if any were extracted
     if (data.documents.length > 0) {
       await db.delete(dossierFacileDocuments).where(eq(dossierFacileDocuments.tenantId, existingTenant.id))
       await db.insert(dossierFacileDocuments).values(
@@ -88,13 +83,13 @@ export async function POST(request: Request) {
           documentCategory: doc.documentCategory,
           documentSubCategory: doc.documentSubCategory,
           documentStatus: doc.documentStatus,
-          monthlySum: doc.monthlySum,
+          url: doc.url,
         })),
       )
     }
 
     console.log(
-      `[DossierFacile Webhook] ${partnerCallBackType} for tenant ${tenantIdStr} — status: ${status}, documents: ${data.documents.length}`,
+      `[DossierFacile Webhook] ${partnerCallBackType} for tenant ${tenantIdStr} — status: ${data.status}, documents: ${data.documents.length}`,
     )
     return NextResponse.json({ ok: true })
   } catch (error) {

@@ -1,9 +1,9 @@
 import { z } from 'zod'
 
-export const ownerFormSchema = z.object({
+export const ZOwnerFormSchema = z.object({
   name: z.string().min(1, 'Le nom est requis'),
-  url: z.string().url('URL invalide').or(z.literal('')).optional(),
+  url: z.url('URL invalide').or(z.literal('')).optional(),
   acceptDossierFacileApplications: z.boolean(),
 })
 
-export type OwnerFormData = z.infer<typeof ownerFormSchema>
+export type TOwnerFormData = z.infer<typeof ZOwnerFormSchema>
