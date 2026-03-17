@@ -10,6 +10,7 @@ import { UpdateResidenceList } from '~/components/bailleur/update-residence-list
 import { AvailabilityBadge } from '~/components/shared/availability-badge'
 import { useMyAccommodations } from '~/hooks/use-my-accommodations'
 import { calculateAvailability } from '~/utils/calculateAvailability'
+import { sPluriel } from '~/utils/sPluriel'
 
 const ResidenceListSkeleton = () => (
   <div className="fr-flex fr-direction-column fr-flex-gap-6v">
@@ -111,7 +112,15 @@ export const ResidenceList: FC = () => {
                 key={accommodation.id}
               >
                 <ResidenceCard key={index} accomodation={accommodation} href={`/bailleur/residences/${accommodation.properties.slug}`} />
-                <UpdateResidenceList accommodation={accommodation}>{badgeAvailability}</UpdateResidenceList>
+                <UpdateResidenceList accommodation={accommodation}>
+                  <div className="fr-flex fr-justify-content-space-between">
+                    <span className="fr-text-mention--grey fr-text--xl fr-mb-0">
+                      {accommodation.properties.nb_total_apartments} logement{sPluriel(accommodation.properties.nb_total_apartments ?? 0)}
+                    </span>
+                    {badgeAvailability}
+                  </div>
+                  <hr className="fr-mt-3w fr-mb-0" />
+                </UpdateResidenceList>
               </div>
             )
           })}
