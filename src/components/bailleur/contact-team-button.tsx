@@ -9,7 +9,7 @@ export const ContactTeamButton = () => {
       iconId="ri-search-line"
       priority="secondary"
       linkProps={{
-        href: 'mailto:contact@monlogementetudiant.beta.gouv.fr',
+        href: 'mailto:gestionnaire@monlogementetudiant.beta.gouv.fr',
         onClick: () => {
           trackEvent({ category: 'Espace Gestionnaire', action: 'contacter equipe' })
         },
