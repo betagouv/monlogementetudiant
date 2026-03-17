@@ -6,7 +6,7 @@ import { z } from 'zod'
 import { APARTMENT_TYPES } from '~/enums/apartment-type'
 import { db } from '~/server/db'
 import { accommodations, dossierFacileApplications, dossierFacileTenants } from '~/server/db/schema'
-import { buildAuthorizationUrl, validateConfig } from '~/server/services/dossier-facile'
+import { buildDossierFacileAuthorizationUrl, validateDossierFacileConfig } from '~/server/services/dossier-facile/sync'
 import { createTRPCRouter, userProcedure } from '../init'
 
 const STATE_COOKIE_NAME = 'df_oauth_state'
@@ -45,7 +45,11 @@ export const dossierFacileRouter = createTRPCRouter({
   connectUrl: userProcedure
     .input(z.object({ returnTo: z.string().startsWith('/').optional() }).optional())
     .mutation(async ({ ctx, input }) => {
-      validateConfig()
+      if (ctx.session.user.role !== 'user') {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Only students can connect DossierFacile' })
+      }
+
+      validateDossierFacileConfig()
 
       const state = crypto.randomUUID()
       const expiresAt = new Date(Date.now() + STATE_TTL_SECONDS * 1000)
@@ -65,7 +69,7 @@ export const dossierFacileRouter = createTRPCRouter({
         maxAge: STATE_TTL_SECONDS,
       })
 
-      const authorizationUrl = buildAuthorizationUrl(state, ctx.session.user.email)
+      const authorizationUrl = buildDossierFacileAuthorizationUrl(state, ctx.session.user.email)
 
       return { authorizationUrl, expiresAt: expiresAt.toISOString() }
     }),

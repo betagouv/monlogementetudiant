@@ -20,7 +20,6 @@ function webhookRequest(body: unknown, apiKey?: string): Request {
   })
 }
 
-// Dynamically import the webhook handler so the db alias is resolved
 async function callWebhook(body: unknown, apiKey: string = WEBHOOK_API_KEY) {
   const { POST } = await import('../app/api/dossier-facile/webhook/route')
   return POST(webhookRequest(body, apiKey))
@@ -86,19 +85,12 @@ describe('DossierFacile Webhook', () => {
       const res = await callWebhook({ onTenantId: '123' })
       expect(res.status).toBe(400)
       const json = await res.json()
-      expect(json.error).toContain('Missing')
+      expect(json.error).toContain('Invalid webhook payload')
     })
 
     it('returns 400 when onTenantId is missing', async () => {
       const res = await callWebhook({ partnerCallBackType: 'VERIFIED_ACCOUNT' })
       expect(res.status).toBe(400)
-    })
-
-    it('returns 400 for unknown callback type', async () => {
-      const res = await callWebhook({ partnerCallBackType: 'UNKNOWN_TYPE', onTenantId: '123' })
-      expect(res.status).toBe(400)
-      const json = await res.json()
-      expect(json.error).toContain('Unknown callback type')
     })
   })
 

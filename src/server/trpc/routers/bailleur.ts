@@ -451,7 +451,6 @@ export const bailleurRouter = createTRPCRouter({
         return { items: [], total: 0, page: input.page, pageSize: PAGE_SIZE }
       }
 
-      // Get all accommodation slugs for this owner
       const ownerAccommodations = await db
         .select({ slug: accommodations.slug })
         .from(accommodations)
@@ -533,7 +532,6 @@ export const bailleurRouter = createTRPCRouter({
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Candidature not found' })
     }
 
-    // Verify ownership
     const usr = await db.query.user.findFirst({
       where: eq(user.id, ctx.session.user.id),
       with: { owner: true },
@@ -556,7 +554,6 @@ export const bailleurRouter = createTRPCRouter({
       throw new TRPCError({ code: 'FORBIDDEN', message: 'You do not own this accommodation' })
     }
 
-    // Get user email from tenant
     const tenantUser = await db.query.user.findFirst({
       where: eq(user.id, application.tenant.userId),
     })
@@ -599,7 +596,6 @@ export const bailleurRouter = createTRPCRouter({
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Candidature not found' })
       }
 
-      // Verify ownership
       const usr = await db.query.user.findFirst({
         where: eq(user.id, ctx.session.user.id),
         with: { owner: true },

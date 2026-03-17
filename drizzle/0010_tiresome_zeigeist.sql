@@ -5,7 +5,7 @@ CREATE TABLE "dossier_facile_document" (
 	"document_category" text NOT NULL,
 	"document_sub_category" text,
 	"document_status" text,
-	"monthly_sum" integer,
+	"url" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
