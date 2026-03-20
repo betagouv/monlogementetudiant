@@ -21,6 +21,7 @@ export const FindStudentAccommodationPlaceholderImageCard = ({ id = 0 }: { id?: 
       width={vue === 'carte' ? 332 : 390}
       height={193}
       priority
+      unoptimized
     />
   )
 }
