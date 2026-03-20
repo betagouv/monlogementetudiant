@@ -33,6 +33,13 @@ export function TRPCReactProvider({ children }: { children: React.ReactNode }) {
         httpBatchLink({
           transformer: superjson,
           url: getUrl(),
+          async fetch(url, options) {
+            const res = await globalThis.fetch(url, options)
+            if (res.status === 503) {
+              window.location.reload()
+            }
+            return res
+          },
         }),
       ],
     }),
