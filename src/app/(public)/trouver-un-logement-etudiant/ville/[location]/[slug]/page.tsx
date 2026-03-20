@@ -1,4 +1,3 @@
-import { RiIconClassName } from '@codegouvfr/react-dsfr'
 import { Breadcrumb } from '@codegouvfr/react-dsfr/Breadcrumb'
 import { Tag, TagProps } from '@codegouvfr/react-dsfr/Tag'
 import { HydrationBoundary } from '@tanstack/react-query'
