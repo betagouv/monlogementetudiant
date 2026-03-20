@@ -11,12 +11,13 @@ import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import { useState } from 'react'
 import { LinkUserToOwnerDialog } from '~/components/administration/link-user-to-owner-dialog'
-import { OwnerForm, OwnerFormData } from '~/components/administration/owner-form'
+import { OwnerForm } from '~/components/administration/owner-form'
 import { RoleBadge } from '~/components/administration/role-badge'
 import { createToast } from '~/components/ui/createToast'
 import { useAdminDeleteOwner } from '~/hooks/use-admin-delete-owner'
 import { useAdminOwner } from '~/hooks/use-admin-owner'
 import { useAdminUpdateOwner } from '~/hooks/use-admin-update-owner'
+import { TOwnerFormData } from '~/schemas/owner-form'
 import { useTRPC, useTRPCClient } from '~/server/trpc/client'
 import { getFaviconUrl } from '~/utils/get-favicon-url'
 import { sPluriel } from '~/utils/sPluriel'
@@ -91,8 +92,13 @@ export function OwnerDetail({ id }: { id: string }) {
   if (isLoading) return <p>Chargement...</p>
   if (!ownerData) return <p>Gestionnaire non trouvé</p>
 
-  const handleSubmit = (data: OwnerFormData) => {
-    updateOwner.mutate({ id: ownerId, name: data.name, url: data.url || null })
+  const handleSubmit = (data: TOwnerFormData) => {
+    updateOwner.mutate({
+      id: ownerId,
+      name: data.name,
+      url: data.url || null,
+      acceptDossierFacileApplications: data.acceptDossierFacileApplications,
+    })
   }
 
   const handleDelete = () => {
@@ -182,6 +188,7 @@ export function OwnerDetail({ id }: { id: string }) {
                     defaultValues={{
                       name: ownerData.name,
                       url: ownerData.url ?? '',
+                      acceptDossierFacileApplications: ownerData.acceptDossierFacileApplications,
                     }}
                     onSubmit={handleSubmit}
                     isPending={updateOwner.isPending}

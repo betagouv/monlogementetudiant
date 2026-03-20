@@ -1,7 +1,10 @@
 import { eq } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
+import { ZWebhookBodySchema } from '~/schemas/dossier-facile/dossier-facile-webhook'
 import { db } from '~/server/db'
-import { dossierFacileTenants } from '~/server/db/schema'
+import { dossierFacileDocuments, dossierFacileTenants } from '~/server/db/schema'
+import { normalizeStatus } from '~/server/services/dossier-facile/sync'
+import { extractWebhookData } from '~/server/services/dossier-facile/webhook'
 
 export async function POST(request: Request) {
   const apiKey = process.env.DOSSIERFACILE_WEBHOOK_API_KEY
@@ -16,7 +19,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  let body: { partnerCallBackType?: string; onTenantId?: string | number }
+  let body: Record<string, unknown>
   try {
     body = await request.json()
   } catch {
@@ -26,104 +29,81 @@ export async function POST(request: Request) {
 
   console.log('[DossierFacile Webhook] Received:', JSON.stringify(body))
 
-  const { partnerCallBackType, onTenantId: tenantId } = body
-  if (!partnerCallBackType || !tenantId) {
-    console.warn('[DossierFacile Webhook] Missing partnerCallBackType or tenantId')
-    return NextResponse.json({ error: 'Missing partnerCallBackType or tenantId' }, { status: 400 })
+  const parsed = ZWebhookBodySchema.safeParse(body)
+  if (!parsed.success) {
+    console.warn('[DossierFacile Webhook] Invalid payload:', parsed.error.issues)
+    return NextResponse.json({ error: 'Invalid webhook payload' }, { status: 400 })
   }
 
-  const tenantIdStr = String(tenantId)
+  const { partnerCallBackType, onTenantId: tenantIdStr } = parsed.data
 
-  switch (partnerCallBackType) {
-    case 'CREATED_ACCOUNT': {
-      console.log(`[DossierFacile Webhook] CREATED_ACCOUNT for tenant ${tenantIdStr}`)
+  // DELETED_ACCOUNT: delete the tenant row entirely
+  if (partnerCallBackType === 'DELETED_ACCOUNT') {
+    console.log(`[DossierFacile Webhook] DELETED_ACCOUNT for tenant ${tenantIdStr}`)
+    await db.delete(dossierFacileTenants).where(eq(dossierFacileTenants.tenantId, tenantIdStr))
+    console.log(`[DossierFacile Webhook] Tenant ${tenantIdStr} deleted successfully`)
+    return NextResponse.json({ ok: true })
+  }
+
+  const now = new Date()
+
+  try {
+    const data = extractWebhookData(parsed.data)
+
+    const [existingTenant] = await db
+      .select({ id: dossierFacileTenants.id })
+      .from(dossierFacileTenants)
+      .where(eq(dossierFacileTenants.tenantId, tenantIdStr))
+      .limit(1)
+
+    if (!existingTenant) {
+      console.warn(`[DossierFacile Webhook] Tenant ${tenantIdStr} not found in DB`)
+      return NextResponse.json({ ok: true })
+    }
+
+    await db
+      .update(dossierFacileTenants)
+      .set({
+        status: data.status,
+        url: data.url,
+        pdfUrl: data.pdfUrl,
+        name: data.name,
+        guarantorCount: data.guarantorCount,
+        updatedAt: now,
+        lastSyncedAt: now,
+      })
+      .where(eq(dossierFacileTenants.tenantId, tenantIdStr))
+
+    if (data.documents.length > 0) {
+      await db.delete(dossierFacileDocuments).where(eq(dossierFacileDocuments.tenantId, existingTenant.id))
+      await db.insert(dossierFacileDocuments).values(
+        data.documents.map((doc) => ({
+          tenantId: existingTenant.id,
+          ownerType: doc.ownerType,
+          documentCategory: doc.documentCategory,
+          documentSubCategory: doc.documentSubCategory,
+          documentStatus: doc.documentStatus,
+          url: doc.url,
+        })),
+      )
+    }
+
+    console.log(
+      `[DossierFacile Webhook] ${partnerCallBackType} for tenant ${tenantIdStr} — status: ${data.status}, documents: ${data.documents.length}`,
+    )
+    return NextResponse.json({ ok: true })
+  } catch (error) {
+    // Fallback: just update status from callback type
+    console.error(`[DossierFacile Webhook] Error extracting data for ${tenantIdStr}, falling back to status-only update:`, error)
+
+    const fallbackStatus = normalizeStatus(partnerCallBackType)
+    if (fallbackStatus) {
       await db
         .update(dossierFacileTenants)
-        .set({ status: 'to_process', updatedAt: new Date() })
+        .set({ status: fallbackStatus, updatedAt: now })
         .where(eq(dossierFacileTenants.tenantId, tenantIdStr))
-      console.log(`[DossierFacile Webhook] Tenant ${tenantIdStr} status set to to_process`)
-      return NextResponse.json({ ok: true })
     }
 
-    case 'DELETED_ACCOUNT': {
-      console.log(`[DossierFacile Webhook] DELETED_ACCOUNT for tenant ${tenantIdStr}`)
-      await db.delete(dossierFacileTenants).where(eq(dossierFacileTenants.tenantId, tenantIdStr))
-      console.log(`[DossierFacile Webhook] Tenant ${tenantIdStr} deleted successfully`)
-      return NextResponse.json({ ok: true })
-    }
-
-    case 'ACCESS_REVOKED': {
-      console.log(`[DossierFacile Webhook] ACCESS_REVOKED for tenant ${tenantIdStr}`)
-      await db
-        .update(dossierFacileTenants)
-        .set({ status: 'access_revoked', updatedAt: new Date() })
-        .where(eq(dossierFacileTenants.tenantId, tenantIdStr))
-      console.log(`[DossierFacile Webhook] Tenant ${tenantIdStr} status set to access_revoked`)
-      return NextResponse.json({ ok: true })
-    }
-
-    case 'VERIFIED_ACCOUNT': {
-      console.log(`[DossierFacile Webhook] VERIFIED_ACCOUNT for tenant ${tenantIdStr}`)
-      await db
-        .update(dossierFacileTenants)
-        .set({ status: 'verified', updatedAt: new Date() })
-        .where(eq(dossierFacileTenants.tenantId, tenantIdStr))
-      console.log(`[DossierFacile Webhook] Tenant ${tenantIdStr} status set to verified`)
-      return NextResponse.json({ ok: true })
-    }
-
-    case 'DENIED_ACCOUNT': {
-      console.log(`[DossierFacile Webhook] DENIED_ACCOUNT for tenant ${tenantIdStr}`)
-      await db
-        .update(dossierFacileTenants)
-        .set({ status: 'denied', updatedAt: new Date() })
-        .where(eq(dossierFacileTenants.tenantId, tenantIdStr))
-      console.log(`[DossierFacile Webhook] Tenant ${tenantIdStr} status set to denied`)
-      return NextResponse.json({ ok: true })
-    }
-
-    case 'APPLICATION_TYPE_CHANGED': {
-      console.log(`[DossierFacile Webhook] APPLICATION_TYPE_CHANGED for tenant ${tenantIdStr}`)
-      await db
-        .update(dossierFacileTenants)
-        .set({ status: 'incomplete', updatedAt: new Date() })
-        .where(eq(dossierFacileTenants.tenantId, tenantIdStr))
-      console.log(`[DossierFacile Webhook] Tenant ${tenantIdStr} status set to incomplete`)
-      return NextResponse.json({ ok: true })
-    }
-
-    case 'ARCHIVED_ACCOUNT': {
-      console.log(`[DossierFacile Webhook] ARCHIVED_ACCOUNT for tenant ${tenantIdStr}`)
-      await db
-        .update(dossierFacileTenants)
-        .set({ status: 'inactive', updatedAt: new Date() })
-        .where(eq(dossierFacileTenants.tenantId, tenantIdStr))
-      console.log(`[DossierFacile Webhook] Tenant ${tenantIdStr} status set to inactive`)
-      return NextResponse.json({ ok: true })
-    }
-
-    case 'RETURNED_ACCOUNT': {
-      console.log(`[DossierFacile Webhook] RETURNED_ACCOUNT for tenant ${tenantIdStr}`)
-      await db
-        .update(dossierFacileTenants)
-        .set({ status: 'incomplete', updatedAt: new Date() })
-        .where(eq(dossierFacileTenants.tenantId, tenantIdStr))
-      console.log(`[DossierFacile Webhook] Tenant ${tenantIdStr} status set to incomplete`)
-      return NextResponse.json({ ok: true })
-    }
-
-    case 'MERGED_ACCOUNT': {
-      console.log(`[DossierFacile Webhook] MERGED_ACCOUNT for tenant ${tenantIdStr}`)
-      await db
-        .update(dossierFacileTenants)
-        .set({ status: 'inactive', updatedAt: new Date() })
-        .where(eq(dossierFacileTenants.tenantId, tenantIdStr))
-      console.log(`[DossierFacile Webhook] Tenant ${tenantIdStr} status set to inactive`)
-      return NextResponse.json({ ok: true })
-    }
-
-    default:
-      console.warn(`[DossierFacile Webhook] Unknown callback type: ${partnerCallBackType} for tenant ${tenantIdStr}`)
-      return NextResponse.json({ error: `Unknown callback type: ${partnerCallBackType}` }, { status: 400 })
+    return NextResponse.json({ ok: true })
   }
 }

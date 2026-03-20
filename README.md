@@ -363,6 +363,7 @@ Le script crée automatiquement l'iframe et gère le redimensionnement dynamique
 | `data-accessible` | Logements PMR | `data-accessible="true"` |
 | `data-filters` | Afficher/masquer les filtres (visible par défaut) | `data-filters="false"` |
 | `data-page` | Page de pagination | `data-page="2"` |
+| `data-gestionnaire` | Slug du gestionnaire | `data-gestionnaire="arpej"` |
 | `data-target` | ID de l'élément où déposer l'iframe | `data-target="widget-container"` |
 
 Si `data-city` ou `data-bbox` est fourni, le champ de recherche de localisation est masqué.

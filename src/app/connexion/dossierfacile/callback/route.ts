@@ -4,7 +4,7 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { db } from '~/server/db'
 import { user as userTable } from '~/server/db/schema'
-import { syncTenantFromCode } from '~/server/services/dossier-facile'
+import { syncDossierFacileTenantFromCode } from '~/server/services/dossier-facile/sync'
 
 const STATE_COOKIE_NAME = 'df_oauth_state'
 
@@ -44,7 +44,6 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${baseUrl}/dossier-facile/error?error_type=expired_state`)
   }
 
-  // Delete the cookie
   cookieStore.delete(STATE_COOKIE_NAME)
 
   try {
@@ -56,7 +55,7 @@ export async function GET(request: Request) {
       return NextResponse.redirect(`${baseUrl}/dossier-facile/error?error_type=user_not_found`)
     }
 
-    await syncTenantFromCode(userId, code, {
+    await syncDossierFacileTenantFromCode(userId, code, {
       firstname: user.firstname,
       lastname: user.lastname,
       email: user.email,

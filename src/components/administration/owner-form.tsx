@@ -2,15 +2,14 @@
 
 import Button from '@codegouvfr/react-dsfr/Button'
 import Input from '@codegouvfr/react-dsfr/Input'
+import ToggleSwitch from '@codegouvfr/react-dsfr/ToggleSwitch'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { type OwnerFormData, ownerFormSchema } from '~/schemas/owner-form'
-
-export type { OwnerFormData }
+import { type TOwnerFormData, ZOwnerFormSchema } from '~/schemas/owner-form'
 
 interface OwnerFormProps {
-  defaultValues?: Partial<OwnerFormData>
-  onSubmit: (data: OwnerFormData) => void
+  defaultValues?: Partial<TOwnerFormData>
+  onSubmit: (data: TOwnerFormData) => void
   isPending?: boolean
   submitLabel?: string
 }
@@ -19,15 +18,20 @@ export const OwnerForm = ({ defaultValues, onSubmit, isPending, submitLabel = 'E
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors },
-  } = useForm<OwnerFormData>({
-    resolver: zodResolver(ownerFormSchema),
+  } = useForm<TOwnerFormData>({
+    resolver: zodResolver(ZOwnerFormSchema),
     defaultValues: {
       name: '',
       url: '',
+      acceptDossierFacileApplications: false,
       ...defaultValues,
     },
   })
+
+  const acceptDf = watch('acceptDossierFacileApplications')
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -43,7 +47,15 @@ export const OwnerForm = ({ defaultValues, onSubmit, isPending, submitLabel = 'E
         state={errors.url ? 'error' : 'default'}
         stateRelatedMessage={errors.url?.message}
       />
-      <Button type="submit" disabled={isPending}>
+      <ToggleSwitch
+        label="Accepter les candidatures DossierFacile"
+        checked={acceptDf}
+        onChange={(checked) => {
+          setValue('acceptDossierFacileApplications', checked)
+        }}
+        inputTitle="Activer ou désactiver les candidatures DossierFacile"
+      />
+      <Button type="submit" disabled={isPending} className="fr-mt-2w">
         {isPending ? 'Enregistrement...' : submitLabel}
       </Button>
     </form>
