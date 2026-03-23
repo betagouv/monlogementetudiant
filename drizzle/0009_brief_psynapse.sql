@@ -1,0 +1,1 @@
+ALTER TABLE "account_owner" ALTER COLUMN "accept_dossier_facile_applications" SET DEFAULT false;
