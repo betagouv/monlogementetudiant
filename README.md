@@ -244,6 +244,7 @@ Variables d'env requises : `MATOMO_URL`, `MATOMO_TOKEN`, `MATOMO_ID_SITE`
 ### Cron jobs (Scalingo)
 
 Les tâches planifiées sont définies dans `cron.json` à la racine. Scalingo lit ce fichier au déploiement.
+Les migrations Drizzle sont appliquées au déploiement via le hook `postdeploy` défini dans `Procfile`.
 
 | Cron | Commande | Fréquence |
 |------|----------|-----------|
