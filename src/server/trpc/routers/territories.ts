@@ -99,12 +99,12 @@ function mapCityRow(c: CityRow, stats?: CityStats, nearbyCities: { name: string;
   }
 }
 
-const accommodationSubqueries = (cityName: typeof cities.name) => ({
+const accommodationSubqueries = (cityId: typeof cities.id) => ({
   nbTotalApartments: sql<number>`
     COALESCE((
       SELECT SUM(${accommodations.nbTotalApartments})
       FROM ${accommodations}
-      WHERE ${accommodations.city} = ${cityName}
+      WHERE ${accommodations.cityId} = ${cityId}
         AND ${accommodations.published} = true
         AND ${accommodations.available} = true
     ), 0)::int
@@ -113,7 +113,7 @@ const accommodationSubqueries = (cityName: typeof cities.name) => ({
     (
       SELECT MIN(${accommodations.priceMin})
       FROM ${accommodations}
-      WHERE ${accommodations.city} = ${cityName}
+      WHERE ${accommodations.cityId} = ${cityId}
         AND ${accommodations.published} = true
         AND ${accommodations.available} = true
         AND ${accommodations.priceMin} IS NOT NULL
@@ -124,7 +124,7 @@ const accommodationSubqueries = (cityName: typeof cities.name) => ({
       SELECT SUM(${accommodations.nbTotalApartments})
       FROM ${accommodations}
       JOIN ${owners} ON ${accommodations.ownerId} = ${owners.id}
-      WHERE ${accommodations.city} = ${cityName}
+      WHERE ${accommodations.cityId} = ${cityId}
         AND ${accommodations.published} = true
         AND ${accommodations.available} = true
         AND ${owners.name} = 'CROUS'
@@ -140,7 +140,7 @@ export const territoriesRouter = createTRPCRouter({
     const tokens = tokenizeQuery(normalized)
     if (tokens.length === 0) return empty
 
-    const accomSubs = accommodationSubqueries(cities.name)
+    const accomSubs = accommodationSubqueries(cities.id)
 
     const [academyResults, departmentResults, cityResults] = await Promise.all([
       db
@@ -257,7 +257,7 @@ export const territoriesRouter = createTRPCRouter({
     .query(async ({ input }) => {
       const departmentCode = input?.departmentCode
       const popular = input?.popular
-      const accomSubs = accommodationSubqueries(cities.name)
+      const accomSubs = accommodationSubqueries(cities.id)
 
       const conditions: SQL[] = []
       if (departmentCode) conditions.push(eq(departments.code, departmentCode))
@@ -333,7 +333,7 @@ export const territoriesRouter = createTRPCRouter({
         .from(accommodations)
         .where(
           and(
-            sql`${accommodations.city} = (SELECT ${cities.name} FROM ${cities} WHERE ${cities.slug} = ${slugLower} LIMIT 1)`,
+            sql`${accommodations.cityId} = (SELECT ${cities.id} FROM ${cities} WHERE ${cities.slug} = ${slugLower} LIMIT 1)`,
             eq(accommodations.published, true),
             eq(accommodations.available, true),
           ),

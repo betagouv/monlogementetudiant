@@ -11,6 +11,7 @@ import { owners } from '~/server/db/schema/owners'
 import { notifyAccommodationCreated, notifyAccommodationUpdated } from '~/server/services/mattermost'
 import { computeDerivedFields, generateSlug, geocodeAddress } from '~/server/trpc/utils/accommodation-helpers'
 import { AVAILABILITY_FIELD_MAP, mapFields, UPDATE_FIELD_MAP } from '~/server/trpc/utils/field-mapping'
+import { resolveCityId } from '~/server/trpc/utils/resolve-city'
 import { findAvailableSlug } from '~/server/utils/slug'
 import { createTRPCRouter, ownerProcedure } from '../init'
 import { mapToGeoJsonFeature, priceMaxComputed } from './accommodations'
@@ -251,6 +252,9 @@ export const bailleurRouter = createTRPCRouter({
       // Geocode address
       const coords = await geocodeAddress(fields.address, fields.city, fields.postal_code)
 
+      // Resolve city FK
+      const cityId = await resolveCityId(fields.postal_code, fields.city)
+
       // Compute derived fields from flat typologies
       const derived = computeDerivedFields({ ...flatTypologies })
 
@@ -267,6 +271,7 @@ export const bailleurRouter = createTRPCRouter({
         acceptWaitingList: fields.accept_waiting_list ?? false,
         published: fields.published ?? false,
         scholarshipHoldersPriority: fields.scholarship_holders_priority ?? false,
+        cityId: cityId,
         ownerId: owner.id,
         nbTotalApartments: derived.nbTotalApartments,
         priceMin: derived.priceMin,
@@ -343,7 +348,7 @@ export const bailleurRouter = createTRPCRouter({
     camelFields.priceMin = derived.priceMin
     camelFields.imagesCount = derived.imagesCount
 
-    // Re-geocode if address changed
+    // Re-geocode and re-resolve cityId if address/city/postal_code changed
     if (fields.address !== undefined || fields.city !== undefined || fields.postal_code !== undefined) {
       // Fetch current values to fill in blanks
       const [current] = await db
@@ -359,6 +364,14 @@ export const bailleurRouter = createTRPCRouter({
         const coords = await geocodeAddress(address, city, postalCode)
         if (coords) {
           camelFields.geom = sql`ST_SetSRID(ST_MakePoint(${coords.lon}, ${coords.lat}), 4326)`
+        }
+
+        // Re-resolve cityId when city or postal code changes
+        if (fields.city !== undefined || fields.postal_code !== undefined) {
+          const newCityId = await resolveCityId(postalCode, city)
+          if (newCityId) {
+            camelFields.cityId = newCityId
+          }
         }
       }
     }

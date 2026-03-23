@@ -292,8 +292,11 @@ const command: ImportCommand = {
         }
 
         // Ensure city exists in DB with correct casing
+        let resolvedCityId: number | null = null
         if (resolvedPostalCode && resolvedCity) {
-          resolvedCity = await ensureCity(resolvedPostalCode, resolvedCity)
+          const cityResult = await ensureCity(resolvedPostalCode, resolvedCity)
+          resolvedCity = cityResult.name
+          resolvedCityId = cityResult.id || null
         }
 
         // Images
@@ -325,6 +328,7 @@ const command: ImportCommand = {
           description: row.description?.trim() || null,
           address: resolvedAddress,
           city: resolvedCity,
+          cityId: resolvedCityId,
           postalCode: resolvedPostalCode,
           residenceType: row.residence_type?.trim() || null,
           target_audience: 'etudiants' as const,

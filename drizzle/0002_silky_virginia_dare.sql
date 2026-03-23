@@ -1,4 +1,4 @@
-CREATE TABLE "dossier_facile_tenant" (
+CREATE TABLE IF NOT EXISTS "dossier_facile_tenant" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"user_id" text NOT NULL,
 	"tenant_id" text NOT NULL,

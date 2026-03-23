@@ -195,8 +195,11 @@ const command: ImportCommand = {
         const resolvedPostalCode = geo?.postalCode ?? acfAddress?.post_code ?? ''
         let resolvedCity = geo?.city ?? acfAddress?.city ?? ''
 
+        let resolvedCityId: number | null = null
         if (resolvedPostalCode && resolvedCity) {
-          resolvedCity = await ensureCity(resolvedPostalCode, resolvedCity)
+          const cityResult = await ensureCity(resolvedPostalCode, resolvedCity)
+          resolvedCity = cityResult.name
+          resolvedCityId = cityResult.id || null
         }
 
         let imageUrls: string[] = []
@@ -224,6 +227,7 @@ const command: ImportCommand = {
           slug: await findAvailableSlug(generateSlug(name), db, accommodations),
           address: resolvedAddress,
           city: resolvedCity,
+          cityId: resolvedCityId,
           postalCode: resolvedPostalCode,
           published: true,
           available: residence.acf.residence_full === true ? false : true,

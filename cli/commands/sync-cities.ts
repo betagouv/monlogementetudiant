@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 import { accommodations, cities, departments } from '../../src/server/db/schema'
 import { generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
 import { findAvailableSlug } from '../../src/server/utils/slug'
@@ -162,6 +162,30 @@ const command: SyncCommand = {
         const apiCity = await fetchCityFromGeoApi(postalCode, cityName)
         if (!apiCity) {
           result.errors.push(`Ville introuvable pour CP ${postalCode}`)
+          continue
+        }
+
+        // Check if a city with the same INSEE code already exists
+        const existingByInsee = await db
+          .select({ id: cities.id, name: cities.name, postalCodes: cities.postalCodes })
+          .from(cities)
+          .where(sql`${apiCity.code} = ANY(${cities.inseeCodes})`)
+          .limit(1)
+
+        if (existingByInsee[0]) {
+          // City exists — just add the missing postal code
+          if (!existingByInsee[0].postalCodes.includes(postalCode)) {
+            if (!options.dryRun) {
+              await db
+                .update(cities)
+                .set({ postalCodes: [...existingByInsee[0].postalCodes, postalCode] })
+                .where(eq(cities.id, existingByInsee[0].id))
+            }
+            if (options.verbose) console.log(`    ✓ ${existingByInsee[0].name} — ajout CP ${postalCode}`)
+          } else {
+            if (options.verbose) console.log(`    ✓ ${existingByInsee[0].name} existe déjà (INSEE ${apiCity.code})`)
+          }
+          result.skipped++
           continue
         }
 
