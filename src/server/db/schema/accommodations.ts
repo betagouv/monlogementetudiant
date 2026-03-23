@@ -60,6 +60,24 @@ export const accommodations = pgTable(
     priceMinT7More: integer('price_min_t7_more'),
     priceMaxT7More: integer('price_max_t7_more'),
 
+    // Superficie (m²)
+    superficieMinT1: integer('superficie_min_t1'),
+    superficieMaxT1: integer('superficie_max_t1'),
+    superficieMinT1Bis: integer('superficie_min_t1_bis'),
+    superficieMaxT1Bis: integer('superficie_max_t1_bis'),
+    superficieMinT2: integer('superficie_min_t2'),
+    superficieMaxT2: integer('superficie_max_t2'),
+    superficieMinT3: integer('superficie_min_t3'),
+    superficieMaxT3: integer('superficie_max_t3'),
+    superficieMinT4: integer('superficie_min_t4'),
+    superficieMaxT4: integer('superficie_max_t4'),
+    superficieMinT5: integer('superficie_min_t5'),
+    superficieMaxT5: integer('superficie_max_t5'),
+    superficieMinT6: integer('superficie_min_t6'),
+    superficieMaxT6: integer('superficie_max_t6'),
+    superficieMinT7More: integer('superficie_min_t7_more'),
+    superficieMaxT7More: integer('superficie_max_t7_more'),
+
     // Amenities
     laundryRoom: boolean('laundry_room'),
     commonAreas: boolean('common_areas'),

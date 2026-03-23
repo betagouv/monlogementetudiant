@@ -30,6 +30,8 @@ export const ZTypology = z
     type: z.enum(TYPOLOGY_TYPES, { error: 'Veuillez sélectionner un type de logement' }),
     price_min: z.number({ error: 'Le loyer minimum est requis' }).min(0, 'Le loyer minimum doit être positif'),
     price_max: z.number({ error: 'Le loyer maximum est requis' }).min(0, 'Le loyer maximum doit être positif'),
+    superficie_min: z.number().min(1, 'La superficie minimum doit être au moins 1 m²').nullish(),
+    superficie_max: z.number().min(1, 'La superficie maximum doit être au moins 1 m²').nullish(),
     colocation: z.boolean(),
     nb_total: z.number({ error: 'Le nombre total est requis' }).min(1, 'Le nombre total doit être au moins 1'),
     nb_available: z.number({ error: 'Le nombre disponible est requis' }).min(0, 'Le nombre disponible doit être positif'),
@@ -40,6 +42,13 @@ export const ZTypology = z
         code: z.ZodIssueCode.custom,
         message: 'Le loyer minimum ne peut pas être supérieur au loyer maximum',
         path: ['price_min'],
+      })
+    }
+    if (data.superficie_min != null && data.superficie_max != null && data.superficie_min > data.superficie_max) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'La superficie minimum ne peut pas être supérieure à la superficie maximum',
+        path: ['superficie_min'],
       })
     }
     if (data.nb_available > data.nb_total) {
@@ -58,34 +67,50 @@ export const ZCreateResidence = ZUpdateResidence.omit({
   nb_t1_available: true,
   price_min_t1: true,
   price_max_t1: true,
+  superficie_min_t1: true,
+  superficie_max_t1: true,
   nb_t1_bis: true,
   nb_t1_bis_available: true,
   price_min_t1_bis: true,
   price_max_t1_bis: true,
+  superficie_min_t1_bis: true,
+  superficie_max_t1_bis: true,
   nb_t2: true,
   nb_t2_available: true,
   price_min_t2: true,
   price_max_t2: true,
+  superficie_min_t2: true,
+  superficie_max_t2: true,
   nb_t3: true,
   nb_t3_available: true,
   price_min_t3: true,
   price_max_t3: true,
+  superficie_min_t3: true,
+  superficie_max_t3: true,
   nb_t4: true,
   nb_t4_available: true,
   price_min_t4: true,
   price_max_t4: true,
+  superficie_min_t4: true,
+  superficie_max_t4: true,
   nb_t5: true,
   nb_t5_available: true,
   price_min_t5: true,
   price_max_t5: true,
+  superficie_min_t5: true,
+  superficie_max_t5: true,
   nb_t6: true,
   nb_t6_available: true,
   price_min_t6: true,
   price_max_t6: true,
+  superficie_min_t6: true,
+  superficie_max_t6: true,
   nb_t7_more: true,
   nb_t7_more_available: true,
   price_min_t7_more: true,
   price_max_t7_more: true,
+  superficie_min_t7_more: true,
+  superficie_max_t7_more: true,
 }).extend({
   address: z.string().min(1, "L'adresse est requise"),
   city: z.string().min(1, 'La ville est requise'),
@@ -121,6 +146,8 @@ export function transformTypologiesToFlat(typologies: TTypology[]) {
     flat[`nb_${key}_available`] = null
     flat[`price_min_${key}`] = null
     flat[`price_max_${key}`] = null
+    flat[`superficie_min_${key}`] = null
+    flat[`superficie_max_${key}`] = null
   }
 
   for (const t of typologies) {
@@ -130,6 +157,8 @@ export function transformTypologiesToFlat(typologies: TTypology[]) {
     flat[`nb_${key}_available`] = t.nb_available
     flat[`price_min_${key}`] = t.price_min
     flat[`price_max_${key}`] = t.price_max
+    flat[`superficie_min_${key}`] = t.superficie_min ?? null
+    flat[`superficie_max_${key}`] = t.superficie_max ?? null
   }
 
   return flat

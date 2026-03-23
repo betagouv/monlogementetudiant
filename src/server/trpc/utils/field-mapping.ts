@@ -80,6 +80,24 @@ export const UPDATE_FIELD_MAP: FieldMap = {
   price_min_t7_more: 'priceMinT7More',
   price_max_t7_more: 'priceMaxT7More',
 
+  // Superficie (m²)
+  superficie_min_t1: 'superficieMinT1',
+  superficie_max_t1: 'superficieMaxT1',
+  superficie_min_t1_bis: 'superficieMinT1Bis',
+  superficie_max_t1_bis: 'superficieMaxT1Bis',
+  superficie_min_t2: 'superficieMinT2',
+  superficie_max_t2: 'superficieMaxT2',
+  superficie_min_t3: 'superficieMinT3',
+  superficie_max_t3: 'superficieMaxT3',
+  superficie_min_t4: 'superficieMinT4',
+  superficie_max_t4: 'superficieMaxT4',
+  superficie_min_t5: 'superficieMinT5',
+  superficie_max_t5: 'superficieMaxT5',
+  superficie_min_t6: 'superficieMinT6',
+  superficie_max_t6: 'superficieMaxT6',
+  superficie_min_t7_more: 'superficieMinT7More',
+  superficie_max_t7_more: 'superficieMaxT7More',
+
   // Misc counts
   nb_accessible_apartments: 'nbAccessibleApartments',
   nb_coliving_apartments: 'nbColivingApartments',

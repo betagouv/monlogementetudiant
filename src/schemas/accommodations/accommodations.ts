@@ -78,6 +78,25 @@ const ZPricing = z.object({
   price_max_t7_more: z.number().nullable(),
 })
 
+const ZSuperficie = z.object({
+  superficie_min_t1: z.number().nullable(),
+  superficie_max_t1: z.number().nullable(),
+  superficie_min_t1_bis: z.number().nullable(),
+  superficie_max_t1_bis: z.number().nullable(),
+  superficie_min_t2: z.number().nullable(),
+  superficie_max_t2: z.number().nullable(),
+  superficie_min_t3: z.number().nullable(),
+  superficie_max_t3: z.number().nullable(),
+  superficie_min_t4: z.number().nullable(),
+  superficie_max_t4: z.number().nullable(),
+  superficie_min_t5: z.number().nullable(),
+  superficie_max_t5: z.number().nullable(),
+  superficie_min_t6: z.number().nullable(),
+  superficie_max_t6: z.number().nullable(),
+  superficie_min_t7_more: z.number().nullable(),
+  superficie_max_t7_more: z.number().nullable(),
+})
+
 const ZAmenities = z.object({
   refrigerator: z.boolean().nullable(),
   laundry_room: z.boolean().nullable(),
@@ -99,7 +118,8 @@ export const ZAccomodation = z.object({
   properties: ZBaseAccommodationInfo.extend(ZApartmentCounts.shape)
     .extend(ZApartmentAvailability.shape)
     .extend(ZOwnerInfo.shape)
-    .extend(ZPricing.shape),
+    .extend(ZPricing.shape)
+    .extend(ZSuperficie.shape),
 })
 
 export type TAccomodation = z.infer<typeof ZAccomodation>
@@ -110,6 +130,7 @@ export type TAccomodationCard = z.infer<typeof ZAccomodationCard>
 export const ZAccomodationDetails = ZBaseAccommodationInfo.extend(ZApartmentCounts.shape)
   .extend(ZApartmentAvailability.shape)
   .extend(ZPricing.shape)
+  .extend(ZSuperficie.shape)
   .extend(ZAmenities.shape)
   .extend({
     available: z.boolean(),
@@ -148,6 +169,7 @@ export const ZAccomodationMy = z.object({
     .extend(ZApartmentAvailability.shape)
     .extend(ZOwnerInfo.shape)
     .extend(ZPricing.shape)
+    .extend(ZSuperficie.shape)
     .extend(ZAmenities.shape),
 })
 export type TAccomodationMy = z.infer<typeof ZAccomodationMy>

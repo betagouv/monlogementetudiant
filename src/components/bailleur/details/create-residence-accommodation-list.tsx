@@ -99,6 +99,7 @@ export const CreateResidenceAccommodationList = () => {
                     </div>
                   </div>
                 </div>
+
                 <Button
                   type="button"
                   size="small"
@@ -110,23 +111,41 @@ export const CreateResidenceAccommodationList = () => {
                 />
               </div>
 
-              {/* disable, we need to persist this at type level */}
-              {/* <div className="fr-py-2w fr-flex fr-align-items-center">
-                <span className="fr-mr-2w">Colocation</span>
-                <Controller
-                  name={`typologies.${index}.colocation`}
-                  control={control}
-                  render={({ field: toggleField }) => (
-                    <ToggleSwitch
-                      inputTitle="colocation"
-                      label=""
-                      showCheckedHint={false}
-                      checked={toggleField.value}
-                      onChange={toggleField.onChange}
-                    />
-                  )}
-                />
-              </div> */}
+              <div className="fr-grid-row fr-grid-row--gutters fr-justify-content-end fr-py-2w">
+                <div className="fr-col-12 fr-col-md-6">
+                  <label className="fr-label fr-mb-1w">Surface (m²)</label>
+                  <div className="fr-grid-row fr-grid-row--gutters">
+                    <div className="fr-col-6">
+                      <Input
+                        label=""
+                        hintText="Minimum"
+                        iconId="ri-shape-line"
+                        state={errors.typologies?.[index]?.superficie_min ? 'error' : 'default'}
+                        stateRelatedMessage={errors.typologies?.[index]?.superficie_min?.message}
+                        nativeInputProps={{
+                          type: 'number',
+                          min: 1,
+                          ...register(`typologies.${index}.superficie_min`, numberTransform),
+                        }}
+                      />
+                    </div>
+                    <div className="fr-col-6">
+                      <Input
+                        label=""
+                        hintText="Maximum"
+                        iconId="ri-shape-line"
+                        state={errors.typologies?.[index]?.superficie_max ? 'error' : 'default'}
+                        stateRelatedMessage={errors.typologies?.[index]?.superficie_max?.message}
+                        nativeInputProps={{
+                          type: 'number',
+                          min: 1,
+                          ...register(`typologies.${index}.superficie_max`, numberTransform),
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               <div className="fr-flex fr-align-items-center fr-flex-gap-4v fr-py-2w">
                 <div className="fr-col-12 fr-col-md-6">
@@ -169,6 +188,8 @@ export const CreateResidenceAccommodationList = () => {
                     type: '' as TCreateResidence['typologies'][number]['type'],
                     price_min: undefined as unknown as number,
                     price_max: undefined as unknown as number,
+                    superficie_min: undefined,
+                    superficie_max: undefined,
                     colocation: false,
                     nb_total: undefined as unknown as number,
                     nb_available: undefined as unknown as number,
