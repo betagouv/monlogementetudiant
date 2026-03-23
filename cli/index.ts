@@ -1,11 +1,14 @@
 import { program } from 'commander'
 import { importBackup } from './commands/import-backup'
+import { migrate } from './commands/migrate'
 import { migrateUsers } from './commands/migrate-users'
 import { runImport, runSync } from './factory'
 
 program.name('mle').description('MLE CLI tools')
 
 program.command('migrate-users').description('Migrate Django users to better-auth').action(migrateUsers)
+
+program.command('migrate').description('Apply Drizzle migrations').action(migrate)
 
 program
   .command('import-backup')
