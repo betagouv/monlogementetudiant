@@ -42,16 +42,21 @@ export const FindAccommodationForm: FC = () => {
 
   const handleOnChangeBudget = (event: React.ChangeEvent<HTMLInputElement>) => setQueryStates({ prix: Number(event.target.value) })
 
-  const searchParams = new URLSearchParams({
-    prix: form.getValues('maxPrice').toString(),
-    bbox: form.getValues('bbox') ?? '',
-    colocation: form.getValues('coliving') ? 'true' : 'false',
-    accessible: form.getValues('accessible') ? 'true' : 'false',
-    vue: 'carte',
-  })
-
   const city = queryStates.q
   const basePath = city ? `/trouver-un-logement-etudiant/ville/${encodeURIComponent(city)}` : '/trouver-un-logement-etudiant'
+
+  const searchParams = new URLSearchParams({
+    prix: form.getValues('maxPrice').toString(),
+    colocation: form.getValues('coliving') ? 'true' : 'false',
+    accessible: form.getValues('accessible') ? 'true' : 'false',
+  })
+  // Only include bbox when not navigating to a specific city (city uses boundary polygon instead)
+  if (!city) {
+    const bbox = form.getValues('bbox')
+    if (bbox) searchParams.set('bbox', bbox)
+    searchParams.set('vue', 'carte')
+  }
+
   const href = `${basePath}?${searchParams.toString()}`
   return (
     <>
