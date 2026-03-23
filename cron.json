@@ -5,6 +5,7 @@
     { "command": "0 1 * * 0 npx tsx cli/index.ts sync cities" },
     { "command": "0 4 1 */3 * npx tsx cli/index.ts sync rents" },
     { "command": "10 4 1 * * npx tsx cli/index.ts sync students" },
-    { "command": "0 3 * * * npx tsx cli/index.ts sync stats" }
+    { "command": "0 3 * * * npx tsx cli/index.ts sync stats" },
+    { "command": "0 4 * * * npx tsx cli/index.ts import initiall" }
   ]
 }
