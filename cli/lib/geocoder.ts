@@ -91,32 +91,53 @@ interface GeoApiCity {
 
 export async function fetchCityFromGeoApi(postalCode: string, name?: string): Promise<GeoApiCity | null> {
   const url = `https://geo.api.gouv.fr/communes?codePostal=${postalCode}&fields=nom,codesPostaux,codeDepartement,contour,codeEpci,population`
-  try {
-    const response = await fetch(url)
-    if (!response.ok) return null
-    const results: GeoApiCity[] = await response.json()
-    if (results.length === 0) {
-      // Fallback: treat as INSEE code
-      return await fetchCityByInsee(postalCode)
-    }
-    if (name && results.length > 1) {
-      const normalized = name
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-      const match = results.find((c) => {
-        const n = c.nom
+  const maxAttempts = 2
+  const retryDelay = 5000
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const response = await fetch(url)
+      if (response.status === 429 || response.status >= 500) {
+        console.warn(`  ⚠ Geo API HTTP ${response.status} for postal code "${postalCode}" (attempt ${attempt}/${maxAttempts})`)
+        if (attempt < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, retryDelay))
+          continue
+        }
+        return null
+      }
+      if (!response.ok) return null
+      const results: GeoApiCity[] = await response.json()
+      if (results.length === 0) {
+        // Fallback: treat as INSEE code
+        return await fetchCityByInsee(postalCode)
+      }
+      if (name && results.length > 1) {
+        const normalized = name
           .toLowerCase()
           .normalize('NFD')
           .replace(/[\u0300-\u036f]/g, '')
-        return n === normalized || n.includes(normalized) || normalized.includes(n)
-      })
-      return match ?? results[0]
+        const match = results.find((c) => {
+          const n = c.nom
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+          return n === normalized || n.includes(normalized) || normalized.includes(n)
+        })
+        return match ?? results[0]
+      }
+      return results[0]
+    } catch (error) {
+      console.warn(
+        `  ⚠ Geo API error for postal code "${postalCode}" (attempt ${attempt}/${maxAttempts}): ${error instanceof Error ? error.message : String(error)}`,
+      )
+      if (attempt < maxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, retryDelay))
+        continue
+      }
+      return null
     }
-    return results[0]
-  } catch {
-    return null
   }
+  return null
 }
 
 export async function fetchCityByInsee(inseeCode: string): Promise<GeoApiCity | null> {
