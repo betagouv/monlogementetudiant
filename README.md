@@ -363,6 +363,7 @@ Le script crée automatiquement l'iframe et gère le redimensionnement dynamique
 | `data-accessible` | Logements PMR | `data-accessible="true"` |
 | `data-filters` | Afficher/masquer les filtres (visible par défaut) | `data-filters="false"` |
 | `data-page` | Page de pagination | `data-page="2"` |
+| `data-gestionnaire` | Filtrer par slug du gestionnaire/bailleur | `data-gestionnaire="promologis-2"` |
 | `data-target` | ID de l'élément où déposer l'iframe | `data-target="widget-container"` |
 
 Si `data-city` ou `data-bbox` est fourni, le champ de recherche de localisation est masqué.
@@ -385,6 +386,9 @@ Les filtres sont **visibles par défaut**. Pour les masquer, utiliser `data-filt
 
 <!-- Bbox manuelle, colocation -->
 <script src="https://monlogementetudiant.beta.gouv.fr/widget/embed.js" data-bbox="2.2,48.8,2.5,48.9" data-colocation="true"></script>
+
+<!-- Logements d'un gestionnaire spécifique -->
+<script src="https://monlogementetudiant.beta.gouv.fr/widget/embed.js" data-gestionnaire="promologis-2"></script>
 
 <!-- Iframe déposée dans un élément spécifique -->
 <div id="mon-widget"></div>
