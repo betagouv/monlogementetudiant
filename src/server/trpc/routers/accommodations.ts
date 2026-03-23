@@ -333,6 +333,7 @@ export const accommodationsRouter = createTRPCRouter({
         viewCrous: z.boolean().default(false),
         academyId: z.number().optional(),
         ownerSlug: z.string().optional(),
+        citySlug: z.string().optional(),
       }),
     )
     .query(async ({ input }) => {
@@ -341,13 +342,15 @@ export const accommodationsRouter = createTRPCRouter({
       const conditions: SQL[] = [eq(accommodations.published, true), sql`${accommodations.geom} IS NOT NULL`]
       await applyCommonListFilters(conditions, input)
 
-      if (academyId) {
+      if (input.citySlug) {
+        conditions.push(
+          sql`ST_Within(${accommodations.geom}, (SELECT ${cities.boundary} FROM ${cities} WHERE ${cities.slug} = ${input.citySlug}))`,
+        )
+      } else if (academyId) {
         conditions.push(
           sql`ST_Within(${accommodations.geom}, (SELECT ${academies.boundary} FROM ${academies} WHERE ${academies.id} = ${academyId}))`,
         )
-      }
-
-      if (bbox) {
+      } else if (bbox) {
         const parts = bbox.split(',').map(Number)
         if (parts.length === 4) {
           const [xmin, ymin, xmax, ymax] = parts

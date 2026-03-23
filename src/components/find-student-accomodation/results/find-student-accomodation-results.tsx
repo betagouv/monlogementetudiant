@@ -61,6 +61,7 @@ export const FindStudentAccomodationResultsContent: FC<FindStudentAccomodationRe
     accessible: parseAsString,
     colocation: parseAsString,
     crous: parseAsString,
+    ville: parseAsString,
     ['recherche-par-carte']: parseAsString,
   })
 
@@ -127,6 +128,9 @@ export const FindStudentAccomodationResultsContent: FC<FindStudentAccomodationRe
                     params.set('academie', queryStates.academie)
                   } else if (queryStates.bbox) {
                     params.set('bbox', queryStates.bbox)
+                  }
+                  if (queryStates.ville && !hasMapInteraction) {
+                    params.set('ville', queryStates.ville)
                   }
 
                   if (queryStates.accessible) {
