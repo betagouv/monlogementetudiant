@@ -82,6 +82,7 @@ cli/
     import-arpej-ibail.ts # Import résidences ARPEJ (API iBAIL)
     import-csv.ts        # Import générique depuis CSV
     import-fac-habitat.ts # Import résidences FAC HABITAT (SFTP)
+    upload-images.ts     # Upload images locales vers S3
     sync-cities.ts       # Sync villes (geo.api.gouv.fr)
     sync-rents.ts        # Sync loyers moyens (data.gouv.fr)
     sync-students.ts     # Sync nb étudiants (enseignementsup)
@@ -174,6 +175,21 @@ Options spécifiques :
 - `--file <path>` : utiliser un fichier JSON local au lieu du SFTP
 
 Variables d'env requises : `FAC_HABITAT_SFTP_HOST`, `FAC_HABITAT_SFTP_USERNAME`, `FAC_HABITAT_SFTP_PASSWORD`, `FAC_HABITAT_SFTP_PORT` (défaut : 22), `S3_*` (upload images)
+
+#### `upload-images` — Upload d'images locales vers S3
+
+```bash
+pnpm cli upload-images /chemin/vers/dossier --name aclef
+```
+
+Upload les images d'un dossier local vers S3, organisé par sous-dossier. Chaque sous-dossier correspond à une résidence (ex: `albert-camus/`, `l-arsenal/`). Les images sont uploadées dans `accommodations{S3_SUFFIX_DIR}/{name}/pictures/{uuid}.{ext}`.
+
+Le résultat affiche les URLs S3 par sous-dossier, séparées par `|` (format compatible avec la colonne `pictures` de l'import CSV).
+
+Options :
+- `--name <name>` (requis) : nom du gestionnaire (ex: `aclef`, `acm-habitat`)
+
+Variables d'env requises : `S3_*`
 
 ---
 
@@ -277,7 +293,7 @@ Toutes les variables sont dans `.env.dist`. Celles spécifiques au CLI :
 | `FAC_HABITAT_SFTP_USERNAME` | `import fac-habitat` |
 | `FAC_HABITAT_SFTP_PASSWORD` | `import fac-habitat` |
 | `FAC_HABITAT_SFTP_PORT` | `import fac-habitat` |
-| `S3_*` | `import arpej-ibail`, `import csv`, `import fac-habitat` (upload images) |
+| `S3_*` | `import arpej-ibail`, `import csv`, `import fac-habitat`, `upload-images` |
 
 ## Architecture
 
