@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createAcademy, createAccommodation, createCity, createDepartment, createExternalSource, createOwner } from './fixtures/factories'
-import { caller } from './helpers/test-caller'
 import './helpers/setup-integration'
+import { caller } from './helpers/test-caller'
 
 describe('accommodations.list', () => {
   it('returns only published accommodations with geom', async () => {
@@ -388,6 +388,7 @@ describe('accommodations.getBySlug', () => {
       slug: 'crous',
       url: 'https://crous.fr',
       image_base64: null,
+      accept_dossier_facile_applications: false,
     })
   })
 
