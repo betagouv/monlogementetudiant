@@ -26,7 +26,7 @@ vi.mock('../../lib/geocoder', async (importOriginal) => {
   const original = await importOriginal<typeof import('../../lib/geocoder')>()
   return {
     ...original,
-    ensureCity: vi.fn(async (_postalCode: string, cityName: string) => cityName),
+    ensureCity: vi.fn(async (_postalCode: string, cityName: string) => ({ name: cityName, id: 0 })),
   }
 })
 

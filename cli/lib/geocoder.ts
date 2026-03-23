@@ -200,17 +200,39 @@ export async function reverseGeocode(lat: number, lng: number): Promise<GeocodeR
   }
 }
 
-export async function ensureCity(postalCode: string, cityName: string): Promise<string> {
+export async function ensureCity(postalCode: string, cityName: string): Promise<{ name: string; id: number }> {
   // 1. Look up by postal code in cities table
-  const existing = await db.select({ name: cities.name }).from(cities).where(sql`${postalCode} = ANY(${cities.postalCodes})`).limit(1)
-  if (existing[0]) return existing[0].name
+  const existing = await db
+    .select({ name: cities.name, id: cities.id })
+    .from(cities)
+    .where(sql`${postalCode} = ANY(${cities.postalCodes})`)
+    .limit(1)
+  if (existing[0]) return existing[0]
 
-  // 2. Not found — fetch from geo API and create
+  // 2. Not found — fetch from geo API
   const apiCity = await fetchCityFromGeoApi(postalCode, cityName)
-  if (!apiCity) return cityName
+  if (!apiCity) return { name: cityName, id: 0 }
 
+  // 3. Check by INSEE code — the city may exist with a different postal code
+  const byInsee = await db
+    .select({ name: cities.name, id: cities.id, postalCodes: cities.postalCodes })
+    .from(cities)
+    .where(sql`${apiCity.code} = ANY(${cities.inseeCodes})`)
+    .limit(1)
+  if (byInsee[0]) {
+    // Add the missing postal code to the existing city
+    if (!byInsee[0].postalCodes.includes(postalCode)) {
+      await db
+        .update(cities)
+        .set({ postalCodes: [...byInsee[0].postalCodes, postalCode] })
+        .where(eq(cities.id, byInsee[0].id))
+    }
+    return { name: byInsee[0].name, id: byInsee[0].id }
+  }
+
+  // 4. City doesn't exist — create it
   const dept = await db.select({ id: departments.id }).from(departments).where(eq(departments.code, apiCity.codeDepartement)).limit(1)
-  if (!dept[0]) return apiCity.nom
+  if (!dept[0]) return { name: apiCity.nom, id: 0 }
 
   const [newCity] = await db
     .insert(cities)
@@ -227,5 +249,5 @@ export async function ensureCity(postalCode: string, cityName: string): Promise<
     .returning({ id: cities.id })
 
   await fillCityFromApi(newCity.id)
-  return apiCity.nom
+  return { name: apiCity.nom, id: newCity.id }
 }
