@@ -40,7 +40,7 @@ describe('accommodations.list', () => {
     expect(result.results.features[0].properties.slug).toBe('inside-bbox')
   })
 
-  it('filters by city radius using listExpandedByCity', async () => {
+  it('filters by city radius using listExpandedByCity (outside boundary, within radius)', async () => {
     const academy = await createAcademy({ name: 'Académie de Paris' })
     const department = await createDepartment({ academyId: academy.id, code: '75', name: 'Paris' })
     await createCity({
@@ -63,18 +63,237 @@ describe('accommodations.list', () => {
       },
     })
 
+    // Outside city boundary but within 10km radius of centroid
     await createAccommodation({
-      slug: 'inside-city-radius',
-      geom: { type: 'Point', coordinates: [2.35, 48.85] },
+      slug: 'near-paris',
+      geom: { type: 'Point', coordinates: [2.42, 48.85] },
     })
+    // Far away — outside radius
     await createAccommodation({
-      slug: 'outside-city-radius',
+      slug: 'far-from-paris',
       geom: { type: 'Point', coordinates: [5.0, 43.3] },
     })
 
     const result = await caller.accommodations.listExpandedByCity({ city: 'paris' })
     expect(result.count).toBe(1)
-    expect(result.results.features[0].properties.slug).toBe('inside-city-radius')
+    expect(result.results.features[0].properties.slug).toBe('near-paris')
+  })
+
+  it('listExpandedByCity excludes accommodations inside the city boundary', async () => {
+    const academy = await createAcademy({ name: 'Académie de Toulouse' })
+    const department = await createDepartment({ academyId: academy.id, code: '31', name: 'Haute-Garonne' })
+    await createCity({
+      departmentId: department.id,
+      name: 'Toulouse',
+      slug: 'toulouse',
+      boundary: {
+        type: 'MultiPolygon',
+        coordinates: [
+          [
+            [
+              [1.38, 43.56],
+              [1.5, 43.56],
+              [1.5, 43.65],
+              [1.38, 43.65],
+              [1.38, 43.56],
+            ],
+          ],
+        ],
+      },
+    })
+
+    // Inside Toulouse boundary
+    await createAccommodation({
+      slug: 'in-toulouse',
+      geom: { type: 'Point', coordinates: [1.44, 43.6] },
+    })
+    // Outside boundary but within 10km radius
+    await createAccommodation({
+      slug: 'near-toulouse',
+      geom: { type: 'Point', coordinates: [1.35, 43.57] },
+    })
+
+    const result = await caller.accommodations.listExpandedByCity({ city: 'toulouse' })
+    expect(result.count).toBe(1)
+    expect(result.results.features[0].properties.slug).toBe('near-toulouse')
+  })
+
+  it('listExpandedByCity never returns accommodations from the same city regardless of pagination', async () => {
+    const academy = await createAcademy({ name: 'Académie de Marseille' })
+    const department = await createDepartment({ academyId: academy.id, code: '13', name: 'Bouches-du-Rhône' })
+    await createCity({
+      departmentId: department.id,
+      name: 'Marseille',
+      slug: 'marseille',
+      boundary: {
+        type: 'MultiPolygon',
+        coordinates: [
+          [
+            [
+              [5.3, 43.2],
+              [5.45, 43.2],
+              [5.45, 43.35],
+              [5.3, 43.35],
+              [5.3, 43.2],
+            ],
+          ],
+        ],
+      },
+    })
+
+    // Create many accommodations inside Marseille (more than a typical page size)
+    for (let i = 0; i < 15; i++) {
+      await createAccommodation({
+        slug: `marseille-residence-${i}`,
+        geom: { type: 'Point', coordinates: [5.35 + i * 0.005, 43.28] },
+      })
+    }
+    // One outside boundary but within radius
+    await createAccommodation({
+      slug: 'near-marseille-outside',
+      geom: { type: 'Point', coordinates: [5.47, 43.28] },
+    })
+
+    // Call without excludeIds — boundary exclusion alone must filter all in-city results
+    const result = await caller.accommodations.listExpandedByCity({ city: 'marseille' })
+    expect(result.results.features.every((f) => f.properties.slug === 'near-marseille-outside')).toBe(true)
+    expect(result.count).toBe(1)
+  })
+
+  it('listExpandedByCity combines boundary exclusion with excludeIds', async () => {
+    const academy = await createAcademy({ name: 'Académie de Lyon' })
+    const department = await createDepartment({ academyId: academy.id, code: '69', name: 'Rhône' })
+    await createCity({
+      departmentId: department.id,
+      name: 'Lyon',
+      slug: 'lyon',
+      boundary: {
+        type: 'MultiPolygon',
+        coordinates: [
+          [
+            [
+              [4.8, 45.72],
+              [4.9, 45.72],
+              [4.9, 45.8],
+              [4.8, 45.8],
+              [4.8, 45.72],
+            ],
+          ],
+        ],
+      },
+    })
+
+    // Inside Lyon — should be excluded by boundary
+    await createAccommodation({
+      slug: 'in-lyon',
+      geom: { type: 'Point', coordinates: [4.85, 45.76] },
+    })
+    // Outside boundary, within radius — should be excluded by excludeIds
+    const excluded = await createAccommodation({
+      slug: 'near-lyon-excluded',
+      geom: { type: 'Point', coordinates: [4.92, 45.76] },
+    })
+    // Outside boundary, within radius — should be returned
+    await createAccommodation({
+      slug: 'near-lyon-kept',
+      geom: { type: 'Point', coordinates: [4.75, 45.76] },
+    })
+
+    const result = await caller.accommodations.listExpandedByCity({
+      city: 'lyon',
+      excludeIds: [excluded.id],
+    })
+    expect(result.count).toBe(1)
+    expect(result.results.features[0].properties.slug).toBe('near-lyon-kept')
+  })
+
+  it('listExpandedByCity applies filters to results outside the city', async () => {
+    const academy = await createAcademy({ name: 'Académie de Nantes' })
+    const department = await createDepartment({ academyId: academy.id, code: '44', name: 'Loire-Atlantique' })
+    await createCity({
+      departmentId: department.id,
+      name: 'Nantes',
+      slug: 'nantes',
+      boundary: {
+        type: 'MultiPolygon',
+        coordinates: [
+          [
+            [
+              [-1.62, 47.18],
+              [-1.5, 47.18],
+              [-1.5, 47.28],
+              [-1.62, 47.28],
+              [-1.62, 47.18],
+            ],
+          ],
+        ],
+      },
+    })
+
+    // Outside boundary, within radius, accessible
+    await createAccommodation({
+      slug: 'near-nantes-accessible',
+      nbAccessibleApartments: 3,
+      geom: { type: 'Point', coordinates: [-1.48, 47.23] },
+    })
+    // Outside boundary, within radius, not accessible
+    await createAccommodation({
+      slug: 'near-nantes-not-accessible',
+      nbAccessibleApartments: 0,
+      geom: { type: 'Point', coordinates: [-1.45, 47.23] },
+    })
+
+    const result = await caller.accommodations.listExpandedByCity({
+      city: 'nantes',
+      isAccessible: true,
+    })
+    expect(result.count).toBe(1)
+    expect(result.results.features[0].properties.slug).toBe('near-nantes-accessible')
+  })
+
+  it('citySlug combined with other filters', async () => {
+    const academy = await createAcademy({ name: 'Académie de Bordeaux' })
+    const department = await createDepartment({ academyId: academy.id, code: '33', name: 'Gironde' })
+    await createCity({
+      departmentId: department.id,
+      name: 'Bordeaux',
+      slug: 'bordeaux',
+      boundary: {
+        type: 'MultiPolygon',
+        coordinates: [
+          [
+            [
+              [-0.64, 44.81],
+              [-0.54, 44.81],
+              [-0.54, 44.88],
+              [-0.64, 44.88],
+              [-0.64, 44.81],
+            ],
+          ],
+        ],
+      },
+    })
+
+    await createAccommodation({
+      slug: 'bordeaux-cheap-accessible',
+      priceMin: 300,
+      nbAccessibleApartments: 2,
+      geom: { type: 'Point', coordinates: [-0.58, 44.84] },
+    })
+    await createAccommodation({
+      slug: 'bordeaux-expensive',
+      priceMin: 900,
+      nbAccessibleApartments: 0,
+      geom: { type: 'Point', coordinates: [-0.57, 44.85] },
+    })
+
+    const result = await caller.accommodations.list({
+      citySlug: 'bordeaux',
+      priceMax: 500,
+      isAccessible: true,
+    })
+    expect(result.count).toBe(1)
+    expect(result.results.features[0].properties.slug).toBe('bordeaux-cheap-accessible')
   })
 
   it('filters by isAccessible', async () => {
@@ -177,6 +396,94 @@ describe('accommodations.list', () => {
     const result = await caller.accommodations.list({})
     expect(result.count).toBe(1)
     expect(result.results.features[0].properties.slug).toBe('non-crous-default')
+  })
+
+  it('filters by citySlug (spatial — strict city boundary)', async () => {
+    const academy = await createAcademy({ name: 'Académie de Lille' })
+    const department = await createDepartment({ academyId: academy.id, code: '59', name: 'Nord' })
+    await createCity({
+      departmentId: department.id,
+      name: 'Lille',
+      slug: 'lille',
+      boundary: {
+        type: 'MultiPolygon',
+        coordinates: [
+          [
+            [
+              [3.02, 50.6],
+              [3.1, 50.6],
+              [3.1, 50.66],
+              [3.02, 50.66],
+              [3.02, 50.6],
+            ],
+          ],
+        ],
+      },
+    })
+
+    await createAccommodation({
+      slug: 'in-lille',
+      geom: { type: 'Point', coordinates: [3.06, 50.63] },
+    })
+    await createAccommodation({
+      slug: 'in-villeneuve-dascq',
+      geom: { type: 'Point', coordinates: [3.13, 50.63] },
+    })
+
+    const result = await caller.accommodations.list({ citySlug: 'lille' })
+    expect(result.count).toBe(1)
+    expect(result.results.features[0].properties.slug).toBe('in-lille')
+  })
+
+  it('citySlug takes priority over bbox', async () => {
+    const academy = await createAcademy({ name: 'Académie de Lille 2' })
+    const department = await createDepartment({ academyId: academy.id, code: '60', name: 'Nord 2' })
+    await createCity({
+      departmentId: department.id,
+      name: 'Lille 2',
+      slug: 'lille-2',
+      boundary: {
+        type: 'MultiPolygon',
+        coordinates: [
+          [
+            [
+              [3.02, 50.6],
+              [3.1, 50.6],
+              [3.1, 50.66],
+              [3.02, 50.66],
+              [3.02, 50.6],
+            ],
+          ],
+        ],
+      },
+    })
+
+    await createAccommodation({
+      slug: 'in-city-boundary',
+      geom: { type: 'Point', coordinates: [3.06, 50.63] },
+    })
+    await createAccommodation({
+      slug: 'in-bbox-but-outside-city',
+      geom: { type: 'Point', coordinates: [3.13, 50.63] },
+    })
+
+    // bbox covers both points, but citySlug should take priority and only return in-city results
+    const result = await caller.accommodations.list({
+      citySlug: 'lille-2',
+      bbox: '2.9,50.5,3.2,50.7',
+    })
+    expect(result.count).toBe(1)
+    expect(result.results.features[0].properties.slug).toBe('in-city-boundary')
+  })
+
+  it('citySlug with unknown slug returns no results', async () => {
+    await createAccommodation({
+      slug: 'some-accommodation',
+      geom: { type: 'Point', coordinates: [3.06, 50.63] },
+    })
+
+    const result = await caller.accommodations.list({ citySlug: 'ville-inexistante' })
+    expect(result.count).toBe(0)
   })
 
   it('filters by academyId (spatial)', async () => {
