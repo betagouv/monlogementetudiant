@@ -38,8 +38,10 @@ pnpm drizzle-kit migrate
 Les variables de connexion sont dans `.env.dist` :
 
 ```
-DATABASE_URL=postgres://jde:jde@localhost:5433/mle_dev
-DATABASE_URL_TEST=postgres://test:test@localhost:5434/mle_test
+DATABASE_URL=postgres://mle:mle@localhost:5490/mle_dev
+DATABASE_URL_TEST=postgres://test:test@localhost:5491/mle_test
+
+cp .env.dist .env
 ```
 
 ## Commandes
