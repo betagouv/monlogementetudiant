@@ -66,10 +66,14 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
               total: accommodation.properties.nb_t1,
               priceMin: accommodation.properties.price_min_t1,
               priceMax: accommodation.properties.price_max_t1,
+              superficieMin: accommodation.properties.superficie_min_t1,
+              superficieMax: accommodation.properties.superficie_max_t1,
               availableField: 'nb_t1_available' as const,
               totalField: 'nb_t1' as const,
               priceMinField: 'price_min_t1' as const,
               priceMaxField: 'price_max_t1' as const,
+              superficieMinField: 'superficie_min_t1' as const,
+              superficieMaxField: 'superficie_max_t1' as const,
             },
             {
               type: 'T1 bis',
@@ -77,10 +81,14 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
               total: accommodation.properties.nb_t1_bis,
               priceMin: accommodation.properties.price_min_t1_bis,
               priceMax: accommodation.properties.price_max_t1_bis,
+              superficieMin: accommodation.properties.superficie_min_t1_bis,
+              superficieMax: accommodation.properties.superficie_max_t1_bis,
               availableField: 'nb_t1_bis_available' as const,
               totalField: 'nb_t1_bis' as const,
               priceMinField: 'price_min_t1_bis' as const,
               priceMaxField: 'price_max_t1_bis' as const,
+              superficieMinField: 'superficie_min_t1_bis' as const,
+              superficieMaxField: 'superficie_max_t1_bis' as const,
             },
             {
               type: 'T2',
@@ -88,10 +96,14 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
               total: accommodation.properties.nb_t2,
               priceMin: accommodation.properties.price_min_t2,
               priceMax: accommodation.properties.price_max_t2,
+              superficieMin: accommodation.properties.superficie_min_t2,
+              superficieMax: accommodation.properties.superficie_max_t2,
               availableField: 'nb_t2_available' as const,
               totalField: 'nb_t2' as const,
               priceMinField: 'price_min_t2' as const,
               priceMaxField: 'price_max_t2' as const,
+              superficieMinField: 'superficie_min_t2' as const,
+              superficieMaxField: 'superficie_max_t2' as const,
             },
             {
               type: 'T3',
@@ -99,10 +111,14 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
               total: accommodation.properties.nb_t3,
               priceMin: accommodation.properties.price_min_t3,
               priceMax: accommodation.properties.price_max_t3,
+              superficieMin: accommodation.properties.superficie_min_t3,
+              superficieMax: accommodation.properties.superficie_max_t3,
               availableField: 'nb_t3_available' as const,
               totalField: 'nb_t3' as const,
               priceMinField: 'price_min_t3' as const,
               priceMaxField: 'price_max_t3' as const,
+              superficieMinField: 'superficie_min_t3' as const,
+              superficieMaxField: 'superficie_max_t3' as const,
             },
             {
               type: 'T4',
@@ -110,10 +126,14 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
               total: accommodation.properties.nb_t4,
               priceMin: accommodation.properties.price_min_t4,
               priceMax: accommodation.properties.price_max_t4,
+              superficieMin: accommodation.properties.superficie_min_t4,
+              superficieMax: accommodation.properties.superficie_max_t4,
               availableField: 'nb_t4_available' as const,
               totalField: 'nb_t4' as const,
               priceMinField: 'price_min_t4' as const,
               priceMaxField: 'price_max_t4' as const,
+              superficieMinField: 'superficie_min_t4' as const,
+              superficieMaxField: 'superficie_max_t4' as const,
             },
             {
               type: 'T5',
@@ -121,10 +141,14 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
               total: accommodation.properties.nb_t5,
               priceMin: accommodation.properties.price_min_t5,
               priceMax: accommodation.properties.price_max_t5,
+              superficieMin: accommodation.properties.superficie_min_t5,
+              superficieMax: accommodation.properties.superficie_max_t5,
               availableField: 'nb_t5_available' as const,
               totalField: 'nb_t5' as const,
               priceMinField: 'price_min_t5' as const,
               priceMaxField: 'price_max_t5' as const,
+              superficieMinField: 'superficie_min_t5' as const,
+              superficieMaxField: 'superficie_max_t5' as const,
             },
             {
               type: 'T6',
@@ -132,10 +156,14 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
               total: accommodation.properties.nb_t6,
               priceMin: accommodation.properties.price_min_t6,
               priceMax: accommodation.properties.price_max_t6,
+              superficieMin: accommodation.properties.superficie_min_t6,
+              superficieMax: accommodation.properties.superficie_max_t6,
               availableField: 'nb_t6_available' as const,
               totalField: 'nb_t6' as const,
               priceMinField: 'price_min_t6' as const,
               priceMaxField: 'price_max_t6' as const,
+              superficieMinField: 'superficie_min_t6' as const,
+              superficieMaxField: 'superficie_max_t6' as const,
             },
             {
               type: 'T7+',
@@ -143,10 +171,14 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
               total: accommodation.properties.nb_t7_more,
               priceMin: accommodation.properties.price_min_t7_more,
               priceMax: accommodation.properties.price_max_t7_more,
+              superficieMin: accommodation.properties.superficie_min_t7_more,
+              superficieMax: accommodation.properties.superficie_max_t7_more,
               availableField: 'nb_t7_more_available' as const,
               totalField: 'nb_t7_more' as const,
               priceMinField: 'price_min_t7_more' as const,
               priceMaxField: 'price_max_t7_more' as const,
+              superficieMinField: 'superficie_min_t7_more' as const,
+              superficieMaxField: 'superficie_max_t7_more' as const,
             },
           ].map((typology, index, arr) => (
             <div key={typology.type} className={`fr-p-4w ${index !== arr.length - 1 ? 'fr-border-bottom' : ''}`}>
@@ -190,6 +222,38 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
                         nativeInputProps={{
                           type: 'number',
                           ...register(typology.priceMaxField, numberTransform),
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="fr-grid-row fr-grid-row--gutters fr-flex fr-direction-md-row fr-direction-column fr-align-items-end fr-justify-content-end">
+                <div className="fr-col-md-6">
+                  <label className="fr-label fr-mb-0">Surface (m²)</label>
+                  <div className="fr-grid-row fr-grid-row--gutters">
+                    <div className="fr-col-6">
+                      <Input
+                        label=""
+                        hintText="Minimum"
+                        iconId="ri-shape-line"
+                        nativeInputProps={{
+                          type: 'number',
+                          min: 1,
+                          ...register(typology.superficieMinField, numberTransform),
+                        }}
+                      />
+                    </div>
+                    <div className="fr-col-6">
+                      <Input
+                        label=""
+                        hintText="Maximum"
+                        iconId="ri-shape-line"
+                        nativeInputProps={{
+                          type: 'number',
+                          min: 1,
+                          ...register(typology.superficieMaxField, numberTransform),
                         }}
                       />
                     </div>
