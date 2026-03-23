@@ -1,5 +1,6 @@
 'use client'
 
+import type L from 'leaflet'
 import { FC, useEffect, useMemo } from 'react'
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import { tss } from 'tss-react'
@@ -9,7 +10,7 @@ import 'leaflet-defaulticon-compatibility'
 import { parseAsString, useQueryStates } from 'nuqs'
 import { useAccomodations } from '~/hooks/use-accomodations'
 
-const BoundsHandler: FC = () => {
+const BoundsHandler: FC<{ markerPositions: L.LatLngTuple[] }> = ({ markerPositions }) => {
   const map = useMap()
   const [queryStates, setQueryStates] = useQueryStates({
     bbox: parseAsString,
@@ -24,10 +25,12 @@ const BoundsHandler: FC = () => {
         [south, west],
         [north, east],
       ])
+    } else if (markerPositions.length > 0) {
+      map.fitBounds(markerPositions, { padding: [20, 20] })
     } else {
       map.setView([46.5, 2.4], 6)
     }
-  }, [queryStates.bbox, map])
+  }, [queryStates.bbox, markerPositions, map])
 
   useMapEvents({
     dragend: (e) => {
@@ -127,9 +130,15 @@ export const AccomodationsMap: FC = () => {
 
   const { data: accommodations } = useAccomodations()
 
+  const accommodationsData = accommodations?.results.features || []
+
+  const markerPositions = useMemo<L.LatLngTuple[]>(
+    () => accommodationsData.map((a) => [a.geometry.coordinates[1], a.geometry.coordinates[0]]),
+    [accommodationsData],
+  )
+
   const markers = useMemo(() => {
-    const accommodationsData = accommodations?.results.features || []
-    return accommodationsData.map((accommodation) => (
+    return accommodationsData.map((accommodation, i) => (
       <Marker
         eventHandlers={{
           click: () => {
@@ -141,10 +150,10 @@ export const AccomodationsMap: FC = () => {
           },
         }}
         key={accommodation.id}
-        position={[accommodation.geometry.coordinates[1], accommodation.geometry.coordinates[0]]}
+        position={markerPositions[i]}
       />
     ))
-  }, [accommodations, queryStates.bbox, setQueryStates])
+  }, [accommodationsData, markerPositions, setQueryStates])
 
   const memoizedMap = useMemo(() => {
     return (
@@ -153,12 +162,12 @@ export const AccomodationsMap: FC = () => {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
-        <BoundsHandler />
+        <BoundsHandler markerPositions={markerPositions} />
         <CustomZoomControls />
         {markers}
       </MapContainer>
     )
-  }, [markers, queryStates.bbox])
+  }, [markers, markerPositions, queryStates.bbox])
 
   return memoizedMap
 }
