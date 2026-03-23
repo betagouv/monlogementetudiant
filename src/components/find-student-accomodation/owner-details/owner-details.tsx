@@ -25,6 +25,7 @@ interface OwnerDetailsProps {
   isAuthenticated: boolean
   accommodationSlug: string
   availableApartmentTypes: ApartmentType[]
+  acceptDossierFacile: boolean
 }
 
 export const OwnerDetails = async ({
@@ -40,6 +41,7 @@ export const OwnerDetails = async ({
   isAuthenticated,
   accommodationSlug,
   availableApartmentTypes,
+  acceptDossierFacile,
 }: OwnerDetailsProps) => {
   const t = await getTranslations('accomodation')
   const ownerUrl = externalUrl || owner?.url
@@ -90,6 +92,7 @@ export const OwnerDetails = async ({
         accommodationSlug={accommodationSlug}
         availableApartmentTypes={availableApartmentTypes}
         isAuthenticated={isAuthenticated}
+        acceptDossierFacile={acceptDossierFacile}
       />
       <div className={styles.sidebarOwner}>{!!ownerUrl && available && <ConsultOfferButton href={ownerUrl} slug={slug ?? ''} />}</div>
       {nbAvailable === 0 && (

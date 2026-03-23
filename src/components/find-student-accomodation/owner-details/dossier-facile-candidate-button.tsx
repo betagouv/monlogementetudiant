@@ -14,9 +14,10 @@ interface Props {
   accommodationSlug: string
   availableApartmentTypes: ApartmentType[]
   isAuthenticated: boolean
+  acceptDossierFacile: boolean
 }
 
-export const DossierFacileLinkButton = ({ accommodationSlug, availableApartmentTypes, isAuthenticated }: Props) => {
+export const DossierFacileLinkButton = ({ accommodationSlug, availableApartmentTypes, isAuthenticated, acceptDossierFacile }: Props) => {
   const t = useTranslations('accomodation')
   const trpc = useTRPC()
   const trpcClient = useTRPCClient()
@@ -56,7 +57,7 @@ export const DossierFacileLinkButton = ({ accommodationSlug, availableApartmentT
 
   const tenantUrl = tenant?.url ?? z.string().parse(process.env.NEXT_PUBLIC_DOSSIERFACILE_LOCATAIRE_URL)
 
-  if (!isAuthenticated) return null
+  if (!isAuthenticated || !acceptDossierFacile) return null
 
   if (isTenantLoading || isApplicationLoading) {
     return (
