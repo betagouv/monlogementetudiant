@@ -159,11 +159,12 @@ async function processImages(picturesRaw: string, verbose?: boolean): Promise<st
     .filter((u) => u !== '' && (u.startsWith('http://') || u.startsWith('https://')))
 
   const result: string[] = []
+  const bucket = process.env.S3_BUCKET ?? ''
 
   for (const url of urls) {
     try {
       const host = new URL(url).hostname
-      if (host === 's3.gra.io.cloud.ovh.net' || host.endsWith('.s3.gra.io.cloud.ovh.net')) {
+      if (host === `${bucket}.s3.gra.io.cloud.ovh.net`) {
         result.push(url)
       } else {
         if (verbose) console.log(`    Téléchargement image : ${url}`)

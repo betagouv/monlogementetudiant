@@ -2,6 +2,7 @@ import { program } from 'commander'
 import { importBackup } from './commands/import-backup'
 import { migrate } from './commands/migrate'
 import { migrateUsers } from './commands/migrate-users'
+import { uploadImages } from './commands/upload-images'
 import { runImport, runSync } from './factory'
 
 program.name('mle').description('MLE CLI tools')
@@ -37,5 +38,11 @@ program
   .option('--force', 'Forcer la mise à jour')
   .option('--date <date>', 'Date de référence (YYYY-MM-DD)')
   .action((type, opts) => runSync(type, opts))
+
+program
+  .command('upload-images <dir>')
+  .description('Upload des images depuis un dossier local vers S3 (un sous-dossier = un groupe)')
+  .requiredOption('--name <name>', 'Nom du gestionnaire (ex: aclef, acm-habitat)')
+  .action((dir, opts) => uploadImages(dir, opts))
 
 program.parse()
