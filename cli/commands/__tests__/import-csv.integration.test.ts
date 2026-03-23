@@ -436,10 +436,11 @@ describe('import-csv integration', () => {
     expect(accs[0].nbT1).toBe(10)
   })
 
-  it('handles pictures with S3 URLs (kept as-is)', async () => {
+  it('handles pictures with S3 URLs from current bucket (kept as-is)', async () => {
     const db = getTestDb()
 
-    const s3Url = 'https://s3.gra.io.cloud.ovh.net/bucket/accommodations/image1.jpg'
+    vi.stubEnv('S3_BUCKET', 'monlogementetudiant-s3-staging')
+    const s3Url = 'https://monlogementetudiant-s3-staging.s3.gra.io.cloud.ovh.net/accommodations/image1.jpg'
     const filePath = writeTmpCsv([makeRow({ pictures: s3Url })])
 
     await command.execute({ file: filePath, source: 'test-s3-pic' })
@@ -447,6 +448,9 @@ describe('import-csv integration', () => {
     const accs = await db.select().from(accommodations)
     expect(accs[0].imagesUrls).toContain(s3Url)
     expect(accs[0].imagesCount).toBe(1)
+    // Should NOT have fetched the image since it's already on our bucket
+    expect(mockFetch).not.toHaveBeenCalled()
+    vi.unstubAllEnvs()
   })
 
   it('handles pictures with external URLs (re-uploaded)', async () => {
@@ -473,8 +477,9 @@ describe('import-csv integration', () => {
   it('handles multiple pictures separated by pipe', async () => {
     const db = getTestDb()
 
-    const s3Url1 = 'https://s3.gra.io.cloud.ovh.net/bucket/img1.jpg'
-    const s3Url2 = 'https://s3.gra.io.cloud.ovh.net/bucket/img2.jpg'
+    vi.stubEnv('S3_BUCKET', 'monlogementetudiant-s3-staging')
+    const s3Url1 = 'https://monlogementetudiant-s3-staging.s3.gra.io.cloud.ovh.net/img1.jpg'
+    const s3Url2 = 'https://monlogementetudiant-s3-staging.s3.gra.io.cloud.ovh.net/img2.jpg'
     const filePath = writeTmpCsv([makeRow({ pictures: `${s3Url1}|${s3Url2}` })])
 
     await command.execute({ file: filePath, source: 'test-multi-pic' })
@@ -482,6 +487,35 @@ describe('import-csv integration', () => {
     const accs = await db.select().from(accommodations)
     expect(accs[0].imagesUrls).toHaveLength(2)
     expect(accs[0].imagesCount).toBe(2)
+    vi.unstubAllEnvs()
+  })
+
+  it('re-uploads staging S3 images when running in prod', async () => {
+    const db = getTestDb()
+
+    // Simulate prod environment with prod bucket
+    vi.stubEnv('S3_BUCKET', 'monlogementetudiant-s3')
+
+    // Image URL from staging bucket
+    const stagingUrl = 'https://monlogementetudiant-s3-staging.s3.gra.io.cloud.ovh.net/accommodations/image1.jpg'
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      arrayBuffer: async () => new ArrayBuffer(100),
+    })
+
+    const filePath = writeTmpCsv([makeRow({ pictures: stagingUrl })])
+
+    await command.execute({ file: filePath, source: 'test-staging-to-prod' })
+
+    // Should have fetched (re-downloaded) the staging image
+    expect(mockFetch).toHaveBeenCalledWith(stagingUrl)
+
+    const accs = await db.select().from(accommodations)
+    expect(accs[0].imagesUrls).toHaveLength(1)
+    // The URL should now point to our (mocked) prod bucket, not staging
+    expect(accs[0].imagesUrls![0]).not.toContain('staging')
+    vi.unstubAllEnvs()
   })
 
   it('handles BOM-encoded CSV', async () => {
