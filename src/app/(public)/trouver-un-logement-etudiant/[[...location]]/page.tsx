@@ -58,12 +58,12 @@ export default async function FindStudentAccommodationPage({
 }) {
   const awaitedParams = await params
   const awaitedSearchParams = await searchParams
-  const { dehydratedState, user, territory, isAcademy, serverBbox, serverAcademie, routeCategoryKey } =
+  const { dehydratedState, user, territory, isAcademy, serverBbox, serverAcademie, serverVille, routeCategoryKey } =
     await getStudentAccommodationPageContext(awaitedParams, awaitedSearchParams)
 
   return (
     <HydrationBoundary state={dehydratedState}>
-      <SearchParamsSync bbox={serverBbox} academie={serverAcademie} />
+      <SearchParamsSync bbox={serverBbox} academie={serverAcademie} ville={serverVille} />
       <div className="fr-container">
         <FindStudentAccommodationTitle location={territory?.name} />
         <FindStudentAccomodationHeader />

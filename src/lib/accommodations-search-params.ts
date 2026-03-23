@@ -9,6 +9,7 @@ export const accommodationsParsers = {
   page: parseAsInteger,
   prix: parseAsInteger,
   crous: parseAsString,
+  ville: parseAsString,
 }
 
 export const accommodationsSearchParamsCache = createSearchParamsCache(accommodationsParsers)
