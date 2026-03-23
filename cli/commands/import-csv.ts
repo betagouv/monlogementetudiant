@@ -1,6 +1,6 @@
+import { and, eq, sql } from 'drizzle-orm'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
-import { and, eq, sql } from 'drizzle-orm'
 import { accommodations, externalSources } from '../../src/server/db/schema'
 import { generateAccommodationKey, uploadFile } from '../../src/server/services/s3'
 import { computeDerivedFields, generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
@@ -30,7 +30,13 @@ function toBool(value: string | undefined): boolean | null {
   return ['oui', 'vrai', 'true', '1', 'yes'].includes(v)
 }
 
-function parseCsvLine(line: string): string[] {
+function detectSeparator(headerLine: string): string {
+  const semicolons = headerLine.split(';').length
+  const commas = headerLine.split(',').length
+  return semicolons >= commas ? ';' : ','
+}
+
+function parseCsvLine(line: string, separator: string): string[] {
   const fields: string[] = []
   let current = ''
   let inQuotes = false
@@ -50,7 +56,7 @@ function parseCsvLine(line: string): string[] {
       }
     } else if (ch === '"') {
       inQuotes = true
-    } else if (ch === ';') {
+    } else if (ch === separator) {
       fields.push(current)
       current = ''
     } else {
@@ -105,12 +111,13 @@ function parseCsv(filePath: string, limit?: number): CsvRow[] {
   const lines = splitCsvRows(content)
   if (lines.length < 2) return []
 
-  const headers = parseCsvLine(lines[0]).map((h) => h.trim())
+  const separator = detectSeparator(lines[0])
+  const headers = parseCsvLine(lines[0], separator).map((h) => h.trim())
   const rows: CsvRow[] = []
 
   for (let i = 1; i < lines.length; i++) {
     if (limit && rows.length >= limit) break
-    const fields = parseCsvLine(lines[i])
+    const fields = parseCsvLine(lines[i], separator)
     const row: CsvRow = {}
     for (let j = 0; j < headers.length; j++) {
       row[headers[j]] = fields[j]?.trim() ?? ''
