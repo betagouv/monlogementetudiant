@@ -55,7 +55,9 @@ export const getStudentAccommodationPageContext = cache(
     const isAcademy = routeCategoryKey === 'academie'
     const isCity = routeCategoryKey === 'ville'
     const serverBbox =
-      !isAcademy && territoryBbox ? `${territoryBbox.west},${territoryBbox.south},${territoryBbox.east},${territoryBbox.north}` : undefined
+      !isAcademy && !isCity && territoryBbox
+        ? `${territoryBbox.west},${territoryBbox.south},${territoryBbox.east},${territoryBbox.north}`
+        : undefined
     const serverAcademie = isAcademy && territory ? territory.id.toString() : undefined
     const serverVille = isCity && territory && 'slug' in territory ? territory.slug : undefined
 
@@ -113,7 +115,6 @@ export const getStudentAccommodationPageContext = cache(
       isAcademy,
       serverBbox,
       serverAcademie,
-      serverVille,
       routeCategoryKey,
     }
   },

@@ -67,10 +67,13 @@ export const prefetchAccommodations = async (
     const data = client.getQueryData(trpc.accommodations.list.queryOptions(queryInput).queryKey)
     if (data) {
       // Seed the cache key the client will use on first render (before SearchParamsSync updates the URL)
+      // Client derives citySlug from pathname, not from URL params.
+      // On first render, pathname is available so citySlug matches the server prefetch.
+      // But we also seed a key without citySlug for the brief moment before hydration.
       const clientQueryInput = {
         ...queryInput,
         bbox: parsedParams.bbox ?? undefined,
-        citySlug: parsedParams.ville ?? undefined,
+        citySlug: undefined,
         academyId: parsedParams.academie ? Number(parsedParams.academie) : undefined,
       }
       client.setQueryData(trpc.accommodations.list.queryOptions(clientQueryInput).queryKey, data)
