@@ -77,13 +77,14 @@ export async function createCity(
 ) {
   const db = getTestDb()
   const { boundary, ...rest } = overrides
+  const suffix = ++cityCounter
   const [row] = await db
     .insert(cities)
     .values({
       name: 'Saint-Étienne',
       slug: 'saint-etienne',
       postalCodes: ['42000'],
-      inseeCodes: ['42218'],
+      inseeCodes: [String(42000 + suffix).padStart(5, '0')],
       popular: false,
       ...rest,
       ...(boundary ? { boundary: sql`ST_SetSRID(ST_GeomFromGeoJSON(${JSON.stringify(boundary)}), 4326)` } : {}),
@@ -118,6 +119,7 @@ export async function createOwner(overrides: Partial<OwnerInsert> & { userId?: s
   return row
 }
 
+let cityCounter = 0
 let accommodationCounter = 0
 
 export async function createAccommodation(

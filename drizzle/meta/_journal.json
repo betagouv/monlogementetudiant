@@ -71,6 +71,27 @@
       "when": 1774255965885,
       "tag": "0009_brief_psynapse",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1774275936430,
+      "tag": "0010_deduplicate_cities",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1774275936432,
+      "tag": "0011_city_insee_unique_and_accommodation_fk",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1774275936434,
+      "tag": "0012_backfill_accommodation_city_id",
+      "breakpoints": true
     }
   ]
 }
