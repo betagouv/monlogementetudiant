@@ -147,7 +147,7 @@
       "emailSubject": "Logement étudiant {title} {locationFormatted}",
       "emailBody": "Venez découvrir le logement étudiant {title}, situé {locationFormatted}.\n\n🔗 {url}\n📍 {location}\n\nCordialement,\nMon Logement Étudiant",
       "buttons": {
-        "consult": "Consulter le site du bailleur",
+        "consult": "Consulter l'offre",
         "dossierFacile": "Candidater avec Dossier Facile",
         "dossierFacileConnect": "Lier mon compte DossierFacile",
         "dossierFacileConnectDescription": "Liez votre dossier de location certifié",
