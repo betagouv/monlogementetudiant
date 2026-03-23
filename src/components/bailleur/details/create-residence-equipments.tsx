@@ -40,6 +40,7 @@ export const CreateResidenceEquipments = () => {
                   activeCategory === category.key && toggleStyles.equipmentsToggleButtonActive,
                 )}
                 priority={activeCategory === category.key ? 'secondary' : 'tertiary'}
+                type="button"
                 onClick={() => setActiveCategory(category.key)}
               >
                 {category.label}
