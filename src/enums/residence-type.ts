@@ -15,10 +15,9 @@ export const RESIDENCE_TYPE_LABELS: Record<EResidenceType, string> = {
   [EResidenceType.RESIDENCE_ETUDIANTE]: 'Résidence étudiante',
   [EResidenceType.SOCIALE_JEUNES_ACTIFS]: 'Résidence Sociale Jeunes Actifs (RSJA, Habitat Jeunes)',
   [EResidenceType.JEUNES_TRAVAILLEURS]: 'Foyer de jeunes travailleurs (FJT)',
-  [EResidenceType.SOCIAL_CLASSIQUE]: 'Logement social classique commercialisé en partie aux étudiants',
+  [EResidenceType.SOCIAL_CLASSIQUE]: 'Logement social classique commercialisé aux étudiants',
   [EResidenceType.SOCIAL_FLECHE_JEUNE]: 'Logement social fléché vers les jeunes (loi ELAN – article 109)',
   [EResidenceType.ECOLE]: "Résidence d'école ou d'établissement d'enseignement",
-  [EResidenceType.SOUS_LOCATION]:
-    'Logements sociaux sous-loués aux étudiants par une association via une convention ou un contrat spécifique',
+  [EResidenceType.SOUS_LOCATION]: 'Logements sociaux sous-loués aux étudiants par une association',
   [EResidenceType.INTERGENERATIONNELLE]: 'Cohabitation intergénérationnelle',
 }
