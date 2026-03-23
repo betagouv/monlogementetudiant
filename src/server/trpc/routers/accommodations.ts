@@ -384,6 +384,7 @@ export const accommodationsRouter = createTRPCRouter({
       const citySlug = input.city.trim().toLowerCase()
       const [cityRow] = await db
         .select({
+          id: cities.id,
           centerLat: sql<number>`ST_Y(ST_Centroid(${cities.boundary})::geometry)`,
           centerLng: sql<number>`ST_X(ST_Centroid(${cities.boundary})::geometry)`,
         })
@@ -411,6 +412,10 @@ export const accommodationsRouter = createTRPCRouter({
       const conditions: SQL[] = [eq(accommodations.published, true), sql`${accommodations.geom} IS NOT NULL`]
       await applyCommonListFilters(conditions, input)
       applyCenterRadiusFilter(conditions, center, radius)
+      // Exclude accommodations inside the city boundary so only surrounding results appear
+      conditions.push(
+        sql`NOT ST_Within(${accommodations.geom}, (SELECT ${cities.boundary} FROM ${cities} WHERE ${cities.id} = ${cityRow.id}))`,
+      )
       if (input.excludeIds?.length) {
         conditions.push(notInArray(accommodations.id, input.excludeIds))
       }
