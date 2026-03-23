@@ -1,4 +1,5 @@
 import { bigint, boolean, geometry, index, integer, pgTable, text, timestamp, unique, varchar } from 'drizzle-orm/pg-core'
+import { cities } from './cities'
 import { owners } from './owners'
 
 export const accommodations = pgTable(
@@ -83,6 +84,7 @@ export const accommodations = pgTable(
     externalReference: varchar('external_reference', { length: 255 }),
 
     // Relations
+    cityId: bigint('city_id', { mode: 'number' }).references(() => cities.id),
     ownerId: bigint('owner_id', { mode: 'number' }).references(() => owners.id),
 
     // Timestamps
@@ -90,6 +92,7 @@ export const accommodations = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }),
   },
   (t) => [
+    index('accommodation_city_id_idx').on(t.cityId),
     index('accommodation_owner_id_idx').on(t.ownerId),
     index('accommodation_published_idx').on(t.published),
     unique('unique_owner_external_reference').on(t.ownerId, t.externalReference),

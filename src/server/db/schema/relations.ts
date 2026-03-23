@@ -19,8 +19,9 @@ export const departmentsRelations = relations(departments, ({ one, many }) => ({
   cities: many(cities),
 }))
 
-export const citiesRelations = relations(cities, ({ one }) => ({
+export const citiesRelations = relations(cities, ({ one, many }) => ({
   department: one(departments, { fields: [cities.departmentId], references: [departments.id] }),
+  accommodations: many(accommodations),
 }))
 
 export const userRelations = relations(user, ({ one }) => ({
@@ -43,6 +44,7 @@ export const ownersRelations = relations(owners, ({ many }) => ({
 }))
 
 export const accommodationsRelations = relations(accommodations, ({ one, many }) => ({
+  city: one(cities, { fields: [accommodations.cityId], references: [cities.id] }),
   owner: one(owners, { fields: [accommodations.ownerId], references: [owners.id] }),
   favorites: many(favoriteAccommodations),
   externalSources: many(externalSources),

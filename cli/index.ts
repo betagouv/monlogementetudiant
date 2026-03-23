@@ -1,4 +1,5 @@
 import { program } from 'commander'
+import { healthcheck } from './commands/healthcheck'
 import { importBackup } from './commands/import-backup'
 import { migrate } from './commands/migrate'
 import { migrateUsers } from './commands/migrate-users'
@@ -44,5 +45,13 @@ program
   .description('Upload des images depuis un dossier local vers S3 (un sous-dossier = un groupe)')
   .requiredOption('--name <name>', 'Nom du gestionnaire (ex: aclef, acm-habitat)')
   .action((dir, opts) => uploadImages(dir, opts))
+
+program
+  .command('healthcheck')
+  .description('Vérifie la cohérence des résidences publiées (city_id, URLs)')
+  .option('--verbose', 'Afficher le détail de chaque résidence')
+  .option('--fetch', 'Tester les URLs en HTTP (nécessite le serveur Next.js)')
+  .option('--base-url <url>', 'URL de base pour les tests HTTP', 'http://localhost:3000')
+  .action((opts) => healthcheck(opts))
 
 program.parse()

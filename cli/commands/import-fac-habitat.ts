@@ -205,8 +205,11 @@ const command: ImportCommand = {
 
         let resolvedCity = geo?.city ?? item.city
         const resolvedPostalCode = geo?.postalCode ?? item.postal_code
+        let resolvedCityId: number | null = null
         if (resolvedPostalCode && resolvedCity) {
-          resolvedCity = await ensureCity(resolvedPostalCode, resolvedCity)
+          const cityResult = await ensureCity(resolvedPostalCode, resolvedCity)
+          resolvedCity = cityResult.name
+          resolvedCityId = cityResult.id || null
         }
 
         const typology = buildTypologyValues(item)
@@ -231,6 +234,7 @@ const command: ImportCommand = {
           slug: await findAvailableSlug(generateSlug(item.name), db, accommodations),
           address: geo?.address ?? item.address,
           city: resolvedCity,
+          cityId: resolvedCityId,
           postalCode: resolvedPostalCode,
           residenceType: 'residence-etudiante',
           target_audience: 'etudiants',

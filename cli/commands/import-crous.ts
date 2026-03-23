@@ -245,8 +245,11 @@ const command: ImportCommand = {
 
         resolvedCity = normalizeCity(resolvedCity)
 
+        let resolvedCityId: number | null = null
         if (resolvedPostalCode) {
-          resolvedCity = await ensureCity(resolvedPostalCode, resolvedCity || name)
+          const cityResult = await ensureCity(resolvedPostalCode, resolvedCity || name)
+          resolvedCity = cityResult.name
+          resolvedCityId = cityResult.id || null
         }
 
         if (!resolvedCity && options.verbose) {
@@ -314,6 +317,7 @@ const command: ImportCommand = {
             .set({
               ...baseFields,
               ...(resolvedCity ? { city: resolvedCity } : {}),
+              ...(resolvedCityId ? { cityId: resolvedCityId } : {}),
               ...(resolvedPostalCode ? { postalCode: resolvedPostalCode } : {}),
             })
             .where(eq(accommodations.id, existing.id))
@@ -343,6 +347,7 @@ const command: ImportCommand = {
               ...baseFields,
               slug,
               city: resolvedCity || name,
+              cityId: resolvedCityId,
               postalCode: resolvedPostalCode || '00000',
               imagesCount: 0,
               createdAt: new Date(),

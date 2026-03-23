@@ -4,7 +4,7 @@ import { generateAccommodationKey, uploadFile } from '../../src/server/services/
 import { computeDerivedFields, generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
 import { findAvailableSlug } from '../../src/server/utils/slug'
 import { db } from '../lib/db'
-import { geocodeAddress } from '../lib/geocoder'
+import { ensureCity, geocodeAddress } from '../lib/geocoder'
 import type { ImportCommand, ImportOptions, ImportResult } from '../types'
 import { getOrCreateOwner } from '../utils/get-or-create-owner'
 
@@ -125,6 +125,14 @@ const command: ImportCommand = {
           .join(', ')
         const geo = await geocodeAddress(fullAddress)
 
+        const resolvedPostalCode = geo?.postalCode ?? residence.zip_code
+        const resolvedCityName = geo?.city ?? residence.city
+        let resolvedCityId: number | null = null
+        if (resolvedPostalCode && resolvedCityName) {
+          const cityResult = await ensureCity(resolvedPostalCode, resolvedCityName)
+          resolvedCityId = cityResult.id || null
+        }
+
         let imageUrls: string[] = []
         if (residence.images?.length && !options.dryRun) {
           imageUrls = await uploadImages(residence.images, options.verbose ?? false)
@@ -141,8 +149,9 @@ const command: ImportCommand = {
           slug: await findAvailableSlug(generateSlug(residence.title), db, accommodations),
           description: (residence.description as string) ?? null,
           address: geo?.address ?? residence.address,
-          city: geo?.city ?? residence.city,
-          postalCode: geo?.postalCode ?? residence.zip_code,
+          city: resolvedCityName,
+          cityId: resolvedCityId,
+          postalCode: resolvedPostalCode,
           residenceType: 'universitaire-conventionnee',
           published: true,
           ...(geo ? { geom: sql`ST_SetSRID(ST_MakePoint(${geo.lng}, ${geo.lat}), 4326)` } : {}),
