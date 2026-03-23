@@ -16,7 +16,7 @@ import { NearbyAccommodations } from '~/components/accommodation/nearby-accommod
 import { SaveAccommodationFavoriteButton } from '~/components/favorites/save-accommodation-favorite-button'
 import { OwnerDetails } from '~/components/find-student-accomodation/owner-details/owner-details'
 import { getAvailableApartmentTypes } from '~/enums/apartment-type'
-import { RESIDENCE_TYPE_LABELS } from '~/enums/residence-type'
+import { EResidenceType, RESIDENCE_TYPE_LABELS } from '~/enums/residence-type'
 import { formatCityWithA } from '~/utils/french-contraction'
 import { getAccommodationPageContext } from './get-accommodation-page-context'
 import styles from './logement.module.css'
@@ -73,6 +73,9 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
 
   const cityFormatted = formatCityWithA(city)
   const breadCrumbTitle = commonT('breadcrumbs.accommodationTitle', { name, cityFormatted })
+  const isRSJAorFJT =
+    accommodation.residence_type === EResidenceType.SOCIALE_JEUNES_ACTIFS ||
+    accommodation.residence_type === EResidenceType.JEUNES_TRAVAILLEURS
 
   return (
     <HydrationBoundary state={dehydratedState}>
@@ -100,7 +103,7 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
           <div className={styles.infosContainer}>
             {images_urls && images_urls.length > 0 && <AccommodationImages images={images_urls} title={name} />}
             <div className={styles.section}>
-              {accommodation.residence_type && (
+              {accommodation.residence_type && isRSJAorFJT && (
                 <span className={clsx(styles.accommodationType, 'fr-text--bold fr-text--uppercase')}>
                   {RESIDENCE_TYPE_LABELS[accommodation.residence_type]}
                 </span>
