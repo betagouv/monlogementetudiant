@@ -394,10 +394,15 @@ export const accommodationsRouter = createTRPCRouter({
         .limit(1)
 
       if (!cityRow) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'City not found',
-        })
+        return {
+          count: 0,
+          page_size: input.pageSize,
+          min_price: null,
+          max_price: null,
+          next: null,
+          previous: null,
+          results: { features: [] },
+        }
       }
 
       const { page, pageSize, radius } = input
