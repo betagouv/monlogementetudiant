@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { db } from '~/server/db'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { favoriteAccommodations } from '~/server/db/schema/favorite-accommodations'
+import { owners } from '~/server/db/schema/owners'
 import { createTRPCRouter, userProcedure } from '../init'
 import { mapToGeoJsonFeature, priceMaxComputed } from './accommodations'
 
@@ -11,28 +12,29 @@ export const favoritesRouter = createTRPCRouter({
   list: userProcedure.query(async ({ ctx }) => {
     const userId = ctx.session.user.id
 
-    const results = await db.query.favoriteAccommodations.findMany({
-      where: eq(favoriteAccommodations.userId, userId),
-      orderBy: desc(favoriteAccommodations.createdAt),
-      with: {
+    const results = await db
+      .select({
+        id: favoriteAccommodations.id,
+        createdAt: favoriteAccommodations.createdAt,
         accommodation: {
-          columns: { geom: false },
-          with: { owner: true },
-          extras: {
-            priceMaxComputed: priceMaxComputed.as('priceMaxComputed'),
-            lat: sql<number>`ST_Y(${accommodations.geom}::geometry)`.as('lat'),
-            lng: sql<number>`ST_X(${accommodations.geom}::geometry)`.as('lng'),
-          },
+          ...accommodations,
+          priceMaxComputed: priceMaxComputed,
+          lat: sql<number>`ST_Y(${accommodations.geom}::geometry)`,
+          lng: sql<number>`ST_X(${accommodations.geom}::geometry)`,
+          ownerName: owners.name,
+          ownerUrl: owners.url,
         },
-      },
-    })
+      })
+      .from(favoriteAccommodations)
+      .innerJoin(accommodations, eq(favoriteAccommodations.accommodationId, accommodations.id))
+      .leftJoin(owners, eq(accommodations.ownerId, owners.id))
+      .where(and(eq(favoriteAccommodations.userId, userId), eq(accommodations.published, true)))
+      .orderBy(desc(favoriteAccommodations.createdAt))
 
     return results.map((row) => ({
       id: row.id,
       accommodation: mapToGeoJsonFeature({
         ...row.accommodation,
-        ownerName: row.accommodation.owner?.name ?? null,
-        ownerUrl: row.accommodation.owner?.url ?? null,
       }),
       created_at: row.createdAt,
     }))
@@ -47,7 +49,7 @@ export const favoritesRouter = createTRPCRouter({
     })
 
     if (!accom) {
-      throw new TRPCError({ code: 'NOT_FOUND', message: `Accommodation not found: ${input.accommodationSlug}` })
+      throw new TRPCError({ code: 'NOT_FOUND', message: `[favorites.add] Accommodation not found: ${input.accommodationSlug}` })
     }
 
     const [row] = await db
