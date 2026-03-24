@@ -7,7 +7,7 @@ import { APARTMENT_TYPES } from '~/enums/apartment-type'
 import { db } from '~/server/db'
 import { accommodations, dossierFacileApplications, dossierFacileTenants } from '~/server/db/schema'
 import { buildAuthorizationUrl, validateConfig } from '~/server/services/dossier-facile'
-import { createTRPCRouter, protectedProcedure } from '../init'
+import { createTRPCRouter, userProcedure } from '../init'
 
 const STATE_COOKIE_NAME = 'df_oauth_state'
 const STATE_TTL_SECONDS = 600 // 10 minutes
@@ -42,13 +42,9 @@ const availabilityKey: Record<
 }
 
 export const dossierFacileRouter = createTRPCRouter({
-  connectUrl: protectedProcedure
+  connectUrl: userProcedure
     .input(z.object({ returnTo: z.string().startsWith('/').optional() }).optional())
     .mutation(async ({ ctx, input }) => {
-      if (ctx.session.user.role !== 'user') {
-        throw new TRPCError({ code: 'FORBIDDEN', message: 'Only students can connect DossierFacile' })
-      }
-
       validateConfig()
 
       const state = crypto.randomUUID()
@@ -74,14 +70,14 @@ export const dossierFacileRouter = createTRPCRouter({
       return { authorizationUrl, expiresAt: expiresAt.toISOString() }
     }),
 
-  tenant: protectedProcedure.query(async ({ ctx }) => {
+  tenant: userProcedure.query(async ({ ctx }) => {
     const tenant = await db.query.dossierFacileTenants.findFirst({
       where: eq(dossierFacileTenants.userId, ctx.session.user.id),
     })
     return tenant ?? null
   }),
 
-  listApplications: protectedProcedure.input(z.object({ accommodationSlug: z.string() })).query(async ({ ctx, input }) => {
+  listApplications: userProcedure.input(z.object({ accommodationSlug: z.string() })).query(async ({ ctx, input }) => {
     const tenant = await db.query.dossierFacileTenants.findFirst({
       where: eq(dossierFacileTenants.userId, ctx.session.user.id),
     })
@@ -96,7 +92,7 @@ export const dossierFacileRouter = createTRPCRouter({
     return application ?? null
   }),
 
-  application: protectedProcedure
+  application: userProcedure
     .input(
       z.object({
         accommodationSlug: z.string(),
@@ -104,10 +100,6 @@ export const dossierFacileRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (ctx.session.user.role !== 'user') {
-        throw new TRPCError({ code: 'FORBIDDEN', message: 'Only students can apply' })
-      }
-
       const tenant = await db.query.dossierFacileTenants.findFirst({
         where: eq(dossierFacileTenants.userId, ctx.session.user.id),
       })
