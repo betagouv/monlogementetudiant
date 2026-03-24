@@ -9,7 +9,7 @@ import { cities } from '~/server/db/schema/cities'
 import { departments } from '~/server/db/schema/departments'
 import { studentAlerts } from '~/server/db/schema/student-alerts'
 import { bboxSelect } from '~/server/trpc/utils/spatial-helpers'
-import { createTRPCRouter, protectedProcedure } from '../init'
+import { createTRPCRouter, userProcedure } from '../init'
 
 type AlertMatchInput = {
   cityId: number | null
@@ -201,7 +201,7 @@ function buildUpdateData(fields: Record<string, unknown>): Record<string, unknow
 }
 
 export const alertsRouter = createTRPCRouter({
-  list: protectedProcedure.query(async ({ ctx }) => {
+  list: userProcedure.query(async ({ ctx }) => {
     const userId = ctx.session.user.id
 
     const alerts = await db
@@ -232,7 +232,7 @@ export const alertsRouter = createTRPCRouter({
     return results
   }),
 
-  create: protectedProcedure.input(ZCreateAlertRequest).mutation(async ({ ctx, input }) => {
+  create: userProcedure.input(ZCreateAlertRequest).mutation(async ({ ctx, input }) => {
     const userId = ctx.session.user.id
 
     const [row] = await db
@@ -252,7 +252,7 @@ export const alertsRouter = createTRPCRouter({
     return row
   }),
 
-  update: protectedProcedure.input(ZUpdateAlertRequest).mutation(async ({ ctx, input }) => {
+  update: userProcedure.input(ZUpdateAlertRequest).mutation(async ({ ctx, input }) => {
     const userId = ctx.session.user.id
     const { id, ...fields } = input
 
@@ -267,7 +267,7 @@ export const alertsRouter = createTRPCRouter({
     return row
   }),
 
-  delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ ctx, input }) => {
+  delete: userProcedure.input(z.object({ id: z.number() })).mutation(async ({ ctx, input }) => {
     const userId = ctx.session.user.id
 
     await db.delete(studentAlerts).where(and(eq(studentAlerts.id, input.id), eq(studentAlerts.userId, userId)))
