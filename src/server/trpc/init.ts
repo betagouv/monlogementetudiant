@@ -28,6 +28,13 @@ export const ownerProcedure = protectedProcedure.use(async ({ ctx, next }) => {
   return next({ ctx })
 })
 
+export const userProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+  if (ctx.session.user.role === 'owner') {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'Student or admin role required' })
+  }
+  return next({ ctx })
+})
+
 export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
   if (ctx.session.user.role !== 'admin') {
     throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin role required' })
