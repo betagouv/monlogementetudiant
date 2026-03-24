@@ -4,11 +4,11 @@ import { z } from 'zod'
 import { db } from '~/server/db'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { favoriteAccommodations } from '~/server/db/schema/favorite-accommodations'
-import { createTRPCRouter, protectedProcedure } from '../init'
+import { createTRPCRouter, userProcedure } from '../init'
 import { mapToGeoJsonFeature, priceMaxComputed } from './accommodations'
 
 export const favoritesRouter = createTRPCRouter({
-  list: protectedProcedure.query(async ({ ctx }) => {
+  list: userProcedure.query(async ({ ctx }) => {
     const userId = ctx.session.user.id
 
     const results = await db.query.favoriteAccommodations.findMany({
@@ -38,7 +38,7 @@ export const favoritesRouter = createTRPCRouter({
     }))
   }),
 
-  add: protectedProcedure.input(z.object({ accommodationSlug: z.string() })).mutation(async ({ ctx, input }) => {
+  add: userProcedure.input(z.object({ accommodationSlug: z.string() })).mutation(async ({ ctx, input }) => {
     const userId = ctx.session.user.id
 
     const accom = await db.query.accommodations.findFirst({
@@ -69,7 +69,7 @@ export const favoritesRouter = createTRPCRouter({
     return row
   }),
 
-  remove: protectedProcedure.input(z.object({ slug: z.string() })).mutation(async ({ ctx, input }) => {
+  remove: userProcedure.input(z.object({ slug: z.string() })).mutation(async ({ ctx, input }) => {
     const userId = ctx.session.user.id
 
     await db

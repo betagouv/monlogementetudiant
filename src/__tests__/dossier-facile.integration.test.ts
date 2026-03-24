@@ -337,7 +337,7 @@ describe('DossierFacile tRPC', () => {
 
     it('rejects non-user roles', async () => {
       await expect(ownerCaller.dossierFacile.application({ accommodationSlug: 'x', apartmentType: 't1' })).rejects.toThrow(
-        'Only students can apply',
+        'Student or admin role required',
       )
     })
 
