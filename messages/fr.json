@@ -549,9 +549,10 @@
       "rangeLabel": "Budget maximum"
     },
     "hero": {
-      "title": "Trouvez votre prochain",
-      "highlight": "logement étudiant",
-      "subtitle": "estimez votre budget et découvrez les aides auxquelles vous avez droit."
+      "title": "Trouvez votre prochaine",
+      "titleHighlight": "résidence sociale étudiante",
+      "counter": "Plus de <strong>60 000 logements</strong> déjà référencés",
+      "illustrationAlt": "Étudiant travaillant sur son ordinateur"
     },
     "cta": "Rechercher un logement",
     "title": "Plus de 1300 résidences étudiantes",
@@ -561,9 +562,21 @@
       "description": "<part1>Estimation, fiches pratiques et aperçu des logements, tout est là pour</part1><part2>vous guider pas à pas vers votre prochaine vie étudiante.</part2>"
     },
     "features": {
+      "simulateAids": {
+        "badge": "RECOMMANDÉ",
+        "title": "Simulez vos aides au logement",
+        "description": "6 questions pour estimer vos droits et faciliter vos recherches de logement",
+        "button": "Simuler mes aides"
+      },
+      "calculateBudget": {
+        "badge": "PRATIQUE",
+        "title": "Calculez votre futur budget étudiant",
+        "description": "Gérez vos finances facilement et visualisez votre budget mensuel en temps réel",
+        "button": "Calculer mon budget"
+      },
       "prepareBudget": {
         "title": "Préparer son budget étudiant",
-        "description": "Gérer son budget est l’un des premiers défis de la vie étudiante. Entre le loyer, l’alimentation, les transports et les loisirs, il peut être difficile de s’y retrouver et de faire les bons choix financiers. Pourtant, avec quelques repères et de bons outils, il est tout à fait possible de garder le contrôle et d’éviter les mauvaises surprises.",
+        "description": "Gérer son budget est l'un des premiers défis de la vie étudiante. Entre le loyer, l'alimentation, les transports et les loisirs, il peut être difficile de s'y retrouver et de faire les bons choix financiers. Pourtant, avec quelques repères et de bons outils, il est tout à fait possible de garder le contrôle et d'éviter les mauvaises surprises.",
         "button": "Tout savoir"
       },
       "exploreCities": {
@@ -576,8 +589,49 @@
         "searchButton": "Rechercher"
       }
     },
+    "cities": {
+      "title": "Explorez les villes étudiantes",
+      "moreButton": "Plus de villes",
+      "illustrationAlt": "Étudiante sur canapé avec laptop"
+    },
+    "facilitate": {
+      "title": "Tout pour faciliter ma recherche de logement",
+      "items": {
+        "offers": "Offres de logement",
+        "simulator": "Simulateur d'aides au logement",
+        "calculator": "Calculatrice de budget étudiant",
+        "alerts": "Alertes logement",
+        "account": "Espace connecté Étudiant"
+      },
+      "button": "Créer un compte"
+    },
+    "news": {
+      "title": "À la Une de Mon Logement Étudiant",
+      "description": "Retrouvez nos dernières actualités et conseils pour bien préparer votre vie étudiante",
+      "moreButton": "Plus d'actualités",
+      "articles": {
+        "budget": {
+          "title": "Comment bien préparer son budget étudiant ?",
+          "description": "Découvrez nos conseils pour gérer vos finances pendant vos études.",
+          "imageAlt": "Préparer son budget"
+        },
+        "cities": {
+          "title": "Les meilleures villes étudiantes en 2025",
+          "description": "Notre classement des villes les plus attractives pour les étudiants.",
+          "imageAlt": "Villes étudiantes"
+        },
+        "aids": {
+          "title": "Toutes les aides au logement étudiant",
+          "description": "APL, ALS, Visale... découvrez toutes les aides disponibles.",
+          "imageAlt": "Aides au logement"
+        }
+      }
+    },
     "partners": {
-      "title": "Parmi les bailleurs partenaires"
+      "title": "Gestionnaires, rejoignez la plateforme nationale du",
+      "titleHighlight": "logement social étudiant",
+      "description": "Nous centralisons l'ensemble de l'offre de résidences à vocation sociale pour fluidifier le parcours d'accès au logement des étudiants et futurs étudiants",
+      "button": "En savoir plus"
     },
     "social": {
       "titlePart1": "Bailleurs sociaux, rejoignez la plateforme nationale du",
