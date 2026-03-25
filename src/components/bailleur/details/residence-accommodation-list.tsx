@@ -1,31 +1,53 @@
 'use client'
 
-import Input from '@codegouvfr/react-dsfr/Input'
-import Select from '@codegouvfr/react-dsfr/Select'
+import Tabs from '@codegouvfr/react-dsfr/Tabs'
 import { useTranslations } from 'next-intl'
-import { useFormContext } from 'react-hook-form'
+import { parseAsString, useQueryState } from 'nuqs'
+import { useState } from 'react'
 import { AvailabilityBadge } from '~/components/shared/availability-badge'
 import { TAccomodationMy } from '~/schemas/accommodations/accommodations'
-import { TUpdateResidence } from '~/schemas/accommodations/update-residence'
 import { calculateAvailability } from '~/utils/calculateAvailability'
-import { isPerPersonTypology } from '~/utils/is-per-person-typology'
+import { TypologyTabContent } from './typology-tab-content'
+
+const TYPOLOGIES = [
+  { type: 'T1', fieldSuffix: 't1' },
+  { type: 'T1 bis', fieldSuffix: 't1_bis' },
+  { type: 'T2', fieldSuffix: 't2' },
+  { type: 'T3', fieldSuffix: 't3' },
+  { type: 'T4', fieldSuffix: 't4' },
+  { type: 'T5', fieldSuffix: 't5' },
+  { type: 'T6', fieldSuffix: 't6' },
+  { type: 'T7+', fieldSuffix: 't7_more' },
+] as const
+
+type NewTypology = { id: number; fieldSuffix: string | null }
 
 export const ResidenceAccommodationList = ({ accommodation }: { accommodation: TAccomodationMy }) => {
   const t = useTranslations('findAccomodation.card')
+  const [newTypologies, setNewTypologies] = useState<NewTypology[]>([])
+  const [nextId, setNextId] = useState(1)
 
-  const {
-    register,
-    watch,
-    formState: { errors },
-  } = useFormContext<TUpdateResidence>()
-
-  const numberTransform = {
-    setValueAs: (value: string) => {
-      if (value === '' || value === undefined || value === null) return null
-      const num = Number(value)
-      return isNaN(num) ? null : num
-    },
+  // Calculer le premier onglet disponible
+  const getInitialTabId = () => {
+    const { nb_t1, nb_t1_bis, nb_t2, nb_t3, nb_t4, nb_t5, nb_t6, nb_t7_more } = accommodation.properties
+    const typologyData = [
+      { fieldSuffix: 't1', total: nb_t1 },
+      { fieldSuffix: 't1_bis', total: nb_t1_bis },
+      { fieldSuffix: 't2', total: nb_t2 },
+      { fieldSuffix: 't3', total: nb_t3 },
+      { fieldSuffix: 't4', total: nb_t4 },
+      { fieldSuffix: 't5', total: nb_t5 },
+      { fieldSuffix: 't6', total: nb_t6 },
+      { fieldSuffix: 't7_more', total: nb_t7_more },
+    ]
+    const firstWithData = typologyData.find((t) => t.total !== null && t.total >= 1)
+    return firstWithData ? `tab-${firstWithData.fieldSuffix}` : 'tab-add'
   }
+
+  const [selectedTabId, setSelectedTabId] = useQueryState(
+    'typology',
+    parseAsString.withDefault(getInitialTabId()),
+  )
 
   const {
     nb_t1_available,
@@ -36,7 +58,16 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
     nb_t5_available,
     nb_t6_available,
     nb_t7_more_available,
+    nb_t1,
+    nb_t1_bis,
+    nb_t2,
+    nb_t3,
+    nb_t4,
+    nb_t5,
+    nb_t6,
+    nb_t7_more,
   } = accommodation.properties
+
   const nbAvailable = calculateAvailability({
     nb_t1_available,
     nb_t1_bis_available,
@@ -47,247 +78,107 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
     nb_t6_available,
     nb_t7_more_available,
   })
+
+  const totals: Record<string, number | null> = {
+    t1: nb_t1,
+    t1_bis: nb_t1_bis,
+    t2: nb_t2,
+    t3: nb_t3,
+    t4: nb_t4,
+    t5: nb_t5,
+    t6: nb_t6,
+    t7_more: nb_t7_more,
+  }
+
+  // Typologies existantes (seulement celles avec données en BDD)
+  const existingTypologies = TYPOLOGIES.filter((typo) => totals[typo.fieldSuffix] !== null && totals[typo.fieldSuffix]! >= 1)
+
+  // FieldSuffixes déjà utilisés (existants + nouveaux avec type sélectionné)
+  const usedFieldSuffixes = [
+    ...existingTypologies.map((t) => t.fieldSuffix),
+    ...newTypologies.filter((t) => t.fieldSuffix !== null).map((t) => t.fieldSuffix as string),
+  ]
+
+  // Toutes les typologies visibles, triées selon l'ordre de TYPOLOGIES
+  const sortedVisibleTypologies = TYPOLOGIES.filter((typo) => usedFieldSuffixes.includes(typo.fieldSuffix))
+
+  // Typologies disponibles pour ajout
+  const availableTypologies = TYPOLOGIES.filter((typo) => !usedFieldSuffixes.includes(typo.fieldSuffix))
+
+  const canAddMore = availableTypologies.length > 0
+
+  const handleAddNewTypology = () => {
+    const newId = nextId
+    setNewTypologies((prev) => [...prev, { id: newId, fieldSuffix: null }])
+    setNextId((prev) => prev + 1)
+    setSelectedTabId(`tab-new-${newId}`)
+  }
+
+  const handleTypeSelect = (newTypologyId: number, fieldSuffix: string) => {
+    setNewTypologies((prev) => prev.map((t) => (t.id === newTypologyId ? { ...t, fieldSuffix } : t)))
+    setSelectedTabId(`tab-${fieldSuffix}`)
+  }
+
+  const handleTabChange = (tabId: string) => {
+    if (tabId === 'tab-add') {
+      handleAddNewTypology()
+    } else {
+      setSelectedTabId(tabId)
+    }
+  }
+
+  // Construire les tabs
+  const tabs = [
+    // Onglets triés selon l'ordre de TYPOLOGIES
+    ...sortedVisibleTypologies.map((typo) => ({
+      tabId: `tab-${typo.fieldSuffix}`,
+      label: typo.type,
+    })),
+    // Onglets nouveaux (sans type sélectionné)
+    ...newTypologies
+      .filter((t) => t.fieldSuffix === null)
+      .map((t) => ({
+        tabId: `tab-new-${t.id}`,
+        label: 'Nouveau',
+      })),
+    // Onglet Ajouter
+    ...(canAddMore ? [{ tabId: 'tab-add', label: 'Ajouter' }] : []),
+  ]
+
   const badgeAvailability = (
     <AvailabilityBadge nbAvailable={nbAvailable} noAvailabilityText={t('noAvailability')} availabilityText={t('availability')} as="span" />
   )
+
   return (
-    <div className="fr-border-bottom">
+    <div>
       <div className="fr-p-2w fr-p-md-6w">
         <div className="fr-flex fr-justify-content-space-between fr-align-items-center fr-mb-2w">
           <h3 className="fr-mb-0">{accommodation.properties.nb_total_apartments} logements</h3>
           {badgeAvailability}
         </div>
 
-        <div className="fr-border fr-border-radius--8">
-          {[
-            {
-              type: 'T1',
-              available: accommodation.properties.nb_t1_available,
-              total: accommodation.properties.nb_t1,
-              priceMin: accommodation.properties.price_min_t1,
-              priceMax: accommodation.properties.price_max_t1,
-              superficieMin: accommodation.properties.superficie_min_t1,
-              superficieMax: accommodation.properties.superficie_max_t1,
-              availableField: 'nb_t1_available' as const,
-              totalField: 'nb_t1' as const,
-              priceMinField: 'price_min_t1' as const,
-              priceMaxField: 'price_max_t1' as const,
-              superficieMinField: 'superficie_min_t1' as const,
-              superficieMaxField: 'superficie_max_t1' as const,
-            },
-            {
-              type: 'T1 bis',
-              available: accommodation.properties.nb_t1_bis_available,
-              total: accommodation.properties.nb_t1_bis,
-              priceMin: accommodation.properties.price_min_t1_bis,
-              priceMax: accommodation.properties.price_max_t1_bis,
-              superficieMin: accommodation.properties.superficie_min_t1_bis,
-              superficieMax: accommodation.properties.superficie_max_t1_bis,
-              availableField: 'nb_t1_bis_available' as const,
-              totalField: 'nb_t1_bis' as const,
-              priceMinField: 'price_min_t1_bis' as const,
-              priceMaxField: 'price_max_t1_bis' as const,
-              superficieMinField: 'superficie_min_t1_bis' as const,
-              superficieMaxField: 'superficie_max_t1_bis' as const,
-            },
-            {
-              type: 'T2',
-              available: accommodation.properties.nb_t2_available,
-              total: accommodation.properties.nb_t2,
-              priceMin: accommodation.properties.price_min_t2,
-              priceMax: accommodation.properties.price_max_t2,
-              superficieMin: accommodation.properties.superficie_min_t2,
-              superficieMax: accommodation.properties.superficie_max_t2,
-              availableField: 'nb_t2_available' as const,
-              totalField: 'nb_t2' as const,
-              priceMinField: 'price_min_t2' as const,
-              priceMaxField: 'price_max_t2' as const,
-              superficieMinField: 'superficie_min_t2' as const,
-              superficieMaxField: 'superficie_max_t2' as const,
-            },
-            {
-              type: 'T3',
-              available: accommodation.properties.nb_t3_available,
-              total: accommodation.properties.nb_t3,
-              priceMin: accommodation.properties.price_min_t3,
-              priceMax: accommodation.properties.price_max_t3,
-              superficieMin: accommodation.properties.superficie_min_t3,
-              superficieMax: accommodation.properties.superficie_max_t3,
-              availableField: 'nb_t3_available' as const,
-              totalField: 'nb_t3' as const,
-              priceMinField: 'price_min_t3' as const,
-              priceMaxField: 'price_max_t3' as const,
-              superficieMinField: 'superficie_min_t3' as const,
-              superficieMaxField: 'superficie_max_t3' as const,
-            },
-            {
-              type: 'T4',
-              available: accommodation.properties.nb_t4_available,
-              total: accommodation.properties.nb_t4,
-              priceMin: accommodation.properties.price_min_t4,
-              priceMax: accommodation.properties.price_max_t4,
-              superficieMin: accommodation.properties.superficie_min_t4,
-              superficieMax: accommodation.properties.superficie_max_t4,
-              availableField: 'nb_t4_available' as const,
-              totalField: 'nb_t4' as const,
-              priceMinField: 'price_min_t4' as const,
-              priceMaxField: 'price_max_t4' as const,
-              superficieMinField: 'superficie_min_t4' as const,
-              superficieMaxField: 'superficie_max_t4' as const,
-            },
-            {
-              type: 'T5',
-              available: accommodation.properties.nb_t5_available,
-              total: accommodation.properties.nb_t5,
-              priceMin: accommodation.properties.price_min_t5,
-              priceMax: accommodation.properties.price_max_t5,
-              superficieMin: accommodation.properties.superficie_min_t5,
-              superficieMax: accommodation.properties.superficie_max_t5,
-              availableField: 'nb_t5_available' as const,
-              totalField: 'nb_t5' as const,
-              priceMinField: 'price_min_t5' as const,
-              priceMaxField: 'price_max_t5' as const,
-              superficieMinField: 'superficie_min_t5' as const,
-              superficieMaxField: 'superficie_max_t5' as const,
-            },
-            {
-              type: 'T6',
-              available: accommodation.properties.nb_t6_available,
-              total: accommodation.properties.nb_t6,
-              priceMin: accommodation.properties.price_min_t6,
-              priceMax: accommodation.properties.price_max_t6,
-              superficieMin: accommodation.properties.superficie_min_t6,
-              superficieMax: accommodation.properties.superficie_max_t6,
-              availableField: 'nb_t6_available' as const,
-              totalField: 'nb_t6' as const,
-              priceMinField: 'price_min_t6' as const,
-              priceMaxField: 'price_max_t6' as const,
-              superficieMinField: 'superficie_min_t6' as const,
-              superficieMaxField: 'superficie_max_t6' as const,
-            },
-            {
-              type: 'T7+',
-              available: accommodation.properties.nb_t7_more_available,
-              total: accommodation.properties.nb_t7_more,
-              priceMin: accommodation.properties.price_min_t7_more,
-              priceMax: accommodation.properties.price_max_t7_more,
-              superficieMin: accommodation.properties.superficie_min_t7_more,
-              superficieMax: accommodation.properties.superficie_max_t7_more,
-              availableField: 'nb_t7_more_available' as const,
-              totalField: 'nb_t7_more' as const,
-              priceMinField: 'price_min_t7_more' as const,
-              priceMaxField: 'price_max_t7_more' as const,
-              superficieMinField: 'superficie_min_t7_more' as const,
-              superficieMaxField: 'superficie_max_t7_more' as const,
-            },
-          ].map((typology, index, arr) => (
-            <div key={typology.type} className={`fr-p-4w ${index !== arr.length - 1 ? 'fr-border-bottom' : ''}`}>
-              <div className="fr-grid-row fr-grid-row--gutters fr-flex fr-direction-md-row fr-direction-column fr-align-items-end">
-                <div className="fr-col-md-6">
-                  <Select
-                    label="Type de Logement"
-                    nativeSelectProps={{
-                      defaultValue: typology.type,
-                    }}
-                  >
-                    <option value="T1">Studio T1</option>
-                    <option value="T1 bis">Studio T1 bis</option>
-                    <option value="T2">Logement T2</option>
-                    <option value="T3">Logement T3</option>
-                    <option value="T4">Logement T4</option>
-                    <option value="T5">Logement T5</option>
-                    <option value="T6">Logement T6</option>
-                    <option value="T7+">Logement T7+</option>
-                  </Select>
-                </div>
-                <div className="fr-col-md-6">
-                  <label className="fr-label fr-mb-0">{isPerPersonTypology(typology.type) ? 'Loyer CC par personne' : 'Loyer CC'}</label>
-                  <div className="fr-grid-row fr-grid-row--gutters">
-                    <div className="fr-col-6">
-                      <Input
-                        label=""
-                        hintText="Minimum"
-                        iconId="fr-icon-money-euro-circle-line"
-                        nativeInputProps={{
-                          type: 'number',
-                          ...register(typology.priceMinField, numberTransform),
-                        }}
-                      />
-                    </div>
-                    <div className="fr-col-6">
-                      <Input
-                        label=""
-                        hintText="Maximum"
-                        iconId="fr-icon-money-euro-circle-line"
-                        nativeInputProps={{
-                          type: 'number',
-                          ...register(typology.priceMaxField, numberTransform),
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
+        <div>
+          <Tabs selectedTabId={selectedTabId} onTabChange={handleTabChange} tabs={tabs}>
+            {/* Onglets triés selon l'ordre de TYPOLOGIES */}
+            {sortedVisibleTypologies.map((typo) => (
+              <div key={typo.fieldSuffix} className={selectedTabId === `tab-${typo.fieldSuffix}` ? '' : 'fr-hidden'}>
+                <TypologyTabContent mode="update" fieldSuffix={typo.fieldSuffix} typologyType={typo.type} />
               </div>
-
-              <div className="fr-grid-row fr-grid-row--gutters fr-flex fr-direction-md-row fr-direction-column fr-align-items-end fr-justify-content-end">
-                <div className="fr-col-md-6">
-                  <label className="fr-label fr-mb-0">Surface (m²)</label>
-                  <div className="fr-grid-row fr-grid-row--gutters">
-                    <div className="fr-col-6">
-                      <Input
-                        label=""
-                        hintText="Minimum"
-                        iconId="ri-shape-line"
-                        nativeInputProps={{
-                          type: 'number',
-                          min: 1,
-                          ...register(typology.superficieMinField, numberTransform),
-                        }}
-                      />
-                    </div>
-                    <div className="fr-col-6">
-                      <Input
-                        label=""
-                        hintText="Maximum"
-                        iconId="ri-shape-line"
-                        nativeInputProps={{
-                          type: 'number',
-                          min: 1,
-                          ...register(typology.superficieMaxField, numberTransform),
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="fr-grid-row fr-grid-row--gutters fr-flex fr-direction-md-row fr-direction-column">
-                <div className="fr-col-md-6">
-                  <Input
-                    label="Nombre total de logements"
-                    state={errors[typology.totalField] ? 'error' : 'default'}
-                    stateRelatedMessage={errors[typology.totalField]?.message}
-                    nativeInputProps={{
-                      type: 'number',
-                      ...register(typology.totalField, numberTransform),
-                    }}
+            ))}
+            {/* Onglets nouveaux (sans type sélectionné) */}
+            {newTypologies
+              .filter((t) => t.fieldSuffix === null)
+              .map((t) => (
+                <div key={`new-${t.id}`} className={selectedTabId === `tab-new-${t.id}` ? '' : 'fr-hidden'}>
+                  <TypologyTabContent
+                    mode="update-new"
+                    fieldSuffix={null}
+                    availableTypes={availableTypologies.map((typ) => ({ type: typ.type, fieldSuffix: typ.fieldSuffix }))}
+                    onTypeSelect={(fieldSuffix) => handleTypeSelect(t.id, fieldSuffix)}
                   />
                 </div>
-                <div className="fr-col-md-6">
-                  <Input
-                    label="Logements disponibles"
-                    state={errors[typology.availableField] ? 'error' : 'default'}
-                    stateRelatedMessage={errors[typology.availableField]?.message}
-                    nativeInputProps={{
-                      type: 'number',
-                      disabled: !watch(typology.totalField),
-                      ...register(typology.availableField, numberTransform),
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          ))}
+              ))}
+          </Tabs>
         </div>
       </div>
     </div>
