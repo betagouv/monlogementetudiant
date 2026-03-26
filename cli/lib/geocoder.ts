@@ -151,6 +151,39 @@ export async function fetchCityByInsee(inseeCode: string): Promise<GeoApiCity | 
   }
 }
 
+export async function fetchCommunesByDepartment(deptCode: string): Promise<GeoApiCity[]> {
+  const url = `https://geo.api.gouv.fr/departements/${deptCode}/communes?fields=nom,codesPostaux,codeDepartement,contour,codeEpci,population`
+  const maxAttempts = 2
+  const retryDelay = 5000
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      await throttle()
+      const response = await fetch(url)
+      if (response.status === 429 || response.status >= 500) {
+        console.warn(`  ⚠ Geo API HTTP ${response.status} for department "${deptCode}" (attempt ${attempt}/${maxAttempts})`)
+        if (attempt < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, retryDelay))
+          continue
+        }
+        return []
+      }
+      if (!response.ok) return []
+      return await response.json()
+    } catch (error) {
+      console.warn(
+        `  ⚠ Geo API error for department "${deptCode}" (attempt ${attempt}/${maxAttempts}): ${error instanceof Error ? error.message : String(error)}`,
+      )
+      if (attempt < maxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, retryDelay))
+        continue
+      }
+      return []
+    }
+  }
+  return []
+}
+
 export async function fillCityFromApi(cityId: number): Promise<boolean> {
   const city = await db.select({ postalCodes: cities.postalCodes, name: cities.name }).from(cities).where(eq(cities.id, cityId)).limit(1)
   if (!city[0]) return false
