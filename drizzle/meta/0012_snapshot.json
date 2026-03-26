@@ -1,6 +1,6 @@
 {
-  "id": "b193c97b-2c11-473b-92f5-dcbc3c811e65",
-  "prevId": "197b8020-f63a-484a-80f6-4be0e5c7a340",
+  "id": "946264d1-fdb4-420d-8eff-47955e626190",
+  "prevId": "5869e93a-ea49-4c1c-a3c7-fd143c77b63f",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -464,6 +464,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "city_id": {
+          "name": "city_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
         "owner_id": {
           "name": "owner_id",
           "type": "bigint",
@@ -484,6 +490,21 @@
         }
       },
       "indexes": {
+        "accommodation_city_id_idx": {
+          "name": "accommodation_city_id_idx",
+          "columns": [
+            {
+              "expression": "city_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "accommodation_owner_id_idx": {
           "name": "accommodation_owner_id_idx",
           "columns": [
@@ -516,6 +537,19 @@
         }
       },
       "foreignKeys": {
+        "accommodation_accommodation_city_id_territories_city_id_fk": {
+          "name": "accommodation_accommodation_city_id_territories_city_id_fk",
+          "tableFrom": "accommodation_accommodation",
+          "tableTo": "territories_city",
+          "columnsFrom": [
+            "city_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
         "accommodation_accommodation_owner_id_account_owner_id_fk": {
           "name": "accommodation_accommodation_owner_id_account_owner_id_fk",
           "tableFrom": "accommodation_accommodation",

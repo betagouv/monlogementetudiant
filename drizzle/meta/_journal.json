@@ -92,6 +92,13 @@
       "when": 1774275936434,
       "tag": "0012_backfill_accommodation_city_id",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1774522930946,
+      "tag": "0013_fac-habitat",
+      "breakpoints": true
     }
   ]
 }
