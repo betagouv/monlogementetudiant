@@ -1,6 +1,7 @@
 'use client'
 
 import clsx from 'clsx'
+import { parseAsInteger, useQueryState } from 'nuqs'
 import { FC, useMemo } from 'react'
 import { useAccomodations } from '~/hooks/use-accomodations'
 import { TUser } from '~/lib/types'
@@ -22,6 +23,9 @@ export const FindStudentAccomodationResultsSections: FC<FindStudentAccomodationR
   user,
 }) => {
   const { data: accommodations, isFetching } = useAccomodations()
+  const [page] = useQueryState('page', parseAsInteger.withDefault(1))
+  const totalPages = accommodations ? Math.ceil(accommodations.count / accommodations.page_size) : 1
+  const isLastPage = page >= totalPages
   const mainAccommodationIds = useMemo(
     () => (accommodations?.results.features || []).map((feature) => feature.id),
     [accommodations?.results.features],
@@ -35,7 +39,7 @@ export const FindStudentAccomodationResultsSections: FC<FindStudentAccomodationR
         accommodations={accommodations}
         isFetching={isFetching}
       />
-      {showNeighbors && (
+      {showNeighbors && isLastPage && (
         <div className={clsx(accommodations && accommodations.count <= accommodations.page_size && 'fr-mt-4w')}>
           <FindStudentAccomodationNeighborsResults territory={territory} user={user} mainAccommodationIds={mainAccommodationIds} />
         </div>
