@@ -1,5 +1,5 @@
 import { program } from 'commander'
-import { healthcheck } from './commands/healthcheck'
+import { healthcheck, healthcheckCities } from './commands/healthcheck'
 import { importBackup } from './commands/import-backup'
 import { migrate } from './commands/migrate'
 import { migrateUsers } from './commands/migrate-users'
@@ -53,5 +53,12 @@ program
   .option('--fetch', 'Tester les URLs en HTTP (nécessite le serveur Next.js)')
   .option('--base-url <url>', 'URL de base pour les tests HTTP', 'http://localhost:3000')
   .action((opts) => healthcheck(opts))
+
+program
+  .command('healthcheck-cities')
+  .description('Vérifie les pages villes en HTTP (GET /trouver-un-logement-etudiant/ville/{slug})')
+  .option('--verbose', 'Afficher le détail de chaque ville')
+  .option('--base-url <url>', 'URL de base pour les tests HTTP', 'http://localhost:3000')
+  .action((opts) => healthcheckCities(opts))
 
 program.parse()
