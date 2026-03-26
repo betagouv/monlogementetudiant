@@ -1,7 +1,9 @@
 import Breadcrumb from '@codegouvfr/react-dsfr/Breadcrumb'
 import { Avatar } from '@codegouvfr/react-dsfr/picto'
 import { HydrationBoundary } from '@tanstack/react-query'
+import { notFound } from 'next/navigation'
 import { CandidaturesList } from '~/components/bailleur/candidatures/candidatures-list'
+import { getServerSession } from '~/services/better-auth'
 import { getCandidaturesPageContext } from './get-candidatures-page-context'
 
 export const dynamic = 'force-dynamic'
@@ -19,6 +21,11 @@ type CandidaturesPageProps = {
 }
 
 export default async function CandidaturesPage({ searchParams }: CandidaturesPageProps) {
+  const session = await getServerSession()
+  if (!session?.user.owner?.acceptDossierFacileApplications) {
+    return notFound()
+  }
+
   const awaitedSearchParams = await searchParams
   const { dehydratedState } = await getCandidaturesPageContext(awaitedSearchParams)
 
