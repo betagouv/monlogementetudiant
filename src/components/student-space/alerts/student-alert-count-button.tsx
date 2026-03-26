@@ -17,6 +17,10 @@ export const StudentAlertCountButton = ({ alert }: { alert: TAlert }) => {
       searchParams.set('accessible', 'true')
     }
 
+    if (alert.max_price) {
+      searchParams.set('prix', alert.max_price.toString())
+    }
+
     if (alert.city) {
       const { bbox } = alert.city
       const expanded = expandBbox(bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax)
