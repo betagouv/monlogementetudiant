@@ -1,6 +1,6 @@
 {
-  "id": "5869e93a-ea49-4c1c-a3c7-fd143c77b63f",
-  "prevId": "361124e1-d82b-47c9-877d-4220afb749f0",
+  "id": "9b254100-e191-4ac1-ba87-628eeabd3145",
+  "prevId": "946264d1-fdb4-420d-8eff-47955e626190",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -14,15 +14,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
-            "type": "byDefault",
             "name": "territories_academy_id_seq",
-            "schema": "public",
             "increment": "1",
-            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
+            "startWith": "1",
             "cache": "1",
-            "cycle": false
+            "cycle": false,
+            "schema": "public",
+            "type": "byDefault"
           }
         },
         "name": {
@@ -56,15 +56,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
-            "type": "byDefault",
             "name": "accommodation_accommodation_id_seq",
-            "schema": "public",
             "increment": "1",
-            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
+            "startWith": "1",
             "cache": "1",
-            "cycle": false
+            "cycle": false,
+            "schema": "public",
+            "type": "byDefault"
           }
         },
         "name": {
@@ -501,9 +501,9 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         },
         "accommodation_owner_id_idx": {
           "name": "accommodation_owner_id_idx",
@@ -516,9 +516,9 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         },
         "accommodation_published_idx": {
           "name": "accommodation_published_idx",
@@ -531,55 +531,55 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "accommodation_accommodation_city_id_territories_city_id_fk": {
           "name": "accommodation_accommodation_city_id_territories_city_id_fk",
           "tableFrom": "accommodation_accommodation",
-          "tableTo": "territories_city",
           "columnsFrom": [
             "city_id"
           ],
+          "tableTo": "territories_city",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "accommodation_accommodation_owner_id_account_owner_id_fk": {
           "name": "accommodation_accommodation_owner_id_account_owner_id_fk",
           "tableFrom": "accommodation_accommodation",
-          "tableTo": "account_owner",
           "columnsFrom": [
             "owner_id"
           ],
+          "tableTo": "account_owner",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "accommodation_accommodation_slug_unique": {
           "name": "accommodation_accommodation_slug_unique",
-          "nullsNotDistinct": false,
           "columns": [
             "slug"
-          ]
+          ],
+          "nullsNotDistinct": false
         },
         "unique_owner_external_reference": {
           "name": "unique_owner_external_reference",
-          "nullsNotDistinct": false,
           "columns": [
             "owner_id",
             "external_reference"
-          ]
+          ],
+          "nullsNotDistinct": false
         }
       },
       "policies": {},
@@ -676,15 +676,15 @@
         "account_user_id_user_id_fk": {
           "name": "account_user_id_user_id_fk",
           "tableFrom": "account",
-          "tableTo": "user",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "user",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -753,25 +753,25 @@
         "session_user_id_user_id_fk": {
           "name": "session_user_id_user_id_fk",
           "tableFrom": "session",
-          "tableTo": "user",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "user",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "session_token_unique": {
           "name": "session_token_unique",
-          "nullsNotDistinct": false,
           "columns": [
             "token"
-          ]
+          ],
+          "nullsNotDistinct": false
         }
       },
       "policies": {},
@@ -880,9 +880,9 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {},
@@ -890,10 +890,10 @@
       "uniqueConstraints": {
         "user_email_unique": {
           "name": "user_email_unique",
-          "nullsNotDistinct": false,
           "columns": [
             "email"
-          ]
+          ],
+          "nullsNotDistinct": false
         }
       },
       "policies": {},
@@ -961,15 +961,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
-            "type": "byDefault",
             "name": "territories_city_id_seq",
-            "schema": "public",
             "increment": "1",
-            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
+            "startWith": "1",
             "cache": "1",
-            "cycle": false
+            "cycle": false,
+            "schema": "public",
+            "type": "byDefault"
           }
         },
         "name": {
@@ -1057,34 +1057,34 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "territories_city_department_id_territories_department_id_fk": {
           "name": "territories_city_department_id_territories_department_id_fk",
           "tableFrom": "territories_city",
-          "tableTo": "territories_department",
           "columnsFrom": [
             "department_id"
           ],
+          "tableTo": "territories_department",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "territories_city_slug_unique": {
           "name": "territories_city_slug_unique",
-          "nullsNotDistinct": false,
           "columns": [
             "slug"
-          ]
+          ],
+          "nullsNotDistinct": false
         }
       },
       "policies": {},
@@ -1101,15 +1101,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
-            "type": "byDefault",
             "name": "territories_department_id_seq",
-            "schema": "public",
             "increment": "1",
-            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
+            "startWith": "1",
             "cache": "1",
-            "cycle": false
+            "cycle": false,
+            "schema": "public",
+            "type": "byDefault"
           }
         },
         "name": {
@@ -1149,24 +1149,24 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "territories_department_academy_id_territories_academy_id_fk": {
           "name": "territories_department_academy_id_territories_academy_id_fk",
           "tableFrom": "territories_department",
-          "tableTo": "territories_academy",
           "columnsFrom": [
             "academy_id"
           ],
+          "tableTo": "territories_academy",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -1223,26 +1223,26 @@
         "dossier_facile_application_tenant_id_dossier_facile_tenant_id_fk": {
           "name": "dossier_facile_application_tenant_id_dossier_facile_tenant_id_fk",
           "tableFrom": "dossier_facile_application",
-          "tableTo": "dossier_facile_tenant",
           "columnsFrom": [
             "tenant_id"
           ],
+          "tableTo": "dossier_facile_tenant",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "dossier_facile_application_tenant_id_accommodation_slug_unique": {
           "name": "dossier_facile_application_tenant_id_accommodation_slug_unique",
-          "nullsNotDistinct": false,
           "columns": [
             "tenant_id",
             "accommodation_slug"
-          ]
+          ],
+          "nullsNotDistinct": false
         }
       },
       "policies": {},
@@ -1328,34 +1328,34 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "dossier_facile_tenant_user_id_user_id_fk": {
           "name": "dossier_facile_tenant_user_id_user_id_fk",
           "tableFrom": "dossier_facile_tenant",
-          "tableTo": "user",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "user",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "dossier_facile_tenant_tenant_id_unique": {
           "name": "dossier_facile_tenant_tenant_id_unique",
-          "nullsNotDistinct": false,
           "columns": [
             "tenant_id"
-          ]
+          ],
+          "nullsNotDistinct": false
         }
       },
       "policies": {},
@@ -1372,15 +1372,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
-            "type": "byDefault",
             "name": "stats_eventstats_id_seq",
-            "schema": "public",
             "increment": "1",
-            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
+            "startWith": "1",
             "cache": "1",
-            "cycle": false
+            "cycle": false,
+            "schema": "public",
+            "type": "byDefault"
           }
         },
         "date": {
@@ -1445,15 +1445,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
-            "type": "byDefault",
             "name": "accommodation_externalsource_id_seq",
-            "schema": "public",
             "increment": "1",
-            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
+            "startWith": "1",
             "cache": "1",
-            "cycle": false
+            "cycle": false,
+            "schema": "public",
+            "type": "byDefault"
           }
         },
         "accommodation_id": {
@@ -1481,26 +1481,26 @@
         "accommodation_externalsource_accommodation_id_accommodation_accommodation_id_fk": {
           "name": "accommodation_externalsource_accommodation_id_accommodation_accommodation_id_fk",
           "tableFrom": "accommodation_externalsource",
-          "tableTo": "accommodation_accommodation",
           "columnsFrom": [
             "accommodation_id"
           ],
+          "tableTo": "accommodation_accommodation",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "accommodation_externalsource_source_accommodation_id_unique": {
           "name": "accommodation_externalsource_source_accommodation_id_unique",
-          "nullsNotDistinct": false,
           "columns": [
             "source",
             "accommodation_id"
-          ]
+          ],
+          "nullsNotDistinct": false
         }
       },
       "policies": {},
@@ -1517,15 +1517,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
-            "type": "byDefault",
             "name": "accommodation_favoriteaccommodation_id_seq",
-            "schema": "public",
             "increment": "1",
-            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
+            "startWith": "1",
             "cache": "1",
-            "cycle": false
+            "cycle": false,
+            "schema": "public",
+            "type": "byDefault"
           }
         },
         "user_id": {
@@ -1560,35 +1560,35 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "accommodation_favoriteaccommodation_accommodation_id_accommodation_accommodation_id_fk": {
           "name": "accommodation_favoriteaccommodation_accommodation_id_accommodation_accommodation_id_fk",
           "tableFrom": "accommodation_favoriteaccommodation",
-          "tableTo": "accommodation_accommodation",
           "columnsFrom": [
             "accommodation_id"
           ],
+          "tableTo": "accommodation_accommodation",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "accommodation_favoriteaccommodation_user_id_accommodation_id_unique": {
           "name": "accommodation_favoriteaccommodation_user_id_accommodation_id_unique",
-          "nullsNotDistinct": false,
           "columns": [
             "user_id",
             "accommodation_id"
-          ]
+          ],
+          "nullsNotDistinct": false
         }
       },
       "policies": {},
@@ -1605,15 +1605,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
-            "type": "byDefault",
             "name": "newsletter_subscription_id_seq",
-            "schema": "public",
             "increment": "1",
-            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
+            "startWith": "1",
             "cache": "1",
-            "cycle": false
+            "cycle": false,
+            "schema": "public",
+            "type": "byDefault"
           }
         },
         "email": {
@@ -1654,15 +1654,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
-            "type": "byDefault",
             "name": "account_owner_id_seq",
-            "schema": "public",
             "increment": "1",
-            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
+            "startWith": "1",
             "cache": "1",
-            "cycle": false
+            "cycle": false,
+            "schema": "public",
+            "type": "byDefault"
           }
         },
         "name": {
@@ -1703,10 +1703,10 @@
       "uniqueConstraints": {
         "account_owner_slug_unique": {
           "name": "account_owner_slug_unique",
-          "nullsNotDistinct": false,
           "columns": [
             "slug"
-          ]
+          ],
+          "nullsNotDistinct": false
         }
       },
       "policies": {},
@@ -1760,15 +1760,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
-            "type": "byDefault",
             "name": "stats_stats_id_seq",
-            "schema": "public",
             "increment": "1",
-            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
+            "startWith": "1",
             "cache": "1",
-            "cycle": false
+            "cycle": false,
+            "schema": "public",
+            "type": "byDefault"
           }
         },
         "date": {
@@ -1845,10 +1845,10 @@
       "uniqueConstraints": {
         "stats_stats_date_unique": {
           "name": "stats_stats_date_unique",
-          "nullsNotDistinct": false,
           "columns": [
             "date"
-          ]
+          ],
+          "nullsNotDistinct": false
         }
       },
       "policies": {},
@@ -1865,15 +1865,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
-            "type": "byDefault",
             "name": "student_alert_id_seq",
-            "schema": "public",
             "increment": "1",
-            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
+            "startWith": "1",
             "cache": "1",
-            "cycle": false
+            "cycle": false,
+            "schema": "public",
+            "type": "byDefault"
           }
         },
         "user_id": {
@@ -1953,63 +1953,63 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "student_alert_user_id_user_id_fk": {
           "name": "student_alert_user_id_user_id_fk",
           "tableFrom": "student_alert",
-          "tableTo": "user",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "user",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "student_alert_city_id_territories_city_id_fk": {
           "name": "student_alert_city_id_territories_city_id_fk",
           "tableFrom": "student_alert",
-          "tableTo": "territories_city",
           "columnsFrom": [
             "city_id"
           ],
+          "tableTo": "territories_city",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "student_alert_department_id_territories_department_id_fk": {
           "name": "student_alert_department_id_territories_department_id_fk",
           "tableFrom": "student_alert",
-          "tableTo": "territories_department",
           "columnsFrom": [
             "department_id"
           ],
+          "tableTo": "territories_department",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "student_alert_academy_id_territories_academy_id_fk": {
           "name": "student_alert_academy_id_territories_academy_id_fk",
           "tableFrom": "student_alert",
-          "tableTo": "territories_academy",
           "columnsFrom": [
             "academy_id"
           ],
+          "tableTo": "territories_academy",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -2021,10 +2021,10 @@
   },
   "enums": {},
   "schemas": {},
+  "views": {},
   "sequences": {},
   "roles": {},
   "policies": {},
-  "views": {},
   "_meta": {
     "columns": {},
     "schemas": {},
