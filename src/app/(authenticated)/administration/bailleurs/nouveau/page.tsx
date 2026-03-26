@@ -7,8 +7,8 @@ import { TOwnerFormData } from '~/schemas/owner-form'
 export default function NewOwnerPage() {
   const createOwner = useAdminCreateOwner()
 
-  const handleSubmit = (data: TOwnerFormData) => {
-    createOwner.mutate({ name: data.name, url: data.url || undefined })
+  const handleSubmit = async (data: TOwnerFormData) => {
+    await createOwner.mutateAsync({ name: data.name, url: data.url || undefined })
   }
 
   return (
