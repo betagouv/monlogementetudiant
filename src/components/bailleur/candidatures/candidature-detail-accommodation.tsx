@@ -14,7 +14,7 @@ export const CandidatureDetailAccommodation = ({
     {pdfUrl && (
       <div className="fr-mt-4w">
         <div className="fr-flex fr-align-items-center fr-flex-gap-2v fr-mb-3w">
-          <span className="ri-file-list-3-line fr-text--lg" aria-hidden="true" />
+          <span className="ri-file-list-3-line " aria-hidden="true" />
           <h2 className="fr-h4 fr-mb-0">Documents</h2>
         </div>
         <div className="fr-flex fr-direction-column">

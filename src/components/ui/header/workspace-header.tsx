@@ -40,7 +40,7 @@ export const WorkspaceHeaderComponent: FC = async () => {
             <span className="fr-ml-1w fr-badge fr-badge--new fr-badge--no-icon fr-text--uppercase">{t('bailleur.header.title')}</span>
           </>
         }
-        navigation={<WorkspaceHeaderNavigation />}
+        navigation={<WorkspaceHeaderNavigation acceptDossierFacile={auth.user.owner?.acceptDossierFacileApplications ?? false} />}
         className="fr-header"
       />
     </div>
