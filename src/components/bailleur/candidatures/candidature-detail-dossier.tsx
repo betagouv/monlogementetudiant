@@ -4,7 +4,7 @@ import { APARTMENT_TYPE_LABELS, ApartmentType } from '~/enums/apartment-type'
 export const CandidatureDetailDossier = ({ apartmentType }: { apartmentType: string }) => (
   <>
     <div className="fr-flex fr-align-items-center fr-flex-gap-2v fr-mb-3w">
-      <span className="ri-building-4-line fr-text--lg" aria-hidden="true" />
+      <span className="ri-building-4-line " aria-hidden="true" />
       <h2 className="fr-h4 fr-mb-0">Demande de logement</h2>
     </div>
 
@@ -24,8 +24,8 @@ export const CandidatureDetailDossier = ({ apartmentType }: { apartmentType: str
     <hr className="fr-my-3w" />
 
     <div className="fr-flex fr-align-items-center fr-flex-gap-2v fr-mb-3w">
-      <span className="ri-user-search-line fr-text--lg" aria-hidden="true" />
-      <h2 className="fr-h4 fr-mb-0">A propos du candidat</h2>
+      <span className="ri-user-search-line fr-mb-0 fr-text--lg" aria-hidden="true" />
+      <h2 className="fr-h4 fr-mb-0">À propos du candidat</h2>
     </div>
 
     <Badge severity="info" noIcon className="fr-mb-2w">

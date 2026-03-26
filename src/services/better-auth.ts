@@ -88,5 +88,18 @@ export const getServerSession = cache(async () => {
     headers: requestHeaders,
   })
 
-  return results
+  if (!results) return results
+
+  const usr = await db.query.user.findFirst({
+    where: eq(schema.user.id, results.user.id),
+    with: { owner: true },
+  })
+
+  return {
+    ...results,
+    user: {
+      ...results.user,
+      owner: usr?.owner ?? null,
+    },
+  }
 })

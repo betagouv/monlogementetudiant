@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl'
 import { FC } from 'react'
 import styles from './navigation.module.css'
 
-export const WorkspaceHeaderNavigation: FC = () => {
+export const WorkspaceHeaderNavigation: FC<{ acceptDossierFacile: boolean }> = ({ acceptDossierFacile }) => {
   const t = useTranslations('navigation.workspace')
   const pathname = usePathname()
 
@@ -27,14 +27,18 @@ export const WorkspaceHeaderNavigation: FC = () => {
       },
       text: t('residences'),
     },
-    {
-      isActive: pathname === '/bailleur/candidatures',
-      linkProps: {
-        href: '/bailleur/candidatures',
-        target: '_self',
-      },
-      text: t('candidates'),
-    },
+    ...(acceptDossierFacile
+      ? [
+          {
+            isActive: pathname === '/bailleur/candidatures',
+            linkProps: {
+              href: '/bailleur/candidatures',
+              target: '_self' as const,
+            },
+            text: t('candidates'),
+          },
+        ]
+      : []),
     {
       isActive: pathname === '/bailleur/centre-d-aide',
       linkProps: {
