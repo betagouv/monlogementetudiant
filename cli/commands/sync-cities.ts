@@ -3,7 +3,7 @@ import { accommodations, cities, departments } from '../../src/server/db/schema'
 import { generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
 import { findAvailableSlug } from '../../src/server/utils/slug'
 import { db } from '../lib/db'
-import { fetchCityFromGeoApi, fillCityFromApi } from '../lib/geocoder'
+import { fetchCityFromGeoApi, fetchCommunesByDepartment, fillCityFromApi } from '../lib/geocoder'
 import type { SyncCommand, SyncOptions, SyncResult } from '../types'
 
 // Paris, Marseille, Lyon — arrondissements hardcodés (même données que Django)
@@ -68,7 +68,7 @@ const SPECIAL_CITIES = [
 
 async function ensureSpecialCities(options: SyncOptions, result: SyncResult): Promise<void> {
   for (const sc of SPECIAL_CITIES) {
-    const existing = await db.select().from(cities).where(eq(cities.name, sc.name)).limit(1)
+    const existing = await db.select({ id: cities.id }).from(cities).where(eq(cities.name, sc.name)).limit(1)
     if (existing[0]) {
       if (options.verbose) console.log(`  ✓ ${sc.name} existe déjà`)
       result.skipped++
@@ -102,6 +102,95 @@ async function ensureSpecialCities(options: SyncOptions, result: SyncResult): Pr
     await fillCityFromApi(newCity.id)
     if (options.verbose) console.log(`  ✓ ${sc.name} créée`)
     result.updated++
+  }
+}
+
+// Arrondissements are handled as merged cities (Paris, Marseille, Lyon) in ensureSpecialCities
+function isArrondissement(inseeCode: string): boolean {
+  const code = Number.parseInt(inseeCode, 10)
+  if (Number.isNaN(code)) return false
+  // Paris: 75101-75120, Marseille: 13201-13216, Lyon: 69381-69389
+  return (code >= 75101 && code <= 75120) || (code >= 13201 && code <= 13216) || (code >= 69381 && code <= 69389)
+}
+
+function findSlugInMemory(baseSlug: string, taken: Set<string>): string {
+  if (!taken.has(baseSlug)) return baseSlug
+  const prefix = `${baseSlug}-`
+  let i = 1
+  while (taken.has(`${prefix}${i}`)) i++
+  return `${prefix}${i}`
+}
+
+async function importAllCommunes(options: SyncOptions, result: SyncResult): Promise<void> {
+  // Pre-load reference data
+  const deptRows = await db.select({ id: departments.id, code: departments.code }).from(departments)
+  const deptMap = new Map(deptRows.map((d) => [d.code, d.id]))
+
+  const inseeRows = await db.select({ inseeCodes: cities.inseeCodes }).from(cities)
+  const existingInsee = new Set(inseeRows.flatMap((r) => r.inseeCodes))
+
+  const slugRows = await db.select({ slug: cities.slug }).from(cities)
+  const existingSlugs = new Set(slugRows.map((r) => r.slug))
+
+  const deptCodes = Array.from(deptMap.keys()).sort()
+
+  for (let i = 0; i < deptCodes.length; i++) {
+    const deptCode = deptCodes[i]
+    const deptId = deptMap.get(deptCode)!
+
+    let communes
+    try {
+      communes = await fetchCommunesByDepartment(deptCode)
+    } catch (error) {
+      result.errors.push(`Département ${deptCode}: ${error instanceof Error ? error.message : String(error)}`)
+      continue
+    }
+
+    if (communes.length === 0) {
+      if (options.verbose) console.log(`    [${i + 1}/${deptCodes.length}] ${deptCode}: aucune commune retournée`)
+      continue
+    }
+
+    let created = 0
+    for (const commune of communes) {
+      if (isArrondissement(commune.code)) continue
+      if (existingInsee.has(commune.code)) {
+        result.skipped++
+        continue
+      }
+
+      const baseSlug = generateSlug(commune.nom)
+      const slug = findSlugInMemory(baseSlug, existingSlugs)
+      existingSlugs.add(slug)
+      existingInsee.add(commune.code)
+
+      if (options.dryRun) {
+        if (options.verbose) console.log(`      [dry-run] ${commune.nom} (${commune.code})`)
+        result.updated++
+        created++
+        continue
+      }
+
+      try {
+        await db.insert(cities).values({
+          name: commune.nom,
+          slug,
+          postalCodes: commune.codesPostaux ?? [],
+          inseeCodes: [commune.code],
+          departmentId: deptId,
+          popular: false,
+          epciCode: commune.codeEpci ?? null,
+          population: commune.population ?? null,
+          boundary: commune.contour ? sql`ST_SetSRID(ST_Multi(ST_GeomFromGeoJSON(${JSON.stringify(commune.contour)})), 4326)` : null,
+        })
+        result.updated++
+        created++
+      } catch (error) {
+        result.errors.push(`${commune.nom} (${commune.code}): ${error instanceof Error ? error.message : String(error)}`)
+      }
+    }
+
+    console.log(`    [${i + 1}/${deptCodes.length}] ${deptCode}: ${created} nouvelles communes`)
   }
 }
 
@@ -222,6 +311,9 @@ const command: SyncCommand = {
         result.errors.push(`CP ${postalCode}: ${error instanceof Error ? error.message : String(error)}`)
       }
     }
+
+    console.log('  🌍 Import de toutes les communes manquantes...')
+    await importAllCommunes(options, result)
 
     return result
   },
