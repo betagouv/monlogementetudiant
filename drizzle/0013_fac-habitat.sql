@@ -10,7 +10,8 @@ DECLARE
 BEGIN
   SELECT id INTO fac_habitat_owner_id FROM account_owner WHERE LOWER(name) = LOWER('FAC HABITAT');
   IF fac_habitat_owner_id IS NULL THEN
-    RAISE EXCEPTION 'Owner FAC HABITAT not found';
+    RAISE NOTICE 'Owner FAC HABITAT not found, skipping migration';
+    RETURN;
   END IF;
 
   CREATE TEMP TABLE tmp_fac_habitat_update (
