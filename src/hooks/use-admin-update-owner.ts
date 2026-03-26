@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { createToast } from '~/components/ui/createToast'
+import { type TUpdateOwnerInput } from '~/schemas/owner-form'
 import { useTRPC, useTRPCClient } from '~/server/trpc/client'
 
 export const useAdminUpdateOwner = () => {
@@ -12,8 +13,7 @@ export const useAdminUpdateOwner = () => {
   const t = useTranslations('toast')
 
   return useMutation({
-    mutationFn: (data: { id: number; name?: string; url?: string | null; acceptDossierFacileApplications?: boolean }) =>
-      trpcClient.admin.owners.update.mutate(data),
+    mutationFn: (data: TUpdateOwnerInput) => trpcClient.admin.owners.update.mutate(data),
     onSuccess: async (updated) => {
       await queryClient.invalidateQueries({ queryKey: trpc.admin.owners.list.queryKey() })
       await queryClient.invalidateQueries({ queryKey: trpc.admin.owners.getById.queryKey({ id: updated.id }) })
