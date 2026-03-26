@@ -3,7 +3,14 @@ import { createAcademy, createDepartment } from '../../../src/__tests__/fixtures
 import { getTestDb } from '../../../src/__tests__/helpers/test-db'
 import { cities } from '../../../src/server/db/schema'
 
-const mockFetch = vi.fn()
+const mockFetch = vi.fn().mockImplementation((url: string) => {
+  // fetchCommunesByDepartment calls → return empty array so step 4 is a no-op
+  if (typeof url === 'string' && url.includes('/departements/')) {
+    return Promise.resolve({ ok: true, status: 200, json: async () => [] })
+  }
+  // Default: handled by per-test mockResolvedValue
+  return Promise.resolve({ ok: true, status: 200, json: async () => [] })
+})
 vi.stubGlobal('fetch', mockFetch)
 
 const testDb = getTestDb()
@@ -23,18 +30,24 @@ describe('sync-cities integration', () => {
     await createDepartment({ academyId: academy.id, name: 'Rhône', code: '69' })
 
     // Mock geo API calls for fillCityFromApi (postalCode lookup for each city)
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => [
-        {
-          nom: 'Paris',
-          code: '75056',
-          codesPostaux: ['75001'],
-          codeDepartement: '75',
-          codeEpci: '200054781',
-          population: 2100000,
-        },
-      ],
+    mockFetch.mockImplementation((url: string) => {
+      if (typeof url === 'string' && url.includes('/departements/')) {
+        return Promise.resolve({ ok: true, status: 200, json: async () => [] })
+      }
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: async () => [
+          {
+            nom: 'Paris',
+            code: '75056',
+            codesPostaux: ['75001'],
+            codeDepartement: '75',
+            codeEpci: '200054781',
+            population: 2100000,
+          },
+        ],
+      })
     })
 
     const result = await command.execute({ dryRun: true, verbose: true })
@@ -63,18 +76,24 @@ describe('sync-cities integration', () => {
     await createDepartment({ academyId: academy.id, name: 'Bouches-du-Rhône', code: '13' })
     await createDepartment({ academyId: academy.id, name: 'Rhône', code: '69' })
 
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => [
-        {
-          nom: 'Marseille',
-          code: '13055',
-          codesPostaux: ['13001'],
-          codeDepartement: '13',
-          codeEpci: '200054807',
-          population: 870000,
-        },
-      ],
+    mockFetch.mockImplementation((url: string) => {
+      if (typeof url === 'string' && url.includes('/departements/')) {
+        return Promise.resolve({ ok: true, status: 200, json: async () => [] })
+      }
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: async () => [
+          {
+            nom: 'Marseille',
+            code: '13055',
+            codesPostaux: ['13001'],
+            codeDepartement: '13',
+            codeEpci: '200054807',
+            population: 870000,
+          },
+        ],
+      })
     })
 
     const result = await command.execute({ dryRun: true, verbose: true })
