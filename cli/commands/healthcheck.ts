@@ -114,3 +114,59 @@ export async function healthcheck(options: HealthcheckOptions) {
   await closeDb()
   process.exit(errors > 0 ? 1 : 0)
 }
+
+export async function healthcheckCities(options: HealthcheckOptions) {
+  const baseUrl = options.baseUrl || 'http://localhost:3000'
+
+  console.log('🏙️ Healthcheck des pages villes...\n')
+
+  const rows = await db
+    .select({
+      id: cities.id,
+      name: cities.name,
+      slug: cities.slug,
+    })
+    .from(cities)
+
+  let ok = 0
+  let errors = 0
+  const issues: string[] = []
+
+  for (const row of rows) {
+    if (!row.slug) {
+      issues.push(`  #${row.id} ${row.name}: slug manquant`)
+      errors++
+      continue
+    }
+
+    const url = `${BASE_PATH}/${row.slug}`
+
+    try {
+      const response = await fetch(`${baseUrl}${url}`, { method: 'HEAD', redirect: 'follow' })
+      if (!response.ok) {
+        issues.push(`  #${row.id} ${row.name}: HTTP ${response.status} → ${url}`)
+        errors++
+      } else {
+        ok++
+        if (options.verbose) console.log(`  ✓ ${row.name} → ${url}`)
+      }
+    } catch (err) {
+      issues.push(`  #${row.id} ${row.name}: ${err instanceof Error ? err.message : String(err)} → ${url}`)
+      errors++
+    }
+  }
+
+  console.log(`\n📊 Résultat: ${rows.length} villes`)
+  console.log(`  ✅ OK: ${ok}`)
+  console.log(`  ❌ Erreurs: ${errors}`)
+
+  if (issues.length > 0) {
+    console.log(`\n📋 Détails (${issues.length} villes avec problèmes):`)
+    for (const issue of issues) {
+      console.log(issue)
+    }
+  }
+
+  await closeDb()
+  process.exit(errors > 0 ? 1 : 0)
+}
