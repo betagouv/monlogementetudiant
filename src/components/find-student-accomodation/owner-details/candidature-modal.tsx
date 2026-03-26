@@ -3,23 +3,23 @@
 import { createModal } from '@codegouvfr/react-dsfr/Modal'
 import Select from '@codegouvfr/react-dsfr/Select'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { APARTMENT_TYPE_LABELS, type ApartmentType } from '~/enums/apartment-type'
 import { useTRPC, useTRPCClient } from '~/server/trpc/client'
-
-export const candidatureModal = createModal({
-  id: 'candidature-modal',
-  isOpenedByDefault: false,
-})
 
 interface CandidatureModalProps {
   accommodationSlug: string
   availableApartmentTypes: ApartmentType[]
 }
 
+export const useCandidatureModal = (accommodationSlug: string) => {
+  return useMemo(() => createModal({ id: `candidature-modal-${accommodationSlug}`, isOpenedByDefault: false }), [accommodationSlug])
+}
+
 export const CandidatureModal = ({ accommodationSlug, availableApartmentTypes }: CandidatureModalProps) => {
   const [step, setStep] = useState<'form' | 'success'>('form')
   const [selectedApartmentType, setSelectedApartmentType] = useState<ApartmentType | ''>('')
+  const modal = useCandidatureModal(accommodationSlug)
 
   const trpc = useTRPC()
   const trpcClient = useTRPCClient()
@@ -40,13 +40,13 @@ export const CandidatureModal = ({ accommodationSlug, availableApartmentTypes }:
   }
 
   const handleClose = () => {
-    candidatureModal.close()
+    modal.close()
     setStep('form')
     setSelectedApartmentType('')
   }
 
   return (
-    <candidatureModal.Component
+    <modal.Component
       title={step === 'form' ? 'Candidater pour ce logement' : 'Candidature envoyée'}
       buttons={
         step === 'form'
@@ -93,6 +93,6 @@ export const CandidatureModal = ({ accommodationSlug, availableApartmentTypes }:
       ) : (
         <p>Votre candidature a bien été envoyée. Le bailleur reviendra vers vous dans les meilleurs délais.</p>
       )}
-    </candidatureModal.Component>
+    </modal.Component>
   )
 }

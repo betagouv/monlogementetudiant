@@ -1,10 +1,10 @@
-import { index, integer, pgTable, serial, text, timestamp, unique, varchar } from 'drizzle-orm/pg-core'
+import { index, integer, pgTable, text, timestamp, unique, uuid, varchar } from 'drizzle-orm/pg-core'
 import { user } from './auth'
 
 export const dossierFacileTenants = pgTable(
   'dossier_facile_tenant',
   {
-    id: serial('id').primaryKey(),
+    id: uuid('id').defaultRandom().primaryKey(),
     userId: text('user_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
@@ -21,24 +21,28 @@ export const dossierFacileTenants = pgTable(
   (t) => [index('dossier_facile_tenant_user_id_idx').on(t.userId)],
 )
 
-export const dossierFacileDocuments = pgTable('dossier_facile_document', {
-  id: serial('id').primaryKey(),
-  tenantId: integer('tenant_id')
-    .notNull()
-    .references(() => dossierFacileTenants.id, { onDelete: 'cascade' }),
-  ownerType: text('owner_type').notNull(),
-  documentCategory: text('document_category').notNull(),
-  documentSubCategory: text('document_sub_category'),
-  documentStatus: text('document_status'),
-  url: text('url'),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-})
+export const dossierFacileDocuments = pgTable(
+  'dossier_facile_document',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => dossierFacileTenants.id, { onDelete: 'cascade' }),
+    ownerType: text('owner_type').notNull(),
+    documentCategory: text('document_category').notNull(),
+    documentSubCategory: text('document_sub_category'),
+    documentStatus: text('document_status'),
+    url: text('url'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [unique().on(table.tenantId, table.ownerType, table.documentCategory, table.documentSubCategory)],
+)
 
 export const dossierFacileApplications = pgTable(
   'dossier_facile_application',
   {
-    id: serial('id').primaryKey(),
-    tenantId: integer('tenant_id')
+    id: uuid('id').defaultRandom().primaryKey(),
+    tenantId: uuid('tenant_id')
       .notNull()
       .references(() => dossierFacileTenants.id, { onDelete: 'cascade' }),
     accommodationSlug: varchar('accommodation_slug', { length: 255 }).notNull(),

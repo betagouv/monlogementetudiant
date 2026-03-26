@@ -516,7 +516,7 @@ export const bailleurRouter = createTRPCRouter({
       }
     }),
 
-  getCandidature: ownerProcedure.input(z.object({ id: z.number() })).query(async ({ ctx, input }) => {
+  getCandidature: ownerProcedure.input(z.object({ id: z.string().uuid() })).query(async ({ ctx, input }) => {
     const application = await db.query.dossierFacileApplications.findFirst({
       where: eq(dossierFacileApplications.id, input.id),
       with: {
@@ -583,7 +583,7 @@ export const bailleurRouter = createTRPCRouter({
   updateCandidatureStatus: ownerProcedure
     .input(
       z.object({
-        id: z.number(),
+        id: z.string().uuid(),
         status: z.enum(['accepted', 'rejected']),
       }),
     )

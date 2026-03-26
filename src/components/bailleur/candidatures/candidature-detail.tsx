@@ -30,7 +30,7 @@ const TabLayout = ({
 )
 
 interface CandidatureDetailProps {
-  id: number
+  id: string
 }
 
 export const CandidatureDetail = ({ id }: CandidatureDetailProps) => {

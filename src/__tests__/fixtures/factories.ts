@@ -204,7 +204,7 @@ export async function createDossierFacileTenant(overrides: Omit<Partial<DossierF
 
 export async function createDossierFacileApplication(
   overrides: Omit<Partial<DossierFacileApplicationInsert>, 'tenantId' | 'accommodationSlug' | 'apartmentType'> & {
-    tenantId: number
+    tenantId: string
     accommodationSlug: string
     apartmentType: string
   },

@@ -7,7 +7,7 @@ import z from 'zod'
 import type { ApartmentType } from '~/enums/apartment-type'
 import { trackEvent } from '~/lib/tracking'
 import { useTRPC, useTRPCClient } from '~/server/trpc/client'
-import { CandidatureModal, candidatureModal } from './candidature-modal'
+import { CandidatureModal, useCandidatureModal } from './candidature-modal'
 
 interface Props {
   accommodationSlug: string
@@ -20,6 +20,7 @@ export const DossierFacileLinkButton = ({ accommodationSlug, availableApartmentT
   const t = useTranslations('accomodation')
   const trpc = useTRPC()
   const trpcClient = useTRPCClient()
+  const candidatureModal = useCandidatureModal(accommodationSlug)
 
   const { data: tenant, isLoading: isTenantLoading } = useQuery({
     ...trpc.dossierFacile.tenant.queryOptions(),
