@@ -1,6 +1,7 @@
 import { HydrationBoundary } from '@tanstack/react-query'
 import { notFound } from 'next/navigation'
 import { CandidatureDetail } from '~/components/bailleur/candidatures/candidature-detail'
+import { getServerSession } from '~/services/better-auth'
 import { getCandidateDetailsPageContext } from './get-candidate-details-page-context'
 
 export const dynamic = 'force-dynamic'
@@ -13,6 +14,11 @@ type Props = {
 }
 
 export default async function CandidatureDetailPage({ params }: Props) {
+  const session = await getServerSession()
+  if (!session?.user.owner?.acceptDossierFacileApplications) {
+    return notFound()
+  }
+
   const { id } = await params
 
   if (!UUID_REGEX.test(id)) return notFound()
