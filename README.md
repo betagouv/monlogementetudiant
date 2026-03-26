@@ -85,7 +85,7 @@ cli/
     import-csv.ts        # Import générique depuis CSV
     import-fac-habitat.ts # Import résidences FAC HABITAT (SFTP)
     upload-images.ts     # Upload images locales vers S3
-    sync-cities.ts       # Sync villes (geo.api.gouv.fr)
+    sync-cities.ts       # Sync villes (geo.api.gouv.fr) + rattrapage toutes communes
     sync-rents.ts        # Sync loyers moyens (data.gouv.fr)
     sync-students.ts     # Sync nb étudiants (enseignementsup)
     sync-stats.ts        # Sync stats Matomo
@@ -141,6 +141,25 @@ Options :
 | `--base-url <url>` | URL de base pour les tests HTTP (défaut : `http://localhost:3000`) |
 
 Le process exit avec le code `1` si des erreurs sont détectées (city_id manquant, slug absent, URL en 404, etc.).
+
+#### `healthcheck-cities` — Vérifier les pages villes en HTTP
+
+```bash
+pnpm cli healthcheck-cities
+pnpm cli healthcheck-cities --verbose
+pnpm cli healthcheck-cities --base-url https://monlogementetudiant.beta.gouv.fr
+```
+
+Effectue un `HEAD` sur `/trouver-un-logement-etudiant/ville/{slug}` pour chaque ville en base et reporte les erreurs HTTP (404, 500, etc.). Nécessite le serveur Next.js en cours d'exécution.
+
+Options :
+
+| Option | Description |
+|--------|-------------|
+| `--verbose` | Affiche le détail de chaque ville |
+| `--base-url <url>` | URL de base pour les tests HTTP (défaut : `http://localhost:3000`) |
+
+Le process exit avec le code `1` si des erreurs sont détectées.
 
 ---
 
@@ -234,6 +253,7 @@ pnpm cli sync cities --dry-run --verbose
 1. Crée Paris/Marseille/Lyon si absentes (codes postaux et INSEE hardcodés)
 2. Met à jour chaque ville existante via geo.api.gouv.fr (contour, EPCI, population)
 3. Crée les villes manquantes à partir des accommodations publiées sans ville associée
+4. **Rattrapage de toutes les communes françaises** : parcourt chaque département via `GET /departements/{code}/communes` (~101 appels API) et importe les communes absentes en base (déduplication par code INSEE). Les arrondissements de Paris/Marseille/Lyon sont ignorés (gérés à l'étape 1). Cela permet à toutes les ~35 000 communes d'apparaître dans la recherche, même sans résidence associée.
 
 Pas de variables d'env spécifiques (utilise les APIs publiques geo.api.gouv.fr).
 
