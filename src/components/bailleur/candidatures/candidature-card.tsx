@@ -15,7 +15,7 @@ const STATUS_CONFIG = {
 } as const
 
 interface CandidatureItem {
-  id: number
+  id: string
   studentName: string | null
   studentEmail: string | null
   residence: string | null

@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm'
+import { and, eq, notInArray } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
 import { ZWebhookBodySchema } from '~/schemas/dossier-facile/dossier-facile-webhook'
 import { db } from '~/server/db'
@@ -75,17 +75,40 @@ export async function POST(request: Request) {
       .where(eq(dossierFacileTenants.tenantId, tenantIdStr))
 
     if (data.documents.length > 0) {
-      await db.delete(dossierFacileDocuments).where(eq(dossierFacileDocuments.tenantId, existingTenant.id))
-      await db.insert(dossierFacileDocuments).values(
-        data.documents.map((doc) => ({
-          tenantId: existingTenant.id,
-          ownerType: doc.ownerType,
-          documentCategory: doc.documentCategory,
-          documentSubCategory: doc.documentSubCategory,
-          documentStatus: doc.documentStatus,
-          url: doc.url,
-        })),
-      )
+      const upsertedIds: string[] = []
+      for (const doc of data.documents) {
+        const [upserted] = await db
+          .insert(dossierFacileDocuments)
+          .values({
+            tenantId: existingTenant.id,
+            ownerType: doc.ownerType,
+            documentCategory: doc.documentCategory,
+            documentSubCategory: doc.documentSubCategory,
+            documentStatus: doc.documentStatus,
+            url: doc.url,
+          })
+          .onConflictDoUpdate({
+            target: [
+              dossierFacileDocuments.tenantId,
+              dossierFacileDocuments.ownerType,
+              dossierFacileDocuments.documentCategory,
+              dossierFacileDocuments.documentSubCategory,
+            ],
+            set: {
+              documentStatus: doc.documentStatus,
+              url: doc.url,
+            },
+          })
+          .returning({ id: dossierFacileDocuments.id })
+        if (upserted) upsertedIds.push(upserted.id)
+      }
+
+      // Remove stale documents no longer in the webhook payload
+      if (upsertedIds.length > 0) {
+        await db
+          .delete(dossierFacileDocuments)
+          .where(and(eq(dossierFacileDocuments.tenantId, existingTenant.id), notInArray(dossierFacileDocuments.id, upsertedIds)))
+      }
     }
 
     console.log(

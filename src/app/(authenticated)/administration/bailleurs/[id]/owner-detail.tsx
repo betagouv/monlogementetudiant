@@ -92,11 +92,11 @@ export function OwnerDetail({ id }: { id: string }) {
   if (isLoading) return <p>Chargement...</p>
   if (!ownerData) return <p>Gestionnaire non trouvé</p>
 
-  const handleSubmit = (data: TOwnerFormData) => {
-    updateOwner.mutate({
+  const handleSubmit = async (data: TOwnerFormData) => {
+    await updateOwner.mutateAsync({
       id: ownerId,
       name: data.name,
-      url: data.url || null,
+      url: data.url || undefined,
       acceptDossierFacileApplications: data.acceptDossierFacileApplications,
     })
   }

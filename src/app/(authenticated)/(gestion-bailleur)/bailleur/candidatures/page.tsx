@@ -26,7 +26,7 @@ export default async function CandidaturesPage({ searchParams }: CandidaturesPag
     <HydrationBoundary state={dehydratedState}>
       <div className="fr-container fr-pb-12w">
         <Breadcrumb
-          currentPageLabel={<>Gestion des candidatures</>}
+          currentPageLabel="Gestion des candidatures"
           segments={[{ label: 'Tableau de bord', linkProps: { href: '/bailleur/tableau-de-bord' } }]}
           classes={{ root: 'fr-mt-0 fr-mb-2w fr-pt-4w' }}
         />

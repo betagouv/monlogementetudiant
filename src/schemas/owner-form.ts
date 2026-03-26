@@ -7,3 +7,6 @@ export const ZOwnerFormSchema = z.object({
 })
 
 export type TOwnerFormData = z.infer<typeof ZOwnerFormSchema>
+
+export const ZUpdateOwnerInput = ZOwnerFormSchema.partial().extend({ id: z.number() })
+export type TUpdateOwnerInput = z.infer<typeof ZUpdateOwnerInput>
