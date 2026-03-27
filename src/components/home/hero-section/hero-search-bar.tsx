@@ -78,10 +78,7 @@ export const HeroSearchBar: FC = () => {
             <FindStudentAccommodationCitiesAutocompleteResults data={data} onClickItem={handleOnClickItem} />
           )}
         </div>
-        <Button
-          className={classes.searchButton}
-          onClick={handleSearch}
-        >
+        <Button className={classes.searchButton} onClick={handleSearch}>
           Rechercher
         </Button>
       </div>
