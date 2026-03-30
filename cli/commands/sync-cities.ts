@@ -229,16 +229,17 @@ const command: SyncCommand = {
     const publishedAccommodations = await db
       .select({
         postalCode: accommodations.postalCode,
-        city: accommodations.city,
+        city: cities.name,
       })
       .from(accommodations)
+      .innerJoin(cities, eq(accommodations.cityId, cities.id))
       .where(eq(accommodations.published, true))
 
     const existingPostalCodes = new Set((await db.select({ postalCodes: cities.postalCodes }).from(cities)).flatMap((c) => c.postalCodes))
 
     const missingPostalCodes = new Map<string, string>()
     for (const acc of publishedAccommodations) {
-      if (!acc.postalCode || existingPostalCodes.has(acc.postalCode)) continue
+      if (!acc.postalCode || !acc.city || existingPostalCodes.has(acc.postalCode)) continue
       missingPostalCodes.set(acc.postalCode, acc.city)
     }
 

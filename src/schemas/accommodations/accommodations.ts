@@ -10,7 +10,7 @@ export const ZGeometry = z.object({
 const ZBaseAccommodationInfo = z.object({
   id: z.number(),
   address: z.string().max(255),
-  city: z.string().max(150),
+  city: z.string(),
   name: z.string().max(250),
   postal_code: z.string().max(5),
   residence_type: z.enum(EResidenceType).nullable(),

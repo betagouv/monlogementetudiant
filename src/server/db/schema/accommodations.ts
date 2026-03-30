@@ -10,7 +10,6 @@ export const accommodations = pgTable(
     slug: varchar({ length: 255 }).notNull().unique(),
     description: text(),
     address: varchar({ length: 255 }),
-    city: varchar({ length: 150 }).notNull(),
     postalCode: varchar('postal_code', { length: 5 }).notNull(),
     residenceType: varchar('residence_type', { length: 100 }),
     target_audience: varchar('target_audience', { length: 100 }),

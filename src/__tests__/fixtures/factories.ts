@@ -63,6 +63,7 @@ export async function createDepartment(overrides: Omit<Partial<DepartmentInsert>
     .values({
       name: 'Loire',
       code: '42',
+      slug: 'loire',
       ...overrides,
     })
     .returning()
@@ -131,7 +132,6 @@ export async function createAccommodation(
   const values = {
     name: 'Résidence Test',
     slug: `residence-test-${suffix}`,
-    city: 'Saint-Étienne',
     postalCode: '42000',
     published: true,
     available: true,

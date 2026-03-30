@@ -315,7 +315,7 @@ function ResidencesTab({
     id: number
     name: string
     slug: string
-    city: string
+    city: string | null
     citySlug: string | null
     nbTotalApartments: number | null
     nbAvailableApartments: number

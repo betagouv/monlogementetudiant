@@ -40,6 +40,7 @@ function computePriceMax(
 }
 
 type AccommodationWithOwnerAndExtras = Omit<typeof accommodations.$inferSelect, 'geom'> & {
+  city: { name: string } | null
   owner: { name: string; url: string | null } | null
   lat: number
   lng: number
@@ -57,7 +58,7 @@ function mapToAccommodationMy(row: AccommodationWithOwnerAndExtras): TAccomodati
       slug: row.slug,
       description: row.description ?? null,
       address: row.address ?? '',
-      city: row.city,
+      city: row.city?.name ?? '',
       postal_code: row.postalCode,
       residence_type: toResidenceType(row.residenceType),
       target_audience: toTargetAudience(row.target_audience),
@@ -160,7 +161,7 @@ export const getAccommodationMyById = async (slug: string): Promise<TAccomodatio
   const row = await db.query.accommodations.findFirst({
     where: ownerId != null ? and(eq(accommodations.slug, slug), eq(accommodations.ownerId, ownerId)) : eq(accommodations.slug, slug),
     columns: { geom: false },
-    with: { owner: true },
+    with: { owner: true, city: true },
     extras: {
       lat: sql<number>`ST_Y(${accommodations.geom}::geometry)`.as('lat'),
       lng: sql<number>`ST_X(${accommodations.geom}::geometry)`.as('lng'),

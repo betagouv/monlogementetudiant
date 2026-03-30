@@ -11,6 +11,7 @@ import { cities } from '~/server/db/schema/cities'
 import { externalSources } from '~/server/db/schema/external-sources'
 import { owners } from '~/server/db/schema/owners'
 import { baseProcedure, createTRPCRouter } from '../init'
+import { bboxSelect } from '../utils/spatial-helpers'
 
 const availabilityCols = [
   accommodations.nbT1Available,
@@ -171,7 +172,8 @@ const listAccommodationsWithConditions = async ({ page, pageSize, where }: { pag
         slug: accommodations.slug,
         description: accommodations.description,
         address: accommodations.address,
-        city: accommodations.city,
+        city: cities.name,
+        citySlug: cities.slug,
         postalCode: accommodations.postalCode,
         residenceType: accommodations.residenceType,
         targetAudience: accommodations.target_audience,
@@ -243,6 +245,7 @@ const listAccommodationsWithConditions = async ({ page, pageSize, where }: { pag
       })
       .from(accommodations)
       .leftJoin(owners, eq(accommodations.ownerId, owners.id))
+      .innerJoin(cities, eq(accommodations.cityId, cities.id))
       .where(where)
       .orderBy(sql`${priorityOrder} ASC`, sql`${totalAvailable} DESC`)
       .limit(pageSize)
@@ -278,6 +281,7 @@ export function mapToGeoJsonFeature(row: Record<string, unknown>) {
       slug: row.slug as string,
       address: (row.address as string) ?? '',
       city: row.city as string,
+      city_slug: row.citySlug as string,
       postal_code: row.postalCode as string,
       residence_type: toResidenceType((row.residenceType as string | null) ?? null),
       target_audience: toTargetAudience((row.targetAudience as string | null) ?? null),
@@ -464,7 +468,7 @@ export const accommodationsRouter = createTRPCRouter({
         slug: accommodations.slug,
         description: accommodations.description,
         address: accommodations.address,
-        city: accommodations.city,
+        city: cities.name,
         postalCode: accommodations.postalCode,
         residenceType: accommodations.residenceType,
         targetAudience: accommodations.target_audience,
@@ -547,9 +551,12 @@ export const accommodationsRouter = createTRPCRouter({
         ownerUrl: owners.url,
         ownerImage: owners.image,
         ownerAcceptDossierFacile: owners.acceptDossierFacileApplications,
+        citySlug: cities.slug,
+        cityBbox: bboxSelect(cities),
       })
       .from(accommodations)
       .leftJoin(owners, eq(accommodations.ownerId, owners.id))
+      .innerJoin(cities, eq(accommodations.cityId, cities.id))
       .where(and(eq(accommodations.slug, input.slug), eq(accommodations.published, true), sql`${accommodations.geom} IS NOT NULL`))
       .limit(1)
 
@@ -666,6 +673,8 @@ export const accommodationsRouter = createTRPCRouter({
             accept_dossier_facile_applications: row.ownerAcceptDossierFacile ?? false,
           }
         : null,
+      city_slug: row.citySlug,
+      city_bbox: row.cityBbox,
     }
   }),
 })
