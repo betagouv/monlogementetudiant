@@ -125,6 +125,7 @@
     "equipments": {
       "title": "Équipements"
     },
+    "socialHousingRequired": "Une <bold>demande de logement social</bold> est nécessaire pour intégrer la résidence",
     "descriptionTitle": "À propos du logement étudiant {title}",
     "title": "Logement étudiant {title} {cityFormatted}",
     "tags": {
@@ -149,11 +150,11 @@
       "buttons": {
         "consult": "Consulter l'offre du gestionnaire",
         "dossierFacile": "Candidater avec Dossier Facile",
-        "dossierFacileConnect": "Lier mon compte DossierFacile",
-        "dossierFacileConnectDescription": "Liez votre dossier de location certifié",
+        "dossierFacileConnect": "Lier mon compte Dossier Facile",
+        "dossierFacileConnectDescription": "Lier votre dossier facile certifié",
         "dossierFacilePending": "Dossier en cours de vérification",
-        "dossierFacileIncomplete": "Complétez votre dossier DossierFacile",
-        "dossierFacileDenied": "Dossier DossierFacile refusé",
+        "dossierFacileIncomplete": "Complétez votre DossierFacile",
+        "dossierFacileDenied": "Votre DossierFacile a été refusé",
         "dossierFacileApply": "Candidater avec DossierFacile",
         "dossierFacileApplied": "Candidature envoyée",
         "dossierFacileSelectType": "Type de logement",
@@ -913,6 +914,7 @@
         "accessible": "Nombre de logements adaptés PMR",
         "coliving": "Nombre de logements en colocation dans la résidence",
         "scholarship": "Les étudiants boursiers sont prioritaires dans la résidence",
+        "socialHousing": "Une demande de logement social est nécessaire.",
         "accommodationType": "Typologie de logements",
         "targetAudience": "Public dans la résidence",
         "typologyTab": {
