@@ -49,18 +49,18 @@ function OwnerAvatar({ name, url, imageBase64, index }: { name: string; url: str
   const [dbImageError, setDbImageError] = useState(false)
   const faviconUrl = url ? getFaviconUrl(url) : null
 
-  if (faviconUrl && !faviconError) {
-    return (
-      <div className={styles.gCardAvatar} style={{ background: '#fff', overflow: 'hidden' }}>
-        <Image src={faviconUrl} alt={name} width={32} height={32} onError={() => setFaviconError(true)} unoptimized />
-      </div>
-    )
-  }
-
   if (imageBase64 && !dbImageError) {
     return (
       <div className={styles.gCardAvatar} style={{ background: '#fff', overflow: 'hidden' }}>
         <Image src={imageBase64} alt={name} width={32} height={32} onError={() => setDbImageError(true)} unoptimized />
+      </div>
+    )
+  }
+
+  if (faviconUrl && !faviconError) {
+    return (
+      <div className={styles.gCardAvatar} style={{ background: '#fff', overflow: 'hidden' }}>
+        <Image src={faviconUrl} alt={name} width={32} height={32} onError={() => setFaviconError(true)} unoptimized />
       </div>
     )
   }
