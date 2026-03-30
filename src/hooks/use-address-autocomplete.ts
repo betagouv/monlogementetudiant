@@ -1,5 +1,6 @@
 'use client'
 
+import * as Sentry from '@sentry/nextjs'
 import { useCallback, useState } from 'react'
 import { useDebouncedCallback } from 'use-debounce'
 
@@ -54,7 +55,7 @@ export const useAddressAutocomplete = () => {
 
       setSuggestions(mappedSuggestions)
     } catch (error) {
-      console.error('Error fetching address suggestions:', error)
+      Sentry.captureException(error, { tags: { feature: 'address-autocomplete' } })
       setSuggestions([])
     } finally {
       setIsLoading(false)

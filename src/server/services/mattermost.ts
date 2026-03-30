@@ -1,3 +1,5 @@
+import * as Sentry from '@sentry/nextjs'
+
 const MATTERMOST_WEBHOOK_URL = process.env.MATTERMOST_WEBHOOK_URL
 
 const BASE_URL = process.env.BASE_URL ?? 'https://monlogementetudiant.beta.gouv.fr'
@@ -20,6 +22,7 @@ async function sendWebhook(text: string): Promise<void> {
       console.warn(`Mattermost webhook failed: ${response.status} ${await response.text()}`)
     }
   } catch (error) {
+    Sentry.captureException(error, { level: 'warning', tags: { service: 'mattermost' } })
     console.warn('Mattermost webhook error:', error)
   }
 }

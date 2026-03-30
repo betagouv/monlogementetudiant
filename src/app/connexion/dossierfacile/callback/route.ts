@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import { eq } from 'drizzle-orm'
 import { jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
@@ -68,6 +69,7 @@ export async function GET(request: Request) {
     redirectUrl.searchParams.set('df_success', '1')
     return NextResponse.redirect(redirectUrl.toString())
   } catch (error) {
+    Sentry.captureException(error, { tags: { route: 'dossierfacile-callback' } })
     const errorType = error instanceof Error && 'errorType' in error ? (error as { errorType: string }).errorType : 'sync_failed'
     return NextResponse.redirect(`${baseUrl}/dossier-facile/error?error_type=${errorType}`)
   }
