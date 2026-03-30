@@ -22,8 +22,8 @@ import { getAccommodationPageContext } from './get-accommodation-page-context'
 import styles from './logement.module.css'
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string; location: string }> }): Promise<Metadata> {
-  const { slug, location } = await params
-  const { accommodation } = await getAccommodationPageContext(slug, location)
+  const { slug } = await params
+  const { accommodation } = await getAccommodationPageContext(slug)
   const t = await getTranslations('metadata')
   const cityFormatted = formatCityWithA(accommodation.city)
 
@@ -36,9 +36,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function AccommodationPage({ params }: { params: Promise<{ slug: string; location: string }> }) {
   const t = await getTranslations('accomodation')
   const commonT = await getTranslations()
-  const { slug, location } = await params
+  const { slug } = await params
   const { accommodation, cityBbox, dehydratedState, latitude, longitude, nbAvailable, nearbyAccommodations, user } =
-    await getAccommodationPageContext(slug, location)
+    await getAccommodationPageContext(slug)
 
   const {
     address,

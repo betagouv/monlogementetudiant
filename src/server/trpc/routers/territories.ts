@@ -1,3 +1,4 @@
+import { TRPCError } from '@trpc/server'
 import { type AnyColumn, and, asc, eq, ne, type SQL, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import fs from 'fs'
@@ -33,8 +34,10 @@ function buildWhere(nameCol: AnyColumn, tokens: string[]): SQL {
 }
 
 function buildRank(nameCol: AnyColumn, normalized: string): SQL {
+  const normalizedCol = sql`LOWER(REPLACE(immutable_unaccent(${nameCol}), '-', ' '))`
   return sql`GREATEST(
-    CASE WHEN immutable_unaccent(${nameCol}) ILIKE ${normalized + '%'} THEN 1.0 ELSE 0.0 END,
+    CASE WHEN ${normalizedCol} = ${normalized} THEN 2.0 ELSE 0.0 END,
+    CASE WHEN ${normalizedCol} ILIKE ${normalized + '%'} THEN 1.0 ELSE 0.0 END,
     ts_rank(to_tsvector('simple', immutable_unaccent(${nameCol})), plainto_tsquery('simple', ${normalized}))
   ) DESC, ${nameCol} ASC`
 }
@@ -147,7 +150,7 @@ export const territoriesRouter = createTRPCRouter({
         .select({
           id: academies.id,
           name: academies.name,
-          slug: sql<string>`LOWER(REPLACE(${academies.name}, ' ', '-'))`,
+          slug: academies.slug,
           bbox: bboxSelect(academies),
         })
         .from(academies)
@@ -159,7 +162,7 @@ export const territoriesRouter = createTRPCRouter({
         .select({
           id: departments.id,
           name: departments.name,
-          slug: sql<string>`LOWER(REPLACE(${departments.name}, ' ', '-'))`,
+          slug: departments.slug,
           bbox: bboxSelect(departments),
         })
         .from(departments)
@@ -213,7 +216,7 @@ export const territoriesRouter = createTRPCRouter({
       .select({
         id: academies.id,
         name: academies.name,
-        slug: sql<string>`LOWER(REPLACE(${academies.name}, ' ', '-'))`,
+        slug: academies.slug,
         bbox: bboxSelect(academies),
       })
       .from(academies)
@@ -231,6 +234,7 @@ export const territoriesRouter = createTRPCRouter({
       .select({
         id: departments.id,
         name: departments.name,
+        slug: departments.slug,
         code: departments.code,
         bbox: bboxSelect(departments),
       })
@@ -241,6 +245,7 @@ export const territoriesRouter = createTRPCRouter({
     return results.map((d) => ({
       id: d.id,
       name: d.name,
+      slug: d.slug,
       code: d.code,
       bbox: d.bbox,
     }))
@@ -358,6 +363,98 @@ export const territoriesRouter = createTRPCRouter({
       nearbyCities.map((nc) => ({ name: nc.name, slug: nc.slug })),
     )
   }),
+
+  getBySlug: baseProcedure
+    .input(z.object({ type: z.enum(['ville', 'academie', 'departement']), slug: z.string() }))
+    .query(async ({ input }) => {
+      const slugLower = input.slug.toLowerCase()
+
+      if (input.type === 'ville') {
+        const c1 = alias(cities, 'c1')
+        const c2 = alias(cities, 'c2')
+
+        const [cityRows, accommodationStats, nearbyCities] = await Promise.all([
+          db
+            .select({
+              id: cities.id,
+              name: cities.name,
+              slug: cities.slug,
+              departmentCode: departments.code,
+              postalCodes: cities.postalCodes,
+              epciCode: sql<string>`COALESCE(${cities.epciCode}, '')`,
+              inseeCodes: cities.inseeCodes,
+              averageIncome: cities.averageIncome,
+              averageRent: cities.averageRent,
+              popular: cities.popular,
+              nbStudents: sql<number>`COALESCE(${cities.nbStudents}, 0)`,
+              bbox: bboxSelect(cities),
+            })
+            .from(cities)
+            .leftJoin(departments, eq(cities.departmentId, departments.id))
+            .where(eq(cities.slug, slugLower))
+            .limit(1),
+
+          db
+            .select({
+              nbTotalApartments: sql<number>`COALESCE(SUM(${accommodations.nbTotalApartments}), 0)::int`,
+              priceMin: sql<number | null>`MIN(${accommodations.priceMin})`,
+              nbT1: sql<number | null>`SUM(${accommodations.nbT1})::int`,
+              nbT1Bis: sql<number | null>`SUM(${accommodations.nbT1Bis})::int`,
+              nbT2: sql<number | null>`SUM(${accommodations.nbT2})::int`,
+              nbT3: sql<number | null>`SUM(${accommodations.nbT3})::int`,
+              nbT4: sql<number | null>`SUM(${accommodations.nbT4})::int`,
+              nbT5: sql<number | null>`SUM(${accommodations.nbT5})::int`,
+              nbT6: sql<number | null>`SUM(${accommodations.nbT6})::int`,
+              nbT7More: sql<number | null>`SUM(${accommodations.nbT7More})::int`,
+            })
+            .from(accommodations)
+            .where(
+              and(
+                sql`${accommodations.cityId} = (SELECT ${cities.id} FROM ${cities} WHERE ${cities.slug} = ${slugLower} LIMIT 1)`,
+                eq(accommodations.published, true),
+                eq(accommodations.available, true),
+              ),
+            ),
+
+          db
+            .select({ name: c2.name, slug: c2.slug })
+            .from(c1)
+            .innerJoin(c2, and(ne(c1.id, c2.id), sql`ST_DWithin(${c1.boundary}::geography, ${c2.boundary}::geography, 50000)`))
+            .where(eq(c1.slug, slugLower))
+            .orderBy(asc(c2.name)),
+        ])
+
+        const city = cityRows[0]
+        if (!city) throw new TRPCError({ code: 'NOT_FOUND', message: `City not found: ${input.slug}` })
+
+        return mapCityRow(
+          city,
+          accommodationStats[0] ?? undefined,
+          nearbyCities.map((nc) => ({ name: nc.name, slug: nc.slug })),
+        )
+      }
+
+      if (input.type === 'academie') {
+        const rows = await db
+          .select({ id: academies.id, name: academies.name, slug: academies.slug, bbox: bboxSelect(academies) })
+          .from(academies)
+          .where(eq(academies.slug, slugLower))
+          .limit(1)
+
+        if (!rows[0]) throw new TRPCError({ code: 'NOT_FOUND', message: `Academy not found: ${input.slug}` })
+        return rows[0]
+      }
+
+      // departement
+      const rows = await db
+        .select({ id: departments.id, name: departments.name, slug: departments.slug, bbox: bboxSelect(departments) })
+        .from(departments)
+        .where(eq(departments.slug, slugLower))
+        .limit(1)
+
+      if (!rows[0]) throw new TRPCError({ code: 'NOT_FOUND', message: `Department not found: ${input.slug}` })
+      return rows[0]
+    }),
 
   rentSearch: baseProcedure.input(z.object({ q: z.string().min(1) })).query(({ input }) => {
     const rentData = getRentData()
