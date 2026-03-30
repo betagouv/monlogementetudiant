@@ -12,6 +12,7 @@ import { CreateResidencePublication } from '~/components/bailleur/details/create
 import { ResidenceDetails } from '~/components/bailleur/details/residence-details'
 import { ResidenceRedirection } from '~/components/bailleur/details/residence-redirection'
 import { ResidenceSummary } from '~/components/bailleur/details/residence-summary'
+import { ResidenceVirtualTour } from '~/components/bailleur/details/residence-virtual-tour'
 import { useCreateResidence } from '~/hooks/use-create-residence'
 import { trackEvent } from '~/lib/tracking'
 import { TCreateResidence, ZCreateResidence } from '~/schemas/accommodations/create-residence'
@@ -29,6 +30,7 @@ export const CreateResidenceForm = () => {
       target_audience: '' as TCreateResidence['target_audience'],
       description: '',
       external_url: '',
+      virtual_tour_url: '',
       accept_waiting_list: false,
       typologies: [
         {
@@ -84,6 +86,7 @@ export const CreateResidenceForm = () => {
           <div className={clsx(styles.container, 'fr-col-md-8 boxShadow')}>
             <ResidenceDetails />
             <CreateResidencePictures />
+            <ResidenceVirtualTour />
             <CreateResidenceAccommodationList />
             <CreateResidenceEquipments />
             <ResidenceSummary />
