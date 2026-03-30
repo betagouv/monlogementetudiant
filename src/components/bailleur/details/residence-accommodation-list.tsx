@@ -44,10 +44,7 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
     return firstWithData ? `tab-${firstWithData.fieldSuffix}` : 'tab-add'
   }
 
-  const [selectedTabId, setSelectedTabId] = useQueryState(
-    'typology',
-    parseAsString.withDefault(getInitialTabId()),
-  )
+  const [selectedTabId, setSelectedTabId] = useQueryState('typology', parseAsString.withDefault(getInitialTabId()))
 
   const {
     nb_t1_available,
