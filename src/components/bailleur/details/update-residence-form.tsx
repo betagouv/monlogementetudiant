@@ -12,6 +12,7 @@ import { ResidenceLocation } from '~/components/bailleur/details/residence-locat
 import { ResidencePictures } from '~/components/bailleur/details/residence-pictures'
 import { ResidenceRedirection } from '~/components/bailleur/details/residence-redirection'
 import { ResidenceSummary } from '~/components/bailleur/details/residence-summary'
+import { ResidenceVirtualTour } from '~/components/bailleur/details/residence-virtual-tour'
 import { UpdateResidencePublication } from '~/components/bailleur/details/update-residence-publication'
 import { useUpdateResidenceDetails } from '~/hooks/use-update-residence-details'
 import { trackEvent } from '~/lib/tracking'
@@ -50,6 +51,7 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
       postal_code: accommodation.properties.postal_code || '',
       description: accommodation.properties.description || '',
       external_url: accommodation.properties.external_url || '',
+      virtual_tour_url: accommodation.properties.virtual_tour_url || '',
       accept_waiting_list: accommodation.properties.accept_waiting_list || false,
 
       nb_t1: accommodation.properties.nb_t1 ?? null,
@@ -147,6 +149,7 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
           <div className={clsx(styles.container, 'fr-col-md-8 boxShadow')}>
             <ResidenceDetails />
             <ResidencePictures accommodation={accommodation} />
+            <ResidenceVirtualTour />
             <ResidenceAccommodationList accommodation={accommodation} />
             <ResidenceEquipments />
             <ResidenceSummary />

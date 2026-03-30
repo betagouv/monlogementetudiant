@@ -14,6 +14,7 @@ export const ZUpdateResidence = z.object({
   postal_code: z.string().min(1, 'Le code postal est requis').optional(),
   description: z.string().optional(),
   external_url: z.url('Veuillez saisir une URL valide').optional().or(z.literal('')),
+  virtual_tour_url: z.string().optional(),
 
   accept_waiting_list: z.boolean().optional(),
 
