@@ -9,6 +9,7 @@ import { externalSources } from '../../server/db/schema/external-sources'
 import { favoriteAccommodations } from '../../server/db/schema/favorite-accommodations'
 import { owners } from '../../server/db/schema/owners'
 import { studentAlerts } from '../../server/db/schema/student-alerts'
+import { generateSlug } from '../../server/trpc/utils/accommodation-helpers'
 import { getTestDb } from '../helpers/test-db'
 
 type UserInsert = typeof user.$inferInsert
@@ -44,26 +45,32 @@ export async function createAcademy(
 ) {
   const db = getTestDb()
   const { boundary, ...rest } = overrides
+  const name = rest.name ?? 'Académie de Lyon'
+  const slug = rest.slug ?? buildTestSlug(name, ++academyCounter)
   const values = {
-    name: 'Académie de Lyon',
+    name,
+    slug,
     ...rest,
     ...(boundary ? { boundary: sql`ST_SetSRID(ST_GeomFromGeoJSON(${JSON.stringify(boundary)}), 4326)` } : {}),
   }
   const [row] = await db
     .insert(academies)
     .values(values as typeof academies.$inferInsert)
-    .returning({ id: academies.id, name: academies.name })
+    .returning({ id: academies.id, name: academies.name, slug: academies.slug })
   return row
 }
 
 export async function createDepartment(overrides: Omit<Partial<DepartmentInsert>, 'academyId'> & { academyId: number }) {
   const db = getTestDb()
+  const name = overrides.name ?? 'Loire'
+  const code = overrides.code ?? '42'
+  const slug = overrides.slug ?? buildTestSlug(name || code, ++departmentCounter)
   const [row] = await db
     .insert(departments)
     .values({
-      name: 'Loire',
-      code: '42',
-      slug: 'loire',
+      name,
+      code,
+      slug,
       ...overrides,
     })
     .returning()
@@ -122,6 +129,13 @@ export async function createOwner(overrides: Partial<OwnerInsert> & { userId?: s
 
 let cityCounter = 0
 let accommodationCounter = 0
+let academyCounter = 0
+let departmentCounter = 0
+
+function buildTestSlug(value: string, suffix: number) {
+  const baseSlug = generateSlug(value).trim() || 'test'
+  return suffix === 1 ? baseSlug : `${baseSlug}-${suffix}`
+}
 
 export async function createAccommodation(
   overrides: Partial<Omit<AccommodationInsert, 'geom'>> & { geom?: { type: string; coordinates: [number, number] | number[][][][] } } = {},
@@ -129,6 +143,24 @@ export async function createAccommodation(
   const db = getTestDb()
   const { geom, ...rest } = overrides
   const suffix = ++accommodationCounter
+  let cityId = rest.cityId
+
+  if (!cityId) {
+    const academy = await createAcademy({ name: `Académie Test ${suffix}` })
+    const department = await createDepartment({
+      academyId: academy.id,
+      name: `Département Test ${suffix}`,
+      code: String((suffix % 95) + 1).padStart(2, '0'),
+    })
+    const city = await createCity({
+      departmentId: department.id,
+      name: `Ville Test ${suffix}`,
+      slug: `ville-test-${suffix}`,
+      postalCodes: [String(42000 + suffix).padStart(5, '0')],
+    })
+    cityId = city.id
+  }
+
   const values = {
     name: 'Résidence Test',
     slug: `residence-test-${suffix}`,
@@ -136,6 +168,7 @@ export async function createAccommodation(
     published: true,
     available: true,
     imagesCount: 0,
+    cityId,
     ...rest,
     ...(geom ? { geom: sql`ST_SetSRID(ST_MakePoint(${geom.coordinates[0]}, ${geom.coordinates[1]}), 4326)` } : {}),
   }
