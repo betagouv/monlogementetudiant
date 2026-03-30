@@ -23,12 +23,14 @@ type TypologyTabContentProps =
       fieldSuffix: string
       typologyType: string
       isImported: boolean
+      onDelete?: () => void
     }
   | {
       mode: 'update-new'
       fieldSuffix: string | null
       availableTypes: Array<{ type: string; fieldSuffix: string }>
       onTypeSelect: (fieldSuffix: string) => void
+      onDelete?: () => void
     }
 
 export const TypologyTabContent = (props: TypologyTabContentProps) => {
@@ -68,7 +70,19 @@ export const TypologyTabContent = (props: TypologyTabContentProps) => {
             </Select>
           </div>
           <div className="fr-col-12 fr-col-md-6">
-            <label className="fr-label fr-mb-1w">{t('rent')}</label>
+            <div className="fr-flex fr-justify-content-space-between fr-align-items-start">
+              <label className="fr-label fr-mb-1w">{t('rent')}</label>
+              {props.onDelete && (
+                <Button
+                  type="button"
+                  size="small"
+                  priority="tertiary no outline"
+                  iconId="ri-delete-bin-6-line"
+                  title={t('deleteType')}
+                  onClick={props.onDelete}
+                />
+              )}
+            </div>
             <div className="fr-grid-row fr-grid-row--gutters">
               <div className="fr-col-6">
                 <Input
@@ -191,7 +205,9 @@ export const TypologyTabContent = (props: TypologyTabContentProps) => {
         <div className="fr-col-12 fr-col-md-6">
           <div className="fr-flex fr-justify-content-space-between fr-align-items-start">
             <label className="fr-label fr-mb-1w">{isColocation ? t('rentPerPerson') : t('rent')}</label>
-            {props.mode === 'create' && (
+            {(props.mode === 'create' ||
+              (props.mode === 'update' && !isImported && props.onDelete) ||
+              (props.mode === 'update-new' && props.onDelete)) && (
               <Button
                 type="button"
                 size="small"
