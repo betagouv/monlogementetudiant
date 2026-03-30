@@ -1,37 +1,36 @@
 import { z } from 'zod'
 import { ZUpdateResidence } from './update-residence'
 
-export const TYPOLOGY_TYPES = ['T1', 'T1 bis', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7+'] as const
+// Constante centralisée pour toutes les typologies
+export const TYPOLOGIES = [
+  { type: 'T1', fieldSuffix: 't1', label: 'Studio T1' },
+  { type: 'T1 bis', fieldSuffix: 't1_bis', label: 'Studio T1 bis' },
+  { type: 'T2', fieldSuffix: 't2', label: 'Logement T2' },
+  { type: 'T3', fieldSuffix: 't3', label: 'Logement T3' },
+  { type: 'T4', fieldSuffix: 't4', label: 'Logement T4' },
+  { type: 'T5', fieldSuffix: 't5', label: 'Logement T5' },
+  { type: 'T6', fieldSuffix: 't6', label: 'Logement T6' },
+  { type: 'T7+', fieldSuffix: 't7_more', label: 'Logement T7+' },
+] as const
 
-export const TYPOLOGY_LABELS: Record<string, string> = {
-  T1: 'Studio T1',
-  'T1 bis': 'Studio T1 bis',
-  T2: 'Logement T2',
-  T3: 'Logement T3',
-  T4: 'Logement T4',
-  T5: 'Logement T5',
-  T6: 'Logement T6',
-  'T7+': 'Logement T7+',
-}
+export type TypologyType = (typeof TYPOLOGIES)[number]['type']
+export type TypologyFieldSuffix = (typeof TYPOLOGIES)[number]['fieldSuffix']
 
-export const TYPE_TO_KEY: Record<string, string> = {
-  T1: 't1',
-  'T1 bis': 't1_bis',
-  T2: 't2',
-  T3: 't3',
-  T4: 't4',
-  T5: 't5',
-  T6: 't6',
-  'T7+': 't7_more',
-}
+// Helper pour obtenir le label complet depuis un type
+export const getTypologyLabel = (type: string): string => TYPOLOGIES.find((t) => t.type === type)?.label ?? type
+
+// Dérivés pour compatibilité
+export const TYPOLOGY_TYPES = TYPOLOGIES.map((t) => t.type) as unknown as readonly TypologyType[]
+
+export const TYPE_TO_KEY: Record<string, string> = Object.fromEntries(TYPOLOGIES.map((t) => [t.type, t.fieldSuffix]))
 
 export const ZTypology = z
   .object({
     type: z.enum(TYPOLOGY_TYPES, { error: 'Veuillez sélectionner un type de logement' }),
     price_min: z.number({ error: 'Le loyer minimum est requis' }).min(0, 'Le loyer minimum doit être positif'),
     price_max: z.number({ error: 'Le loyer maximum est requis' }).min(0, 'Le loyer maximum doit être positif'),
-    superficie_min: z.number().min(1, 'La superficie minimum doit être au moins 1 m²').nullish(),
-    superficie_max: z.number().min(1, 'La superficie maximum doit être au moins 1 m²').nullish(),
+    superficie_min: z.number({ error: 'La superficie minimum est requise' }).min(1, 'La superficie minimum doit être au moins 1 m²'),
+    superficie_max: z.number({ error: 'La superficie maximum est requise' }).min(1, 'La superficie maximum doit être au moins 1 m²'),
     colocation: z.boolean(),
     nb_total: z.number({ error: 'Le nombre total est requis' }).min(1, 'Le nombre total doit être au moins 1'),
     nb_available: z.number({ error: 'Le nombre disponible est requis' }).min(0, 'Le nombre disponible doit être positif'),

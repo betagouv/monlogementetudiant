@@ -5,7 +5,7 @@ import Input from '@codegouvfr/react-dsfr/Input'
 import Select from '@codegouvfr/react-dsfr/Select'
 import { useTranslations } from 'next-intl'
 import { useFormContext } from 'react-hook-form'
-import { TYPOLOGY_LABELS, TYPOLOGY_TYPES } from '~/schemas/accommodations/create-residence'
+import { getTypologyLabel, TYPOLOGY_TYPES } from '~/schemas/accommodations/create-residence'
 import { isPerPersonTypology } from '~/utils/is-per-person-typology'
 
 type FieldPath = string
@@ -60,7 +60,7 @@ export const TypologyTabContent = (props: TypologyTabContentProps) => {
               </option>
               {props.availableTypes.map(({ type, fieldSuffix }) => (
                 <option key={fieldSuffix} value={fieldSuffix}>
-                  {TYPOLOGY_LABELS[type as keyof typeof TYPOLOGY_LABELS] ?? type}
+                  {getTypologyLabel(type)}
                 </option>
               ))}
             </Select>
@@ -173,7 +173,7 @@ export const TypologyTabContent = (props: TypologyTabContentProps) => {
               </option>
               {TYPOLOGY_TYPES.filter((type) => !usedTypes.includes(type) || type === props.typologyType).map((type) => (
                 <option key={type} value={type}>
-                  {TYPOLOGY_LABELS[type]}
+                  {getTypologyLabel(type)}
                 </option>
               ))}
             </Select>
