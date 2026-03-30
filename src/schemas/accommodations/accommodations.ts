@@ -26,6 +26,7 @@ const ZBaseAccommodationInfo = z.object({
   scholarship_holders_priority: z.boolean(),
   social_housing_required: z.boolean(),
   wifi: z.boolean(),
+  is_imported: z.boolean().optional(),
 })
 
 const ZApartmentCounts = z.object({
@@ -171,6 +172,7 @@ export const ZAccomodationMy = z.object({
     .extend(ZOwnerInfo.shape)
     .extend(ZPricing.shape)
     .extend(ZSuperficie.shape)
-    .extend(ZAmenities.shape),
+    .extend(ZAmenities.shape)
+    .extend({ is_imported: z.boolean() }),
 })
 export type TAccomodationMy = z.infer<typeof ZAccomodationMy>

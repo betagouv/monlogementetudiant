@@ -6,6 +6,7 @@ import { TAccomodationMy } from '~/schemas/accommodations/accommodations'
 import { db } from '~/server/db'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { user } from '~/server/db/schema/auth'
+import { externalSources } from '~/server/db/schema/external-sources'
 import { getServerSession } from '~/services/better-auth'
 
 const residenceTypeValues = new Set<string>(Object.values(EResidenceType))
@@ -46,7 +47,7 @@ type AccommodationWithOwnerAndExtras = Omit<typeof accommodations.$inferSelect, 
   lng: number
 }
 
-function mapToAccommodationMy(row: AccommodationWithOwnerAndExtras): TAccomodationMy {
+function mapToAccommodationMy(row: AccommodationWithOwnerAndExtras, isImported: boolean): TAccomodationMy {
   return {
     geometry: {
       type: 'Point',
@@ -138,6 +139,7 @@ function mapToAccommodationMy(row: AccommodationWithOwnerAndExtras): TAccomodati
       desk: row.desk ?? null,
       residence_manager: row.residenceManager ?? null,
       cooking_plates: row.cookingPlates ?? null,
+      is_imported: isImported,
     },
   }
 }
@@ -173,5 +175,10 @@ export const getAccommodationMyById = async (slug: string): Promise<TAccomodatio
     return notFound()
   }
 
-  return mapToAccommodationMy(row)
+  // Check if this accommodation was imported (has an entry in external_sources)
+  const hasExternalSource = await db.query.externalSources.findFirst({
+    where: eq(externalSources.accommodationId, row.id),
+  })
+
+  return mapToAccommodationMy(row, !!hasExternalSource)
 }
