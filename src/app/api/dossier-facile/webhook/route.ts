@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import { and, eq, notInArray } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
 import { ZWebhookBodySchema } from '~/schemas/dossier-facile/dossier-facile-webhook'
@@ -116,6 +117,10 @@ export async function POST(request: Request) {
     )
     return NextResponse.json({ ok: true })
   } catch (error) {
+    Sentry.captureException(error, {
+      tags: { route: 'dossierfacile-webhook', callbackType: partnerCallBackType },
+      extra: { tenantId: tenantIdStr },
+    })
     // Fallback: just update status from callback type
     console.error(`[DossierFacile Webhook] Error extracting data for ${tenantIdStr}, falling back to status-only update:`, error)
 

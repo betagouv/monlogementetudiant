@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import { NextResponse } from 'next/server'
 import { generateAccommodationKey, uploadFile } from '~/server/services/s3'
 import { getServerSession } from '~/services/better-auth'
@@ -42,6 +43,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ images_urls: imagesUrls })
   } catch (error) {
+    Sentry.captureException(error, { tags: { route: 'upload' } })
     if (error instanceof Error) {
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
