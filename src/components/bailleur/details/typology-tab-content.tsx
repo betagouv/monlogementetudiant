@@ -69,10 +69,20 @@ export const TypologyTabContent = (props: TypologyTabContentProps) => {
             <label className="fr-label fr-mb-1w">{t('rent')}</label>
             <div className="fr-grid-row fr-grid-row--gutters">
               <div className="fr-col-6">
-                <Input label="" hintText={t('minimum')} iconId="fr-icon-money-euro-circle-line" nativeInputProps={{ type: 'number', min: 0 }} />
+                <Input
+                  label=""
+                  hintText={t('minimum')}
+                  iconId="fr-icon-money-euro-circle-line"
+                  nativeInputProps={{ type: 'number', min: 0 }}
+                />
               </div>
               <div className="fr-col-6">
-                <Input label="" hintText={t('maximum')} iconId="fr-icon-money-euro-circle-line" nativeInputProps={{ type: 'number', min: 0 }} />
+                <Input
+                  label=""
+                  hintText={t('maximum')}
+                  iconId="fr-icon-money-euro-circle-line"
+                  nativeInputProps={{ type: 'number', min: 0 }}
+                />
               </div>
             </div>
           </div>
