@@ -13,6 +13,7 @@ import { TypologyTabContent } from './typology-tab-content'
 type NewTypology = { id: number; fieldSuffix: string | null }
 
 export const ResidenceAccommodationList = ({ accommodation }: { accommodation: TAccomodationMy }) => {
+  const isImported = accommodation.properties.is_imported
   const t = useTranslations('findAccomodation.card')
   const [newTypologies, setNewTypologies] = useState<NewTypology[]>([])
   const [nextId, setNextId] = useState(1)
@@ -92,7 +93,7 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
   // Typologies disponibles pour ajout
   const availableTypologies = TYPOLOGIES.filter((typo) => !usedFieldSuffixes.includes(typo.fieldSuffix))
 
-  const canAddMore = availableTypologies.length > 0
+  const canAddMore = availableTypologies.length > 0 && !isImported
 
   const handleAddNewTypology = () => {
     const newId = nextId
@@ -149,7 +150,7 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
             {/* Onglets triés selon l'ordre de TYPOLOGIES */}
             {sortedVisibleTypologies.map((typo) => (
               <div key={typo.fieldSuffix} className={selectedTabId === `tab-${typo.fieldSuffix}` ? '' : 'fr-hidden'}>
-                <TypologyTabContent mode="update" fieldSuffix={typo.fieldSuffix} typologyType={typo.type} />
+                <TypologyTabContent mode="update" fieldSuffix={typo.fieldSuffix} typologyType={typo.type} isImported={isImported} />
               </div>
             ))}
             {/* Onglets nouveaux (sans type sélectionné) */}
