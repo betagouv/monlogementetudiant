@@ -13,6 +13,7 @@ type AccommodationResidenceProps = {
 
 export const AccommodationResidence = async ({ accommodation }: AccommodationResidenceProps) => {
   const t = await getTranslations('accomodation')
+  const { social_housing_required } = accommodation
 
   const accommodationsTiles = [
     {
@@ -109,6 +110,7 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
         ) : (
           <h4 className="fr-mb-0">{t('availableAccommodations')}</h4>
         )}
+
         <div className={styles.accommodationsContainer}>
           <div>
             <div className={styles.mainContainer}>
@@ -137,6 +139,16 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
                 </div>
               ))}
             </div>
+            {social_housing_required && (
+              <div>
+                <hr className="fr-mt-3w fr-mb-0" />
+                <span className="ri-information-line fr-text--sm fr-mb-0">
+                  {t.rich('socialHousingRequired', {
+                    bold: (chunks) => <strong>{chunks}</strong>,
+                  })}
+                </span>
+              </div>
+            )}
           </div>
         </div>
         <div className="fr-flex fr-justify-content-space-between fr-align-items-center fr-border fr-border-radius--8 fr-px-3w fr-py-2w">
