@@ -7,9 +7,10 @@ import { trackEvent } from '~/lib/tracking'
 interface ConsultOfferButtonProps {
   href: string
   slug: string
+  priority?: 'primary' | 'tertiary'
 }
 
-export const ConsultOfferButton = ({ href, slug }: ConsultOfferButtonProps) => {
+export const ConsultOfferButton = ({ href, slug, priority = 'tertiary' }: ConsultOfferButtonProps) => {
   const t = useTranslations('accomodation')
 
   return (
@@ -19,7 +20,7 @@ export const ConsultOfferButton = ({ href, slug }: ConsultOfferButtonProps) => {
           href,
           onClick: () => trackEvent({ category: 'Logement', action: 'consulter offre', name: slug }),
         }}
-        priority="tertiary"
+        priority={priority}
         size="medium"
       >
         {t('sidebar.buttons.consult')}
