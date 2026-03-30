@@ -125,6 +125,7 @@
     "equipments": {
       "title": "Équipements"
     },
+    "socialHousingRequired": "Une <bold>demande de logement social</bold> est nécessaire pour intégrer la résidence",
     "descriptionTitle": "À propos du logement étudiant {title}",
     "title": "Logement étudiant {title} {cityFormatted}",
     "tags": {
@@ -913,6 +914,7 @@
         "accessible": "Nombre de logements adaptés PMR",
         "coliving": "Nombre de logements en colocation dans la résidence",
         "scholarship": "Les étudiants boursiers sont prioritaires dans la résidence",
+        "socialHousing": "Une demande de logement social est nécessaire.",
         "accommodationType": "Typologie de logements",
         "targetAudience": "Public dans la résidence",
         "typologyTab": {
