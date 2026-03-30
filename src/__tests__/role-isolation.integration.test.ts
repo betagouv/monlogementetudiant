@@ -24,7 +24,18 @@ describe('student cannot access bailleur routes', () => {
         city: 'Paris',
         postal_code: '75001',
         external_url: 'https://example.com',
-        typologies: [{ type: 'T1', price_min: 400, price_max: 600, colocation: false, nb_total: 10, nb_available: 5 }],
+        typologies: [
+          {
+            type: 'T1',
+            price_min: 400,
+            price_max: 600,
+            superficie_min: 15,
+            superficie_max: 25,
+            colocation: false,
+            nb_total: 10,
+            nb_available: 5,
+          },
+        ],
       }),
     ).rejects.toThrow('Owner or admin role required')
   })

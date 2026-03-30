@@ -6,19 +6,9 @@ import { parseAsString, useQueryState } from 'nuqs'
 import { useState } from 'react'
 import { AvailabilityBadge } from '~/components/shared/availability-badge'
 import { TAccomodationMy } from '~/schemas/accommodations/accommodations'
+import { TYPOLOGIES } from '~/schemas/accommodations/create-residence'
 import { calculateAvailability } from '~/utils/calculateAvailability'
 import { TypologyTabContent } from './typology-tab-content'
-
-const TYPOLOGIES = [
-  { type: 'T1', fieldSuffix: 't1' },
-  { type: 'T1 bis', fieldSuffix: 't1_bis' },
-  { type: 'T2', fieldSuffix: 't2' },
-  { type: 'T3', fieldSuffix: 't3' },
-  { type: 'T4', fieldSuffix: 't4' },
-  { type: 'T5', fieldSuffix: 't5' },
-  { type: 'T6', fieldSuffix: 't6' },
-  { type: 'T7+', fieldSuffix: 't7_more' },
-] as const
 
 type NewTypology = { id: number; fieldSuffix: string | null }
 

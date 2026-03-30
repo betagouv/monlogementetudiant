@@ -105,6 +105,22 @@ export const createUpdateResidenceSchema = (existingData: {
   nb_t5?: number | null
   nb_t6?: number | null
   nb_t7_more?: number | null
+  superficie_min_t1?: number | null
+  superficie_max_t1?: number | null
+  superficie_min_t1_bis?: number | null
+  superficie_max_t1_bis?: number | null
+  superficie_min_t2?: number | null
+  superficie_max_t2?: number | null
+  superficie_min_t3?: number | null
+  superficie_max_t3?: number | null
+  superficie_min_t4?: number | null
+  superficie_max_t4?: number | null
+  superficie_min_t5?: number | null
+  superficie_max_t5?: number | null
+  superficie_min_t6?: number | null
+  superficie_max_t6?: number | null
+  superficie_min_t7_more?: number | null
+  superficie_max_t7_more?: number | null
 }) =>
   ZUpdateResidence.superRefine((data, ctx) => {
     const validations = [
@@ -174,6 +190,102 @@ export const createUpdateResidenceSchema = (existingData: {
             path: [availablePath],
           })
         }
+      }
+    }
+
+    // Validation superficie obligatoire et min ≤ max
+    const superficieValidations = [
+      {
+        total: data.nb_t1 ?? existingData.nb_t1,
+        min: data.superficie_min_t1 ?? existingData.superficie_min_t1,
+        max: data.superficie_max_t1 ?? existingData.superficie_max_t1,
+        minPath: 'superficie_min_t1',
+        maxPath: 'superficie_max_t1',
+        type: 'T1',
+      },
+      {
+        total: data.nb_t1_bis ?? existingData.nb_t1_bis,
+        min: data.superficie_min_t1_bis ?? existingData.superficie_min_t1_bis,
+        max: data.superficie_max_t1_bis ?? existingData.superficie_max_t1_bis,
+        minPath: 'superficie_min_t1_bis',
+        maxPath: 'superficie_max_t1_bis',
+        type: 'T1 bis',
+      },
+      {
+        total: data.nb_t2 ?? existingData.nb_t2,
+        min: data.superficie_min_t2 ?? existingData.superficie_min_t2,
+        max: data.superficie_max_t2 ?? existingData.superficie_max_t2,
+        minPath: 'superficie_min_t2',
+        maxPath: 'superficie_max_t2',
+        type: 'T2',
+      },
+      {
+        total: data.nb_t3 ?? existingData.nb_t3,
+        min: data.superficie_min_t3 ?? existingData.superficie_min_t3,
+        max: data.superficie_max_t3 ?? existingData.superficie_max_t3,
+        minPath: 'superficie_min_t3',
+        maxPath: 'superficie_max_t3',
+        type: 'T3',
+      },
+      {
+        total: data.nb_t4 ?? existingData.nb_t4,
+        min: data.superficie_min_t4 ?? existingData.superficie_min_t4,
+        max: data.superficie_max_t4 ?? existingData.superficie_max_t4,
+        minPath: 'superficie_min_t4',
+        maxPath: 'superficie_max_t4',
+        type: 'T4',
+      },
+      {
+        total: data.nb_t5 ?? existingData.nb_t5,
+        min: data.superficie_min_t5 ?? existingData.superficie_min_t5,
+        max: data.superficie_max_t5 ?? existingData.superficie_max_t5,
+        minPath: 'superficie_min_t5',
+        maxPath: 'superficie_max_t5',
+        type: 'T5',
+      },
+      {
+        total: data.nb_t6 ?? existingData.nb_t6,
+        min: data.superficie_min_t6 ?? existingData.superficie_min_t6,
+        max: data.superficie_max_t6 ?? existingData.superficie_max_t6,
+        minPath: 'superficie_min_t6',
+        maxPath: 'superficie_max_t6',
+        type: 'T6',
+      },
+      {
+        total: data.nb_t7_more ?? existingData.nb_t7_more,
+        min: data.superficie_min_t7_more ?? existingData.superficie_min_t7_more,
+        max: data.superficie_max_t7_more ?? existingData.superficie_max_t7_more,
+        minPath: 'superficie_min_t7_more',
+        maxPath: 'superficie_max_t7_more',
+        type: 'T7+',
+      },
+    ]
+
+    for (const { total, min, max, minPath, maxPath, type } of superficieValidations) {
+      // Si la typologie a des logements, la superficie est obligatoire
+      if (total != null && total > 0) {
+        if (min == null) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `La superficie minimum est requise pour ${type}`,
+            path: [minPath],
+          })
+        }
+        if (max == null) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `La superficie maximum est requise pour ${type}`,
+            path: [maxPath],
+          })
+        }
+      }
+      // Validation min ≤ max
+      if (min != null && max != null && min > max) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `La superficie minimum ${type} ne peut pas être supérieure à la superficie maximum`,
+          path: [minPath],
+        })
       }
     }
   })
