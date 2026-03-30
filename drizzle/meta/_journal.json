@@ -120,6 +120,13 @@
       "when": 1774876293662,
       "tag": "0016_typical_cannonball",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1774876400000,
+      "tag": "0017_spatial_indexes",
+      "breakpoints": true
     }
   ]
 }

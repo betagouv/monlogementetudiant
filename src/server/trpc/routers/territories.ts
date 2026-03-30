@@ -370,10 +370,7 @@ export const territoriesRouter = createTRPCRouter({
       const slugLower = input.slug.toLowerCase()
 
       if (input.type === 'ville') {
-        const c1 = alias(cities, 'c1')
-        const c2 = alias(cities, 'c2')
-
-        const [cityRows, accommodationStats, nearbyCities] = await Promise.all([
+        const [cityRows, accommodationStats] = await Promise.all([
           db
             .select({
               id: cities.id,
@@ -415,23 +412,12 @@ export const territoriesRouter = createTRPCRouter({
                 eq(accommodations.available, true),
               ),
             ),
-
-          db
-            .select({ name: c2.name, slug: c2.slug })
-            .from(c1)
-            .innerJoin(c2, and(ne(c1.id, c2.id), sql`ST_DWithin(${c1.boundary}::geography, ${c2.boundary}::geography, 50000)`))
-            .where(eq(c1.slug, slugLower))
-            .orderBy(asc(c2.name)),
         ])
 
         const city = cityRows[0]
         if (!city) throw new TRPCError({ code: 'NOT_FOUND', message: `City not found: ${input.slug}` })
 
-        return mapCityRow(
-          city,
-          accommodationStats[0] ?? undefined,
-          nearbyCities.map((nc) => ({ name: nc.name, slug: nc.slug })),
-        )
+        return mapCityRow(city, accommodationStats[0] ?? undefined)
       }
 
       if (input.type === 'academie') {
