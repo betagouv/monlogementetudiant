@@ -22,6 +22,7 @@ type TypologyTabContentProps =
       mode: 'update'
       fieldSuffix: string
       typologyType: string
+      isImported: boolean
     }
   | {
       mode: 'update-new'
@@ -31,6 +32,7 @@ type TypologyTabContentProps =
     }
 
 export const TypologyTabContent = (props: TypologyTabContentProps) => {
+  const isImported = props.mode === 'update' ? props.isImported : false
   const t = useTranslations('bailleur.residences.details.typologyTab')
   const {
     register,
@@ -157,30 +159,36 @@ export const TypologyTabContent = (props: TypologyTabContentProps) => {
   return (
     <div className="fr-p-2w">
       <div className="fr-grid-row fr-grid-row--gutters fr-align-items-end">
-        {props.mode === 'create' && (
-          <div className="fr-col-12 fr-col-md-6">
-            <Select
-              label={t('housingType')}
-              state={getError('type') ? 'error' : 'default'}
-              stateRelatedMessage={getError('type')?.message}
-              nativeSelectProps={{
-                ...register(getFieldName('type')),
-                defaultValue: '',
-              }}
-            >
-              <option value="" disabled>
-                {t('selectType')}
+        <div className="fr-col-12 fr-col-md-6">
+          <Select
+            label={t('housingType')}
+            disabled={props.mode === 'update' && isImported}
+            state={getError('type') ? 'error' : 'default'}
+            stateRelatedMessage={getError('type')?.message}
+            nativeSelectProps={
+              props.mode === 'create'
+                ? {
+                    ...register(getFieldName('type')),
+                    defaultValue: '',
+                  }
+                : {
+                    defaultValue: typologyType,
+                    disabled: isImported,
+                  }
+            }
+          >
+            <option value="" disabled>
+              {t('selectType')}
+            </option>
+            {TYPOLOGY_TYPES.filter((type) => !usedTypes.includes(type) || type === typologyType).map((type) => (
+              <option key={type} value={type}>
+                {getTypologyLabel(type)}
               </option>
-              {TYPOLOGY_TYPES.filter((type) => !usedTypes.includes(type) || type === props.typologyType).map((type) => (
-                <option key={type} value={type}>
-                  {getTypologyLabel(type)}
-                </option>
-              ))}
-            </Select>
-          </div>
-        )}
+            ))}
+          </Select>
+        </div>
 
-        <div className={props.mode === 'create' ? 'fr-col-12 fr-col-md-6' : 'fr-col-12'}>
+        <div className="fr-col-12 fr-col-md-6">
           <div className="fr-flex fr-justify-content-space-between fr-align-items-start">
             <label className="fr-label fr-mb-1w">{isColocation ? t('rentPerPerson') : t('rent')}</label>
             {props.mode === 'create' && (
@@ -200,6 +208,7 @@ export const TypologyTabContent = (props: TypologyTabContentProps) => {
                 label=""
                 hintText={t('minimum')}
                 iconId="fr-icon-money-euro-circle-line"
+                disabled={isImported}
                 state={getError('price_min') ? 'error' : 'default'}
                 stateRelatedMessage={getError('price_min')?.message}
                 nativeInputProps={{
@@ -214,6 +223,7 @@ export const TypologyTabContent = (props: TypologyTabContentProps) => {
                 label=""
                 hintText={t('maximum')}
                 iconId="fr-icon-money-euro-circle-line"
+                disabled={isImported}
                 state={getError('price_max') ? 'error' : 'default'}
                 stateRelatedMessage={getError('price_max')?.message}
                 nativeInputProps={{
@@ -236,6 +246,7 @@ export const TypologyTabContent = (props: TypologyTabContentProps) => {
                 label=""
                 hintText={t('minimum')}
                 iconId="ri-shape-line"
+                disabled={isImported}
                 state={getError('superficie_min') ? 'error' : 'default'}
                 stateRelatedMessage={getError('superficie_min')?.message}
                 nativeInputProps={{
@@ -250,6 +261,7 @@ export const TypologyTabContent = (props: TypologyTabContentProps) => {
                 label=""
                 hintText={t('maximum')}
                 iconId="ri-shape-line"
+                disabled={isImported}
                 state={getError('superficie_max') ? 'error' : 'default'}
                 stateRelatedMessage={getError('superficie_max')?.message}
                 nativeInputProps={{
@@ -267,6 +279,7 @@ export const TypologyTabContent = (props: TypologyTabContentProps) => {
         <div className="fr-col-12 fr-col-md-6">
           <Input
             label={t('totalHousing')}
+            disabled={isImported}
             state={getError('nb_total') ? 'error' : 'default'}
             stateRelatedMessage={getError('nb_total')?.message}
             nativeInputProps={{
@@ -279,12 +292,13 @@ export const TypologyTabContent = (props: TypologyTabContentProps) => {
         <div className="fr-col-12 fr-col-md-6">
           <Input
             label={t('availableHousing')}
+            disabled={isImported}
             state={getError('nb_available') ? 'error' : 'default'}
             stateRelatedMessage={getError('nb_available')?.message}
             nativeInputProps={{
               type: 'number',
               min: 0,
-              disabled: !nbTotalValue,
+              disabled: isImported || !nbTotalValue,
               ...register(getFieldName('nb_available'), numberTransform),
             }}
           />
