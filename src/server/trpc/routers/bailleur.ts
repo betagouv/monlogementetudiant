@@ -7,6 +7,7 @@ import { ZUpdateResidenceList } from '~/schemas/accommodations/update-residence-
 import { db } from '~/server/db'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { user } from '~/server/db/schema/auth'
+import { cities } from '~/server/db/schema/cities'
 import { dossierFacileApplications, dossierFacileTenants } from '~/server/db/schema/dossier-facile'
 import { owners } from '~/server/db/schema/owners'
 import { notifyAccommodationCreated, notifyAccommodationUpdated } from '~/server/services/mattermost'
@@ -97,7 +98,7 @@ const accommodationSelectFields = {
   slug: accommodations.slug,
   description: accommodations.description,
   address: accommodations.address,
-  city: accommodations.city,
+  city: cities.name,
   postalCode: accommodations.postalCode,
   residenceType: accommodations.residenceType,
   targetAudience: accommodations.target_audience,
@@ -196,7 +197,7 @@ export const bailleurRouter = createTRPCRouter({
       const conditions = [eq(accommodations.ownerId, owner.id)]
 
       if (input.search && input.search.length >= 3) {
-        conditions.push(or(ilike(accommodations.name, `%${input.search}%`), ilike(accommodations.city, `%${input.search}%`))!)
+        conditions.push(or(ilike(accommodations.name, `%${input.search}%`), ilike(cities.name, `%${input.search}%`))!)
       }
 
       if (input.hasAvailability) {
@@ -230,6 +231,7 @@ export const bailleurRouter = createTRPCRouter({
           .select(accommodationSelectFields)
           .from(accommodations)
           .leftJoin(owners, eq(accommodations.ownerId, owners.id))
+          .innerJoin(cities, eq(accommodations.cityId, cities.id))
           .where(where)
           .orderBy(accommodations.name)
           .limit(PAGE_SIZE)
@@ -279,7 +281,6 @@ export const bailleurRouter = createTRPCRouter({
         name: fields.name,
         slug,
         address: fields.address,
-        city: fields.city,
         postalCode: fields.postal_code,
         residenceType: fields.residence_type ?? null,
         target_audience: fields.target_audience ?? null,
@@ -386,14 +387,15 @@ export const bailleurRouter = createTRPCRouter({
     if (fields.address !== undefined || fields.city !== undefined || fields.postal_code !== undefined) {
       // Fetch current values to fill in blanks
       const [current] = await db
-        .select({ address: accommodations.address, city: accommodations.city, postalCode: accommodations.postalCode })
+        .select({ address: accommodations.address, cityName: cities.name, postalCode: accommodations.postalCode })
         .from(accommodations)
+        .innerJoin(cities, eq(accommodations.cityId, cities.id))
         .where(eq(accommodations.slug, slug))
         .limit(1)
 
       if (current) {
         const address = fields.address ?? current.address ?? ''
-        const city = fields.city ?? current.city
+        const city = fields.city ?? current.cityName ?? ''
         const postalCode = fields.postal_code ?? current.postalCode
         const coords = await geocodeAddress(address, city, postalCode)
         if (coords) {

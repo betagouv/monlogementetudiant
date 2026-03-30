@@ -350,8 +350,8 @@ const ownersRouter = createTRPCRouter({
         id: accommodations.id,
         name: accommodations.name,
         slug: accommodations.slug,
-        city: accommodations.city,
-        citySlug: sql<string | null>`(SELECT ${cities.slug} FROM ${cities} WHERE ${cities.name} = ${accommodations.city} LIMIT 1)`,
+        city: cities.name,
+        citySlug: cities.slug,
         available: accommodations.available,
         published: accommodations.published,
         nbTotalApartments: accommodations.nbTotalApartments,
@@ -360,6 +360,7 @@ const ownersRouter = createTRPCRouter({
         lng: sql<number | null>`ST_X(${accommodations.geom}::geometry)`,
       })
       .from(accommodations)
+      .innerJoin(cities, eq(accommodations.cityId, cities.id))
       .where(eq(accommodations.ownerId, input.ownerId))
       .orderBy(accommodations.name)
   }),
@@ -398,7 +399,7 @@ const residencesRouter = createTRPCRouter({
         conditions.push(
           or(
             ilike(accommodations.name, `%${input.search}%`),
-            ilike(accommodations.city, `%${input.search}%`),
+            ilike(cities.name, `%${input.search}%`),
             ilike(owners.name, `%${input.search}%`),
           ),
         )
@@ -411,8 +412,8 @@ const residencesRouter = createTRPCRouter({
           id: accommodations.id,
           name: accommodations.name,
           slug: accommodations.slug,
-          city: accommodations.city,
-          citySlug: sql<string | null>`(SELECT ${cities.slug} FROM ${cities} WHERE ${cities.name} = ${accommodations.city} LIMIT 1)`,
+          city: cities.name,
+          citySlug: cities.slug,
           available: accommodations.available,
           published: accommodations.published,
           nbTotalApartments: accommodations.nbTotalApartments,
@@ -421,6 +422,7 @@ const residencesRouter = createTRPCRouter({
         })
         .from(accommodations)
         .leftJoin(owners, eq(accommodations.ownerId, owners.id))
+        .innerJoin(cities, eq(accommodations.cityId, cities.id))
         .where(where)
         .orderBy(accommodations.name)
         .limit(100)
