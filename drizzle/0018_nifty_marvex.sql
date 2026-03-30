@@ -1,0 +1,1 @@
+ALTER TABLE "accommodation_accommodation" ADD COLUMN "social_housing_required" boolean;

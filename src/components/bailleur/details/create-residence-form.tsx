@@ -56,6 +56,7 @@ export const CreateResidenceForm = () => {
       images_files: [],
       published: true,
       scholarship_holders_priority: false,
+      social_housing_required: false,
       nb_accessible_apartments: null,
       nb_coliving_apartments: null,
       address: '',

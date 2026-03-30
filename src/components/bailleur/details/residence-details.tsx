@@ -121,6 +121,16 @@ export const ResidenceDetails = () => {
                 )}
               />
             </div>
+            <div className="fr-py-2w fr-flex fr-justify-content-space-between fr-align-items-center fr-border-bottom">
+              <span>{t('socialHousing')}</span>
+              <Controller
+                name="social_housing_required"
+                control={control}
+                render={({ field }) => (
+                  <ToggleSwitch inputTitle="" label="" showCheckedHint={false} checked={field.value} onChange={field.onChange} />
+                )}
+              />
+            </div>
             <div className="fr-py-1w fr-flex fr-justify-content-space-between fr-align-items-center fr-border-bottom">
               <span>{t('accessible')}</span>
               <Input

@@ -69,6 +69,7 @@ function mapToAccommodationMy(row: AccommodationWithOwnerAndExtras): TAccomodati
       external_url: row.externalUrl ?? undefined,
       updated_at: row.updatedAt ?? new Date(),
       scholarship_holders_priority: row.scholarshipHoldersPriority ?? false,
+      social_housing_required: row.socialHousingRequired ?? false,
       wifi: row.wifi ?? false,
       nb_total_apartments: row.nbTotalApartments,
       nb_accessible_apartments: row.nbAccessibleApartments,
@@ -161,7 +162,7 @@ export const getAccommodationMyById = async (slug: string): Promise<TAccomodatio
   const row = await db.query.accommodations.findFirst({
     where: ownerId != null ? and(eq(accommodations.slug, slug), eq(accommodations.ownerId, ownerId)) : eq(accommodations.slug, slug),
     columns: { geom: false },
-    with: { owner: true, city: true },
+    with: { owner: true, city: { columns: { boundary: false } } },
     extras: {
       lat: sql<number>`ST_Y(${accommodations.geom}::geometry)`.as('lat'),
       lng: sql<number>`ST_X(${accommodations.geom}::geometry)`.as('lng'),
