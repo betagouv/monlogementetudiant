@@ -67,6 +67,7 @@ function mapToAccommodationMy(row: AccommodationWithOwnerAndExtras): TAccomodati
       accept_waiting_list: row.acceptWaitingList ?? false,
       images_urls: row.imagesUrls ?? null,
       external_url: row.externalUrl ?? undefined,
+      virtual_tour_url: row.virtualTourUrl ?? null,
       updated_at: row.updatedAt ?? new Date(),
       scholarship_holders_priority: row.scholarshipHoldersPriority ?? false,
       social_housing_required: row.socialHousingRequired ?? false,

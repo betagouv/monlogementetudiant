@@ -14,6 +14,7 @@ import { AccommodationEquipments } from '~/app/(public)/trouver-un-logement-etud
 import { AccommodationLocalisation } from '~/app/(public)/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-localisation'
 import AccommodationMap from '~/app/(public)/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-map'
 import { AccommodationResidence } from '~/app/(public)/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-residence'
+import { AccommodationVirtualTour } from '~/app/(public)/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-virtual-tour'
 import { AccommodationImages } from '~/components/accommodation/accommodation-images'
 import { NearbyAccommodations } from '~/components/accommodation/nearby-accommodations'
 import { SaveAccommodationFavoriteButton } from '~/components/favorites/save-accommodation-favorite-button'
@@ -55,6 +56,7 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
     external_url,
     description,
     accept_waiting_list,
+    virtual_tour_url,
   } = accommodation
 
   const citySearchUrl = `/trouver-un-logement-etudiant/ville/${encodeURIComponent(city)}?vue=carte&bbox=${cityBbox.west},${cityBbox.south},${cityBbox.east},${cityBbox.north}`
@@ -126,6 +128,7 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
             <AccommodationEquipments accommodation={accommodation} />
             <AccommodationLocalisation address={address} city={city} latitude={latitude} longitude={longitude} postalCode={postal_code} />
             <AccommodationDescription title={name} description={description} />
+            {virtual_tour_url && <AccommodationVirtualTour embedCode={virtual_tour_url} />}
           </div>
           <div className="fr-hidden-sm">{<AccommodationMap latitude={latitude} longitude={longitude} />}</div>
           <div className={styles.stickyColumn}>

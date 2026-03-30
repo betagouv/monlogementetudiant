@@ -99,6 +99,7 @@ export const accommodations = pgTable(
     imagesUrls: text('images_urls').array(),
     imagesCount: integer('images_count').notNull(),
     externalUrl: varchar('external_url', { length: 255 }),
+    virtualTourUrl: text('virtual_tour_url'),
     externalReference: varchar('external_reference', { length: 255 }),
 
     // Relations

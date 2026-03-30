@@ -163,6 +163,7 @@ const accommodationSelectFields = {
   wifi: accommodations.wifi,
   imagesUrls: accommodations.imagesUrls,
   externalUrl: accommodations.externalUrl,
+  virtualTourUrl: accommodations.virtualTourUrl,
   updatedAt: accommodations.updatedAt,
   ownerName: owners.name,
   ownerUrl: owners.url,
