@@ -1,11 +1,19 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { createAccommodation, createOwner, createUser } from './fixtures/factories'
+import { createAcademy, createAccommodation, createCity, createDepartment, createOwner, createUser } from './fixtures/factories'
 import './helpers/setup-integration'
 import { adminCaller, authenticatedCaller, caller, ownerCaller } from './helpers/test-caller'
 
 type AccommodationOverrides = NonNullable<Parameters<typeof createAccommodation>[0]>
 type AccommodationGeom = NonNullable<AccommodationOverrides['geom']>
 const parisPoint = { type: 'Point', coordinates: [2.3522, 48.8566] } as AccommodationGeom
+
+let cityHelperCounter = 0
+async function createCityWithName(name: string, slug: string, postalCodes: string[] = ['00000']) {
+  const suffix = ++cityHelperCounter
+  const academy = await createAcademy({ name: `Académie ${name}` })
+  const department = await createDepartment({ academyId: academy.id, name: `Département ${name}`, code: String(90 + suffix) })
+  return createCity({ departmentId: department.id, name, slug, postalCodes })
+}
 
 // Create user records before each test
 beforeEach(async () => {
@@ -61,6 +69,7 @@ describe('bailleur.create', () => {
   })
 
   it('creates owner record automatically and lists it', async () => {
+    await createCityWithName('Lyon', 'lyon', ['69001'])
     await ownerCaller.bailleur.create({
       name: 'Ma Résidence',
       address: '2 avenue des Champs',
@@ -110,8 +119,10 @@ describe('bailleur.list', () => {
 
   it('filters by city name', async () => {
     const owner = await createOwner({ name: 'Owner City', slug: 'owner-city', userId: 'test-owner-id' })
-    await createAccommodation({ name: 'Résidence A', slug: 'city-a', ownerId: owner.id })
-    await createAccommodation({ name: 'Résidence B', slug: 'city-b', ownerId: owner.id })
+    const marseille = await createCityWithName('Marseille', 'marseille')
+    const lyon = await createCityWithName('Lyon', 'lyon')
+    await createAccommodation({ name: 'Résidence A', slug: 'city-a', ownerId: owner.id, cityId: marseille.id })
+    await createAccommodation({ name: 'Résidence B', slug: 'city-b', ownerId: owner.id, cityId: lyon.id })
 
     const result = await ownerCaller.bailleur.list({ page: 1, search: 'Marseille' })
     expect(result.count).toBe(1)
@@ -120,7 +131,8 @@ describe('bailleur.list', () => {
 
   it('filters by partial city name (case insensitive)', async () => {
     const owner = await createOwner({ name: 'Owner Partial', slug: 'owner-partial', userId: 'test-owner-id' })
-    await createAccommodation({ name: 'Résidence Stéphanoise', slug: 'partial-city', ownerId: owner.id })
+    const saintEtienne = await createCityWithName('Saint-Étienne', 'saint-etienne')
+    await createAccommodation({ name: 'Résidence Stéphanoise', slug: 'partial-city', ownerId: owner.id, cityId: saintEtienne.id })
 
     const result = await ownerCaller.bailleur.list({ page: 1, search: 'saint-ét' })
     expect(result.count).toBe(1)
@@ -129,7 +141,8 @@ describe('bailleur.list', () => {
 
   it('filters by city or name', async () => {
     const owner = await createOwner({ name: 'Owner CityOrName', slug: 'owner-city-or-name', userId: 'test-owner-id' })
-    await createAccommodation({ name: 'Résidence Lumière', slug: 'city-or-name-a', ownerId: owner.id })
+    const bordeaux = await createCityWithName('Bordeaux', 'bordeaux')
+    await createAccommodation({ name: 'Résidence Lumière', slug: 'city-or-name-a', ownerId: owner.id, cityId: bordeaux.id })
     await createAccommodation({ name: 'Résidence Bordeaux', slug: 'city-or-name-b', ownerId: owner.id })
 
     const result = await ownerCaller.bailleur.list({ page: 1, search: 'Bordeaux' })
