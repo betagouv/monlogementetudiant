@@ -219,13 +219,18 @@ export const bailleurRouter = createTRPCRouter({
       const offset = (input.page - 1) * PAGE_SIZE
 
       const [countResult, priceBounds, results] = await Promise.all([
-        db.select({ count: sql<number>`count(*)::int` }).from(accommodations).where(where),
+        db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(accommodations)
+          .innerJoin(cities, eq(accommodations.cityId, cities.id))
+          .where(where),
         db
           .select({
             minPrice: sql<number | null>`MIN(${accommodations.priceMin})`,
             maxPrice: sql<number | null>`MAX(${priceMaxComputed})`,
           })
           .from(accommodations)
+          .innerJoin(cities, eq(accommodations.cityId, cities.id))
           .where(where),
         db
           .select(accommodationSelectFields)

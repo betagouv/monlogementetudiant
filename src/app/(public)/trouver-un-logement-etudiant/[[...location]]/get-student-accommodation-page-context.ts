@@ -54,7 +54,8 @@ export const getStudentAccommodationPageContext = cache(
         ? `${territoryBbox.west},${territoryBbox.south},${territoryBbox.east},${territoryBbox.north}`
         : undefined
     const serverAcademie = isAcademy && territory ? territory.id.toString() : undefined
-    const serverVille = isCity && territory ? routeLocation : undefined
+    const isMapSearch = getSingleSearchParam(awaitedSearchParams['recherche-par-carte']) === 'true'
+    const serverVille = isCity && territory && !isMapSearch ? routeLocation : undefined
 
     const queryClient = getQueryClient()
 
