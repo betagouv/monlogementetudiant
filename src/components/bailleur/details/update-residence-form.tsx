@@ -118,6 +118,7 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
       images_urls: accommodation.properties.images_urls || [],
       published: accommodation.properties.published,
       scholarship_holders_priority: accommodation.properties.scholarship_holders_priority || false,
+      social_housing_required: accommodation.properties.social_housing_required || false,
       nb_accessible_apartments: accommodation.properties.nb_accessible_apartments || null,
       nb_coliving_apartments: accommodation.properties.nb_coliving_apartments || null,
     },

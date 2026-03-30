@@ -24,6 +24,7 @@ const ZBaseAccommodationInfo = z.object({
   published: z.boolean(),
   available: z.boolean().nullable(),
   scholarship_holders_priority: z.boolean(),
+  social_housing_required: z.boolean(),
   wifi: z.boolean(),
 })
 
