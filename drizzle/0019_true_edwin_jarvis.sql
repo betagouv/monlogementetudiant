@@ -1,0 +1,1 @@
+ALTER TABLE "accommodation_accommodation" ADD COLUMN "virtual_tour_url" text;

@@ -20,6 +20,7 @@ const ZBaseAccommodationInfo = z.object({
   images_urls: z.array(z.string()).nullable(),
   description: z.string().nullable(),
   external_url: z.string().optional(),
+  virtual_tour_url: z.string().nullable(),
   updated_at: z.date(),
   published: z.boolean(),
   available: z.boolean().nullable(),

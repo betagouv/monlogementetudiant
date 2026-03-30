@@ -44,6 +44,7 @@ export const UPDATE_FIELD_MAP: FieldMap = {
   postal_code: 'postalCode',
   description: 'description',
   external_url: 'externalUrl',
+  virtual_tour_url: 'virtualTourUrl',
   accept_waiting_list: 'acceptWaitingList',
   published: 'published',
   scholarship_holders_priority: 'scholarshipHoldersPriority',
