@@ -337,11 +337,7 @@ const ownersRouter = createTRPCRouter({
         imageBuffer = Buffer.from(base64Data, 'base64')
       }
 
-      const [updated] = await db
-        .update(owners)
-        .set({ image: imageBuffer })
-        .where(eq(owners.id, input.id))
-        .returning()
+      const [updated] = await db.update(owners).set({ image: imageBuffer }).where(eq(owners.id, input.id)).returning()
 
       if (!updated) {
         throw new TRPCError({ code: 'NOT_FOUND', message: (await getAdminErrorTranslations())('ownerNotFound') })
