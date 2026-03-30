@@ -71,12 +71,12 @@ describe('territories.listCities', () => {
     const otherOwner = await createOwner({ name: 'Privé', slug: 'prive' })
 
     // Saint-Étienne: 8 CROUS + 2 other = majority CROUS
-    await createAccommodation({ city: 'Saint-Étienne', cityId: saintEtienneCityId, ownerId: crousOwner.id, nbTotalApartments: 8 })
-    await createAccommodation({ city: 'Saint-Étienne', cityId: saintEtienneCityId, ownerId: otherOwner.id, nbTotalApartments: 2 })
+    await createAccommodation({ cityId: saintEtienneCityId, ownerId: crousOwner.id, nbTotalApartments: 8 })
+    await createAccommodation({ cityId: saintEtienneCityId, ownerId: otherOwner.id, nbTotalApartments: 2 })
 
     // Lyon: 3 CROUS + 7 other = NOT majority CROUS
-    await createAccommodation({ city: 'Lyon', cityId: lyonCityId, ownerId: crousOwner.id, nbTotalApartments: 3 })
-    await createAccommodation({ city: 'Lyon', cityId: lyonCityId, ownerId: otherOwner.id, nbTotalApartments: 7 })
+    await createAccommodation({ cityId: lyonCityId, ownerId: crousOwner.id, nbTotalApartments: 3 })
+    await createAccommodation({ cityId: lyonCityId, ownerId: otherOwner.id, nbTotalApartments: 7 })
 
     const result = await caller.territories.listCities({ popular: true })
     const saintEtienne = result.find((c) => c.name === 'Saint-Étienne')
@@ -99,7 +99,6 @@ describe('territories.getCityDetails', () => {
   it('returns city with accommodation stats', async () => {
     const city = await createCity({ departmentId, name: 'Saint-Étienne', slug: 'saint-etienne' })
     await createAccommodation({
-      city: 'Saint-Étienne',
       cityId: city.id,
       nbTotalApartments: 10,
       priceMin: 300,
@@ -107,7 +106,6 @@ describe('territories.getCityDetails', () => {
       available: true,
     })
     await createAccommodation({
-      city: 'Saint-Étienne',
       cityId: city.id,
       nbTotalApartments: 5,
       priceMin: 250,

@@ -316,14 +316,12 @@ const command: ImportCommand = {
             .update(accommodations)
             .set({
               ...baseFields,
-              ...(resolvedCity ? { city: resolvedCity } : {}),
               ...(resolvedCityId ? { cityId: resolvedCityId } : {}),
               ...(resolvedPostalCode ? { postalCode: resolvedPostalCode } : {}),
             })
             .where(eq(accommodations.id, existing.id))
             .returning({
               slug: accommodations.slug,
-              city: accommodations.city,
               priceMinT1: accommodations.priceMinT1,
               name: accommodations.name,
             })
@@ -335,9 +333,8 @@ const command: ImportCommand = {
           // Backfill external_sources if needed
           await db.insert(externalSources).values({ accommodationId: existing.id, source: SOURCE, sourceId }).onConflictDoNothing()
 
-          const updatedCity = updated.city ?? resolvedCity
-          if (updatedCity) {
-            processedEntries.push({ slug: updated.slug, city: updatedCity })
+          if (resolvedCity) {
+            processedEntries.push({ slug: updated.slug, city: resolvedCity })
           }
           result.updated++
         } else {
@@ -346,13 +343,12 @@ const command: ImportCommand = {
             .values({
               ...baseFields,
               slug,
-              city: resolvedCity || name,
               cityId: resolvedCityId,
               postalCode: resolvedPostalCode || '00000',
               imagesCount: 0,
               createdAt: new Date(),
             })
-            .returning({ id: accommodations.id, slug: accommodations.slug, city: accommodations.city })
+            .returning({ id: accommodations.id, slug: accommodations.slug })
 
           await db.insert(externalSources).values({
             accommodationId: created.id,
@@ -360,9 +356,8 @@ const command: ImportCommand = {
             sourceId,
           })
 
-          const createdCity = created.city ?? resolvedCity
-          if (createdCity) {
-            processedEntries.push({ slug: created.slug, city: createdCity })
+          if (resolvedCity) {
+            processedEntries.push({ slug: created.slug, city: resolvedCity })
           }
           result.created++
         }

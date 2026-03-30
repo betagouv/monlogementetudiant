@@ -6,6 +6,7 @@ export const departments = pgTable(
   {
     id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
     name: varchar({ length: 200 }).notNull(),
+    slug: varchar({ length: 255 }).notNull().unique(),
     code: varchar({ length: 3 }).notNull(),
     boundary: geometry({ type: 'multipolygon', srid: 4326 }),
     academyId: bigint('academy_id', { mode: 'number' })

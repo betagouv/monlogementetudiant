@@ -4,20 +4,13 @@ import { cache } from 'react'
 import { expandBbox } from '~/components/map/map-utils'
 import { computeExpandedPriceMax, EXPANDED_SEARCH_PAGE_SIZE, EXPANDED_SEARCH_RADIUS_KM } from '~/lib/accommodations-expanded-search'
 import { accommodationsSearchParamsCache } from '~/lib/accommodations-search-params'
-import { TTerritories, TTerritory } from '~/schemas/territories'
+import { TTerritory } from '~/schemas/territories'
 import { prefetchAccommodations } from '~/server/accommodations/get-accommodations'
-import { getTerritories } from '~/server/territories/get-territories'
 import { getQueryClient, trpc } from '~/server/trpc/server'
 import { getServerSession } from '~/services/better-auth'
 
-const getTerritoriesCategoryKey = (categoryKey: 'ville' | 'academie' | 'departement') => {
-  const keys = {
-    academie: 'academies',
-    departement: 'departments',
-    ville: 'cities',
-  }
-  return keys[categoryKey] as keyof TTerritories
-}
+const VALID_CATEGORIES = ['ville', 'academie', 'departement'] as const
+type Category = (typeof VALID_CATEGORIES)[number]
 
 const getSingleSearchParam = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value)
 
@@ -25,27 +18,29 @@ export const getStudentAccommodationPageContext = cache(
   async (awaitedParams: { location: string[] }, awaitedSearchParams: Record<string, string | string[] | undefined>) => {
     const routeCategoryKey = awaitedParams?.location?.[0] || ''
     const routeLocation = decodeURIComponent(awaitedParams?.location?.[1] || '')
-
     if (awaitedParams?.location) {
       if (awaitedParams.location.length !== 2) {
         redirect(`/trouver-un-logement-etudiant`)
       }
 
-      if (!['ville', 'academie', 'departement'].includes(routeCategoryKey)) {
+      if (!VALID_CATEGORIES.includes(routeCategoryKey as Category)) {
         redirect(`/trouver-un-logement-etudiant`)
       }
     }
 
-    const territories = await getTerritories(routeLocation)
-    const territoryList: TTerritory[] =
-      territories[getTerritoriesCategoryKey(routeCategoryKey as 'ville' | 'academie' | 'departement')] || []
-    const territory = territoryList.find((territory) => {
-      const slug = 'slug' in territory ? territory.slug : territory.name
-      return slug === routeLocation || territory.name === routeLocation
-    })
+    let territory: TTerritory | undefined
 
-    if (routeCategoryKey && routeLocation && !territory) {
-      redirect(`/trouver-un-logement-etudiant`)
+    if (routeCategoryKey && routeLocation) {
+      try {
+        territory = await getQueryClient().fetchQuery(
+          trpc.territories.getBySlug.queryOptions({
+            type: routeCategoryKey as Category,
+            slug: routeLocation,
+          }),
+        )
+      } catch {
+        redirect(`/trouver-un-logement-etudiant`)
+      }
     }
 
     const territoryBbox = territory?.bbox
@@ -59,7 +54,7 @@ export const getStudentAccommodationPageContext = cache(
         ? `${territoryBbox.west},${territoryBbox.south},${territoryBbox.east},${territoryBbox.north}`
         : undefined
     const serverAcademie = isAcademy && territory ? territory.id.toString() : undefined
-    const serverVille = isCity && territory && 'slug' in territory ? territory.slug : undefined
+    const serverVille = isCity && territory ? routeLocation : undefined
 
     const queryClient = getQueryClient()
 

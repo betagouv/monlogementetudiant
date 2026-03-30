@@ -1,28 +1,21 @@
 import { dehydrate } from '@tanstack/react-query'
 import { cache } from 'react'
 import { expandBbox } from '~/components/map/map-utils'
-import { TTerritories } from '~/schemas/territories'
 import { getAccommodationById } from '~/server/accommodations/get-accommodation-by-id'
 import { getAccommodations } from '~/server/accommodations/get-accommodations'
-import { getTerritories } from '~/server/territories/get-territories'
 import { getQueryClient, trpc } from '~/server/trpc/server'
 import { getServerSession } from '~/services/better-auth'
 import { calculateAvailability } from '~/utils/calculateAvailability'
 
-export const getAccommodationPageContext = cache(async (slug: string, location: string) => {
-  const decodedLocationUri = decodeURIComponent(location)
+export const getAccommodationPageContext = cache(async (slug: string) => {
+  const [accommodation, session] = await Promise.all([getAccommodationById(slug), getServerSession()])
 
-  const [accommodation, session, territories] = await Promise.all([
-    getAccommodationById(slug),
-    getServerSession(),
-    getTerritories(decodedLocationUri),
-  ])
-
-  const territory = (territories.cities || []).find(
-    (territory) => territory.name === decodedLocationUri || territory.slug === decodedLocationUri,
-  ) as TTerritories['cities'][0]
-
-  const cityBbox = expandBbox(territory.bbox.xmin, territory.bbox.ymin, territory.bbox.xmax, territory.bbox.ymax)
+  const cityBbox = expandBbox(
+    accommodation.city_bbox.xmin,
+    accommodation.city_bbox.ymin,
+    accommodation.city_bbox.xmax,
+    accommodation.city_bbox.ymax,
+  )
 
   const { coordinates } = accommodation.geom
   const [longitude, latitude] = coordinates

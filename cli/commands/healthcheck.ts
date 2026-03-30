@@ -21,13 +21,12 @@ export async function healthcheck(options: HealthcheckOptions) {
       id: accommodations.id,
       name: accommodations.name,
       slug: accommodations.slug,
-      city: accommodations.city,
       cityId: accommodations.cityId,
       citySlug: cities.slug,
       cityName: cities.name,
     })
     .from(accommodations)
-    .leftJoin(cities, eq(accommodations.cityId, cities.id))
+    .innerJoin(cities, eq(accommodations.cityId, cities.id))
     .where(eq(accommodations.published, true))
 
   let ok = 0
@@ -40,7 +39,7 @@ export async function healthcheck(options: HealthcheckOptions) {
 
     // Check 1: city_id is set
     if (!row.cityId) {
-      checks.push(`city_id NULL (city text: "${row.city}")`)
+      checks.push(`city_id NULL`)
       warnings++
     }
 
@@ -56,14 +55,8 @@ export async function healthcheck(options: HealthcheckOptions) {
       errors++
     }
 
-    // Check 4: city name consistency
-    if (row.cityId && row.cityName && row.city !== row.cityName) {
-      checks.push(`nom incohérent: accommodation.city="${row.city}" vs city.name="${row.cityName}"`)
-      if (options.verbose) warnings++
-    }
-
     // Build expected URL
-    const cityPart = row.cityName || row.city || null
+    const cityPart = row.cityName || null
     const url = cityPart ? `${BASE_PATH}/${encodeURIComponent(cityPart)}/${row.slug}` : null
 
     if (!cityPart) {
