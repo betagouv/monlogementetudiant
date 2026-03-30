@@ -12,6 +12,7 @@ import Image from 'next/image'
 import { useState } from 'react'
 import { LinkUserToOwnerDialog } from '~/components/administration/link-user-to-owner-dialog'
 import { OwnerForm } from '~/components/administration/owner-form'
+import { OwnerLogoForm } from '~/components/administration/owner-logo-form'
 import { RoleBadge } from '~/components/administration/role-badge'
 import { createToast } from '~/components/ui/createToast'
 import { useAdminDeleteOwner } from '~/hooks/use-admin-delete-owner'
@@ -60,18 +61,18 @@ function OwnerDetailAvatar({ name, url, imageBase64 }: { name: string; url: stri
   const [dbImageError, setDbImageError] = useState(false)
   const faviconUrl = url ? getFaviconUrl(url) : null
 
-  if (faviconUrl && !faviconError) {
-    return (
-      <div className={styles.gestionnaireAvatar} style={{ background: '#fff', overflow: 'hidden' }}>
-        <Image src={faviconUrl} alt={name} width={40} height={40} onError={() => setFaviconError(true)} unoptimized />
-      </div>
-    )
-  }
-
   if (imageBase64 && !dbImageError) {
     return (
       <div className={styles.gestionnaireAvatar} style={{ background: '#fff', overflow: 'hidden' }}>
         <Image src={imageBase64} alt={name} width={40} height={40} onError={() => setDbImageError(true)} unoptimized />
+      </div>
+    )
+  }
+
+  if (faviconUrl && !faviconError) {
+    return (
+      <div className={styles.gestionnaireAvatar} style={{ background: '#fff', overflow: 'hidden' }}>
+        <Image src={faviconUrl} alt={name} width={40} height={40} onError={() => setFaviconError(true)} unoptimized />
       </div>
     )
   }
@@ -184,6 +185,7 @@ export function OwnerDetail({ id }: { id: string }) {
             content: (
               <div className="fr-grid-row fr-grid-row--gutters">
                 <div className="fr-col-md-8">
+                  <OwnerLogoForm ownerId={ownerId} imageBase64={ownerData.imageBase64} />
                   <OwnerForm
                     defaultValues={{
                       name: ownerData.name,
