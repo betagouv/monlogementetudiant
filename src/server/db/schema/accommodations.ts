@@ -93,6 +93,7 @@ export const accommodations = pgTable(
     bathroom: varchar('bathroom', { length: 50 }),
     acceptWaitingList: boolean('accept_waiting_list'),
     scholarshipHoldersPriority: boolean('scholarship_holders_priority'),
+    socialHousingRequired: boolean('social_housing_required'),
 
     // Media/URLs
     imagesUrls: text('images_urls').array(),

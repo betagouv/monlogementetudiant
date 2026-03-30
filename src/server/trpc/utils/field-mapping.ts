@@ -47,6 +47,7 @@ export const UPDATE_FIELD_MAP: FieldMap = {
   accept_waiting_list: 'acceptWaitingList',
   published: 'published',
   scholarship_holders_priority: 'scholarshipHoldersPriority',
+  social_housing_required: 'socialHousingRequired',
   images_urls: 'imagesUrls',
 
   // Typology counts
