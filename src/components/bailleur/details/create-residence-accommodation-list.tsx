@@ -1,9 +1,9 @@
 'use client'
 
 import Tabs from '@codegouvfr/react-dsfr/Tabs'
-import { useState } from 'react'
+import { parseAsString, useQueryState } from 'nuqs'
 import { useFieldArray, useFormContext } from 'react-hook-form'
-import { TCreateResidence, TYPOLOGY_LABELS, TYPOLOGY_TYPES } from '~/schemas/accommodations/create-residence'
+import { TCreateResidence, TYPOLOGIES, TYPOLOGY_TYPES } from '~/schemas/accommodations/create-residence'
 import { TypologyTabContent } from './typology-tab-content'
 
 export const CreateResidenceAccommodationList = () => {
@@ -20,22 +20,34 @@ export const CreateResidenceAccommodationList = () => {
     name: 'typologies',
   })
 
-  const [selectedTabId, setSelectedTabId] = useState(fields.length > 0 ? `tab-0` : 'tab-add')
-
-  const getTabLabel = (index: number) => {
-    const type = watchedTypologies?.[index]?.type
-    return type ? TYPOLOGY_LABELS[type] : 'Nouveau'
-  }
+  const getInitialTabId = () => (fields.length > 0 ? 'tab-0' : 'tab-add')
+  const [selectedTabId, setSelectedTabId] = useQueryState('typology', parseAsString.withDefault(getInitialTabId()))
 
   const usedTypes = watchedTypologies?.map((t) => t.type).filter(Boolean) ?? []
+
+  // Trier les champs selon l'ordre de TYPOLOGIES
+  const sortedFieldsWithIndex = fields
+    .map((field, originalIndex) => ({
+      field,
+      originalIndex,
+      type: watchedTypologies?.[originalIndex]?.type,
+    }))
+    .sort((a, b) => {
+      const indexA = TYPOLOGIES.findIndex((t) => t.type === a.type)
+      const indexB = TYPOLOGIES.findIndex((t) => t.type === b.type)
+      // Les "Nouveau" (sans type) vont à la fin
+      if (indexA === -1) return 1
+      if (indexB === -1) return -1
+      return indexA - indexB
+    })
 
   const handleAddTypology = () => {
     append({
       type: '' as TCreateResidence['typologies'][number]['type'],
       price_min: undefined as unknown as number,
       price_max: undefined as unknown as number,
-      superficie_min: undefined,
-      superficie_max: undefined,
+      superficie_min: undefined as unknown as number,
+      superficie_max: undefined as unknown as number,
       colocation: false,
       nb_total: undefined as unknown as number,
       nb_available: undefined as unknown as number,
@@ -54,9 +66,9 @@ export const CreateResidenceAccommodationList = () => {
   const canAddMore = fields.length < TYPOLOGY_TYPES.length
 
   const tabs = [
-    ...fields.map((_, index) => ({
-      tabId: `tab-${index}`,
-      label: getTabLabel(index),
+    ...sortedFieldsWithIndex.map(({ originalIndex, type }) => ({
+      tabId: `tab-${originalIndex}`,
+      label: type || 'Nouveau',
     })),
     ...(canAddMore ? [{ tabId: 'tab-add', label: 'Ajouter' }] : []),
   ]
@@ -79,14 +91,14 @@ export const CreateResidenceAccommodationList = () => {
 
         <div>
           <Tabs selectedTabId={selectedTabId} onTabChange={handleTabChange} tabs={tabs}>
-            {fields.map((field, index) => (
-              <div key={field.id} className={selectedTabId === `tab-${index}` ? '' : 'fr-hidden'}>
+            {sortedFieldsWithIndex.map(({ field, originalIndex }) => (
+              <div key={field.id} className={selectedTabId === `tab-${originalIndex}` ? '' : 'fr-hidden'}>
                 <TypologyTabContent
                   mode="create"
-                  index={index}
-                  typologyType={watchedTypologies?.[index]?.type}
+                  index={originalIndex}
+                  typologyType={watchedTypologies?.[originalIndex]?.type}
                   usedTypes={usedTypes}
-                  onDelete={() => handleRemoveTypology(index)}
+                  onDelete={() => handleRemoveTypology(originalIndex)}
                 />
               </div>
             ))}
