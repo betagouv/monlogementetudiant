@@ -94,7 +94,15 @@ export const OwnerDetails = async ({
         isAuthenticated={isAuthenticated}
         acceptDossierFacile={acceptDossierFacile}
       />
-      <div className={styles.sidebarOwner}>{!!ownerUrl && available && <ConsultOfferButton href={ownerUrl} slug={slug ?? ''} />}</div>
+      <div className={styles.sidebarOwner}>
+        {!!ownerUrl && available && (
+          <ConsultOfferButton
+            href={ownerUrl}
+            slug={slug ?? ''}
+            priority={!isAuthenticated || !acceptDossierFacile ? 'primary' : 'tertiary'}
+          />
+        )}
+      </div>
       {nbAvailable === 0 && (
         <>
           <hr className={styles.sidebarSeparator} />
