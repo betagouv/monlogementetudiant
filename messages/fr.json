@@ -225,7 +225,7 @@
     "title": "Trouver un logement étudiant",
     "titleWithLocation": "Trouver un logement étudiant {locationFormatted}",
     "header": {
-      "inputLabel": "Académie, ville ou département",
+      "inputLabel": "Ville, académie ou département",
       "shared": "Colocation",
       "tooltip": {
         "accessible": "Etablissements en capacité d'accueillir des personnes en situation de handicap"
