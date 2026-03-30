@@ -323,6 +323,34 @@ const ownersRouter = createTRPCRouter({
       return rest
     }),
 
+  updateLogo: adminProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        image: z.string().nullable(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      let imageBuffer: Buffer | null = null
+      if (input.image) {
+        const base64Data = input.image.replace(/^data:image\/\w+;base64,/, '')
+        imageBuffer = Buffer.from(base64Data, 'base64')
+      }
+
+      const [updated] = await db
+        .update(owners)
+        .set({ image: imageBuffer })
+        .where(eq(owners.id, input.id))
+        .returning()
+
+      if (!updated) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: (await getAdminErrorTranslations())('ownerNotFound') })
+      }
+
+      const { image, ...rest } = updated
+      return rest
+    }),
+
   delete: adminProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
     const accomCount = await db.select({ count: count() }).from(accommodations).where(eq(accommodations.ownerId, input.id))
 
