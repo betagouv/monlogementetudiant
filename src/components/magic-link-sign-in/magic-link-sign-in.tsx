@@ -4,6 +4,7 @@ import { fr } from '@codegouvfr/react-dsfr'
 import Button from '@codegouvfr/react-dsfr/Button'
 import { Input } from '@codegouvfr/react-dsfr/Input'
 import { zodResolver } from '@hookform/resolvers/zod'
+import * as Sentry from '@sentry/nextjs'
 import clsx from 'clsx'
 import { useTranslations } from 'next-intl'
 import { FC } from 'react'
@@ -58,7 +59,8 @@ export const MagicLinkSignInForm: FC<{ callbackURL?: string; type?: 'owner' | 'a
         priority: 'success',
         message: t('success'),
       })
-    } catch {
+    } catch (error) {
+      Sentry.captureException(error, { tags: { feature: 'magic-link-sign-in' } })
       trackEvent({ category: 'Authentification', action: 'connexion gestionnaire', name: 'erreur' })
       createToast({
         priority: 'error',
