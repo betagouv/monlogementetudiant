@@ -13,21 +13,30 @@ import { useSignedDocumentUrl } from '~/hooks/use-signed-document-url'
 import { TAccomodationCard } from '~/schemas/accommodations/accommodations'
 import { useTRPC } from '~/server/trpc/client'
 
+type DocumentItem = { id: string; documentCategory: string; documentSubCategory: string | null }
+
 const TabLayout = ({
   children,
   dfTenantId,
   hasPdfUrl,
+  documents,
   accommodation,
 }: {
   dfTenantId: string
   hasPdfUrl: boolean
+  documents: { tenant: DocumentItem[]; guarantor: DocumentItem[] }
   accommodation: TAccomodationCard
   children: ReactNode
 }) => (
   <div className="fr-grid-row fr-grid-row--gutters">
     <div className="fr-col-12 fr-col-md-7">{children}</div>
     <div className="fr-col-12 fr-col-md-5">
-      <CandidatureDetailAccommodation accommodationCard={accommodation} dfTenantId={dfTenantId} hasPdfUrl={hasPdfUrl} />
+      <CandidatureDetailAccommodation
+        accommodationCard={accommodation}
+        dfTenantId={dfTenantId}
+        hasPdfUrl={hasPdfUrl}
+        documents={documents}
+      />
     </div>
   </div>
 )
@@ -88,6 +97,7 @@ export const CandidatureDetail = ({ id }: CandidatureDetailProps) => {
                 accommodation={candidature.accommodation}
                 dfTenantId={candidature.dfTenantId}
                 hasPdfUrl={candidature.hasPdfUrl}
+                documents={candidature.documents}
                 children={<CandidatureDetailDossier apartmentType={candidature.apartmentType} />}
               />
             ),
@@ -99,6 +109,7 @@ export const CandidatureDetail = ({ id }: CandidatureDetailProps) => {
                 accommodation={candidature.accommodation}
                 dfTenantId={candidature.dfTenantId}
                 hasPdfUrl={candidature.hasPdfUrl}
+                documents={candidature.documents}
                 children={<CandidatureDetailSuivi status={candidature.status} />}
               />
             ),
