@@ -67,7 +67,7 @@ const nextConfig = {
 
 export default withSentryConfig(withNextIntl(nextConfig), {
   org: 'betagouv',
-  project: 'mle-front',
+  project: 'monlogementetudiant',
   sentryUrl: 'https://sentry.incubateur.net/',
   silent: !process.env.CI,
   widenClientFileUpload: true,
