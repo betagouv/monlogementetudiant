@@ -1,5 +1,5 @@
 import { SignJWT } from 'jose'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { getJwtSecret } from '../server/utils/jwt-secret'
 import {
   createAccommodation,
@@ -163,50 +163,22 @@ describe('getDocumentSignedUrl', () => {
   })
 })
 
-// ─── /api/df-redirect route (proxy mode) ────────────────────────────────────
+// ─── /api/df-redirect route ─────────────────────────────────────────────────
 
 describe('/api/df-redirect', () => {
-  const FAKE_PDF_BODY = '%PDF-1.4 fake content'
-
-  function mockFetch(body: string, headers: Record<string, string> = {}) {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue(
-        new Response(body, {
-          status: 200,
-          headers: { 'content-type': 'application/pdf', ...headers },
-        }),
-      ),
-    )
-  }
-
-  function mockFetchError(status: number) {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status })))
-  }
-
-  it('proxies the PDF content without exposing the real URL', async () => {
+  it('redirects to the real PDF URL with a valid token', async () => {
     const { tenant } = await createTestData()
-    mockFetch(FAKE_PDF_BODY)
 
     const { redirectUrl } = await ownerCaller.bailleur.getDocumentSignedUrl({ type: 'tenantPdf', tenantId: tenant.id })
     const token = new URL(redirectUrl, 'http://localhost').searchParams.get('token')!
 
     const res = await callRedirect(token)
 
-    // Must be 200 (proxied), NOT 302 (redirect)
-    expect(res.status).toBe(200)
-    expect(res.headers.get('location')).toBeNull()
-
-    // Content is streamed through
-    const body = await res.text()
-    expect(body).toBe(FAKE_PDF_BODY)
-    expect(res.headers.get('content-type')).toBe('application/pdf')
-
-    // Verify the server fetched the correct upstream URL
-    expect(fetch).toHaveBeenCalledWith('https://dossierfacile.example.com/doc/12345.pdf')
+    expect(res.status).toBe(307)
+    expect(res.headers.get('location')).toBe('https://dossierfacile.example.com/doc/12345.pdf')
   })
 
-  it('redirects (not proxies) for tenantUrl since it is an external web page', async () => {
+  it('redirects to the tenant URL with a valid token', async () => {
     const { tenant } = await createTestData()
 
     const { redirectUrl } = await ownerCaller.bailleur.getDocumentSignedUrl({ type: 'tenantUrl', tenantId: tenant.id })
@@ -218,58 +190,20 @@ describe('/api/df-redirect', () => {
     expect(res.headers.get('location')).toBe('https://dossierfacile.example.com/tenant/12345')
   })
 
-  it('proxies individual document content', async () => {
+  it('redirects to a document URL with a valid token', async () => {
     const { tenant } = await createTestData()
     const doc = await createDossierFacileDocument({
       tenantId: tenant.id,
       url: 'https://dossierfacile.example.com/doc/specific.pdf',
     })
-    mockFetch(FAKE_PDF_BODY)
 
     const { redirectUrl } = await ownerCaller.bailleur.getDocumentSignedUrl({ type: 'document', documentId: doc.id })
     const token = new URL(redirectUrl, 'http://localhost').searchParams.get('token')!
 
     const res = await callRedirect(token)
 
-    expect(res.status).toBe(200)
-    expect(fetch).toHaveBeenCalledWith('https://dossierfacile.example.com/doc/specific.pdf')
-  })
-
-  it('sets no-cache headers to prevent token replay via cache', async () => {
-    const { tenant } = await createTestData()
-    mockFetch(FAKE_PDF_BODY)
-
-    const { redirectUrl } = await ownerCaller.bailleur.getDocumentSignedUrl({ type: 'tenantPdf', tenantId: tenant.id })
-    const token = new URL(redirectUrl, 'http://localhost').searchParams.get('token')!
-
-    const res = await callRedirect(token)
-
-    expect(res.headers.get('cache-control')).toBe('no-store, no-cache, must-revalidate')
-  })
-
-  it('forwards content-disposition header from upstream', async () => {
-    const { tenant } = await createTestData()
-    mockFetch(FAKE_PDF_BODY, { 'content-disposition': 'attachment; filename="dossier.pdf"' })
-
-    const { redirectUrl } = await ownerCaller.bailleur.getDocumentSignedUrl({ type: 'tenantPdf', tenantId: tenant.id })
-    const token = new URL(redirectUrl, 'http://localhost').searchParams.get('token')!
-
-    const res = await callRedirect(token)
-
-    expect(res.headers.get('content-disposition')).toBe('attachment; filename="dossier.pdf"')
-  })
-
-  it('redirects to error page when upstream fetch fails', async () => {
-    const { tenant } = await createTestData()
-    mockFetchError(500)
-
-    const { redirectUrl } = await ownerCaller.bailleur.getDocumentSignedUrl({ type: 'tenantPdf', tenantId: tenant.id })
-    const token = new URL(redirectUrl, 'http://localhost').searchParams.get('token')!
-
-    const res = await callRedirect(token)
-
     expect(res.status).toBe(307)
-    expect(res.headers.get('location')).toContain('/dossier-facile/error?error_type=doc_unavailable')
+    expect(res.headers.get('location')).toBe('https://dossierfacile.example.com/doc/specific.pdf')
   })
 
   it('redirects to error page with an expired token', async () => {
