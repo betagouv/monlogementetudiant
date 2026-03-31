@@ -21,6 +21,7 @@ import prepareBudget from '~/images/prepare-budget.webp'
 import sogima from '~/images/sogima.svg'
 import studefi from '~/images/studefi.svg'
 import { getPopularCities } from '~/server/territories/get-popular-cities'
+import { getCanonicalUrl } from '~/utils/canonical'
 import styles from './home.module.css'
 
 export const generateMetadata = async () => {
@@ -32,6 +33,7 @@ export const generateMetadata = async () => {
       index: process.env.NEXT_PUBLIC_APP_ENV === 'production',
       follow: process.env.NEXT_PUBLIC_APP_ENV === 'production',
     },
+    alternates: { canonical: getCanonicalUrl() },
   }
 }
 

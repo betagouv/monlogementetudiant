@@ -10,6 +10,7 @@ import FindStudentAccommodationQA from '~/components/find-student-accomodation/q
 import { FindStudentAccomodationResultsSections } from '~/components/find-student-accomodation/results/find-student-accomodation-results-sections'
 import { FindStudentAccomodationSortView } from '~/components/find-student-accomodation/sort-view/find-student-accomodation-sort-view'
 import { SearchParamsSync } from '~/components/search-params-sync'
+import { getCanonicalUrl } from '~/utils/canonical'
 import { formatCityWithA } from '~/utils/french-contraction'
 import { getStudentAccommodationPageContext } from './get-student-accommodation-page-context'
 
@@ -23,6 +24,10 @@ export async function generateMetadata({
   const awaitedParams = await params
   const awaitedSearchParams = await searchParams
   const { routeCategoryKey, territory } = await getStudentAccommodationPageContext(awaitedParams, awaitedSearchParams)
+
+  const routeLocation = awaitedParams?.location?.[1] ? decodeURIComponent(awaitedParams.location[1]) : undefined
+  const canonicalPath = routeCategoryKey && routeLocation ? `/${routeCategoryKey}/${routeLocation}` : ''
+  const canonical = getCanonicalUrl(`/trouver-un-logement-etudiant${canonicalPath}`)
 
   if (routeCategoryKey === 'academie') {
     return {
@@ -40,12 +45,14 @@ export async function generateMetadata({
     return {
       title: t('searchDetails.title', { locationFormatted }),
       description: t('searchDetails.description', { locationFormatted }),
+      alternates: { canonical },
     }
   }
 
   return {
     title: t('search.title'),
     description: t('search.description'),
+    alternates: { canonical },
   }
 }
 
