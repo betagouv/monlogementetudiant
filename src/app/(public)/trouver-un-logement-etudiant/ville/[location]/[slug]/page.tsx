@@ -21,12 +21,13 @@ import { SaveAccommodationFavoriteButton } from '~/components/favorites/save-acc
 import { OwnerDetails } from '~/components/find-student-accomodation/owner-details/owner-details'
 import { getAvailableApartmentTypes } from '~/enums/apartment-type'
 import { EResidenceType, RESIDENCE_TYPE_LABELS } from '~/enums/residence-type'
+import { getCanonicalUrl } from '~/utils/canonical'
 import { formatCityWithA } from '~/utils/french-contraction'
 import { getAccommodationPageContext } from './get-accommodation-page-context'
 import styles from './logement.module.css'
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string; location: string }> }): Promise<Metadata> {
-  const { slug } = await params
+  const { slug, location } = await params
   const { accommodation } = await getAccommodationPageContext(slug)
   const t = await getTranslations('metadata')
   const cityFormatted = formatCityWithA(accommodation.city)
@@ -34,6 +35,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: t('accommodation.title', { name: accommodation.name, cityFormatted }),
     description: t('accommodation.description', { name: accommodation.name, cityFormatted }),
+    alternates: { canonical: getCanonicalUrl(`/trouver-un-logement-etudiant/ville/${location}/${slug}`) },
   }
 }
 

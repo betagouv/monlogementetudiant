@@ -1,8 +1,18 @@
 import { Breadcrumb } from '@codegouvfr/react-dsfr/Breadcrumb'
 import { getTranslations } from 'next-intl/server'
 import { BudgetSimulatorProvider } from '~/components/budget-simulation/budget-simulator-context'
+import { getCanonicalUrl } from '~/utils/canonical'
 import { BudgetSimulatorContent } from './budget-simulator-content'
 import styles from './simuler-budget.module.css'
+
+export const generateMetadata = async () => {
+  const t = await getTranslations('metadata')
+  return {
+    title: t('budgetSimulator.title'),
+    description: t('budgetSimulator.description'),
+    alternates: { canonical: getCanonicalUrl('/simuler-budget') },
+  }
+}
 
 export default async function BudgetSimulatorPage() {
   const [t, breadcrumbT] = await Promise.all([getTranslations('budgetSimulator'), getTranslations('breadcrumbs')])

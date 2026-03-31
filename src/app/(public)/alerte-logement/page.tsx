@@ -4,7 +4,17 @@ import Image from 'next/image'
 import { getTranslations } from 'next-intl/server'
 import { AlertAccommodationForm } from '~/components/alert-accommodation/alert-accommodation-form'
 import background from '~/images/background.webp'
+import { getCanonicalUrl } from '~/utils/canonical'
 import styles from './alert-logement.module.css'
+
+export const generateMetadata = async () => {
+  const t = await getTranslations('metadata')
+  return {
+    title: t('alertAccommodation.title'),
+    description: t('alertAccommodation.description'),
+    alternates: { canonical: getCanonicalUrl('/alerte-logement') },
+  }
+}
 
 export default async function AlerteLogement() {
   const t = await getTranslations('alertAccommodation')
