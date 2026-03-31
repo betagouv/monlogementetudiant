@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { StudentSpaceNavigation } from '~/components/student-space/navigation/student-space-navigation'
 import { StudentBreadcrumb } from '~/components/student-space/student-breadcrumb'
@@ -25,8 +25,12 @@ export default async function WorkspaceLayout({
 }>) {
   const auth = await getServerSession()
 
-  if (!auth || !auth.session || !auth.user || auth.user.role === 'owner') {
+  if (!auth || !auth.session || !auth.user) {
     return notFound()
+  }
+
+  if (auth.user.role === 'owner') {
+    redirect('/bailleur/tableau-de-bord')
   }
 
   return (

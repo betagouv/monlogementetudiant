@@ -7,14 +7,21 @@ export const authClient = createAuthClient({
   plugins: [magicLinkClient(), inferAdditionalFields<typeof auth>()],
 })
 
-export async function signInCredentials(email: string, password: string, callbackUrl = '/mon-espace') {
-  const result = await authClient.signIn.email({ email, password, callbackURL: callbackUrl })
+export function getRedirectUrlByRole(role: string | undefined): string {
+  if (role === 'owner') return '/bailleur/tableau-de-bord'
+  return '/mon-espace'
+}
+
+export async function signInCredentials(email: string, password: string) {
+  const result = await authClient.signIn.email({ email, password, callbackURL: '/mon-espace' })
 
   if (result.error) {
     return { error: result.error.message || 'Authentication failed' }
   }
 
-  return { success: true, callbackUrl, user: result.data?.user }
+  const redirectUrl = getRedirectUrlByRole(result.data?.user?.role)
+
+  return { success: true, redirectUrl, user: result.data?.user }
 }
 
 export async function signOut(options: { callbackUrl?: string; redirect?: boolean } = {}) {
