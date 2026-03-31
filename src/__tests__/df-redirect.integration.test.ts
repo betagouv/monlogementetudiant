@@ -206,17 +206,16 @@ describe('/api/df-redirect', () => {
     expect(fetch).toHaveBeenCalledWith('https://dossierfacile.example.com/doc/12345.pdf')
   })
 
-  it('proxies tenant URL content', async () => {
+  it('redirects (not proxies) for tenantUrl since it is an external web page', async () => {
     const { tenant } = await createTestData()
-    mockFetch('<html>DossierFacile</html>', { 'content-type': 'text/html' })
 
     const { redirectUrl } = await ownerCaller.bailleur.getDocumentSignedUrl({ type: 'tenantUrl', tenantId: tenant.id })
     const token = new URL(redirectUrl, 'http://localhost').searchParams.get('token')!
 
     const res = await callRedirect(token)
 
-    expect(res.status).toBe(200)
-    expect(fetch).toHaveBeenCalledWith('https://dossierfacile.example.com/tenant/12345')
+    expect(res.status).toBe(307)
+    expect(res.headers.get('location')).toBe('https://dossierfacile.example.com/tenant/12345')
   })
 
   it('proxies individual document content', async () => {

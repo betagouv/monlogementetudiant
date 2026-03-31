@@ -50,6 +50,12 @@ export async function GET(request: Request) {
       return errorRedirect(request, 'doc_not_found')
     }
 
+    // tenantUrl is an external web page (DossierFacile profile) — redirect instead of proxy,
+    // because proxying HTML breaks relative CSS/JS links.
+    if (urlType === 'tenantUrl') {
+      return NextResponse.redirect(url)
+    }
+
     // Proxy: fetch the document server-side and stream it to the client.
     // The real URL never reaches the browser.
     const upstream = await fetch(url)
