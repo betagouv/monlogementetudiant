@@ -8,6 +8,7 @@ import { db } from '~/server/db'
 import { academies } from '~/server/db/schema/academies'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { cities } from '~/server/db/schema/cities'
+import { departments } from '~/server/db/schema/departments'
 import { externalSources } from '~/server/db/schema/external-sources'
 import { owners } from '~/server/db/schema/owners'
 import { baseProcedure, createTRPCRouter } from '../init'
@@ -559,10 +560,12 @@ export const accommodationsRouter = createTRPCRouter({
         ownerAcceptDossierFacile: owners.acceptDossierFacileApplications,
         citySlug: cities.slug,
         cityBbox: bboxSelect(cities),
+        departmentCode: departments.code,
       })
       .from(accommodations)
       .leftJoin(owners, eq(accommodations.ownerId, owners.id))
       .innerJoin(cities, eq(accommodations.cityId, cities.id))
+      .innerJoin(departments, eq(cities.departmentId, departments.id))
       .where(and(eq(accommodations.slug, input.slug), eq(accommodations.published, true), sql`${accommodations.geom} IS NOT NULL`))
       .limit(1)
 
@@ -683,6 +686,7 @@ export const accommodationsRouter = createTRPCRouter({
         : null,
       city_slug: row.citySlug,
       city_bbox: row.cityBbox,
+      department_code: row.departmentCode,
     }
   }),
 })

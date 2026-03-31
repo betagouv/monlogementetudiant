@@ -137,7 +137,8 @@
     "equipments": {
       "title": "Équipements"
     },
-    "socialHousingRequired": "Une <bold>demande de logement social</bold> est nécessaire pour intégrer la résidence",
+    "socialHousingRequired": "Une <bold>demande de logement social</bold> est nécessaire pour intégrer la résidence.",
+    "socialHousingRequiredLink": "Faire une demande sur le {system}",
     "descriptionTitle": "À propos du logement étudiant {title}",
     "title": "Logement étudiant {title} {cityFormatted}",
     "tags": {
@@ -160,7 +161,7 @@
       "emailSubject": "Logement étudiant {title} {locationFormatted}",
       "emailBody": "Venez découvrir le logement étudiant {title}, situé {locationFormatted}.\n\n🔗 {url}\n📍 {location}\n\nCordialement,\nMon Logement Étudiant",
       "buttons": {
-        "consult": "Consulter l'offre du gestionnaire", 
+        "consult": "Consulter l'offre du gestionnaire",
         "dossierFacile": "Candidater avec Dossier Facile",
         "dossierFacileConnect": "Lier mon compte Dossier Facile",
         "dossierFacileConnectDescription": "Lier votre dossier facile certifié",
