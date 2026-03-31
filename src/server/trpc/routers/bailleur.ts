@@ -605,6 +605,7 @@ export const bailleurRouter = createTRPCRouter({
     const [accommodation] = await db
       .select({ ...accommodationSelectFields, ownerId: accommodations.ownerId })
       .from(accommodations)
+      .innerJoin(cities, eq(accommodations.cityId, cities.id))
       .leftJoin(owners, eq(accommodations.ownerId, owners.id))
       .where(eq(accommodations.slug, application.accommodationSlug))
       .limit(1)
