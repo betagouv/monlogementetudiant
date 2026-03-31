@@ -6,14 +6,9 @@ import { NextResponse } from 'next/server'
 import { db } from '~/server/db'
 import { user as userTable } from '~/server/db/schema'
 import { syncDossierFacileTenantFromCode } from '~/server/services/dossier-facile/sync'
+import { getJwtSecret } from '~/server/utils/jwt-secret'
 
 const STATE_COOKIE_NAME = 'df_oauth_state'
-
-function getJwtSecret() {
-  const secret = process.env.AUTH_SECRET
-  if (!secret) throw new Error('AUTH_SECRET is not set')
-  return new TextEncoder().encode(secret)
-}
 
 export async function GET(request: Request) {
   const baseUrl = process.env.BASE_URL || 'http://localhost:3000'
