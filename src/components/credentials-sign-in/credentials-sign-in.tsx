@@ -50,7 +50,7 @@ export const CredentialsSignInForm: FC = () => {
           priority: 'success',
           message: 'Vous êtes connecté avec succès !',
         })
-        router.push(result.callbackUrl || '/mon-espace')
+        router.push(result.redirectUrl)
         router.refresh()
       } else {
         trackEvent({ category: 'Authentification', action: 'connexion etudiant', name: 'erreur' })
