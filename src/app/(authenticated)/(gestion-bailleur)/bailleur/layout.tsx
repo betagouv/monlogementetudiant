@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { CommonFooter } from '~/components/ui/footer/footer'
 import { WorkspaceHeaderComponent } from '~/components/ui/header/workspace-header'
@@ -24,8 +24,12 @@ export default async function WorkspaceLayout({
 }>) {
   const session = await getServerSession()
 
-  if (!session || session.user.role === 'user') {
+  if (!session) {
     return notFound()
+  }
+
+  if (session.user.role === 'user') {
+    redirect('/mon-espace/tableau-de-bord')
   }
 
   return (
