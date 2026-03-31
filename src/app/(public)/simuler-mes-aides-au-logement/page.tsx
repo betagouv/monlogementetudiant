@@ -2,9 +2,20 @@ import { fr } from '@codegouvfr/react-dsfr'
 import Accordion from '@codegouvfr/react-dsfr/Accordion'
 import Button from '@codegouvfr/react-dsfr/Button'
 import { clsx } from 'clsx'
+import { getTranslations } from 'next-intl/server'
 import { WrapperSimulator } from '~/app/(public)/simuler-mes-aides-au-logement/wrapper-simulator'
 import { getGlobalQuestionsAnswers } from '~/server/questions-answers/get-global-questions-answers'
+import { getCanonicalUrl } from '~/utils/canonical'
 import styles from './simuler-mes-aides-au-logement.module.css'
+
+export const generateMetadata = async () => {
+  const t = await getTranslations('metadata')
+  return {
+    title: t('simulateAids.title'),
+    description: t('simulateAids.description'),
+    alternates: { canonical: getCanonicalUrl('/simuler-mes-aides-au-logement') },
+  }
+}
 
 export default async function SimulateAccommodationAids() {
   const questionsAnswers = await getGlobalQuestionsAnswers()
