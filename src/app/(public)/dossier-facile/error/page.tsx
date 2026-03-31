@@ -13,6 +13,10 @@ const errorMessages: Record<string, string> = {
   expired_state: 'La session de connexion a expiré. Veuillez réessayer.',
   user_not_found: 'Votre compte utilisateur est introuvable.',
   sync_failed: 'La synchronisation avec DossierFacile a échoué. Veuillez réessayer ultérieurement.',
+  doc_invalid_link: 'Le lien utilisé est incomplet ou malformé.',
+  doc_not_found: 'Ce document n\u2019existe plus ou a été supprimé.',
+  doc_unavailable: 'Le service DossierFacile n\u2019a pas pu fournir le document. Veuillez réessayer dans quelques instants.',
+  doc_expired: 'Ce lien n\u2019est plus valide. Retournez sur la page de candidature et cliquez à nouveau sur le document.',
 }
 
 const DEFAULT_ERROR_MESSAGE = 'Une erreur est survenue lors de la connexion à DossierFacile. Veuillez réessayer.'

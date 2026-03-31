@@ -1,5 +1,6 @@
 import { TRPCError } from '@trpc/server'
 import { and, asc, desc, eq, gt, ilike, inArray, or, sql } from 'drizzle-orm'
+import { SignJWT } from 'jose'
 import { z } from 'zod'
 import { transformTypologiesToFlat, ZCreateResidence } from '~/schemas/accommodations/create-residence'
 import { ZUpdateResidence } from '~/schemas/accommodations/update-residence'
@@ -8,12 +9,13 @@ import { db } from '~/server/db'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { user } from '~/server/db/schema/auth'
 import { cities } from '~/server/db/schema/cities'
-import { dossierFacileApplications, dossierFacileTenants } from '~/server/db/schema/dossier-facile'
+import { dossierFacileApplications, dossierFacileDocuments, dossierFacileTenants } from '~/server/db/schema/dossier-facile'
 import { owners } from '~/server/db/schema/owners'
 import { notifyAccommodationCreated, notifyAccommodationUpdated } from '~/server/services/mattermost'
 import { computeDerivedFields, generateSlug, geocodeAddress } from '~/server/trpc/utils/accommodation-helpers'
 import { AVAILABILITY_FIELD_MAP, mapFields, UPDATE_FIELD_MAP } from '~/server/trpc/utils/field-mapping'
 import { resolveCityId } from '~/server/trpc/utils/resolve-city'
+import { getJwtSecret } from '~/server/utils/jwt-secret'
 import { findAvailableSlug } from '~/server/utils/slug'
 import { createTRPCRouter, ownerProcedure } from '../init'
 import { mapToGeoJsonFeature, priceMaxComputed } from './accommodations'
@@ -36,6 +38,25 @@ async function getOrCreateOwner(userId: string, userName: string) {
   await db.update(user).set({ ownerId: created.id }).where(eq(user.id, userId))
 
   return created
+}
+
+async function verifyOwnerAccess(userId: string, accommodationSlug: string) {
+  const usr = await db.query.user.findFirst({
+    where: eq(user.id, userId),
+    with: { owner: true },
+  })
+  const isAdmin = usr?.role === 'admin'
+
+  const [accommodation] = await db
+    .select({ ownerId: accommodations.ownerId })
+    .from(accommodations)
+    .where(eq(accommodations.slug, accommodationSlug))
+    .limit(1)
+
+  if (!accommodation) throw new TRPCError({ code: 'NOT_FOUND', message: 'Accommodation not found' })
+  if (!isAdmin && (!usr?.owner || accommodation.ownerId !== usr.owner.id)) {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'You do not own this accommodation' })
+  }
 }
 
 async function getOwnerForUser(userId: string) {
@@ -536,7 +557,6 @@ export const bailleurRouter = createTRPCRouter({
             apartmentType: dossierFacileApplications.apartmentType,
             status: dossierFacileApplications.status,
             createdAt: dossierFacileApplications.createdAt,
-            pdfUrl: dossierFacileTenants.pdfUrl,
             accommodationSlug: dossierFacileApplications.accommodationSlug,
           })
           .from(dossierFacileApplications)
@@ -611,17 +631,78 @@ export const bailleurRouter = createTRPCRouter({
       reviewedAt: application.reviewedAt,
       studentName: application.tenant.name ?? tenantUser?.name ?? null,
       studentEmail: tenantUser?.email ?? null,
-      tenantUrl: application.tenant.url,
-      pdfUrl: application.tenant.pdfUrl,
+      dfTenantId: application.tenant.id,
+      hasTenantUrl: !!application.tenant.url,
+      hasPdfUrl: !!application.tenant.pdfUrl,
       tenantStatus: application.tenant.status,
       guarantorCount: application.tenant.guarantorCount ?? 0,
       documents: {
-        tenant: tenantDocs.filter((d) => d.ownerType === 'tenant'),
-        guarantor: tenantDocs.filter((d) => d.ownerType === 'guarantor'),
+        tenant: tenantDocs.filter((d) => d.ownerType === 'tenant').map(({ url: _url, ...rest }) => rest),
+        guarantor: tenantDocs.filter((d) => d.ownerType === 'guarantor').map(({ url: _url, ...rest }) => rest),
       },
       accommodation: mapToGeoJsonFeature(accommodation as unknown as Record<string, unknown>),
     }
   }),
+
+  getDocumentSignedUrl: ownerProcedure
+    .input(
+      z.object({
+        type: z.enum(['tenantPdf', 'tenantUrl', 'document']),
+        tenantId: z.string().uuid().optional(),
+        documentId: z.string().uuid().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const REDIRECT_TTL = '60s'
+
+      let targetId: string
+
+      if (input.type === 'document') {
+        if (!input.documentId) throw new TRPCError({ code: 'BAD_REQUEST', message: 'documentId is required' })
+
+        const doc = await db.query.dossierFacileDocuments.findFirst({
+          where: eq(dossierFacileDocuments.id, input.documentId),
+          columns: { id: true, tenantId: true },
+        })
+        if (!doc) throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' })
+
+        // Verify access via tenant
+        const tenant = await db.query.dossierFacileTenants.findFirst({
+          where: eq(dossierFacileTenants.id, doc.tenantId),
+          columns: { id: true },
+        })
+        if (!tenant) throw new TRPCError({ code: 'NOT_FOUND' })
+
+        const application = await db.query.dossierFacileApplications.findFirst({
+          where: eq(dossierFacileApplications.tenantId, tenant.id),
+          columns: { accommodationSlug: true },
+        })
+        if (!application) throw new TRPCError({ code: 'NOT_FOUND' })
+
+        await verifyOwnerAccess(ctx.session.user.id, application.accommodationSlug)
+        targetId = input.documentId
+      } else {
+        if (!input.tenantId) throw new TRPCError({ code: 'BAD_REQUEST', message: 'tenantId is required' })
+
+        const application = await db.query.dossierFacileApplications.findFirst({
+          where: eq(dossierFacileApplications.tenantId, input.tenantId),
+          columns: { accommodationSlug: true },
+        })
+        if (!application) throw new TRPCError({ code: 'NOT_FOUND' })
+
+        await verifyOwnerAccess(ctx.session.user.id, application.accommodationSlug)
+        targetId = input.tenantId
+      }
+
+      const token = await new SignJWT({ urlType: input.type, targetId })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setSubject(ctx.session.user.id)
+        .setExpirationTime(REDIRECT_TTL)
+        .setIssuedAt()
+        .sign(getJwtSecret())
+
+      return { redirectUrl: `/api/df-redirect?token=${token}` }
+    }),
 
   updateCandidatureStatus: ownerProcedure
     .input(

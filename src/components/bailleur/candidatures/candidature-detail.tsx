@@ -9,22 +9,25 @@ import { type ReactNode } from 'react'
 import { CandidatureDetailAccommodation } from '~/components/bailleur/candidatures/candidature-detail-accommodation'
 import { CandidatureDetailDossier } from '~/components/bailleur/candidatures/candidature-detail-dossier'
 import { CandidatureDetailSuivi } from '~/components/bailleur/candidatures/candidature-detail-suivi'
+import { useSignedDocumentUrl } from '~/hooks/use-signed-document-url'
 import { TAccomodationCard } from '~/schemas/accommodations/accommodations'
 import { useTRPC } from '~/server/trpc/client'
 
 const TabLayout = ({
   children,
-  pdfUrl,
+  dfTenantId,
+  hasPdfUrl,
   accommodation,
 }: {
-  pdfUrl: string | null
+  dfTenantId: string
+  hasPdfUrl: boolean
   accommodation: TAccomodationCard
   children: ReactNode
 }) => (
   <div className="fr-grid-row fr-grid-row--gutters">
     <div className="fr-col-12 fr-col-md-7">{children}</div>
     <div className="fr-col-12 fr-col-md-5">
-      <CandidatureDetailAccommodation accommodationCard={accommodation} pdfUrl={pdfUrl} />
+      <CandidatureDetailAccommodation accommodationCard={accommodation} dfTenantId={dfTenantId} hasPdfUrl={hasPdfUrl} />
     </div>
   </div>
 )
@@ -36,6 +39,7 @@ interface CandidatureDetailProps {
 export const CandidatureDetail = ({ id }: CandidatureDetailProps) => {
   const trpc = useTRPC()
   const { data: candidature, isLoading } = useQuery(trpc.bailleur.getCandidature.queryOptions({ id }))
+  const { openDocument, isLoading: isOpeningDocument } = useSignedDocumentUrl()
 
   if (isLoading) {
     return (
@@ -60,14 +64,15 @@ export const CandidatureDetail = ({ id }: CandidatureDetailProps) => {
 
       <div className="fr-flex fr-justify-content-space-between fr-align-items-center fr-mb-4w">
         <h1 className="fr-h2 fr-mb-0">Candidature de {candidature.studentName ?? 'Candidat'}</h1>
-        {candidature.tenantUrl && (
+        {candidature.hasTenantUrl && (
           <Button
             priority="primary"
             iconId="ri-external-link-line"
             iconPosition="right"
-            linkProps={{ href: candidature.tenantUrl, target: '_blank', rel: 'noopener noreferrer' }}
+            onClick={() => openDocument('tenantUrl', candidature.dfTenantId)}
+            disabled={isOpeningDocument}
           >
-            Consulter le DossierFacile
+            {isOpeningDocument ? 'Ouverture...' : 'Consulter le DossierFacile'}
           </Button>
         )}
       </div>
@@ -81,7 +86,8 @@ export const CandidatureDetail = ({ id }: CandidatureDetailProps) => {
             content: (
               <TabLayout
                 accommodation={candidature.accommodation}
-                pdfUrl={candidature.pdfUrl}
+                dfTenantId={candidature.dfTenantId}
+                hasPdfUrl={candidature.hasPdfUrl}
                 children={<CandidatureDetailDossier apartmentType={candidature.apartmentType} />}
               />
             ),
@@ -91,7 +97,8 @@ export const CandidatureDetail = ({ id }: CandidatureDetailProps) => {
             content: (
               <TabLayout
                 accommodation={candidature.accommodation}
-                pdfUrl={candidature.pdfUrl}
+                dfTenantId={candidature.dfTenantId}
+                hasPdfUrl={candidature.hasPdfUrl}
                 children={<CandidatureDetailSuivi status={candidature.status} />}
               />
             ),

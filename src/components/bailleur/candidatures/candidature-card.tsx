@@ -22,7 +22,6 @@ interface CandidatureItem {
   apartmentType: string
   status: string
   createdAt: Date | string
-  pdfUrl: string | null
   accommodationSlug: string
 }
 
