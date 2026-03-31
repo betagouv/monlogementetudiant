@@ -57,6 +57,18 @@
       "title": "Calculer son budget étudiant",
       "description": "Gérez vos finances facilement et visualisez votre budget mensuel en temps réel"
     },
+    "alertAccommodation": {
+      "title": "Alertes logement étudiant - Recevez les nouvelles offres",
+      "description": "Restez informé des dernières annonces de logements étudiants. Recevez en temps réel les nouvelles offres disponibles dans votre zone académique."
+    },
+    "simulateAids": {
+      "title": "Simuler mes aides au logement étudiant",
+      "description": "Calculez vos aides au logement (APL, ALS, ALF) en quelques clics. Estimez le montant de vos aides pour votre logement étudiant."
+    },
+    "budgetSimulator": {
+      "title": "Simulateur de budget étudiant",
+      "description": "Simulez votre budget étudiant mensuel. Calculez vos dépenses et revenus pour mieux gérer vos finances."
+    },
     "title": "Mon Logement Étudiant",
     "description": "Mon Logement Étudiant - Votre guide à l'accès au logement étudiant",
     "workspace": {
