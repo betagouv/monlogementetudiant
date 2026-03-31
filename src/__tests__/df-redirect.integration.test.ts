@@ -23,15 +23,15 @@ async function callRedirect(token: string) {
   return GET(new Request(`http://localhost/api/df-redirect?token=${token}`))
 }
 
-async function createTestData(overrides?: { pdfUrl?: string; tenantUrl?: string }) {
+async function createTestData(overrides?: { pdfUrl?: string | null; tenantUrl?: string | null }) {
   const owner = await createOwner({ name: 'Owner DF', slug: 'owner-df', userId: 'test-owner-id' })
   const accommodation = await createAccommodation({ slug: 'res-df-test', ownerId: owner.id })
   const tenant = await createDossierFacileTenant({
     userId: 'test-user-id',
     tenantId: 'df-redirect-1',
     status: 'verified',
-    pdfUrl: overrides?.pdfUrl ?? 'https://dossierfacile.example.com/doc/12345.pdf',
-    url: overrides?.tenantUrl ?? 'https://dossierfacile.example.com/tenant/12345',
+    pdfUrl: overrides?.pdfUrl !== undefined ? overrides.pdfUrl : 'https://dossierfacile.example.com/doc/12345.pdf',
+    url: overrides?.tenantUrl !== undefined ? overrides.tenantUrl : 'https://dossierfacile.example.com/tenant/12345',
   })
   const application = await createDossierFacileApplication({
     tenantId: tenant.id,
@@ -62,7 +62,7 @@ describe('getCandidature does not expose raw URLs', () => {
   })
 
   it('returns hasPdfUrl=false when no PDF URL', async () => {
-    await createTestData({ pdfUrl: undefined })
+    await createTestData({ pdfUrl: null })
 
     const list = await ownerCaller.bailleur.listCandidatures({ page: 1 })
     const candidature = await ownerCaller.bailleur.getCandidature({ id: list.items[0].id })
@@ -149,7 +149,9 @@ describe('getDocumentSignedUrl', () => {
     const tenant = await createDossierFacileTenant({ userId: 'test-user-id', tenantId: 'df-other-1', status: 'verified' })
     await createDossierFacileApplication({ tenantId: tenant.id, accommodationSlug: accommodation.slug, apartmentType: 't1' })
 
-    await expect(ownerCaller.bailleur.getDocumentSignedUrl({ type: 'tenantPdf', tenantId: tenant.id })).rejects.toThrow('FORBIDDEN')
+    await expect(ownerCaller.bailleur.getDocumentSignedUrl({ type: 'tenantPdf', tenantId: tenant.id })).rejects.toThrow(
+      'You do not own this accommodation',
+    )
   })
 
   it('admin can access any document', async () => {
