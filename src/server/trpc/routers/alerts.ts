@@ -7,6 +7,7 @@ import { academies } from '~/server/db/schema/academies'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { cities } from '~/server/db/schema/cities'
 import { departments } from '~/server/db/schema/departments'
+import { owners } from '~/server/db/schema/owners'
 import { studentAlerts } from '~/server/db/schema/student-alerts'
 import { bboxSelect } from '~/server/trpc/utils/spatial-helpers'
 import { createTRPCRouter, userProcedure } from '../init'
@@ -40,7 +41,11 @@ function buildTerritoryCondition(alert: Pick<AlertMatchInput, 'cityId' | 'depart
 }
 
 function buildAlertMatchConditions(alert: AlertMatchInput): SQL[] {
-  const conditions: SQL[] = [eq(accommodations.published, true), sql`${accommodations.priceMin} <= ${alert.maxPrice}`]
+  const conditions: SQL[] = [
+    eq(accommodations.published, true),
+    sql`${accommodations.priceMin} <= ${alert.maxPrice}`,
+    sql`(${accommodations.ownerId} IS NULL OR ${accommodations.ownerId} NOT IN (SELECT ${owners.id} FROM ${owners} WHERE ${owners.slug} = 'crous'))`,
+  ]
 
   if (alert.hasColiving) {
     conditions.push(sql`${accommodations.nbColivingApartments} > 0`)

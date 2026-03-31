@@ -1,10 +1,12 @@
 import Alert from '@codegouvfr/react-dsfr/Alert'
 import Button from '@codegouvfr/react-dsfr/Button'
 import clsx from 'clsx'
+import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 import { TooltipHoverOnly } from '~/components/tooltip-hover-only'
 import { TAccomodationDetails } from '~/schemas/accommodations/accommodations'
 import { isPerPersonTypology } from '~/utils/is-per-person-typology'
+import { getSocialHousingApplicationLink } from '~/utils/social-housing-application-link'
 import styles from './accommodation-residence.module.css'
 
 type AccommodationResidenceProps = {
@@ -14,6 +16,7 @@ type AccommodationResidenceProps = {
 export const AccommodationResidence = async ({ accommodation }: AccommodationResidenceProps) => {
   const t = await getTranslations('accomodation')
   const { social_housing_required } = accommodation
+  const socialHousingApplicationLink = getSocialHousingApplicationLink(accommodation.department_code)
 
   const accommodationsTiles = [
     {
@@ -146,7 +149,16 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
                   {t.rich('socialHousingRequired', {
                     bold: (chunks) => <strong>{chunks}</strong>,
                   })}
+                  &nbsp;
                 </span>
+                <Link
+                  className="fr-link fr-link--icon-right fr-icon-arrow-right-line fr-text--sm fr-mt-1v"
+                  href={socialHousingApplicationLink.url}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  {t('socialHousingRequiredLink', { system: socialHousingApplicationLink.label })}
+                </Link>
               </div>
             )}
           </div>

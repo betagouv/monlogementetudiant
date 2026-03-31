@@ -11,6 +11,7 @@ const ZBaseAccommodationInfo = z.object({
   id: z.number(),
   address: z.string().max(255),
   city: z.string(),
+  department_code: z.string().max(3).optional(),
   name: z.string().max(250),
   postal_code: z.string().max(5),
   residence_type: z.enum(EResidenceType).nullable(),
