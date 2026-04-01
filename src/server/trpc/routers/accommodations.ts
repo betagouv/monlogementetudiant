@@ -571,7 +571,7 @@ export const accommodationsRouter = createTRPCRouter({
 
     const row = rows[0]
     if (!row) {
-      throw new TRPCError({ code: 'NOT_FOUND', message: `Accommodation not found: ${input.slug}` })
+      throw new TRPCError({ code: 'NOT_FOUND', message: `[accommodations.getBySlug] Accommodation not found: ${input.slug}` })
     }
 
     return {
