@@ -224,7 +224,6 @@ export const TypologyTabContent = (props: TypologyTabContentProps) => {
                 label=""
                 hintText={t('minimum')}
                 iconId="fr-icon-money-euro-circle-line"
-                disabled={isImported}
                 state={getError('price_min') ? 'error' : 'default'}
                 stateRelatedMessage={getError('price_min')?.message}
                 nativeInputProps={{
@@ -239,7 +238,6 @@ export const TypologyTabContent = (props: TypologyTabContentProps) => {
                 label=""
                 hintText={t('maximum')}
                 iconId="fr-icon-money-euro-circle-line"
-                disabled={isImported}
                 state={getError('price_max') ? 'error' : 'default'}
                 stateRelatedMessage={getError('price_max')?.message}
                 nativeInputProps={{
@@ -262,7 +260,6 @@ export const TypologyTabContent = (props: TypologyTabContentProps) => {
                 label=""
                 hintText={t('minimum')}
                 iconId="ri-shape-line"
-                disabled={isImported}
                 state={getError('superficie_min') ? 'error' : 'default'}
                 stateRelatedMessage={getError('superficie_min')?.message}
                 nativeInputProps={{
@@ -277,7 +274,6 @@ export const TypologyTabContent = (props: TypologyTabContentProps) => {
                 label=""
                 hintText={t('maximum')}
                 iconId="ri-shape-line"
-                disabled={isImported}
                 state={getError('superficie_max') ? 'error' : 'default'}
                 stateRelatedMessage={getError('superficie_max')?.message}
                 nativeInputProps={{
