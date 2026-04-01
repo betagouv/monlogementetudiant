@@ -1,4 +1,3 @@
-import { fr } from '@codegouvfr/react-dsfr'
 import Button from '@codegouvfr/react-dsfr/Button'
 import clsx from 'clsx'
 import { getTranslations } from 'next-intl/server'
@@ -11,7 +10,7 @@ export const CitiesSection = async () => {
   const sortedPopularCities = popularCities.sort((a, b) => b.nb_total_apartments - a.nb_total_apartments).slice(0, 16)
 
   return (
-    <section className={clsx(fr.cx('fr-container'), styles.citiesSection)}>
+    <section className={clsx('fr-container', 'fr-pl-0 fr-pr-0', styles.citiesSection)}>
       <div className={styles.citiesSectionContent}>
         <div className={styles.citiesIllustration}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
