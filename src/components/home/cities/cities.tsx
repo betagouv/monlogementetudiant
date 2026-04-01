@@ -8,7 +8,7 @@ import styles from './cities.module.css'
 export const CitiesSection = async () => {
   const tHome = await getTranslations('home')
   const popularCities = await getPopularCities()
-  const sortedPopularCities = popularCities.sort((a, b) => b.nb_total_apartments - a.nb_total_apartments).slice(0, 18)
+  const sortedPopularCities = popularCities.sort((a, b) => b.nb_total_apartments - a.nb_total_apartments).slice(0, 16)
 
   return (
     <section className={clsx(fr.cx('fr-container'), styles.citiesSection)}>
@@ -26,20 +26,19 @@ export const CitiesSection = async () => {
                 linkProps={{ href: `/trouver-un-logement-etudiant/ville/${city.name}${city.majority_crous ? '?crous=true' : ''}` }}
                 key={city.id}
                 priority="secondary"
-                size="small"
               >
                 {city.name}
               </Button>
             ))}
+            <Button
+              priority="tertiary"
+              linkProps={{ href: '/trouver-un-logement-etudiant' }}
+              iconPosition="right"
+              iconId="ri-arrow-right-line"
+            >
+              {tHome('cities.moreButton')}
+            </Button>
           </div>
-          <Button
-            priority="secondary"
-            linkProps={{ href: '/trouver-un-logement-etudiant' }}
-            iconPosition="right"
-            iconId="ri-arrow-right-line"
-          >
-            {tHome('cities.moreButton')}
-          </Button>
         </div>
       </div>
     </section>
