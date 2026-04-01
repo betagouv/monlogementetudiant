@@ -157,7 +157,7 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
                   rel="noopener noreferrer"
                   target="_blank"
                 >
-                  {t('socialHousingRequiredLink', { system: socialHousingApplicationLink.label })}
+                  {t('socialHousingRequiredLink')}
                 </Link>
               </div>
             )}
