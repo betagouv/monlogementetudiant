@@ -1,13 +1,11 @@
 /* Cities Section */
 .citiesSection {
   background-color: white;
-  padding: 2rem 0;
 }
 
 .citiesSectionContent {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
 }
 
 .citiesIllustration {
@@ -23,7 +21,7 @@
 .citiesContent {
   display: flex;
   flex-direction: column;
-  padding: 0 1em 0 0rem;
+  padding: 3rem;
   gap: 1.5rem;
 }
 
@@ -42,10 +40,6 @@
 }
 
 @media (min-width: 768px) {
-  .citiesSection {
-    padding: 4rem 0;
-  }
-
   .citiesSectionContent {
     flex-direction: row;
     align-items: stretch;
@@ -54,14 +48,14 @@
   .citiesIllustration {
     display: block;
     flex: 1 1 50%;
-    margin-left: -1.5rem;
-    padding-left: 0;
+    overflow: hidden;
   }
 
   .citiesImage {
-    width: calc(100% + 1.5rem);
+    width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: top center;
   }
 
   .citiesContent {

@@ -5,6 +5,10 @@
   z-index: 2;
 }
 
+.featureCard > * {
+  max-width: 456px;
+}
+
 .featureCardsGrid {
   display: grid;
   grid-template-columns: 1fr;
@@ -13,7 +17,12 @@
 
 .featureCardButtons {
   display: flex;
-  gap: 1rem;
+  gap: 2rem;
+  margin-top: 0.5rem;
+}
+
+.featureCardButtons > a {
+  flex-shrink: 0;
 }
 
 @media (min-width: 768px) {
@@ -69,11 +78,11 @@
 .featureCardLogos {
   display: flex;
   align-items: center;
-  margin-top: 0.5rem;
+  gap: 1rem;
 }
 
 @media (min-width: 768px) {
   .featureCard {
-    padding: 2.5rem 3rem; /* 40px vertical, 48px horizontal (fr-p-12w max DSFR) */
+    padding: 2.5rem 4rem;
   }
 }
