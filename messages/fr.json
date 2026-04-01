@@ -565,7 +565,7 @@
       "simulateAids": {
         "badge": "RECOMMANDÉ",
         "title": "Simulez vos aides au logement",
-        "description": "6 questions pour estimer vos droits et faciliter vos recherches de logement",
+        "description": "6 questions pour estimer vos droits au logement et faciliter vos recherches ",
         "button": "Simuler mes aides"
       },
       "calculateBudget": {
