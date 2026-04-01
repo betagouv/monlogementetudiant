@@ -138,7 +138,7 @@
       "title": "Équipements"
     },
     "socialHousingRequired": "Une <bold>demande de logement social</bold> est nécessaire pour intégrer la résidence.",
-    "socialHousingRequiredLink": "Faire une demande sur le {system}",
+    "socialHousingRequiredLink": "Faire une demande de logement social.",
     "descriptionTitle": "À propos du logement étudiant {title}",
     "title": "Logement étudiant {title} {cityFormatted}",
     "tags": {
