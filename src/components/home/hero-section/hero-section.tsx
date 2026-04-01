@@ -1,13 +1,18 @@
-import { fr } from '@codegouvfr/react-dsfr'
-import Image from 'next/image'
+import { colors, fr } from '@codegouvfr/react-dsfr'
 import { getTranslations } from 'next-intl/server'
+import Image from 'next/image'
 import { HeroSearchBar } from '~/components/home/hero-section/hero-search-bar'
 import styles from './hero-section.module.css'
 
 export const HeroSection = async () => {
   const tHome = await getTranslations('home')
   return (
-    <section className={styles.heroSection}>
+    <section
+      className={styles.heroSection}
+      style={{
+        backgroundColor: colors.decisions.background.alt.blueFrance.default,
+      }}
+    >
       <div className={styles.heroIllustrationLeft}>
         <Image
           src="/images/hero-illustration-left.svg"
