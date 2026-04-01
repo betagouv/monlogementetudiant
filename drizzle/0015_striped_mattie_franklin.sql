@@ -1,3 +1,4 @@
+SET CONSTRAINTS ALL IMMEDIATE;--> statement-breakpoint
 ALTER TABLE "accommodation_accommodation" ADD COLUMN "superficie_min_t1" integer;--> statement-breakpoint
 ALTER TABLE "accommodation_accommodation" ADD COLUMN "superficie_max_t1" integer;--> statement-breakpoint
 ALTER TABLE "accommodation_accommodation" ADD COLUMN "superficie_min_t1_bis" integer;--> statement-breakpoint
