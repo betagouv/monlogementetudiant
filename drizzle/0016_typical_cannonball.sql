@@ -12,7 +12,6 @@ UPDATE territories_department SET name = 'Guyane' WHERE code = '973' AND (name I
 UPDATE territories_department SET name = 'La Réunion' WHERE code = '974' AND (name IS NULL OR name = ''); --> statement-breakpoint
 UPDATE territories_department SET name = 'Mayotte' WHERE code = '976' AND (name IS NULL OR name = ''); --> statement-breakpoint
 UPDATE territories_department SET slug = LOWER(REPLACE(name, ' ', '-')); --> statement-breakpoint
-SET CONSTRAINTS ALL IMMEDIATE; --> statement-breakpoint
 ALTER TABLE territories_department ALTER COLUMN slug SET NOT NULL; --> statement-breakpoint
 ALTER TABLE territories_department ADD CONSTRAINT territories_department_slug_unique UNIQUE(slug); --> statement-breakpoint
 
