@@ -15,35 +15,6 @@ export const CommonFooter = async () => {
       expandedBbox: expandBbox(city.bbox.xmin, city.bbox.ymin, city.bbox.xmax, city.bbox.ymax),
     }))
 
-  const partnersLogos: NonNullable<FooterProps['partnersLogos']> = {
-    sub: [
-      {
-        alt: 'Crous - logo',
-        imgUrl: '/images/logo-crous.svg',
-        linkProps: {
-          href: 'https://www.lescrous.fr/',
-          title: 'Lien vers le site du CROUS',
-        },
-      },
-      {
-        alt: 'Beta.gouv - logo',
-        imgUrl: '/images/logo-beta-gouv.svg',
-        linkProps: {
-          href: 'https://beta.gouv.fr/',
-          title: 'Lien vers le site de beta.gouv',
-        },
-      },
-      {
-        alt: "Ministère de l'Enseignement Supérieur et de la Recherche - logo",
-        imgUrl: '/images/logo-esr.svg',
-        linkProps: {
-          href: 'https://www.enseignementsup-recherche.gouv.fr/',
-          title: "Lien vers le site du ministère de l'Enseignement Supérieur et de la Recherche",
-        },
-      },
-    ],
-  }
-
   const ITEMS_PER_COLUMN = 8
   const linkList = [
     {
@@ -110,6 +81,12 @@ export const CommonFooter = async () => {
       text: "Conditions générales d'utilisation",
     },
   ]
+
+  const linkListTitle = (
+    <span className="fr-text--bold fr-text--xs fr-pb-3v fr-mb-0" style={{ display: 'inline-block' }}>
+      Villes étudiantes
+    </span>
+  )
   return (
     <Footer
       classes={{
@@ -118,6 +95,7 @@ export const CommonFooter = async () => {
       }}
       brandTop={<BrandTop />}
       accessibility="non compliant"
+      linkListTitle={linkListTitle}
       linkList={linkList as NonNullable<FooterProps['linkList']>}
       homeLinkProps={{
         href: '/',
@@ -130,7 +108,6 @@ export const CommonFooter = async () => {
           {t('header.description')}
         </>
       }
-      partnersLogos={partnersLogos}
       bottomItems={bottomItems}
       termsLinkProps={{
         href: 'https://info.monlogementetudiant.beta.gouv.fr/mentions-legales/',

@@ -1,3 +1,4 @@
+import { colors } from '@codegouvfr/react-dsfr'
 import { getTranslations } from 'next-intl/server'
 import { CitiesSection } from '~/components/home/cities/cities'
 import { FacilitateSection } from '~/components/home/facilitate/facilitate'
@@ -24,9 +25,15 @@ export const generateMetadata = async () => {
 export default async function Home() {
   return (
     <>
-      <HeroSection />
-      <FeaturesSection />
-      <CitiesSection />
+      <div
+        style={{
+          backgroundColor: colors.decisions.background.alt.blueFrance.default,
+        }}
+      >
+        <HeroSection />
+        <FeaturesSection />
+        <CitiesSection />
+      </div>
       <FacilitateSection />
       <NewsSection />
       <PartnersSection />
