@@ -1,0 +1,24 @@
+/* FAQ Section */
+.faqSection {
+  padding: 2rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.faqContent {
+  width: 100%;
+  margin: 2rem 0;
+  text-align: left;
+}
+
+@media (min-width: 768px) {
+  .faqSection {
+    padding: 4rem 0;
+  }
+
+  .faqContent {
+    margin: 3rem 0;
+  }
+}

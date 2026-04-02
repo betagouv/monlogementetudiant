@@ -1,11 +1,10 @@
 .bannerContainer {
-  background-color: #9ef9be;
   display: flex;
+  border-bottom: 1px solid #e3e3fd;
 }
 
 .bannerText {
   margin: 0;
-  color: #1f6146;
 }
 
 .bannerContent {

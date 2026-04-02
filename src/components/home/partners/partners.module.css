@@ -1,0 +1,64 @@
+/* Partners Section */
+.partnersSection {
+  background-color: white;
+  display: flex;
+  flex: ;
+}
+
+.partnersLogos {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+  padding: 3rem;
+  align-items: center;
+  justify-items: center;
+  flex: 1;
+}
+
+.partnersLogos > * {
+  max-width: 472px;
+  width: 100%;
+}
+
+.partnersContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 4rem 5rem;
+  background-color: #5757ad;
+  color: white;
+  flex: 1;
+}
+
+.partnersContent > * {
+  width: 100%;
+}
+
+.partnersTitle {
+  margin: 0;
+  color: white;
+}
+
+.partnersHighlight {
+  color: #efcb3a !important;
+}
+
+.partnersContact {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.partnersAvatars {
+  display: flex;
+  position: relative;
+}
+
+.avatarOverlap {
+  margin-left: -12px;
+}
+
+.partnersButton {
+  color: white !important;
+  width: fit-content;
+}

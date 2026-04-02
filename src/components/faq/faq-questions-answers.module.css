@@ -1,7 +1,7 @@
 .accordionContainer {
   background-color: white;
   @media (min-width: 768px) {
-    padding: 2.5rem;
+    padding: 3rem 4rem;
   }
 
   @media (max-width: 768px) {
