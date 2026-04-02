@@ -28,6 +28,7 @@ export default async function Home() {
       <div
         style={{
           backgroundColor: colors.decisions.background.alt.blueFrance.default,
+          paddingBottom: '10rem',
         }}
       >
         <HeroSection />
