@@ -83,7 +83,7 @@ export const CommonFooter = async () => {
   ]
 
   const linkListTitle = (
-    <span className="fr-text--bold fr-text--xs fr-pb-3v fr-mb-0" style={{ display: 'inline-block' }}>
+    <span className="fr-text--bold fr-text--xs fr-m-0" style={{ paddingBottom: '12px', display: 'inline-block', fontSize: '12px' }}>
       Villes étudiantes
     </span>
   )

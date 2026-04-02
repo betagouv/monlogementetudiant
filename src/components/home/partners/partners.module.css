@@ -1,39 +1,46 @@
 /* Partners Section */
 .partnersSection {
-  background-color: #fcc63a;
-  padding: 2rem 0;
-}
-
-.partnersSectionContent {
+  background-color: white;
   display: flex;
-  flex-direction: column;
-  gap: 2rem;
+  flex: ;
 }
 
 .partnersLogos {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem;
-  background-color: white;
-  padding: 1.5rem;
-  border-radius: 8px;
+  gap: 2rem;
+  padding: 3rem;
   align-items: center;
   justify-items: center;
+  flex: 1;
+}
+
+.partnersLogos > * {
+  max-width: 472px;
+  width: 100%;
 }
 
 .partnersContent {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  padding: 4rem 5rem;
+  background-color: #5757ad;
+  color: white;
+  flex: 1;
+}
+
+.partnersContent > * {
+  width: 100%;
 }
 
 .partnersTitle {
   margin: 0;
-  color: #161616;
+  color: white;
 }
 
 .partnersHighlight {
-  color: #000091;
+  color: #efcb3a !important;
 }
 
 .partnersContact {
@@ -52,32 +59,6 @@
 }
 
 .partnersButton {
-  background-color: #161616 !important;
   color: white !important;
   width: fit-content;
-}
-
-.partnersButton:hover {
-  background-color: #333 !important;
-}
-
-@media (min-width: 768px) {
-  .partnersSection {
-    padding: 4rem 0;
-  }
-
-  .partnersSectionContent {
-    flex-direction: row;
-    align-items: center;
-  }
-
-  .partnersLogos {
-    flex: 0 0 45%;
-    padding: 2rem;
-  }
-
-  .partnersContent {
-    flex: 0 0 55%;
-    padding-left: 2rem;
-  }
 }
