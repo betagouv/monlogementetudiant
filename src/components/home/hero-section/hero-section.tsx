@@ -1,6 +1,6 @@
 import { colors, fr } from '@codegouvfr/react-dsfr'
-import { getTranslations } from 'next-intl/server'
 import Image from 'next/image'
+import { getTranslations } from 'next-intl/server'
 import { HeroSearchBar } from '~/components/home/hero-section/hero-search-bar'
 import styles from './hero-section.module.css'
 

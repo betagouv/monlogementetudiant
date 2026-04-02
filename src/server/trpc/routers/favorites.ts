@@ -6,7 +6,6 @@ import { accommodations } from '~/server/db/schema/accommodations'
 import { favoriteAccommodations } from '~/server/db/schema/favorite-accommodations'
 import { owners } from '~/server/db/schema/owners'
 import { createTRPCRouter, userProcedure } from '../init'
-import { owners } from '~/server/db/schema/owners'
 import { mapToGeoJsonFeature, priceMaxComputed } from './accommodations'
 
 export const favoritesRouter = createTRPCRouter({
