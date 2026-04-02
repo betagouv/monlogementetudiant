@@ -5,10 +5,26 @@
   color: white;
 }
 
+.highlight {
+  color: #fcc63a;
+  margin: 0;
+}
+
 .facilitateSectionContent {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  max-width: 1320px;
+}
+
+.faciliteSectionContentLeft {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  /* gap: 2rem; */
+}
+
+.faciliteSectionContentLeft > div:first-child {
+  padding-left: 7.5rem;
 }
 
 .facilitateIllustration {
@@ -37,13 +53,51 @@
 
 .facilitateItem {
   display: flex;
-  align-items: center;
   font-size: 1.125rem;
   color: white;
 }
 
-.facilitateItem span {
+.facilitateItem > div:nth-child(2) > span:nth-child(1) {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.5rem;
+}
+
+.facilitateItem > div:nth-child(2) > span:nth-child(2) {
+  padding-top: 1rem;
   font-size: 1.5rem;
+  font-weight: 400;
+  line-height: 1.25rem;
+}
+
+.facilitateIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.facilitateItemBefore {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  align-items: center;
+  margin-right: 2rem;
+}
+
+.facilitateItemBefore > div:first-child {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.facilitateItemBefore > div:nth-child(2) {
+  height: 48px;
+  width: 1px;
+  border-right: 1px solid white;
 }
 
 .facilitateButton {
@@ -58,12 +112,16 @@
 
 @media (min-width: 768px) {
   .facilitateSection {
-    padding: 4rem 0;
+    padding: 4rem 7rem 5rem 0;
   }
 
   .facilitateSectionContent {
     flex-direction: row;
     align-items: center;
+  }
+
+  .facilitateSetionontentLeft {
+    width: 100%;
   }
 
   .facilitateIllustration {
@@ -73,7 +131,8 @@
   }
 
   .facilitateContent {
-    flex: 0 0 50%;
-    padding-left: 2rem;
+    width: 100%;
+    min-width: 509px;
+    padding: 3.75rem 0;
   }
 }
