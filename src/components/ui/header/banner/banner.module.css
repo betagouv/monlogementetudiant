@@ -1,5 +1,6 @@
 .bannerContainer {
   display: flex;
+  border-bottom: 1px solid #e3e3fd;
 }
 
 .bannerText {
