@@ -595,13 +595,19 @@
       "illustrationAlt": "Étudiante sur canapé avec laptop"
     },
     "facilitate": {
-      "title": "Tout pour faciliter ma recherche de logement",
+      "title": "Tout pour faciliter ma",
+      "titleHighlight": "recherche de logement",
       "items": {
         "offers": "Offres de logement",
+        "offersDescription": "Plus de 600 résidences étudiantes disponibles",
         "simulator": "Simulateur d'aides au logement",
+        "simulatorDescription": "Plus de x0 organismes d'aides référencés",
         "calculator": "Calculatrice de budget étudiant",
+        "calculatorDescription": "Quelques clics pour tout maîtriser",
         "alerts": "Alertes logement",
-        "account": "Espace connecté Étudiant"
+        "alertsDescription": "Notifications en temps réel des disponibilités",
+        "account": "Espace connecté Étudiant",
+        "accountDescription": "Favoris, alertes, to-do list et bien plus."
       },
       "button": "Créer un compte"
     },
