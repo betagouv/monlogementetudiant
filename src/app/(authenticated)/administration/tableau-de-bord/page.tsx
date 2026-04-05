@@ -1,11 +1,24 @@
 'use client'
 
 import Alert from '@codegouvfr/react-dsfr/Alert'
+import Button from '@codegouvfr/react-dsfr/Button'
+import Input from '@codegouvfr/react-dsfr/Input'
+import { createModal } from '@codegouvfr/react-dsfr/Modal'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import clsx from 'clsx'
+import Image from 'next/image'
+import { useState } from 'react'
 import { Cell, Label, Pie, PieChart, ResponsiveContainer } from 'recharts'
+import { useDebounce } from 'use-debounce'
+import { createToast } from '~/components/ui/createToast'
+import { useAdminMyLinkedOwners } from '~/hooks/use-admin-my-linked-owners'
 import { useAdminStats } from '~/hooks/use-admin-stats'
+import { useTRPC, useTRPCClient } from '~/server/trpc/client'
+import { authClient } from '~/services/better-auth-client'
+import { getFaviconUrl } from '~/utils/get-favicon-url'
 import { sPluriel } from '~/utils/sPluriel'
 import styles from '../administration.module.css'
+import dashboardStyles from './tableau-de-bord.module.css'
 
 export default function DashboardPage() {
   const { data, isLoading } = useAdminStats()
@@ -64,6 +77,8 @@ export default function DashboardPage() {
         ))}
       </div>
 
+      <MyLinkedOwners />
+
       <div className={clsx(styles.grid2, 'fr-mb-3w')}>
         <RoleBreakdown data={data} />
         <OccupationChart data={data} />
@@ -73,6 +88,212 @@ export default function DashboardPage() {
         <RecentActivity />
       </div>
     </>
+  )
+}
+
+const AVATAR_COLORS = ['#000091', '#6A6AF4', '#009081', '#E4794A', '#CE614A', '#A558A0', '#C3992A', '#417DC4']
+
+function getColorForName(name: string) {
+  let hash = 0
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash)
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
+}
+
+function getInitials(name: string) {
+  return name
+    .split(/\s+/)
+    .map((w) => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
+}
+
+const linkSelfToOwnerModal = createModal({
+  id: 'link-self-to-owner-modal',
+  isOpenedByDefault: false,
+})
+
+function MyLinkedOwners() {
+  const { data: session } = authClient.useSession()
+  const { data: linkedOwners, isLoading } = useAdminMyLinkedOwners()
+  const trpc = useTRPC()
+  const trpcClient = useTRPCClient()
+  const queryClient = useQueryClient()
+
+  const unlinkMutation = useMutation({
+    mutationFn: (ownerId: number) => trpcClient.admin.users.unlinkAdminFromOwner.mutate({ userId: session!.user.id, ownerId }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: trpc.admin.users.myLinkedOwners.queryKey() })
+      createToast({ priority: 'success', message: 'Délié du gestionnaire' })
+    },
+    onError: (error) => {
+      createToast({ priority: 'error', message: error.message || 'Erreur lors de la déliaison' })
+    },
+  })
+
+  return (
+    <div className={clsx(styles.card, 'fr-mb-3w')}>
+      <div className={styles.cardHeader}>
+        <span className={styles.cardTitle}>
+          <span className="fr-icon-building-line fr-icon--sm fr-mr-1w" aria-hidden="true" />
+          Gestionnaire(s) associé(s) à mon compte
+        </span>
+        <Button iconId="fr-icon-add-line" size="small" priority="secondary" onClick={() => linkSelfToOwnerModal.open()}>
+          Se lier à un gestionnaire
+        </Button>
+      </div>
+      <div>
+        {isLoading ? (
+          <p className="fr-text--sm fr-text-mention--grey fr-p-3w">Chargement...</p>
+        ) : !linkedOwners || linkedOwners.length === 0 ? (
+          <p className="fr-text--sm fr-text-mention--grey fr-p-3w">Vous n'êtes rattaché à aucun gestionnaire</p>
+        ) : (
+          linkedOwners.map((owner) => (
+            <LinkedOwnerItem
+              key={owner.id}
+              owner={owner}
+              onUnlink={() => unlinkMutation.mutate(owner.id)}
+              isUnlinking={unlinkMutation.isPending}
+            />
+          ))
+        )}
+      </div>
+      {session && <LinkSelfToOwnerDialog userId={session.user.id} />}
+    </div>
+  )
+}
+
+function LinkedOwnerItem({
+  owner,
+  onUnlink,
+  isUnlinking,
+}: {
+  owner: { id: number; name: string; slug: string; url: string | null; imageBase64: string | null }
+  onUnlink: () => void
+  isUnlinking: boolean
+}) {
+  const [imgError, setImgError] = useState(false)
+  const faviconUrl = owner.url ? getFaviconUrl(owner.url) : null
+
+  return (
+    <div className={styles.linkedOwnerItem}>
+      {owner.imageBase64 && !imgError ? (
+        <div className={clsx(styles.linkedOwnerAvatar, dashboardStyles.avatarImage)}>
+          <Image src={owner.imageBase64} alt={owner.name} width={40} height={40} onError={() => setImgError(true)} unoptimized />
+        </div>
+      ) : faviconUrl && !imgError ? (
+        <div className={clsx(styles.linkedOwnerAvatar, dashboardStyles.avatarImage)}>
+          <Image src={faviconUrl} alt={owner.name} width={40} height={40} onError={() => setImgError(true)} unoptimized />
+        </div>
+      ) : (
+        <div className={styles.linkedOwnerAvatar} style={{ background: getColorForName(owner.name) }}>
+          {getInitials(owner.name)}
+        </div>
+      )}
+      <div className={styles.linkedOwnerInfo}>
+        <div className={styles.linkedOwnerName}>{owner.name}</div>
+        <div className={styles.linkedOwnerSlug}>{owner.slug}</div>
+      </div>
+      <div className={styles.linkedOwnerActions}>
+        <Button priority="tertiary no outline" size="small" linkProps={{ href: `/administration/bailleurs/${owner.id}` }}>
+          Voir
+        </Button>
+        <Button priority="tertiary no outline" size="small" onClick={onUnlink} disabled={isUnlinking}>
+          Délier
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function LinkSelfToOwnerDialog({ userId }: { userId: string }) {
+  const trpc = useTRPC()
+  const trpcClient = useTRPCClient()
+  const queryClient = useQueryClient()
+
+  const [search, setSearch] = useState('')
+  const [selectedOwnerId, setSelectedOwnerId] = useState<number | null>(null)
+  const [debouncedSearch] = useDebounce(search, 300)
+
+  const { data: ownersList } = useQuery({
+    ...trpc.admin.owners.list.queryOptions({ page: 1, search: debouncedSearch }),
+    enabled: debouncedSearch.length >= 2,
+  })
+
+  const linkMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedOwnerId) return
+      await trpcClient.admin.users.linkAdminToOwner.mutate({ userId, ownerId: selectedOwnerId })
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: trpc.admin.users.myLinkedOwners.queryKey() })
+      createToast({ priority: 'success', message: 'Lié au gestionnaire avec succès' })
+      linkSelfToOwnerModal.close()
+      resetState()
+    },
+    onError: (error) => {
+      createToast({ priority: 'error', message: error.message || 'Erreur lors de la liaison' })
+    },
+  })
+
+  const resetState = () => {
+    setSearch('')
+    setSelectedOwnerId(null)
+  }
+
+  const owners = ownersList?.items ?? []
+
+  return (
+    <linkSelfToOwnerModal.Component title="Se lier à un gestionnaire" size="large">
+      <Input
+        label="Rechercher un gestionnaire"
+        classes={{ root: 'fr-mb-2w' }}
+        nativeInputProps={{
+          value: search,
+          onChange: (e) => setSearch(e.target.value),
+          placeholder: 'Rechercher par nom...',
+        }}
+      />
+
+      {debouncedSearch.length >= 2 && (
+        <div className={dashboardStyles.selectorList}>
+          {owners.map((o) => {
+            const isSelected = selectedOwnerId === o.id
+            return (
+              <button
+                type="button"
+                key={o.id}
+                onClick={() => setSelectedOwnerId(o.id)}
+                className={isSelected ? dashboardStyles.selectorItemSelected : dashboardStyles.selectorItem}
+              >
+                <div className={dashboardStyles.selectorAvatar} style={{ background: getColorForName(o.name) }}>
+                  {getInitials(o.name)}
+                </div>
+                <div className={dashboardStyles.selectorInfo}>
+                  <div className={dashboardStyles.selectorName}>{o.name}</div>
+                  <div className={dashboardStyles.selectorSlug}>{o.slug}</div>
+                </div>
+                <div className={isSelected ? dashboardStyles.selectorRadioSelected : dashboardStyles.selectorRadio} />
+              </button>
+            )
+          })}
+          {owners.length === 0 && (
+            <p className={clsx('fr-text--sm fr-text-mention--grey', dashboardStyles.selectorEmpty)}>Aucun gestionnaire trouvé</p>
+          )}
+        </div>
+      )}
+
+      <div className="fr-flex fr-flex-gap-2v">
+        <Button onClick={() => linkMutation.mutate()} disabled={!selectedOwnerId || linkMutation.isPending}>
+          {linkMutation.isPending ? 'En cours...' : 'Se lier au gestionnaire sélectionné'}
+        </Button>
+        <Button priority="secondary" onClick={() => linkSelfToOwnerModal.close()}>
+          Annuler
+        </Button>
+      </div>
+    </linkSelfToOwnerModal.Component>
   )
 }
 
@@ -133,8 +354,8 @@ function OccupationChart({ data }: { data: ReturnType<typeof useAdminStats>['dat
       <div className={styles.cardHeader}>
         <span className={styles.cardTitle}>Occupation des résidences</span>
       </div>
-      <div className="fr-p-3w" style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-        <div style={{ width: 180, height: 180, flexShrink: 0 }}>
+      <div className={clsx('fr-p-3w', dashboardStyles.occupationContent)}>
+        <div className={dashboardStyles.occupationChartWrapper}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -167,12 +388,12 @@ function OccupationChart({ data }: { data: ReturnType<typeof useAdminStats>['dat
             </PieChart>
           </ResponsiveContainer>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <div className={dashboardStyles.occupationLegend}>
           {chartData.map((entry) => {
             const pct = Math.round((entry.value / total) * 1000) / 10
             return (
-              <div key={entry.name} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <div style={{ width: 12, height: 12, borderRadius: 2, background: entry.color, flexShrink: 0 }} />
+              <div key={entry.name} className={dashboardStyles.occupationLegendItem}>
+                <div className={dashboardStyles.occupationLegendDot} style={{ background: entry.color }} />
                 <div>
                   <div className="fr-text--sm fr-text--bold fr-mb-0">
                     {entry.value.toLocaleString('fr-FR')} {entry.name.toLowerCase()}

@@ -4,6 +4,7 @@ import { getTranslations } from 'next-intl/server'
 import { z } from 'zod'
 import { db } from '~/server/db'
 import { accommodations } from '~/server/db/schema/accommodations'
+import { adminOwnerLinks } from '~/server/db/schema/admin-owner-links'
 import { user } from '~/server/db/schema/auth'
 import { cities } from '~/server/db/schema/cities'
 import { owners } from '~/server/db/schema/owners'
@@ -85,7 +86,7 @@ const usersRouter = createTRPCRouter({
   getById: adminProcedure.input(z.object({ id: z.string() })).query(async ({ input }) => {
     const result = await db.query.user.findFirst({
       where: eq(user.id, input.id),
-      with: { owner: true },
+      with: { owner: true, adminOwnerLinks: { with: { owner: true } } },
     })
 
     if (!result) {
@@ -192,6 +193,52 @@ const usersRouter = createTRPCRouter({
 
     return updated
   }),
+
+  linkAdminToOwner: adminProcedure.input(z.object({ userId: z.string(), ownerId: z.number() })).mutation(async ({ input }) => {
+    const targetUser = await db.query.user.findFirst({ where: eq(user.id, input.userId) })
+    if (!targetUser) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: (await getAdminErrorTranslations())('userNotFound') })
+    }
+    if (targetUser.role !== 'admin') {
+      throw new TRPCError({ code: 'PRECONDITION_FAILED', message: "L'utilisateur doit avoir le rôle admin" })
+    }
+
+    const [created] = await db
+      .insert(adminOwnerLinks)
+      .values({ userId: input.userId, ownerId: input.ownerId })
+      .onConflictDoNothing({ target: [adminOwnerLinks.userId, adminOwnerLinks.ownerId] })
+      .returning()
+
+    return created ?? { userId: input.userId, ownerId: input.ownerId }
+  }),
+
+  unlinkAdminFromOwner: adminProcedure.input(z.object({ userId: z.string(), ownerId: z.number() })).mutation(async ({ input }) => {
+    const [deleted] = await db
+      .delete(adminOwnerLinks)
+      .where(and(eq(adminOwnerLinks.userId, input.userId), eq(adminOwnerLinks.ownerId, input.ownerId)))
+      .returning()
+
+    if (!deleted) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Lien admin-gestionnaire non trouvé' })
+    }
+
+    return deleted
+  }),
+
+  myLinkedOwners: adminProcedure.query(async ({ ctx }) => {
+    const links = await db.query.adminOwnerLinks.findMany({
+      where: eq(adminOwnerLinks.userId, ctx.session.user.id),
+      with: { owner: true },
+    })
+
+    return links.map(({ owner }) => {
+      const { image, ...rest } = owner
+      return {
+        ...rest,
+        imageBase64: image ? `data:image/jpeg;base64,${Buffer.from(image).toString('base64')}` : null,
+      }
+    })
+  }),
 })
 
 const ownersRouter = createTRPCRouter({
@@ -258,6 +305,13 @@ const ownersRouter = createTRPCRouter({
       with: {
         users: {
           columns: { id: true, email: true, name: true, firstname: true, lastname: true, role: true },
+        },
+        adminOwnerLinks: {
+          with: {
+            user: {
+              columns: { id: true, email: true, name: true, firstname: true, lastname: true, role: true },
+            },
+          },
         },
       },
     })
@@ -357,8 +411,9 @@ const ownersRouter = createTRPCRouter({
       })
     }
 
-    // Unlink users
+    // Unlink users and admin links
     await db.update(user).set({ ownerId: null }).where(eq(user.ownerId, input.id))
+    await db.delete(adminOwnerLinks).where(eq(adminOwnerLinks.ownerId, input.id))
 
     const [deleted] = await db.delete(owners).where(eq(owners.id, input.id)).returning({ id: owners.id })
     if (!deleted) {

@@ -2,6 +2,7 @@ import { and, eq, ilike, sql } from 'drizzle-orm'
 import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
 import { db } from '~/server/db'
 import { accommodations } from '~/server/db/schema/accommodations'
+import { adminOwnerLinks } from '~/server/db/schema/admin-owner-links'
 import { user } from '~/server/db/schema/auth'
 import { mapToGeoJsonFeature, priceMaxComputed } from '~/server/trpc/routers/accommodations'
 import { getQueryClient } from '~/server/trpc/server'
@@ -9,13 +10,18 @@ import { getServerSession } from '~/services/better-auth'
 
 const PAGE_SIZE = 20
 
-export const myAccommodationsQueryKey = (page?: string | null, disponible?: string | null, recherche?: string | null) =>
-  ['my-accommodations', page ? Number(page) : null, disponible === 'true' ? true : null, recherche || null] as const
+export const myAccommodationsQueryKey = (
+  page?: string | null,
+  disponible?: string | null,
+  recherche?: string | null,
+  bailleur?: string | null,
+) => ['my-accommodations', page ? Number(page) : null, disponible === 'true' ? true : null, recherche || null, bailleur || null] as const
 
 export const getMyAccommodations = async (searchParams?: {
   page?: string
   disponible?: string
   recherche?: string
+  bailleur?: string
 }): Promise<TGetAccomodationsResponse> => {
   const auth = await getServerSession()
 
@@ -23,8 +29,34 @@ export const getMyAccommodations = async (searchParams?: {
     throw new Error('Unauthorized')
   }
 
-  const usr = await db.query.user.findFirst({ where: eq(user.id, auth.user.id), with: { owner: true } })
-  const owner = usr?.owner
+  let owner: { id: number; name: string; slug: string; url: string | null } | null = null
+
+  if (auth.user.role === 'admin' && searchParams?.bailleur) {
+    // Admin with bailleur query param: verify the admin is linked to this owner
+    const requestedOwnerId = Number(searchParams.bailleur)
+    if (!isNaN(requestedOwnerId)) {
+      const link = await db.query.adminOwnerLinks.findFirst({
+        where: and(eq(adminOwnerLinks.userId, auth.user.id), eq(adminOwnerLinks.ownerId, requestedOwnerId)),
+        with: { owner: true },
+      })
+      if (link) {
+        owner = link.owner
+      }
+    }
+  } else if (auth.user.role === 'admin') {
+    // Admin without bailleur param: use first linked owner
+    const firstLink = await db.query.adminOwnerLinks.findFirst({
+      where: eq(adminOwnerLinks.userId, auth.user.id),
+      with: { owner: true },
+    })
+    if (firstLink) {
+      owner = firstLink.owner
+    }
+  } else {
+    // Owner role: use user.ownerId as before
+    const usr = await db.query.user.findFirst({ where: eq(user.id, auth.user.id), with: { owner: true } })
+    owner = usr?.owner ?? null
+  }
 
   if (!owner) {
     return {
@@ -96,11 +128,16 @@ export const getMyAccommodations = async (searchParams?: {
   }
 }
 
-export const prefetchMyAccommodations = async (searchParams?: { page?: string; disponible?: string; recherche?: string }) => {
+export const prefetchMyAccommodations = async (searchParams?: {
+  page?: string
+  disponible?: string
+  recherche?: string
+  bailleur?: string
+}) => {
   const queryClient = getQueryClient()
 
   await queryClient.prefetchQuery({
-    queryKey: myAccommodationsQueryKey(searchParams?.page, searchParams?.disponible, searchParams?.recherche),
+    queryKey: myAccommodationsQueryKey(searchParams?.page, searchParams?.disponible, searchParams?.recherche, searchParams?.bailleur),
     queryFn: () => getMyAccommodations(searchParams),
   })
 
