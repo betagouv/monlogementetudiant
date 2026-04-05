@@ -10,6 +10,7 @@ import clsx from 'clsx'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import { useState } from 'react'
+import { LinkAdminToOwnerDialog } from '~/components/administration/link-admin-to-owner-dialog'
 import { LinkUserToOwnerDialog } from '~/components/administration/link-user-to-owner-dialog'
 import { OwnerForm } from '~/components/administration/owner-form'
 import { OwnerLogoForm } from '~/components/administration/owner-logo-form'
@@ -162,7 +163,14 @@ export function OwnerDetail({ id }: { id: string }) {
           {
             label: `Utilisateur${sPluriel(userCount)} (${userCount})`,
             iconId: 'fr-icon-user-line',
-            content: <UsersTab users={ownerData.users ?? []} ownerId={ownerId} ownerName={ownerData.name} />,
+            content: (
+              <UsersTab
+                users={ownerData.users ?? []}
+                adminUsers={(ownerData.adminOwnerLinks ?? []).map((link) => link.user)}
+                ownerId={ownerId}
+                ownerName={ownerData.name}
+              />
+            ),
           },
           {
             label: `Résidence${sPluriel(accCount)} (${accCount})`,
@@ -233,10 +241,12 @@ export function OwnerDetail({ id }: { id: string }) {
 
 function UsersTab({
   users,
+  adminUsers,
   ownerId,
   ownerName,
 }: {
   users: Array<{ id: string; email: string; firstname: string; lastname: string; role: string }>
+  adminUsers: Array<{ id: string; email: string; firstname: string; lastname: string; role: string }>
   ownerId: number
   ownerName: string
 }) {
@@ -255,12 +265,75 @@ function UsersTab({
     },
   })
 
+  const unlinkAdminMutation = useMutation({
+    mutationFn: (userId: string) => trpcClient.admin.users.unlinkAdminFromOwner.mutate({ userId, ownerId }),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: trpc.admin.owners.getById.queryKey({ id: ownerId }) }),
+        queryClient.invalidateQueries({ queryKey: trpc.admin.users.myLinkedOwners.queryKey() }),
+      ])
+      createToast({ priority: 'success', message: 'Administrateur délié du gestionnaire' })
+    },
+    onError: (error) => {
+      createToast({ priority: 'error', message: error.message || 'Erreur lors de la déliaison' })
+    },
+  })
+
   return (
     <>
-      <div className="fr-flex fr-justify-content-end fr-mb-2w">
+      <div className="fr-flex fr-justify-content-end fr-mb-2w fr-flex-gap-2v">
+        <LinkAdminToOwnerDialog ownerId={ownerId} ownerName={ownerName} />
         <LinkUserToOwnerDialog ownerId={ownerId} ownerName={ownerName} />
       </div>
 
+      {adminUsers.length > 0 && (
+        <>
+          <h3 className="fr-h6 fr-mb-2w">Administrateurs liés</h3>
+          <div className={clsx('fr-table fr-mb-3w', styles.tableWrapper)}>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Administrateur</th>
+                  <th scope="col">Rôle</th>
+                  <th scope="col">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {adminUsers.map((u) => (
+                  <tr key={u.id}>
+                    <td>
+                      <div className="fr-text--bold">
+                        {u.firstname} {u.lastname}
+                      </div>
+                      <div className="fr-text--xs fr-text-mention--grey">{u.email}</div>
+                    </td>
+                    <td>
+                      <RoleBadge role={u.role} />
+                    </td>
+                    <td>
+                      <div className="fr-flex fr-flex-gap-1v">
+                        <Button priority="tertiary no outline" size="small" linkProps={{ href: `/administration/utilisateurs/${u.id}` }}>
+                          Voir
+                        </Button>
+                        <Button
+                          priority="tertiary no outline"
+                          size="small"
+                          onClick={() => unlinkAdminMutation.mutate(u.id)}
+                          disabled={unlinkAdminMutation.isPending}
+                        >
+                          Délier
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+
+      <h3 className="fr-h6 fr-mb-2w">Utilisateurs rattachés</h3>
       {users.length === 0 ? (
         <p className="fr-text--sm fr-text-mention--grey">Aucun utilisateur rattaché</p>
       ) : (

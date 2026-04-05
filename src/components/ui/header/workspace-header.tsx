@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { FC } from 'react'
 import { BrandTop } from '~/components/ui/brand-top'
+import { OwnerSwitcher } from '~/components/ui/header/owner-switcher'
 import { UserConnectedDropdown } from '~/components/ui/header/user-connected-dropdown'
 import { WorkspaceHeaderNavigation } from '~/components/ui/header/workspace-navigation'
 import { getServerSession } from '~/services/better-auth'
@@ -14,6 +15,11 @@ export const WorkspaceHeaderComponent: FC = async () => {
   if (!auth || !auth.session || !auth.user) {
     return notFound()
   }
+
+  const isAdmin = auth.user.role === 'admin'
+  const adminOwners = auth.user.adminOwners ?? []
+  const showSwitcher = isAdmin && adminOwners.length > 1
+
   return (
     <div>
       <Header
@@ -22,14 +28,7 @@ export const WorkspaceHeaderComponent: FC = async () => {
           title: t('metadata.workspace.title'),
         }}
         quickAccessItems={[
-          // <Button
-          //   priority="tertiary no outline"
-          //   key="alerts-cta"
-          //   iconId="ri-notification-3-line"
-          //   linkProps={{ href: '/alerte-logement', target: '_self' }}
-          // >
-          //   {t('header.notifications')}
-          // </Button>,
+          ...(showSwitcher ? [<OwnerSwitcher key="owner-switcher" owners={adminOwners} />] : []),
           <UserConnectedDropdown user={auth.user} />,
         ]}
         brandTop={<BrandTop />}

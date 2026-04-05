@@ -9,6 +9,7 @@ import { cache } from 'react'
 import { verifyDjangoPassword } from '~/lib/django-password'
 import { db } from '~/server/db'
 import * as schema from '~/server/db/schema'
+import { adminOwnerLinks } from '~/server/db/schema/admin-owner-links'
 import { sendMagicLinkEmail, sendResetPasswordEmail, sendVerificationEmail } from '~/server/services/brevo'
 
 export const oneDay = 24 * 60 * 60
@@ -95,11 +96,27 @@ export const getServerSession = cache(async () => {
     with: { owner: true },
   })
 
+  let adminOwners: Array<{ id: number; name: string; slug: string; url: string | null; acceptDossierFacileApplications: boolean }> = []
+  if (usr?.role === 'admin') {
+    const links = await db.query.adminOwnerLinks.findMany({
+      where: eq(adminOwnerLinks.userId, results.user.id),
+      with: { owner: true },
+    })
+    adminOwners = links.map((l) => ({
+      id: l.owner.id,
+      name: l.owner.name,
+      slug: l.owner.slug,
+      url: l.owner.url,
+      acceptDossierFacileApplications: l.owner.acceptDossierFacileApplications,
+    }))
+  }
+
   return {
     ...results,
     user: {
       ...results.user,
       owner: usr?.owner ?? null,
+      adminOwners,
     },
   }
 })

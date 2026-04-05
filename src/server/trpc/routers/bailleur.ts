@@ -7,6 +7,7 @@ import { ZUpdateResidence } from '~/schemas/accommodations/update-residence'
 import { ZUpdateResidenceList } from '~/schemas/accommodations/update-residence-list'
 import { db } from '~/server/db'
 import { accommodations } from '~/server/db/schema/accommodations'
+import { adminOwnerLinks } from '~/server/db/schema/admin-owner-links'
 import { user } from '~/server/db/schema/auth'
 import { cities } from '~/server/db/schema/cities'
 import { dossierFacileApplications, dossierFacileDocuments, dossierFacileTenants } from '~/server/db/schema/dossier-facile'
@@ -64,6 +65,16 @@ async function getOwnerForUser(userId: string) {
     where: eq(user.id, userId),
     with: { owner: true },
   })
+
+  // For admins, check admin_owner_link if no direct ownerId
+  if (usr?.role === 'admin' && !usr.owner) {
+    const firstLink = await db.query.adminOwnerLinks.findFirst({
+      where: eq(adminOwnerLinks.userId, userId),
+      with: { owner: true },
+    })
+    return firstLink?.owner ?? null
+  }
+
   return usr?.owner ?? null
 }
 
