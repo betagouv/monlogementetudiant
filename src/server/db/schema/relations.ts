@@ -1,6 +1,7 @@
 import { relations } from 'drizzle-orm'
 import { academies } from './academies'
 import { accommodations } from './accommodations'
+import { adminOwnerLinks } from './admin-owner-links'
 import { user } from './auth'
 import { cities } from './cities'
 import { departments } from './departments'
@@ -24,9 +25,10 @@ export const citiesRelations = relations(cities, ({ one, many }) => ({
   accommodations: many(accommodations),
 }))
 
-export const userRelations = relations(user, ({ one }) => ({
+export const userRelations = relations(user, ({ one, many }) => ({
   owner: one(owners, { fields: [user.ownerId], references: [owners.id] }),
   dossierFacileTenant: one(dossierFacileTenants, { fields: [user.id], references: [dossierFacileTenants.userId] }),
+  adminOwnerLinks: many(adminOwnerLinks),
 }))
 
 export const dossierFacileTenantsRelations = relations(dossierFacileTenants, ({ one, many }) => ({
@@ -47,6 +49,12 @@ export const dossierFacileApplicationsRelations = relations(dossierFacileApplica
 export const ownersRelations = relations(owners, ({ many }) => ({
   accommodations: many(accommodations),
   users: many(user),
+  adminOwnerLinks: many(adminOwnerLinks),
+}))
+
+export const adminOwnerLinksRelations = relations(adminOwnerLinks, ({ one }) => ({
+  user: one(user, { fields: [adminOwnerLinks.userId], references: [user.id] }),
+  owner: one(owners, { fields: [adminOwnerLinks.ownerId], references: [owners.id] }),
 }))
 
 export const accommodationsRelations = relations(accommodations, ({ one, many }) => ({

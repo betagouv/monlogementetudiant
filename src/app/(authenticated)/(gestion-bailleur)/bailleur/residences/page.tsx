@@ -13,6 +13,7 @@ type SearchParams = {
   page?: string
   disponible?: string
   recherche?: string
+  bailleur?: string
 }
 
 type ResidencesPageProps = {

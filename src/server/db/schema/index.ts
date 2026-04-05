@@ -1,5 +1,6 @@
 export { academies } from './academies'
 export { accommodations } from './accommodations'
+export { adminOwnerLinks } from './admin-owner-links'
 export { account, session, user, verification } from './auth'
 export { cities } from './cities'
 export { departments } from './departments'
@@ -13,6 +14,7 @@ export { questionsAnswers } from './questions-answers'
 export {
   academiesRelations,
   accommodationsRelations,
+  adminOwnerLinksRelations,
   citiesRelations,
   departmentsRelations,
   dossierFacileApplicationsRelations,
