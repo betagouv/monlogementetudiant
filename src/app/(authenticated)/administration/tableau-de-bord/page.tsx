@@ -10,11 +10,13 @@ import Image from 'next/image'
 import { useState } from 'react'
 import { Cell, Label, Pie, PieChart, ResponsiveContainer } from 'recharts'
 import { useDebounce } from 'use-debounce'
+import dialogStyles from '~/components/administration/link-dialog.module.css'
 import { createToast } from '~/components/ui/createToast'
 import { useAdminMyLinkedOwners } from '~/hooks/use-admin-my-linked-owners'
 import { useAdminStats } from '~/hooks/use-admin-stats'
 import { useTRPC, useTRPCClient } from '~/server/trpc/client'
 import { authClient } from '~/services/better-auth-client'
+import { getAvatarColor, getInitials } from '~/utils/avatar'
 import { getFaviconUrl } from '~/utils/get-favicon-url'
 import { sPluriel } from '~/utils/sPluriel'
 import styles from '../administration.module.css'
@@ -89,25 +91,6 @@ export default function DashboardPage() {
       </div>
     </>
   )
-}
-
-const AVATAR_COLORS = ['#000091', '#6A6AF4', '#009081', '#E4794A', '#CE614A', '#A558A0', '#C3992A', '#417DC4']
-
-function getColorForName(name: string) {
-  let hash = 0
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash)
-  }
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
-}
-
-function getInitials(name: string) {
-  return name
-    .split(/\s+/)
-    .map((w) => w[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase()
 }
 
 const linkSelfToOwnerModal = createModal({
@@ -188,7 +171,7 @@ function LinkedOwnerItem({
           <Image src={faviconUrl} alt={owner.name} width={40} height={40} onError={() => setImgError(true)} unoptimized />
         </div>
       ) : (
-        <div className={styles.linkedOwnerAvatar} style={{ background: getColorForName(owner.name) }}>
+        <div className={styles.linkedOwnerAvatar} style={{ background: getAvatarColor(owner.name) }}>
           {getInitials(owner.name)}
         </div>
       )}
@@ -258,7 +241,7 @@ function LinkSelfToOwnerDialog({ userId }: { userId: string }) {
       />
 
       {debouncedSearch.length >= 2 && (
-        <div className={dashboardStyles.selectorList}>
+        <div className={dialogStyles.selectorList}>
           {owners.map((o) => {
             const isSelected = selectedOwnerId === o.id
             return (
@@ -266,21 +249,21 @@ function LinkSelfToOwnerDialog({ userId }: { userId: string }) {
                 type="button"
                 key={o.id}
                 onClick={() => setSelectedOwnerId(o.id)}
-                className={isSelected ? dashboardStyles.selectorItemSelected : dashboardStyles.selectorItem}
+                className={isSelected ? dialogStyles.selectorItemSelected : dialogStyles.selectorItem}
               >
-                <div className={dashboardStyles.selectorAvatar} style={{ background: getColorForName(o.name) }}>
+                <div className={dialogStyles.selectorAvatarSquare} style={{ background: getAvatarColor(o.name) }}>
                   {getInitials(o.name)}
                 </div>
-                <div className={dashboardStyles.selectorInfo}>
-                  <div className={dashboardStyles.selectorName}>{o.name}</div>
-                  <div className={dashboardStyles.selectorSlug}>{o.slug}</div>
+                <div className={dialogStyles.selectorInfo}>
+                  <div className={dialogStyles.selectorName}>{o.name}</div>
+                  <div className={dialogStyles.selectorMeta}>{o.slug}</div>
                 </div>
-                <div className={isSelected ? dashboardStyles.selectorRadioSelected : dashboardStyles.selectorRadio} />
+                <div className={isSelected ? dialogStyles.selectorRadioSelected : dialogStyles.selectorRadio} />
               </button>
             )
           })}
           {owners.length === 0 && (
-            <p className={clsx('fr-text--sm fr-text-mention--grey', dashboardStyles.selectorEmpty)}>Aucun gestionnaire trouvé</p>
+            <p className={clsx('fr-text--sm fr-text-mention--grey', dialogStyles.selectorEmpty)}>Aucun gestionnaire trouvé</p>
           )}
         </div>
       )}

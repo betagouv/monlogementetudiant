@@ -65,6 +65,7 @@ export async function cleanTables() {
       territories_department,
       territories_city,
       accommodation_accommodation,
+      admin_owner_link,
       account_owner,
       accommodation_externalsource,
       accommodation_favoriteaccommodation,

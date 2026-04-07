@@ -6,6 +6,7 @@ import { createModal } from '@codegouvfr/react-dsfr/Modal'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useDebounce } from 'use-debounce'
+import dialogStyles from '~/components/administration/link-dialog.module.css'
 import { LinkUserOwnerDialog } from '~/components/administration/link-user-owner-dialog'
 import { RoleBadge } from '~/components/administration/role-badge'
 import { UserForm, UserFormData } from '~/components/administration/user-form'
@@ -141,9 +142,9 @@ function AdminLinkedOwners({ userId, links }: { userId: string; links: Array<{ o
 
   return (
     <div className="fr-card fr-card--no-border fr-p-3w fr-mb-3w">
-      <h2 className="fr-h5 fr-mb-2w">Bailleurs associés</h2>
+      <h2 className="fr-h5 fr-mb-2w">Gestionnaires associés</h2>
       {links.length === 0 ? (
-        <p className="fr-text--sm fr-text-mention--grey fr-mb-2w">Aucun bailleur associé</p>
+        <p className="fr-text--sm fr-text-mention--grey fr-mb-2w">Aucun gestionnaire associé</p>
       ) : (
         <div className="fr-mb-2w">
           {links.map(({ owner }) => (
@@ -234,7 +235,7 @@ function LinkAdminToOwnerFromUserDialog({ userId }: { userId: string }) {
         />
 
         {debouncedSearch.length >= 2 && (
-          <div style={{ maxHeight: '280px', overflowY: 'auto', marginBottom: '1.5rem' }}>
+          <div className={dialogStyles.selectorList}>
             {owners.map((o) => {
               const isSelected = selectedOwnerId === o.id
               return (
@@ -242,40 +243,18 @@ function LinkAdminToOwnerFromUserDialog({ userId }: { userId: string }) {
                   type="button"
                   key={o.id}
                   onClick={() => setSelectedOwnerId(o.id)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    width: '100%',
-                    padding: '0.75rem 1rem',
-                    border: isSelected ? '2px solid var(--border-action-high-blue-france)' : '1px solid var(--border-default-grey)',
-                    borderRadius: '0.5rem',
-                    background: isSelected ? 'var(--background-action-low-blue-france)' : 'var(--background-default-grey)',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    marginBottom: '0.5rem',
-                  }}
+                  className={isSelected ? dialogStyles.selectorItemSelected : dialogStyles.selectorItem}
                 >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 700 }}>{o.name}</div>
-                    <div style={{ fontSize: '0.8125rem', color: 'var(--text-mention-grey)' }}>{o.slug}</div>
+                  <div className={dialogStyles.selectorInfo}>
+                    <div className={dialogStyles.selectorName}>{o.name}</div>
+                    <div className={dialogStyles.selectorMeta}>{o.slug}</div>
                   </div>
-                  <div
-                    style={{
-                      width: '1.25rem',
-                      height: '1.25rem',
-                      borderRadius: '50%',
-                      border: isSelected ? '6px solid var(--background-action-high-blue-france)' : '2px solid var(--border-default-grey)',
-                      flexShrink: 0,
-                    }}
-                  />
+                  <div className={isSelected ? dialogStyles.selectorRadioSelected : dialogStyles.selectorRadio} />
                 </button>
               )
             })}
             {owners.length === 0 && (
-              <p className="fr-text--sm fr-text-mention--grey" style={{ padding: '1rem' }}>
-                Aucun gestionnaire trouvé
-              </p>
+              <p className={`fr-text--sm fr-text-mention--grey ${dialogStyles.selectorEmpty}`}>Aucun gestionnaire trouvé</p>
             )}
           </div>
         )}

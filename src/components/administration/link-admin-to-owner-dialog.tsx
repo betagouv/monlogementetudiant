@@ -8,7 +8,9 @@ import { useState } from 'react'
 import { useDebounce } from 'use-debounce'
 import { createToast } from '~/components/ui/createToast'
 import { useTRPC, useTRPCClient } from '~/server/trpc/client'
+import { getAvatarColor, getInitials } from '~/utils/avatar'
 import { formatDateTime } from '~/utils/formatDate'
+import dialogStyles from './link-dialog.module.css'
 
 const linkAdminToOwnerModal = createModal({
   id: 'link-admin-to-owner-modal',
@@ -18,20 +20,6 @@ const linkAdminToOwnerModal = createModal({
 interface LinkAdminToOwnerDialogProps {
   ownerId: number
   ownerName: string
-}
-
-const AVATAR_COLORS = ['#000091', '#6A6AF4', '#009081', '#E4794A', '#CE614A', '#A558A0', '#C3992A', '#417DC4']
-
-function getColorForName(name: string) {
-  let hash = 0
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash)
-  }
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
-}
-
-function getInitials(firstname: string, lastname: string) {
-  return `${firstname.charAt(0)}${lastname.charAt(0)}`.toUpperCase()
 }
 
 export function LinkAdminToOwnerDialog({ ownerId, ownerName }: LinkAdminToOwnerDialogProps) {
@@ -104,73 +92,34 @@ export function LinkAdminToOwnerDialog({ ownerId, ownerName }: LinkAdminToOwnerD
         )}
 
         {debouncedSearch.length >= 2 && (
-          <div style={{ maxHeight: '280px', overflowY: 'auto', marginBottom: '1.5rem' }}>
+          <div className={dialogStyles.selectorList}>
             {users.map((u) => {
               const isSelected = selectedUserId === u.id
               const fullName = `${u.firstname ?? ''} ${u.lastname ?? ''}`.trim() || u.name || u.email
               const initials = getInitials(u.firstname ?? '?', u.lastname ?? '?')
-              const color = getColorForName(fullName)
               return (
                 <button
                   type="button"
                   key={u.id}
                   onClick={() => setSelectedUserId(u.id)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    width: '100%',
-                    padding: '0.75rem 1rem',
-                    border: isSelected ? '2px solid var(--border-action-high-blue-france)' : '1px solid var(--border-default-grey)',
-                    borderRadius: '0.5rem',
-                    background: isSelected ? 'var(--background-action-low-blue-france)' : 'var(--background-default-grey)',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    marginBottom: '0.5rem',
-                  }}
+                  className={isSelected ? dialogStyles.selectorItemSelected : dialogStyles.selectorItem}
                 >
-                  <div
-                    style={{
-                      width: '2.5rem',
-                      height: '2.5rem',
-                      borderRadius: '50%',
-                      background: color,
-                      color: 'white',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 700,
-                      fontSize: '0.875rem',
-                      flexShrink: 0,
-                    }}
-                  >
+                  <div className={dialogStyles.selectorAvatar} style={{ background: getAvatarColor(fullName) }}>
                     {initials}
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 700 }}>{fullName}</div>
-                    <div style={{ fontSize: '0.8125rem', color: 'var(--text-mention-grey)' }}>{u.email}</div>
+                  <div className={dialogStyles.selectorInfo}>
+                    <div className={dialogStyles.selectorName}>{fullName}</div>
+                    <div className={dialogStyles.selectorMeta}>{u.email}</div>
                     {u.createdAt && (
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-mention-grey)' }}>
-                        Compte créé le {formatDateTime(new Date(u.createdAt))}
-                      </div>
+                      <div className={dialogStyles.selectorMetaSmall}>Compte créé le {formatDateTime(new Date(u.createdAt))}</div>
                     )}
                   </div>
-                  <div
-                    style={{
-                      width: '1.25rem',
-                      height: '1.25rem',
-                      borderRadius: '50%',
-                      border: isSelected ? '6px solid var(--background-action-high-blue-france)' : '2px solid var(--border-default-grey)',
-                      flexShrink: 0,
-                    }}
-                  />
+                  <div className={isSelected ? dialogStyles.selectorRadioSelected : dialogStyles.selectorRadio} />
                 </button>
               )
             })}
             {users.length === 0 && (
-              <p className="fr-text--sm fr-text-mention--grey" style={{ padding: '1rem' }}>
-                Aucun administrateur trouvé
-              </p>
+              <p className={`fr-text--sm fr-text-mention--grey ${dialogStyles.selectorEmpty}`}>Aucun administrateur trouvé</p>
             )}
           </div>
         )}
