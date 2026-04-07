@@ -374,7 +374,7 @@ export const accommodationsRouter = createTRPCRouter({
         viewCrous: z.boolean().default(false),
         academyId: z.number().optional(),
         ownerSlug: z.string().optional(),
-        citySlug: z.string().optional(),
+        cityId: z.number().optional(),
       }),
     )
     .query(async ({ input }) => {
@@ -383,9 +383,9 @@ export const accommodationsRouter = createTRPCRouter({
       const conditions: SQL[] = [eq(accommodations.published, true), sql`${accommodations.geom} IS NOT NULL`]
       await applyCommonListFilters(conditions, input)
 
-      if (input.citySlug) {
+      if (input.cityId) {
         conditions.push(
-          sql`ST_Within(${accommodations.geom}, (SELECT ${cities.boundary} FROM ${cities} WHERE ${cities.slug} = ${input.citySlug}))`,
+          sql`ST_Within(${accommodations.geom}, (SELECT ${cities.boundary} FROM ${cities} WHERE ${cities.id} = ${input.cityId}))`,
         )
       } else if (academyId) {
         conditions.push(

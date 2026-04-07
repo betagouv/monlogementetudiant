@@ -31,7 +31,7 @@ export const getAccommodations = (searchParams: {
 
 export const prefetchAccommodations = async (
   awaitedSearchParams: Record<string, string | string[] | undefined>,
-  overrides?: { bbox?: string; academie?: string; citySlug?: string; pageSize?: number },
+  overrides?: { bbox?: string; academie?: string; cityId?: number; pageSize?: number },
 ) => {
   const parsedParams = accommodationsSearchParamsCache.parse(awaitedSearchParams)
   const queryKeyParams = {
@@ -43,8 +43,8 @@ export const prefetchAccommodations = async (
   }
 
   const queryInput = {
-    bbox: overrides?.citySlug ? undefined : (queryKeyParams.bbox ?? undefined),
-    citySlug: overrides?.citySlug ?? undefined,
+    bbox: overrides?.cityId ? undefined : (queryKeyParams.bbox ?? undefined),
+    cityId: overrides?.cityId ?? undefined,
     page: queryKeyParams.page ?? 1,
     pageSize: queryKeyParams.pageSize ?? 12,
     isAccessible: queryKeyParams.accessible === 'true' ? true : undefined,
@@ -61,19 +61,19 @@ export const prefetchAccommodations = async (
   const hasOverrides =
     (overrides?.bbox && overrides.bbox !== parsedParams.bbox) ||
     (overrides?.academie && overrides.academie !== parsedParams.academie) ||
-    overrides?.citySlug
+    overrides?.cityId
 
   if (hasOverrides) {
     const data = client.getQueryData(trpc.accommodations.list.queryOptions(queryInput).queryKey)
     if (data) {
       // Seed the cache key the client will use on first render (before SearchParamsSync updates the URL)
-      // Client derives citySlug from pathname, not from URL params.
-      // On first render, pathname is available so citySlug matches the server prefetch.
-      // But we also seed a key without citySlug for the brief moment before hydration.
+      // Client derives cityId from pathname via getBySlug, not from URL params.
+      // On first render, pathname is available so cityId matches the server prefetch.
+      // But we also seed a key without cityId for the brief moment before hydration.
       const clientQueryInput = {
         ...queryInput,
         bbox: parsedParams.bbox ?? undefined,
-        citySlug: undefined,
+        cityId: undefined,
         academyId: parsedParams.academie ? Number(parsedParams.academie) : undefined,
       }
       client.setQueryData(trpc.accommodations.list.queryOptions(clientQueryInput).queryKey, data)
