@@ -304,13 +304,12 @@ export const TypologyTabContent = (props: TypologyTabContentProps) => {
         <div className="fr-col-12 fr-col-md-6">
           <Input
             label={t('availableHousing')}
-            disabled={isImported}
             state={getError('nb_available') ? 'error' : 'default'}
             stateRelatedMessage={getError('nb_available')?.message}
             nativeInputProps={{
               type: 'number',
               min: 0,
-              disabled: isImported || !nbTotalValue,
+              disabled: !nbTotalValue,
               ...register(getFieldName('nb_available'), numberTransform),
             }}
           />
