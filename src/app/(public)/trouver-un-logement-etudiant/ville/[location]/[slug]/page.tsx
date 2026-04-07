@@ -127,10 +127,10 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
             </div>
             <AccommodationAvailability nbAvailable={nbAvailable} acceptWaitingList={accept_waiting_list} />
             <AccommodationResidence accommodation={accommodation} />
+            <AccommodationVirtualTour url={virtual_tour_url} />
             <AccommodationEquipments accommodation={accommodation} />
             <AccommodationLocalisation address={address} city={city} latitude={latitude} longitude={longitude} postalCode={postal_code} />
             <AccommodationDescription title={name} description={description} />
-            {virtual_tour_url && <AccommodationVirtualTour embedCode={virtual_tour_url} />}
           </div>
           <div className="fr-hidden-sm">{<AccommodationMap latitude={latitude} longitude={longitude} />}</div>
           <div className={styles.stickyColumn}>
