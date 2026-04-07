@@ -105,7 +105,7 @@ export default async function Home() {
                 {sortedPopularCities.map((city) => (
                   <Button
                     className={styles.cityButton}
-                    linkProps={{ href: `/trouver-un-logement-etudiant/ville/${city.name}${city.majority_crous ? '?crous=true' : ''}` }}
+                    linkProps={{ href: `/trouver-un-logement-etudiant/ville/${city.slug}` }}
                     key={city.id}
                     priority="secondary"
                   >
