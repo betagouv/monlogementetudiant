@@ -21,6 +21,7 @@ import { useAdminOwner } from '~/hooks/use-admin-owner'
 import { useAdminUpdateOwner } from '~/hooks/use-admin-update-owner'
 import { TOwnerFormData } from '~/schemas/owner-form'
 import { useTRPC, useTRPCClient } from '~/server/trpc/client'
+import { getInitials } from '~/utils/avatar'
 import { getFaviconUrl } from '~/utils/get-favicon-url'
 import { sPluriel } from '~/utils/sPluriel'
 import styles from '../../administration.module.css'
@@ -47,15 +48,6 @@ const deleteOwnerModal = createModal({
   id: 'delete-owner-modal',
   isOpenedByDefault: false,
 })
-
-function getInitials(name: string) {
-  return name
-    .split(/\s+/)
-    .map((w) => w[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase()
-}
 
 function OwnerDetailAvatar({ name, url, imageBase64 }: { name: string; url: string | null; imageBase64: string | null }) {
   const [faviconError, setFaviconError] = useState(false)
