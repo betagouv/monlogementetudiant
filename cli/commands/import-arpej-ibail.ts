@@ -146,7 +146,6 @@ const command: ImportCommand = {
 
         const accommodationData = {
           name: residence.title,
-          slug: await findAvailableSlug(generateSlug(residence.title), db, accommodations),
           description: (residence.description as string) ?? null,
           address: geo?.address ?? residence.address,
           city: resolvedCityName,
@@ -183,9 +182,10 @@ const command: ImportCommand = {
           await db.update(accommodations).set(accommodationData).where(eq(accommodations.id, existingSource[0].accommodationId))
           result.updated++
         } else {
+          const slug = await findAvailableSlug(generateSlug(residence.title), db, accommodations)
           const [newAccommodation] = await db
             .insert(accommodations)
-            .values({ ...accommodationData, createdAt: new Date() })
+            .values({ ...accommodationData, slug, createdAt: new Date() })
             .returning({ id: accommodations.id })
 
           await db.insert(externalSources).values({

@@ -626,6 +626,25 @@ describe('import-csv integration', () => {
     expect(result.skipped).toBe(1)
   })
 
+  it('slug must not change on re-import with same name', async () => {
+    const db = getTestDb()
+
+    const filePath1 = writeTmpCsv([makeRow({ name: 'Résidence Stabilité' })])
+    await command.execute({ file: filePath1, source: 'slug-test' })
+
+    const [created] = await db.select().from(accommodations).where(eq(accommodations.name, 'Résidence Stabilité'))
+    expect(created).toBeDefined()
+    const originalSlug = created!.slug
+
+    // Second import: update (same source, same name)
+    const filePath2 = writeTmpCsv([makeRow({ name: 'Résidence Stabilité' })])
+    const result = await command.execute({ file: filePath2, source: 'slug-test' })
+    expect(result.updated).toBe(1)
+
+    const [updated] = await db.select().from(accommodations).where(eq(accommodations.id, created!.id))
+    expect(updated!.slug).toBe(originalSlug)
+  })
+
   it('handles CSV with code column for sourceId', async () => {
     const db = getTestDb()
 

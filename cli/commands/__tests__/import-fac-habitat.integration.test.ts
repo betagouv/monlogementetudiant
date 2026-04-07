@@ -288,4 +288,33 @@ describe('import-fac-habitat integration', () => {
 
     await expect(command.execute({})).rejects.toThrow('FAC_HABITAT_SFTP_HOST')
   })
+
+  it('slug must not change on re-import with same name', async () => {
+    const db = getTestDb()
+
+    await createOwner({ name: 'FAC HABITAT', slug: 'fac-habitat-slug' })
+
+    const residence = makeResidence({ id: 7001, name: 'Résidence Stabilité' })
+
+    // First import: create
+    const filePath1 = writeTmpJson([residence])
+    mockGeocoder()
+    await command.execute({ file: filePath1 })
+
+    const sources = await db.select().from(externalSources).where(eq(externalSources.sourceId, '7001'))
+    expect(sources).toHaveLength(1)
+
+    const [created] = await db.select().from(accommodations).where(eq(accommodations.id, sources[0].accommodationId))
+    const originalSlug = created!.slug
+
+    // Second import: update (same id, same name)
+    const filePath2 = writeTmpJson([residence])
+    mockGeocoder()
+
+    const result = await command.execute({ file: filePath2 })
+    expect(result.updated).toBe(1)
+
+    const [updated] = await db.select().from(accommodations).where(eq(accommodations.id, created!.id))
+    expect(updated!.slug).toBe(originalSlug)
+  })
 })
