@@ -107,8 +107,8 @@ function cityAccommodationStatsSubquery() {
   return db
     .select({
       cityId: accommodations.cityId,
-      nbTotalApartments: sql<number>`COALESCE(SUM(${accommodations.nbTotalApartments}), 0)::int`,
-      priceMin: sql<number | null>`MIN(${accommodations.priceMin})`,
+      nbTotalApartments: sql<number>`COALESCE(SUM(${accommodations.nbTotalApartments}), 0)::int`.as('nb_total_apartments'),
+      priceMin: sql<number | null>`MIN(${accommodations.priceMin})`.as('price_min'),
       nbCrousApartments: sql<number>`
         COALESCE(
           SUM(
@@ -119,7 +119,7 @@ function cityAccommodationStatsSubquery() {
           ),
           0
         )::int
-      `,
+      `.as('nb_crous_apartments'),
     })
     .from(accommodations)
     .leftJoin(owners, eq(accommodations.ownerId, owners.id))
