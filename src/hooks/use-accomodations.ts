@@ -22,10 +22,20 @@ export const useAccomodations = ({ pageSize }: UseAccomodationsOptions = {}) => 
   const isMapSearch = rechercheParCarte === 'true'
   const effectiveCitySlug = citySlugFromPath && !isMapSearch ? citySlugFromPath : undefined
 
+  const { data: territory } = useQuery({
+    ...trpc.territories.getBySlug.queryOptions({
+      type: 'ville' as const,
+      slug: effectiveCitySlug!,
+    }),
+    enabled: !!effectiveCitySlug,
+  })
+
+  const cityId = effectiveCitySlug ? territory?.id : undefined
+
   return useQuery({
     ...trpc.accommodations.list.queryOptions({
-      bbox: effectiveCitySlug ? undefined : (bbox ?? undefined),
-      citySlug: effectiveCitySlug,
+      bbox: cityId ? undefined : (bbox ?? undefined),
+      cityId,
       page: page ?? 1,
       pageSize: pageSize ?? 12,
       isAccessible: accessible === 'true' ? true : undefined,
@@ -35,5 +45,6 @@ export const useAccomodations = ({ pageSize }: UseAccomodationsOptions = {}) => 
       academyId: academie ? Number(academie) : undefined,
       ownerSlug: gestionnaire ?? undefined,
     }),
+    enabled: effectiveCitySlug ? !!cityId : true,
   })
 }

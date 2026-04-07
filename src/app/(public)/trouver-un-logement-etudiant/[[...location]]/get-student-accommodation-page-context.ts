@@ -55,7 +55,7 @@ export const getStudentAccommodationPageContext = cache(
         : undefined
     const serverAcademie = isAcademy && territory ? territory.id.toString() : undefined
     const isMapSearch = getSingleSearchParam(awaitedSearchParams['recherche-par-carte']) === 'true'
-    const serverVille = isCity && territory && !isMapSearch ? routeLocation : undefined
+    const serverCityId = isCity && territory && !isMapSearch ? territory.id : undefined
 
     const queryClient = getQueryClient()
 
@@ -63,7 +63,7 @@ export const getStudentAccommodationPageContext = cache(
     const favoritesPromise = queryClient.prefetchQuery(trpc.favorites.list.queryOptions())
 
     // Fetch main results first so we can extract IDs for the expanded search exclusion
-    await prefetchAccommodations(awaitedSearchParams, { bbox: serverBbox, academie: serverAcademie, citySlug: serverVille })
+    await prefetchAccommodations(awaitedSearchParams, { bbox: serverBbox, academie: serverAcademie, cityId: serverCityId })
 
     const cityName = routeCategoryKey === 'ville' ? territory?.name : undefined
     if (cityName) {
@@ -72,8 +72,8 @@ export const getStudentAccommodationPageContext = cache(
 
       const parsedParams = accommodationsSearchParamsCache.parse(awaitedSearchParams)
       const serverQueryInput = {
-        bbox: serverVille ? undefined : (serverBbox ?? parsedParams.bbox ?? undefined),
-        citySlug: serverVille ?? undefined,
+        bbox: serverCityId ? undefined : (serverBbox ?? parsedParams.bbox ?? undefined),
+        cityId: serverCityId ?? undefined,
         page: parsedParams.page ?? 1,
         pageSize: 12,
         isAccessible: parsedParams.accessible === 'true' ? true : undefined,

@@ -251,10 +251,10 @@ describe('accommodations.list', () => {
     expect(result.results.features[0].properties.slug).toBe('near-nantes-accessible')
   })
 
-  it('citySlug combined with other filters', async () => {
+  it('cityId combined with other filters', async () => {
     const academy = await createAcademy({ name: 'Académie de Bordeaux' })
     const department = await createDepartment({ academyId: academy.id, code: '33', name: 'Gironde' })
-    await createCity({
+    const city = await createCity({
       departmentId: department.id,
       name: 'Bordeaux',
       slug: 'bordeaux',
@@ -288,7 +288,7 @@ describe('accommodations.list', () => {
     })
 
     const result = await caller.accommodations.list({
-      citySlug: 'bordeaux',
+      cityId: city.id,
       priceMax: 500,
       isAccessible: true,
     })
@@ -398,10 +398,10 @@ describe('accommodations.list', () => {
     expect(result.results.features[0].properties.slug).toBe('non-crous-default')
   })
 
-  it('filters by citySlug (spatial — strict city boundary)', async () => {
+  it('filters by cityId (spatial — strict city boundary)', async () => {
     const academy = await createAcademy({ name: 'Académie de Lille' })
     const department = await createDepartment({ academyId: academy.id, code: '59', name: 'Nord' })
-    await createCity({
+    const city = await createCity({
       departmentId: department.id,
       name: 'Lille',
       slug: 'lille',
@@ -430,15 +430,15 @@ describe('accommodations.list', () => {
       geom: { type: 'Point', coordinates: [3.13, 50.63] },
     })
 
-    const result = await caller.accommodations.list({ citySlug: 'lille' })
+    const result = await caller.accommodations.list({ cityId: city.id })
     expect(result.count).toBe(1)
     expect(result.results.features[0].properties.slug).toBe('in-lille')
   })
 
-  it('citySlug takes priority over bbox', async () => {
+  it('cityId takes priority over bbox', async () => {
     const academy = await createAcademy({ name: 'Académie de Lille 2' })
     const department = await createDepartment({ academyId: academy.id, code: '60', name: 'Nord 2' })
-    await createCity({
+    const city = await createCity({
       departmentId: department.id,
       name: 'Lille 2',
       slug: 'lille-2',
@@ -467,22 +467,22 @@ describe('accommodations.list', () => {
       geom: { type: 'Point', coordinates: [3.13, 50.63] },
     })
 
-    // bbox covers both points, but citySlug should take priority and only return in-city results
+    // bbox covers both points, but cityId should take priority and only return in-city results
     const result = await caller.accommodations.list({
-      citySlug: 'lille-2',
+      cityId: city.id,
       bbox: '2.9,50.5,3.2,50.7',
     })
     expect(result.count).toBe(1)
     expect(result.results.features[0].properties.slug).toBe('in-city-boundary')
   })
 
-  it('citySlug with unknown slug returns no results', async () => {
+  it('cityId with unknown id returns no results', async () => {
     await createAccommodation({
       slug: 'some-accommodation',
       geom: { type: 'Point', coordinates: [3.06, 50.63] },
     })
 
-    const result = await caller.accommodations.list({ citySlug: 'ville-inexistante' })
+    const result = await caller.accommodations.list({ cityId: 999999 })
     expect(result.count).toBe(0)
   })
 
