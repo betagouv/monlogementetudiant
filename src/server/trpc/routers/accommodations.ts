@@ -423,17 +423,29 @@ export const accommodationsRouter = createTRPCRouter({
     )
     .query(async ({ input }) => {
       const citySlug = input.city.trim().toLowerCase()
-      const [cityRow] = await db
-        .select({
-          id: cities.id,
-          centerLat: sql<number>`ST_Y(ST_Centroid(${cities.boundary})::geometry)`,
-          centerLng: sql<number>`ST_X(ST_Centroid(${cities.boundary})::geometry)`,
-        })
+      const citySelect = {
+        id: cities.id,
+        centerLat: sql<number>`ST_Y(ST_Centroid(${cities.boundary})::geometry)`,
+        centerLng: sql<number>`ST_X(ST_Centroid(${cities.boundary})::geometry)`,
+      }
+
+      // Fast path: lookup by slug (unique index)
+      let [cityRow] = await db
+        .select(citySelect)
         .from(cities)
-        .where(
-          sql`${cities.boundary} IS NOT NULL AND (${cities.slug} = ${citySlug} OR LOWER(immutable_unaccent(${cities.name})) = LOWER(immutable_unaccent(${input.city.trim()})))`,
-        )
+        .where(sql`${cities.boundary} IS NOT NULL AND ${cities.slug} = ${citySlug}`)
         .limit(1)
+
+      // Fallback: lookup by normalized name
+      if (!cityRow) {
+        ;[cityRow] = await db
+          .select(citySelect)
+          .from(cities)
+          .where(
+            sql`${cities.boundary} IS NOT NULL AND LOWER(immutable_unaccent(${cities.name})) = LOWER(immutable_unaccent(${input.city.trim()}))`,
+          )
+          .limit(1)
+      }
 
       if (!cityRow) {
         return {

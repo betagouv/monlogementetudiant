@@ -61,6 +61,7 @@ type CityRow = {
 }
 
 type CityStats = {
+  cityId?: number | null
   nbTotalApartments?: number | null
   priceMin?: number | null
   nbT1?: number | null
@@ -102,38 +103,30 @@ function mapCityRow(c: CityRow, stats?: CityStats, nearbyCities: { name: string;
   }
 }
 
-const accommodationSubqueries = (cityId: typeof cities.id) => ({
-  nbTotalApartments: sql<number>`
-    COALESCE((
-      SELECT SUM(${accommodations.nbTotalApartments})
-      FROM ${accommodations}
-      WHERE ${accommodations.cityId} = ${cityId}
-        AND ${accommodations.published} = true
-        AND ${accommodations.available} = true
-    ), 0)::int
-  `,
-  priceMin: sql<number | null>`
-    (
-      SELECT MIN(${accommodations.priceMin})
-      FROM ${accommodations}
-      WHERE ${accommodations.cityId} = ${cityId}
-        AND ${accommodations.published} = true
-        AND ${accommodations.available} = true
-        AND ${accommodations.priceMin} IS NOT NULL
-    )
-  `,
-  nbCrousApartments: sql<number>`
-    COALESCE((
-      SELECT SUM(${accommodations.nbTotalApartments})
-      FROM ${accommodations}
-      JOIN ${owners} ON ${accommodations.ownerId} = ${owners.id}
-      WHERE ${accommodations.cityId} = ${cityId}
-        AND ${accommodations.published} = true
-        AND ${accommodations.available} = true
-        AND ${owners.name} = 'CROUS'
-    ), 0)::int
-  `,
-})
+function cityAccommodationStatsSubquery() {
+  return db
+    .select({
+      cityId: accommodations.cityId,
+      nbTotalApartments: sql<number>`COALESCE(SUM(${accommodations.nbTotalApartments}), 0)::int`,
+      priceMin: sql<number | null>`MIN(${accommodations.priceMin})`,
+      nbCrousApartments: sql<number>`
+        COALESCE(
+          SUM(
+            CASE
+              WHEN ${owners.name} = 'CROUS' THEN COALESCE(${accommodations.nbTotalApartments}, 0)
+              ELSE 0
+            END
+          ),
+          0
+        )::int
+      `,
+    })
+    .from(accommodations)
+    .leftJoin(owners, eq(accommodations.ownerId, owners.id))
+    .where(and(eq(accommodations.published, true), eq(accommodations.available, true)))
+    .groupBy(accommodations.cityId)
+    .as('city_accommodation_stats')
+}
 
 export const territoriesRouter = createTRPCRouter({
   search: baseProcedure.input(z.object({ q: z.string() })).query(async ({ input }) => {
@@ -142,8 +135,7 @@ export const territoriesRouter = createTRPCRouter({
     const normalized = normalizeCitySearch(q)
     const tokens = tokenizeQuery(normalized)
     if (tokens.length === 0) return empty
-
-    const accomSubs = accommodationSubqueries(cities.id)
+    const cityStats = cityAccommodationStatsSubquery()
 
     const [academyResults, departmentResults, cityResults] = await Promise.all([
       db
@@ -183,12 +175,13 @@ export const territoriesRouter = createTRPCRouter({
           averageRent: cities.averageRent,
           popular: cities.popular,
           nbStudents: sql<number>`COALESCE(${cities.nbStudents}, 0)`,
-          nbTotalApartments: accomSubs.nbTotalApartments,
-          priceMin: accomSubs.priceMin,
+          nbTotalApartments: cityStats.nbTotalApartments,
+          priceMin: cityStats.priceMin,
           bbox: bboxSelect(cities),
         })
         .from(cities)
         .leftJoin(departments, eq(cities.departmentId, departments.id))
+        .leftJoin(cityStats, eq(cityStats.cityId, cities.id))
         .where(buildWhere(cities.name, tokens))
         .orderBy(buildRank(cities.name, normalized))
         .limit(10),
@@ -262,7 +255,7 @@ export const territoriesRouter = createTRPCRouter({
     .query(async ({ input }) => {
       const departmentCode = input?.departmentCode
       const popular = input?.popular
-      const accomSubs = accommodationSubqueries(cities.id)
+      const cityStats = cityAccommodationStatsSubquery()
 
       const conditions: SQL[] = []
       if (departmentCode) conditions.push(eq(departments.code, departmentCode))
@@ -281,13 +274,14 @@ export const territoriesRouter = createTRPCRouter({
           averageRent: cities.averageRent,
           popular: cities.popular,
           nbStudents: sql<number>`COALESCE(${cities.nbStudents}, 0)`,
-          nbTotalApartments: accomSubs.nbTotalApartments,
-          ...(popular ? { nbCrousApartments: accomSubs.nbCrousApartments } : {}),
-          priceMin: accomSubs.priceMin,
+          nbTotalApartments: cityStats.nbTotalApartments,
+          nbCrousApartments: cityStats.nbCrousApartments,
+          priceMin: cityStats.priceMin,
           bbox: bboxSelect(cities),
         })
         .from(cities)
         .leftJoin(departments, eq(cities.departmentId, departments.id))
+        .leftJoin(cityStats, eq(cityStats.cityId, cities.id))
         .where(conditions.length ? and(...conditions) : undefined)
         .orderBy(asc(cities.name))
 
