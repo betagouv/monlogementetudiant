@@ -1,6 +1,7 @@
 import { eq, sql } from 'drizzle-orm'
 import { academies } from '../../server/db/schema/academies'
 import { accommodations } from '../../server/db/schema/accommodations'
+import { adminOwnerLinks } from '../../server/db/schema/admin-owner-links'
 import { user } from '../../server/db/schema/auth'
 import { cities } from '../../server/db/schema/cities'
 import { departments } from '../../server/db/schema/departments'
@@ -125,6 +126,12 @@ export async function createOwner(overrides: Partial<OwnerInsert> & { userId?: s
     await db.update(user).set({ ownerId: row.id }).where(eq(user.id, userId))
   }
 
+  return row
+}
+
+export async function createAdminOwnerLink(overrides: { userId: string; ownerId: number }) {
+  const db = getTestDb()
+  const [row] = await db.insert(adminOwnerLinks).values(overrides).onConflictDoNothing().returning()
   return row
 }
 

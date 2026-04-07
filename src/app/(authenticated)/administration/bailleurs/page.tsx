@@ -14,6 +14,7 @@ import { useState } from 'react'
 import { useDebounce } from 'use-debounce'
 import { AdminDataTable } from '~/components/administration/admin-data-table'
 import { useAdminOwners } from '~/hooks/use-admin-owners'
+import { getAvatarColor, getInitials } from '~/utils/avatar'
 import { getFaviconUrl } from '~/utils/get-favicon-url'
 import { sPluriel } from '~/utils/sPluriel'
 import styles from '../administration.module.css'
@@ -29,22 +30,7 @@ type OwnerRow = {
   availableApartments: number
 }
 
-const AVATAR_COLORS = ['#e63946', '#2b9348', '#4361ee', '#f4a261', '#7209b7', '#4cc9f0']
-
-function getInitials(name: string) {
-  return name
-    .split(/\s+/)
-    .map((w) => w[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase()
-}
-
-function getColor(index: number) {
-  return AVATAR_COLORS[index % AVATAR_COLORS.length]
-}
-
-function OwnerAvatar({ name, url, imageBase64, index }: { name: string; url: string | null; imageBase64: string | null; index: number }) {
+function OwnerAvatar({ name, url, imageBase64 }: { name: string; url: string | null; imageBase64: string | null }) {
   const [faviconError, setFaviconError] = useState(false)
   const [dbImageError, setDbImageError] = useState(false)
   const faviconUrl = url ? getFaviconUrl(url) : null
@@ -66,7 +52,7 @@ function OwnerAvatar({ name, url, imageBase64, index }: { name: string; url: str
   }
 
   return (
-    <div className={styles.gCardAvatar} style={{ background: getColor(index) }}>
+    <div className={styles.gCardAvatar} style={{ background: getAvatarColor(name) }}>
       {getInitials(name)}
     </div>
   )
@@ -197,7 +183,7 @@ export default function OwnersPage() {
               {data!.items.map((owner, i) => (
                 <Link key={owner.id} href={`/administration/bailleurs/${owner.id}`} className={styles.gCard}>
                   <div className={styles.gCardTop}>
-                    <OwnerAvatar name={owner.name} url={owner.url} imageBase64={owner.imageBase64} index={i} />
+                    <OwnerAvatar name={owner.name} url={owner.url} imageBase64={owner.imageBase64} />
                     <div className={styles.flexFill}>
                       <div className={styles.gCardName}>{owner.name}</div>
                       <div className={styles.gCardOrg}>{owner.slug}</div>

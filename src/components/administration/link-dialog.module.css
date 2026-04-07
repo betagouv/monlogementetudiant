@@ -1,0 +1,79 @@
+.selectorList {
+  max-height: 280px;
+  overflow-y: auto;
+  margin-bottom: 1.5rem;
+}
+
+.selectorItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-default-grey);
+  border-radius: 0.5rem;
+  background: var(--background-default-grey);
+  cursor: pointer;
+  text-align: left;
+  margin-bottom: 0.5rem;
+}
+
+.selectorItemSelected {
+  composes: selectorItem;
+  border: 2px solid var(--border-action-high-blue-france);
+  background: var(--background-action-low-blue-france);
+}
+
+.selectorAvatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.selectorAvatarSquare {
+  composes: selectorAvatar;
+  border-radius: 0.375rem;
+}
+
+.selectorInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.selectorName {
+  font-weight: 700;
+}
+
+.selectorMeta {
+  font-size: 0.8125rem;
+  color: var(--text-mention-grey);
+}
+
+.selectorMetaSmall {
+  font-size: 0.75rem;
+  color: var(--text-mention-grey);
+}
+
+.selectorRadio {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  border: 2px solid var(--border-default-grey);
+  flex-shrink: 0;
+}
+
+.selectorRadioSelected {
+  composes: selectorRadio;
+  border: 6px solid var(--background-action-high-blue-france);
+}
+
+.selectorEmpty {
+  padding: 1rem;
+}
