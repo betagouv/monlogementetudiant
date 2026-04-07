@@ -163,4 +163,68 @@ describe('import-arpej-ibail integration', () => {
     const acc = await db.select().from(accommodations).where(eq(accommodations.id, sources[0].accommodationId))
     expect(acc[0].name).toBe('Résidence Lune Renovée')
   })
+
+  it('slug must not change on re-import with same name', async () => {
+    const db = getTestDb()
+
+    await createOwner({ name: 'ARPEJ', slug: 'arpej-slug', url: 'https://www.arpej.fr/fr/' })
+
+    const residence = {
+      key: 'res-slug-001',
+      title: 'Résidence Stabilité',
+      address: '10 Rue Stable',
+      zip_code: '75001',
+      city: 'Paris',
+      rent_amount_from: 400,
+      accommodation_quantity: 10,
+    }
+
+    // First import: create
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => [residence],
+      headers: new Headers({ 'X-Pagination-Total-Pages': '1' }),
+    })
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        features: [
+          {
+            geometry: { type: 'Point', coordinates: [2.35, 48.86] },
+            properties: { city: 'Paris', name: '10 Rue Stable', postcode: '75001' },
+          },
+        ],
+      }),
+    })
+
+    await command.execute({})
+
+    const sources = await db.select().from(externalSources).where(eq(externalSources.sourceId, 'res-slug-001'))
+    const [created] = await db.select().from(accommodations).where(eq(accommodations.id, sources[0].accommodationId))
+    const originalSlug = created!.slug
+
+    // Second import: update (same key, same name)
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => [residence],
+      headers: new Headers({ 'X-Pagination-Total-Pages': '1' }),
+    })
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        features: [
+          {
+            geometry: { type: 'Point', coordinates: [2.35, 48.86] },
+            properties: { city: 'Paris', name: '10 Rue Stable', postcode: '75001' },
+          },
+        ],
+      }),
+    })
+
+    const result = await command.execute({})
+    expect(result.updated).toBe(1)
+
+    const [updated] = await db.select().from(accommodations).where(eq(accommodations.id, created!.id))
+    expect(updated!.slug).toBe(originalSlug)
+  })
 })

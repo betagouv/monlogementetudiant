@@ -308,8 +308,6 @@ const command: ImportCommand = {
           ownerId,
           updatedAt: new Date(),
         }
-        const slug = await findAvailableSlug(generateSlug(name), db, accommodations)
-
         if (existing) {
           // UPDATE — keep existing slug, images, etc.
           const [updated] = await db
@@ -338,6 +336,7 @@ const command: ImportCommand = {
           }
           result.updated++
         } else {
+          const slug = await findAvailableSlug(generateSlug(name), db, accommodations)
           const [created] = await db
             .insert(accommodations)
             .values({
