@@ -6,12 +6,7 @@
 
 .searchBar {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  background-color: white;
-  border-radius: 8px;
-  padding: 0.5rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  align-items: stretch;
 }
 
 .inputContainer {
@@ -24,26 +19,32 @@
 }
 
 .nativeInput {
+  background-color: white !important;
   border: none !important;
+  border-bottom: 2px solid #000091 !important;
   box-shadow: none !important;
+  padding: 0.5rem 0.75rem !important;
+  margin: 0 !important;
 }
 
 .nativeInput:focus {
   outline: none !important;
 }
 
-.searchButton {
+.searchButtonDesktop {
+  display: none;
+}
+
+.searchButtonMobile {
+  display: inline-flex;
 }
 
 @media (min-width: 768px) {
-  .searchBar {
-    flex-direction: row;
-    align-items: center;
-    gap: 0;
-    padding: 0.25rem;
+  .searchButtonDesktop {
+    display: inline-flex;
   }
 
-  .searchButton {
-    border-radius: 6px !important;
+  .searchButtonMobile {
+    display: none;
   }
 }

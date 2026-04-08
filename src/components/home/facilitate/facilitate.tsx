@@ -1,7 +1,7 @@
 import Button from '@codegouvfr/react-dsfr/Button'
 import clsx from 'clsx'
-import { getTranslations } from 'next-intl/server'
 import Image from 'next/image'
+import { getTranslations } from 'next-intl/server'
 import styles from './facilitate.module.css'
 
 export const FacilitateSection = async () => {
