@@ -62,3 +62,36 @@
   color: white !important;
   width: fit-content;
 }
+
+@media (max-width: 767px) {
+  .partnersSection {
+    flex-direction: column-reverse;
+  }
+
+  .partnersContent {
+    padding: 2rem 1.5rem;
+    text-align: center;
+    gap: 1.5rem;
+  }
+
+  .partnersTitle {
+    font-size: 1.75rem !important;
+    line-height: 2.25rem;
+  }
+
+  .partnersContent > p {
+    font-size: 1.125rem !important;
+    line-height: 1.75rem;
+    margin-bottom: 1.5rem !important;
+  }
+
+  .partnersContact {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .partnersButton {
+    align-self: center;
+  }
+}
