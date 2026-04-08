@@ -1,6 +1,5 @@
 import { colors } from '@codegouvfr/react-dsfr'
 import { getTranslations } from 'next-intl/server'
-import pageStyles from './page.module.css'
 import { CitiesSection } from '~/components/home/cities/cities'
 import { FacilitateSection } from '~/components/home/facilitate/facilitate'
 import { FAQSection } from '~/components/home/faq/faq'
@@ -9,6 +8,7 @@ import { HeroSection } from '~/components/home/hero-section/hero-section'
 import { NewsSection } from '~/components/home/news/news'
 import { PartnersSection } from '~/components/home/partners/partners'
 import { getCanonicalUrl } from '~/utils/canonical'
+import pageStyles from './page.module.css'
 
 export const generateMetadata = async () => {
   const t = await getTranslations('metadata')
