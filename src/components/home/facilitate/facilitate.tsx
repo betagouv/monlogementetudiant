@@ -1,7 +1,7 @@
 import Button from '@codegouvfr/react-dsfr/Button'
 import clsx from 'clsx'
-import Image from 'next/image'
 import { getTranslations } from 'next-intl/server'
+import Image from 'next/image'
 import styles from './facilitate.module.css'
 
 export const FacilitateSection = async () => {
@@ -94,6 +94,13 @@ export const FacilitateSection = async () => {
               {tHome('facilitate.button')}
             </Button>
           </div>
+          <Image
+            className={styles.facilitateIllustrationMobile}
+            src="/images/facilities.svg"
+            alt={tHome('hero.illustrationAlt')}
+            width={352}
+            height={215}
+          />
         </div>
       </div>
     </section>
