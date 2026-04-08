@@ -17,7 +17,7 @@ export const CitiesSection = async () => {
           <img src="/images/sofa-student.svg" alt={tHome('cities.illustrationAlt')} className={styles.citiesImage} />
         </div>
         <div className={styles.citiesContent}>
-          <h2 className={clsx('fr-h2', styles.sectionTitle)}>{tHome('cities.title')}</h2>
+          <h2 className={styles.sectionTitle}>{tHome('cities.title')}</h2>
           <div className={styles.citiesGrid}>
             {sortedPopularCities.map((city) => (
               <Button
