@@ -22,6 +22,7 @@ export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = () => {
   const [queryStates] = useQueryStates({
     bbox: parseAsString,
     city: parseAsString,
+    filters: parseAsString,
     gestionnaire: parseAsString,
     page: parseAsInteger,
     prix: parseAsInteger,
@@ -77,6 +78,7 @@ export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = () => {
               if (queryStates.prix) params.set('prix', queryStates.prix.toString())
               if (queryStates.crous) params.set('crous', queryStates.crous.toString())
               if (queryStates.gestionnaire) params.set('gestionnaire', queryStates.gestionnaire)
+              if (queryStates.filters) params.set('filters', queryStates.filters)
               params.set('page', page.toString())
               return {
                 href: `/widget/logements?${params.toString()}`,
