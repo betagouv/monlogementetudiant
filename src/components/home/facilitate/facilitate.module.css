@@ -1,13 +1,8 @@
 /* Facilitate Section - Blue */
 .facilitateSection {
   background-color: #5858ad;
-  padding: 2rem 0;
+  padding: 2rem 1.5rem;
   color: white;
-}
-
-.highlight {
-  color: #fcc63a;
-  margin: 0;
 }
 
 .facilitateSectionContent {
@@ -24,11 +19,16 @@
 }
 
 .faciliteSectionContentLeft > div:first-child {
-  padding-left: 7.5rem;
+  padding: 0;
 }
 
 .facilitateIllustration {
   display: none;
+}
+
+.facilitateIllustrationMobile {
+  width: 22rem;
+  height: 13.4375rem;
 }
 
 .facilitateContent {
@@ -39,6 +39,11 @@
 
 .facilitateTitle {
   color: white;
+  margin: 0;
+}
+
+.highlight {
+  color: #fcc63a;
   margin: 0;
 }
 
@@ -110,6 +115,39 @@
   background-color: #f5f5f5 !important;
 }
 
+@media (max-width: 767px) {
+  .facilitateTitle,
+  .highlight {
+    font-size: 1.75rem !important;
+    text-align: center;
+    padding: 0;
+  }
+
+  .facilitateContent {
+    padding: 1.5rem 0;
+  }
+
+  .facilitateList {
+    gap: 1.5rem;
+  }
+
+  .facilitateItem > div:nth-child(2) > span:nth-child(1) {
+    font-size: 1.375rem;
+    line-height: 1.75rem;
+  }
+
+  .facilitateItem > div:nth-child(2) > span:nth-child(2) {
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  .facilitateButton {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+}
+
 @media (min-width: 768px) {
   .facilitateSection {
     padding: 4rem 7rem 5rem 0;
@@ -128,6 +166,14 @@
     display: flex;
     flex: 0 0 50%;
     justify-content: center;
+  }
+
+  .facilitateIllustrationMobile {
+    display: none;
+  }
+
+  .faciliteSectionContentLeft > div:first-child {
+    padding-left: 7.5rem;
   }
 
   .facilitateContent {

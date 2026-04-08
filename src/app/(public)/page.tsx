@@ -1,5 +1,6 @@
 import { colors } from '@codegouvfr/react-dsfr'
 import { getTranslations } from 'next-intl/server'
+import pageStyles from './page.module.css'
 import { CitiesSection } from '~/components/home/cities/cities'
 import { FacilitateSection } from '~/components/home/facilitate/facilitate'
 import { FAQSection } from '~/components/home/faq/faq'
@@ -26,9 +27,9 @@ export default async function Home() {
   return (
     <>
       <div
+        className={pageStyles.heroWrapper}
         style={{
           backgroundColor: colors.decisions.background.alt.blueFrance.default,
-          paddingBottom: '10rem',
         }}
       >
         <HeroSection />
