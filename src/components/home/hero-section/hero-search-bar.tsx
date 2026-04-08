@@ -1,20 +1,18 @@
 'use client'
 
-import { fr } from '@codegouvfr/react-dsfr'
 import Button from '@codegouvfr/react-dsfr/Button'
 import Input from '@codegouvfr/react-dsfr/Input'
 import { useRouter } from 'next/navigation'
 import { useQueryState } from 'nuqs'
 import { FC, useState } from 'react'
-import { tss } from 'tss-react'
 import { FindStudentAccommodationCitiesAutocompleteResults } from '~/components/find-student-accomodation/home/autocomplete/find-student-accommodations-cities-autocomplete-results'
 import { useSearchCities } from '~/hooks/use-search-cities'
 import { trackEvent } from '~/lib/tracking'
 import { TCity } from '~/schemas/territories'
+import styles from './hero-search-bar.module.css'
 
 export const HeroSearchBar: FC = () => {
   const router = useRouter()
-  const { classes } = useStyles()
   const [_, setBboxQuery] = useQueryState('bbox')
   const { data, isError, searchQuery, searchQueryState, setSearchQuery, setSearchQueryState } = useSearchCities()
   const [selectedCity, setSelectedCity] = useState<TCity | null>(null)
@@ -57,11 +55,11 @@ export const HeroSearchBar: FC = () => {
   }
 
   return (
-    <div className={classes.container}>
-      <div className={classes.searchBar}>
-        <div className={classes.inputContainer}>
+    <div className={styles.container}>
+      <div className={styles.searchBar}>
+        <div className={styles.inputContainer}>
           <Input
-            classes={{ root: classes.input, nativeInputOrTextArea: classes.nativeInput }}
+            classes={{ root: styles.input, nativeInputOrTextArea: styles.nativeInput }}
             label=""
             hideLabel
             iconId="ri-search-line"
@@ -78,52 +76,10 @@ export const HeroSearchBar: FC = () => {
             <FindStudentAccommodationCitiesAutocompleteResults data={data} onClickItem={handleOnClickItem} />
           )}
         </div>
-        <Button className={classes.searchButton} onClick={handleSearch}>
+        <Button className={styles.searchButton} onClick={handleSearch}>
           Rechercher
         </Button>
       </div>
     </div>
   )
 }
-
-const useStyles = tss.create({
-  container: {
-    width: '100%',
-    maxWidth: '600px',
-    margin: '0 auto',
-  },
-  searchBar: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem',
-    backgroundColor: 'white',
-    borderRadius: '8px',
-    padding: '0.5rem',
-    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-    [fr.breakpoints.up('md')]: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: '0',
-      padding: '0.25rem',
-    },
-  },
-  inputContainer: {
-    position: 'relative',
-    flex: 1,
-  },
-  input: {
-    marginBottom: '0 !important',
-  },
-  nativeInput: {
-    border: 'none !important',
-    boxShadow: 'none !important',
-    '&:focus': {
-      outline: 'none !important',
-    },
-  },
-  searchButton: {
-    [fr.breakpoints.up('md')]: {
-      borderRadius: '6px !important',
-    },
-  },
-})
