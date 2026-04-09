@@ -19,10 +19,13 @@ import { AccommodationImages } from '~/components/accommodation/accommodation-im
 import { NearbyAccommodations } from '~/components/accommodation/nearby-accommodations'
 import { SaveAccommodationFavoriteButton } from '~/components/favorites/save-accommodation-favorite-button'
 import { OwnerDetails } from '~/components/find-student-accomodation/owner-details/owner-details'
+import { JsonLd } from '~/components/seo/json-ld'
 import { getAvailableApartmentTypes } from '~/enums/apartment-type'
 import { EResidenceType, RESIDENCE_TYPE_LABELS } from '~/enums/residence-type'
 import { getCanonicalUrl } from '~/utils/canonical'
 import { formatCityWithA } from '~/utils/french-contraction'
+import { buildBreadcrumbSchema, buildLodgingSchema } from '~/utils/schema'
+import { getAccommodationBreadcrumbItems, getAccommodationLodgingData } from './get-accommodation-json-ld'
 import { getAccommodationPageContext } from './get-accommodation-page-context'
 import styles from './logement.module.css'
 
@@ -84,8 +87,24 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
     accommodation.residence_type === EResidenceType.SOCIALE_JEUNES_ACTIFS ||
     accommodation.residence_type === EResidenceType.JEUNES_TRAVAILLEURS
 
+  const breadcrumbItems = getAccommodationBreadcrumbItems(name, city, slug)
+  const lodgingData = getAccommodationLodgingData({
+    name,
+    address,
+    city,
+    postalCode: postal_code,
+    latitude,
+    longitude,
+    imagesUrls: images_urls,
+    priceMin: accommodation.price_min,
+    priceMax: accommodation.price_max,
+    description: description ?? null,
+    slug,
+  })
+
   return (
     <HydrationBoundary state={dehydratedState}>
+      <JsonLd data={[buildBreadcrumbSchema(breadcrumbItems), buildLodgingSchema(lodgingData)]} />
       <div className="fr-container">
         <Breadcrumb
           currentPageLabel={breadCrumbTitle}
