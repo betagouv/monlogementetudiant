@@ -10,8 +10,11 @@ import FindStudentAccommodationQA from '~/components/find-student-accomodation/q
 import { FindStudentAccomodationResultsSections } from '~/components/find-student-accomodation/results/find-student-accomodation-results-sections'
 import { FindStudentAccomodationSortView } from '~/components/find-student-accomodation/sort-view/find-student-accomodation-sort-view'
 import { SearchParamsSync } from '~/components/search-params-sync'
+import { JsonLd } from '~/components/seo/json-ld'
 import { getCanonicalUrl } from '~/utils/canonical'
 import { formatCityWithA } from '~/utils/french-contraction'
+import { buildBreadcrumbSchema, buildFaqSchema } from '~/utils/schema'
+import { getSearchBreadcrumbItems, getSearchFaqItems } from './get-search-json-ld'
 import { getStudentAccommodationPageContext } from './get-student-accommodation-page-context'
 
 export async function generateMetadata({
@@ -68,8 +71,12 @@ export default async function FindStudentAccommodationPage({
   const { dehydratedState, user, territory, isAcademy, serverBbox, serverAcademie, routeCategoryKey } =
     await getStudentAccommodationPageContext(awaitedParams, awaitedSearchParams)
 
+  const breadcrumbItems = getSearchBreadcrumbItems(territory, routeCategoryKey)
+  const faqItems = getSearchFaqItems()
+
   return (
     <HydrationBoundary state={dehydratedState}>
+      <JsonLd data={[buildBreadcrumbSchema(breadcrumbItems), buildFaqSchema(faqItems)]} />
       <SearchParamsSync bbox={serverBbox} academie={serverAcademie} />
       <div className="fr-container">
         <FindStudentAccommodationTitle location={territory?.name} />
