@@ -1,6 +1,6 @@
 import { bigint, date, doublePrecision, integer, jsonb, pgTable, timestamp } from 'drizzle-orm/pg-core'
 
-export const stats = pgTable('stats_stats', {
+export const stats = pgTable('stats', {
   id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   date: date().notNull().unique(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

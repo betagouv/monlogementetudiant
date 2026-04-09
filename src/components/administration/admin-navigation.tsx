@@ -21,7 +21,10 @@ type NavSection = {
 const navSections: NavSection[] = [
   {
     title: 'Navigation',
-    items: [{ label: 'Tableau de bord', icon: 'fr-icon-dashboard-3-line', href: '/administration/tableau-de-bord' }],
+    items: [
+      { label: 'Tableau de bord', icon: 'fr-icon-dashboard-3-line', href: '/administration/tableau-de-bord' },
+      { label: 'Statistiques', icon: 'fr-icon-line-chart-line', href: '/administration/statistiques' },
+    ],
   },
   {
     title: 'Utilisateurs',

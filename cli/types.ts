@@ -30,6 +30,9 @@ export interface SyncOptions {
   verbose?: boolean
   force?: boolean
   date?: string
+  from?: string
+  to?: string
+  only?: 'stats' | 'events'
 }
 
 export interface SyncResult {

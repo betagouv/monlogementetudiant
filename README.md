@@ -282,19 +282,26 @@ Pas de variables d'env spécifiques.
 #### `sync stats` — Synchroniser les statistiques Matomo
 
 ```bash
-pnpm cli sync stats
-pnpm cli sync stats --date 2025-03-10
-pnpm cli sync stats --force
-pnpm cli sync stats --dry-run --verbose
+pnpm cli sync stats                                        # stats de la veille
+pnpm cli sync stats --date 2025-03-10                      # un jour specifique
+pnpm cli sync stats --from 2025-01-01                      # du 1er janvier a hier
+pnpm cli sync stats --from 2025-01-01 --to 2025-03-31      # range specifique
+pnpm cli sync stats --force                                # ecraser les stats existantes
+pnpm cli sync stats --dry-run --verbose                    # simulation
 ```
 
-Collecte les statistiques journalières (visites + events) depuis l'API Matomo et les stocke dans les tables `stats_stats` et `stats_eventstats`.
+Collecte les statistiques journalières (visites + events custom) depuis l'API Matomo et les stocke dans les tables `stats` et `event_stats`. Les visualisations sont disponibles dans `/administration/statistiques`.
 
-Par défaut, collecte les stats de la veille. Les agrégations par semaine/mois sont faites dans Metabase.
+**Mode normal (cron)** : collecte les stats de la veille. C'est le mode utilise par le cron quotidien.
 
-Options spécifiques :
-- `--date <YYYY-MM-DD>` : collecter un jour spécifique (par défaut : veille)
-- `--force` : écraser les stats existantes pour la même date
+**Mode batch (rattrapage)** : avec `--from` (et optionnellement `--to`), boucle sur chaque jour de la range pour backfill l'historique. Un delai de 100ms est applique entre chaque jour pour ne pas surcharger l'API Matomo.
+
+Options :
+- `--date <YYYY-MM-DD>` : collecter un jour specifique (par defaut : veille)
+- `--from <YYYY-MM-DD>` : date de debut pour un sync en batch
+- `--to <YYYY-MM-DD>` : date de fin pour un sync en batch (par defaut : veille)
+- `--force` : ecraser les stats existantes pour la meme date
+- `--dry-run` : simuler sans modifier la base
 
 Variables d'env requises : `MATOMO_URL`, `MATOMO_TOKEN`, `MATOMO_ID_SITE`
 

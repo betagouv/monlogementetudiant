@@ -38,6 +38,9 @@ program
   .option('--verbose', 'Afficher les détails')
   .option('--force', 'Forcer la mise à jour')
   .option('--date <date>', 'Date de référence (YYYY-MM-DD)')
+  .option('--from <date>', 'Date de début pour sync en batch (YYYY-MM-DD)')
+  .option('--to <date>', 'Date de fin pour sync en batch (YYYY-MM-DD, défaut: hier)')
+  .option('--only <type>', 'Sync uniquement stats ou events (stats, events)')
   .action((type, opts) => runSync(type, opts))
 
 program

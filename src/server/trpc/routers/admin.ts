@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server'
-import { and, count, eq, ilike, isNull, or, sql } from 'drizzle-orm'
+import { and, between, count, eq, ilike, isNull, or, sql } from 'drizzle-orm'
 import { getTranslations } from 'next-intl/server'
 import { z } from 'zod'
 import { db } from '~/server/db'
@@ -7,7 +7,9 @@ import { accommodations } from '~/server/db/schema/accommodations'
 import { adminOwnerLinks } from '~/server/db/schema/admin-owner-links'
 import { user } from '~/server/db/schema/auth'
 import { cities } from '~/server/db/schema/cities'
+import { eventStats } from '~/server/db/schema/event-stats'
 import { owners } from '~/server/db/schema/owners'
+import { stats } from '~/server/db/schema/stats'
 import { generateSlug } from '~/server/trpc/utils/accommodation-helpers'
 import { findAvailableSlug } from '~/server/utils/slug'
 import { adminProcedure, createTRPCRouter } from '../init'
@@ -556,9 +558,128 @@ const statsRouter = createTRPCRouter({
   }),
 })
 
+const dateRangeInput = z.object({
+  from: z.string(),
+  to: z.string(),
+})
+
+function aggregateJsonbRanking(rows: { data: unknown }[], limit = 10): { label: string; nbVisits: number }[] {
+  const map = new Map<string, number>()
+  for (const row of rows) {
+    const items = row.data as { label: string; nbVisits: number }[] | null
+    if (!Array.isArray(items)) continue
+    for (const item of items) {
+      map.set(item.label, (map.get(item.label) ?? 0) + (item.nbVisits ?? 0))
+    }
+  }
+  return Array.from(map.entries())
+    .map(([label, nbVisits]) => ({ label, nbVisits }))
+    .sort((a, b) => b.nbVisits - a.nbVisits)
+    .slice(0, limit)
+}
+
+const matomoStatsRouter = createTRPCRouter({
+  overview: adminProcedure.input(dateRangeInput).query(async ({ input }) => {
+    const result = await db
+      .select({
+        totalVisitors: sql<number>`coalesce(sum(${stats.uniqueVisitors}), 0)::int`,
+        totalPageViews: sql<number>`coalesce(sum(${stats.pageViews}), 0)::int`,
+        avgBounceRate: sql<number>`coalesce(avg(${stats.bounceRatePercentage}), 0)::float`,
+        avgDuration: sql<number>`coalesce(avg(${stats.averageDuration}), 0)::float`,
+        avgNewVisitsPercentage: sql<number>`coalesce(avg(${stats.newVisitsPercentage}), 0)::float`,
+        avgVisitorsPerPage: sql<number>`coalesce(avg(${stats.visitorsPerPage}), 0)::float`,
+        days: sql<number>`count(*)::int`,
+      })
+      .from(stats)
+      .where(between(stats.date, input.from, input.to))
+
+    return result[0]!
+  }),
+
+  visitorsOverTime: adminProcedure.input(dateRangeInput).query(async ({ input }) => {
+    return db
+      .select({
+        date: stats.date,
+        uniqueVisitors: stats.uniqueVisitors,
+        pageViews: stats.pageViews,
+      })
+      .from(stats)
+      .where(between(stats.date, input.from, input.to))
+      .orderBy(stats.date)
+  }),
+
+  trendsOverTime: adminProcedure.input(dateRangeInput).query(async ({ input }) => {
+    return db
+      .select({
+        date: stats.date,
+        bounceRatePercentage: stats.bounceRatePercentage,
+        averageDuration: stats.averageDuration,
+        newVisitsPercentage: stats.newVisitsPercentage,
+      })
+      .from(stats)
+      .where(between(stats.date, input.from, input.to))
+      .orderBy(stats.date)
+  }),
+
+  topPages: adminProcedure.input(dateRangeInput).query(async ({ input }) => {
+    const rows = await db
+      .select({ data: stats.topPages })
+      .from(stats)
+      .where(between(stats.date, input.from, input.to))
+    return aggregateJsonbRanking(rows)
+  }),
+
+  topEntryPages: adminProcedure.input(dateRangeInput).query(async ({ input }) => {
+    const rows = await db
+      .select({ data: stats.mainEntryPages })
+      .from(stats)
+      .where(between(stats.date, input.from, input.to))
+    return aggregateJsonbRanking(rows)
+  }),
+
+  topSources: adminProcedure.input(dateRangeInput).query(async ({ input }) => {
+    const rows = await db
+      .select({ data: stats.mainSources })
+      .from(stats)
+      .where(between(stats.date, input.from, input.to))
+    return aggregateJsonbRanking(rows)
+  }),
+
+  eventsByCategory: adminProcedure.input(dateRangeInput).query(async ({ input }) => {
+    return db
+      .select({
+        category: eventStats.category,
+        nbEvents: sql<number>`coalesce(sum(${eventStats.nbEvents}), 0)::int`,
+        nbUniqueEvents: sql<number>`coalesce(sum(${eventStats.nbUniqueEvents}), 0)::int`,
+      })
+      .from(eventStats)
+      .where(between(eventStats.date, input.from, input.to))
+      .groupBy(eventStats.category)
+      .orderBy(sql`sum(${eventStats.nbEvents}) desc`)
+  }),
+
+  topEventActions: adminProcedure.input(dateRangeInput.extend({ category: z.string().optional() })).query(async ({ input }) => {
+    const conditions = [between(eventStats.date, input.from, input.to)]
+    if (input.category) conditions.push(eq(eventStats.category, input.category))
+
+    return db
+      .select({
+        category: eventStats.category,
+        action: eventStats.action,
+        nbEvents: sql<number>`coalesce(sum(${eventStats.nbEvents}), 0)::int`,
+      })
+      .from(eventStats)
+      .where(and(...conditions))
+      .groupBy(eventStats.category, eventStats.action)
+      .orderBy(sql`sum(${eventStats.nbEvents}) desc`)
+      .limit(20)
+  }),
+})
+
 export const adminRouter = createTRPCRouter({
   users: usersRouter,
   owners: ownersRouter,
   residences: residencesRouter,
   stats: statsRouter,
+  matomoStats: matomoStatsRouter,
 })

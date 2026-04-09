@@ -1,6 +1,6 @@
 import { bigint, date, doublePrecision, integer, pgTable, timestamp, varchar } from 'drizzle-orm/pg-core'
 
-export const eventStats = pgTable('stats_eventstats', {
+export const eventStats = pgTable('event_stats', {
   id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   date: date().notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

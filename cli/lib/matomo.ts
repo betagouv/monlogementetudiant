@@ -14,14 +14,21 @@ async function matomoRequest(params: MatomoParams): Promise<unknown> {
   url.searchParams.set('module', 'API')
   url.searchParams.set('format', 'JSON')
   url.searchParams.set('idSite', MATOMO_ID_SITE)
-  url.searchParams.set('token_auth', MATOMO_TOKEN)
   for (const [key, value] of Object.entries(params)) {
     if (value != null) url.searchParams.set(key, value)
   }
 
-  const response = await fetch(url.toString())
-  if (!response.ok) throw new Error(`Matomo API error: ${response.status}`)
-  return response.json()
+  const body = new URLSearchParams({ token_auth: MATOMO_TOKEN })
+  const response = await fetch(url.toString(), { method: 'POST', body })
+  if (!response.ok) {
+    const text = await response.text().catch(() => '')
+    throw new Error(`Matomo API error: ${response.status} - ${text.slice(0, 200)}`)
+  }
+  const json = await response.json()
+  if (json && typeof json === 'object' && 'result' in json && json.result === 'error') {
+    throw new Error(`Matomo API: ${json.message}`)
+  }
+  return json
 }
 
 export interface CompleteStats {
@@ -76,47 +83,50 @@ export async function getAllEvents(date: string): Promise<EventData[]> {
     method: 'Events.getCategory',
     date,
     period: 'day',
-    flat: '1',
     filter_limit: '-1',
   })) as {
     label: string
     nb_events: number
     nb_events_with_value: number
     sum_event_value: number
-    subtable?: { label: string; nb_events: number; nb_events_with_value: number; sum_event_value: number }[]
+    idsubdatatable?: number
   }[]
+
+  if (!Array.isArray(categories) || categories.length === 0) return []
 
   const events: EventData[] = []
 
-  for (const cat of categories ?? []) {
-    const actions = (await matomoRequest({
-      method: 'Events.getActionFromCategoryId',
-      date,
-      period: 'day',
-      idSubtable: String(cat.subtable ? 1 : 0),
-      label: cat.label,
-      filter_limit: '-1',
-    })) as { label: string; nb_events: number; nb_events_with_value: number; sum_event_value: number }[]
+  for (const cat of categories) {
+    if (cat.idsubdatatable) {
+      const actions = (await matomoRequest({
+        method: 'Events.getActionFromCategoryId',
+        date,
+        period: 'day',
+        idSubtable: String(cat.idsubdatatable),
+        filter_limit: '-1',
+      })) as { label: string; nb_events: number; nb_events_with_value: number; sum_event_value: number }[]
 
-    if (Array.isArray(actions)) {
-      for (const action of actions) {
-        events.push({
-          category: cat.label,
-          action: action.label,
-          nbEvents: action.nb_events ?? 0,
-          nbUniqueEvents: action.nb_events_with_value ?? 0,
-          eventValue: action.sum_event_value ?? 0,
-        })
+      if (Array.isArray(actions)) {
+        for (const action of actions) {
+          events.push({
+            category: cat.label,
+            action: action.label,
+            nbEvents: action.nb_events ?? 0,
+            nbUniqueEvents: action.nb_events_with_value ?? 0,
+            eventValue: action.sum_event_value ?? 0,
+          })
+        }
+        continue
       }
-    } else {
-      events.push({
-        category: cat.label,
-        action: '',
-        nbEvents: cat.nb_events ?? 0,
-        nbUniqueEvents: cat.nb_events_with_value ?? 0,
-        eventValue: cat.sum_event_value ?? 0,
-      })
     }
+
+    events.push({
+      category: cat.label,
+      action: '',
+      nbEvents: cat.nb_events ?? 0,
+      nbUniqueEvents: cat.nb_events_with_value ?? 0,
+      eventValue: cat.sum_event_value ?? 0,
+    })
   }
 
   return events

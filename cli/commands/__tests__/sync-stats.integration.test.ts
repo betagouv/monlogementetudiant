@@ -53,7 +53,7 @@ describe('sync-stats integration', () => {
 
     const result = await command.execute({ date: '2025-03-01' })
 
-    expect(result.updated).toBe(3)
+    expect(result.updated).toBe(1)
 
     const statsRows = await db.select().from(stats).where(eq(stats.date, '2025-03-01'))
     expect(statsRows).toHaveLength(1)
@@ -107,5 +107,30 @@ describe('sync-stats integration', () => {
     const rows = await db.select().from(stats).where(eq(stats.date, '2025-03-03'))
     expect(rows).toHaveLength(1)
     expect(rows[0].uniqueVisitors).toBe(999)
+  })
+
+  it('syncs only events without touching stats', async () => {
+    const db = getTestDb()
+
+    await db.insert(stats).values({
+      date: '2025-03-04',
+      uniqueVisitors: 10,
+      pageViews: 20,
+    })
+
+    vi.mocked(getAllEvents).mockResolvedValue([
+      { category: 'Recherche', action: 'recherche logement', nbEvents: 15, nbUniqueEvents: 10, eventValue: 0 },
+    ])
+
+    await command.execute({ date: '2025-03-04', only: 'events' })
+
+    expect(getCompleteStats).not.toHaveBeenCalled()
+
+    const statsRows = await db.select().from(stats).where(eq(stats.date, '2025-03-04'))
+    expect(statsRows[0].uniqueVisitors).toBe(10) // unchanged
+
+    const eventRows = await db.select().from(eventStats).where(eq(eventStats.date, '2025-03-04'))
+    expect(eventRows).toHaveLength(1)
+    expect(eventRows[0].category).toBe('Recherche')
   })
 })

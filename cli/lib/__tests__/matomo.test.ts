@@ -23,7 +23,7 @@ afterEach(() => {
 })
 
 describe('getCompleteStats', () => {
-  it('calls Matomo API with period=day and returns parsed stats', async () => {
+  it('calls Matomo API via POST with token in body and returns parsed stats', async () => {
     mockFetch.mockResolvedValue({
       ok: true,
       json: async () => ({}),
@@ -67,11 +67,14 @@ describe('getCompleteStats', () => {
     expect(result.mainEntryPages).toEqual([{ label: '/login', nbVisits: 80 }])
     expect(result.mainSources).toEqual([{ label: 'google.com', nbVisits: 60 }])
 
-    const firstCall = mockFetch.mock.calls[0][0]
-    const url = new URL(firstCall)
+    // Verify POST method with token in body
+    const [firstCallUrl, firstCallOpts] = mockFetch.mock.calls[0]
+    const url = new URL(firstCallUrl)
     expect(url.searchParams.get('period')).toBe('day')
     expect(url.searchParams.get('date')).toBe('2025-03-01')
-    expect(url.searchParams.get('token_auth')).toBe('test-token')
+    expect(url.searchParams.has('token_auth')).toBe(false)
+    expect(firstCallOpts.method).toBe('POST')
+    expect(firstCallOpts.body.get('token_auth')).toBe('test-token')
   })
 
   it('handles missing values with defaults', async () => {
@@ -87,14 +90,25 @@ describe('getCompleteStats', () => {
     expect(result.pageViews).toBe(0)
     expect(result.topPages).toEqual([])
   })
+
+  it('throws on Matomo error response', async () => {
+    const errorResponse = { ok: true, json: async () => ({ result: 'error', message: 'Invalid token' }) }
+    mockFetch
+      .mockResolvedValueOnce(errorResponse)
+      .mockResolvedValueOnce(errorResponse)
+      .mockResolvedValueOnce(errorResponse)
+      .mockResolvedValueOnce(errorResponse)
+
+    await expect(getCompleteStats('2025-03-01')).rejects.toThrow('Matomo API: Invalid token')
+  })
 })
 
 describe('getAllEvents', () => {
-  it('fetches categories and actions', async () => {
+  it('fetches categories and actions using idsubdatatable', async () => {
     // First call: getCategory
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => [{ label: 'click', nb_events: 10, nb_events_with_value: 5, sum_event_value: 100, subtable: [{}] }],
+      json: async () => [{ label: 'click', nb_events: 10, nb_events_with_value: 5, sum_event_value: 100, idsubdatatable: 42 }],
     })
     // Second call: getActionFromCategoryId
     mockFetch.mockResolvedValueOnce({
@@ -112,16 +126,16 @@ describe('getAllEvents', () => {
       nbUniqueEvents: 3,
       eventValue: 50,
     })
+
+    // Verify idSubtable is passed from idsubdatatable
+    const secondCallUrl = new URL(mockFetch.mock.calls[1][0])
+    expect(secondCallUrl.searchParams.get('idSubtable')).toBe('42')
   })
 
-  it('falls back to category data when no actions array', async () => {
+  it('falls back to category data when no idsubdatatable', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => [{ label: 'download', nb_events: 5, nb_events_with_value: 2, sum_event_value: 10 }],
-    })
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({}), // Not an array
     })
 
     const events = await getAllEvents('2025-03-01')
@@ -130,12 +144,24 @@ describe('getAllEvents', () => {
     expect(events[0].category).toBe('download')
     expect(events[0].action).toBe('')
     expect(events[0].nbEvents).toBe(5)
+    // Only one fetch call (no subtable to fetch)
+    expect(mockFetch).toHaveBeenCalledTimes(1)
   })
 
   it('returns empty array when no categories', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => null,
+    })
+
+    const events = await getAllEvents('2025-03-01')
+    expect(events).toEqual([])
+  })
+
+  it('returns empty array when categories is empty array', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => [],
     })
 
     const events = await getAllEvents('2025-03-01')
