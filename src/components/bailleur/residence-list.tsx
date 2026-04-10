@@ -57,6 +57,7 @@ export const ResidenceList: FC = () => {
     page: parseAsInteger.withDefault(1),
     disponible: parseAsBoolean.withDefault(false),
     recherche: parseAsString.withDefault(''),
+    ownerId: parseAsInteger,
   })
 
   const accommodationsList = accommodations?.results.features || []
@@ -135,6 +136,7 @@ export const ResidenceList: FC = () => {
             const params = new URLSearchParams()
             if (queryStates.disponible) params.set('disponible', queryStates.disponible.toString())
             if (queryStates.recherche) params.set('recherche', queryStates.recherche)
+            if (queryStates.ownerId) params.set('ownerId', queryStates.ownerId.toString())
             params.set('page', page.toString())
             return { href: `/bailleur/residences?${params.toString()}` }
           }}

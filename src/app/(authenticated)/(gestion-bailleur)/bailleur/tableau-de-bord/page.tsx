@@ -17,7 +17,7 @@ import { getBailleurDashboardPageContext } from './get-bailleur-dashboard-page-c
 import styles from './tableau-de-bord.module.css'
 
 type TableauDeBordPageProps = {
-  searchParams: Promise<{ page?: string; bailleur?: string }>
+  searchParams: Promise<{ page?: string; ownerId?: string }>
 }
 
 export default async function TableauDeBordPage({ searchParams }: TableauDeBordPageProps) {
@@ -216,7 +216,7 @@ export default async function TableauDeBordPage({ searchParams }: TableauDeBordP
             getPageLinkProps={(page: number) => {
               const params = new URLSearchParams()
               params.set('page', page.toString())
-              if (awaitedSearchParams.bailleur) params.set('bailleur', awaitedSearchParams.bailleur)
+              if (awaitedSearchParams.ownerId) params.set('ownerId', awaitedSearchParams.ownerId)
               return { href: `/bailleur/tableau-de-bord?${params.toString()}` }
             }}
           />

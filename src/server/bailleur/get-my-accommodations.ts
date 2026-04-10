@@ -1,9 +1,8 @@
 import { and, eq, ilike, sql } from 'drizzle-orm'
 import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
+import { getOwnerForUser } from '~/server/bailleur/get-owner-for-user'
 import { db } from '~/server/db'
 import { accommodations } from '~/server/db/schema/accommodations'
-import { adminOwnerLinks } from '~/server/db/schema/admin-owner-links'
-import { user } from '~/server/db/schema/auth'
 import { mapToGeoJsonFeature, priceMaxComputed } from '~/server/trpc/routers/accommodations'
 import { getQueryClient } from '~/server/trpc/server'
 import { getServerSession } from '~/services/better-auth'
@@ -21,7 +20,7 @@ export const getMyAccommodations = async (searchParams?: {
   page?: string
   disponible?: string
   recherche?: string
-  bailleur?: string
+  ownerId?: string
 }): Promise<TGetAccomodationsResponse> => {
   const auth = await getServerSession()
 
@@ -29,34 +28,8 @@ export const getMyAccommodations = async (searchParams?: {
     throw new Error('Unauthorized')
   }
 
-  let owner: { id: number; name: string; slug: string; url: string | null } | null = null
-
-  if (auth.user.role === 'admin' && searchParams?.bailleur) {
-    // Admin with bailleur query param: verify the admin is linked to this owner
-    const requestedOwnerId = Number(searchParams.bailleur)
-    if (!isNaN(requestedOwnerId)) {
-      const link = await db.query.adminOwnerLinks.findFirst({
-        where: and(eq(adminOwnerLinks.userId, auth.user.id), eq(adminOwnerLinks.ownerId, requestedOwnerId)),
-        with: { owner: true },
-      })
-      if (link) {
-        owner = link.owner
-      }
-    }
-  } else if (auth.user.role === 'admin') {
-    // Admin without bailleur param: use first linked owner
-    const firstLink = await db.query.adminOwnerLinks.findFirst({
-      where: eq(adminOwnerLinks.userId, auth.user.id),
-      with: { owner: true },
-    })
-    if (firstLink) {
-      owner = firstLink.owner
-    }
-  } else {
-    // Owner role: use user.ownerId as before
-    const usr = await db.query.user.findFirst({ where: eq(user.id, auth.user.id), with: { owner: true } })
-    owner = usr?.owner ?? null
-  }
+  const ownerId = searchParams?.ownerId ? Number(searchParams.ownerId) : undefined
+  const owner = await getOwnerForUser(auth.user.id, ownerId)
 
   if (!owner) {
     return {

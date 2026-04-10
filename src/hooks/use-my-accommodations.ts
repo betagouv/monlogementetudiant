@@ -15,9 +15,10 @@ export const useMyAccommodations = ({ debounceTime = 300 }: UseMyAccommodationsO
     page: parseAsInteger,
     disponible: parseAsBoolean,
     recherche: parseAsString,
+    ownerId: parseAsInteger,
   })
 
-  const { page, disponible, recherche } = queryStates
+  const { page, disponible, recherche, ownerId } = queryStates
   const [debouncedRecherche] = useDebounce(recherche, debounceTime)
 
   const enabled =
@@ -29,6 +30,7 @@ export const useMyAccommodations = ({ debounceTime = 300 }: UseMyAccommodationsO
         page: page ?? 1,
         hasAvailability: disponible ?? undefined,
         search: debouncedRecherche && debouncedRecherche.length >= 3 ? debouncedRecherche : undefined,
+        ownerId: ownerId ?? undefined,
       },
       { enabled, placeholderData: keepPreviousData },
     ),
