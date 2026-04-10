@@ -19,6 +19,7 @@ export const WorkspaceHeaderComponent: FC = async () => {
   const isAdmin = auth.user.role === 'admin'
   const adminOwners = auth.user.adminOwners ?? []
   const showSwitcher = isAdmin && adminOwners.length > 1
+  const defaultOwnerId = auth.user.owner?.id ?? adminOwners[0]?.id
 
   return (
     <div>
@@ -28,7 +29,7 @@ export const WorkspaceHeaderComponent: FC = async () => {
           title: t('metadata.workspace.title'),
         }}
         quickAccessItems={[
-          ...(showSwitcher ? [<OwnerSwitcher key="owner-switcher" owners={adminOwners} />] : []),
+          ...(showSwitcher ? [<OwnerSwitcher key="owner-switcher" owners={adminOwners} defaultOwnerId={defaultOwnerId} />] : []),
           <UserConnectedDropdown user={auth.user} />,
         ]}
         brandTop={<BrandTop />}

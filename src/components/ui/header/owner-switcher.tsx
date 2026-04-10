@@ -6,14 +6,15 @@ import { useCallback } from 'react'
 
 interface OwnerSwitcherProps {
   owners: Array<{ id: number; name: string; slug: string }>
+  defaultOwnerId?: number
 }
 
-export function OwnerSwitcher({ owners }: OwnerSwitcherProps) {
+export function OwnerSwitcher({ owners, defaultOwnerId }: OwnerSwitcherProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  const currentOwnerId = searchParams.get('ownerId')
+  const currentOwnerId = searchParams.get('ownerId') ?? defaultOwnerId?.toString()
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
