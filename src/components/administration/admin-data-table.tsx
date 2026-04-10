@@ -11,10 +11,12 @@ interface AdminDataTableProps<T> {
   data: T[]
   pageCount: number
   page: number
-  onPageChange: (page: number) => void
+  onPageChange?: (page: number) => void
   isLoading?: boolean
   isError?: boolean
   hidePagination?: boolean
+  onRowClick?: (row: T) => void
+  isRowSelected?: (row: T) => boolean
 }
 
 export function AdminDataTable<T>({
@@ -26,6 +28,8 @@ export function AdminDataTable<T>({
   isLoading,
   isError,
   hidePagination = false,
+  onRowClick,
+  isRowSelected,
 }: AdminDataTableProps<T>) {
   const [sorting, setSorting] = useState<SortingState>([])
 
@@ -100,7 +104,11 @@ export function AdminDataTable<T>({
             </tr>
           ) : (
             table.getRowModel().rows.map((row) => (
-              <tr key={row.id}>
+              <tr
+                key={row.id}
+                onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+                className={clsx(onRowClick && styles.clickableRow, isRowSelected?.(row.original) && styles.selectedRow)}
+              >
                 {row.getVisibleCells().map((cell) => (
                   <td key={cell.id} style={{ width: cell.column.getSize(), maxWidth: cell.column.columnDef.maxSize }}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -121,7 +129,9 @@ export function AdminDataTable<T>({
             href: '#',
             onClick: (e) => {
               e.preventDefault()
-              onPageChange(pageNumber)
+              if (onPageChange) {
+                onPageChange(pageNumber)
+              }
             },
           })}
         />

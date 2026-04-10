@@ -35,3 +35,17 @@
   composes: centerCell;
   color: var(--text-default-error);
 }
+
+.clickableRow {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.clickableRow:hover {
+  background: var(--background-action-low-blue-france);
+}
+
+.selectedRow {
+  background: var(--background-action-low-blue-france);
+  border-left: 3px solid var(--background-action-high-blue-france);
+}

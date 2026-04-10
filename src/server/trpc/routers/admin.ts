@@ -1,9 +1,10 @@
 import { TRPCError } from '@trpc/server'
-import { and, between, count, eq, ilike, isNull, or, sql } from 'drizzle-orm'
+import { and, between, count, desc, eq, ilike, isNull, or, sql } from 'drizzle-orm'
 import { getTranslations } from 'next-intl/server'
 import { z } from 'zod'
 import { db } from '~/server/db'
 import { accommodations } from '~/server/db/schema/accommodations'
+import { activityLog } from '~/server/db/schema/activity-log'
 import { adminOwnerLinks } from '~/server/db/schema/admin-owner-links'
 import { user } from '~/server/db/schema/auth'
 import { cities } from '~/server/db/schema/cities'
@@ -676,10 +677,222 @@ const matomoStatsRouter = createTRPCRouter({
   }),
 })
 
+const ownerUsageRouter = createTRPCRouter({
+  list: adminProcedure.input(dateRangeInput).query(async ({ input }) => {
+    const ownerRows = await db
+      .select({
+        id: owners.id,
+        name: owners.name,
+        slug: owners.slug,
+        url: owners.url,
+        image: owners.image,
+        nbLogins: sql<number>`(
+          SELECT count(*)::int FROM "session" s
+          INNER JOIN "user" u ON s.user_id = u.id
+          WHERE u.owner_id = "account_owner"."id" AND u.role != 'admin'
+          AND s.created_at >= ${input.from}::date
+          AND s.created_at < (${input.to}::date + 1)
+        )`,
+        lastLogin: sql<string | null>`(
+          SELECT max(s.created_at)::text FROM "session" s
+          INNER JOIN "user" u ON s.user_id = u.id
+          WHERE u.owner_id = "account_owner"."id" AND u.role != 'admin'
+        )`,
+        nbActions: sql<number>`(
+          SELECT count(*)::int FROM activity_log
+          WHERE owner_id = "account_owner"."id"
+          AND created_at >= ${input.from}::date
+          AND created_at < (${input.to}::date + 1)
+        )`,
+        nbCreated: sql<number>`(
+          SELECT count(*)::int FROM activity_log
+          WHERE owner_id = "account_owner"."id" AND action = 'accommodation.created'
+          AND created_at >= ${input.from}::date
+          AND created_at < (${input.to}::date + 1)
+        )`,
+        nbUpdated: sql<number>`(
+          SELECT count(*)::int FROM activity_log
+          WHERE owner_id = "account_owner"."id" AND action = 'accommodation.updated'
+          AND created_at >= ${input.from}::date
+          AND created_at < (${input.to}::date + 1)
+        )`,
+        nbAvailabilityUpdated: sql<number>`(
+          SELECT count(*)::int FROM activity_log
+          WHERE owner_id = "account_owner"."id" AND action = 'accommodation.availability_updated'
+          AND created_at >= ${input.from}::date
+          AND created_at < (${input.to}::date + 1)
+        )`,
+        nbAccommodations: sql<number>`(
+          SELECT count(*)::int FROM accommodation_accommodation WHERE owner_id = "account_owner"."id"
+        )`,
+        nbDepublished: sql<number>`(
+          SELECT count(*)::int FROM accommodation_accommodation
+          WHERE owner_id = "account_owner"."id" AND published = false
+        )`,
+      })
+      .from(owners)
+      .orderBy(owners.name)
+
+    return ownerRows.map(({ image, ...row }) => ({
+      ...row,
+      imageBase64: image ? `data:image/jpeg;base64,${Buffer.from(image).toString('base64')}` : null,
+    }))
+  }),
+
+  detail: adminProcedure.input(dateRangeInput.extend({ ownerId: z.number() })).query(async ({ input }) => {
+    const loginsByDay = await db
+      .select({
+        date: sql<string>`date(s.created_at)`.as('date'),
+        count: sql<number>`count(*)::int`.as('count'),
+      })
+      .from(sql`"session" s`)
+      .innerJoin(sql`"user" u`, sql`s.user_id = u.id`)
+      .where(
+        sql`u.owner_id = ${input.ownerId} AND u.role != 'admin' AND s.created_at >= ${input.from}::date AND s.created_at < (${input.to}::date + 1)`,
+      )
+      .groupBy(sql`date(s.created_at)`)
+      .orderBy(sql`date(s.created_at)`)
+
+    const actionsByDay = await db
+      .select({
+        date: sql<string>`date(created_at)`.as('date'),
+        count: sql<number>`count(*)::int`.as('count'),
+      })
+      .from(activityLog)
+      .where(and(eq(activityLog.ownerId, input.ownerId), sql`created_at >= ${input.from}::date AND created_at < (${input.to}::date + 1)`))
+      .groupBy(sql`date(created_at)`)
+      .orderBy(sql`date(created_at)`)
+
+    const recentActivity = await db
+      .select({
+        id: activityLog.id,
+        createdAt: activityLog.createdAt,
+        userName: activityLog.userName,
+        action: activityLog.action,
+        entityType: activityLog.entityType,
+        entityName: activityLog.entityName,
+        metadata: activityLog.metadata,
+      })
+      .from(activityLog)
+      .where(eq(activityLog.ownerId, input.ownerId))
+      .orderBy(desc(activityLog.createdAt))
+      .limit(50)
+
+    const ownerAccommodations = await db
+      .select({
+        id: accommodations.id,
+        name: accommodations.name,
+        slug: accommodations.slug,
+        published: accommodations.published,
+        createdAt: accommodations.createdAt,
+        updatedAt: accommodations.updatedAt,
+      })
+      .from(accommodations)
+      .where(eq(accommodations.ownerId, input.ownerId))
+      .orderBy(accommodations.name)
+
+    return { loginsByDay, actionsByDay, recentActivity, accommodations: ownerAccommodations }
+  }),
+
+  globalEvents: adminProcedure.input(dateRangeInput).query(async ({ input }) => {
+    const gestEvents = await db
+      .select({
+        action: eventStats.action,
+        nbEvents: sql<number>`coalesce(sum(${eventStats.nbEvents}), 0)::int`,
+      })
+      .from(eventStats)
+      .where(and(eq(eventStats.category, 'Espace Gestionnaire'), between(eventStats.date, input.from, input.to)))
+      .groupBy(eventStats.action)
+      .orderBy(sql`sum(${eventStats.nbEvents}) desc`)
+
+    const contactEquipe = await db
+      .select({
+        nbEvents: sql<number>`coalesce(sum(${eventStats.nbEvents}), 0)::int`,
+      })
+      .from(eventStats)
+      .where(
+        and(
+          eq(eventStats.category, 'Espace Gestionnaire'),
+          eq(eventStats.action, 'contacter equipe'),
+          between(eventStats.date, input.from, input.to),
+        ),
+      )
+
+    const consulterOffre = await db
+      .select({
+        nbEvents: sql<number>`coalesce(sum(${eventStats.nbEvents}), 0)::int`,
+      })
+      .from(eventStats)
+      .where(
+        and(eq(eventStats.category, 'Logement'), eq(eventStats.action, 'consulter offre'), between(eventStats.date, input.from, input.to)),
+      )
+
+    return {
+      gestEvents,
+      contactEquipe: contactEquipe[0]?.nbEvents ?? 0,
+      consulterOffre: consulterOffre[0]?.nbEvents ?? 0,
+    }
+  }),
+
+  activityLog: adminProcedure
+    .input(
+      z.object({
+        page: z.number().default(1),
+        pageSize: z.number().default(PAGE_SIZE),
+        action: z.string().optional(),
+        ownerId: z.number().optional(),
+        from: z.string().optional(),
+        to: z.string().optional(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const conditions = []
+      if (input.action) conditions.push(eq(activityLog.action, input.action))
+      if (input.ownerId) conditions.push(eq(activityLog.ownerId, input.ownerId))
+      if (input.from && input.to) {
+        conditions.push(sql`${activityLog.createdAt} >= ${input.from}::date AND ${activityLog.createdAt} < (${input.to}::date + 1)`)
+      }
+
+      const where = conditions.length > 0 ? and(...conditions) : undefined
+      const pageSize = input.pageSize
+      const offset = (input.page - 1) * pageSize
+
+      const [countResult, rows] = await Promise.all([
+        db.select({ count: count() }).from(activityLog).where(where),
+        db
+          .select({
+            id: activityLog.id,
+            createdAt: activityLog.createdAt,
+            userName: activityLog.userName,
+            action: activityLog.action,
+            entityType: activityLog.entityType,
+            entityName: activityLog.entityName,
+            ownerName: activityLog.ownerName,
+            metadata: activityLog.metadata,
+          })
+          .from(activityLog)
+          .where(where)
+          .orderBy(desc(activityLog.createdAt))
+          .limit(pageSize)
+          .offset(offset),
+      ])
+
+      const total = countResult[0]?.count ?? 0
+
+      return {
+        items: rows,
+        total,
+        pageCount: Math.ceil(total / pageSize),
+        page: input.page,
+      }
+    }),
+})
+
 export const adminRouter = createTRPCRouter({
   users: usersRouter,
   owners: ownersRouter,
   residences: residencesRouter,
   stats: statsRouter,
   matomoStats: matomoStatsRouter,
+  ownerUsage: ownerUsageRouter,
 })

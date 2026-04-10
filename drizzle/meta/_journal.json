@@ -162,6 +162,13 @@
       "when": 1775721366947,
       "tag": "0022_rename-stats-tables",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1775747898841,
+      "tag": "0023_activity-log",
+      "breakpoints": true
     }
   ]
 }

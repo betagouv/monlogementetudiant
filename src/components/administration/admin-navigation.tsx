@@ -24,6 +24,7 @@ const navSections: NavSection[] = [
     items: [
       { label: 'Tableau de bord', icon: 'fr-icon-dashboard-3-line', href: '/administration/tableau-de-bord' },
       { label: 'Statistiques', icon: 'fr-icon-line-chart-line', href: '/administration/statistiques' },
+      { label: 'Usage gestionnaires', icon: 'fr-icon-bar-chart-box-line', href: '/administration/gestionnaires-stats' },
     ],
   },
   {

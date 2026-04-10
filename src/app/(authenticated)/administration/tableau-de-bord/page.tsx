@@ -1,15 +1,17 @@
 'use client'
 
-import Alert from '@codegouvfr/react-dsfr/Alert'
 import Button from '@codegouvfr/react-dsfr/Button'
 import Input from '@codegouvfr/react-dsfr/Input'
 import { createModal } from '@codegouvfr/react-dsfr/Modal'
+import Pagination from '@codegouvfr/react-dsfr/Pagination'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import clsx from 'clsx'
 import Image from 'next/image'
+import { parseAsInteger, useQueryState } from 'nuqs'
 import { useState } from 'react'
 import { Cell, Label, Pie, PieChart, ResponsiveContainer } from 'recharts'
 import { useDebounce } from 'use-debounce'
+import { ActivityItem } from '~/components/administration/activity-item'
 import dialogStyles from '~/components/administration/link-dialog.module.css'
 import { createToast } from '~/components/ui/createToast'
 import { useAdminMyLinkedOwners } from '~/hooks/use-admin-my-linked-owners'
@@ -393,19 +395,50 @@ function OccupationChart({ data }: { data: ReturnType<typeof useAdminStats>['dat
 }
 
 function RecentActivity() {
+  const trpc = useTRPC()
+  const [page, setPage] = useQueryState('activityPage', parseAsInteger.withDefault(1))
+  const { data, isLoading } = useQuery(trpc.admin.ownerUsage.activityLog.queryOptions({ page, pageSize: 6 }))
+
+  const items = data?.items ?? []
+
   return (
     <div className={styles.card}>
       <div className={styles.cardHeader}>
         <span className={styles.cardTitle}>Activité récente</span>
+        <Button priority="tertiary no outline" size="small" linkProps={{ href: '/administration/journaux' }}>
+          Voir tout
+        </Button>
       </div>
-      <div className="fr-m-4w">
-        <Alert
-          severity="info"
-          title="Section en cours de développement"
-          description="La gestion des activités sera disponible prochainement."
-          className="fr-mb-3w"
-        />
-      </div>
+      {isLoading ? (
+        <div className="fr-p-3w fr-text--sm fr-text-mention--grey" style={{ textAlign: 'center' }}>
+          Chargement...
+        </div>
+      ) : items.length === 0 ? (
+        <div className="fr-p-3w fr-text--sm fr-text-mention--grey" style={{ textAlign: 'center' }}>
+          Aucune activité
+        </div>
+      ) : (
+        <>
+          {items.map((item) => (
+            <ActivityItem key={item.id} item={item} showOwner />
+          ))}
+          {data && data.pageCount > 1 && (
+            <div className="fr-p-2w fr-flex fr-justify-content-center">
+              <Pagination
+                count={data.pageCount}
+                defaultPage={page}
+                getPageLinkProps={(p) => ({
+                  href: '#',
+                  onClick: (e: React.MouseEvent) => {
+                    e.preventDefault()
+                    setPage(p)
+                  },
+                })}
+              />
+            </div>
+          )}
+        </>
+      )}
     </div>
   )
 }

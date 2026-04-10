@@ -4,6 +4,7 @@ import clsx from 'clsx'
 import { useMemo, useState } from 'react'
 import { Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { useMatomoStats } from '~/hooks/use-matomo-stats'
+import { formatChartDate, formatDuration, getDateFrom, getYesterday } from '~/utils/date-helpers'
 import styles from '../administration.module.css'
 import pageStyles from './statistiques.module.css'
 
@@ -21,29 +22,6 @@ const COLORS = [
   '#60e0d0',
   '#ff6f61',
 ]
-
-function formatDate(dateStr: string) {
-  const [, m, d] = dateStr.split('-')
-  return `${d}/${m}`
-}
-
-function formatDuration(seconds: number) {
-  const mins = Math.floor(seconds / 60)
-  const secs = Math.round(seconds % 60)
-  return `${mins}m${secs.toString().padStart(2, '0')}s`
-}
-
-function getYesterday() {
-  const d = new Date()
-  d.setDate(d.getDate() - 1)
-  return d.toISOString().split('T')[0]
-}
-
-function getDateFrom(daysAgo: number) {
-  const d = new Date()
-  d.setDate(d.getDate() - daysAgo)
-  return d.toISOString().split('T')[0]
-}
 
 type Preset = '7' | '30' | '90'
 
@@ -160,7 +138,7 @@ export default function StatistiquesPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={visitorsOverTime.data}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border-default-grey)" />
-                  <XAxis dataKey="date" tickFormatter={formatDate} fontSize={11} />
+                  <XAxis dataKey="date" tickFormatter={formatChartDate} fontSize={11} />
                   <YAxis fontSize={11} />
                   <Tooltip labelFormatter={(v) => `Date: ${v}`} />
                   <Legend />
@@ -230,7 +208,7 @@ export default function StatistiquesPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={trends.data}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border-default-grey)" />
-                  <XAxis dataKey="date" tickFormatter={formatDate} fontSize={11} />
+                  <XAxis dataKey="date" tickFormatter={formatChartDate} fontSize={11} />
                   <YAxis unit="%" fontSize={11} />
                   <Tooltip labelFormatter={(v) => `Date: ${v}`} formatter={(v) => [`${Math.round(Number(v))}%`, 'Taux de rebond']} />
                   <Line type="monotone" dataKey="bounceRatePercentage" name="Rebond" stroke="#e8944a" strokeWidth={2} dot={false} />
@@ -251,7 +229,7 @@ export default function StatistiquesPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={trends.data}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border-default-grey)" />
-                  <XAxis dataKey="date" tickFormatter={formatDate} fontSize={11} />
+                  <XAxis dataKey="date" tickFormatter={formatChartDate} fontSize={11} />
                   <YAxis tickFormatter={(v) => formatDuration(v)} fontSize={11} />
                   <Tooltip labelFormatter={(v) => `Date: ${v}`} formatter={(v) => [formatDuration(Number(v)), 'Durée']} />
                   <Line type="monotone" dataKey="averageDuration" name="Durée" stroke="#a94645" strokeWidth={2} dot={false} />

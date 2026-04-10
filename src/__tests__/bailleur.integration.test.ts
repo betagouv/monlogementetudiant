@@ -1,5 +1,8 @@
+import { eq } from 'drizzle-orm'
 import { beforeEach, describe, expect, it } from 'vitest'
+import { activityLog } from '../server/db/schema/activity-log'
 import { createAcademy, createAccommodation, createCity, createDepartment, createOwner, createUser } from './fixtures/factories'
+import { getTestDb } from './helpers/test-db'
 import './helpers/setup-integration'
 import { adminCaller, authenticatedCaller, caller, ownerCaller } from './helpers/test-caller'
 
@@ -276,5 +279,217 @@ describe('bailleur.updateAvailability', () => {
     const detail = list.results.features.find((f) => f.properties.slug === 'avail-test')
     expect(detail?.properties.nb_t1_available).toBe(3)
     expect(detail?.properties.nb_t2_available).toBe(2)
+  })
+})
+
+describe('activity_log diff accuracy', () => {
+  it('logs only the single field that changed', async () => {
+    const db = getTestDb()
+    const owner = await createOwner({ name: 'Owner Diff', slug: 'owner-diff', userId: 'test-owner-id' })
+    await createAccommodation({
+      name: 'Diff Test',
+      slug: 'diff-test',
+      ownerId: owner.id,
+      description: 'Original description',
+      externalUrl: 'https://original.com',
+      virtualTourUrl: null,
+      geom: parisPoint,
+    })
+
+    await db.delete(activityLog)
+    await ownerCaller.bailleur.update({
+      slug: 'diff-test',
+      virtual_tour_url: 'https://tour.example.com',
+    })
+
+    const logs = await db.select().from(activityLog)
+    expect(logs).toHaveLength(1)
+    expect(logs[0].action).toBe('accommodation.updated')
+
+    const meta = logs[0].metadata as { diff: Record<string, unknown> }
+    expect(Object.keys(meta.diff)).toEqual(['virtualTourUrl'])
+  })
+
+  it('logs multiple changed fields in a single update', async () => {
+    const db = getTestDb()
+    const owner = await createOwner({ name: 'Owner Multi', slug: 'owner-multi', userId: 'test-owner-id' })
+    await createAccommodation({
+      name: 'Multi Test',
+      slug: 'multi-test',
+      ownerId: owner.id,
+      description: 'Old desc',
+      externalUrl: 'https://old.com',
+      geom: parisPoint,
+    })
+
+    await db.delete(activityLog)
+    await ownerCaller.bailleur.update({
+      slug: 'multi-test',
+      name: 'Multi Updated',
+      description: 'New desc',
+    })
+
+    const logs = await db.select().from(activityLog)
+    expect(logs).toHaveLength(1)
+    expect(logs[0].action).toBe('accommodation.updated')
+
+    const meta = logs[0].metadata as { diff: Record<string, unknown> }
+    expect(Object.keys(meta.diff).sort()).toEqual(['description', 'name'])
+  })
+
+  it('classifies availability-only changes as accommodation.availability_updated', async () => {
+    const db = getTestDb()
+    const owner = await createOwner({ name: 'Owner Avail2', slug: 'owner-avail2', userId: 'test-owner-id' })
+    await createAccommodation({
+      name: 'Avail Class',
+      slug: 'avail-class',
+      ownerId: owner.id,
+      nbT1: 10,
+      nbT1Available: 5,
+      geom: parisPoint,
+    })
+
+    await db.delete(activityLog)
+    await ownerCaller.bailleur.update({
+      slug: 'avail-class',
+      nb_t1_available: 8,
+    })
+
+    const logs = await db.select().from(activityLog)
+    expect(logs).toHaveLength(1)
+    expect(logs[0].action).toBe('accommodation.availability_updated')
+
+    const meta = logs[0].metadata as { diff: Record<string, unknown> }
+    expect(Object.keys(meta.diff)).toEqual(['nbT1Available'])
+  })
+
+  it('classifies published change as accommodation.published', async () => {
+    const db = getTestDb()
+    const owner = await createOwner({ name: 'Owner Pub', slug: 'owner-pub', userId: 'test-owner-id' })
+    await createAccommodation({
+      name: 'Pub Test',
+      slug: 'pub-test',
+      ownerId: owner.id,
+      published: false,
+      geom: parisPoint,
+    })
+
+    await db.delete(activityLog)
+    await ownerCaller.bailleur.update({
+      slug: 'pub-test',
+      published: true,
+    })
+
+    const logs = await db.select().from(activityLog)
+    expect(logs).toHaveLength(1)
+    expect(logs[0].action).toBe('accommodation.published')
+  })
+
+  it('classifies unpublish change as accommodation.unpublished', async () => {
+    const db = getTestDb()
+    const owner = await createOwner({ name: 'Owner Unpub', slug: 'owner-unpub', userId: 'test-owner-id' })
+    await createAccommodation({
+      name: 'Unpub Test',
+      slug: 'unpub-test',
+      ownerId: owner.id,
+      published: true,
+      geom: parisPoint,
+    })
+
+    await db.delete(activityLog)
+    await ownerCaller.bailleur.update({
+      slug: 'unpub-test',
+      published: false,
+    })
+
+    const logs = await db.select().from(activityLog)
+    expect(logs).toHaveLength(1)
+    expect(logs[0].action).toBe('accommodation.unpublished')
+  })
+
+  it('splits published + availability into separate log entries', async () => {
+    const db = getTestDb()
+    const owner = await createOwner({ name: 'Owner Split', slug: 'owner-split', userId: 'test-owner-id' })
+    await createAccommodation({
+      name: 'Split Test',
+      slug: 'split-test',
+      ownerId: owner.id,
+      published: false,
+      nbT1: 10,
+      nbT1Available: 0,
+      geom: parisPoint,
+    })
+
+    await db.delete(activityLog)
+    await ownerCaller.bailleur.update({
+      slug: 'split-test',
+      published: true,
+      nb_t1_available: 5,
+    })
+
+    const logs = await db.select().from(activityLog)
+    expect(logs).toHaveLength(2)
+
+    const actions = logs.map((l) => l.action).sort()
+    expect(actions).toEqual(['accommodation.availability_updated', 'accommodation.published'])
+
+    const pubLog = logs.find((l) => l.action === 'accommodation.published')!
+    const pubMeta = pubLog.metadata as { diff: Record<string, unknown> }
+    expect(Object.keys(pubMeta.diff)).toEqual(['published'])
+
+    const availLog = logs.find((l) => l.action === 'accommodation.availability_updated')!
+    const availMeta = availLog.metadata as { diff: Record<string, unknown> }
+    expect(Object.keys(availMeta.diff)).toEqual(['nbT1Available'])
+  })
+
+  it('logs creation with accommodation.created action', async () => {
+    const db = getTestDb()
+
+    await db.delete(activityLog)
+    await ownerCaller.bailleur.create({
+      name: 'Created Residence',
+      address: '10 rue Test',
+      city: 'Paris',
+      postal_code: '75001',
+      external_url: 'https://example.com',
+      typologies: [
+        {
+          type: 'T1',
+          price_min: 400,
+          price_max: 600,
+          superficie_min: 15,
+          superficie_max: 25,
+          colocation: false,
+          nb_total: 5,
+          nb_available: 3,
+        },
+      ],
+    })
+
+    const logs = await db.select().from(activityLog).where(eq(activityLog.action, 'accommodation.created'))
+    expect(logs).toHaveLength(1)
+    expect(logs[0].entityName).toBe('Created Residence')
+    expect(logs[0].ownerName).toBeTruthy()
+  })
+
+  it('does not log when no fields actually changed', async () => {
+    const db = getTestDb()
+    const owner = await createOwner({ name: 'Owner NoChange', slug: 'owner-nochange', userId: 'test-owner-id' })
+    await createAccommodation({
+      name: 'No Change',
+      slug: 'no-change',
+      ownerId: owner.id,
+      description: 'Same description',
+      geom: parisPoint,
+    })
+
+    await db.delete(activityLog)
+    await ownerCaller.bailleur.update({
+      slug: 'no-change',
+      description: 'Same description',
+    })
+
+    const logs = await db.select().from(activityLog)
+    expect(logs).toHaveLength(0)
   })
 })

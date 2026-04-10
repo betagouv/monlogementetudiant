@@ -1,5 +1,6 @@
 export { academies } from './academies'
 export { accommodations } from './accommodations'
+export { activityLog } from './activity-log'
 export { adminOwnerLinks } from './admin-owner-links'
 export { account, session, user, verification } from './auth'
 export { cities } from './cities'

@@ -51,7 +51,7 @@ const columns: ColumnDef<ResidenceRow, unknown>[] = [
   {
     id: 'published',
     header: 'Statut',
-    cell: ({ row }) => (row.original.published ? <Badge severity="success">Publiee</Badge> : <Badge severity="warning">Depubliee</Badge>),
+    cell: ({ row }) => (row.original.published ? <Badge severity="success">Publiée</Badge> : <Badge severity="warning">Depubliée</Badge>),
   },
   {
     id: 'actions',

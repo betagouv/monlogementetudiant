@@ -12,6 +12,8 @@ import { user } from '~/server/db/schema/auth'
 import { cities } from '~/server/db/schema/cities'
 import { dossierFacileApplications, dossierFacileDocuments, dossierFacileTenants } from '~/server/db/schema/dossier-facile'
 import { owners } from '~/server/db/schema/owners'
+import { classifyActions, computeDiff } from '~/server/services/accommodation-diff'
+import { logActivity } from '~/server/services/activity-logger'
 import { notifyAccommodationCreated, notifyAccommodationUpdated } from '~/server/services/mattermost'
 import { computeDerivedFields, generateSlug, geocodeAddress } from '~/server/trpc/utils/accommodation-helpers'
 import { AVAILABILITY_FIELD_MAP, mapFields, UPDATE_FIELD_MAP } from '~/server/trpc/utils/field-mapping'
@@ -404,6 +406,16 @@ export const bailleurRouter = createTRPCRouter({
         .returning({ slug: accommodations.slug, name: accommodations.name })
 
       notifyAccommodationCreated(created.name, owner.name, created.slug, ctx.session.user.name)
+      await logActivity({
+        userId: ctx.session.user.id,
+        userName: ctx.session.user.name,
+        action: 'accommodation.created',
+        entityType: 'accommodation',
+        entityName: created.name,
+        ownerId: owner.id,
+        ownerName: owner.name,
+        metadata: { slug: created.slug },
+      })
 
       return { slug: created.slug }
     }),
@@ -416,6 +428,7 @@ export const bailleurRouter = createTRPCRouter({
     const [snapshot] = await db.select().from(accommodations).where(eq(accommodations.slug, slug)).limit(1)
 
     const camelFields = mapFields(fields, UPDATE_FIELD_MAP)
+    const userProvidedKeys = new Set(Object.keys(camelFields))
 
     // Recompute derived fields
     const derived = computeDerivedFields(fields)
@@ -461,15 +474,20 @@ export const bailleurRouter = createTRPCRouter({
       .returning({ slug: accommodations.slug, name: accommodations.name })
 
     if (snapshot) {
-      const diff: Record<string, { old: unknown; new: unknown }> = {}
-      for (const [key, value] of Object.entries(camelFields)) {
-        if (key === 'updatedAt' || key === 'geom') continue
-        const oldVal = (snapshot as Record<string, unknown>)[key]
-        if (oldVal !== value) {
-          diff[key] = { old: oldVal, new: value }
-        }
-      }
+      const diff = computeDiff(snapshot as Record<string, unknown>, camelFields, userProvidedKeys)
       notifyAccommodationUpdated(updated.name, owner?.name ?? '-', updated.slug, ctx.session.user.name, diff)
+      for (const { action, diff: actionDiff } of classifyActions(diff)) {
+        await logActivity({
+          userId: ctx.session.user.id,
+          userName: ctx.session.user.name,
+          action,
+          entityType: 'accommodation',
+          entityName: updated.name,
+          ownerId: owner?.id,
+          ownerName: owner?.name,
+          metadata: { slug: updated.slug, diff: actionDiff },
+        })
+      }
     }
 
     return updated
@@ -496,15 +514,21 @@ export const bailleurRouter = createTRPCRouter({
       .returning({ slug: accommodations.slug, name: accommodations.name })
 
     if (snapshot) {
-      const diff: Record<string, { old: unknown; new: unknown }> = {}
-      for (const [key, value] of Object.entries(setFields)) {
-        if (key === 'updatedAt') continue
-        const oldVal = (snapshot as Record<string, unknown>)[key]
-        if (oldVal !== value) {
-          diff[key] = { old: oldVal, new: value }
-        }
-      }
+      const userKeys = new Set(Object.keys(camelFields))
+      const diff = computeDiff(snapshot as Record<string, unknown>, setFields, userKeys)
       notifyAccommodationUpdated(updated.name, owner?.name ?? '-', updated.slug, ctx.session.user.name, diff)
+      for (const { action, diff: actionDiff } of classifyActions(diff)) {
+        await logActivity({
+          userId: ctx.session.user.id,
+          userName: ctx.session.user.name,
+          action,
+          entityType: 'accommodation',
+          entityName: updated.name,
+          ownerId: owner?.id,
+          ownerName: owner?.name,
+          metadata: { slug: updated.slug, diff: actionDiff },
+        })
+      }
     }
 
     return updated
