@@ -94,7 +94,7 @@ export const getMyAccommodations = async (searchParams?: {
     db.query.accommodations.findMany({
       where,
       columns: { geom: false },
-      with: { owner: true },
+      with: { owner: true, city: { columns: { name: true } } },
       extras: {
         priceMaxComputed: priceMaxComputed.as('priceMaxComputed'),
         lat: sql<number>`ST_Y(${accommodations.geom}::geometry)`.as('lat'),
@@ -120,6 +120,7 @@ export const getMyAccommodations = async (searchParams?: {
       features: results.map((row) =>
         mapToGeoJsonFeature({
           ...row,
+          city: row.city?.name ?? '',
           ownerName: row.owner?.name ?? null,
           ownerUrl: row.owner?.url ?? null,
         }),
