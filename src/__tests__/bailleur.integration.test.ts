@@ -1,10 +1,18 @@
 import { eq } from 'drizzle-orm'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { activityLog } from '../server/db/schema/activity-log'
-import { createAcademy, createAccommodation, createCity, createDepartment, createOwner, createUser } from './fixtures/factories'
+import {
+  createAcademy,
+  createAccommodation,
+  createAdminOwnerLink,
+  createCity,
+  createDepartment,
+  createOwner,
+  createUser,
+} from './fixtures/factories'
 import { getTestDb } from './helpers/test-db'
 import './helpers/setup-integration'
-import { adminCaller, authenticatedCaller, caller, ownerCaller } from './helpers/test-caller'
+import { adminCaller, authenticatedCaller, caller, ownerCaller, ownerCaller2 } from './helpers/test-caller'
 
 type AccommodationOverrides = NonNullable<Parameters<typeof createAccommodation>[0]>
 type AccommodationGeom = NonNullable<AccommodationOverrides['geom']>
@@ -491,5 +499,91 @@ describe('activity_log diff accuracy', () => {
 
     const logs = await db.select().from(activityLog)
     expect(logs).toHaveLength(0)
+  })
+})
+
+describe('bailleur.list owner isolation', () => {
+  it('owner cannot see residences of another owner', async () => {
+    const owner1 = await createOwner({ name: 'Owner Iso 1', slug: 'owner-iso-1', userId: 'test-owner-id' })
+    const owner2 = await createOwner({ name: 'Owner Iso 2', slug: 'owner-iso-2', userId: 'test-owner-id-2' })
+
+    await createAccommodation({ name: 'Résidence Owner 1', slug: 'iso-res-1', ownerId: owner1.id })
+    await createAccommodation({ name: 'Résidence Owner 2', slug: 'iso-res-2', ownerId: owner2.id })
+
+    const result = await ownerCaller.bailleur.list({ page: 1 })
+    expect(result.count).toBe(1)
+    expect(result.results.features[0].properties.name).toBe('Résidence Owner 1')
+  })
+
+  it('owner cannot see residences of another owner by passing bailleur param', async () => {
+    const owner1 = await createOwner({ name: 'Owner Hack 1', slug: 'owner-hack-1', userId: 'test-owner-id' })
+    const owner2 = await createOwner({ name: 'Owner Hack 2', slug: 'owner-hack-2', userId: 'test-owner-id-2' })
+
+    await createAccommodation({ name: 'Résidence Hack 1', slug: 'hack-res-1', ownerId: owner1.id })
+    await createAccommodation({ name: 'Résidence Hack 2', slug: 'hack-res-2', ownerId: owner2.id })
+
+    // Owner 1 tries to access Owner 2's residences via bailleur param
+    const result = await ownerCaller.bailleur.list({ page: 1, ownerId: owner2.id })
+    expect(result.count).toBe(1)
+    expect(result.results.features[0].properties.name).toBe('Résidence Hack 1')
+  })
+
+  it('owner2 cannot see residences of owner1 by passing bailleur param', async () => {
+    const owner1 = await createOwner({ name: 'Owner Cross 1', slug: 'owner-cross-1', userId: 'test-owner-id' })
+    const owner2 = await createOwner({ name: 'Owner Cross 2', slug: 'owner-cross-2', userId: 'test-owner-id-2' })
+
+    await createAccommodation({ name: 'Résidence Cross 1', slug: 'cross-res-1', ownerId: owner1.id })
+    await createAccommodation({ name: 'Résidence Cross 2', slug: 'cross-res-2', ownerId: owner2.id })
+
+    // Owner 2 tries to access Owner 1's residences via bailleur param
+    const result = await ownerCaller2.bailleur.list({ page: 1, ownerId: owner1.id })
+    expect(result.count).toBe(1)
+    expect(result.results.features[0].properties.name).toBe('Résidence Cross 2')
+  })
+
+  it('admin can access residences of a linked owner via bailleur param', async () => {
+    const owner1 = await createOwner({ name: 'Admin Linked 1', slug: 'admin-linked-1' })
+    const owner2 = await createOwner({ name: 'Admin Linked 2', slug: 'admin-linked-2' })
+
+    await createAdminOwnerLink({ userId: 'test-admin-id', ownerId: owner1.id })
+    await createAdminOwnerLink({ userId: 'test-admin-id', ownerId: owner2.id })
+
+    await createAccommodation({ name: 'Résidence Admin 1', slug: 'admin-res-1', ownerId: owner1.id })
+    await createAccommodation({ name: 'Résidence Admin 2', slug: 'admin-res-2', ownerId: owner2.id })
+
+    // Admin switches to owner2
+    const result = await adminCaller.bailleur.list({ page: 1, ownerId: owner2.id })
+    expect(result.count).toBe(1)
+    expect(result.results.features[0].properties.name).toBe('Résidence Admin 2')
+  })
+
+  it('admin without bailleur param sees first linked owner residences', async () => {
+    const owner1 = await createOwner({ name: 'Admin Default 1', slug: 'admin-default-1' })
+    const owner2 = await createOwner({ name: 'Admin Default 2', slug: 'admin-default-2' })
+
+    await createAdminOwnerLink({ userId: 'test-admin-id', ownerId: owner1.id })
+    await createAdminOwnerLink({ userId: 'test-admin-id', ownerId: owner2.id })
+
+    await createAccommodation({ name: 'Résidence Default 1', slug: 'default-res-1', ownerId: owner1.id })
+    await createAccommodation({ name: 'Résidence Default 2', slug: 'default-res-2', ownerId: owner2.id })
+
+    const result = await adminCaller.bailleur.list({ page: 1 })
+    expect(result.count).toBe(1)
+  })
+
+  it('admin cannot access residences of an owner they are not linked to', async () => {
+    const linkedOwner = await createOwner({ name: 'Admin Ok', slug: 'admin-ok' })
+    const unlinkedOwner = await createOwner({ name: 'Admin Nope', slug: 'admin-nope' })
+
+    await createAdminOwnerLink({ userId: 'test-admin-id', ownerId: linkedOwner.id })
+    // No link for unlinkedOwner
+
+    await createAccommodation({ name: 'Résidence Linked', slug: 'linked-res', ownerId: linkedOwner.id })
+    await createAccommodation({ name: 'Résidence Unlinked', slug: 'unlinked-res', ownerId: unlinkedOwner.id })
+
+    // Admin tries to access unlinked owner via bailleur param — should fallback to linked owner
+    const result = await adminCaller.bailleur.list({ page: 1, ownerId: unlinkedOwner.id })
+    expect(result.count).toBe(1)
+    expect(result.results.features[0].properties.name).toBe('Résidence Linked')
   })
 })

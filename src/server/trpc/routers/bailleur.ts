@@ -5,9 +5,9 @@ import { z } from 'zod'
 import { transformTypologiesToFlat, ZCreateResidence } from '~/schemas/accommodations/create-residence'
 import { ZUpdateResidence } from '~/schemas/accommodations/update-residence'
 import { ZUpdateResidenceList } from '~/schemas/accommodations/update-residence-list'
+import { getOwnerForUser } from '~/server/bailleur/get-owner-for-user'
 import { db } from '~/server/db'
 import { accommodations } from '~/server/db/schema/accommodations'
-import { adminOwnerLinks } from '~/server/db/schema/admin-owner-links'
 import { user } from '~/server/db/schema/auth'
 import { cities } from '~/server/db/schema/cities'
 import { dossierFacileApplications, dossierFacileDocuments, dossierFacileTenants } from '~/server/db/schema/dossier-facile'
@@ -60,24 +60,6 @@ async function verifyOwnerAccess(userId: string, accommodationSlug: string) {
   if (!isAdmin && (!usr?.owner || accommodation.ownerId !== usr.owner.id)) {
     throw new TRPCError({ code: 'FORBIDDEN', message: 'You do not own this accommodation' })
   }
-}
-
-async function getOwnerForUser(userId: string) {
-  const usr = await db.query.user.findFirst({
-    where: eq(user.id, userId),
-    with: { owner: true },
-  })
-
-  // For admins, check admin_owner_link if no direct ownerId
-  if (usr?.role === 'admin' && !usr.owner) {
-    const firstLink = await db.query.adminOwnerLinks.findFirst({
-      where: eq(adminOwnerLinks.userId, userId),
-      with: { owner: true },
-    })
-    return firstLink?.owner ?? null
-  }
-
-  return usr?.owner ?? null
 }
 
 async function verifyOwnership(slug: string, userId: string) {
@@ -212,11 +194,12 @@ export const bailleurRouter = createTRPCRouter({
         page: z.number().default(1),
         search: z.string().optional(),
         hasAvailability: z.boolean().optional(),
+        ownerId: z.number().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
       const userId = ctx.session.user.id
-      const owner = await getOwnerForUser(userId)
+      const owner = await getOwnerForUser(userId, input.ownerId)
 
       if (!owner) {
         return {
