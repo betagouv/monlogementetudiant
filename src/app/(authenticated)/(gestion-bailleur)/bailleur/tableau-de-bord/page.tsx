@@ -190,9 +190,16 @@ export default async function TableauDeBordPage({ searchParams }: TableauDeBordP
             return (
               <div key={index} className={clsx('fr-px-3w fr-py-2w', styles.statisticsCard)}>
                 <div>
-                  <Link className="fr-link fr-link--no-underline" href={`/bailleur/residences/${res.properties.slug}`}>
-                    <span className="fr-text--bold fr-text-title--blue-france fr-text--lg">{res.properties.name}</span>
-                  </Link>
+                  <div className="fr-flex fr-justify-content-space-between fr-align-items-center">
+                    <Link className="fr-link fr-link--no-underline" href={`/bailleur/residences/${res.properties.slug}`}>
+                      <span className="fr-text--bold fr-text-title--blue-france fr-text--lg">{res.properties.name}</span>
+                    </Link>
+                    {!res.properties.published && (
+                      <Badge severity="warning" noIcon>
+                        Dépubliée
+                      </Badge>
+                    )}
+                  </div>
                   <p className="fr-text--xs fr-mb-0 fr-mt-1v fr-text-mention--grey">
                     {res.properties.postal_code} {res.properties.city}
                   </p>

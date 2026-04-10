@@ -1,4 +1,4 @@
-import { and, eq, ilike, sql } from 'drizzle-orm'
+import { and, desc, eq, ilike, sql } from 'drizzle-orm'
 import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
 import { getOwnerForUser } from '~/server/bailleur/get-owner-for-user'
 import { db } from '~/server/db'
@@ -73,7 +73,7 @@ export const getMyAccommodations = async (searchParams?: {
         lat: sql<number>`ST_Y(${accommodations.geom}::geometry)`.as('lat'),
         lng: sql<number>`ST_X(${accommodations.geom}::geometry)`.as('lng'),
       },
-      orderBy: accommodations.name,
+      orderBy: [desc(accommodations.published), accommodations.name],
       limit: PAGE_SIZE,
       offset,
     }),
