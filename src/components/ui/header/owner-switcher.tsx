@@ -13,16 +13,16 @@ export function OwnerSwitcher({ owners }: OwnerSwitcherProps) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  const currentBailleur = searchParams.get('bailleur')
+  const currentOwnerId = searchParams.get('ownerId')
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       const value = e.target.value
       const params = new URLSearchParams(searchParams.toString())
       if (value) {
-        params.set('bailleur', value)
+        params.set('ownerId', value)
       } else {
-        params.delete('bailleur')
+        params.delete('ownerId')
       }
       // Reset page when switching owner
       params.delete('page')
@@ -36,7 +36,7 @@ export function OwnerSwitcher({ owners }: OwnerSwitcherProps) {
       <Select
         label={null}
         nativeSelectProps={{
-          value: currentBailleur ?? '',
+          value: currentOwnerId ?? '',
           onChange: handleChange,
         }}
       >

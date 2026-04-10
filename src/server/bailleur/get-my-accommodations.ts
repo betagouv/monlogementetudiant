@@ -13,8 +13,8 @@ export const myAccommodationsQueryKey = (
   page?: string | null,
   disponible?: string | null,
   recherche?: string | null,
-  bailleur?: string | null,
-) => ['my-accommodations', page ? Number(page) : null, disponible === 'true' ? true : null, recherche || null, bailleur || null] as const
+  ownerId?: string | null,
+) => ['my-accommodations', page ? Number(page) : null, disponible === 'true' ? true : null, recherche || null, ownerId || null] as const
 
 export const getMyAccommodations = async (searchParams?: {
   page?: string
@@ -106,12 +106,12 @@ export const prefetchMyAccommodations = async (searchParams?: {
   page?: string
   disponible?: string
   recherche?: string
-  bailleur?: string
+  ownerId?: string
 }) => {
   const queryClient = getQueryClient()
 
   await queryClient.prefetchQuery({
-    queryKey: myAccommodationsQueryKey(searchParams?.page, searchParams?.disponible, searchParams?.recherche, searchParams?.bailleur),
+    queryKey: myAccommodationsQueryKey(searchParams?.page, searchParams?.disponible, searchParams?.recherche, searchParams?.ownerId),
     queryFn: () => getMyAccommodations(searchParams),
   })
 
