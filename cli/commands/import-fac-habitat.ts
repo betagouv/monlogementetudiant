@@ -65,6 +65,39 @@ interface FacHabitatResidence {
   kitchen_type?: string
   refrigerator?: boolean
   bathroom?: string
+  nb_t1_available?: number
+  nb_t1_bis_available?: number
+  nb_t1_prime_available?: number
+  nb_studio_double_available?: number
+  nb_t2_available?: number
+  nb_t2_duplex_available?: number
+  nb_duplex_available?: number
+  nb_t3_available?: number
+  nb_duo_available?: number
+  nb_t4_available?: number
+  nb_t5_en_colocation_available?: number
+  t1_surface_min?: number | null
+  t1_surface_max?: number | null
+  t1_bis_surface_min?: number | null
+  t1_bis_surface_max?: number | null
+  t1_prime_surface_min?: number | null
+  t1_prime_surface_max?: number | null
+  studio_double_surface_min?: number | null
+  studio_double_surface_max?: number | null
+  t2_surface_min?: number | null
+  t2_surface_max?: number | null
+  t2_duplex_surface_min?: number | null
+  t2_duplex_surface_max?: number | null
+  duplex_surface_min?: number | null
+  duplex_surface_max?: number | null
+  t3_surface_min?: number | null
+  t3_surface_max?: number | null
+  duo_surface_min?: number | null
+  duo_surface_max?: number | null
+  t4_surface_min?: number | null
+  t4_surface_max?: number | null
+  t5_en_colocation_surface_min?: number | null
+  t5_en_colocation_surface_max?: number | null
   nb_accessible_apartments?: number
   nb_coliving_apartments?: number
   nb_total_apartments?: number
@@ -124,6 +157,13 @@ function buildTypologyValues(item: FacHabitatResidence) {
     return nums.length > 0 ? Math.round(Math.max(...nums)) : null
   }
 
+  const nbT1Available = item.nb_t1_available ?? 0
+  const nbT1BisAvailable = (item.nb_t1_bis_available ?? 0) + (item.nb_t1_prime_available ?? 0) + (item.nb_studio_double_available ?? 0)
+  const nbT2Available = (item.nb_t2_available ?? 0) + (item.nb_t2_duplex_available ?? 0) + (item.nb_duplex_available ?? 0)
+  const nbT3Available = (item.nb_t3_available ?? 0) + (item.nb_duo_available ?? 0)
+  const nbT4Available = item.nb_t4_available ?? 0
+  const nbT5Available = item.nb_t5_en_colocation_available ?? 0
+
   return {
     nbT1: nbT1 || null,
     nbT1Bis: nbT1Bis || null,
@@ -131,6 +171,12 @@ function buildTypologyValues(item: FacHabitatResidence) {
     nbT3: nbT3 || null,
     nbT4: nbT4 || null,
     nbT5: nbT5 || null,
+    nbT1Available: nbT1Available || null,
+    nbT1BisAvailable: nbT1BisAvailable || null,
+    nbT2Available: nbT2Available || null,
+    nbT3Available: nbT3Available || null,
+    nbT4Available: nbT4Available || null,
+    nbT5Available: nbT5Available || null,
     priceMinT1: minOf(item.t1_rent_min),
     priceMaxT1: maxOf(item.t1_rent_max),
     priceMinT1Bis: minOf(item.t1_bis_rent_min, item.t1_prime_rent_min, item.studio_double_rent_min),
@@ -143,6 +189,18 @@ function buildTypologyValues(item: FacHabitatResidence) {
     priceMaxT4: maxOf(item.t4_rent_max),
     priceMinT5: minOf(item.t5_rent_min, item.t5_en_colocation_rent_min),
     priceMaxT5: maxOf(item.t5_rent_max, item.t5_en_colocation_rent_max),
+    superficieMinT1: minOf(item.t1_surface_min),
+    superficieMaxT1: maxOf(item.t1_surface_max),
+    superficieMinT1Bis: minOf(item.t1_bis_surface_min, item.t1_prime_surface_min, item.studio_double_surface_min),
+    superficieMaxT1Bis: maxOf(item.t1_bis_surface_max, item.t1_prime_surface_max, item.studio_double_surface_max),
+    superficieMinT2: minOf(item.t2_surface_min, item.t2_duplex_surface_min, item.duplex_surface_min),
+    superficieMaxT2: maxOf(item.t2_surface_max, item.t2_duplex_surface_max, item.duplex_surface_max),
+    superficieMinT3: minOf(item.t3_surface_min, item.duo_surface_min),
+    superficieMaxT3: maxOf(item.t3_surface_max, item.duo_surface_max),
+    superficieMinT4: minOf(item.t4_surface_min),
+    superficieMaxT4: maxOf(item.t4_surface_max),
+    superficieMinT5: minOf(item.t5_en_colocation_surface_min),
+    superficieMaxT5: maxOf(item.t5_en_colocation_surface_max),
   }
 }
 
@@ -257,6 +315,24 @@ const command: ImportCommand = {
           priceMaxT4: typology.priceMaxT4,
           priceMinT5: typology.priceMinT5,
           priceMaxT5: typology.priceMaxT5,
+          nbT1Available: typology.nbT1Available,
+          nbT1BisAvailable: typology.nbT1BisAvailable,
+          nbT2Available: typology.nbT2Available,
+          nbT3Available: typology.nbT3Available,
+          nbT4Available: typology.nbT4Available,
+          nbT5Available: typology.nbT5Available,
+          superficieMinT1: typology.superficieMinT1,
+          superficieMaxT1: typology.superficieMaxT1,
+          superficieMinT1Bis: typology.superficieMinT1Bis,
+          superficieMaxT1Bis: typology.superficieMaxT1Bis,
+          superficieMinT2: typology.superficieMinT2,
+          superficieMaxT2: typology.superficieMaxT2,
+          superficieMinT3: typology.superficieMinT3,
+          superficieMaxT3: typology.superficieMaxT3,
+          superficieMinT4: typology.superficieMinT4,
+          superficieMaxT4: typology.superficieMaxT4,
+          superficieMinT5: typology.superficieMinT5,
+          superficieMaxT5: typology.superficieMaxT5,
           priceMin: derived.priceMin,
           nbTotalApartments: item.nb_total_apartments ?? derived.nbTotalApartments,
           nbAccessibleApartments: item.nb_accessible_apartments ?? null,
