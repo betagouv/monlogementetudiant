@@ -13,6 +13,14 @@
   display: none;
 }
 
+.facilitateIllustrationMobile {
+  display: block;
+  width: 100%;
+  max-width: 352px;
+  height: auto;
+  align-self: center;
+}
+
 .facilitateTitle {
   color: white;
   margin: 0;

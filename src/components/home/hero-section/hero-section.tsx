@@ -9,7 +9,7 @@ export const HeroSection = async () => {
   return (
     <section className={styles.heroSection}>
       <div className="fr-container">
-        <div className={clsx('fr-pt-md-8w fr-pb-md-16w', styles.heroContent)}>
+        <div className={clsx('fr-pt-4w fr-pt-md-8w fr-pb-md-16w', styles.heroContent)}>
           <h1 className={styles.heroTitle}>
             {tHome('hero.title')}
             <br />

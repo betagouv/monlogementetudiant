@@ -17,17 +17,25 @@ import styles from './partners.module.css'
 export const PartnersSection = async () => {
   const t = await getTranslations()
   const tHome = await getTranslations('home')
+  const logos = [
+    { src: arpej, alt: 'Logo Arpej' },
+    { src: afev, alt: 'Logo Afev' },
+    { src: espacil, alt: 'Logo Espacil' },
+    { src: fachabitat, alt: 'Logo Fac Habitat' },
+    { src: alteal, alt: 'Logo Alteal' },
+    { src: opal, alt: 'Logo Opal' },
+    { src: studefi, alt: 'Logo Studefi' },
+    { src: mgel, alt: 'Logo Mgel' },
+  ]
+
   return (
     <section className={styles.partnersSection}>
       <div className={styles.partnersLogos}>
-        <Image src={arpej} width={200} height={90} alt="Logo Arpej" />
-        <Image src={afev} width={200} height={90} alt="Logo Espacil" />
-        <Image src={espacil} width={200} height={90} alt="Logo Espacil" />
-        <Image src={fachabitat} width={200} height={90} alt="Logo Hénéo" />
-        <Image src={alteal} width={200} height={90} alt="Logo Studefi" />
-        <Image src={opal} width={200} height={90} alt="Logo Agefo" />
-        <Image src={studefi} width={200} height={90} alt="Logo Aquitanis" />
-        <Image src={mgel} width={200} height={90} alt="Logo Aquitanis" />
+        {logos.map((logo) => (
+          <div key={logo.alt} className={styles.partnerLogoItem}>
+            <Image src={logo.src} width={200} height={90} alt={logo.alt} className={styles.partnerLogoImage} />
+          </div>
+        ))}
       </div>
       <div className={styles.partnersContent}>
         <h2 className={clsx('fr-h1', styles.partnersTitle)}>
