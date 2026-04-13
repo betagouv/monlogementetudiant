@@ -23,7 +23,12 @@ export const FeaturesSection = async () => {
           <h2 className={clsx('fr-h2 fr-mb-0', styles.featureCardTitle)}>{tHome('features.simulateAids.title')}</h2>
           <p className={clsx('fr-mb-0', styles.featureCardDescription)}>{tHome('features.simulateAids.description')}</p>
           <div className={styles.featureCardButtons}>
-            <Button priority="secondary" iconId="ri-money-euro-circle-line" iconPosition="left" linkProps={{ href: '/simuler-mes-aides' }}>
+            <Button
+              priority="secondary"
+              iconId="ri-money-euro-circle-line"
+              iconPosition="left"
+              linkProps={{ href: '/simuler-mes-aides-au-logement' }}
+            >
               {tHome('features.simulateAids.button')}
             </Button>
             <div className="fr-flex fr-align-items-center fr-justify-content-center fr-justify-content-md-start fr-flex-gap-4v">
@@ -48,12 +53,7 @@ export const FeaturesSection = async () => {
           <h2 className={clsx('fr-h2 fr-mb-0', styles.featureCardTitle)}>{tHome('features.calculateBudget.title')}</h2>
           <p className={clsx('fr-mb-0', styles.featureCardDescription)}>{tHome('features.calculateBudget.description')}</p>
           <div className={styles.featureCardButtons}>
-            <Button
-              priority="secondary"
-              iconId="ri-calculator-line"
-              iconPosition="left"
-              linkProps={{ href: '/preparer-mon-budget-etudiant' }}
-            >
+            <Button priority="secondary" iconId="ri-calculator-line" iconPosition="left" linkProps={{ href: '/simuler-budget' }}>
               {tHome('features.calculateBudget.button')}
             </Button>
           </div>
