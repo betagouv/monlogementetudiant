@@ -7,7 +7,7 @@ export { ETargetAudience } from '~/enums/target-audience'
 
 export const ZUpdateResidence = z.object({
   name: z.string().min(1, 'Le nom de la résidence est requis').optional(),
-  residence_type: z.enum(EResidenceType, { error: 'La typologie de logements est requise' }).optional(),
+  residence_type: z.enum(EResidenceType, { error: 'Le type de la résidence est requis' }).optional(),
   target_audience: z.enum(ETargetAudience, { error: 'Le public cible est requis' }).optional(),
   address: z.string().min(1, "L'adresse est requise").optional(),
   city: z.string().min(1, 'La ville est requise').optional(),

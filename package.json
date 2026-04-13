@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "predev": "react-dsfr update-icons",
-    "prebuild": "react-dsfr update-icons",
+    "predev": "react-dsfr update-icons && cp node_modules/@codegouvfr/react-dsfr/dsfr/favicon/favicon.svg public/favicon.svg && cp node_modules/@codegouvfr/react-dsfr/dsfr/favicon/favicon.ico public/favicon.ico",
+    "prebuild": "react-dsfr update-icons && cp node_modules/@codegouvfr/react-dsfr/dsfr/favicon/favicon.svg public/favicon.svg && cp node_modules/@codegouvfr/react-dsfr/dsfr/favicon/favicon.ico public/favicon.ico",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -41,6 +41,7 @@
     "dayjs": "^1.11.19",
     "dompurify": "^3.3.1",
     "drizzle-orm": "^0.45.1",
+    "isomorphic-dompurify": "^3.8.0",
     "jose": "^6.2.1",
     "leaflet": "^1.9.4",
     "leaflet-defaulticon-compatibility": "^0.1.2",

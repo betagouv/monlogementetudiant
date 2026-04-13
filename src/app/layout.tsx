@@ -7,10 +7,12 @@ import { Suspense } from 'react'
 import { NextAppDirEmotionCacheProvider } from 'tss-react/next'
 import Matomo from '~/app/matomo'
 import { DossierFacileSuccessToast } from '~/components/dossier-facile/dossier-facile-success-toast'
+import { JsonLd } from '~/components/seo/json-ld'
 import { Signout } from '~/components/signout'
 import Toaster from '~/components/ui/toaster'
 import { DsfrHead, getHtmlAttributes } from '~/dsfr/dsfr-head'
 import { DsfrProvider, StartDsfrOnHydration } from '~/dsfr/dsfr-provider'
+import { buildOrganizationSchema, buildWebSiteSchema } from '~/utils/schema'
 
 export const generateMetadata = async () => {
   const t = await getTranslations('metadata')
@@ -39,6 +41,7 @@ export default async function RootLayout({
         <Suspense fallback={null}>
           <Matomo />
         </Suspense>
+        <JsonLd data={[buildOrganizationSchema(), buildWebSiteSchema()]} />
       </head>
       <body>
         <NextAppDirEmotionCacheProvider options={{ key: 'css' }}>

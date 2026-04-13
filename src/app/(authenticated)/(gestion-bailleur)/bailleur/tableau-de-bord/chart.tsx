@@ -3,11 +3,29 @@
 import { Cell, Label, Pie, PieChart } from 'recharts'
 
 interface ResidenceChartProps {
-  available: number
+  available: number | null
   total: number
 }
 
 export const ResidenceChart = ({ available, total }: ResidenceChartProps) => {
+  if (available === null) {
+    return (
+      <div className="fr-flex fr-align-items-center fr-flex-gap-6v">
+        <PieChart width={72} height={72}>
+          <Pie data={[{ value: 1 }]} cx="50%" cy="50%" innerRadius={24} outerRadius={32} dataKey="value" startAngle={90} endAngle={-270}>
+            <Cell fill="#E5E5E5" />
+            <Label value="-" position="center" fontSize={14} fontWeight="bold" fill="#000" />
+          </Pie>
+        </PieChart>
+        <span className="fr-text--sm fr-text-mention--grey fr-mb-0">
+          Disponibilité
+          <br />
+          non-renseignée
+        </span>
+      </div>
+    )
+  }
+
   const occupied = total - available
   const occupiedPercentage = total > 0 ? Math.round((occupied / total) * 100) : 0
 

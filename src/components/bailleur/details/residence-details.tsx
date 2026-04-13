@@ -49,7 +49,7 @@ export const ResidenceDetails = () => {
                 stateRelatedMessage={errors.residence_type?.message}
               >
                 <option value="" disabled hidden>
-                  Sélectionnez une typologie
+                  Sélectionnez un type
                 </option>
                 {Object.values(EResidenceType).map((value) => (
                   <option key={value} value={value}>

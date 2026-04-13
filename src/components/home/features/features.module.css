@@ -1,0 +1,78 @@
+.featureCardButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-top: 0.5rem;
+}
+
+.featureCardButtons > a {
+  width: 100%;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+}
+
+.featureCardPurple {
+  border-left-color: #5757ad !important;
+  border-bottom: 1px solid var(--border-default-grey);
+}
+
+.featureCardYellow {
+  border-left-color: #fcc63a !important;
+  border-bottom: 1px solid var(--border-default-grey);
+}
+
+.featureCardTitle {
+  text-align: center;
+}
+
+.featureCardDescription {
+  text-align: center;
+}
+
+.badgePurple {
+  background-color: #ececfb !important;
+  color: #313178 !important;
+  width: fit-content;
+  margin: auto;
+}
+
+.badgeYellow {
+  background-color: #feecc2 !important;
+  color: #716043 !important;
+  width: fit-content;
+  margin: auto;
+}
+
+@media (min-width: 768px) {
+  .featureCardPurple,
+  .featureCardYellow {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-left: 7px solid transparent;
+    border-bottom: none;
+  }
+
+  .featureCardTitle {
+    text-align: left;
+  }
+
+  .badgePurple,
+  .badgeYellow {
+    margin: 0;
+  }
+
+  .featureCardDescription {
+    text-align: left;
+    font-size: 1.25rem !important;
+    line-height: 2rem !important;
+  }
+
+  .featureCardButtons {
+    flex-direction: row;
+  }
+
+  .featureCardButtons > a {
+    flex-shrink: 0;
+    width: auto;
+  }
+}

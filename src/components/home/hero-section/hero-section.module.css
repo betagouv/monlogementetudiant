@@ -1,0 +1,95 @@
+.heroSection {
+  position: relative;
+  background-color: var(--background-alt-blue-france);
+}
+
+.heroContent {
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.heroTitle {
+  font-size: 1.75rem;
+  line-height: 2.25rem;
+  font-weight: 700;
+  margin: 0 0 1.5rem;
+  color: #161616;
+}
+
+.heroSearchContainer {
+  margin: 0 auto 1.5rem;
+  max-width: 600px;
+  box-shadow: 0 6px 18px 0 rgb(0 0 18 / 16%);
+  border-radius: 4px 4px 0 0;
+}
+
+.heroIllustrations {
+  display: flex;
+  width: 100%;
+}
+
+.heroIllustrationLeft,
+.heroIllustrationRight {
+  position: relative;
+  width: 50%;
+  height: 200px;
+}
+
+.heroIllustrationLeftImg {
+  object-fit: contain;
+  object-position: left bottom;
+}
+
+.heroIllustrationRightImg {
+  object-fit: contain;
+  object-position: right bottom;
+}
+
+@media (min-width: 768px) {
+  .heroIllustrations {
+    display: contents;
+  }
+
+  .heroIllustrationLeftImg,
+  .heroIllustrationRightImg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .heroTitle {
+    font-size: 3.5rem;
+    line-height: 4rem;
+    text-align: center;
+  }
+
+  .heroIllustrationLeft {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 708px;
+    height: 709px;
+  }
+
+  .heroIllustrationRight {
+    display: block;
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 610px;
+    width: 726px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .heroIllustrationLeft {
+    height: 610px;
+    width: 610px;
+  }
+
+  .heroIllustrationRight {
+    height: 610px;
+    width: 689px;
+  }
+}

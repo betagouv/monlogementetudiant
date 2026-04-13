@@ -172,27 +172,45 @@ export default async function TableauDeBordPage({ searchParams }: TableauDeBordP
               nb_t5_available,
               nb_t6_available,
               nb_t7_more_available,
+              nb_t1,
+              nb_t1_bis,
+              nb_t2,
+              nb_t3,
+              nb_t4,
+              nb_t5,
+              nb_t6,
+              nb_t7_more,
             } = res.properties
-            const calculatedAvailability = calculateAvailability({
-              nb_t1_available,
-              nb_t1_bis_available,
-              nb_t2_available,
-              nb_t3_available,
-              nb_t4_available,
-              nb_t5_available,
-              nb_t6_available,
-              nb_t7_more_available,
-            })
-            const available = calculatedAvailability ?? 0
+            const calculatedAvailability = calculateAvailability(
+              {
+                nb_t1_available,
+                nb_t1_bis_available,
+                nb_t2_available,
+                nb_t3_available,
+                nb_t4_available,
+                nb_t5_available,
+                nb_t6_available,
+                nb_t7_more_available,
+              },
+              { nb_t1, nb_t1_bis, nb_t2, nb_t3, nb_t4, nb_t5, nb_t6, nb_t7_more },
+            )
+            const available = calculatedAvailability
             const total = res.properties.nb_total_apartments || 0
             if (total === 0) return null
 
             return (
               <div key={index} className={clsx('fr-px-3w fr-py-2w', styles.statisticsCard)}>
                 <div>
-                  <Link className="fr-link fr-link--no-underline" href={`/bailleur/residences/${res.properties.slug}`}>
-                    <span className="fr-text--bold fr-text-title--blue-france fr-text--lg">{res.properties.name}</span>
-                  </Link>
+                  <div className="fr-flex fr-justify-content-space-between fr-align-items-center">
+                    <Link className="fr-link fr-link--no-underline" href={`/bailleur/residences/${res.properties.slug}`}>
+                      <span className="fr-text--bold fr-text-title--blue-france fr-text--lg">{res.properties.name}</span>
+                    </Link>
+                    {!res.properties.published && (
+                      <Badge severity="warning" noIcon>
+                        Dépubliée
+                      </Badge>
+                    )}
+                  </div>
                   <p className="fr-text--xs fr-mb-0 fr-mt-1v fr-text-mention--grey">
                     {res.properties.postal_code} {res.properties.city}
                   </p>
