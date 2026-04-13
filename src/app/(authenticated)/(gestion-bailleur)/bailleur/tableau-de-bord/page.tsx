@@ -172,18 +172,29 @@ export default async function TableauDeBordPage({ searchParams }: TableauDeBordP
               nb_t5_available,
               nb_t6_available,
               nb_t7_more_available,
+              nb_t1,
+              nb_t1_bis,
+              nb_t2,
+              nb_t3,
+              nb_t4,
+              nb_t5,
+              nb_t6,
+              nb_t7_more,
             } = res.properties
-            const calculatedAvailability = calculateAvailability({
-              nb_t1_available,
-              nb_t1_bis_available,
-              nb_t2_available,
-              nb_t3_available,
-              nb_t4_available,
-              nb_t5_available,
-              nb_t6_available,
-              nb_t7_more_available,
-            })
-            const available = calculatedAvailability ?? 0
+            const calculatedAvailability = calculateAvailability(
+              {
+                nb_t1_available,
+                nb_t1_bis_available,
+                nb_t2_available,
+                nb_t3_available,
+                nb_t4_available,
+                nb_t5_available,
+                nb_t6_available,
+                nb_t7_more_available,
+              },
+              { nb_t1, nb_t1_bis, nb_t2, nb_t3, nb_t4, nb_t5, nb_t6, nb_t7_more },
+            )
+            const available = calculatedAvailability
             const total = res.properties.nb_total_apartments || 0
             if (total === 0) return null
 

@@ -288,6 +288,42 @@ describe('bailleur.updateAvailability', () => {
     expect(detail?.properties.nb_t1_available).toBe(3)
     expect(detail?.properties.nb_t2_available).toBe(2)
   })
+
+  it('preserves null availability when updating with null (does not default to 0)', async () => {
+    const owner = await createOwner({ name: 'Owner NullAvail', slug: 'owner-null-avail', userId: 'test-owner-id' })
+    await createAccommodation({
+      name: 'Null Avail Test',
+      slug: 'null-avail-test',
+      ownerId: owner.id,
+      nbT1: 10,
+      nbT2: 5,
+      nbT3: null,
+      geom: parisPoint,
+    })
+
+    // Update with explicit nulls for typologies without stock
+    await ownerCaller.bailleur.updateAvailability({
+      slug: 'null-avail-test',
+      nb_t1_available: 3,
+      nb_t1_bis_available: null,
+      nb_t2_available: null,
+      nb_t3_available: null,
+      nb_t4_available: null,
+      nb_t5_available: null,
+      nb_t6_available: null,
+      nb_t7_more_available: null,
+    })
+
+    const list = await ownerCaller.bailleur.list({ page: 1 })
+    const detail = list.results.features.find((f) => f.properties.slug === 'null-avail-test')
+
+    // t1 was explicitly set to 3
+    expect(detail?.properties.nb_t1_available).toBe(3)
+    // t2 was sent as null → should remain null, not become 0
+    expect(detail?.properties.nb_t2_available).toBeNull()
+    // t3 has no stock and was sent as null → should remain null
+    expect(detail?.properties.nb_t3_available).toBeNull()
+  })
 })
 
 describe('activity_log diff accuracy', () => {
