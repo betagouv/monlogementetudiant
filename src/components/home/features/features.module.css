@@ -1,8 +1,9 @@
 .featureCardButtons {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
   margin-top: 0.5rem;
+  justify-content: space-between;
+  gap: 2rem;
 }
 
 .featureCardButtons > a {
@@ -44,7 +45,7 @@
   margin: auto;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 992px) {
   .featureCardPurple,
   .featureCardYellow {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -69,6 +70,16 @@
 
   .featureCardButtons {
     flex-direction: row;
+  }
+
+  .featureLogos {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .featureLogos img {
+    flex-shrink: 1;
+    min-width: 0;
   }
 
   .featureCardButtons > a {

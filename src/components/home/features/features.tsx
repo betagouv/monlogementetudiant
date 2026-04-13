@@ -10,7 +10,7 @@ export const FeaturesSection = async () => {
 
   return (
     <section className={clsx('fr-container-sm', styles.featuresSection)}>
-      <div className="fr-flex fr-direction-column fr-direction-md-row fr-justify-content-space-between fr-flex-gap-md-8v fr-pb-md-4w">
+      <div className="fr-flex fr-direction-column fr-direction-lg-row fr-justify-content-space-between fr-flex-gap-md-8v fr-pb-md-4w">
         <div
           className={clsx(
             'fr-flex fr-flex-gap-4v fr-direction-column fr-background-default--grey fr-px-4w fr-py-3w fr-px-md-8w fr-py-md-5w fr-position-relative',
@@ -31,7 +31,7 @@ export const FeaturesSection = async () => {
             >
               {tHome('features.simulateAids.button')}
             </Button>
-            <div className="fr-flex fr-align-items-center fr-justify-content-center fr-justify-content-md-start fr-flex-gap-4v">
+            <div className={clsx('fr-flex fr-align-items-center fr-justify-content-center fr-flex-gap-4v', styles.featureLogos)}>
               <Image src="/images/apl.svg" width={23} height={30} alt="APL" />
               <Image src="/images/logo-crous.svg" width={36} height={36} alt="CROUS" />
               <Image src="/images/caf.svg" width={31} height={30} alt="CAF" />
