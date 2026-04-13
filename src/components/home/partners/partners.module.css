@@ -6,8 +6,8 @@
 .partnersLogos {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 2rem;
-  padding: 3rem;
+  gap: 1rem;
+  padding: 48px 16px;
   align-items: center;
   justify-items: center;
   flex: 1;
@@ -51,6 +51,11 @@
 }
 
 @media (max-width: 767px) {
+  .partnersLogos {
+    padding: 1rem 0;
+    gap: 1rem;
+  }
+
   .partnersSection {
     flex-direction: column-reverse;
   }
@@ -69,7 +74,6 @@
   .partnersContent > p {
     font-size: 1.125rem !important;
     line-height: 1.75rem;
-    margin-bottom: 1.5rem !important;
   }
 
   .partnersContact {

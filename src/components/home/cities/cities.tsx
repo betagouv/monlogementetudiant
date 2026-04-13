@@ -11,7 +11,7 @@ export const CitiesSection = async () => {
   const sortedPopularCities = popularCities.sort((a, b) => b.nb_total_apartments - a.nb_total_apartments).slice(0, 16)
 
   return (
-    <section className="fr-container fr-pb-16w">
+    <section className="fr-container-sm fr-pb-md-16w">
       <div className={styles.citiesSection}>
         <div className="fr-flex fr-direction-column fr-direction-md-row">
           <div className={styles.citiesIllustration}>
@@ -24,7 +24,7 @@ export const CitiesSection = async () => {
             />
           </div>
           <div className={clsx('fr-flex fr-direction-column fr-flex-gap-6v', styles.citiesContent)}>
-            <h2 className="fr-h2 fr-mb-0">{tHome('cities.title')}</h2>
+            <h2 className={clsx('fr-text--center fr-h2 fr-mb-0', styles.citiesTitle)}>{tHome('cities.title')}</h2>
             <div className={clsx('fr-flex fr-flex-wrap fr-flex-gap-4v', styles.citiesGrid)}>
               {sortedPopularCities.map((city) => (
                 <Button

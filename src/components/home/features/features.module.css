@@ -12,17 +12,14 @@
   justify-content: center;
 }
 
-.featureCardPurple,
-.featureCardYellow {
-  border-left: 7px solid transparent;
-}
-
 .featureCardPurple {
   border-left-color: #5757ad;
+  border-bottom: 1px solid var(--border-default-grey);
 }
 
 .featureCardYellow {
   border-left-color: #fcc63a;
+  border-bottom: 1px solid var(--border-default-grey);
 }
 
 .featureCardTitle {
@@ -51,6 +48,8 @@
   .featureCardPurple,
   .featureCardYellow {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-left: 7px solid transparent;
+    border-bottom: none;
   }
 
   .featureCardTitle {
@@ -64,6 +63,8 @@
 
   .featureCardDescription {
     text-align: left;
+    font-size: 1.25rem !important;
+    line-height: 2rem !important;
   }
 
   .featureCardButtons {
