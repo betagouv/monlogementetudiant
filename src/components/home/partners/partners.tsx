@@ -1,4 +1,3 @@
-import { fr } from '@codegouvfr/react-dsfr'
 import Button from '@codegouvfr/react-dsfr/Button'
 import clsx from 'clsx'
 import Image from 'next/image'
@@ -21,28 +20,28 @@ export const PartnersSection = async () => {
   return (
     <section className={styles.partnersSection}>
       <div className={styles.partnersLogos}>
-        <Image src={arpej} width={120} height={60} alt="Logo Arpej" />
-        <Image src={afev} width={120} height={60} alt="Logo Espacil" />
-        <Image src={espacil} width={120} height={60} alt="Logo Espacil" />
-        <Image src={fachabitat} width={120} height={60} alt="Logo Hénéo" />
-        <Image src={alteal} width={120} height={60} alt="Logo Studefi" />
-        <Image src={opal} width={120} height={60} alt="Logo Agefo" />
-        <Image src={studefi} width={120} height={60} alt="Logo Aquitanis" />
-        <Image src={mgel} width={120} height={60} alt="Logo Aquitanis" />
+        <Image src={arpej} width={200} height={90} alt="Logo Arpej" />
+        <Image src={afev} width={200} height={90} alt="Logo Espacil" />
+        <Image src={espacil} width={200} height={90} alt="Logo Espacil" />
+        <Image src={fachabitat} width={200} height={90} alt="Logo Hénéo" />
+        <Image src={alteal} width={200} height={90} alt="Logo Studefi" />
+        <Image src={opal} width={200} height={90} alt="Logo Agefo" />
+        <Image src={studefi} width={200} height={90} alt="Logo Aquitanis" />
+        <Image src={mgel} width={200} height={90} alt="Logo Aquitanis" />
       </div>
       <div className={styles.partnersContent}>
         <h2 className={clsx('fr-h1', styles.partnersTitle)}>
           {tHome('partners.title')} <span className={styles.partnersHighlight}>{tHome('partners.titleHighlight')}</span>
         </h2>
-        <p className={fr.cx('fr-text--lg', 'fr-mb-4w')}>{tHome('partners.description')}</p>
-        <div className={styles.partnersContact}>
+        <p className="fr-text--lg fr-mb-0">{tHome('partners.description')}</p>
+        <div className={clsx('fr-flex fr-align-items-center fr-flex-gap-4v', styles.partnersContact)}>
           <div className={styles.partnersAvatars}>
             <Image src={avatarCecilia} alt="Cécilia" width={48} height={48} />
             <Image src={avatarYasmine} alt="Yasmine" width={48} height={48} className={styles.avatarOverlap} />
           </div>
           <div>
-            <p className={fr.cx('fr-text--bold', 'fr-mb-0')}>{t('landing.hero.contact.name')}</p>
-            <p className={fr.cx('fr-mb-0')}>{t('landing.hero.contact.role')}</p>
+            <p className="fr-text--bold fr-mb-0">{t('landing.hero.contact.name')}</p>
+            <p className="fr-mb-0">{t('landing.hero.contact.role')}</p>
           </div>
         </div>
         <Button priority="tertiary" className={styles.partnersButton} linkProps={{ href: '/landing', target: '_blank' }}>

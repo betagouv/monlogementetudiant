@@ -1,8 +1,6 @@
-/* Partners Section */
 .partnersSection {
   background-color: white;
   display: flex;
-  flex: ;
 }
 
 .partnersLogos {
@@ -13,11 +11,6 @@
   align-items: center;
   justify-items: center;
   flex: 1;
-}
-
-.partnersLogos > * {
-  max-width: 472px;
-  width: 100%;
 }
 
 .partnersContent {
@@ -41,12 +34,6 @@
 
 .partnersHighlight {
   color: #efcb3a !important;
-}
-
-.partnersContact {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
 }
 
 .partnersAvatars {
@@ -87,7 +74,6 @@
 
   .partnersContact {
     flex-direction: column;
-    align-items: center;
     text-align: center;
   }
 

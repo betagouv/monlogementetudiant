@@ -1,40 +1,16 @@
-/* Facilitate Section - Blue */
 .facilitateSection {
   background-color: #5858ad;
-  padding: 2rem 1.5rem;
-  color: white;
-}
-
-.facilitateSectionContent {
-  display: flex;
-  flex-direction: column;
-  max-width: 1320px;
 }
 
 .faciliteSectionContentLeft {
   display: flex;
   flex-direction: column;
   width: 100%;
-  /* gap: 2rem; */
-}
-
-.faciliteSectionContentLeft > div:first-child {
-  padding: 0;
+  align-items: center;
 }
 
 .facilitateIllustration {
   display: none;
-}
-
-.facilitateIllustrationMobile {
-  width: 22rem;
-  height: 13.4375rem;
-}
-
-.facilitateContent {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
 }
 
 .facilitateTitle {
@@ -51,9 +27,6 @@
   list-style: none;
   padding: 0;
   margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
 }
 
 .facilitateItem {
@@ -62,15 +35,15 @@
   color: white;
 }
 
-.facilitateItem > div:nth-child(2) > span:nth-child(1) {
+.facilitateItemTitle {
   font-size: 1.75rem;
   font-weight: 700;
   line-height: 1.5rem;
 }
 
-.facilitateItem > div:nth-child(2) > span:nth-child(2) {
+.facilitateItemDescription {
   padding-top: 1rem;
-  font-size: 1.5rem;
+  font-size: 1.125rem;
   font-weight: 400;
   line-height: 1.25rem;
 }
@@ -93,13 +66,7 @@
   margin-right: 2rem;
 }
 
-.facilitateItemBefore > div:first-child {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.facilitateItemBefore > div:nth-child(2) {
+.facilitateItemLine {
   height: 48px;
   width: 1px;
   border-right: 1px solid white;
@@ -108,6 +75,8 @@
 .facilitateButton {
   background-color: white !important;
   color: #5858ad !important;
+  font-weight: 500;
+  font-size: 18px;
   width: fit-content;
 }
 
@@ -116,29 +85,8 @@
 }
 
 @media (max-width: 767px) {
-  .facilitateTitle,
-  .highlight {
-    font-size: 1.75rem !important;
-    text-align: center;
-    padding: 0;
-  }
-
-  .facilitateContent {
-    padding: 1.5rem 0;
-  }
-
   .facilitateList {
     gap: 1.5rem;
-  }
-
-  .facilitateItem > div:nth-child(2) > span:nth-child(1) {
-    font-size: 1.375rem;
-    line-height: 1.75rem;
-  }
-
-  .facilitateItem > div:nth-child(2) > span:nth-child(2) {
-    font-size: 1rem;
-    line-height: 1.5rem;
   }
 
   .facilitateButton {
@@ -149,36 +97,21 @@
 }
 
 @media (min-width: 768px) {
-  .facilitateSection {
-    padding: 4rem 7rem 5rem 0;
-  }
-
-  .facilitateSectionContent {
-    flex-direction: row;
-    align-items: center;
-  }
-
-  .facilitateSetionontentLeft {
-    width: 100%;
+  .faciliteSectionContentLeft {
+    flex: 0 0 50%;
+    width: auto;
+    overflow: hidden;
+    margin-left: -5%;
   }
 
   .facilitateIllustration {
-    display: flex;
-    flex: 0 0 50%;
-    justify-content: center;
+    display: block;
+    width: 120%;
+    height: auto;
+    max-width: none;
   }
 
   .facilitateIllustrationMobile {
     display: none;
-  }
-
-  .faciliteSectionContentLeft > div:first-child {
-    padding-left: 7.5rem;
-  }
-
-  .facilitateContent {
-    width: 100%;
-    min-width: 509px;
-    padding: 3.75rem 0;
   }
 }

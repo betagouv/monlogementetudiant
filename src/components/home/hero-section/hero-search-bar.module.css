@@ -12,10 +12,7 @@
 .inputContainer {
   position: relative;
   flex: 1;
-}
-
-.input {
-  margin-bottom: 0 !important;
+  z-index: 10;
 }
 
 .nativeInput {
@@ -27,24 +24,6 @@
   margin: 0 !important;
 }
 
-.nativeInput:focus {
-  outline: none !important;
-}
-
-.searchButtonDesktop {
-  display: none;
-}
-
-.searchButtonMobile {
-  display: inline-flex;
-}
-
-@media (min-width: 768px) {
-  .searchButtonDesktop {
-    display: inline-flex;
-  }
-
-  .searchButtonMobile {
-    display: none;
-  }
+.searchButton {
+  border-top-right-radius: 4px;
 }
