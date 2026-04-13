@@ -514,6 +514,137 @@ const residencesRouter = createTRPCRouter({
         ownerName: r.ownerName ?? '-',
       }))
     }),
+
+  exportCsv: adminProcedure
+    .input(
+      z.object({
+        ownerId: z.number().optional(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const conditions = []
+      if (input.ownerId) {
+        conditions.push(eq(accommodations.ownerId, input.ownerId))
+      }
+      const where = conditions.length > 0 ? and(...conditions) : undefined
+
+      const results = await db
+        .select({
+          id: accommodations.id,
+          name: accommodations.name,
+          slug: accommodations.slug,
+          description: accommodations.description,
+          address: accommodations.address,
+          postalCode: accommodations.postalCode,
+          residenceType: accommodations.residenceType,
+          targetAudience: accommodations.target_audience,
+          published: accommodations.published,
+          available: accommodations.available,
+          city: cities.name,
+          ownerName: owners.name,
+          nbTotalApartments: accommodations.nbTotalApartments,
+          nbAccessibleApartments: accommodations.nbAccessibleApartments,
+          nbColivingApartments: accommodations.nbColivingApartments,
+          nbT1: accommodations.nbT1,
+          nbT1Bis: accommodations.nbT1Bis,
+          nbT2: accommodations.nbT2,
+          nbT3: accommodations.nbT3,
+          nbT4: accommodations.nbT4,
+          nbT5: accommodations.nbT5,
+          nbT6: accommodations.nbT6,
+          nbT7More: accommodations.nbT7More,
+          nbT1Available: accommodations.nbT1Available,
+          nbT1BisAvailable: accommodations.nbT1BisAvailable,
+          nbT2Available: accommodations.nbT2Available,
+          nbT3Available: accommodations.nbT3Available,
+          nbT4Available: accommodations.nbT4Available,
+          nbT5Available: accommodations.nbT5Available,
+          nbT6Available: accommodations.nbT6Available,
+          nbT7MoreAvailable: accommodations.nbT7MoreAvailable,
+          priceMin: accommodations.priceMin,
+          priceMinT1: accommodations.priceMinT1,
+          priceMaxT1: accommodations.priceMaxT1,
+          priceMinT1Bis: accommodations.priceMinT1Bis,
+          priceMaxT1Bis: accommodations.priceMaxT1Bis,
+          priceMinT2: accommodations.priceMinT2,
+          priceMaxT2: accommodations.priceMaxT2,
+          priceMinT3: accommodations.priceMinT3,
+          priceMaxT3: accommodations.priceMaxT3,
+          priceMinT4: accommodations.priceMinT4,
+          priceMaxT4: accommodations.priceMaxT4,
+          priceMinT5: accommodations.priceMinT5,
+          priceMaxT5: accommodations.priceMaxT5,
+          priceMinT6: accommodations.priceMinT6,
+          priceMaxT6: accommodations.priceMaxT6,
+          priceMinT7More: accommodations.priceMinT7More,
+          priceMaxT7More: accommodations.priceMaxT7More,
+          superficieMinT1: accommodations.superficieMinT1,
+          superficieMaxT1: accommodations.superficieMaxT1,
+          superficieMinT1Bis: accommodations.superficieMinT1Bis,
+          superficieMaxT1Bis: accommodations.superficieMaxT1Bis,
+          superficieMinT2: accommodations.superficieMinT2,
+          superficieMaxT2: accommodations.superficieMaxT2,
+          superficieMinT3: accommodations.superficieMinT3,
+          superficieMaxT3: accommodations.superficieMaxT3,
+          superficieMinT4: accommodations.superficieMinT4,
+          superficieMaxT4: accommodations.superficieMaxT4,
+          superficieMinT5: accommodations.superficieMinT5,
+          superficieMaxT5: accommodations.superficieMaxT5,
+          superficieMinT6: accommodations.superficieMinT6,
+          superficieMaxT6: accommodations.superficieMaxT6,
+          superficieMinT7More: accommodations.superficieMinT7More,
+          superficieMaxT7More: accommodations.superficieMaxT7More,
+          laundryRoom: accommodations.laundryRoom,
+          commonAreas: accommodations.commonAreas,
+          bikeStorage: accommodations.bikeStorage,
+          parking: accommodations.parking,
+          secureAccess: accommodations.secureAccess,
+          residenceManager: accommodations.residenceManager,
+          kitchenType: accommodations.kitchenType,
+          desk: accommodations.desk,
+          cookingPlates: accommodations.cookingPlates,
+          microwave: accommodations.microwave,
+          refrigerator: accommodations.refrigerator,
+          wifi: accommodations.wifi,
+          bathroom: accommodations.bathroom,
+          acceptWaitingList: accommodations.acceptWaitingList,
+          scholarshipHoldersPriority: accommodations.scholarshipHoldersPriority,
+          socialHousingRequired: accommodations.socialHousingRequired,
+          externalUrl: accommodations.externalUrl,
+          virtualTourUrl: accommodations.virtualTourUrl,
+          externalReference: accommodations.externalReference,
+          imagesCount: accommodations.imagesCount,
+          createdAt: accommodations.createdAt,
+          updatedAt: accommodations.updatedAt,
+        })
+        .from(accommodations)
+        .leftJoin(owners, eq(accommodations.ownerId, owners.id))
+        .leftJoin(cities, eq(accommodations.cityId, cities.id))
+        .where(where)
+        .orderBy(accommodations.name)
+
+      if (results.length === 0) return ''
+
+      const headers = Object.keys(results[0]!)
+      const csvRows = [
+        headers.join(';'),
+        ...results.map((row) =>
+          headers
+            .map((h) => {
+              const val = (row as Record<string, unknown>)[h]
+              if (val === null || val === undefined) return ''
+              if (val instanceof Date) return val.toISOString()
+              const str = String(val)
+              if (str.includes(';') || str.includes('"') || str.includes('\n')) {
+                return `"${str.replace(/"/g, '""')}"`
+              }
+              return str
+            })
+            .join(';'),
+        ),
+      ]
+      return csvRows.join('\n')
+    }),
 })
 
 const statsRouter = createTRPCRouter({
