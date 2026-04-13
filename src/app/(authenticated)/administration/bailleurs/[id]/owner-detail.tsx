@@ -167,7 +167,7 @@ export function OwnerDetail({ id }: { id: string }) {
           {
             label: `Résidence${sPluriel(accCount)} (${accCount})`,
             iconId: 'fr-icon-home-4-line',
-            content: <ResidencesTab accommodations={accommodationsData ?? []} />,
+            content: <ResidencesTab accommodations={accommodationsData ?? []} ownerId={ownerId} ownerName={ownerData.name} />,
           },
           {
             label: 'Statistiques',
@@ -375,8 +375,21 @@ function UsersTab({
   )
 }
 
+function downloadCsv(csv: string, filename: string) {
+  const bom = '\uFEFF'
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 function ResidencesTab({
   accommodations,
+  ownerId,
+  ownerName,
 }: {
   accommodations: Array<{
     id: number
@@ -389,53 +402,77 @@ function ResidencesTab({
     available: boolean
     published: boolean
   }>
+  ownerId: number
+  ownerName: string
 }) {
+  const trpcClient = useTRPCClient()
+  const [exporting, setExporting] = useState(false)
+
+  const handleExportCsv = async () => {
+    setExporting(true)
+    try {
+      const csv = await trpcClient.admin.residences.exportCsv.query({ ownerId })
+      const date = new Date().toISOString().slice(0, 10)
+      const safeName = ownerName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()
+      downloadCsv(csv, `residences-${safeName}-${date}.csv`)
+    } finally {
+      setExporting(false)
+    }
+  }
+
   if (accommodations.length === 0) {
     return <p className="fr-text--sm fr-text-mention--grey">Aucune résidence</p>
   }
 
   return (
-    <div className={clsx('fr-table', styles.tableWrapper)}>
-      <table>
-        <thead>
-          <tr>
-            <th scope="col">Résidence</th>
-            <th scope="col">Ville</th>
-            <th scope="col">Logements</th>
-            <th scope="col">Dispo.</th>
-            <th scope="col">Statut</th>
-            <th scope="col">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {accommodations.map((acc) => (
-            <tr key={acc.id}>
-              <td className="fr-text--bold">{acc.name}</td>
-              <td>{acc.city}</td>
-              <td>{acc.nbTotalApartments ?? '-'}</td>
-              <td>
-                {acc.nbAvailableApartments} / {acc.nbTotalApartments ?? '-'}
-              </td>
-              <td>{acc.published ? <Badge severity="success">Publiée</Badge> : <Badge severity="warning">Dépubliée</Badge>}</td>
-              <td>
-                <div className="fr-flex fr-flex-gap-1v">
-                  <Button
-                    priority="tertiary"
-                    size="small"
-                    linkProps={{ href: `/trouver-un-logement-etudiant/ville/${acc.citySlug}/${acc.slug}`, target: '_blank' }}
-                  >
-                    Voir
-                  </Button>
-                  <Button priority="tertiary" size="small" linkProps={{ href: `/bailleur/residences/${acc.slug}` }}>
-                    Modifier
-                  </Button>
-                </div>
-              </td>
+    <>
+      <div className="fr-flex fr-justify-content-end fr-mb-2w">
+        <Button iconId="fr-icon-download-line" priority="secondary" onClick={handleExportCsv} disabled={exporting}>
+          {exporting ? 'Export en cours...' : 'Export CSV'}
+        </Button>
+      </div>
+      <div className={clsx('fr-table', styles.tableWrapper)}>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Résidence</th>
+              <th scope="col">Ville</th>
+              <th scope="col">Logements</th>
+              <th scope="col">Dispo.</th>
+              <th scope="col">Statut</th>
+              <th scope="col">Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {accommodations.map((acc) => (
+              <tr key={acc.id}>
+                <td className="fr-text--bold">{acc.name}</td>
+                <td>{acc.city}</td>
+                <td>{acc.nbTotalApartments ?? '-'}</td>
+                <td>
+                  {acc.nbAvailableApartments} / {acc.nbTotalApartments ?? '-'}
+                </td>
+                <td>{acc.published ? <Badge severity="success">Publiée</Badge> : <Badge severity="warning">Dépubliée</Badge>}</td>
+                <td>
+                  <div className="fr-flex fr-flex-gap-1v">
+                    <Button
+                      priority="tertiary"
+                      size="small"
+                      linkProps={{ href: `/trouver-un-logement-etudiant/ville/${acc.citySlug}/${acc.slug}`, target: '_blank' }}
+                    >
+                      Voir
+                    </Button>
+                    <Button priority="tertiary" size="small" linkProps={{ href: `/bailleur/residences/${acc.slug}` }}>
+                      Modifier
+                    </Button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   )
 }
 
