@@ -13,12 +13,12 @@
 }
 
 .featureCardPurple {
-  border-left-color: #5757ad;
+  border-left-color: #5757ad !important;
   border-bottom: 1px solid var(--border-default-grey);
 }
 
 .featureCardYellow {
-  border-left-color: #fcc63a;
+  border-left-color: #fcc63a !important;
   border-bottom: 1px solid var(--border-default-grey);
 }
 
