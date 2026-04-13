@@ -48,11 +48,11 @@ export const NewsSection = async () => {
 
   return (
     <section className={clsx('fr-container', styles.newsSection)}>
-      <div className="fr-flex fr-direction-column">
+      <div className={clsx('fr-flex fr-direction-column', styles.newsSectionHeader)}>
         <h2 className="fr-h2 fr-mb-0">{tHome('news.title')}</h2>
-        <p className="fr-text--lg">{tHome('news.description')}</p>
+        <p className={styles.newsHeaderDescription}>{tHome('news.description')}</p>
       </div>
-      <div className="fr-grid-row fr-grid-row--gutters fr-mb-4w">
+      <div className="fr-flex fr-direction-column fr-direction-md-row fr-justify-content-space-between fr-flex-gap-4v fr-mb-4w">
         {posts.map((post) => {
           const imageUrl = post._embedded?.['wp:featuredmedia']?.[0]?.source_url
           const imageAlt = post._embedded?.['wp:featuredmedia']?.[0]?.alt_text || ''

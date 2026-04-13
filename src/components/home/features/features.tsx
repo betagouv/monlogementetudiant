@@ -9,11 +9,11 @@ export const FeaturesSection = async () => {
   const tHome = await getTranslations('home')
 
   return (
-    <section className={clsx('fr-container', styles.featuresSection)}>
-      <div className="fr-flex fr-justify-content-space-between fr-flex-gap-8v fr-pb-4w">
+    <section className={clsx('fr-container-sm', styles.featuresSection)}>
+      <div className="fr-flex fr-direction-column fr-direction-md-row fr-justify-content-space-between fr-flex-gap-md-8v fr-pb-md-4w">
         <div
           className={clsx(
-            'fr-flex fr-flex-gap-4v fr-direction-column fr-background-default--grey fr-px-8w fr-py-5w fr-position-relative',
+            'fr-flex fr-flex-gap-4v fr-direction-column fr-background-default--grey fr-px-4w fr-py-3w fr-px-md-8w fr-py-md-5w fr-position-relative',
             styles.featureCardPurple,
           )}
         >
@@ -21,12 +21,12 @@ export const FeaturesSection = async () => {
             {tHome('features.simulateAids.badge')}
           </Badge>
           <h2 className={clsx('fr-h2 fr-mb-0', styles.featureCardTitle)}>{tHome('features.simulateAids.title')}</h2>
-          <p className={clsx('fr-text--xl fr-mb-0', styles.featureCardDescription)}>{tHome('features.simulateAids.description')}</p>
+          <p className={clsx('fr-mb-0', styles.featureCardDescription)}>{tHome('features.simulateAids.description')}</p>
           <div className={styles.featureCardButtons}>
             <Button priority="secondary" iconId="ri-money-euro-circle-line" iconPosition="left" linkProps={{ href: '/simuler-mes-aides' }}>
               {tHome('features.simulateAids.button')}
             </Button>
-            <div className="fr-flex fr-align-items-center fr-flex-gap-4v">
+            <div className="fr-flex fr-align-items-center fr-justify-content-center fr-justify-content-md-start fr-flex-gap-4v">
               <Image src="/images/apl.svg" width={23} height={30} alt="APL" />
               <Image src="/images/logo-crous.svg" width={36} height={36} alt="CROUS" />
               <Image src="/images/caf.svg" width={31} height={30} alt="CAF" />
@@ -38,7 +38,7 @@ export const FeaturesSection = async () => {
 
         <div
           className={clsx(
-            'fr-flex fr-flex-gap-4v fr-direction-column fr-background-default--grey fr-px-8w fr-py-4w fr-position-relative',
+            'fr-flex fr-flex-gap-4v fr-direction-column fr-background-default--grey fr-px-4w fr-py-3w fr-px-md-8w fr-py-md-5w fr-position-relative',
             styles.featureCardYellow,
           )}
         >
@@ -46,7 +46,7 @@ export const FeaturesSection = async () => {
             {tHome('features.calculateBudget.badge')}
           </Badge>
           <h2 className={clsx('fr-h2 fr-mb-0', styles.featureCardTitle)}>{tHome('features.calculateBudget.title')}</h2>
-          <p className={clsx('fr-text--xl fr-mb-0', styles.featureCardDescription)}>{tHome('features.calculateBudget.description')}</p>
+          <p className={clsx('fr-mb-0', styles.featureCardDescription)}>{tHome('features.calculateBudget.description')}</p>
           <div className={styles.featureCardButtons}>
             <Button
               priority="secondary"

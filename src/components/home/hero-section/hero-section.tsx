@@ -8,11 +8,8 @@ export const HeroSection = async () => {
   const tHome = await getTranslations('home')
   return (
     <section className={styles.heroSection}>
-      <div className={styles.heroIllustrationLeft}>
-        <Image src="/images/hero-illustration-left.svg" alt="" fill className={styles.heroIllustrationLeftImg} priority />
-      </div>
       <div className="fr-container">
-        <div className={clsx('fr-pt-8w fr-pb-16w', styles.heroContent)}>
+        <div className={clsx('fr-pt-md-8w fr-pb-md-16w', styles.heroContent)}>
           <h1 className={styles.heroTitle}>
             {tHome('hero.title')}
             <br />
@@ -28,14 +25,19 @@ export const HeroSection = async () => {
           </p>
         </div>
       </div>
-      <div className={styles.heroIllustrationRight}>
-        <Image
-          src="/images/hero-illustration-right.svg"
-          alt={tHome('hero.illustrationAlt')}
-          fill
-          className={styles.heroIllustrationRightImg}
-          priority
-        />
+      <div className={styles.heroIllustrations}>
+        <div className={styles.heroIllustrationLeft}>
+          <Image src="/images/hero-illustration-left.svg" alt="" fill className={styles.heroIllustrationLeftImg} priority />
+        </div>
+        <div className={styles.heroIllustrationRight}>
+          <Image
+            src="/images/hero-illustration-right.svg"
+            alt={tHome('hero.illustrationAlt')}
+            fill
+            className={styles.heroIllustrationRightImg}
+            priority
+          />
+        </div>
       </div>
     </section>
   )

@@ -3,13 +3,31 @@
   box-shadow: 0 2px 6px 0 rgb(0 0 18 / 16%);
 }
 
+.citiesIllustration {
+  overflow: hidden;
+}
+
 .citiesImage {
+  width: 100%;
+  height: auto;
   object-fit: contain;
   object-position: bottom center;
 }
 
+.citiesTitle {
+  font-size: 1.5rem;
+}
+
 .cityButton {
   white-space: nowrap;
+}
+
+.citiesGrid {
+  justify-content: center;
+}
+
+.citiesContent {
+  padding: 32px 16px;
 }
 
 @media (min-width: 768px) {
@@ -17,12 +35,6 @@
     flex: 1 1 50%;
     display: flex;
     align-items: flex-end;
-    overflow: hidden;
-  }
-
-  .citiesImage {
-    width: 100%;
-    height: auto;
   }
 
   .citiesContent {

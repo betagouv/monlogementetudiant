@@ -99,6 +99,7 @@ const useStyles = tss.create({
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
+    textAlign: 'start',
   },
   categoryItem: {
     paddingBottom: '0.5rem',

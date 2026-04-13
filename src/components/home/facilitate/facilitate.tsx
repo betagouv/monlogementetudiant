@@ -25,7 +25,7 @@ const ITEMS = [
 export const FacilitateSection = async () => {
   const tHome = await getTranslations('home')
   return (
-    <section className={clsx('fr-py-8w', styles.facilitateSection)}>
+    <section className={clsx('fr-py-md-8w fr-py-4w', styles.facilitateSection)}>
       <div className="fr-container">
         <h2 className={clsx('fr-h1', styles.facilitateTitle)}>
           {tHome('facilitate.title')}

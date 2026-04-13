@@ -6,7 +6,7 @@ const STUDENT_SERVICES_URL = 'https://messervices.etudiant.gouv.fr'
 export const AlertSection = async () => {
   const tHome = await getTranslations('home')
   return (
-    <section className="fr-container fr-mb-4w">
+    <section className="fr-container-sm fr-mb-md-4w">
       <Alert
         severity="info"
         title={

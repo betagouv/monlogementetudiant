@@ -1,5 +1,27 @@
+.newsSection {
+  padding: 2rem 0;
+}
+
+.newsSectionHeader {
+  text-align: center;
+}
+
+.newsHeaderDescription {
+  font-size: 14px;
+  line-height: 24px;
+}
+
 @media (min-width: 768px) {
   .newsSection {
     padding: 4rem 0;
+  }
+
+  .newsSectionHeader {
+    text-align: start;
+  }
+
+  .newsHeaderDescription {
+    font-size: 20px;
+    line-height: 32px;
   }
 }

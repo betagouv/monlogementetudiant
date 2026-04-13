@@ -15,6 +15,10 @@
   z-index: 10;
 }
 
+.input {
+  margin-bottom: 0 !important;
+}
+
 .nativeInput {
   background-color: white !important;
   border: none !important;

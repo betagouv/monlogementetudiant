@@ -50,9 +50,7 @@ export const HeroSearchBar: FC = () => {
         <Button className={`fr-hidden fr-unhidden-sm ${styles.searchButton}`} iconId="ri-search-line" linkProps={{ href: searchHref }}>
           Rechercher
         </Button>
-        <Button className="fr-hidden-sm" iconId="ri-search-line" linkProps={{ href: searchHref }}>
-          <span className="fr-sr-only">Rechercher</span>
-        </Button>
+        <Button className="fr-hidden-sm" iconId="ri-search-line" title="Rechercher" linkProps={{ href: searchHref }} />
       </div>
     </div>
   )
