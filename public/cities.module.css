@@ -1,0 +1,85 @@
+.citiesSection {
+  background-color: white;
+  box-shadow: 0 2px 6px 0 rgb(0 0 18 / 16%);
+}
+
+.citiesSectionContent {
+  display: flex;
+  flex-direction: column;
+}
+
+.citiesIllustration {
+  position: relative;
+  padding-top: 2rem;
+  padding-bottom: 1.5rem;
+}
+
+.citiesImage {
+  object-position: bottom left;
+}
+
+.citiesContent {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  gap: 1.5rem;
+}
+
+.citiesGrid {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  align-content: flex-start;
+  gap: 16px;
+  align-self: stretch;
+  flex-wrap: wrap;
+}
+
+.cityButton {
+  white-space: nowrap;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 1.375rem;
+  line-height: 1.75rem;
+}
+
+@media (min-width: 768px) {
+  .sectionTitle {
+    font-size: 2rem;
+    line-height: 2.5rem;
+  }
+
+  .citiesSectionContent {
+    flex-direction: row;
+  }
+
+  .citiesIllustration {
+    display: block;
+    flex: 1 1 50%;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  .citiesImage {
+    object-position: bottom left;
+  }
+
+  .citiesContent {
+    flex: 1 1 50%;
+    display: flex;
+    padding: 48px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 32px;
+  }
+
+  .citiesGrid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 1rem;
+    padding-bottom: auto;
+  }
+}

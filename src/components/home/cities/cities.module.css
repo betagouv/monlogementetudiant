@@ -1,95 +1,38 @@
-/* Cities Section */
 .citiesSection {
   background-color: white;
-}
-
-.citiesSectionContent {
-  display: flex;
-  flex-direction: column;
-}
-
-.citiesIllustration {
-  padding-top: 2rem;
-  padding-bottom: 1.5rem;
+  box-shadow: 0 2px 6px 0 rgb(0 0 18 / 16%);
 }
 
 .citiesImage {
-  width: 100%;
-  height: auto;
-  max-width: 100%;
-  min-height: 244px;
-  padding-left: 15px;
-}
-
-.citiesContent {
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-  text-align: center;
-  gap: 1.5rem;
-}
-
-.citiesGrid {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  align-content: flex-start;
-  gap: 16px;
-  align-self: stretch;
-  flex-wrap: wrap;
-  padding-bottom: 2rem;
+  object-fit: contain;
+  object-position: bottom center;
 }
 
 .cityButton {
   white-space: nowrap;
 }
 
-.sectionTitle {
-  margin: 0;
-  font-size: 1.375rem;
-  line-height: 1.75rem;
-}
-
 @media (min-width: 768px) {
-  .sectionTitle {
-    font-size: 1.75rem;
-    line-height: 2.25rem;
-  }
-
-  .citiesSectionContent {
-    flex-direction: row;
-    align-items: stretch;
-  }
-
   .citiesIllustration {
-    display: block;
     flex: 1 1 50%;
+    display: flex;
+    align-items: flex-end;
     overflow: hidden;
-    padding: 0;
   }
 
   .citiesImage {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: top center;
-    padding-left: 0px;
+    height: auto;
   }
 
   .citiesContent {
     flex: 1 1 50%;
-    display: flex;
     padding: 48px;
-    flex-direction: column;
     align-items: flex-start;
     gap: 32px;
   }
 
   .citiesGrid {
-    display: flex;
-    flex-wrap: wrap;
     justify-content: flex-start;
-    gap: 1rem;
-    padding-bottom: auto;
   }
 }

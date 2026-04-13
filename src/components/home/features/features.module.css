@@ -1,20 +1,3 @@
-/* Features Section - Double Cards */
-.featuresSection {
-  padding: 0;
-  position: relative;
-  z-index: 2;
-}
-
-.featureCard > * {
-  max-width: 456px;
-}
-
-.featureCardsGrid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0;
-}
-
 .featureCardButtons {
   display: flex;
   flex-direction: column;
@@ -29,25 +12,9 @@
   justify-content: center;
 }
 
-@media (min-width: 768px) {
-  .featuresSection {
-    padding: 4rem 0;
-  }
-
-  .featureCardsGrid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 2rem;
-  }
-}
-
-.featureCard {
-  background-color: white;
-  border-radius: 0;
-  padding: 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+.featureCardPurple,
+.featureCardYellow {
+  border-left: 7px solid transparent;
 }
 
 .featureCardPurple {
@@ -59,12 +26,10 @@
 }
 
 .featureCardTitle {
-  margin: 0;
   text-align: center;
 }
 
 .featureCardDescription {
-  max-width: 456px;
   text-align: center;
 }
 
@@ -82,67 +47,31 @@
   margin: auto;
 }
 
-.featureCardLogos {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin: auto;
-}
-
 @media (min-width: 768px) {
-  .featureCard {
-    padding: 2.5rem 4rem;
+  .featureCardPurple,
+  .featureCardYellow {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   }
 
   .featureCardTitle {
     text-align: left;
   }
 
-  .featureCard {
-    background-color: white;
-    border-radius: 0;
-    padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    border-left: 4px solid transparent;
-  }
-
-  .badgePurple {
-    margin: 0;
-  }
-
+  .badgePurple,
   .badgeYellow {
     margin: 0;
   }
 
   .featureCardDescription {
-    max-width: 456px;
     text-align: left;
   }
 
   .featureCardButtons {
-    display: flex;
     flex-direction: row;
-    gap: 2rem;
-    margin-top: 0.5rem;
   }
 
   .featureCardButtons > a {
     flex-shrink: 0;
     width: auto;
-    display: auto;
-  }
-
-  .featureCardLogos {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin: 0;
-  }
-
-  .featureCardsGrid {
-    gap: 1.5rem;
   }
 }

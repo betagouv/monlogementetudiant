@@ -4,93 +4,63 @@ import Image from 'next/image'
 import { getTranslations } from 'next-intl/server'
 import styles from './facilitate.module.css'
 
+const ITEMS = [
+  { icon: 'ri-hotel-line', titleKey: 'facilitate.items.offers', descKey: 'facilitate.items.offersDescription', showLine: true },
+  {
+    icon: 'ri-money-euro-circle-line',
+    titleKey: 'facilitate.items.simulator',
+    descKey: 'facilitate.items.simulatorDescription',
+    showLine: true,
+  },
+  {
+    icon: 'ri-calculator-line',
+    titleKey: 'facilitate.items.calculator',
+    descKey: 'facilitate.items.calculatorDescription',
+    showLine: true,
+  },
+  { icon: 'ri-mail-unread-line', titleKey: 'facilitate.items.alerts', descKey: 'facilitate.items.alertsDescription', showLine: true },
+  { icon: 'ri-user-line', titleKey: 'facilitate.items.account', descKey: 'facilitate.items.accountDescription', showLine: false },
+] as const
+
 export const FacilitateSection = async () => {
   const tHome = await getTranslations('home')
   return (
-    <section className={styles.facilitateSection}>
-      <div>
-        <div className={styles.facilitateSectionContent}>
+    <section className={clsx('fr-py-8w', styles.facilitateSection)}>
+      <div className="fr-container">
+        <h2 className={clsx('fr-h1', styles.facilitateTitle)}>
+          {tHome('facilitate.title')}
+          <br />
+          <span className={styles.highlight}>{tHome('facilitate.titleHighlight')}</span>
+        </h2>
+        <div className="fr-flex fr-direction-column fr-direction-md-row fr-align-items-center fr-flex-gap-8v">
           <div className={styles.faciliteSectionContentLeft}>
-            <div>
-              <h2 className={clsx('fr-h1', styles.facilitateTitle)}>{tHome('facilitate.title')}</h2>
-              <h2 className={clsx('fr-h1', styles.highlight)}>{tHome('facilitate.titleHighlight')}</h2>
-            </div>
             <Image
               className={styles.facilitateIllustration}
               src="/images/facilities.svg"
               alt={tHome('hero.illustrationAlt')}
-              width={811}
-              height={500}
+              width={610}
+              height={587}
             />
           </div>
-          <div className={styles.facilitateContent}>
-            <ul className={styles.facilitateList}>
-              <li className={styles.facilitateItem}>
-                <div className={styles.facilitateItemBefore}>
-                  <div>
-                    <i className={clsx('ri-hotel-line', styles.facilitateIcon)} aria-hidden="true" />
+          <div className="fr-flex fr-direction-column fr-flex-gap-6v">
+            <ul className={clsx('fr-flex fr-direction-column fr-flex-gap-4v', styles.facilitateList)}>
+              {ITEMS.map((item) => (
+                <li key={item.titleKey} className={styles.facilitateItem}>
+                  <div className={styles.facilitateItemBefore}>
+                    <div>
+                      <i className={clsx(item.icon, styles.facilitateIcon)} aria-hidden="true" />
+                    </div>
+                    {item.showLine && <div className={styles.facilitateItemLine} />}
                   </div>
-                  <div></div>
-                </div>
-                <div>
-                  <span>{tHome('facilitate.items.offers')}</span>
-                  <br />
-                  <span>{tHome('facilitate.items.offersDescription')}</span>
-                </div>
-              </li>
-              <li className={styles.facilitateItem}>
-                <div className={styles.facilitateItemBefore}>
                   <div>
-                    <i className={clsx('ri-money-euro-circle-line', styles.facilitateIcon)} aria-hidden="true" />
+                    <span className={styles.facilitateItemTitle}>{tHome(item.titleKey)}</span>
+                    <br />
+                    <span className={styles.facilitateItemDescription}>{tHome(item.descKey)}</span>
                   </div>
-                  <div></div>
-                </div>
-                <div>
-                  <span>{tHome('facilitate.items.simulator')}</span>
-                  <br />
-                  <span>{tHome('facilitate.items.simulatorDescription')}</span>
-                </div>
-              </li>
-              <li className={styles.facilitateItem}>
-                <div className={styles.facilitateItemBefore}>
-                  <div>
-                    <i className={clsx('ri-calculator-line', styles.facilitateIcon)} aria-hidden="true" />
-                  </div>
-                  <div></div>
-                </div>
-                <div>
-                  <span>{tHome('facilitate.items.calculator')}</span>
-                  <br />
-                  <span>{tHome('facilitate.items.calculatorDescription')}</span>
-                </div>
-              </li>
-              <li className={styles.facilitateItem}>
-                <div className={styles.facilitateItemBefore}>
-                  <div>
-                    <i className={clsx('ri-mail-unread-line', styles.facilitateIcon)} aria-hidden="true" />
-                  </div>
-                  <div></div>
-                </div>
-                <div>
-                  <span>{tHome('facilitate.items.alerts')}</span>
-                  <br />
-                  <span>{tHome('facilitate.items.alertsDescription')}</span>
-                </div>
-              </li>
-              <li className={styles.facilitateItem}>
-                <div className={styles.facilitateItemBefore}>
-                  <div>
-                    <i className={clsx('ri-user-line', styles.facilitateIcon)} aria-hidden="true" />
-                  </div>
-                </div>
-                <div>
-                  <span>{tHome('facilitate.items.account')}</span>
-                  <br />
-                  <span>{tHome('facilitate.items.accountDescription')}</span>
-                </div>
-              </li>
+                </li>
+              ))}
             </ul>
-            <Button className={styles.facilitateButton} linkProps={{ href: '/inscription' }}>
+            <Button className={styles.facilitateButton} linkProps={{ href: '/s-inscrire' }}>
               {tHome('facilitate.button')}
             </Button>
           </div>

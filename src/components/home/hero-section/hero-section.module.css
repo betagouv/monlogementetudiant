@@ -1,15 +1,12 @@
-/* Hero Section */
 .heroSection {
   position: relative;
-  padding: 0 0 2rem;
-  overflow: visible;
+  background-color: var(--background-alt-blue-france);
 }
 
 .heroContent {
   text-align: center;
   position: relative;
   z-index: 1;
-  padding-top: 3rem;
 }
 
 .heroTitle {
@@ -23,36 +20,24 @@
 .heroSearchContainer {
   margin: 0 auto 1.5rem;
   max-width: 600px;
+  box-shadow: 0 6px 18px 0 rgb(0 0 18 / 16%);
+  border-radius: 4px 4px 0 0;
 }
 
-.heroCounter {
-  font-size: 1rem;
-  color: #666;
-  margin: 0;
+.heroIllustrationLeftImg {
+  object-fit: contain;
+  object-position: left bottom;
 }
 
-.heroCounter strong {
-  color: #161616;
-}
-
-.heroIllustrationLeft,
-.heroIllustrationRight {
-  display: none;
+.heroIllustrationRightImg {
+  object-fit: contain;
+  object-position: right bottom;
 }
 
 @media (min-width: 768px) {
-  .heroSection {
-    padding: 0 0 3rem;
-    min-height: 400px;
-  }
-
-  .heroContent {
-    padding-top: 4rem;
-  }
-
   .heroTitle {
-    font-size: 3rem;
-    line-height: 3.5rem;
+    font-size: 3.5rem;
+    line-height: 4rem;
     text-align: center;
   }
 
@@ -77,12 +62,12 @@
 
 @media (min-width: 1200px) {
   .heroIllustrationLeft {
-    width: 708px;
-    height: 650px;
+    height: 610px;
+    width: 610px;
   }
 
   .heroIllustrationRight {
     height: 610px;
-    width: 726px;
+    width: 689px;
   }
 }

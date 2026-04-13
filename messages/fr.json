@@ -545,6 +545,10 @@
     }
   },
   "home": {
+    "alert": {
+      "title": "Réalisez votre Dossier Social Étudiant (DSE) sur <underline>messervices.étudiant.gouv.fr</underline> avant le 31 mai",
+      "description": "Cela permet un traitement optimal de votre dossier et vous assure, si vous êtes éligible, le versement de votre bourse dès la rentrée de septembre. Par ailleurs, les dossiers complétés et validés avant cette date sont prioritaires pour l'attribution d'un logement Crous."
+    },
     "header": {
       "rangeLabel": "Budget maximum"
     },
@@ -601,7 +605,7 @@
         "offers": "Offres de logement",
         "offersDescription": "Plus de 600 résidences étudiantes disponibles",
         "simulator": "Simulateur d'aides au logement",
-        "simulatorDescription": "Plus de x0 organismes d'aides référencés",
+"simulatorDescription": "Plus de 4 organismes d'aides référencés",
         "calculator": "Calculatrice de budget étudiant",
         "calculatorDescription": "Quelques clics pour tout maîtriser",
         "alerts": "Alertes logement",
