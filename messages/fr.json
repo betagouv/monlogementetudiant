@@ -992,7 +992,7 @@
         "coliving": "Nombre de logements en colocation dans la résidence",
         "scholarship": "Les étudiants boursiers sont prioritaires dans la résidence",
         "socialHousing": "Une demande de logement social est nécessaire.",
-        "accommodationType": "Typologie de logements",
+"accommodationType": "Type de résidence",
         "targetAudience": "Public dans la résidence",
         "typologyTab": {
           "housingType": "Type de logement",
