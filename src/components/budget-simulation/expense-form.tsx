@@ -49,7 +49,7 @@ export function ExpenseForm() {
 
   return (
     <div className="fr-flex fr-direction-column fr-flex-gap-4v">
-      {state.activeExpenseTypes.map((type, index) => {
+      {state.activeExpenseTypes.map((type) => {
         return (
           <div key={type} className="fr-flex fr-flex-gap-4v">
             <div className={clsx('fr-flex-basis-0 fr-flex-grow-1', styles.sourceSelect)}>
@@ -117,29 +117,24 @@ export function ExpenseForm() {
                     : 'fr-align-items-end fr-mb-1w',
               )}
             >
-              {index === state.activeExpenseTypes.length - 1 && canAddMore ? (
+              {state.activeExpenseTypes.length > 1 && (
                 <Button
-                  iconId="ri-add-line"
-                  title={t('addExpenseTitle')}
-                  priority="secondary"
+                  priority="tertiary"
+                  title={t('removeExpenseTitle')}
+                  iconId="ri-delete-bin-line"
                   size="small"
-                  onClick={handleAddExpenseType}
+                  onClick={() => handleRemoveExpenseType(type)}
                 />
-              ) : (
-                state.activeExpenseTypes.length > 1 && (
-                  <Button
-                    priority="tertiary"
-                    title={t('removeExpenseTitle')}
-                    iconId="ri-delete-bin-line"
-                    size="small"
-                    onClick={() => handleRemoveExpenseType(type)}
-                  />
-                )
               )}
             </div>
           </div>
         )
       })}
+      {canAddMore && (
+        <Button iconId="ri-add-line" priority="secondary" size="small" onClick={handleAddExpenseType}>
+          {t('addExpenseLabel')}
+        </Button>
+      )}
       {state.activeExpenseTypes.some((type) => EXPENSE_RANGES[type as keyof typeof EXPENSE_RANGES]) && (
         <div>
           <hr className="fr-pt-2w fr-pb-0 fr-mt-2w" />
