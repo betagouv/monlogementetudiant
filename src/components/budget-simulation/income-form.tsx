@@ -45,7 +45,7 @@ export function IncomeForm() {
 
   return (
     <div className="fr-flex fr-direction-column fr-flex-gap-4v">
-      {state.activeIncomeTypes.map((type, index) => (
+      {state.activeIncomeTypes.map((type) => (
         <div key={type} className="fr-flex fr-align-items-end fr-flex-gap-4v">
           <div className={clsx('fr-flex-basis-0 fr-flex-grow-1', styles.sourceSelect)}>
             <Select
@@ -83,22 +83,23 @@ export function IncomeForm() {
             />
           </div>
           <div className="fr-flex fr-flex-gap-2v">
-            {index === state.activeIncomeTypes.length - 1 && canAddMore ? (
-              <Button iconId="ri-add-line" title={t('addIncomeTitle')} priority="secondary" size="small" onClick={handleAddIncomeType} />
-            ) : (
-              state.activeIncomeTypes.length > 1 && (
-                <Button
-                  priority="tertiary"
-                  title={t('removeIncomeTitle')}
-                  iconId="ri-delete-bin-line"
-                  size="small"
-                  onClick={() => handleRemoveIncomeType(type)}
-                />
-              )
+            {state.activeIncomeTypes.length > 1 && (
+              <Button
+                priority="tertiary"
+                title={t('removeIncomeTitle')}
+                iconId="ri-delete-bin-line"
+                size="small"
+                onClick={() => handleRemoveIncomeType(type)}
+              />
             )}
           </div>
         </div>
       ))}
+      {canAddMore && (
+        <Button iconId="ri-add-line" priority="secondary" size="small" onClick={handleAddIncomeType}>
+          {t('addIncomeLabel')}
+        </Button>
+      )}
     </div>
   )
 }

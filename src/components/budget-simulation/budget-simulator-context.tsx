@@ -102,8 +102,8 @@ export function BudgetSimulatorProvider({ children }: BudgetSimulatorProviderPro
       childcare: 0,
       other: 0,
     },
-    activeIncomeTypes: ['salary'],
-    activeExpenseTypes: ['housing'],
+    activeIncomeTypes: ['salary', 'scholarships', 'familyAid'],
+    activeExpenseTypes: ['housing', 'food', 'transport'],
   })
 
   const updateMonthlyIncomes = (incomes: Partial<MonthlyIncomes>) => {

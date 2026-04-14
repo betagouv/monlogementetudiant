@@ -23,7 +23,7 @@
         "title": "Tableau de bord"
       },
       "todo": {
-        "title": "To-do list"
+        "title": "Mes priorités"
       },
       "favorites": {
         "title": "Mes favoris"
@@ -781,7 +781,9 @@
       "sourceLabel": "Source de revenus",
       "amountLabel": "Montant",
       "addIncomeTitle": "Ajouter un revenu",
+      "addIncomeLabel": "Ajouter une source de revenu",
       "removeIncomeTitle": "Supprimer un revenu",
+      
       "types": {
         "familyAid": "Aides de ma famille",
         "scholarships": "Bourses (du Crous ou de la Région)",
@@ -798,6 +800,7 @@
       "amountLabel": "Montant",
       "amountHint": "Entre {low} € et {high} € en moyenne *",
       "addExpenseTitle": "Ajouter une dépense",
+      "addExpenseLabel": "Ajouter une dépense",
       "removeExpenseTitle": "Supprimer une dépense",
       "types": {
         "housing": "Loyer",
@@ -857,9 +860,9 @@
   },
   "student": {
     "navigation": {
-      "backToHome": "Retour à l'accueil",
+      "backToHome": "Retour à la recherche",
       "dashboard": "Tableau de bord",
-      "todoList": "To-do list ({done}/{total})",
+      "todoList": "Mes priorités ({done}/{total})",
       "housingAid": "Aides au logement",
       "favorites": "Favoris",
       "alerts": "Alertes logements"
@@ -875,10 +878,10 @@
     },
     "maximizeChances": {
       "title": "Mettez toutes les chances de votre côté",
-      "completeTodoList": { "title": "Complétez votre to-do list", "cta": "To-do list" },
+      "completeTodoList": { "title": "Complétez votre liste de priorités", "cta": "Mes priorités" },
       "estimateAid": { "title": "Estimez vos aides au logement", "cta": "Mes aides" },
       "createAlerts": { "title": "Créez vous des alertes logements", "cta": "Mes alertes" },
-      "todoListButton": "To-do list",
+      "todoListButton": "Mes priorités",
       "myAidButton": "Mes aides",
       "myAlertsButton": "Mes alertes"
     },
@@ -889,8 +892,8 @@
       }
     },
     "todo": {
-      "title": "Ma To-do list",
-      "description": "Complétez votre to-do list pour mettre toutes les chances de votre côté"
+      "title": "Ma liste de priorités",
+      "description": "Complétez votre liste de priorités pour mettre toutes les chances de votre côté"
     }
   },
   "toast": {
@@ -992,7 +995,7 @@
         "coliving": "Nombre de logements en colocation dans la résidence",
         "scholarship": "Les étudiants boursiers sont prioritaires dans la résidence",
         "socialHousing": "Une demande de logement social est nécessaire.",
-"accommodationType": "Type de résidence",
+        "accommodationType": "Type de résidence",
         "targetAudience": "Public dans la résidence",
         "typologyTab": {
           "housingType": "Type de logement",

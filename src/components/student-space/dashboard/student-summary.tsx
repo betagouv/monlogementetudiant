@@ -25,7 +25,7 @@ export const StudentSummary = async () => {
         </div>
         <div className="fr-width-full">
           <Tile
-            pictogram={<span className={styles.tileIcon}>📬</span>}
+            pictogram={<span className={styles.tileIcon}>🔔</span>}
             enlargeLinkOrButton
             linkProps={{
               href: 'alertes',
