@@ -202,6 +202,31 @@ export async function createAccommodation(
   return row
 }
 
+export async function addAccommodationAddress(
+  accommodationId: number,
+  overrides: {
+    isMain?: boolean
+    address?: string
+    postalCode?: string
+    cityId: number
+    geom?: { type: string; coordinates: [number, number] }
+  },
+) {
+  const db = getTestDb()
+  const { geom, ...rest } = overrides
+  const [row] = await db
+    .insert(accommodationAddresses)
+    .values({
+      accommodationId,
+      isMain: false,
+      postalCode: '75000',
+      ...rest,
+      ...(geom ? { geom: sql`ST_SetSRID(ST_MakePoint(${geom.coordinates[0]}, ${geom.coordinates[1]}), 4326)` } : {}),
+    })
+    .returning()
+  return row
+}
+
 export async function createExternalSource(
   overrides: Omit<Partial<ExternalSourceInsert>, 'accommodationId'> & { accommodationId: number },
 ) {
