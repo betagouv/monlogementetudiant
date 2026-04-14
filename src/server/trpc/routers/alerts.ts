@@ -4,6 +4,7 @@ import { ZCreateAlertRequest } from '~/schemas/alerts/create-alert'
 import { ZUpdateAlertRequest } from '~/schemas/alerts/update-alert'
 import { db } from '~/server/db'
 import { academies } from '~/server/db/schema/academies'
+import { accommodationAddresses } from '~/server/db/schema/accommodation-addresses'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { cities } from '~/server/db/schema/cities'
 import { departments } from '~/server/db/schema/departments'
@@ -34,7 +35,7 @@ function buildTerritoryCondition(alert: Pick<AlertMatchInput, 'cityId' | 'depart
 
   for (const { id, table } of territoryLevels) {
     if (id) {
-      return sql`ST_Intersects(${accommodations.geom}, (SELECT ${table.boundary} FROM ${table} WHERE ${table.id} = ${id}))`
+      return sql`EXISTS (SELECT 1 FROM ${accommodationAddresses} WHERE ${accommodationAddresses.accommodationId} = ${accommodations.id} AND ST_Intersects(${accommodationAddresses.geom}, (SELECT ${table.boundary} FROM ${table} WHERE ${table.id} = ${id})))`
     }
   }
   return null

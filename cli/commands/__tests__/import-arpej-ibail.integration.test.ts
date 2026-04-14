@@ -2,7 +2,7 @@ import { and, eq } from 'drizzle-orm'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createAccommodation, createExternalSource, createImportBlocklist, createOwner } from '../../../src/__tests__/fixtures/factories'
 import { getTestDb } from '../../../src/__tests__/helpers/test-db'
-import { accommodations, externalSources } from '../../../src/server/db/schema'
+import { accommodationAddresses, accommodations, externalSources } from '../../../src/server/db/schema'
 
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
@@ -82,7 +82,9 @@ describe('import-arpej-ibail integration', () => {
 
     const [created] = await db.select().from(accommodations).where(eq(accommodations.name, 'Résidence Soleil'))
     expect(created).toBeDefined()
-    expect(created!.postalCode).toBe('75001')
+
+    const [addr] = await db.select().from(accommodationAddresses).where(eq(accommodationAddresses.accommodationId, created!.id))
+    expect(addr.postalCode).toBe('75001')
 
     const sources = await db
       .select()

@@ -1,5 +1,4 @@
-import { bigint, boolean, geometry, index, integer, pgTable, text, timestamp, unique, varchar } from 'drizzle-orm/pg-core'
-import { cities } from './cities'
+import { bigint, boolean, index, integer, pgTable, text, timestamp, unique, varchar } from 'drizzle-orm/pg-core'
 import { owners } from './owners'
 
 export const accommodations = pgTable(
@@ -9,12 +8,10 @@ export const accommodations = pgTable(
     name: varchar({ length: 200 }).notNull(),
     slug: varchar({ length: 255 }).notNull().unique(),
     description: text(),
-    address: varchar({ length: 255 }),
-    postalCode: varchar('postal_code', { length: 5 }).notNull(),
     residenceType: varchar('residence_type', { length: 100 }),
     target_audience: varchar('target_audience', { length: 100 }),
     published: boolean().notNull(),
-    geom: geometry({ type: 'point', srid: 4326 }),
+    available: boolean().notNull().default(true),
 
     // Apartment counts
     nbTotalApartments: integer('nb_total_apartments'),
@@ -102,7 +99,6 @@ export const accommodations = pgTable(
     externalReference: varchar('external_reference', { length: 255 }),
 
     // Relations
-    cityId: bigint('city_id', { mode: 'number' }).references(() => cities.id),
     ownerId: bigint('owner_id', { mode: 'number' }).references(() => owners.id),
 
     // Timestamps
@@ -110,7 +106,6 @@ export const accommodations = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }),
   },
   (t) => [
-    index('accommodation_city_id_idx').on(t.cityId),
     index('accommodation_owner_id_idx').on(t.ownerId),
     index('accommodation_published_idx').on(t.published),
     unique('unique_owner_external_reference').on(t.ownerId, t.externalReference),

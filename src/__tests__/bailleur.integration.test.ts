@@ -62,9 +62,7 @@ describe('bailleur.create', () => {
     await createOwner({ name: 'Owner Create', slug: 'owner-create', userId: 'test-owner-id' })
     const result = await ownerCaller.bailleur.create({
       name: 'Résidence Test',
-      address: '1 rue de la Paix',
-      city: 'Paris',
-      postal_code: '75001',
+      addresses: [{ address: '1 rue de la Paix', city: 'Paris', postal_code: '75001' }],
       external_url: 'https://example.com',
       typologies: [
         {
@@ -89,9 +87,7 @@ describe('bailleur.create', () => {
     const owner = await createOwner({ name: 'Owner List', slug: 'owner-list', userId: 'test-owner-id' })
     const result = await ownerCaller.bailleur.create({
       name: 'Ma Résidence',
-      address: '2 avenue des Champs',
-      city: 'Lyon',
-      postal_code: '69001',
+      addresses: [{ address: '2 avenue des Champs', city: 'Lyon', postal_code: '69001' }],
       external_url: 'https://example.com',
       typologies: [
         {
@@ -608,9 +604,7 @@ describe('activity_log diff accuracy', () => {
     await db.delete(activityLog)
     await ownerCaller.bailleur.create({
       name: 'Created Residence',
-      address: '10 rue Test',
-      city: 'Paris',
-      postal_code: '75001',
+      addresses: [{ address: '10 rue Test', city: 'Paris', postal_code: '75001' }],
       external_url: 'https://example.com',
       typologies: [
         {
