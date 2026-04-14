@@ -1,8 +1,8 @@
+import { and, eq, sql } from 'drizzle-orm'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
-import { and, eq, sql } from 'drizzle-orm'
 import { ZUpdateResidence } from '../../src/schemas/accommodations/update-residence'
-import { accommodations, externalSources } from '../../src/server/db/schema'
+import { accommodationAddresses, accommodations, externalSources } from '../../src/server/db/schema'
 import type { CsvRow } from '../../src/server/lib/import/csv-parser'
 import { generateSourceId, normalizeEnum, parseCsvContent, toBool, toDigit } from '../../src/server/lib/import/csv-parser'
 import { generateAccommodationKey, uploadFile } from '../../src/server/services/s3'
@@ -81,9 +81,6 @@ const ZAccommodationImport = ZUpdateResidence.pick({
   name: true,
   residence_type: true,
   target_audience: true,
-  address: true,
-  city: true,
-  postal_code: true,
   description: true,
   external_url: true,
   accept_waiting_list: true,
@@ -359,17 +356,19 @@ const command: ImportCommand = {
           images_urls: imagesUrls.length > 0 ? imagesUrls : undefined,
         })
 
+        const addressData = {
+          address: resolvedAddress,
+          postalCode: resolvedPostalCode,
+          cityId: resolvedCityId,
+          ...(geom ? { geom } : {}),
+        }
+
         const accommodationData = {
           name,
           description: row.description?.trim() || null,
-          address: resolvedAddress,
-          city: resolvedCity,
-          cityId: resolvedCityId,
-          postalCode: resolvedPostalCode,
           residenceType: normalizeEnum(row.residence_type),
           target_audience: (normalizeEnum(row.target_audience) ?? 'etudiants') as 'etudiants' | 'mixte-etudiants-jeunes-actifs',
           published: true,
-          ...(geom ? { geom } : {}),
           nbT1: toDigit(row.nb_t1),
           nbT1Bis: toDigit(row.nb_t1_bis),
           nbT2: toDigit(row.nb_t2),
@@ -449,7 +448,10 @@ const command: ImportCommand = {
         }
 
         if (existingSource[0]) {
-          await db.update(accommodations).set(accommodationData).where(eq(accommodations.id, existingSource[0].accommodationId))
+          const accommodationId = existingSource[0].accommodationId
+          await db.update(accommodations).set(accommodationData).where(eq(accommodations.id, accommodationId))
+          await db.delete(accommodationAddresses).where(eq(accommodationAddresses.accommodationId, accommodationId))
+          await db.insert(accommodationAddresses).values({ accommodationId, isMain: true, ...addressData })
           result.updated++
         } else {
           const slug = await findAvailableSlug(generateSlug(name), db, accommodations)
@@ -457,6 +459,8 @@ const command: ImportCommand = {
             .insert(accommodations)
             .values({ ...accommodationData, slug, createdAt: new Date() })
             .returning({ id: accommodations.id })
+
+          await db.insert(accommodationAddresses).values({ accommodationId: newAccommodation.id, isMain: true, ...addressData })
 
           await db.insert(externalSources).values({
             accommodationId: newAccommodation.id,

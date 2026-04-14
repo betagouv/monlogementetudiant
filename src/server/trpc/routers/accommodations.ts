@@ -6,6 +6,7 @@ import { ETargetAudience } from '~/enums/target-audience'
 import { EXPANDED_SEARCH_PAGE_SIZE, EXPANDED_SEARCH_RADIUS_KM } from '~/lib/accommodations-expanded-search'
 import { db } from '~/server/db'
 import { academies } from '~/server/db/schema/academies'
+import { accommodationAddresses } from '~/server/db/schema/accommodation-addresses'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { cities } from '~/server/db/schema/cities'
 import { departments } from '~/server/db/schema/departments'
@@ -25,34 +26,35 @@ const availabilityCols = [
   accommodations.nbT7MoreAvailable,
 ] as const
 
+// Raw column names used inside CTE ordering (no table qualification)
 const totalAvailable = sql<number>`(
-  COALESCE(${accommodations.nbT1Available}, 0) +
-  COALESCE(${accommodations.nbT1BisAvailable}, 0) +
-  COALESCE(${accommodations.nbT2Available}, 0) +
-  COALESCE(${accommodations.nbT3Available}, 0) +
-  COALESCE(${accommodations.nbT4Available}, 0) +
-  COALESCE(${accommodations.nbT5Available}, 0) +
-  COALESCE(${accommodations.nbT6Available}, 0) +
-  COALESCE(${accommodations.nbT7MoreAvailable}, 0)
+  COALESCE("nbT1Available", 0) +
+  COALESCE("nbT1BisAvailable", 0) +
+  COALESCE("nbT2Available", 0) +
+  COALESCE("nbT3Available", 0) +
+  COALESCE("nbT4Available", 0) +
+  COALESCE("nbT5Available", 0) +
+  COALESCE("nbT6Available", 0) +
+  COALESCE("nbT7MoreAvailable", 0)
 )`
 
 const unknownAvailability = sql<boolean>`(
-  ${accommodations.nbT1Available} IS NULL AND
-  ${accommodations.nbT1BisAvailable} IS NULL AND
-  ${accommodations.nbT2Available} IS NULL AND
-  ${accommodations.nbT3Available} IS NULL AND
-  ${accommodations.nbT4Available} IS NULL AND
-  ${accommodations.nbT5Available} IS NULL AND
-  ${accommodations.nbT6Available} IS NULL AND
-  ${accommodations.nbT7MoreAvailable} IS NULL
+  "nbT1Available" IS NULL AND
+  "nbT1BisAvailable" IS NULL AND
+  "nbT2Available" IS NULL AND
+  "nbT3Available" IS NULL AND
+  "nbT4Available" IS NULL AND
+  "nbT5Available" IS NULL AND
+  "nbT6Available" IS NULL AND
+  "nbT7MoreAvailable" IS NULL
 )`
 
 const priorityOrder = sql`CASE
   WHEN ${totalAvailable} > 0 THEN 1
-  WHEN ${totalAvailable} = 0 AND ${accommodations.acceptWaitingList} = true AND NOT ${unknownAvailability} THEN 2
-  WHEN ${unknownAvailability} AND ${accommodations.acceptWaitingList} = true THEN 3
-  WHEN ${unknownAvailability} AND (${accommodations.acceptWaitingList} IS NULL OR ${accommodations.acceptWaitingList} = false) THEN 4
-  WHEN ${totalAvailable} = 0 AND (${accommodations.acceptWaitingList} IS NULL OR ${accommodations.acceptWaitingList} = false) AND NOT ${unknownAvailability} THEN 5
+  WHEN ${totalAvailable} = 0 AND "acceptWaitingList" = true AND NOT ${unknownAvailability} THEN 2
+  WHEN ${unknownAvailability} AND "acceptWaitingList" = true THEN 3
+  WHEN ${unknownAvailability} AND ("acceptWaitingList" IS NULL OR "acceptWaitingList" = false) THEN 4
+  WHEN ${totalAvailable} = 0 AND ("acceptWaitingList" IS NULL OR "acceptWaitingList" = false) AND NOT ${unknownAvailability} THEN 5
   ELSE 6
 END`
 
@@ -130,15 +132,33 @@ const applyCenterRadiusFilter = (conditions: SQL[], center: string, radius: numb
   const [lng, lat] = center.split(',').map(Number)
   const radiusMeters = radius * 1000
   conditions.push(
-    sql`ST_DWithin(${accommodations.geom}::geography, ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography, ${radiusMeters})`,
+    sql`ST_DWithin(${accommodationAddresses.geom}::geography, ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography, ${radiusMeters})`,
   )
 }
 
-const listAccommodationsWithConditions = async ({ page, pageSize, where }: { page: number; pageSize: number; where: SQL | undefined }) => {
+const listAccommodationsWithConditions = async ({
+  page,
+  pageSize,
+  where,
+  addressOrderHint,
+}: {
+  page: number
+  pageSize: number
+  where: SQL | undefined
+  addressOrderHint?: SQL
+}) => {
   const offset = (page - 1) * pageSize
+  const addressOrder = addressOrderHint ?? sql`${accommodationAddresses.isMain} DESC`
+  const whereClause = where ? sql`WHERE ${where}` : sql``
 
+  // Use a CTE: first deduplicate with DISTINCT ON, then sort + paginate on top
   const [countResult, priceBounds, results] = await Promise.all([
-    db.select({ count: sql<number>`count(*)::int` }).from(accommodations).where(where),
+    db
+      .select({ count: sql<number>`count(DISTINCT ${accommodations.id})::int` })
+      .from(accommodations)
+      .innerJoin(accommodationAddresses, eq(accommodationAddresses.accommodationId, accommodations.id))
+      .innerJoin(cities, eq(accommodationAddresses.cityId, cities.id))
+      .where(where),
 
     db
       .select({
@@ -164,94 +184,101 @@ const listAccommodationsWithConditions = async ({ page, pageSize, where }: { pag
             ))`,
       })
       .from(accommodations)
+      .innerJoin(accommodationAddresses, eq(accommodationAddresses.accommodationId, accommodations.id))
+      .innerJoin(cities, eq(accommodationAddresses.cityId, cities.id))
       .where(where),
 
-    db
-      .select({
-        id: accommodations.id,
-        name: accommodations.name,
-        slug: accommodations.slug,
-        description: accommodations.description,
-        address: accommodations.address,
-        city: cities.name,
-        citySlug: cities.slug,
-        postalCode: accommodations.postalCode,
-        residenceType: accommodations.residenceType,
-        targetAudience: accommodations.target_audience,
-        published: accommodations.published,
-        nbTotalApartments: accommodations.nbTotalApartments,
-        nbAccessibleApartments: accommodations.nbAccessibleApartments,
-        nbColivingApartments: accommodations.nbColivingApartments,
-        nbT1: accommodations.nbT1,
-        nbT1Bis: accommodations.nbT1Bis,
-        nbT2: accommodations.nbT2,
-        nbT3: accommodations.nbT3,
-        nbT4: accommodations.nbT4,
-        nbT5: accommodations.nbT5,
-        nbT6: accommodations.nbT6,
-        nbT7More: accommodations.nbT7More,
-        nbT1Available: accommodations.nbT1Available,
-        nbT1BisAvailable: accommodations.nbT1BisAvailable,
-        nbT2Available: accommodations.nbT2Available,
-        nbT3Available: accommodations.nbT3Available,
-        nbT4Available: accommodations.nbT4Available,
-        nbT5Available: accommodations.nbT5Available,
-        nbT6Available: accommodations.nbT6Available,
-        nbT7MoreAvailable: accommodations.nbT7MoreAvailable,
-        priceMin: accommodations.priceMin,
-        priceMinT1: accommodations.priceMinT1,
-        priceMaxT1: accommodations.priceMaxT1,
-        priceMinT1Bis: accommodations.priceMinT1Bis,
-        priceMaxT1Bis: accommodations.priceMaxT1Bis,
-        priceMinT2: accommodations.priceMinT2,
-        priceMaxT2: accommodations.priceMaxT2,
-        priceMinT3: accommodations.priceMinT3,
-        priceMaxT3: accommodations.priceMaxT3,
-        priceMinT4: accommodations.priceMinT4,
-        priceMaxT4: accommodations.priceMaxT4,
-        priceMinT5: accommodations.priceMinT5,
-        priceMaxT5: accommodations.priceMaxT5,
-        priceMinT6: accommodations.priceMinT6,
-        priceMaxT6: accommodations.priceMaxT6,
-        priceMinT7More: accommodations.priceMinT7More,
-        priceMaxT7More: accommodations.priceMaxT7More,
-        superficieMinT1: accommodations.superficieMinT1,
-        superficieMaxT1: accommodations.superficieMaxT1,
-        superficieMinT1Bis: accommodations.superficieMinT1Bis,
-        superficieMaxT1Bis: accommodations.superficieMaxT1Bis,
-        superficieMinT2: accommodations.superficieMinT2,
-        superficieMaxT2: accommodations.superficieMaxT2,
-        superficieMinT3: accommodations.superficieMinT3,
-        superficieMaxT3: accommodations.superficieMaxT3,
-        superficieMinT4: accommodations.superficieMinT4,
-        superficieMaxT4: accommodations.superficieMaxT4,
-        superficieMinT5: accommodations.superficieMinT5,
-        superficieMaxT5: accommodations.superficieMaxT5,
-        superficieMinT6: accommodations.superficieMinT6,
-        superficieMaxT6: accommodations.superficieMaxT6,
-        superficieMinT7More: accommodations.superficieMinT7More,
-        superficieMaxT7More: accommodations.superficieMaxT7More,
-        priceMaxComputed: priceMaxComputed,
-        acceptWaitingList: accommodations.acceptWaitingList,
-        scholarshipHoldersPriority: accommodations.scholarshipHoldersPriority,
-        socialHousingRequired: accommodations.socialHousingRequired,
-        wifi: accommodations.wifi,
-        imagesUrls: accommodations.imagesUrls,
-        externalUrl: accommodations.externalUrl,
-        virtualTourUrl: accommodations.virtualTourUrl,
-        updatedAt: accommodations.updatedAt,
-        ownerName: owners.name,
-        ownerUrl: owners.url,
-        lat: sql<number>`ST_Y(${accommodations.geom}::geometry)`,
-        lng: sql<number>`ST_X(${accommodations.geom}::geometry)`,
-      })
-      .from(accommodations)
-      .leftJoin(owners, eq(accommodations.ownerId, owners.id))
-      .innerJoin(cities, eq(accommodations.cityId, cities.id))
-      .where(where)
-      .orderBy(sql`${priorityOrder} ASC`, sql`${totalAvailable} DESC`)
-      .limit(pageSize)
-      .offset(offset),
+    db.execute<Record<string, unknown>>(sql`
+      WITH deduped AS (
+        SELECT DISTINCT ON (${accommodations.id})
+          ${accommodations.id} as id,
+          ${accommodations.name} as name,
+          ${accommodations.slug} as slug,
+          ${accommodations.description} as description,
+          ${accommodationAddresses.address} as address,
+          ${cities.name} as city,
+          ${cities.slug} as "citySlug",
+          ${accommodationAddresses.postalCode} as "postalCode",
+          ${accommodations.residenceType} as "residenceType",
+          ${accommodations.target_audience} as "targetAudience",
+          ${accommodations.published} as published,
+          ${accommodations.available} as available,
+          ${accommodations.nbTotalApartments} as "nbTotalApartments",
+          ${accommodations.nbAccessibleApartments} as "nbAccessibleApartments",
+          ${accommodations.nbColivingApartments} as "nbColivingApartments",
+          ${accommodations.nbT1} as "nbT1",
+          ${accommodations.nbT1Bis} as "nbT1Bis",
+          ${accommodations.nbT2} as "nbT2",
+          ${accommodations.nbT3} as "nbT3",
+          ${accommodations.nbT4} as "nbT4",
+          ${accommodations.nbT5} as "nbT5",
+          ${accommodations.nbT6} as "nbT6",
+          ${accommodations.nbT7More} as "nbT7More",
+          ${accommodations.nbT1Available} as "nbT1Available",
+          ${accommodations.nbT1BisAvailable} as "nbT1BisAvailable",
+          ${accommodations.nbT2Available} as "nbT2Available",
+          ${accommodations.nbT3Available} as "nbT3Available",
+          ${accommodations.nbT4Available} as "nbT4Available",
+          ${accommodations.nbT5Available} as "nbT5Available",
+          ${accommodations.nbT6Available} as "nbT6Available",
+          ${accommodations.nbT7MoreAvailable} as "nbT7MoreAvailable",
+          ${accommodations.priceMin} as "priceMin",
+          ${accommodations.priceMinT1} as "priceMinT1",
+          ${accommodations.priceMaxT1} as "priceMaxT1",
+          ${accommodations.priceMinT1Bis} as "priceMinT1Bis",
+          ${accommodations.priceMaxT1Bis} as "priceMaxT1Bis",
+          ${accommodations.priceMinT2} as "priceMinT2",
+          ${accommodations.priceMaxT2} as "priceMaxT2",
+          ${accommodations.priceMinT3} as "priceMinT3",
+          ${accommodations.priceMaxT3} as "priceMaxT3",
+          ${accommodations.priceMinT4} as "priceMinT4",
+          ${accommodations.priceMaxT4} as "priceMaxT4",
+          ${accommodations.priceMinT5} as "priceMinT5",
+          ${accommodations.priceMaxT5} as "priceMaxT5",
+          ${accommodations.priceMinT6} as "priceMinT6",
+          ${accommodations.priceMaxT6} as "priceMaxT6",
+          ${accommodations.priceMinT7More} as "priceMinT7More",
+          ${accommodations.priceMaxT7More} as "priceMaxT7More",
+          ${accommodations.superficieMinT1} as "superficieMinT1",
+          ${accommodations.superficieMaxT1} as "superficieMaxT1",
+          ${accommodations.superficieMinT1Bis} as "superficieMinT1Bis",
+          ${accommodations.superficieMaxT1Bis} as "superficieMaxT1Bis",
+          ${accommodations.superficieMinT2} as "superficieMinT2",
+          ${accommodations.superficieMaxT2} as "superficieMaxT2",
+          ${accommodations.superficieMinT3} as "superficieMinT3",
+          ${accommodations.superficieMaxT3} as "superficieMaxT3",
+          ${accommodations.superficieMinT4} as "superficieMinT4",
+          ${accommodations.superficieMaxT4} as "superficieMaxT4",
+          ${accommodations.superficieMinT5} as "superficieMinT5",
+          ${accommodations.superficieMaxT5} as "superficieMaxT5",
+          ${accommodations.superficieMinT6} as "superficieMinT6",
+          ${accommodations.superficieMaxT6} as "superficieMaxT6",
+          ${accommodations.superficieMinT7More} as "superficieMinT7More",
+          ${accommodations.superficieMaxT7More} as "superficieMaxT7More",
+          ${priceMaxComputed} as "priceMaxComputed",
+          ${accommodations.acceptWaitingList} as "acceptWaitingList",
+          ${accommodations.scholarshipHoldersPriority} as "scholarshipHoldersPriority",
+          ${accommodations.socialHousingRequired} as "socialHousingRequired",
+          ${accommodations.wifi} as wifi,
+          ${accommodations.imagesUrls} as "imagesUrls",
+          ${accommodations.externalUrl} as "externalUrl",
+          ${accommodations.virtualTourUrl} as "virtualTourUrl",
+          ${accommodations.updatedAt} as "updatedAt",
+          ${owners.name} as "ownerName",
+          ${owners.url} as "ownerUrl",
+          ST_Y(${accommodationAddresses.geom}::geometry) as lat,
+          ST_X(${accommodationAddresses.geom}::geometry) as lng
+        FROM ${accommodations}
+        INNER JOIN ${accommodationAddresses} ON ${accommodationAddresses.accommodationId} = ${accommodations.id}
+        INNER JOIN ${cities} ON ${cities.id} = ${accommodationAddresses.cityId}
+        LEFT JOIN ${owners} ON ${owners.id} = ${accommodations.ownerId}
+        ${whereClause}
+        ORDER BY ${accommodations.id}, ${addressOrder}
+      )
+      SELECT * FROM deduped
+      ORDER BY ${priorityOrder} ASC, ${totalAvailable} DESC
+      LIMIT ${pageSize} OFFSET ${offset}
+    `),
   ])
 
   const count = countResult[0]?.count ?? 0
@@ -265,7 +292,7 @@ const listAccommodationsWithConditions = async ({ page, pageSize, where }: { pag
     next: page < totalPages ? String(page + 1) : null,
     previous: page > 1 ? String(page - 1) : null,
     results: {
-      features: results.map(mapToGeoJsonFeature),
+      features: (Array.isArray(results) ? results : (results as { rows: Record<string, unknown>[] }).rows).map(mapToGeoJsonFeature),
     },
   }
 }
@@ -378,29 +405,32 @@ export const accommodationsRouter = createTRPCRouter({
     .query(async ({ input }) => {
       const { bbox, center, radius, page, pageSize, academyId } = input
 
-      const conditions: SQL[] = [eq(accommodations.published, true), sql`${accommodations.geom} IS NOT NULL`]
+      const conditions: SQL[] = [eq(accommodations.published, true), sql`${accommodationAddresses.geom} IS NOT NULL`]
       await applyCommonListFilters(conditions, input)
 
+      let addressOrderHint: SQL | undefined
       if (input.cityId) {
         conditions.push(
-          sql`ST_Within(${accommodations.geom}, (SELECT ${cities.boundary} FROM ${cities} WHERE ${cities.id} = ${input.cityId}))`,
+          sql`ST_Within(${accommodationAddresses.geom}, (SELECT ${cities.boundary} FROM ${cities} WHERE ${cities.id} = ${input.cityId}))`,
         )
+        // Prefer the address in the searched city
+        addressOrderHint = sql`CASE WHEN ${accommodationAddresses.cityId} = ${input.cityId} THEN 0 ELSE 1 END, ${accommodationAddresses.isMain} DESC`
       } else if (academyId) {
         conditions.push(
-          sql`ST_Within(${accommodations.geom}, (SELECT ${academies.boundary} FROM ${academies} WHERE ${academies.id} = ${academyId}))`,
+          sql`ST_Within(${accommodationAddresses.geom}, (SELECT ${academies.boundary} FROM ${academies} WHERE ${academies.id} = ${academyId}))`,
         )
       } else if (bbox) {
         const parts = bbox.split(',').map(Number)
         if (parts.length === 4) {
           const [xmin, ymin, xmax, ymax] = parts
-          conditions.push(sql`ST_Intersects(${accommodations.geom}, ST_MakeEnvelope(${xmin}, ${ymin}, ${xmax}, ${ymax}, 4326))`)
+          conditions.push(sql`ST_Intersects(${accommodationAddresses.geom}, ST_MakeEnvelope(${xmin}, ${ymin}, ${xmax}, ${ymax}, 4326))`)
         }
       } else if (center) {
         applyCenterRadiusFilter(conditions, center, radius)
       }
 
       const where = and(...conditions)
-      return listAccommodationsWithConditions({ page, pageSize, where })
+      return listAccommodationsWithConditions({ page, pageSize, where, addressOrderHint })
     }),
 
   listExpandedByCity: baseProcedure
@@ -460,12 +490,12 @@ export const accommodationsRouter = createTRPCRouter({
       const { page, pageSize, radius } = input
       const center = `${cityRow.centerLng},${cityRow.centerLat}`
 
-      const conditions: SQL[] = [eq(accommodations.published, true), sql`${accommodations.geom} IS NOT NULL`]
+      const conditions: SQL[] = [eq(accommodations.published, true), sql`${accommodationAddresses.geom} IS NOT NULL`]
       await applyCommonListFilters(conditions, input)
       applyCenterRadiusFilter(conditions, center, radius)
       // Exclude accommodations inside the city boundary so only surrounding results appear
       conditions.push(
-        sql`NOT ST_Within(${accommodations.geom}, (SELECT ${cities.boundary} FROM ${cities} WHERE ${cities.id} = ${cityRow.id}))`,
+        sql`NOT ST_Within(${accommodationAddresses.geom}, (SELECT ${cities.boundary} FROM ${cities} WHERE ${cities.id} = ${cityRow.id}))`,
       )
       if (input.excludeIds?.length) {
         conditions.push(notInArray(accommodations.id, input.excludeIds))
@@ -476,15 +506,16 @@ export const accommodationsRouter = createTRPCRouter({
     }),
 
   getBySlug: baseProcedure.input(z.object({ slug: z.string() })).query(async ({ input }) => {
+    // Get the accommodation with its main address
     const rows = await db
       .select({
         id: accommodations.id,
         name: accommodations.name,
         slug: accommodations.slug,
         description: accommodations.description,
-        address: accommodations.address,
+        address: accommodationAddresses.address,
         city: cities.name,
-        postalCode: accommodations.postalCode,
+        postalCode: accommodationAddresses.postalCode,
         residenceType: accommodations.residenceType,
         targetAudience: accommodations.target_audience,
         published: accommodations.published,
@@ -560,8 +591,8 @@ export const accommodationsRouter = createTRPCRouter({
         microwave: accommodations.microwave,
         refrigerator: accommodations.refrigerator,
         bathroom: accommodations.bathroom,
-        lat: sql<number>`ST_Y(${accommodations.geom}::geometry)`,
-        lng: sql<number>`ST_X(${accommodations.geom}::geometry)`,
+        lat: sql<number>`ST_Y(${accommodationAddresses.geom}::geometry)`,
+        lng: sql<number>`ST_X(${accommodationAddresses.geom}::geometry)`,
         ownerName: owners.name,
         ownerSlug: owners.slug,
         ownerUrl: owners.url,
@@ -572,16 +603,32 @@ export const accommodationsRouter = createTRPCRouter({
         departmentCode: departments.code,
       })
       .from(accommodations)
-      .leftJoin(owners, eq(accommodations.ownerId, owners.id))
-      .innerJoin(cities, eq(accommodations.cityId, cities.id))
+      .innerJoin(
+        accommodationAddresses,
+        and(eq(accommodationAddresses.accommodationId, accommodations.id), eq(accommodationAddresses.isMain, true)),
+      )
+      .innerJoin(cities, eq(accommodationAddresses.cityId, cities.id))
       .innerJoin(departments, eq(cities.departmentId, departments.id))
-      .where(and(eq(accommodations.slug, input.slug), eq(accommodations.published, true), sql`${accommodations.geom} IS NOT NULL`))
+      .leftJoin(owners, eq(accommodations.ownerId, owners.id))
+      .where(and(eq(accommodations.slug, input.slug), eq(accommodations.published, true), sql`${accommodationAddresses.geom} IS NOT NULL`))
       .limit(1)
 
     const row = rows[0]
     if (!row) {
       throw new TRPCError({ code: 'NOT_FOUND', message: `[accommodations.getBySlug] Accommodation not found: ${input.slug}` })
     }
+
+    const allAddresses = await db
+      .select({
+        address: accommodationAddresses.address,
+        postalCode: accommodationAddresses.postalCode,
+        cityName: cities.name,
+        isMain: accommodationAddresses.isMain,
+      })
+      .from(accommodationAddresses)
+      .innerJoin(cities, eq(accommodationAddresses.cityId, cities.id))
+      .where(eq(accommodationAddresses.accommodationId, row.id))
+      .orderBy(sql`${accommodationAddresses.isMain} DESC`)
 
     return {
       id: row.id,
@@ -591,6 +638,12 @@ export const accommodationsRouter = createTRPCRouter({
       address: row.address ?? '',
       city: row.city,
       postal_code: row.postalCode,
+      addresses: allAddresses.map((a) => ({
+        address: a.address ?? '',
+        city: a.cityName,
+        postal_code: a.postalCode,
+        is_main: a.isMain,
+      })),
       residence_type: toResidenceType(row.residenceType),
       target_audience: toTargetAudience(row.targetAudience),
       published: row.published,

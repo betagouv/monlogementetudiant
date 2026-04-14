@@ -4,8 +4,10 @@ import { EResidenceType } from '~/enums/residence-type'
 import { ETargetAudience } from '~/enums/target-audience'
 import { TAccomodationMy } from '~/schemas/accommodations/accommodations'
 import { db } from '~/server/db'
+import { accommodationAddresses } from '~/server/db/schema/accommodation-addresses'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { user } from '~/server/db/schema/auth'
+import { cities } from '~/server/db/schema/cities'
 import { externalSources } from '~/server/db/schema/external-sources'
 import { getServerSession } from '~/services/better-auth'
 
@@ -40,27 +42,77 @@ function computePriceMax(
   return priceMaxes.length > 0 ? Math.max(...priceMaxes) : null
 }
 
-type AccommodationWithOwnerAndExtras = Omit<typeof accommodations.$inferSelect, 'geom'> & {
-  city: { name: string } | null
-  owner: { name: string; url: string | null } | null
-  lat: number
-  lng: number
-}
+export const getAccommodationMyById = async (slug: string): Promise<TAccomodationMy> => {
+  const auth = await getServerSession()
+  if (!auth) {
+    return notFound()
+  }
 
-function mapToAccommodationMy(row: AccommodationWithOwnerAndExtras, isImported: boolean): TAccomodationMy {
+  let ownerId: number | null = null
+  if (auth.user.role !== 'admin') {
+    const userId = auth.user.id
+    const usr = await db.query.user.findFirst({ where: eq(user.id, userId), with: { owner: true } })
+    const owner = usr?.owner
+    if (!owner) {
+      return notFound()
+    }
+    ownerId = owner.id
+  }
+
+  const row = await db.query.accommodations.findFirst({
+    where: ownerId != null ? and(eq(accommodations.slug, slug), eq(accommodations.ownerId, ownerId)) : eq(accommodations.slug, slug),
+    with: { owner: true },
+  })
+
+  if (!row) {
+    return notFound()
+  }
+
+  // Fetch addresses separately to avoid geometry deserialization issues
+  const addresses = await db
+    .select({
+      id: accommodationAddresses.id,
+      address: accommodationAddresses.address,
+      postalCode: accommodationAddresses.postalCode,
+      isMain: accommodationAddresses.isMain,
+      cityName: cities.name,
+      lat: sql<number>`ST_Y(${accommodationAddresses.geom}::geometry)`,
+      lng: sql<number>`ST_X(${accommodationAddresses.geom}::geometry)`,
+    })
+    .from(accommodationAddresses)
+    .innerJoin(cities, eq(accommodationAddresses.cityId, cities.id))
+    .where(eq(accommodationAddresses.accommodationId, row.id))
+    .orderBy(sql`${accommodationAddresses.isMain} DESC`)
+
+  const hasExternalSource = await db.query.externalSources.findFirst({
+    where: eq(externalSources.accommodationId, row.id),
+  })
+
+  const mainAddress = addresses.find((a) => a.isMain) ?? addresses[0]
+  const lat = mainAddress?.lat ?? 0
+  const lng = mainAddress?.lng ?? 0
+
+  const allAddresses = addresses.map((a) => ({
+    address: a.address ?? '',
+    city: a.cityName,
+    postal_code: a.postalCode,
+    is_main: a.isMain,
+  }))
+
   return {
     geometry: {
       type: 'Point',
-      coordinates: [row.lng, row.lat],
+      coordinates: [lng, lat],
     },
     properties: {
       id: row.id,
       name: row.name,
       slug: row.slug,
       description: row.description ?? null,
-      address: row.address ?? '',
-      city: row.city?.name ?? '',
-      postal_code: row.postalCode,
+      address: mainAddress?.address ?? '',
+      city: mainAddress?.cityName ?? '',
+      postal_code: mainAddress?.postalCode ?? '',
+      addresses: allAddresses,
       residence_type: toResidenceType(row.residenceType),
       target_audience: toTargetAudience(row.target_audience),
       published: row.published,
@@ -139,46 +191,7 @@ function mapToAccommodationMy(row: AccommodationWithOwnerAndExtras, isImported: 
       desk: row.desk ?? null,
       residence_manager: row.residenceManager ?? null,
       cooking_plates: row.cookingPlates ?? null,
-      is_imported: isImported,
+      is_imported: !!hasExternalSource,
     },
   }
-}
-
-export const getAccommodationMyById = async (slug: string): Promise<TAccomodationMy> => {
-  const auth = await getServerSession()
-  if (!auth) {
-    return notFound()
-  }
-
-  let ownerId: number | null = null
-  if (auth.user.role !== 'admin') {
-    const userId = auth.user.id
-    const usr = await db.query.user.findFirst({ where: eq(user.id, userId), with: { owner: true } })
-    const owner = usr?.owner
-    if (!owner) {
-      return notFound()
-    }
-    ownerId = owner.id
-  }
-
-  const row = await db.query.accommodations.findFirst({
-    where: ownerId != null ? and(eq(accommodations.slug, slug), eq(accommodations.ownerId, ownerId)) : eq(accommodations.slug, slug),
-    columns: { geom: false },
-    with: { owner: true, city: { columns: { boundary: false } } },
-    extras: {
-      lat: sql<number>`ST_Y(${accommodations.geom}::geometry)`.as('lat'),
-      lng: sql<number>`ST_X(${accommodations.geom}::geometry)`.as('lng'),
-    },
-  })
-
-  if (!row) {
-    return notFound()
-  }
-
-  // Check if this accommodation was imported (has an entry in external_sources)
-  const hasExternalSource = await db.query.externalSources.findFirst({
-    where: eq(externalSources.accommodationId, row.id),
-  })
-
-  return mapToAccommodationMy(row, !!hasExternalSource)
 }

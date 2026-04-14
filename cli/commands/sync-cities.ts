@@ -1,5 +1,5 @@
 import { eq, sql } from 'drizzle-orm'
-import { accommodations, cities, departments } from '../../src/server/db/schema'
+import { accommodationAddresses, accommodations, cities, departments } from '../../src/server/db/schema'
 import { generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
 import { findAvailableSlug } from '../../src/server/utils/slug'
 import { db } from '../lib/db'
@@ -228,11 +228,12 @@ const command: SyncCommand = {
     console.log('  🔍 Recherche de villes manquantes...')
     const publishedAccommodations = await db
       .select({
-        postalCode: accommodations.postalCode,
+        postalCode: accommodationAddresses.postalCode,
         city: cities.name,
       })
       .from(accommodations)
-      .innerJoin(cities, eq(accommodations.cityId, cities.id))
+      .innerJoin(accommodationAddresses, eq(accommodationAddresses.accommodationId, accommodations.id))
+      .innerJoin(cities, eq(accommodationAddresses.cityId, cities.id))
       .where(eq(accommodations.published, true))
 
     const existingPostalCodes = new Set((await db.select({ postalCodes: cities.postalCodes }).from(cities)).flatMap((c) => c.postalCodes))

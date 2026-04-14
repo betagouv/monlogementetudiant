@@ -7,6 +7,7 @@ import { ZUpdateResidence } from '~/schemas/accommodations/update-residence'
 import { ZUpdateResidenceList } from '~/schemas/accommodations/update-residence-list'
 import { getOwnerForUser } from '~/server/bailleur/get-owner-for-user'
 import { db } from '~/server/db'
+import { accommodationAddresses } from '~/server/db/schema/accommodation-addresses'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { user } from '~/server/db/schema/auth'
 import { cities } from '~/server/db/schema/cities'
@@ -94,9 +95,9 @@ const accommodationSelectFields = {
   name: accommodations.name,
   slug: accommodations.slug,
   description: accommodations.description,
-  address: accommodations.address,
+  address: accommodationAddresses.address,
   city: cities.name,
-  postalCode: accommodations.postalCode,
+  postalCode: accommodationAddresses.postalCode,
   residenceType: accommodations.residenceType,
   targetAudience: accommodations.target_audience,
   published: accommodations.published,
@@ -163,8 +164,8 @@ const accommodationSelectFields = {
   updatedAt: accommodations.updatedAt,
   ownerName: owners.name,
   ownerUrl: owners.url,
-  lat: sql<number>`ST_Y(${accommodations.geom}::geometry)`,
-  lng: sql<number>`ST_X(${accommodations.geom}::geometry)`,
+  lat: sql<number>`ST_Y(${accommodationAddresses.geom}::geometry)`,
+  lng: sql<number>`ST_X(${accommodationAddresses.geom}::geometry)`,
 } as const
 
 export const bailleurRouter = createTRPCRouter({
@@ -196,6 +197,7 @@ export const bailleurRouter = createTRPCRouter({
       const conditions = [eq(accommodations.ownerId, owner.id)]
 
       if (input.search && input.search.length >= 3) {
+        // Search joins through addresses to match city name
         conditions.push(or(ilike(accommodations.name, `%${input.search}%`), ilike(cities.name, `%${input.search}%`))!)
       }
 
@@ -221,7 +223,11 @@ export const bailleurRouter = createTRPCRouter({
         db
           .select({ count: sql<number>`count(*)::int` })
           .from(accommodations)
-          .innerJoin(cities, eq(accommodations.cityId, cities.id))
+          .innerJoin(
+            accommodationAddresses,
+            and(eq(accommodationAddresses.accommodationId, accommodations.id), eq(accommodationAddresses.isMain, true)),
+          )
+          .innerJoin(cities, eq(accommodationAddresses.cityId, cities.id))
           .where(where),
         db
           .select({
@@ -229,13 +235,21 @@ export const bailleurRouter = createTRPCRouter({
             maxPrice: sql<number | null>`MAX(${priceMaxComputed})`,
           })
           .from(accommodations)
-          .innerJoin(cities, eq(accommodations.cityId, cities.id))
+          .innerJoin(
+            accommodationAddresses,
+            and(eq(accommodationAddresses.accommodationId, accommodations.id), eq(accommodationAddresses.isMain, true)),
+          )
+          .innerJoin(cities, eq(accommodationAddresses.cityId, cities.id))
           .where(where),
         db
           .select(accommodationSelectFields)
           .from(accommodations)
+          .innerJoin(
+            accommodationAddresses,
+            and(eq(accommodationAddresses.accommodationId, accommodations.id), eq(accommodationAddresses.isMain, true)),
+          )
+          .innerJoin(cities, eq(accommodationAddresses.cityId, cities.id))
           .leftJoin(owners, eq(accommodations.ownerId, owners.id))
-          .innerJoin(cities, eq(accommodations.cityId, cities.id))
           .where(where)
           .orderBy(accommodations.name)
           .limit(PAGE_SIZE)
@@ -271,16 +285,10 @@ export const bailleurRouter = createTRPCRouter({
         throw new TRPCError({ code: 'FORBIDDEN', message: 'No owner record for this user' })
       }
 
-      const { typologies, name, ...fields } = input
+      const { typologies, name, addresses, ...fields } = input
       const flatTypologies = transformTypologiesToFlat(typologies)
 
       const slug = await findAvailableSlug(generateSlug(name), db, accommodations)
-
-      // Geocode address
-      const coords = await geocodeAddress(fields.address, fields.city, fields.postal_code)
-
-      // Resolve city FK
-      const cityId = await resolveCityId(fields.postal_code, fields.city)
 
       // Compute derived fields from flat typologies
       const derived = computeDerivedFields({ ...flatTypologies })
@@ -288,8 +296,6 @@ export const bailleurRouter = createTRPCRouter({
       const insertValues: typeof accommodations.$inferInsert = {
         name: normalizeAccommodationName(name),
         slug,
-        address: fields.address,
-        postalCode: fields.postal_code,
         residenceType: fields.residence_type ?? null,
         target_audience: fields.target_audience ?? null,
         description: fields.description ?? null,
@@ -298,7 +304,6 @@ export const bailleurRouter = createTRPCRouter({
         published: fields.published ?? false,
         scholarshipHoldersPriority: fields.scholarship_holders_priority ?? false,
         socialHousingRequired: fields.social_housing_required ?? false,
-        cityId: cityId,
         ownerId: owner.id,
         nbTotalApartments: derived.nbTotalApartments,
         priceMin: derived.priceMin,
@@ -363,14 +368,32 @@ export const bailleurRouter = createTRPCRouter({
         updatedAt: new Date(),
       }
 
-      if (coords) {
-        ;(insertValues as Record<string, unknown>).geom = sql`ST_SetSRID(ST_MakePoint(${coords.lon}, ${coords.lat}), 4326)`
-      }
-
       const [created] = await db
         .insert(accommodations)
         .values(insertValues)
-        .returning({ slug: accommodations.slug, name: accommodations.name })
+        .returning({ id: accommodations.id, slug: accommodations.slug, name: accommodations.name })
+
+      // Geocode + resolve cities in parallel, then batch insert
+      const resolved = await Promise.all(
+        addresses.map(async (addr, i) => {
+          const [coords, cityId] = await Promise.all([
+            geocodeAddress(addr.address, addr.city, addr.postal_code),
+            resolveCityId(addr.postal_code, addr.city),
+          ])
+          const values: typeof accommodationAddresses.$inferInsert = {
+            accommodationId: created.id,
+            isMain: i === 0,
+            address: addr.address,
+            postalCode: addr.postal_code,
+            cityId,
+          }
+          if (coords) {
+            ;(values as Record<string, unknown>).geom = sql`ST_SetSRID(ST_MakePoint(${coords.lon}, ${coords.lat}), 4326)`
+          }
+          return values
+        }),
+      )
+      await db.insert(accommodationAddresses).values(resolved)
 
       notifyAccommodationCreated(created.name, owner.name, created.slug, ctx.session.user.name)
       await logActivity({
@@ -388,8 +411,8 @@ export const bailleurRouter = createTRPCRouter({
     }),
 
   update: ownerProcedure.input(z.object({ slug: z.string() }).merge(ZUpdateResidence)).mutation(async ({ ctx, input }) => {
-    const { slug, ...fields } = input
-    const { owner } = await verifyOwnership(slug, ctx.session.user.id)
+    const { slug, addresses: inputAddresses, ...fields } = input
+    const { owner, accommodationId } = await verifyOwnership(slug, ctx.session.user.id)
 
     // Snapshot current state for diff
     const [snapshot] = await db.select().from(accommodations).where(eq(accommodations.slug, slug)).limit(1)
@@ -406,33 +429,30 @@ export const bailleurRouter = createTRPCRouter({
     camelFields.priceMin = derived.priceMin
     camelFields.imagesCount = derived.imagesCount
 
-    // Re-geocode and re-resolve cityId if address/city/postal_code changed
-    if (fields.address !== undefined || fields.city !== undefined || fields.postal_code !== undefined) {
-      // Fetch current values to fill in blanks
-      const [current] = await db
-        .select({ address: accommodations.address, cityName: cities.name, postalCode: accommodations.postalCode })
-        .from(accommodations)
-        .innerJoin(cities, eq(accommodations.cityId, cities.id))
-        .where(eq(accommodations.slug, slug))
-        .limit(1)
-
-      if (current) {
-        const address = fields.address ?? current.address ?? ''
-        const city = fields.city ?? current.cityName ?? ''
-        const postalCode = fields.postal_code ?? current.postalCode
-        const coords = await geocodeAddress(address, city, postalCode)
-        if (coords) {
-          camelFields.geom = sql`ST_SetSRID(ST_MakePoint(${coords.lon}, ${coords.lat}), 4326)`
-        }
-
-        // Re-resolve cityId when city or postal code changes
-        if (fields.city !== undefined || fields.postal_code !== undefined) {
-          const newCityId = await resolveCityId(postalCode, city)
-          if (newCityId) {
-            camelFields.cityId = newCityId
+    // Handle addresses update
+    if (inputAddresses !== undefined) {
+      // Geocode in parallel, then delete old + batch insert
+      const resolved = await Promise.all(
+        inputAddresses.map(async (addr, i) => {
+          const [coords, cityId] = await Promise.all([
+            geocodeAddress(addr.address, addr.city, addr.postal_code),
+            resolveCityId(addr.postal_code, addr.city),
+          ])
+          const values: typeof accommodationAddresses.$inferInsert = {
+            accommodationId,
+            isMain: i === 0,
+            address: addr.address,
+            postalCode: addr.postal_code,
+            cityId,
           }
-        }
-      }
+          if (coords) {
+            ;(values as Record<string, unknown>).geom = sql`ST_SetSRID(ST_MakePoint(${coords.lon}, ${coords.lat}), 4326)`
+          }
+          return values
+        }),
+      )
+      await db.delete(accommodationAddresses).where(eq(accommodationAddresses.accommodationId, accommodationId))
+      await db.insert(accommodationAddresses).values(resolved)
     }
 
     camelFields.updatedAt = new Date()
@@ -610,7 +630,11 @@ export const bailleurRouter = createTRPCRouter({
     const [accommodation] = await db
       .select({ ...accommodationSelectFields, ownerId: accommodations.ownerId })
       .from(accommodations)
-      .innerJoin(cities, eq(accommodations.cityId, cities.id))
+      .innerJoin(
+        accommodationAddresses,
+        and(eq(accommodationAddresses.accommodationId, accommodations.id), eq(accommodationAddresses.isMain, true)),
+      )
+      .innerJoin(cities, eq(accommodationAddresses.cityId, cities.id))
       .leftJoin(owners, eq(accommodations.ownerId, owners.id))
       .where(eq(accommodations.slug, application.accommodationSlug))
       .limit(1)
