@@ -3,6 +3,7 @@ import { and, between, count, desc, eq, ilike, isNull, or, sql } from 'drizzle-o
 import { getTranslations } from 'next-intl/server'
 import { z } from 'zod'
 import { db } from '~/server/db'
+import { accommodationAddresses } from '~/server/db/schema/accommodation-addresses'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { activityLog } from '~/server/db/schema/activity-log'
 import { adminOwnerLinks } from '~/server/db/schema/admin-owner-links'
@@ -439,11 +440,15 @@ const ownersRouter = createTRPCRouter({
         published: accommodations.published,
         nbTotalApartments: accommodations.nbTotalApartments,
         nbAvailableApartments: nbAvailableApartmentsSum,
-        lat: sql<number | null>`ST_Y(${accommodations.geom}::geometry)`,
-        lng: sql<number | null>`ST_X(${accommodations.geom}::geometry)`,
+        lat: sql<number | null>`ST_Y(${accommodationAddresses.geom}::geometry)`,
+        lng: sql<number | null>`ST_X(${accommodationAddresses.geom}::geometry)`,
       })
       .from(accommodations)
-      .innerJoin(cities, eq(accommodations.cityId, cities.id))
+      .innerJoin(
+        accommodationAddresses,
+        and(eq(accommodationAddresses.accommodationId, accommodations.id), eq(accommodationAddresses.isMain, true)),
+      )
+      .innerJoin(cities, eq(accommodationAddresses.cityId, cities.id))
       .where(eq(accommodations.ownerId, input.ownerId))
       .orderBy(accommodations.name)
   }),
@@ -492,33 +497,29 @@ const residencesRouter = createTRPCRouter({
       const where = conditions.length > 0 ? and(...conditions) : undefined
       const offset = (input.page - 1) * PAGE_SIZE
 
-      const [countResult, results] = await Promise.all([
-        db
-          .select({ count: count() })
-          .from(accommodations)
-          .leftJoin(owners, eq(accommodations.ownerId, owners.id))
-          .innerJoin(cities, eq(accommodations.cityId, cities.id))
-          .where(where),
-        db
-          .select({
-            id: accommodations.id,
-            name: accommodations.name,
-            slug: accommodations.slug,
-            city: cities.name,
-            citySlug: cities.slug,
-            published: accommodations.published,
-            nbTotalApartments: accommodations.nbTotalApartments,
-            nbAvailableApartments: nbAvailableApartmentsSum,
-            ownerName: owners.name,
-          })
-          .from(accommodations)
-          .leftJoin(owners, eq(accommodations.ownerId, owners.id))
-          .innerJoin(cities, eq(accommodations.cityId, cities.id))
-          .where(where)
-          .orderBy(accommodations.name)
-          .limit(PAGE_SIZE)
-          .offset(offset),
-      ])
+      const results = await db
+        .select({
+          id: accommodations.id,
+          name: accommodations.name,
+          slug: accommodations.slug,
+          city: cities.name,
+          citySlug: cities.slug,
+          available: accommodations.available,
+          published: accommodations.published,
+          nbTotalApartments: accommodations.nbTotalApartments,
+          nbAvailableApartments: nbAvailableApartmentsSum,
+          ownerName: owners.name,
+        })
+        .from(accommodations)
+        .leftJoin(owners, eq(accommodations.ownerId, owners.id))
+        .innerJoin(
+          accommodationAddresses,
+          and(eq(accommodationAddresses.accommodationId, accommodations.id), eq(accommodationAddresses.isMain, true)),
+        )
+        .innerJoin(cities, eq(accommodationAddresses.cityId, cities.id))
+        .where(where)
+        .orderBy(accommodations.name)
+        .limit(100)
 
       const total = countResult[0]?.count ?? 0
 
@@ -552,8 +553,8 @@ const residencesRouter = createTRPCRouter({
           name: accommodations.name,
           slug: accommodations.slug,
           description: accommodations.description,
-          address: accommodations.address,
-          postalCode: accommodations.postalCode,
+          address: accommodationAddresses.address,
+          postalCode: accommodationAddresses.postalCode,
           residenceType: accommodations.residenceType,
           targetAudience: accommodations.target_audience,
           published: accommodations.published,
@@ -636,7 +637,11 @@ const residencesRouter = createTRPCRouter({
         })
         .from(accommodations)
         .leftJoin(owners, eq(accommodations.ownerId, owners.id))
-        .leftJoin(cities, eq(accommodations.cityId, cities.id))
+        .leftJoin(
+          accommodationAddresses,
+          and(eq(accommodationAddresses.accommodationId, accommodations.id), eq(accommodationAddresses.isMain, true)),
+        )
+        .leftJoin(cities, eq(accommodationAddresses.cityId, cities.id))
         .where(where)
         .orderBy(accommodations.name)
 

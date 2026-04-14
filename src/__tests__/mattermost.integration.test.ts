@@ -28,9 +28,7 @@ describe('mattermost notifications', () => {
     await createOwner({ name: 'Owner Webhook', slug: 'owner-webhook', userId: 'test-owner-id' })
     const result = await ownerCaller.bailleur.create({
       name: 'Résidence Webhook',
-      address: '1 rue de la Paix',
-      city: 'Paris',
-      postal_code: '75001',
+      addresses: [{ address: '1 rue de la Paix', city: 'Paris', postal_code: '75001' }],
       external_url: 'https://example.com',
       typologies: [
         {

@@ -20,9 +20,7 @@ describe('student cannot access bailleur routes', () => {
     await expect(
       authenticatedCaller.bailleur.create({
         name: 'Résidence Test',
-        address: '1 rue de la Paix',
-        city: 'Paris',
-        postal_code: '75001',
+        addresses: [{ address: '1 rue de la Paix', city: 'Paris', postal_code: '75001' }],
         external_url: 'https://example.com',
         typologies: [
           {

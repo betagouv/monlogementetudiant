@@ -780,6 +780,7 @@ describe('accommodations.getBySlug', () => {
       name: 'Résidence Détail',
       description: 'A nice residence',
       address: '42 rue de la Paix',
+      postalCode: '75001',
       residenceType: 'residence-universitaire-conventionnee',
       ownerId: owner.id,
       nbTotalApartments: 100,

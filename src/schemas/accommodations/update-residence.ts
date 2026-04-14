@@ -6,9 +6,16 @@ export const ZUpdateResidence = z.object({
   name: z.string().min(1, 'Le nom de la résidence est requis').optional(),
   residence_type: z.enum(EResidenceType, { error: 'Le type de la résidence est requis' }).optional(),
   target_audience: z.enum(ETargetAudience, { error: 'Le public cible est requis' }).optional(),
-  address: z.string().min(1, "L'adresse est requise").optional(),
-  city: z.string().min(1, 'La ville est requise').optional(),
-  postal_code: z.string().min(1, 'Le code postal est requis').optional(),
+  addresses: z
+    .array(
+      z.object({
+        address: z.string().min(1, "L'adresse est requise"),
+        city: z.string().min(1, 'La ville est requise'),
+        postal_code: z.string().min(1, 'Le code postal est requis'),
+      }),
+    )
+    .min(1, 'Au moins une adresse est requise')
+    .optional(),
   description: z.string().optional(),
   external_url: z.url('Veuillez saisir une URL valide').optional().or(z.literal('')),
   virtual_tour_url: z.string().optional(),

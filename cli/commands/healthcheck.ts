@@ -1,4 +1,5 @@
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
+import { accommodationAddresses } from '../../src/server/db/schema/accommodation-addresses'
 import { accommodations } from '../../src/server/db/schema/accommodations'
 import { cities } from '../../src/server/db/schema/cities'
 import { closeDb, db } from '../lib/db'
@@ -21,12 +22,16 @@ export async function healthcheck(options: HealthcheckOptions) {
       id: accommodations.id,
       name: accommodations.name,
       slug: accommodations.slug,
-      cityId: accommodations.cityId,
+      cityId: accommodationAddresses.cityId,
       citySlug: cities.slug,
       cityName: cities.name,
     })
     .from(accommodations)
-    .innerJoin(cities, eq(accommodations.cityId, cities.id))
+    .innerJoin(
+      accommodationAddresses,
+      and(eq(accommodationAddresses.accommodationId, accommodations.id), eq(accommodationAddresses.isMain, true)),
+    )
+    .innerJoin(cities, eq(accommodationAddresses.cityId, cities.id))
     .where(eq(accommodations.published, true))
 
   let ok = 0
