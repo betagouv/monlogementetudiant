@@ -142,8 +142,8 @@ async function downloadFromSftp(verbose?: boolean): Promise<string> {
 
 function buildTypologyValues(item: FacHabitatResidence) {
   const nbT1 = item.nb_t1 ?? 0
-  const nbT1Bis = (item.nb_t1_bis ?? 0) + (item.nb_t1_prime ?? 0) + (item.nb_studio_double ?? 0)
-  const nbT2 = (item.nb_t2 ?? 0) + (item.nb_t2_duplex ?? 0) + (item.nb_duplex ?? 0)
+  const nbT1Bis = (item.nb_t1_bis ?? 0) + (item.nb_t1_prime ?? 0) + (item.nb_studio_double ?? 0) + (item.nb_duplex ?? 0)
+  const nbT2 = (item.nb_t2 ?? 0) + (item.nb_t2_duplex ?? 0)
   const nbT3 = (item.nb_t3 ?? 0) + (item.nb_duo ?? 0)
   const nbT4 = item.nb_t4 ?? 0
   const nbT5 = (item.nb_t5 ?? 0) + (item.nb_t5_en_colocation ?? 0)
@@ -158,8 +158,12 @@ function buildTypologyValues(item: FacHabitatResidence) {
   }
 
   const nbT1Available = item.nb_t1_available ?? 0
-  const nbT1BisAvailable = (item.nb_t1_bis_available ?? 0) + (item.nb_t1_prime_available ?? 0) + (item.nb_studio_double_available ?? 0)
-  const nbT2Available = (item.nb_t2_available ?? 0) + (item.nb_t2_duplex_available ?? 0) + (item.nb_duplex_available ?? 0)
+  const nbT1BisAvailable =
+    (item.nb_t1_bis_available ?? 0) +
+    (item.nb_t1_prime_available ?? 0) +
+    (item.nb_studio_double_available ?? 0) +
+    (item.nb_duplex_available ?? 0)
+  const nbT2Available = (item.nb_t2_available ?? 0) + (item.nb_t2_duplex_available ?? 0)
   const nbT3Available = (item.nb_t3_available ?? 0) + (item.nb_duo_available ?? 0)
   const nbT4Available = item.nb_t4_available ?? 0
   const nbT5Available = item.nb_t5_en_colocation_available ?? 0
@@ -179,10 +183,10 @@ function buildTypologyValues(item: FacHabitatResidence) {
     nbT5Available: nbT5Available || null,
     priceMinT1: minOf(item.t1_rent_min),
     priceMaxT1: maxOf(item.t1_rent_max),
-    priceMinT1Bis: minOf(item.t1_bis_rent_min, item.t1_prime_rent_min, item.studio_double_rent_min),
-    priceMaxT1Bis: maxOf(item.t1_bis_rent_max, item.t1_prime_rent_max, item.studio_double_rent_max),
-    priceMinT2: minOf(item.t2_rent_min, item.t2_duplex_rent_min, item.duplex_rent_min),
-    priceMaxT2: maxOf(item.t2_rent_max, item.t2_duplex_rent_max, item.duplex_rent_max),
+    priceMinT1Bis: minOf(item.t1_bis_rent_min, item.t1_prime_rent_min, item.studio_double_rent_min, item.duplex_rent_min),
+    priceMaxT1Bis: maxOf(item.t1_bis_rent_max, item.t1_prime_rent_max, item.studio_double_rent_max, item.duplex_rent_max),
+    priceMinT2: minOf(item.t2_rent_min, item.t2_duplex_rent_min),
+    priceMaxT2: maxOf(item.t2_rent_max, item.t2_duplex_rent_max),
     priceMinT3: minOf(item.t3_rent_min, item.duo_rent_min),
     priceMaxT3: maxOf(item.t3_rent_max, item.duo_rent_max),
     priceMinT4: minOf(item.t4_rent_min),
@@ -191,10 +195,10 @@ function buildTypologyValues(item: FacHabitatResidence) {
     priceMaxT5: maxOf(item.t5_rent_max, item.t5_en_colocation_rent_max),
     superficieMinT1: minOf(item.t1_surface_min),
     superficieMaxT1: maxOf(item.t1_surface_max),
-    superficieMinT1Bis: minOf(item.t1_bis_surface_min, item.t1_prime_surface_min, item.studio_double_surface_min),
-    superficieMaxT1Bis: maxOf(item.t1_bis_surface_max, item.t1_prime_surface_max, item.studio_double_surface_max),
-    superficieMinT2: minOf(item.t2_surface_min, item.t2_duplex_surface_min, item.duplex_surface_min),
-    superficieMaxT2: maxOf(item.t2_surface_max, item.t2_duplex_surface_max, item.duplex_surface_max),
+    superficieMinT1Bis: minOf(item.t1_bis_surface_min, item.t1_prime_surface_min, item.studio_double_surface_min, item.duplex_surface_min),
+    superficieMaxT1Bis: maxOf(item.t1_bis_surface_max, item.t1_prime_surface_max, item.studio_double_surface_max, item.duplex_surface_max),
+    superficieMinT2: minOf(item.t2_surface_min, item.t2_duplex_surface_min),
+    superficieMaxT2: maxOf(item.t2_surface_max, item.t2_duplex_surface_max),
     superficieMinT3: minOf(item.t3_surface_min, item.duo_surface_min),
     superficieMaxT3: maxOf(item.t3_surface_max, item.duo_surface_max),
     superficieMinT4: minOf(item.t4_surface_min),
