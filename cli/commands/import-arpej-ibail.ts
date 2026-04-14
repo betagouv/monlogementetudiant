@@ -1,5 +1,5 @@
 import { and, eq, sql } from 'drizzle-orm'
-import { accommodations, externalSources, importBlocklist } from '../../src/server/db/schema'
+import { accommodationAddresses, accommodations, externalSources, importBlocklist } from '../../src/server/db/schema'
 import { generateAccommodationKey, uploadFile } from '../../src/server/services/s3'
 import { computeDerivedFields, generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
 import { findAvailableSlug } from '../../src/server/utils/slug'
@@ -159,16 +159,18 @@ const command: ImportCommand = {
           images_urls: imageUrls.length > 0 ? imageUrls : null,
         })
 
+        const addressData = {
+          address: geo?.address ?? residence.address,
+          postalCode: resolvedPostalCode,
+          cityId: resolvedCityId,
+          ...(geo ? { geom: sql`ST_SetSRID(ST_MakePoint(${geo.lng}, ${geo.lat}), 4326)` } : {}),
+        }
+
         const accommodationData = {
           name: residence.title,
           description: (residence.description as string) ?? null,
-          address: geo?.address ?? residence.address,
-          city: resolvedCityName,
-          cityId: resolvedCityId,
-          postalCode: resolvedPostalCode,
           residenceType: 'universitaire-conventionnee',
           published: true,
-          ...(geo ? { geom: sql`ST_SetSRID(ST_MakePoint(${geo.lng}, ${geo.lat}), 4326)` } : {}),
           nbT1: residence.accommodation_quantity ?? null,
           nbT1Available: residence.available_accommodation_quantity ?? null,
           priceMinT1: residence.rent_amount_from ?? null,
@@ -194,7 +196,10 @@ const command: ImportCommand = {
         }
 
         if (existingSource[0]) {
-          await db.update(accommodations).set(accommodationData).where(eq(accommodations.id, existingSource[0].accommodationId))
+          const accommodationId = existingSource[0].accommodationId
+          await db.update(accommodations).set(accommodationData).where(eq(accommodations.id, accommodationId))
+          await db.delete(accommodationAddresses).where(eq(accommodationAddresses.accommodationId, accommodationId))
+          await db.insert(accommodationAddresses).values({ accommodationId, isMain: true, ...addressData })
           result.updated++
         } else {
           const slug = await findAvailableSlug(generateSlug(residence.title), db, accommodations)
@@ -202,6 +207,8 @@ const command: ImportCommand = {
             .insert(accommodations)
             .values({ ...accommodationData, slug, createdAt: new Date() })
             .returning({ id: accommodations.id })
+
+          await db.insert(accommodationAddresses).values({ accommodationId: newAccommodation.id, isMain: true, ...addressData })
 
           await db.insert(externalSources).values({
             accommodationId: newAccommodation.id,

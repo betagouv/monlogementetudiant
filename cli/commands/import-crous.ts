@@ -1,7 +1,7 @@
 import { and, eq, sql } from 'drizzle-orm'
 import * as XLSX from 'xlsx'
 import { sanitizeHTML } from '~/utils/sanitize-html'
-import { accommodations, externalSources } from '../../src/server/db/schema'
+import { accommodationAddresses, accommodations, externalSources } from '../../src/server/db/schema'
 import { computeDerivedFields, generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
 import { findAvailableSlug } from '../../src/server/utils/slug'
 import { db } from '../lib/db'
@@ -278,16 +278,22 @@ const command: ImportCommand = {
           continue
         }
 
+        // Address fields for accommodation_address table
+        const addressData = {
+          address: resolvedAddress,
+          postalCode: resolvedPostalCode || '00000',
+          cityId: resolvedCityId,
+          ...(geom ? { geom } : {}),
+        }
+
         // Common fields for both insert and update
         const baseFields = {
           name,
           description: item.description_residence ? sanitizeHTML(item.description_residence) : null,
-          address: resolvedAddress,
           residenceType: 'residence-etudiante',
           target_audience: 'etudiants' as const,
           published: true,
           available: true,
-          ...(geom ? { geom } : {}),
           priceMinT1: typology.priceMinT1,
           priceMaxT1: typology.priceMaxT1,
           priceMinT1Bis: typology.priceMinT1Bis,
@@ -310,19 +316,15 @@ const command: ImportCommand = {
         }
         if (existing) {
           // UPDATE — keep existing slug, images, etc.
-          const [updated] = await db
-            .update(accommodations)
-            .set({
-              ...baseFields,
-              ...(resolvedCityId ? { cityId: resolvedCityId } : {}),
-              ...(resolvedPostalCode ? { postalCode: resolvedPostalCode } : {}),
-            })
-            .where(eq(accommodations.id, existing.id))
-            .returning({
-              slug: accommodations.slug,
-              priceMinT1: accommodations.priceMinT1,
-              name: accommodations.name,
-            })
+          const [updated] = await db.update(accommodations).set(baseFields).where(eq(accommodations.id, existing.id)).returning({
+            slug: accommodations.slug,
+            priceMinT1: accommodations.priceMinT1,
+            name: accommodations.name,
+          })
+
+          // Upsert address
+          await db.delete(accommodationAddresses).where(eq(accommodationAddresses.accommodationId, existing.id))
+          await db.insert(accommodationAddresses).values({ accommodationId: existing.id, isMain: true, ...addressData })
 
           if (options.verbose) {
             console.log(`    Mise à jour id=${existing.id}, name =${updated.name} slug=${updated.slug} priceMinT1=${updated.priceMinT1}`)
@@ -342,12 +344,12 @@ const command: ImportCommand = {
             .values({
               ...baseFields,
               slug,
-              cityId: resolvedCityId,
-              postalCode: resolvedPostalCode || '00000',
               imagesCount: 0,
               createdAt: new Date(),
             })
             .returning({ id: accommodations.id, slug: accommodations.slug })
+
+          await db.insert(accommodationAddresses).values({ accommodationId: created.id, isMain: true, ...addressData })
 
           await db.insert(externalSources).values({
             accommodationId: created.id,

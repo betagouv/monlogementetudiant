@@ -1,5 +1,6 @@
 import { eq, sql } from 'drizzle-orm'
 import { academies } from '../../server/db/schema/academies'
+import { accommodationAddresses } from '../../server/db/schema/accommodation-addresses'
 import { accommodations } from '../../server/db/schema/accommodations'
 import { adminOwnerLinks } from '../../server/db/schema/admin-owner-links'
 import { user } from '../../server/db/schema/auth'
@@ -148,12 +149,17 @@ function buildTestSlug(value: string, suffix: number) {
 }
 
 export async function createAccommodation(
-  overrides: Partial<Omit<AccommodationInsert, 'geom'>> & { geom?: { type: string; coordinates: [number, number] | number[][][][] } } = {},
+  overrides: Partial<AccommodationInsert> & {
+    geom?: { type: string; coordinates: [number, number] | number[][][][] }
+    cityId?: number
+    address?: string
+    postalCode?: string
+  } = {},
 ) {
   const db = getTestDb()
-  const { geom, ...rest } = overrides
+  const { geom, cityId: overrideCityId, address, postalCode, ...rest } = overrides
   const suffix = ++accommodationCounter
-  let cityId = rest.cityId
+  let cityId = overrideCityId
 
   if (!cityId) {
     const academy = await createAcademy({ name: `Académie Test ${suffix}` })
@@ -174,17 +180,25 @@ export async function createAccommodation(
   const values = {
     name: 'Résidence Test',
     slug: `residence-test-${suffix}`,
-    postalCode: '42000',
     published: true,
     imagesCount: 0,
-    cityId,
     ...rest,
-    ...(geom ? { geom: sql`ST_SetSRID(ST_MakePoint(${geom.coordinates[0]}, ${geom.coordinates[1]}), 4326)` } : {}),
   }
   const [row] = await db
     .insert(accommodations)
     .values(values as typeof accommodations.$inferInsert)
     .returning()
+
+  // Insert main address into accommodation_address table
+  await db.insert(accommodationAddresses).values({
+    accommodationId: row.id,
+    isMain: true,
+    address: address ?? null,
+    postalCode: postalCode ?? '42000',
+    cityId,
+    ...(geom ? { geom: sql`ST_SetSRID(ST_MakePoint(${geom.coordinates[0]}, ${geom.coordinates[1]}), 4326)` } : {}),
+  })
+
   return row
 }
 

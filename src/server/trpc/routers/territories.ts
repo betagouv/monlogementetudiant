@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { ZAlertAccommodationFormSchema } from '~/schemas/alert-accommodation/alert-accommodation'
 import { db } from '~/server/db'
 import { academies } from '~/server/db/schema/academies'
+import { accommodationAddresses } from '~/server/db/schema/accommodation-addresses'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { cities } from '~/server/db/schema/cities'
 import { departments } from '~/server/db/schema/departments'
@@ -106,7 +107,7 @@ function mapCityRow(c: CityRow, stats?: CityStats, nearbyCities: { name: string;
 function cityAccommodationStatsSubquery() {
   return db
     .select({
-      cityId: accommodations.cityId,
+      cityId: accommodationAddresses.cityId,
       nbTotalApartments: sql<number>`COALESCE(SUM(${accommodations.nbTotalApartments}), 0)::int`.as('nb_total_apartments'),
       priceMin: sql<number | null>`MIN(${accommodations.priceMin})`.as('price_min'),
       nbCrousApartments: sql<number>`
@@ -122,9 +123,10 @@ function cityAccommodationStatsSubquery() {
       `.as('nb_crous_apartments'),
     })
     .from(accommodations)
+    .innerJoin(accommodationAddresses, eq(accommodationAddresses.accommodationId, accommodations.id))
     .leftJoin(owners, eq(accommodations.ownerId, owners.id))
-    .where(eq(accommodations.published, true))
-    .groupBy(accommodations.cityId)
+    .where(and(eq(accommodations.published, true), eq(accommodations.available, true)))
+    .groupBy(accommodationAddresses.cityId)
     .as('city_accommodation_stats')
 }
 
@@ -330,9 +332,10 @@ export const territoriesRouter = createTRPCRouter({
           nbT7More: sql<number | null>`SUM(${accommodations.nbT7More})::int`,
         })
         .from(accommodations)
+        .innerJoin(accommodationAddresses, eq(accommodationAddresses.accommodationId, accommodations.id))
         .where(
           and(
-            sql`${accommodations.cityId} = (SELECT ${cities.id} FROM ${cities} WHERE ${cities.slug} = ${slugLower} LIMIT 1)`,
+            sql`${accommodationAddresses.cityId} = (SELECT ${cities.id} FROM ${cities} WHERE ${cities.slug} = ${slugLower} LIMIT 1)`,
             eq(accommodations.published, true),
           ),
         ),
@@ -398,9 +401,10 @@ export const territoriesRouter = createTRPCRouter({
               nbT7More: sql<number | null>`SUM(${accommodations.nbT7More})::int`,
             })
             .from(accommodations)
+            .innerJoin(accommodationAddresses, eq(accommodationAddresses.accommodationId, accommodations.id))
             .where(
               and(
-                sql`${accommodations.cityId} = (SELECT ${cities.id} FROM ${cities} WHERE ${cities.slug} = ${slugLower} LIMIT 1)`,
+                sql`${accommodationAddresses.cityId} = (SELECT ${cities.id} FROM ${cities} WHERE ${cities.slug} = ${slugLower} LIMIT 1)`,
                 eq(accommodations.published, true),
               ),
             ),

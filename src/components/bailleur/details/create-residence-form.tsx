@@ -61,9 +61,7 @@ export const CreateResidenceForm = () => {
       social_housing_required: false,
       nb_accessible_apartments: null,
       nb_coliving_apartments: null,
-      address: '',
-      city: '',
-      postal_code: '',
+      addresses: [{ address: '', city: '', postal_code: '' }],
     },
   })
 

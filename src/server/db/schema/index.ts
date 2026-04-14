@@ -1,4 +1,5 @@
 export { academies } from './academies'
+export { accommodationAddresses } from './accommodation-addresses'
 export { accommodations } from './accommodations'
 export { activityLog } from './activity-log'
 export { adminOwnerLinks } from './admin-owner-links'
@@ -16,6 +17,7 @@ export { owners } from './owners'
 export { questionsAnswers } from './questions-answers'
 export {
   academiesRelations,
+  accommodationAddressesRelations,
   accommodationsRelations,
   adminOwnerLinksRelations,
   citiesRelations,

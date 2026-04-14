@@ -111,9 +111,15 @@ export const ZCreateResidence = ZUpdateResidence.omit({
   superficie_min_t7_more: true,
   superficie_max_t7_more: true,
 }).extend({
-  address: z.string().min(1, "L'adresse est requise"),
-  city: z.string().min(1, 'La ville est requise'),
-  postal_code: z.string().min(1, 'Le code postal est requis'),
+  addresses: z
+    .array(
+      z.object({
+        address: z.string().min(1, "L'adresse est requise"),
+        city: z.string().min(1, 'La ville est requise'),
+        postal_code: z.string().min(1, 'Le code postal est requis'),
+      }),
+    )
+    .min(1, 'Au moins une adresse est requise'),
   external_url: z.url('Veuillez saisir une URL valide').min(1, "L'URL de redirection est requise"),
   images_files: z.array(z.instanceof(File)).optional(),
   typologies: z
