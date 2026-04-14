@@ -201,8 +201,8 @@ describe('import-fac-habitat integration', () => {
     const accs = await db.select().from(accommodations)
     const acc = accs.find((a) => a.externalReference === '100')
     expect(acc).toBeDefined()
-    expect(acc!.nbT1Bis).toBe(6) // 3 + 2 + 1
-    expect(acc!.nbT2).toBe(4) // 2 + 1 + 1
+    expect(acc!.nbT1Bis).toBe(7) // 3 + 2 + 1 + 1
+    expect(acc!.nbT2).toBe(3) // 2 + 1
     expect(acc!.nbT3).toBe(6) // 4 + 2
     expect(acc!.nbT5).toBe(3) // 1 + 2
     expect(acc!.priceMinT1Bis).toBe(300) // min(350, 300, 400)
