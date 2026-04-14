@@ -8,7 +8,7 @@ import { TUpdateResidence } from '~/schemas/accommodations/update-residence'
 
 export const UpdateResidencePublication = ({ onSubmit, slug }: { onSubmit: (data: TUpdateResidence) => void; slug: string }) => {
   const t = useTranslations('bailleur.residences.details')
-  const { control, getValues } = useFormContext<TUpdateResidence>()
+  const { control } = useFormContext<TUpdateResidence>()
 
   return (
     <Controller
@@ -17,7 +17,7 @@ export const UpdateResidencePublication = ({ onSubmit, slug }: { onSubmit: (data
       render={({ field }) => {
         const handleOnChange = (value: boolean) => {
           field.onChange(value)
-          onSubmit(getValues())
+          onSubmit({ published: value })
           trackEvent({
             category: 'Espace Gestionnaire',
             action: value ? 'publication residence' : 'depublication residence',
