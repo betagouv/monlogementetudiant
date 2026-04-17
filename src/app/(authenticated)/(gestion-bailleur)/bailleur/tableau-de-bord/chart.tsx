@@ -8,7 +8,7 @@ interface ResidenceChartProps {
 }
 
 export const ResidenceChart = ({ available, total }: ResidenceChartProps) => {
-  if (available === null) {
+  if (available === null || total === 0) {
     return (
       <div className="fr-flex fr-align-items-center fr-flex-gap-6v">
         <PieChart width={72} height={72}>
