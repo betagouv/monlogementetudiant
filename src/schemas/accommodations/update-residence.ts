@@ -2,9 +2,6 @@ import { z } from 'zod'
 import { EResidenceType } from '~/enums/residence-type'
 import { ETargetAudience } from '~/enums/target-audience'
 
-export { EResidenceType, RESIDENCE_TYPE_LABELS } from '~/enums/residence-type'
-export { ETargetAudience } from '~/enums/target-audience'
-
 export const ZUpdateResidence = z.object({
   name: z.string().min(1, 'Le nom de la résidence est requis').optional(),
   residence_type: z.enum(EResidenceType, { error: 'Le type de la résidence est requis' }).optional(),
