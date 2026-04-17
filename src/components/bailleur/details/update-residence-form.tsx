@@ -28,7 +28,6 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
   const redirectUri = `/trouver-un-logement-etudiant/ville/${encodeURIComponent(city)}/${accommodation.properties.slug}`
 
   const updateMutation = useUpdateResidenceDetails(accommodation.properties.slug)
-
   const form = useForm<TUpdateResidence>({
     resolver: zodResolver(
       createUpdateResidenceSchema({
