@@ -140,12 +140,12 @@ function makeRow(overrides: Record<string, string> = {}): string[] {
     parking: 'oui',
     secure_access: 'oui',
     residence_manager: 'oui',
-    kitchen_type: 'equipee',
+    kitchen_type: 'private',
     desk: 'oui',
     cooking_plates: 'oui',
     microwave: 'oui',
     refrigerator: 'oui',
-    bathroom: 'douche',
+    bathroom: 'private',
     accept_waiting_list: 'oui',
   }
 
@@ -243,12 +243,12 @@ describe('import-csv integration', () => {
     expect(created!.parking).toBe(true)
     expect(created!.secureAccess).toBe(true)
     expect(created!.residenceManager).toBe(true)
-    expect(created!.kitchenType).toBe('equipee')
+    expect(created!.kitchenType).toBe('private')
     expect(created!.desk).toBe(true)
     expect(created!.cookingPlates).toBe(true)
     expect(created!.microwave).toBe(true)
     expect(created!.refrigerator).toBe(true)
-    expect(created!.bathroom).toBe('douche')
+    expect(created!.bathroom).toBe('private')
     expect(created!.acceptWaitingList).toBe(true)
     expect(created!.externalUrl).toBe('https://monbailleur.fr')
 
@@ -713,5 +713,184 @@ describe('import-csv integration', () => {
       .from(externalSources)
       .where(and(eq(externalSources.source, 'test-code'), eq(externalSources.sourceId, 'ABC-123')))
     expect(sources).toHaveLength(1)
+  })
+
+  describe('Zod validation', () => {
+    it('normalizes uppercase kitchen_type and bathroom to lowercase', async () => {
+      const db = getTestDb()
+
+      const filePath = writeTmpCsv([makeRow({ kitchen_type: 'PRIVATE', bathroom: 'SHARED' })])
+
+      const result = await command.execute({ file: filePath, source: 'test-norm-upper' })
+
+      expect(result.created).toBe(1)
+      const accs = await db.select().from(accommodations).where(eq(accommodations.name, 'Résidence Soleil'))
+      expect(accs[0].kitchenType).toBe('private')
+      expect(accs[0].bathroom).toBe('shared')
+    })
+
+    it('normalizes mixed-case and whitespace-padded enum values', async () => {
+      const db = getTestDb()
+
+      const filePath = writeTmpCsv([makeRow({ kitchen_type: '  Private  ', bathroom: 'Shared' })])
+
+      const result = await command.execute({ file: filePath, source: 'test-norm-mixed' })
+
+      expect(result.created).toBe(1)
+      const accs = await db.select().from(accommodations)
+      expect(accs[0].kitchenType).toBe('private')
+      expect(accs[0].bathroom).toBe('shared')
+    })
+
+    it('normalizes uppercase residence_type to lowercase', async () => {
+      const db = getTestDb()
+
+      const filePath = writeTmpCsv([makeRow({ residence_type: 'RESIDENCE-ETUDIANTE' })])
+
+      const result = await command.execute({ file: filePath, source: 'test-norm-residence' })
+
+      expect(result.created).toBe(1)
+      const accs = await db.select().from(accommodations)
+      expect(accs[0].residenceType).toBe('residence-etudiante')
+    })
+
+    it('keeps kitchen_type and bathroom null when CSV is empty', async () => {
+      const db = getTestDb()
+
+      const filePath = writeTmpCsv([makeRow({ kitchen_type: '', bathroom: '' })])
+
+      const result = await command.execute({ file: filePath, source: 'test-norm-empty' })
+
+      expect(result.created).toBe(1)
+      const accs = await db.select().from(accommodations)
+      expect(accs[0].kitchenType).toBeNull()
+      expect(accs[0].bathroom).toBeNull()
+    })
+
+    it('fails the entire import when kitchen_type is not a valid enum value', async () => {
+      const db = getTestDb()
+
+      const filePath = writeTmpCsv([makeRow({ kitchen_type: 'garbage-value' })])
+
+      await expect(command.execute({ file: filePath, source: 'test-fail-kitchen' })).rejects.toThrow(/Validation Zod échouée/)
+
+      const accs = await db.select().from(accommodations)
+      expect(accs).toHaveLength(0)
+    })
+
+    it('fails the entire import when bathroom is not a valid enum value', async () => {
+      const db = getTestDb()
+
+      const filePath = writeTmpCsv([makeRow({ bathroom: 'douche' })])
+
+      await expect(command.execute({ file: filePath, source: 'test-fail-bathroom' })).rejects.toThrow(/Validation Zod échouée/)
+
+      const accs = await db.select().from(accommodations)
+      expect(accs).toHaveLength(0)
+    })
+
+    it('fails the entire import when residence_type is not a valid enum value', async () => {
+      const db = getTestDb()
+
+      const filePath = writeTmpCsv([makeRow({ residence_type: 'unknown-residence-type' })])
+
+      await expect(command.execute({ file: filePath, source: 'test-fail-residence' })).rejects.toThrow(/Validation Zod échouée/)
+
+      const accs = await db.select().from(accommodations)
+      expect(accs).toHaveLength(0)
+    })
+
+    it('aborts the whole import (two-pass: no partial writes) when an invalid value appears on a later row', async () => {
+      const db = getTestDb()
+
+      const filePath = writeTmpCsv([
+        makeRow({ name: 'Résidence Valide' }),
+        makeRow({ name: 'Résidence Invalide', kitchen_type: 'PASTEL' }),
+        makeRow({ name: 'Résidence Jamais Vue' }),
+      ])
+
+      await expect(command.execute({ file: filePath, source: 'test-fail-mid' })).rejects.toThrow(/Ligne 2 - Résidence Invalide/)
+
+      // Two-pass guarantee: NO row should be inserted, including the valid first one
+      const accs = await db.select().from(accommodations)
+      expect(accs).toHaveLength(0)
+
+      // No external_source should exist either
+      const sources = await db.select().from(externalSources).where(eq(externalSources.source, 'test-fail-mid'))
+      expect(sources).toHaveLength(0)
+
+      // No owner should have been created (validation runs before owner creation)
+      const ownerRows = await db.select().from(owners)
+      expect(ownerRows).toHaveLength(0)
+    })
+
+    it('collects all validation errors across rows in a single throw', async () => {
+      const db = getTestDb()
+
+      const filePath = writeTmpCsv([
+        makeRow({ name: 'Résidence A', kitchen_type: 'WRONG_KITCHEN' }),
+        makeRow({ name: 'Résidence B' }), // valid
+        makeRow({ name: 'Résidence C', bathroom: 'WRONG_BATHROOM' }),
+        makeRow({ name: 'Résidence D', residence_type: 'WRONG_RESIDENCE' }),
+      ])
+
+      await expect(command.execute({ file: filePath, source: 'test-collect-errors' })).rejects.toThrow(
+        // The thrown message should mention all 3 invalid rows by line number
+        /Validation Zod échouée \(3 ligne\(s\)\)[\s\S]*Ligne 1[\s\S]*Résidence A[\s\S]*Ligne 3[\s\S]*Résidence C[\s\S]*Ligne 4[\s\S]*Résidence D/,
+      )
+
+      // Two-pass guarantee: NO row inserted
+      const accs = await db.select().from(accommodations)
+      expect(accs).toHaveLength(0)
+    })
+
+    it('does not insert the valid first row when the second row fails validation', async () => {
+      const db = getTestDb()
+
+      const filePath = writeTmpCsv([makeRow({ name: 'Résidence Tout Bon' }), makeRow({ name: 'Résidence Mauvaise', bathroom: 'INVALIDE' })])
+
+      await expect(command.execute({ file: filePath, source: 'test-no-partial' })).rejects.toThrow(/Validation Zod échouée/)
+
+      const tousBon = await db.select().from(accommodations).where(eq(accommodations.name, 'Résidence Tout Bon'))
+      expect(tousBon).toHaveLength(0)
+    })
+
+    it('does not create owner when validation fails', async () => {
+      const db = getTestDb()
+
+      const filePath = writeTmpCsv([makeRow({ owner_name: 'Bailleur Jamais Créé', name: 'Résidence X', kitchen_type: 'INVALID' })])
+
+      await expect(command.execute({ file: filePath, source: 'test-no-owner' })).rejects.toThrow(/Validation Zod échouée/)
+
+      const ownerRows = await db.select().from(owners).where(eq(owners.name, 'Bailleur Jamais Créé'))
+      expect(ownerRows).toHaveLength(0)
+    })
+
+    it('does not call geocoder or upload images when validation fails (fast-fail)', async () => {
+      const filePath = writeTmpCsv([
+        makeRow({
+          latitude: '',
+          longitude: '',
+          pictures: 'https://flatbay.fr/images/photo.jpg',
+          kitchen_type: 'NOPE',
+        }),
+      ])
+
+      await expect(command.execute({ file: filePath, source: 'test-fast-fail' })).rejects.toThrow(/Validation Zod échouée/)
+
+      // Pass 1 happens before pass 2 → geocoder fetch and image download must NOT be called
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it('runs validation in dry-run mode (no DB writes but still throws)', async () => {
+      const db = getTestDb()
+
+      const filePath = writeTmpCsv([makeRow({ kitchen_type: 'invalid' })])
+
+      await expect(command.execute({ file: filePath, source: 'test-dry-fail', dryRun: true })).rejects.toThrow(/Validation Zod échouée/)
+
+      const accs = await db.select().from(accommodations)
+      expect(accs).toHaveLength(0)
+    })
   })
 })

@@ -1,6 +1,7 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { and, eq, sql } from 'drizzle-orm'
+import { ZUpdateResidence } from '../../src/schemas/accommodations/update-residence'
 import { accommodations, externalSources } from '../../src/server/db/schema'
 import { generateAccommodationKey, uploadFile } from '../../src/server/services/s3'
 import { computeDerivedFields, generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
@@ -187,6 +188,119 @@ async function processImages(picturesRaw: string, verbose?: boolean): Promise<st
   return result
 }
 
+function normalizeEnum(value: string | undefined): string | null {
+  if (!value) return null
+  const trimmed = value.trim().toLowerCase()
+  return trimmed === '' ? null : trimmed
+}
+
+const ZAccommodationImport = ZUpdateResidence.pick({
+  name: true,
+  residence_type: true,
+  target_audience: true,
+  address: true,
+  city: true,
+  postal_code: true,
+  description: true,
+  external_url: true,
+  accept_waiting_list: true,
+  nb_t1: true,
+  nb_t1_bis: true,
+  nb_t2: true,
+  nb_t3: true,
+  nb_t4: true,
+  nb_t5: true,
+  nb_t6: true,
+  nb_t7_more: true,
+  price_min_t1: true,
+  price_max_t1: true,
+  price_min_t1_bis: true,
+  price_max_t1_bis: true,
+  price_min_t2: true,
+  price_max_t2: true,
+  price_min_t3: true,
+  price_max_t3: true,
+  price_min_t4: true,
+  price_max_t4: true,
+  price_min_t5: true,
+  price_max_t5: true,
+  price_min_t6: true,
+  price_max_t6: true,
+  price_min_t7_more: true,
+  price_max_t7_more: true,
+  nb_accessible_apartments: true,
+  nb_coliving_apartments: true,
+  refrigerator: true,
+  laundry_room: true,
+  bathroom: true,
+  kitchen_type: true,
+  microwave: true,
+  secure_access: true,
+  parking: true,
+  common_areas: true,
+  bike_storage: true,
+  desk: true,
+  residence_manager: true,
+  cooking_plates: true,
+  images_urls: true,
+  published: true,
+  scholarship_holders_priority: true,
+})
+
+// Build the validation payload from the raw CSV row.
+// address/city/postal_code are intentionally omitted (resolved by geocoding in pass 2)
+// images_urls is omitted (uploaded to S3 in pass 2). All three fields are .optional() in the schema.
+function buildValidationPayload(row: CsvRow) {
+  return {
+    name: row.name?.trim() || undefined,
+    residence_type: normalizeEnum(row.residence_type) ?? undefined,
+    target_audience: 'etudiants',
+    description: row.description?.trim() || undefined,
+    external_url: row.owner_url?.trim() || undefined,
+    accept_waiting_list: toBool(row.accept_waiting_list) ?? undefined,
+    nb_t1: toDigit(row.nb_t1) ?? undefined,
+    nb_t1_bis: toDigit(row.nb_t1_bis) ?? undefined,
+    nb_t2: toDigit(row.nb_t2) ?? undefined,
+    nb_t3: toDigit(row.nb_t3) ?? undefined,
+    nb_t4: toDigit(row.nb_t4) ?? undefined,
+    nb_t5: toDigit(row.nb_t5) ?? undefined,
+    nb_t6: toDigit(row.nb_t6) ?? undefined,
+    nb_t7_more: toDigit(row.nb_t7_more) ?? undefined,
+    price_min_t1: toDigit(row.t1_rent_min) ?? undefined,
+    price_max_t1: toDigit(row.t1_rent_max) ?? undefined,
+    price_min_t1_bis: toDigit(row.t1_bis_rent_min) ?? undefined,
+    price_max_t1_bis: toDigit(row.t1_bis_rent_max) ?? undefined,
+    price_min_t2: toDigit(row.t2_rent_min) ?? undefined,
+    price_max_t2: toDigit(row.t2_rent_max) ?? undefined,
+    price_min_t3: toDigit(row.t3_rent_min) ?? undefined,
+    price_max_t3: toDigit(row.t3_rent_max) ?? undefined,
+    price_min_t4: toDigit(row.t4_rent_min) ?? undefined,
+    price_max_t4: toDigit(row.t4_rent_max) ?? undefined,
+    price_min_t5: toDigit(row.t5_rent_min) ?? undefined,
+    price_max_t5: toDigit(row.t5_rent_max) ?? undefined,
+    price_min_t6: toDigit(row.t6_rent_min) ?? undefined,
+    price_max_t6: toDigit(row.t6_rent_max) ?? undefined,
+    price_min_t7_more: toDigit(row.t7_more_rent_min) ?? undefined,
+    price_max_t7_more: toDigit(row.t7_more_rent_max) ?? undefined,
+    nb_accessible_apartments: toDigit(row.nb_accessible_apartments, true) ?? undefined,
+    nb_coliving_apartments: toDigit(row.nb_coliving_apartments, true) ?? undefined,
+    refrigerator: toBool(row.refrigerator) ?? undefined,
+    laundry_room: toBool(row.laundry_room) ?? undefined,
+    bathroom: normalizeEnum(row.bathroom) ?? undefined,
+    kitchen_type: normalizeEnum(row.kitchen_type) ?? undefined,
+    microwave: toBool(row.microwave) ?? undefined,
+    secure_access: toBool(row.secure_access) ?? undefined,
+    parking: toBool(row.parking) ?? undefined,
+    common_areas: toBool(row.common_areas) ?? undefined,
+    bike_storage: toBool(row.bike_storage) ?? undefined,
+    desk: toBool(row.desk) ?? undefined,
+    residence_manager: toBool(row.residence_manager) ?? undefined,
+    cooking_plates: toBool(row.cooking_plates) ?? undefined,
+    published: true,
+    scholarship_holders_priority: toBool(row.scholarship_holders_priority) ?? undefined,
+  }
+}
+
 function generateSourceId(row: CsvRow): string {
   if (row.code && row.code.trim() !== '') return row.code.trim()
   const key = `${row.name ?? ''}|${row.address ?? ''}|${row.postal_code ?? ''}`
@@ -216,6 +330,23 @@ const command: ImportCommand = {
     console.log(`  ${rows.length} lignes chargées depuis ${options.file}`)
 
     if (rows.length === 0) return result
+
+    // PASS 1: Validate every row up-front. No DB writes happen until all rows pass.
+    // Rows with no name are skipped (same as pass 2) and not validated.
+    const validationErrors: string[] = []
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i]
+      const name = row.name?.trim()
+      if (!name) continue
+      const parsed = ZAccommodationImport.safeParse(buildValidationPayload(row))
+      if (!parsed.success) {
+        const issues = parsed.error.issues.map((iss) => `${iss.path.join('.') || '<root>'}: ${iss.message}`).join('; ')
+        validationErrors.push(`Ligne ${i + 1} - ${name}: ${issues}`)
+      }
+    }
+    if (validationErrors.length > 0) {
+      throw new Error(`Validation Zod échouée (${validationErrors.length} ligne(s)):\n${validationErrors.join('\n')}`)
+    }
 
     // Get or create owner from first row
     const ownerName = rows[0].owner_name?.trim()
@@ -329,7 +460,7 @@ const command: ImportCommand = {
           city: resolvedCity,
           cityId: resolvedCityId,
           postalCode: resolvedPostalCode,
-          residenceType: row.residence_type?.trim() || null,
+          residenceType: normalizeEnum(row.residence_type),
           target_audience: 'etudiants' as const,
           published: true,
           ...(geom ? { geom } : {}),
@@ -367,12 +498,12 @@ const command: ImportCommand = {
           parking: toBool(row.parking),
           secureAccess: toBool(row.secure_access),
           residenceManager: toBool(row.residence_manager),
-          kitchenType: row.kitchen_type?.trim() || null,
+          kitchenType: normalizeEnum(row.kitchen_type),
           desk: toBool(row.desk),
           cookingPlates: toBool(row.cooking_plates),
           microwave: toBool(row.microwave),
           refrigerator: toBool(row.refrigerator),
-          bathroom: row.bathroom?.trim() || null,
+          bathroom: normalizeEnum(row.bathroom),
           acceptWaitingList: toBool(row.accept_waiting_list),
           scholarshipHoldersPriority: toBool(row.scholarship_holders_priority),
           imagesUrls: imagesUrls.length > 0 ? imagesUrls : null,
