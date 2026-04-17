@@ -196,7 +196,6 @@ export default async function TableauDeBordPage({ searchParams }: TableauDeBordP
             )
             const available = calculatedAvailability
             const total = res.properties.nb_total_apartments || 0
-            if (total === 0) return null
 
             return (
               <div key={index} className={clsx('fr-px-3w fr-py-2w', styles.statisticsCard)}>
