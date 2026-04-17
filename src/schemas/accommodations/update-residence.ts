@@ -176,7 +176,7 @@ export const createUpdateResidenceSchema = (existingData: {
     ]
 
     for (const { total, available, availablePath, type } of validations) {
-      if ((total === null || total === undefined) && typeof available === 'number') {
+      if ((total === null || total === undefined) && typeof available === 'number' && available !== 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: `Veuillez d'abord renseigner le nombre total de logements ${type}`,
