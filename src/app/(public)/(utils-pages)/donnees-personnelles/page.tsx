@@ -1,7 +1,13 @@
 import { fr } from '@codegouvfr/react-dsfr'
 import { Breadcrumb } from '@codegouvfr/react-dsfr/Breadcrumb'
+import { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 import styles from '../pages.module.css'
+
+export const generateMetadata = async (): Promise<Metadata> => {
+  const t = await getTranslations('metadata')
+  return { title: t('personalData.title'), description: t('personalData.description') }
+}
 
 export default async function DonneesPersonnellesPage() {
   const [t, breadcrumbT] = await Promise.all([getTranslations('personalData'), getTranslations('breadcrumbs')])
