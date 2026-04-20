@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Widget Simulateur d'aides</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+      background: #f5f5f5;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    h2 {
+      color: #666;
+      margin-top: 3rem;
+    }
+
+    code {
+      background: #eee;
+      padding: 0.1rem 0.3rem;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+
+    hr {
+      margin: 3rem 0;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Test Widget Simulateur d'aides</h1>
+
+  <h2>1. Intégration par défaut</h2>
+  <p>Script inséré directement dans le flux.</p>
+  <script src="http://localhost:3000/widget/embed-simulateur-aides.js"></script>
+
+  <hr>
+
+  <h2>2. Intégration dans un conteneur ciblé</h2>
+  <p><code>data-target="cible-simulateur"</code></p>
+  <div id="cible-simulateur"></div>
+  <script src="http://localhost:3000/widget/embed-simulateur-aides.js" data-target="cible-simulateur"></script>
+</body>
+
+</html>
