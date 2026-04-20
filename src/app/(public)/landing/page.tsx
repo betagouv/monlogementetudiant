@@ -1,6 +1,7 @@
 import { fr } from '@codegouvfr/react-dsfr'
 import Button from '@codegouvfr/react-dsfr/Button'
 import clsx from 'clsx'
+import { Metadata } from 'next'
 import Image from 'next/image'
 import { getTranslations } from 'next-intl/server'
 import { z } from 'zod'
@@ -27,6 +28,11 @@ import sogima from '~/images/sogima.svg'
 import studefi from '~/images/studefi.svg'
 import visibilityAvatar from '~/images/visibility.webp'
 import styles from './landing.module.css'
+
+export const generateMetadata = async (): Promise<Metadata> => {
+  const t = await getTranslations('metadata')
+  return { title: t('landing.title'), description: t('landing.description') }
+}
 
 export default async function LandingPage() {
   const t = await getTranslations('landing')

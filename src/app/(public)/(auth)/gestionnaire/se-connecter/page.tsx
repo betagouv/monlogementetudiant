@@ -1,12 +1,18 @@
 import { fr } from '@codegouvfr/react-dsfr'
 import Button from '@codegouvfr/react-dsfr/Button'
 import clsx from 'clsx'
+import { Metadata } from 'next'
 import Image from 'next/image'
 import { getTranslations } from 'next-intl/server'
 import { z } from 'zod'
 import { MagicLinkSignInForm } from '~/components/magic-link-sign-in/magic-link-sign-in'
 import background from '~/images/background-owner.webp'
 import authStyles from '../../auth.module.css'
+
+export const generateMetadata = async (): Promise<Metadata> => {
+  const [tLogin, tMeta] = await Promise.all([getTranslations('login'), getTranslations('metadata')])
+  return { title: tLogin('ownerTitle'), description: tMeta('loginOwner.description') }
+}
 
 export default async function LoginPage() {
   const t = await getTranslations('login')
