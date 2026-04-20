@@ -200,7 +200,8 @@
     "simulatorButton": "Simulateur",
     "card": {
       "availability": "Disponibilité",
-      "noAvailability": "Aucune disponibilité"
+      "noAvailability": "Aucune disponibilité",
+      "unknownAvailability": "Disponibilité non renseignée"
     },
     "waitingList": "Dépôt de dossier possible",
     "unknownAvailability": "Disponibilités non renseignées",

@@ -199,7 +199,14 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
   }, [selectedTabId, validTabIds, setSelectedTabId])
 
   const badgeAvailability = (
-    <AvailabilityBadge nbAvailable={nbAvailable} noAvailabilityText={t('noAvailability')} availabilityText={t('availability')} as="span" />
+    <AvailabilityBadge
+      nbAvailable={nbAvailable}
+      noAvailabilityText={t('noAvailability')}
+      availabilityText={t('availability')}
+      unknownAvailabilityText={t('unknownAvailability')}
+      as="span"
+      context="owner"
+    />
   )
 
   return (
