@@ -172,7 +172,8 @@
       "dashboard": "Tableau de bord",
       "helpCenter": "Centre d'aide",
       "residences": "Résidences",
-      "candidates": "Candidatures"
+      "candidates": "Candidatures",
+      "users": "Utilisateurs"
     }
   },
   "accomodation": {
@@ -996,6 +997,70 @@
     }
   },
   "bailleur": {
+    "users": {
+      "pageTitle": "Gestion des utilisateurs",
+      "newUser": "Nouvel utilisateur",
+      "editUser": "Éditer l'utilisateur",
+      "addUser": "Ajouter un utilisateur",
+      "breadcrumbDashboard": "Tableau de bord",
+      "countOne": "{count} utilisateur",
+      "countOther": "{count} utilisateurs",
+      "searchPlaceholder": "Rechercher",
+      "noUsers": "Aucun utilisateur pour le moment.",
+      "loading": "Chargement...",
+      "notFound": "Utilisateur introuvable",
+      "edit": "Éditer",
+      "delete": "Supprimer",
+      "cancel": "Annuler",
+      "noPermissions": "Aucune permission",
+      "deleteModalTitle": "Confirmer la suppression",
+      "deleteConfirm": "Êtes-vous sûr de vouloir supprimer {firstname} {lastname} ? Cette action est irréversible.",
+      "submitCreate": "Créer l'utilisateur",
+      "submitUpdate": "Mettre à jour",
+      "saving": "Enregistrement...",
+      "form": {
+        "email": "Email",
+        "firstname": "Prénom",
+        "lastname": "Nom",
+        "bailleurRole": "Rôle",
+        "bailleurRoleAdminScope": "Rôle dans l'espace bailleur",
+        "permissions": "Permissions",
+        "administratorHint": "Un administrateur dispose automatiquement de toutes les permissions.",
+        "gestionnaireHint": "Sélectionnez les permissions à accorder au gestionnaire.",
+        "errors": {
+          "emailInvalid": "Email invalide",
+          "firstnameRequired": "Le prénom est requis",
+          "lastnameRequired": "Le nom est requis"
+        }
+      },
+      "role": {
+        "administrator": "Administrateur",
+        "gestionnaire": "Gestionnaire"
+      },
+      "permission": {
+        "manage_users": "Gestion des utilisateurs",
+        "manage_residences": "Gestion des résidences",
+        "manage_availability": "Disponibilités des résidences",
+        "manage_applications": "Dossiers étudiants",
+        "allAsAdministrator": "Toutes (administrateur)"
+      },
+      "toast": {
+        "created": "Utilisateur créé. Un email d'invitation a été envoyé.",
+        "createError": "Erreur lors de la création de l'utilisateur",
+        "updated": "Utilisateur mis à jour",
+        "updateError": "Erreur lors de la mise à jour",
+        "deleted": "Utilisateur supprimé",
+        "deleteError": "Erreur lors de la suppression"
+      },
+      "adminTable": {
+        "header": "Utilisateur",
+        "roleHeader": "Rôle",
+        "bailleurRoleHeader": "Rôle bailleur",
+        "permissionsHeader": "Permissions",
+        "actionsHeader": "Actions",
+        "emptyRole": "-"
+      }
+    },
     "header": {
       "title": "Espace gestionnaire"
     },

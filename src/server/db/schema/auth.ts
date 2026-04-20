@@ -1,4 +1,13 @@
-import { bigint, boolean, index, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
+import { bigint, boolean, index, integer, pgEnum, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
+
+export const bailleurRoleEnum = pgEnum('bailleur_role', ['administrator', 'gestionnaire'])
+export const bailleurPermissionEnum = pgEnum('bailleur_permission', [
+  'manage_users',
+  'manage_residences',
+  'manage_availability',
+  'manage_applications',
+])
 
 export const user = pgTable(
   'user',
@@ -17,6 +26,8 @@ export const user = pgTable(
     legacyUser: boolean('legacy_user').notNull().default(false),
     legacyId: integer('legacy_id'),
     ownerId: bigint('owner_id', { mode: 'number' }),
+    bailleurRole: bailleurRoleEnum('bailleur_role'),
+    bailleurPermissions: bailleurPermissionEnum('bailleur_permissions').array().notNull().default(sql`ARRAY[]::bailleur_permission[]`),
   },
   (t) => [index('user_owner_id_idx').on(t.ownerId)],
 )
