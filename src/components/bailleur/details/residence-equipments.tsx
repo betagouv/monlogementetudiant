@@ -11,6 +11,9 @@ import { TUpdateResidence } from '~/schemas/accommodations/update-residence'
 
 type Category = 'collective' | 'individual'
 
+const ENUM_FIELDS = ['bathroom', 'kitchen_type'] as const
+const ENUM_OPTIONS = ['private', 'shared'] as const
+
 const categories: { key: Category; label: string }[] = [
   { key: 'collective', label: 'Résidence' },
   { key: 'individual', label: 'Logement' },
@@ -37,7 +40,11 @@ export const ResidenceEquipments = () => {
                   activeCategory === category.key && toggleStyles.equipmentsToggleButtonActive,
                 )}
                 priority={activeCategory === category.key ? 'secondary' : 'tertiary'}
-                onClick={() => setActiveCategory(category.key)}
+                type="button"
+                onClick={(event) => {
+                  event.preventDefault()
+                  setActiveCategory(category.key)
+                }}
               >
                 {category.label}
               </Button>
@@ -46,40 +53,57 @@ export const ResidenceEquipments = () => {
         </div>
         {activeEquipments.map((equipment) => {
           const fieldName = equipment.key as keyof TUpdateResidence
+          const isEnum = ENUM_FIELDS.includes(fieldName as (typeof ENUM_FIELDS)[number])
+
+          if (isEnum) {
+            return (
+              <Controller
+                key={equipment.key}
+                name={fieldName}
+                control={control}
+                render={({ field }) => (
+                  <>
+                    {ENUM_OPTIONS.map((option) => {
+                      const label = typeof equipment.label === 'function' ? equipment.label(option) : equipment.label
+                      const isSelected = field.value === option
+
+                      return (
+                        <Tag
+                          key={`${equipment.key}-${option}`}
+                          pressed={isSelected}
+                          className="fr-mx-1v fr-mb-2v"
+                          nativeButtonProps={{
+                            type: 'button',
+                            onClick: () => field.onChange(isSelected ? undefined : option),
+                          }}
+                        >
+                          {label}
+                        </Tag>
+                      )
+                    })}
+                  </>
+                )}
+              />
+            )
+          }
 
           return (
             <Controller
               key={equipment.key}
               name={fieldName}
               control={control}
-              render={({ field }) => {
-                const value = field.value
-                const hasEquipment = Boolean(value)
-                const label = typeof equipment.label === 'function' ? equipment.label(value as string) : equipment.label
-
-                const handleClick = () => {
-                  // For boolean fields, toggle the value
-                  if (fieldName === 'bathroom' || fieldName === 'kitchen_type') {
-                    // For enum fields, cycle through values
-                    if (fieldName === 'bathroom') {
-                      const nextValue = value === 'private' ? 'shared' : value === 'shared' ? undefined : 'private'
-                      field.onChange(nextValue)
-                    } else if (fieldName === 'kitchen_type') {
-                      const nextValue = value === 'private' ? 'shared' : value === 'shared' ? undefined : 'private'
-                      field.onChange(nextValue)
-                    }
-                  } else {
-                    // For boolean fields, toggle
-                    field.onChange(!value)
-                  }
-                }
-
-                return (
-                  <Tag pressed={hasEquipment} className="fr-mx-1v fr-mb-2v" nativeButtonProps={{ type: 'button', onClick: handleClick }}>
-                    {label}
-                  </Tag>
-                )
-              }}
+              render={({ field }) => (
+                <Tag
+                  pressed={Boolean(field.value)}
+                  className="fr-mx-1v fr-mb-2v"
+                  nativeButtonProps={{
+                    type: 'button',
+                    onClick: () => field.onChange(!field.value),
+                  }}
+                >
+                  {typeof equipment.label === 'function' ? equipment.label(field.value as string) : equipment.label}
+                </Tag>
+              )}
             />
           )
         })}

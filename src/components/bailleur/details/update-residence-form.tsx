@@ -134,6 +134,7 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
       desk: accommodation.properties.desk || false,
       residence_manager: accommodation.properties.residence_manager || false,
       cooking_plates: accommodation.properties.cooking_plates || false,
+      wifi: accommodation.properties.wifi || false,
       images_urls: accommodation.properties.images_urls || [],
       published: accommodation.properties.published,
       scholarship_holders_priority: accommodation.properties.scholarship_holders_priority || false,

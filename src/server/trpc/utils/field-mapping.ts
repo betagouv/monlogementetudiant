@@ -117,6 +117,7 @@ export const UPDATE_FIELD_MAP: FieldMap = {
   desk: 'desk',
   residence_manager: 'residenceManager',
   cooking_plates: 'cookingPlates',
+  wifi: 'wifi',
 } as const
 
 // ---------------------------------------------------------------------------
