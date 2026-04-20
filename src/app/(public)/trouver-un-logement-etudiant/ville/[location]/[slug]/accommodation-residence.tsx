@@ -187,8 +187,8 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
             )}
           </div>
         </div>
-        <div className="fr-flex fr-justify-content-space-between fr-align-items-center fr-border fr-border-radius--8 fr-px-3w fr-py-2w">
-          <span className={clsx('ri-calculator-line', styles.simulatorIcon)} aria-hidden />
+        <div className="fr-flex fr-direction-column fr-direction-md-row fr-justify-content-space-between fr-align-items-md-center fr-flex-gap-2v fr-border fr-border-radius--8 fr-px-3w fr-py-2w">
+          <span className={clsx('ri-calculator-line fr-hidden fr-unhidden-sm', styles.simulatorIcon)} aria-hidden />
           <p className="fr-mb-0 fr-flex fr-direction-column">
             <span className="fr-text--bold">{t('simulator')}</span>
             <span className="fr-mb-0">{t('simulatorDescription')}</span>

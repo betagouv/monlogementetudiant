@@ -10,6 +10,7 @@
   border: 1px solid var(--border-default-grey);
   border-radius: 4px;
   overflow: hidden;
+  align-self: flex-start;
 }
 
 .equipmentsToggleButton {

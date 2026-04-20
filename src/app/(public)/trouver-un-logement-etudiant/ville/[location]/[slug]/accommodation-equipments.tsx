@@ -37,8 +37,8 @@ export const AccommodationEquipments = ({ accommodation }: AccommodationEquipmen
 
   return (
     <div className={styles.section}>
-      <div className={toggleStyles.equipmentsHeader}>
-        <h4>{t('equipments.title')}</h4>
+      <div className="fr-flex fr-direction-column fr-flex-gap-2v fr-direction-sm-row fr-justify-content-md-space-between fr-align-items-md-center fr-mb-4w">
+        <h4 className="fr-mb-0">{t('equipments.title')}</h4>
         <div className={toggleStyles.equipmentsToggle}>
           {categories
             .filter((c) => c.visible)
@@ -52,7 +52,10 @@ export const AccommodationEquipments = ({ accommodation }: AccommodationEquipmen
                 )}
                 priority={activeCategory === category.key ? 'secondary' : 'tertiary'}
                 type="button"
-                onClick={() => setActiveCategory(category.key)}
+                onClick={(event) => {
+                  event.preventDefault()
+                  setActiveCategory(category.key)
+                }}
               >
                 {category.label}
               </Button>
