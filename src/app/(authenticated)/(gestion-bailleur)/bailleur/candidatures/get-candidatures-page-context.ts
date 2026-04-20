@@ -1,5 +1,7 @@
 import { dehydrate } from '@tanstack/react-query'
+import { redirect } from 'next/navigation'
 import { cache } from 'react'
+import { getBailleurContext } from '~/server/bailleur/get-bailleur-context'
 import { getQueryClient, trpc } from '~/server/trpc/server'
 
 type SearchParams = {
@@ -7,9 +9,13 @@ type SearchParams = {
   status?: string
   recherche?: string
   tri?: string
+  ownerId?: string
 }
 
 export const getCandidaturesPageContext = cache(async (searchParams: SearchParams) => {
+  const ctx = await getBailleurContext(searchParams.ownerId)
+  if (!ctx.hasPermission('manage_applications')) redirect('/bailleur/tableau-de-bord')
+
   const queryClient = getQueryClient()
 
   const page = searchParams.page ? Number(searchParams.page) : 1
@@ -21,5 +27,6 @@ export const getCandidaturesPageContext = cache(async (searchParams: SearchParam
 
   return {
     dehydratedState: dehydrate(queryClient),
+    ctx,
   }
 })

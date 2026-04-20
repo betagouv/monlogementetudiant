@@ -30,7 +30,7 @@ export const authenticatedCaller = createCaller({
       updatedAt: new Date(),
     },
   },
-} as Parameters<typeof createCaller>[0])
+} as unknown as Parameters<typeof createCaller>[0])
 
 export const authenticatedCaller2 = createCaller({
   session: {
@@ -57,7 +57,7 @@ export const authenticatedCaller2 = createCaller({
       updatedAt: new Date(),
     },
   },
-} as Parameters<typeof createCaller>[0])
+} as unknown as Parameters<typeof createCaller>[0])
 
 export const ownerCaller = createCaller({
   session: {
@@ -68,6 +68,8 @@ export const ownerCaller = createCaller({
       firstname: 'Test',
       lastname: 'Owner',
       role: 'owner' as const,
+      bailleurRole: 'administrator' as const,
+      bailleurPermissions: [],
       emailVerified: true,
       image: null,
       createdAt: new Date(),
@@ -84,7 +86,7 @@ export const ownerCaller = createCaller({
       updatedAt: new Date(),
     },
   },
-} as Parameters<typeof createCaller>[0])
+} as unknown as Parameters<typeof createCaller>[0])
 
 export const ownerCaller2 = createCaller({
   session: {
@@ -95,6 +97,8 @@ export const ownerCaller2 = createCaller({
       firstname: 'Test',
       lastname: 'Owner 2',
       role: 'owner' as const,
+      bailleurRole: 'administrator' as const,
+      bailleurPermissions: [],
       emailVerified: true,
       image: null,
       createdAt: new Date(),
@@ -111,7 +115,48 @@ export const ownerCaller2 = createCaller({
       updatedAt: new Date(),
     },
   },
-} as Parameters<typeof createCaller>[0])
+} as unknown as Parameters<typeof createCaller>[0])
+
+export const gestionnaireCallerFactory = (
+  options: {
+    id?: string
+    email?: string
+    ownerSuffix?: string
+    permissions?: Array<'manage_users' | 'manage_residences' | 'manage_availability' | 'manage_applications'>
+  } = {},
+) => {
+  const id = options.id ?? 'test-gestionnaire-id'
+  const email = options.email ?? 'gestionnaire@test.com'
+  const suffix = options.ownerSuffix ?? 'g'
+  return createCaller({
+    session: {
+      user: {
+        id,
+        email,
+        name: 'Test Gestionnaire',
+        firstname: 'Test',
+        lastname: 'Gestionnaire',
+        role: 'owner' as const,
+        bailleurRole: 'gestionnaire' as const,
+        bailleurPermissions: options.permissions ?? [],
+        emailVerified: true,
+        image: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      session: {
+        id: `test-gestionnaire-session-${suffix}`,
+        userId: id,
+        token: `test-gestionnaire-token-${suffix}`,
+        expiresAt: new Date(Date.now() + 3600000),
+        ipAddress: null,
+        userAgent: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    },
+  } as unknown as Parameters<typeof createCaller>[0])
+}
 
 export const adminCaller = createCaller({
   session: {
@@ -122,6 +167,8 @@ export const adminCaller = createCaller({
       firstname: 'Test',
       lastname: 'Admin',
       role: 'admin' as const,
+      bailleurRole: null,
+      bailleurPermissions: [],
       emailVerified: true,
       image: null,
       createdAt: new Date(),
@@ -138,4 +185,4 @@ export const adminCaller = createCaller({
       updatedAt: new Date(),
     },
   },
-} as Parameters<typeof createCaller>[0])
+} as unknown as Parameters<typeof createCaller>[0])

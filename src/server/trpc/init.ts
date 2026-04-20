@@ -1,5 +1,6 @@
 import { initTRPC, TRPCError } from '@trpc/server'
 import superjson from 'superjson'
+import { type BailleurPermission, hasPermission } from '~/server/bailleur/permissions'
 import { getServerSession } from '~/services/better-auth'
 
 export const createTRPCContext = async () => {
@@ -41,3 +42,16 @@ export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
   }
   return next({ ctx })
 })
+
+export const bailleurProcedure = (permission: BailleurPermission) =>
+  ownerProcedure.use(async ({ ctx, next }) => {
+    const u = {
+      role: ctx.session.user.role,
+      bailleurRole: ctx.session.user.bailleurRole ?? null,
+      bailleurPermissions: ctx.session.user.bailleurPermissions ?? [],
+    }
+    if (!hasPermission(u, permission)) {
+      throw new TRPCError({ code: 'FORBIDDEN', message: `Permission denied: ${permission}` })
+    }
+    return next({ ctx })
+  })

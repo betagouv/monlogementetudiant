@@ -3,7 +3,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { useTRPC } from '~/server/trpc/client'
 
-export const useAdminUser = (id: string) => {
+export const useAdminUser = (id: string | null | undefined) => {
   const trpc = useTRPC()
-  return useQuery(trpc.admin.users.getById.queryOptions({ id }))
+  return useQuery({
+    ...trpc.admin.users.getById.queryOptions({ id: id ?? '' }),
+    enabled: !!id,
+  })
 }

@@ -2,6 +2,7 @@ import { TRPCError } from '@trpc/server'
 import { and, between, count, desc, eq, ilike, isNull, or, sql } from 'drizzle-orm'
 import { getTranslations } from 'next-intl/server'
 import { z } from 'zod'
+import { BAILLEUR_PERMISSIONS, BAILLEUR_ROLES } from '~/server/bailleur/permissions'
 import { db } from '~/server/db'
 import { accommodationAddresses } from '~/server/db/schema/accommodation-addresses'
 import { accommodations } from '~/server/db/schema/accommodations'
@@ -109,6 +110,8 @@ const usersRouter = createTRPCRouter({
         firstname: z.string().min(1),
         lastname: z.string().min(1),
         role: z.enum(['admin', 'owner', 'user']).default('user'),
+        bailleurRole: z.enum(BAILLEUR_ROLES).nullable().optional(),
+        bailleurPermissions: z.array(z.enum(BAILLEUR_PERMISSIONS)).optional(),
       }),
     )
     .mutation(async ({ input }) => {
@@ -118,6 +121,9 @@ const usersRouter = createTRPCRouter({
       }
 
       const id = crypto.randomUUID()
+      const bailleurRole = input.role === 'owner' ? (input.bailleurRole ?? 'administrator') : null
+      const bailleurPermissions = input.role === 'owner' && bailleurRole === 'gestionnaire' ? (input.bailleurPermissions ?? []) : []
+
       const [created] = await db
         .insert(user)
         .values({
@@ -127,6 +133,8 @@ const usersRouter = createTRPCRouter({
           firstname: input.firstname,
           lastname: input.lastname,
           role: input.role,
+          bailleurRole,
+          bailleurPermissions,
         })
         .returning()
 
@@ -141,6 +149,8 @@ const usersRouter = createTRPCRouter({
         firstname: z.string().min(1).optional(),
         lastname: z.string().min(1).optional(),
         role: z.enum(['admin', 'owner', 'user']).optional(),
+        bailleurRole: z.enum(BAILLEUR_ROLES).nullable().optional(),
+        bailleurPermissions: z.array(z.enum(BAILLEUR_PERMISSIONS)).optional(),
       }),
     )
     .mutation(async ({ input }) => {
@@ -155,6 +165,22 @@ const usersRouter = createTRPCRouter({
         const current = await db.query.user.findFirst({ where: eq(user.id, id) })
         if (current) {
           updateData.name = `${fields.firstname ?? current.firstname} ${fields.lastname ?? current.lastname}`
+        }
+      }
+
+      // Coherence: si on passe le role application a user/admin, on remet a null les champs bailleur
+      if (fields.role !== undefined && fields.role !== 'owner') {
+        updateData.bailleurRole = null
+        updateData.bailleurPermissions = []
+      } else {
+        if (fields.bailleurRole !== undefined) {
+          updateData.bailleurRole = fields.bailleurRole
+          if (fields.bailleurRole === 'administrator') {
+            updateData.bailleurPermissions = []
+          }
+        }
+        if (fields.bailleurPermissions !== undefined && fields.bailleurRole !== 'administrator') {
+          updateData.bailleurPermissions = fields.bailleurPermissions
         }
       }
 
@@ -310,7 +336,16 @@ const ownersRouter = createTRPCRouter({
       where: eq(owners.id, input.id),
       with: {
         users: {
-          columns: { id: true, email: true, name: true, firstname: true, lastname: true, role: true },
+          columns: {
+            id: true,
+            email: true,
+            name: true,
+            firstname: true,
+            lastname: true,
+            role: true,
+            bailleurRole: true,
+            bailleurPermissions: true,
+          },
         },
         adminOwnerLinks: {
           with: {
