@@ -1,12 +1,14 @@
 'use client'
 
 import Tabs from '@codegouvfr/react-dsfr/Tabs'
+import { useTranslations } from 'next-intl'
 import { parseAsString, useQueryState } from 'nuqs'
 import { useFieldArray, useFormContext } from 'react-hook-form'
 import { TCreateResidence, TYPOLOGIES, TYPOLOGY_TYPES } from '~/schemas/accommodations/create-residence'
 import { TypologyTabContent } from './typology-tab-content'
 
 export const CreateResidenceAccommodationList = () => {
+  const t = useTranslations('bailleur.residences.details.typologyTab')
   const {
     control,
     watch,
@@ -65,10 +67,30 @@ export const CreateResidenceAccommodationList = () => {
 
   const canAddMore = fields.length < TYPOLOGY_TYPES.length
 
+  const hasTypologyError = (index: number) => {
+    const typologyErrors = errors.typologies
+    return typologyErrors?.[index] && Object.keys(typologyErrors[index]).length > 0
+  }
+
+  const hasAnyTypologyError = (() => {
+    const typologyErrors = errors.typologies
+    if (!typologyErrors) return false
+    return fields.some((_, index) => typologyErrors[index] && Object.keys(typologyErrors[index]).length > 0)
+  })()
+
+  const tabLabel = (label: string, index: number) =>
+    hasTypologyError(index) ? (
+      <span>
+        {label} <span style={{ color: 'var(--text-default-error)', fontWeight: 'bold' }}>●</span>
+      </span>
+    ) : (
+      label
+    )
+
   const tabs = [
     ...sortedFieldsWithIndex.map(({ originalIndex, type }) => ({
       tabId: `tab-${originalIndex}`,
-      label: type || 'Nouveau',
+      label: tabLabel(type || 'Nouveau', originalIndex),
     })),
     ...(canAddMore ? [{ tabId: 'tab-add', label: 'Ajouter' }] : []),
   ]
@@ -88,6 +110,7 @@ export const CreateResidenceAccommodationList = () => {
 
         {errors.typologies?.root && <p className="fr-error-text">{errors.typologies.root.message}</p>}
         {errors.typologies?.message && <p className="fr-error-text">{errors.typologies.message}</p>}
+        {hasAnyTypologyError && <p className="fr-error-text fr-mb-2w">{t('tabsHaveErrors')}</p>}
 
         <div>
           <Tabs selectedTabId={selectedTabId} onTabChange={handleTabChange} tabs={tabs}>
