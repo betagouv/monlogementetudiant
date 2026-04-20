@@ -1007,7 +1007,8 @@
           "surface": "Surface (m²)",
           "totalHousing": "Nombre total de logements",
           "availableHousing": "Logements disponibles",
-          "deleteType": "Supprimer ce type de logement"
+          "deleteType": "Supprimer ce type de logement",
+          "tabsHaveErrors": "Certains onglets contiennent des erreurs, veuillez les compléter."
         }
       }
     }
