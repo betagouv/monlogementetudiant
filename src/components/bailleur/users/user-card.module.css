@@ -1,0 +1,39 @@
+.card {
+  background: white;
+  border: 1px solid var(--border-default-grey);
+  border-radius: 0.25rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.name {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin: 0.25rem 0 0 0;
+}
+
+.email {
+  font-size: 0.75rem;
+  color: var(--text-mention-grey);
+  margin: 0;
+}
+
+.permissions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}

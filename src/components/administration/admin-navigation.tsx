@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import styles from '~/app/(authenticated)/administration/administration.module.css'
 import { useAdminStats } from '~/hooks/use-admin-stats'
+import { useAdminUser } from '~/hooks/use-admin-user'
 
 type NavItem = {
   label: string
@@ -54,9 +55,24 @@ const navSections: NavSection[] = [
   },
 ]
 
+const USER_DETAIL_PREFIX = '/administration/utilisateurs/'
+const STUDENTS_HREF = '/administration/utilisateurs'
+const OWNER_ACCOUNTS_HREF = '/administration/comptes-gestionnaires'
+
+const extractUserIdFromUserDetail = (pathname: string): string | null => {
+  if (!pathname.startsWith(USER_DETAIL_PREFIX)) return null
+  const rest = pathname.slice(USER_DETAIL_PREFIX.length)
+  if (!rest || rest === 'nouveau' || rest.includes('/')) return null
+  return rest
+}
+
 export const AdminNavigation = () => {
   const pathname = usePathname()
   const { data: stats } = useAdminStats()
+
+  const viewedUserId = extractUserIdFromUserDetail(pathname)
+  const { data: viewedUser } = useAdminUser(viewedUserId)
+  const viewedRoleIsBailleur = viewedUser?.role === 'owner' || viewedUser?.role === 'admin'
 
   const getBadgeValue = (key?: string) => {
     if (!stats || !key) return null
@@ -66,6 +82,16 @@ export const AdminNavigation = () => {
     return null
   }
 
+  const isItemActive = (href: string) => {
+    // Cas particulier: une URL /administration/utilisateurs/[id] active "Comptes gestionnaires"
+    // si le user vu a le role owner/admin, sinon "Etudiants".
+    if (viewedUserId && viewedUser) {
+      if (href === STUDENTS_HREF) return !viewedRoleIsBailleur
+      if (href === OWNER_ACCOUNTS_HREF) return viewedRoleIsBailleur
+    }
+    return pathname === href || pathname.startsWith(`${href}/`)
+  }
+
   return (
     <aside className={styles.sidebar}>
       <nav className={styles.sidebarNav}>
@@ -73,7 +99,7 @@ export const AdminNavigation = () => {
           <div key={section.title}>
             <div className={styles.navSectionTitle}>{section.title}</div>
             {section.items.map((item) => {
-              const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+              const isActive = isItemActive(item.href)
               const badgeValue = getBadgeValue(item.badgeKey)
               return (
                 <Link

@@ -79,6 +79,8 @@ export const auth = betterAuth({
       lastname: { type: 'string', defaultValue: '', input: true },
       role: { type: 'string', defaultValue: 'user', input: false },
       legacyUser: { type: 'boolean', defaultValue: false, input: false },
+      bailleurRole: { type: 'string', defaultValue: null, input: false },
+      bailleurPermissions: { type: 'string[]', defaultValue: [], input: false },
     },
   },
 })
@@ -118,6 +120,8 @@ export const getServerSession = cache(async () => {
       ...results.user,
       owner: usr?.owner ?? null,
       adminOwners,
+      bailleurRole: usr?.bailleurRole ?? null,
+      bailleurPermissions: usr?.bailleurPermissions ?? [],
     },
   }
 })

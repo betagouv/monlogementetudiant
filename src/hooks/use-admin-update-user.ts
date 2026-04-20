@@ -12,8 +12,15 @@ export const useAdminUpdateUser = () => {
   const t = useTranslations('toast')
 
   return useMutation({
-    mutationFn: (data: { id: string; email?: string; firstname?: string; lastname?: string; role?: 'admin' | 'owner' | 'user' }) =>
-      trpcClient.admin.users.update.mutate(data),
+    mutationFn: (data: {
+      id: string
+      email?: string
+      firstname?: string
+      lastname?: string
+      role?: 'admin' | 'owner' | 'user'
+      bailleurRole?: 'administrator' | 'gestionnaire' | null
+      bailleurPermissions?: Array<'manage_users' | 'manage_residences' | 'manage_availability' | 'manage_applications'>
+    }) => trpcClient.admin.users.update.mutate(data),
     onSuccess: async (updated) => {
       await queryClient.invalidateQueries({ queryKey: trpc.admin.users.list.queryKey() })
       await queryClient.invalidateQueries({ queryKey: trpc.admin.users.getById.queryKey({ id: updated.id }) })

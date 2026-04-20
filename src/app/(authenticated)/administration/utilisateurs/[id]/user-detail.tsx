@@ -58,6 +58,10 @@ export function UserDetail({ id }: { id: string }) {
                 firstname: userData.firstname,
                 lastname: userData.lastname,
                 role: userData.role as 'admin' | 'owner' | 'user',
+                bailleurRole: userData.bailleurRole as 'administrator' | 'gestionnaire' | null,
+                bailleurPermissions: (userData.bailleurPermissions ?? []) as Array<
+                  'manage_users' | 'manage_residences' | 'manage_availability' | 'manage_applications'
+                >,
               }}
               onSubmit={handleSubmit}
               isPending={updateUser.isPending}
