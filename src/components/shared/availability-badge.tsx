@@ -5,12 +5,29 @@ interface AvailabilityBadgeProps {
   nbAvailable: number | null
   noAvailabilityText: string
   availabilityText: string
+  unknownAvailabilityText?: string
   className?: string
   as?: 'span' | 'p'
+  context?: 'owner' | 'public'
 }
 
-export function AvailabilityBadge({ nbAvailable, noAvailabilityText, availabilityText, className, as }: AvailabilityBadgeProps) {
+export function AvailabilityBadge({
+  nbAvailable,
+  noAvailabilityText,
+  availabilityText,
+  unknownAvailabilityText,
+  className,
+  as,
+  context = 'public',
+}: AvailabilityBadgeProps) {
   if (nbAvailable === null || nbAvailable === undefined) {
+    if (context === 'owner') {
+      return (
+        <Badge severity="warning" noIcon className={className} as={as}>
+          <span className="fr-text--uppercase fr-mb-0">{unknownAvailabilityText}</span>
+        </Badge>
+      )
+    }
     return null
   }
 

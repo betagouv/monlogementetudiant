@@ -20,14 +20,14 @@ export const UpdateResidenceList: FC<UpdateResidenceListProps> = ({ accommodatio
   const { mutateAsync: updateAccommodation, isPending } = useUpdateAccommodation(accommodation.properties.slug)
   const form = useForm<TUpdateResidenceList>({
     defaultValues: {
-      nb_t1_available: accommodation.properties.nb_t1_available ?? 0,
-      nb_t1_bis_available: accommodation.properties.nb_t1_bis_available ?? 0,
-      nb_t2_available: accommodation.properties.nb_t2_available ?? 0,
-      nb_t3_available: accommodation.properties.nb_t3_available ?? 0,
-      nb_t4_available: accommodation.properties.nb_t4_available ?? 0,
-      nb_t5_available: accommodation.properties.nb_t5_available ?? 0,
-      nb_t6_available: accommodation.properties.nb_t6_available ?? 0,
-      nb_t7_more_available: accommodation.properties.nb_t7_more_available ?? 0,
+      nb_t1_available: accommodation.properties.nb_t1_available,
+      nb_t1_bis_available: accommodation.properties.nb_t1_bis_available,
+      nb_t2_available: accommodation.properties.nb_t2_available,
+      nb_t3_available: accommodation.properties.nb_t3_available,
+      nb_t4_available: accommodation.properties.nb_t4_available,
+      nb_t5_available: accommodation.properties.nb_t5_available,
+      nb_t6_available: accommodation.properties.nb_t6_available,
+      nb_t7_more_available: accommodation.properties.nb_t7_more_available,
     },
     resolver: zodResolver(
       createUpdateResidenceListSchema({

@@ -102,7 +102,13 @@ export const ResidenceList: FC = () => {
             })
 
             const badgeAvailability = (
-              <AvailabilityBadge nbAvailable={nbAvailable} noAvailabilityText={t('noAvailability')} availabilityText={t('availability')} />
+              <AvailabilityBadge
+                nbAvailable={nbAvailable}
+                noAvailabilityText={t('noAvailability')}
+                availabilityText={t('availability')}
+                unknownAvailabilityText={t('unknownAvailability')}
+                context="owner"
+              />
             )
             return (
               <div
@@ -115,9 +121,11 @@ export const ResidenceList: FC = () => {
                 <ResidenceCard key={index} accomodation={accommodation} href={`/bailleur/residences/${accommodation.properties.slug}`} />
                 <UpdateResidenceList accommodation={accommodation}>
                   <div className="fr-flex fr-justify-content-space-between">
-                    <span className="fr-text-mention--grey fr-text--xl fr-mb-0">
-                      {accommodation.properties.nb_total_apartments} logement{sPluriel(accommodation.properties.nb_total_apartments ?? 0)}
-                    </span>
+                    {!!accommodation.properties.nb_total_apartments && (
+                      <span className="fr-text-mention--grey fr-text--xl fr-mb-0">
+                        {accommodation.properties.nb_total_apartments} logement{sPluriel(accommodation.properties.nb_total_apartments ?? 0)}
+                      </span>
+                    )}
                     {badgeAvailability}
                   </div>
                   <hr className="fr-mt-3w fr-mb-0" />
