@@ -1,8 +1,14 @@
 import { fr } from '@codegouvfr/react-dsfr'
 import { Breadcrumb } from '@codegouvfr/react-dsfr/Breadcrumb'
+import { Metadata } from 'next'
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 import styles from '../pages.module.css'
+
+export const generateMetadata = async (): Promise<Metadata> => {
+  const [tLegal, tMeta] = await Promise.all([getTranslations('legalMentions'), getTranslations('metadata')])
+  return { title: tLegal('title'), description: tMeta('legalMentions.description') }
+}
 
 export default async function MentionsLegalesPage() {
   const [t, breadcrumbT] = await Promise.all([getTranslations('legalMentions'), getTranslations('breadcrumbs')])

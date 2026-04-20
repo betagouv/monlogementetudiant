@@ -2,8 +2,14 @@ import { fr } from '@codegouvfr/react-dsfr'
 import { Breadcrumb } from '@codegouvfr/react-dsfr/Breadcrumb'
 import { Table } from '@codegouvfr/react-dsfr/Table'
 import clsx from 'clsx'
+import { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 import styles from './budget.module.css'
+
+export const generateMetadata = async (): Promise<Metadata> => {
+  const [tBudget, tMeta] = await Promise.all([getTranslations('budget'), getTranslations('metadata')])
+  return { title: tBudget('title'), description: tMeta('budget.description') }
+}
 
 export default async function BudgetPage() {
   const [t, breadcrumbT] = await Promise.all([getTranslations('budget'), getTranslations('breadcrumbs')])

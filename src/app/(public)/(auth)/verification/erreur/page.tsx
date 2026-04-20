@@ -4,9 +4,10 @@ import { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations('verification.error')
+  const [tVerif, tMeta] = await Promise.all([getTranslations('verification.error'), getTranslations('metadata')])
   return {
-    title: t('title'),
+    title: tVerif('title'),
+    description: tMeta('verificationError.description'),
   }
 }
 

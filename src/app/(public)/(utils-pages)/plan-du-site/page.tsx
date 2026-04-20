@@ -1,8 +1,14 @@
 import { fr } from '@codegouvfr/react-dsfr'
 import { Breadcrumb } from '@codegouvfr/react-dsfr/Breadcrumb'
 import { Summary } from '@codegouvfr/react-dsfr/Summary'
+import { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 import styles from '../pages.module.css'
+
+export const generateMetadata = async (): Promise<Metadata> => {
+  const [tSiteMap, tMeta] = await Promise.all([getTranslations('siteMap'), getTranslations('metadata')])
+  return { title: tSiteMap('title'), description: tMeta('siteMap.description') }
+}
 
 export default async function SiteMap() {
   const [t, breadcrumbT] = await Promise.all([getTranslations('siteMap'), getTranslations('breadcrumbs')])
