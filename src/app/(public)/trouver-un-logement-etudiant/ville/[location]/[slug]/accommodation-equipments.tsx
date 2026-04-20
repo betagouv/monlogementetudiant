@@ -51,6 +51,7 @@ export const AccommodationEquipments = ({ accommodation }: AccommodationEquipmen
                   activeCategory === category.key && toggleStyles.equipmentsToggleButtonActive,
                 )}
                 priority={activeCategory === category.key ? 'secondary' : 'tertiary'}
+                type="button"
                 onClick={() => setActiveCategory(category.key)}
               >
                 {category.label}

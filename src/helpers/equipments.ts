@@ -14,13 +14,13 @@ export const EQUIPMENTS = [
   {
     icon: 'ri-bubble-chart-line',
     key: 'bathroom',
-    label: (value: string) => (value === 'private' ? 'Salle de bain privée' : 'Salle de bain partagée'),
+    label: (value: string) => (value === 'shared' ? 'Salle de bain partagée' : 'Salle de bain privée'),
     category: 'individual',
   },
   {
     icon: 'ri-restaurant-line',
     key: 'kitchen_type',
-    label: (value: string) => (value === 'private' ? 'Cuisine privée' : 'Cuisine partagée'),
+    label: (value: string) => (value === 'shared' ? 'Cuisine partagée' : 'Cuisine privée'),
     category: 'individual',
   },
   {

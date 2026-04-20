@@ -41,7 +41,10 @@ export const CreateResidenceEquipments = () => {
                 )}
                 priority={activeCategory === category.key ? 'secondary' : 'tertiary'}
                 type="button"
-                onClick={() => setActiveCategory(category.key)}
+                onClick={(event) => {
+                  event.preventDefault()
+                  setActiveCategory(category.key)
+                }}
               >
                 {category.label}
               </Button>

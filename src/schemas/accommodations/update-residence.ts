@@ -86,6 +86,7 @@ export const ZUpdateResidence = z.object({
   desk: z.boolean().optional(),
   residence_manager: z.boolean().optional(),
   cooking_plates: z.boolean().optional(),
+  wifi: z.boolean().optional(),
   images_urls: z.array(z.string().transform((url) => encodeURI(url))).optional(),
 
   published: z.boolean().optional(),
