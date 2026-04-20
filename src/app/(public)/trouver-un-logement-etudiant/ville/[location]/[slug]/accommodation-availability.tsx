@@ -14,8 +14,8 @@ const AccommodationMaximizeChance = async () => {
   const t = await getTranslations('accomodation.availability')
 
   return (
-    <div className={clsx('fr-py-4w fr-px-5w', classes.cardContainer, classes.maximiseChancesContainer)}>
-      <div>
+    <div className={clsx('fr-py-2w fr-px-3w fr-py-md-4w fr-px-md-5w', classes.cardContainer, classes.maximiseChancesContainer)}>
+      <div className="fr-hidden fr-unhidden-sm">
         <SelfTraining fontSize="large" width="62px" height="62px" className="fr-artwork--blue-ecume" />
       </div>
       <div className={classes.cardContent}>
@@ -45,7 +45,7 @@ export const AccommodationAvailability = async ({ nbAvailable, acceptWaitingList
     return (
       <div className={styles.section}>
         <div className={classes.mainContainer}>
-          <div className={clsx('fr-py-4w fr-px-5w', classes.cardContainer)}>
+          <div className={clsx('fr-py-2w fr-px-3w fr-py-md-4w fr-px-md-5w', classes.cardContainer)}>
             <div>
               <Error fontSize="large" width="62px" height="62px" />
             </div>

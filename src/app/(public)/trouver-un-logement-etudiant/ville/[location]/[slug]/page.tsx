@@ -105,25 +105,27 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
   return (
     <HydrationBoundary state={dehydratedState}>
       <JsonLd data={[buildBreadcrumbSchema(breadcrumbItems), buildLodgingSchema(lodgingData)]} />
-      <div className="fr-container">
-        <Breadcrumb
-          currentPageLabel={breadCrumbTitle}
-          homeLinkProps={{ href: '/' }}
-          segments={[
-            {
-              label: commonT('breadcrumbs.findAccomodationWithLocation', { locationFormatted: formatCityWithA(city) }),
-              linkProps: {
-                href: citySearchUrl,
+      <div className="fr-container-md">
+        <div className="fr-px-2w fr-px-md-0">
+          <Breadcrumb
+            currentPageLabel={breadCrumbTitle}
+            homeLinkProps={{ href: '/' }}
+            segments={[
+              {
+                label: commonT('breadcrumbs.findAccomodationWithLocation', { locationFormatted: formatCityWithA(city) }),
+                linkProps: {
+                  href: citySearchUrl,
+                },
               },
-            },
-          ]}
-          classes={{ root: 'fr-mt-0 fr-mb-2w fr-pt-4w' }}
-        />
-        <div className="fr-flex fr-justify-content-space-between fr-align-items-center">
-          <div className="fr-col-md-10">
-            <h1 className="fr-h2">{t('title', { cityFormatted, title: name })}</h1>
+            ]}
+            classes={{ root: 'fr-mt-0 fr-mb-2w fr-pt-4w' }}
+          />
+          <div className="fr-flex fr-direction-column fr-direction-md-row fr-justify-content-space-between fr-align-items-md-start fr-mb-2w fr-mb-md-0">
+            <div className="fr-col-md-10">
+              <h1 className="fr-h2">{t('title', { cityFormatted, title: name })}</h1>
+            </div>
+            <SaveAccommodationFavoriteButton slug={slug} withLabel user={user} />
           </div>
-          <SaveAccommodationFavoriteButton slug={slug} withLabel user={user} />
         </div>
         <div className={styles.container}>
           <div className={styles.infosContainer}>
@@ -152,7 +154,7 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
             <AccommodationDescription title={name} description={description} />
           </div>
           <div className="fr-hidden-sm">{<AccommodationMap latitude={latitude} longitude={longitude} />}</div>
-          <div className={styles.stickyColumn}>
+          <div className={clsx('fr-mt-2w fr-mt-md-0 fr-px-2w fr-px-md-0', styles.stickyColumn)}>
             <OwnerDetails
               acceptWaitingList={accept_waiting_list}
               owner={owner}
