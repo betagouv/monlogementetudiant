@@ -400,11 +400,15 @@ cli/
 drizzle/                        # Migrations SQL Drizzle
 public/
   widget/
-    embed.js                    # Script d'embed pour les partenaires
-    test.html                   # Page de test du widget
+    embed.js                          # Script d'embed — widget logements
+    embed-simulateur-aides.js         # Script d'embed — widget simulateur d'aides
+    embed-calculatrice.js             # Script d'embed — widget calculatrice de budget
+    test.html                         # Page de test — widget logements
+    test-simulateur-aides.html        # Page de test — widget simulateur d'aides
+    test-calculatrice.html            # Page de test — widget calculatrice de budget
 ```
 
-## Widget iframe
+## Widget iframe — Logements
 
 Widget embarquable qui affiche une grille de résidences étudiantes sur des sites partenaires.
 
@@ -481,6 +485,62 @@ Ouvrir le fichier test en `file://` (pas via localhost) pour simuler un vrai con
 - Le body de l'iframe a `overflow: hidden` — pas de double scrollbar, le scroll est géré par la page parente
 - Les cards ouvrent la page détail sur le site principal dans un nouvel onglet
 - Les headers `X-Frame-Options` et `Content-Security-Policy: frame-ancestors *` sont configurés dans `next.config.mjs` pour autoriser l'embedding
+
+## Widget iframe — Simulateur d'aides
+
+Widget embarquable qui affiche le simulateur d'aides au logement (éligibilité CAF, APL, etc.) sur des sites partenaires.
+
+### Intégration
+
+```html
+<script src="https://monlogementetudiant.beta.gouv.fr/widget/embed-simulateur-aides.js"></script>
+```
+
+Le simulateur gère son propre state interne (navigation par étapes), aucun paramètre de configuration n'est requis.
+
+### Paramètres
+
+| Attribut | Description | Exemple |
+|---|---|---|
+| `data-target` | ID de l'élément où déposer l'iframe | `data-target="mon-widget"` |
+
+### Exemple
+
+```html
+<!-- Insertion dans un conteneur spécifique -->
+<div id="mon-widget"></div>
+<script src="https://monlogementetudiant.beta.gouv.fr/widget/embed-simulateur-aides.js" data-target="mon-widget"></script>
+```
+
+## Widget iframe — Calculatrice de budget
+
+Widget embarquable qui affiche la calculatrice de budget étudiant (revenus, dépenses, résumé mensuel) sur des sites partenaires.
+
+### Intégration
+
+```html
+<script src="https://monlogementetudiant.beta.gouv.fr/widget/embed-calculatrice.js"></script>
+```
+
+La calculatrice gère son propre state interne, aucun paramètre de configuration n'est requis.
+
+### Paramètres
+
+| Attribut | Description | Exemple |
+|---|---|---|
+| `data-target` | ID de l'élément où déposer l'iframe | `data-target="mon-widget"` |
+
+### Exemple
+
+```html
+<!-- Insertion dans un conteneur spécifique -->
+<div id="mon-widget"></div>
+<script src="https://monlogementetudiant.beta.gouv.fr/widget/embed-calculatrice.js" data-target="mon-widget"></script>
+```
+
+### Test local (simulateur d'aides et calculatrice)
+
+Même procédure que pour le widget logements : lancer `pnpm dev` puis ouvrir `public/widget/test-simulateur-aides.html` ou `public/widget/test-calculatrice.html` en `file://`.
 
 ## Maintainers
 
