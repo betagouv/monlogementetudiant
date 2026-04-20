@@ -1,11 +1,14 @@
 import { TRPCError } from '@trpc/server'
-import { and, asc, desc, eq, gt, ilike, inArray, or, sql } from 'drizzle-orm'
+import { and, asc, count, desc, eq, gt, ilike, inArray, ne, or, sql } from 'drizzle-orm'
 import { SignJWT } from 'jose'
+import { headers } from 'next/headers'
 import { z } from 'zod'
 import { transformTypologiesToFlat, ZCreateResidence } from '~/schemas/accommodations/create-residence'
 import { ZUpdateResidence } from '~/schemas/accommodations/update-residence'
 import { ZUpdateResidenceList } from '~/schemas/accommodations/update-residence-list'
+import { zCreateBailleurUser, zUpdateBailleurUser } from '~/schemas/bailleur-users/bailleur-user-form'
 import { getOwnerForUser } from '~/server/bailleur/get-owner-for-user'
+import { ADMIN_ONLY_PERMISSIONS, canGrantAdministratorRights } from '~/server/bailleur/permissions'
 import { db } from '~/server/db'
 import { accommodationAddresses } from '~/server/db/schema/accommodation-addresses'
 import { accommodations } from '~/server/db/schema/accommodations'
@@ -21,8 +24,9 @@ import { AVAILABILITY_FIELD_MAP, mapFields, UPDATE_FIELD_MAP } from '~/server/tr
 import { resolveCityId } from '~/server/trpc/utils/resolve-city'
 import { getJwtSecret } from '~/server/utils/jwt-secret'
 import { findAvailableSlug } from '~/server/utils/slug'
+import { auth } from '~/services/better-auth'
 import { normalizeAccommodationName } from '~/utils/normalize-accommodation-name'
-import { createTRPCRouter, ownerProcedure } from '../init'
+import { bailleurProcedure, createTRPCRouter, ownerProcedure } from '../init'
 import { mapToGeoJsonFeature, priceMaxComputed } from './accommodations'
 
 async function verifyOwnerAccess(userId: string, accommodationSlug: string) {
@@ -271,7 +275,7 @@ export const bailleurRouter = createTRPCRouter({
         },
       }
     }),
-  create: ownerProcedure
+  create: bailleurProcedure('manage_residences')
     .input(
       ZCreateResidence.omit({ images_files: true }).extend({
         name: z.string().min(1, 'Le nom de la résidence est requis'),
@@ -410,121 +414,125 @@ export const bailleurRouter = createTRPCRouter({
       return { slug: created.slug }
     }),
 
-  update: ownerProcedure.input(z.object({ slug: z.string() }).merge(ZUpdateResidence)).mutation(async ({ ctx, input }) => {
-    const { slug, addresses: inputAddresses, ...fields } = input
-    const { owner, accommodationId } = await verifyOwnership(slug, ctx.session.user.id)
+  update: bailleurProcedure('manage_residences')
+    .input(z.object({ slug: z.string() }).merge(ZUpdateResidence))
+    .mutation(async ({ ctx, input }) => {
+      const { slug, addresses: inputAddresses, ...fields } = input
+      const { owner, accommodationId } = await verifyOwnership(slug, ctx.session.user.id)
 
-    // Snapshot current state for diff
-    const [snapshot] = await db.select().from(accommodations).where(eq(accommodations.slug, slug)).limit(1)
+      // Snapshot current state for diff
+      const [snapshot] = await db.select().from(accommodations).where(eq(accommodations.slug, slug)).limit(1)
 
-    const camelFields = mapFields(fields, UPDATE_FIELD_MAP)
-    if (typeof camelFields.name === 'string') {
-      camelFields.name = normalizeAccommodationName(camelFields.name)
-    }
-    const userProvidedKeys = new Set(Object.keys(camelFields))
-
-    // Recompute derived fields
-    const derived = computeDerivedFields(fields)
-    camelFields.nbTotalApartments = derived.nbTotalApartments
-    camelFields.priceMin = derived.priceMin
-    camelFields.imagesCount = derived.imagesCount
-
-    // Handle addresses update
-    if (inputAddresses !== undefined) {
-      // Geocode in parallel, then delete old + batch insert
-      const resolved = await Promise.all(
-        inputAddresses.map(async (addr, i) => {
-          const [coords, cityId] = await Promise.all([
-            geocodeAddress(addr.address, addr.city, addr.postal_code),
-            resolveCityId(addr.postal_code, addr.city),
-          ])
-          const values: typeof accommodationAddresses.$inferInsert = {
-            accommodationId,
-            isMain: i === 0,
-            address: addr.address,
-            postalCode: addr.postal_code,
-            cityId,
-          }
-          if (coords) {
-            ;(values as Record<string, unknown>).geom = sql`ST_SetSRID(ST_MakePoint(${coords.lon}, ${coords.lat}), 4326)`
-          }
-          return values
-        }),
-      )
-      await db.delete(accommodationAddresses).where(eq(accommodationAddresses.accommodationId, accommodationId))
-      await db.insert(accommodationAddresses).values(resolved)
-    }
-
-    camelFields.updatedAt = new Date()
-
-    const [updated] = await db
-      .update(accommodations)
-      .set(camelFields)
-      .where(eq(accommodations.slug, slug))
-      .returning({ slug: accommodations.slug, name: accommodations.name })
-
-    if (snapshot) {
-      const diff = computeDiff(snapshot as Record<string, unknown>, camelFields, userProvidedKeys)
-      notifyAccommodationUpdated(updated.name, owner?.name ?? '-', updated.slug, ctx.session.user.name, diff)
-      for (const { action, diff: actionDiff } of classifyActions(diff)) {
-        await logActivity({
-          userId: ctx.session.user.id,
-          userName: ctx.session.user.name,
-          action,
-          entityType: 'accommodation',
-          entityName: updated.name,
-          ownerId: owner?.id,
-          ownerName: owner?.name,
-          metadata: { slug: updated.slug, diff: actionDiff },
-        })
+      const camelFields = mapFields(fields, UPDATE_FIELD_MAP)
+      if (typeof camelFields.name === 'string') {
+        camelFields.name = normalizeAccommodationName(camelFields.name)
       }
-    }
+      const userProvidedKeys = new Set(Object.keys(camelFields))
 
-    return updated
-  }),
+      // Recompute derived fields
+      const derived = computeDerivedFields(fields)
+      camelFields.nbTotalApartments = derived.nbTotalApartments
+      camelFields.priceMin = derived.priceMin
+      camelFields.imagesCount = derived.imagesCount
 
-  updateAvailability: ownerProcedure.input(z.object({ slug: z.string() }).merge(ZUpdateResidenceList)).mutation(async ({ ctx, input }) => {
-    const { slug, ...availFields } = input
-    const { owner } = await verifyOwnership(slug, ctx.session.user.id)
-
-    // Snapshot current state for diff
-    const [snapshot] = await db.select().from(accommodations).where(eq(accommodations.slug, slug)).limit(1)
-
-    const camelFields = mapFields(availFields, AVAILABILITY_FIELD_MAP)
-
-    const setFields = {
-      ...camelFields,
-      updatedAt: new Date(),
-    }
-
-    const [updated] = await db
-      .update(accommodations)
-      .set(setFields)
-      .where(eq(accommodations.slug, slug))
-      .returning({ slug: accommodations.slug, name: accommodations.name })
-
-    if (snapshot) {
-      const userKeys = new Set(Object.keys(camelFields))
-      const diff = computeDiff(snapshot as Record<string, unknown>, setFields, userKeys)
-      notifyAccommodationUpdated(updated.name, owner?.name ?? '-', updated.slug, ctx.session.user.name, diff)
-      for (const { action, diff: actionDiff } of classifyActions(diff)) {
-        await logActivity({
-          userId: ctx.session.user.id,
-          userName: ctx.session.user.name,
-          action,
-          entityType: 'accommodation',
-          entityName: updated.name,
-          ownerId: owner?.id,
-          ownerName: owner?.name,
-          metadata: { slug: updated.slug, diff: actionDiff },
-        })
+      // Handle addresses update
+      if (inputAddresses !== undefined) {
+        // Geocode in parallel, then delete old + batch insert
+        const resolved = await Promise.all(
+          inputAddresses.map(async (addr, i) => {
+            const [coords, cityId] = await Promise.all([
+              geocodeAddress(addr.address, addr.city, addr.postal_code),
+              resolveCityId(addr.postal_code, addr.city),
+            ])
+            const values: typeof accommodationAddresses.$inferInsert = {
+              accommodationId,
+              isMain: i === 0,
+              address: addr.address,
+              postalCode: addr.postal_code,
+              cityId,
+            }
+            if (coords) {
+              ;(values as Record<string, unknown>).geom = sql`ST_SetSRID(ST_MakePoint(${coords.lon}, ${coords.lat}), 4326)`
+            }
+            return values
+          }),
+        )
+        await db.delete(accommodationAddresses).where(eq(accommodationAddresses.accommodationId, accommodationId))
+        await db.insert(accommodationAddresses).values(resolved)
       }
-    }
 
-    return updated
-  }),
+      camelFields.updatedAt = new Date()
 
-  listCandidatures: ownerProcedure
+      const [updated] = await db
+        .update(accommodations)
+        .set(camelFields)
+        .where(eq(accommodations.slug, slug))
+        .returning({ slug: accommodations.slug, name: accommodations.name })
+
+      if (snapshot) {
+        const diff = computeDiff(snapshot as Record<string, unknown>, camelFields, userProvidedKeys)
+        notifyAccommodationUpdated(updated.name, owner?.name ?? '-', updated.slug, ctx.session.user.name, diff)
+        for (const { action, diff: actionDiff } of classifyActions(diff)) {
+          await logActivity({
+            userId: ctx.session.user.id,
+            userName: ctx.session.user.name,
+            action,
+            entityType: 'accommodation',
+            entityName: updated.name,
+            ownerId: owner?.id,
+            ownerName: owner?.name,
+            metadata: { slug: updated.slug, diff: actionDiff },
+          })
+        }
+      }
+
+      return updated
+    }),
+
+  updateAvailability: bailleurProcedure('manage_availability')
+    .input(z.object({ slug: z.string() }).merge(ZUpdateResidenceList))
+    .mutation(async ({ ctx, input }) => {
+      const { slug, ...availFields } = input
+      const { owner } = await verifyOwnership(slug, ctx.session.user.id)
+
+      // Snapshot current state for diff
+      const [snapshot] = await db.select().from(accommodations).where(eq(accommodations.slug, slug)).limit(1)
+
+      const camelFields = mapFields(availFields, AVAILABILITY_FIELD_MAP)
+
+      const setFields = {
+        ...camelFields,
+        updatedAt: new Date(),
+      }
+
+      const [updated] = await db
+        .update(accommodations)
+        .set(setFields)
+        .where(eq(accommodations.slug, slug))
+        .returning({ slug: accommodations.slug, name: accommodations.name })
+
+      if (snapshot) {
+        const userKeys = new Set(Object.keys(camelFields))
+        const diff = computeDiff(snapshot as Record<string, unknown>, setFields, userKeys)
+        notifyAccommodationUpdated(updated.name, owner?.name ?? '-', updated.slug, ctx.session.user.name, diff)
+        for (const { action, diff: actionDiff } of classifyActions(diff)) {
+          await logActivity({
+            userId: ctx.session.user.id,
+            userName: ctx.session.user.name,
+            action,
+            entityType: 'accommodation',
+            entityName: updated.name,
+            ownerId: owner?.id,
+            ownerName: owner?.name,
+            metadata: { slug: updated.slug, diff: actionDiff },
+          })
+        }
+      }
+
+      return updated
+    }),
+
+  listCandidatures: bailleurProcedure('manage_applications')
     .input(
       z.object({
         page: z.number().default(1),
@@ -604,77 +612,79 @@ export const bailleurRouter = createTRPCRouter({
       }
     }),
 
-  getCandidature: ownerProcedure.input(z.object({ id: z.string().uuid() })).query(async ({ ctx, input }) => {
-    const application = await db.query.dossierFacileApplications.findFirst({
-      where: eq(dossierFacileApplications.id, input.id),
-      with: {
-        tenant: {
-          with: {
-            documents: true,
+  getCandidature: bailleurProcedure('manage_applications')
+    .input(z.object({ id: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const application = await db.query.dossierFacileApplications.findFirst({
+        where: eq(dossierFacileApplications.id, input.id),
+        with: {
+          tenant: {
+            with: {
+              documents: true,
+            },
           },
         },
-      },
-    })
+      })
 
-    if (!application) {
-      throw new TRPCError({ code: 'NOT_FOUND', message: 'Candidature not found' })
-    }
+      if (!application) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Candidature not found' })
+      }
 
-    const usr = await db.query.user.findFirst({
-      where: eq(user.id, ctx.session.user.id),
-      with: { owner: true },
-    })
+      const usr = await db.query.user.findFirst({
+        where: eq(user.id, ctx.session.user.id),
+        with: { owner: true },
+      })
 
-    const isAdmin = usr?.role === 'admin'
+      const isAdmin = usr?.role === 'admin'
 
-    const [accommodation] = await db
-      .select({ ...accommodationSelectFields, ownerId: accommodations.ownerId })
-      .from(accommodations)
-      .innerJoin(
-        accommodationAddresses,
-        and(eq(accommodationAddresses.accommodationId, accommodations.id), eq(accommodationAddresses.isMain, true)),
-      )
-      .innerJoin(cities, eq(accommodationAddresses.cityId, cities.id))
-      .leftJoin(owners, eq(accommodations.ownerId, owners.id))
-      .where(eq(accommodations.slug, application.accommodationSlug))
-      .limit(1)
+      const [accommodation] = await db
+        .select({ ...accommodationSelectFields, ownerId: accommodations.ownerId })
+        .from(accommodations)
+        .innerJoin(
+          accommodationAddresses,
+          and(eq(accommodationAddresses.accommodationId, accommodations.id), eq(accommodationAddresses.isMain, true)),
+        )
+        .innerJoin(cities, eq(accommodationAddresses.cityId, cities.id))
+        .leftJoin(owners, eq(accommodations.ownerId, owners.id))
+        .where(eq(accommodations.slug, application.accommodationSlug))
+        .limit(1)
 
-    if (!accommodation) {
-      throw new TRPCError({ code: 'NOT_FOUND', message: 'Accommodation not found' })
-    }
+      if (!accommodation) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Accommodation not found' })
+      }
 
-    if (!isAdmin && (!usr?.owner || accommodation.ownerId !== usr.owner.id)) {
-      throw new TRPCError({ code: 'FORBIDDEN', message: 'You do not own this accommodation' })
-    }
+      if (!isAdmin && (!usr?.owner || accommodation.ownerId !== usr.owner.id)) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'You do not own this accommodation' })
+      }
 
-    const tenantUser = await db.query.user.findFirst({
-      where: eq(user.id, application.tenant.userId),
-    })
+      const tenantUser = await db.query.user.findFirst({
+        where: eq(user.id, application.tenant.userId),
+      })
 
-    const tenantDocs = application.tenant.documents ?? []
+      const tenantDocs = application.tenant.documents ?? []
 
-    return {
-      id: application.id,
-      status: application.status,
-      apartmentType: application.apartmentType,
-      createdAt: application.createdAt,
-      reviewedAt: application.reviewedAt,
-      studentName: application.tenant.name ?? tenantUser?.name ?? null,
-      studentEmail: tenantUser?.email ?? null,
-      dfTenantId: application.tenant.id,
-      hasTenantUrl: !!application.tenant.url,
-      hasPdfUrl: !!application.tenant.pdfUrl,
-      tenantStatus: application.tenant.status,
-      guarantorCount: application.tenant.guarantorCount ?? 0,
-      documents: {
-        tenant: tenantDocs.filter((d) => d.ownerType === 'tenant').map(({ url: _url, ...rest }) => rest),
-        guarantor: tenantDocs.filter((d) => d.ownerType === 'guarantor').map(({ url: _url, ...rest }) => rest),
-      },
-      accommodation: mapToGeoJsonFeature(accommodation as unknown as Record<string, unknown>),
-    }
-  }),
+      return {
+        id: application.id,
+        status: application.status,
+        apartmentType: application.apartmentType,
+        createdAt: application.createdAt,
+        reviewedAt: application.reviewedAt,
+        studentName: application.tenant.name ?? tenantUser?.name ?? null,
+        studentEmail: tenantUser?.email ?? null,
+        dfTenantId: application.tenant.id,
+        hasTenantUrl: !!application.tenant.url,
+        hasPdfUrl: !!application.tenant.pdfUrl,
+        tenantStatus: application.tenant.status,
+        guarantorCount: application.tenant.guarantorCount ?? 0,
+        documents: {
+          tenant: tenantDocs.filter((d) => d.ownerType === 'tenant').map(({ url: _url, ...rest }) => rest),
+          guarantor: tenantDocs.filter((d) => d.ownerType === 'guarantor').map(({ url: _url, ...rest }) => rest),
+        },
+        accommodation: mapToGeoJsonFeature(accommodation as unknown as Record<string, unknown>),
+      }
+    }),
 
-  getDocumentSignedUrl: ownerProcedure
+  getDocumentSignedUrl: bailleurProcedure('manage_applications')
     .input(
       z.object({
         type: z.enum(['tenantPdf', 'tenantUrl', 'document']),
@@ -734,7 +744,7 @@ export const bailleurRouter = createTRPCRouter({
       return { redirectUrl: `/api/df-redirect?token=${token}` }
     }),
 
-  updateCandidatureStatus: ownerProcedure
+  updateCandidatureStatus: bailleurProcedure('manage_applications')
     .input(
       z.object({
         id: z.string().uuid(),
@@ -783,4 +793,211 @@ export const bailleurRouter = createTRPCRouter({
 
       return updated
     }),
+
+  users: createTRPCRouter({
+    list: bailleurProcedure('manage_users')
+      .input(z.object({ ownerId: z.number().optional(), search: z.string().optional() }))
+      .query(async ({ ctx, input }) => {
+        const owner = await getOwnerForUser(ctx.session.user.id, input.ownerId)
+        if (!owner) return { items: [] }
+
+        const conditions = [eq(user.ownerId, owner.id), eq(user.role, 'owner')]
+        if (input.search && input.search.length >= 2) {
+          const searchCondition = or(
+            ilike(user.email, `%${input.search}%`),
+            ilike(user.firstname, `%${input.search}%`),
+            ilike(user.lastname, `%${input.search}%`),
+          )
+          if (searchCondition) conditions.push(searchCondition)
+        }
+
+        const items = await db
+          .select({
+            id: user.id,
+            email: user.email,
+            firstname: user.firstname,
+            lastname: user.lastname,
+            bailleurRole: user.bailleurRole,
+            bailleurPermissions: user.bailleurPermissions,
+            createdAt: user.createdAt,
+          })
+          .from(user)
+          .where(and(...conditions))
+          .orderBy(user.firstname, user.lastname)
+
+        return { items, ownerId: owner.id }
+      }),
+
+    getById: bailleurProcedure('manage_users')
+      .input(z.object({ id: z.string(), ownerId: z.number().optional() }))
+      .query(async ({ ctx, input }) => {
+        const owner = await getOwnerForUser(ctx.session.user.id, input.ownerId)
+        if (!owner) throw new TRPCError({ code: 'FORBIDDEN' })
+
+        const target = await db.query.user.findFirst({
+          where: and(eq(user.id, input.id), eq(user.ownerId, owner.id), eq(user.role, 'owner')),
+        })
+        if (!target) throw new TRPCError({ code: 'NOT_FOUND', message: 'Utilisateur non trouve' })
+
+        return {
+          id: target.id,
+          email: target.email,
+          firstname: target.firstname,
+          lastname: target.lastname,
+          bailleurRole: target.bailleurRole,
+          bailleurPermissions: target.bailleurPermissions,
+        }
+      }),
+
+    create: bailleurProcedure('manage_users')
+      .input(zCreateBailleurUser.extend({ ownerId: z.number().optional() }))
+      .mutation(async ({ ctx, input }) => {
+        const owner = await getOwnerForUser(ctx.session.user.id, input.ownerId)
+        if (!owner) throw new TRPCError({ code: 'FORBIDDEN', message: 'Bailleur introuvable' })
+
+        const callerCanGrantAdminRights = canGrantAdministratorRights({
+          role: ctx.session.user.role,
+          bailleurRole: ctx.session.user.bailleurRole ?? null,
+          bailleurPermissions: ctx.session.user.bailleurPermissions ?? [],
+        })
+
+        if (!callerCanGrantAdminRights) {
+          if (input.bailleurRole === 'administrator') {
+            throw new TRPCError({ code: 'FORBIDDEN', message: 'Seul un administrateur peut creer un autre administrateur' })
+          }
+          const sensitiveRequested = input.bailleurPermissions.filter((p) => ADMIN_ONLY_PERMISSIONS.includes(p))
+          if (sensitiveRequested.length > 0) {
+            throw new TRPCError({
+              code: 'FORBIDDEN',
+              message: `Seul un administrateur peut accorder ces permissions: ${sensitiveRequested.join(', ')}`,
+            })
+          }
+        }
+
+        const existing = await db.query.user.findFirst({ where: eq(user.email, input.email) })
+        if (existing) {
+          throw new TRPCError({ code: 'CONFLICT', message: 'Un utilisateur existe deja avec cet email' })
+        }
+
+        const id = crypto.randomUUID()
+        const [created] = await db
+          .insert(user)
+          .values({
+            id,
+            email: input.email,
+            name: `${input.firstname} ${input.lastname}`,
+            firstname: input.firstname,
+            lastname: input.lastname,
+            role: 'owner',
+            ownerId: owner.id,
+            bailleurRole: input.bailleurRole,
+            bailleurPermissions: input.bailleurRole === 'administrator' ? [] : input.bailleurPermissions,
+          })
+          .returning()
+
+        try {
+          const requestHeaders = await headers()
+          await auth.api.signInMagicLink({
+            body: { email: input.email, callbackURL: '/bailleur/tableau-de-bord' },
+            headers: requestHeaders,
+          })
+        } catch (err) {
+          console.error('Erreur envoi magic-link bailleur user', err)
+        }
+
+        return created
+      }),
+
+    update: bailleurProcedure('manage_users')
+      .input(zUpdateBailleurUser.extend({ ownerId: z.number().optional() }))
+      .mutation(async ({ ctx, input }) => {
+        const owner = await getOwnerForUser(ctx.session.user.id, input.ownerId)
+        if (!owner) throw new TRPCError({ code: 'FORBIDDEN', message: 'Bailleur introuvable' })
+
+        const target = await db.query.user.findFirst({
+          where: and(eq(user.id, input.id), eq(user.ownerId, owner.id), eq(user.role, 'owner')),
+        })
+        if (!target) throw new TRPCError({ code: 'NOT_FOUND', message: 'Utilisateur non trouve' })
+
+        const callerCanGrantAdminRights = canGrantAdministratorRights({
+          role: ctx.session.user.role,
+          bailleurRole: ctx.session.user.bailleurRole ?? null,
+          bailleurPermissions: ctx.session.user.bailleurPermissions ?? [],
+        })
+
+        if (!callerCanGrantAdminRights) {
+          if (input.bailleurRole === 'administrator') {
+            throw new TRPCError({
+              code: 'FORBIDDEN',
+              message: 'Seul un administrateur peut promouvoir un utilisateur au role administrateur',
+            })
+          }
+          if (input.bailleurPermissions !== undefined) {
+            const sensitiveRequested = input.bailleurPermissions.filter((p) => ADMIN_ONLY_PERMISSIONS.includes(p))
+            if (sensitiveRequested.length > 0) {
+              throw new TRPCError({
+                code: 'FORBIDDEN',
+                message: `Seul un administrateur peut accorder ces permissions: ${sensitiveRequested.join(', ')}`,
+              })
+            }
+          }
+        }
+
+        const updateData: Record<string, unknown> = { updatedAt: new Date() }
+        if (input.firstname !== undefined) updateData.firstname = input.firstname
+        if (input.lastname !== undefined) updateData.lastname = input.lastname
+        if (input.firstname !== undefined || input.lastname !== undefined) {
+          updateData.name = `${input.firstname ?? target.firstname} ${input.lastname ?? target.lastname}`
+        }
+        if (input.bailleurRole !== undefined) {
+          updateData.bailleurRole = input.bailleurRole
+          if (input.bailleurRole === 'administrator') {
+            updateData.bailleurPermissions = []
+          }
+        }
+        if (input.bailleurPermissions !== undefined && input.bailleurRole !== 'administrator') {
+          updateData.bailleurPermissions = input.bailleurPermissions
+        }
+
+        if (target.id === ctx.session.user.id && updateData.bailleurRole && updateData.bailleurRole !== 'administrator') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Vous ne pouvez pas retirer votre propre role administrateur' })
+        }
+
+        const [updated] = await db.update(user).set(updateData).where(eq(user.id, input.id)).returning()
+        return updated
+      }),
+
+    delete: bailleurProcedure('manage_users')
+      .input(z.object({ id: z.string(), ownerId: z.number().optional() }))
+      .mutation(async ({ ctx, input }) => {
+        if (input.id === ctx.session.user.id) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Vous ne pouvez pas vous supprimer vous-meme' })
+        }
+
+        const owner = await getOwnerForUser(ctx.session.user.id, input.ownerId)
+        if (!owner) throw new TRPCError({ code: 'FORBIDDEN', message: 'Bailleur introuvable' })
+
+        const target = await db.query.user.findFirst({
+          where: and(eq(user.id, input.id), eq(user.ownerId, owner.id), eq(user.role, 'owner')),
+        })
+        if (!target) throw new TRPCError({ code: 'NOT_FOUND', message: 'Utilisateur non trouve' })
+
+        if (target.bailleurRole === 'administrator') {
+          const [{ administratorCount }] = await db
+            .select({ administratorCount: count() })
+            .from(user)
+            .where(and(eq(user.ownerId, owner.id), eq(user.bailleurRole, 'administrator'), ne(user.id, target.id)))
+
+          if (administratorCount === 0) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: 'Impossible de supprimer le dernier administrateur du bailleur',
+            })
+          }
+        }
+
+        await db.delete(user).where(eq(user.id, input.id))
+        return { id: input.id }
+      }),
+  }),
 })

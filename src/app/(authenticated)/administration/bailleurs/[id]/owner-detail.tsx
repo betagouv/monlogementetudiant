@@ -9,6 +9,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import clsx from 'clsx'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { LinkAdminToOwnerDialog } from '~/components/administration/link-admin-to-owner-dialog'
 import { LinkUserToOwnerDialog } from '~/components/administration/link-user-to-owner-dialog'
@@ -236,7 +237,15 @@ function UsersTab({
   ownerId,
   ownerName,
 }: {
-  users: Array<{ id: string; email: string; firstname: string; lastname: string; role: string }>
+  users: Array<{
+    id: string
+    email: string
+    firstname: string
+    lastname: string
+    role: string
+    bailleurRole?: 'administrator' | 'gestionnaire' | null
+    bailleurPermissions?: string[] | null
+  }>
   adminUsers: Array<{ id: string; email: string; firstname: string; lastname: string; role: string }>
   ownerId: number
   ownerName: string
@@ -244,6 +253,7 @@ function UsersTab({
   const queryClient = useQueryClient()
   const trpc = useTRPC()
   const trpcClient = useTRPCClient()
+  const tUsers = useTranslations('bailleur.users')
 
   const unlinkMutation = useMutation({
     mutationFn: (userId: string) => trpcClient.admin.users.unlinkFromOwner.mutate({ userId }),
@@ -334,6 +344,8 @@ function UsersTab({
               <tr>
                 <th scope="col">Utilisateur</th>
                 <th scope="col">Rôle</th>
+                <th scope="col">Rôle gestionnaire</th>
+                <th scope="col">Permissions</th>
                 <th scope="col">Actions</th>
               </tr>
             </thead>
@@ -348,6 +360,32 @@ function UsersTab({
                   </td>
                   <td>
                     <RoleBadge role={u.role} />
+                  </td>
+                  <td>
+                    {u.bailleurRole ? (
+                      <span
+                        className={`fr-badge fr-badge--sm fr-badge--no-icon ${u.bailleurRole === 'administrator' ? 'fr-badge--info' : 'fr-badge--new'}`}
+                      >
+                        {tUsers(`role.${u.bailleurRole}`)}
+                      </span>
+                    ) : (
+                      <span className="fr-text-mention--grey fr-text--xs">{tUsers('adminTable.emptyRole')}</span>
+                    )}
+                  </td>
+                  <td>
+                    {u.bailleurRole === 'administrator' ? (
+                      <span className="fr-text-mention--grey fr-text--xs">{tUsers('permission.allAsAdministrator')}</span>
+                    ) : u.bailleurPermissions && u.bailleurPermissions.length > 0 ? (
+                      <div className="fr-flex fr-flex-gap-1v" style={{ flexWrap: 'wrap' }}>
+                        {u.bailleurPermissions.map((p) => (
+                          <span key={p} className="fr-tag fr-tag--sm">
+                            {tUsers(`permission.${p}` as Parameters<typeof tUsers>[0])}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="fr-text-mention--grey fr-text--xs">{tUsers('adminTable.emptyRole')}</span>
+                    )}
                   </td>
                   <td>
                     <div className="fr-flex fr-flex-gap-1v">

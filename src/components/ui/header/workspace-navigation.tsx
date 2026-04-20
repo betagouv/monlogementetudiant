@@ -7,7 +7,10 @@ import { FC } from 'react'
 import { buildHref } from '~/utils/preserve-query-params'
 import styles from './navigation.module.css'
 
-export const WorkspaceHeaderNavigation: FC<{ acceptDossierFacile: boolean }> = ({ acceptDossierFacile }) => {
+export const WorkspaceHeaderNavigation: FC<{ acceptDossierFacile: boolean; canManageUsers?: boolean }> = ({
+  acceptDossierFacile,
+  canManageUsers = false,
+}) => {
   const t = useTranslations('navigation.workspace')
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -38,6 +41,18 @@ export const WorkspaceHeaderNavigation: FC<{ acceptDossierFacile: boolean }> = (
               target: '_self' as const,
             },
             text: t('candidates'),
+          },
+        ]
+      : []),
+    ...(canManageUsers
+      ? [
+          {
+            isActive: pathname.startsWith('/bailleur/utilisateurs'),
+            linkProps: {
+              href: '/bailleur/utilisateurs',
+              target: '_self' as const,
+            },
+            text: t('users'),
           },
         ]
       : []),

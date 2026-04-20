@@ -6,6 +6,7 @@ import { BrandTop } from '~/components/ui/brand-top'
 import { OwnerSwitcher } from '~/components/ui/header/owner-switcher'
 import { UserConnectedDropdown } from '~/components/ui/header/user-connected-dropdown'
 import { WorkspaceHeaderNavigation } from '~/components/ui/header/workspace-navigation'
+import { hasPermission } from '~/server/bailleur/permissions'
 import { getServerSession } from '~/services/better-auth'
 
 export const WorkspaceHeaderComponent: FC = async () => {
@@ -20,6 +21,15 @@ export const WorkspaceHeaderComponent: FC = async () => {
   const adminOwners = auth.user.adminOwners ?? []
   const showSwitcher = isAdmin && adminOwners.length > 1
   const defaultOwnerId = auth.user.owner?.id ?? adminOwners[0]?.id
+
+  const canManageUsers = hasPermission(
+    {
+      role: auth.user.role,
+      bailleurRole: auth.user.bailleurRole ?? null,
+      bailleurPermissions: auth.user.bailleurPermissions ?? [],
+    },
+    'manage_users',
+  )
 
   return (
     <div>
@@ -40,7 +50,12 @@ export const WorkspaceHeaderComponent: FC = async () => {
             <span className="fr-ml-1w fr-badge fr-badge--new fr-badge--no-icon fr-text--uppercase">{t('bailleur.header.title')}</span>
           </>
         }
-        navigation={<WorkspaceHeaderNavigation acceptDossierFacile={auth.user.owner?.acceptDossierFacileApplications ?? false} />}
+        navigation={
+          <WorkspaceHeaderNavigation
+            acceptDossierFacile={auth.user.owner?.acceptDossierFacileApplications ?? false}
+            canManageUsers={canManageUsers}
+          />
+        }
         className="fr-header"
       />
     </div>

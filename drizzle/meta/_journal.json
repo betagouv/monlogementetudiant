@@ -211,6 +211,13 @@
       "when": 1777278885370,
       "tag": "0029_accommodation-addresses",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1776673916175,
+      "tag": "0030_bailleur_roles_permissions",
+      "breakpoints": true
     }
   ]
 }
