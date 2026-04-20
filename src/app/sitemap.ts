@@ -8,12 +8,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = z.string().parse(process.env.BASE_URL)
   const lastModified = new Date()
 
-  const prepareStudentLifeMetadata: MetadataRoute.Sitemap = popularCities.map((city) => ({
-    url: `${baseUrl}/preparer-sa-vie-etudiante/${city.slug}`,
-    lastModified,
-    changeFrequency: 'weekly',
-    priority: 0.8,
-  }))
   const findStudentAccommodationMetadata: MetadataRoute.Sitemap = popularCities.map((city) => ({
     url: `${baseUrl}/trouver-un-logement-etudiant/ville/${city.slug}`,
     lastModified,
@@ -49,25 +43,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
     {
-      url: `${baseUrl}/preparer-sa-vie-etudiante`,
-      lastModified,
-      changeFrequency: 'weekly',
-      priority: 0.5,
-    },
-    ...prepareStudentLifeMetadata,
-    {
       url: `${baseUrl}/trouver-un-logement-etudiant`,
       lastModified,
       changeFrequency: 'weekly',
       priority: 0.5,
     },
     ...findStudentAccommodationMetadata,
-    {
-      url: `${baseUrl}/foire-aux-questions`,
-      lastModified,
-      changeFrequency: 'monthly',
-      priority: 0.5,
-    },
     {
       url: `${baseUrl}/alerte-logement`,
       lastModified,
