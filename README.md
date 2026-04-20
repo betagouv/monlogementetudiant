@@ -428,14 +428,14 @@ Le script crée automatiquement l'iframe et gère le redimensionnement dynamique
 | `data-crous` | CROUS uniquement | `data-crous="true"` |
 | `data-colocation` | Colocation uniquement | `data-colocation="true"` |
 | `data-accessible` | Logements PMR | `data-accessible="true"` |
-| `data-filters` | Afficher/masquer les filtres (visible par défaut) | `data-filters="false"` |
+| `data-filters` | Filtres à afficher (tous par défaut). `"false"` masque tout. Liste séparée par des virgules parmi `ville`, `prix`, `colocation`, `crous`, `accessible` | `data-filters="ville,prix,colocation"` |
 | `data-page` | Page de pagination | `data-page="2"` |
 | `data-gestionnaire` | Filtrer par slug du gestionnaire/bailleur | `data-gestionnaire="promologis-2"` |
 | `data-target` | ID de l'élément où déposer l'iframe | `data-target="widget-container"` |
 
 Si `data-city` ou `data-bbox` est fourni, le champ de recherche de localisation est masqué.
 
-Les filtres sont **visibles par défaut**. Pour les masquer, utiliser `data-filters="false"`.
+Les filtres sont **tous visibles par défaut**. Pour n'en afficher que certains, passer une liste séparée par des virgules : `data-filters="ville,prix"`. Pour tout masquer : `data-filters="false"`. Valeurs disponibles : `ville`, `prix`, `colocation`, `crous`, `accessible`.
 
 ### Comportement du widget
 
@@ -456,6 +456,9 @@ Les filtres sont **visibles par défaut**. Pour les masquer, utiliser `data-filt
 
 <!-- Logements d'un gestionnaire spécifique -->
 <script src="https://monlogementetudiant.beta.gouv.fr/widget/embed.js" data-gestionnaire="promologis-2"></script>
+
+<!-- Afficher uniquement les filtres ville, prix et colocation -->
+<script src="https://monlogementetudiant.beta.gouv.fr/widget/embed.js" data-filters="ville,prix,colocation"></script>
 
 <!-- Iframe déposée dans un élément spécifique -->
 <div id="mon-widget"></div>

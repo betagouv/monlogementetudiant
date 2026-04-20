@@ -1,20 +1,114 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Test Widget MLE</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 2rem; background: #f5f5f5; }
-    h1 { color: #333; }
-    h2 { color: #666; margin-top: 3rem; }
-    hr { margin: 3rem 0; }
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+      background: #f5f5f5;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    h2 {
+      color: #666;
+      margin-top: 3rem;
+    }
+
+    code {
+      background: #eee;
+      padding: 0.1rem 0.3rem;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+
+    hr {
+      margin: 3rem 0;
+    }
   </style>
 </head>
+
 <body>
   <h1>Test Widget Mon Logement Étudiant</h1>
 
-  <h2>1. Paris, avec filtres</h2>
-  <script src="http://localhost:3000/widget/embed.js" data-city="Paris" data-prix="800"></script>
+  <h2>1. Tous les filtres (défaut)</h2>
+  <p><code>data-city="Paris"</code> — aucun <code>data-filters</code></p>
+  <script src="http://localhost:3000/widget/embed.js" data-city="Paris"></script>
+
+  <hr>
+
+  <h2>2. Aucun filtre</h2>
+  <p><code>data-filters="false"</code></p>
+  <script src="http://localhost:3000/widget/embed.js" data-city="Lyon" data-filters="false"></script>
+
+  <hr>
+
+  <h2>3. Ville + Prix + Colocation</h2>
+  <p><code>data-filters="ville,prix,colocation"</code></p>
+  <script src="http://localhost:3000/widget/embed.js" data-filters="ville,prix,colocation"></script>
+
+  <hr>
+
+  <h2>4. Prix uniquement</h2>
+  <p><code>data-filters="prix"</code> + ville fixée</p>
+  <script src="http://localhost:3000/widget/embed.js" data-city="Toulouse" data-filters="prix"></script>
+
+  <hr>
+
+  <h2>5. Colocation uniquement</h2>
+  <p><code>data-filters="colocation"</code> + ville fixée</p>
+  <script src="http://localhost:3000/widget/embed.js" data-city="Bordeaux" data-filters="colocation"></script>
+
+  <hr>
+
+  <h2>6. Ville uniquement (recherche)</h2>
+  <p><code>data-filters="ville"</code> — sans ville pré-remplie</p>
+  <script src="http://localhost:3000/widget/embed.js" data-filters="ville"></script>
+
+  <hr>
+
+  <h2>7. CROUS uniquement</h2>
+  <p><code>data-filters="crous"</code> + ville fixée</p>
+  <script src="http://localhost:3000/widget/embed.js" data-city="Rennes" data-filters="crous"></script>
+
+  <hr>
+
+  <h2>8. Accessible (PMR) uniquement</h2>
+  <p><code>data-filters="accessible"</code> + ville fixée</p>
+  <script src="http://localhost:3000/widget/embed.js" data-city="Nantes" data-filters="accessible"></script>
+
+  <hr>
+
+  <h2>9. CROUS + Accessible</h2>
+  <p><code>data-filters="crous,accessible"</code> + ville fixée</p>
+  <script src="http://localhost:3000/widget/embed.js" data-city="Strasbourg" data-filters="crous,accessible"></script>
+
+  <hr>
+
+  <h2>10. Ville + Prix (combo courante)</h2>
+  <p><code>data-filters="ville,prix"</code></p>
+  <script src="http://localhost:3000/widget/embed.js" data-filters="ville,prix"></script>
+
+  <hr>
+
+  <h2>11. Valeur invalide (fallback : bloc masqué)</h2>
+  <p><code>data-filters="foobar"</code> → aucun filtre reconnu</p>
+  <script src="http://localhost:3000/widget/embed.js" data-city="Montpellier" data-filters="foobar"></script>
+
+  <hr>
+
+  <h2>12. Bbox manuelle + filtres partiels</h2>
+  <p><code>data-bbox</code> + <code>data-filters="prix,colocation"</code></p>
+  <script src="http://localhost:3000/widget/embed.js" data-bbox="2.2,48.8,2.5,48.9"
+    data-filters="prix,colocation"></script>
 </body>
+
 </html>

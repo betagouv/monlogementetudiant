@@ -10,15 +10,17 @@ import { FindStudentAccommodationCrousFilter } from '~/components/find-student-a
 import { FindStudentAccommodationPrice } from '~/components/find-student-accomodation/header/find-student-accommodation-price'
 import { FindStudentColivingAccomodationSwitch } from '~/components/find-student-accomodation/header/find-student-coliving-accomodation'
 import { expandBbox } from '~/components/map/map-utils'
+import { WidgetFilterKey } from '~/components/widget/widget-filters'
 import { useSearchCities } from '~/hooks/use-search-cities'
 import { TCity } from '~/schemas/territories'
 
 type WidgetAccommodationFiltersProps = {
   initialCity?: string
   showLocationInput: boolean
+  visibleFilters: WidgetFilterKey[]
 }
 
-export const WidgetAccommodationFilters: FC<WidgetAccommodationFiltersProps> = ({ initialCity, showLocationInput }) => {
+export const WidgetAccommodationFilters: FC<WidgetAccommodationFiltersProps> = ({ initialCity, showLocationInput, visibleFilters }) => {
   const t = useTranslations('findAccomodation')
   const { classes } = useStyles()
   const [, setBbox] = useQueryState('bbox', parseAsString)
@@ -41,7 +43,7 @@ export const WidgetAccommodationFilters: FC<WidgetAccommodationFiltersProps> = (
   return (
     <div className={classes.container}>
       <div className={classes.locationContainer}>
-        {showLocationInput && (
+        {showLocationInput && visibleFilters.includes('ville') && (
           <Input
             classes={{ root: classes.input }}
             label={t('header.inputLabel')}
@@ -73,10 +75,10 @@ export const WidgetAccommodationFilters: FC<WidgetAccommodationFiltersProps> = (
       </div>
 
       <div className={classes.filtersRow}>
-        <FindStudentAccommodationPrice pageSize={6} widget />
-        <FindStudentAccommodationCrousFilter />
-        <FindStudentColivingAccomodationSwitch widget />
-        <FindStudentAccessibleAccomodationSwitch widget />
+        {visibleFilters.includes('prix') && <FindStudentAccommodationPrice pageSize={6} widget />}
+        {visibleFilters.includes('crous') && <FindStudentAccommodationCrousFilter />}
+        {visibleFilters.includes('colocation') && <FindStudentColivingAccomodationSwitch widget />}
+        {visibleFilters.includes('accessible') && <FindStudentAccessibleAccomodationSwitch widget />}
       </div>
     </div>
   )

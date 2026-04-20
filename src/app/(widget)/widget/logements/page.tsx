@@ -4,6 +4,7 @@ import { SearchParamsSync } from '~/components/search-params-sync'
 import { WidgetAccommodationFilters } from '~/components/widget/widget-accommodation-filters'
 import { WidgetAccommodationGrid } from '~/components/widget/widget-accommodation-grid'
 import { WidgetBodyStyle } from '~/components/widget/widget-body-style'
+import { parseVisibleFilters } from '~/components/widget/widget-filters'
 import { prefetchAccommodations } from '~/server/accommodations/get-accommodations'
 import { getTerritories } from '~/server/territories/get-territories'
 
@@ -27,7 +28,7 @@ export default async function WidgetLogementsPage({
   const awaitedSearchParams = await searchParams
 
   const hasLocation = !!awaitedSearchParams.city || !!awaitedSearchParams.bbox
-  const showFilters = awaitedSearchParams.filters !== 'false'
+  const visibleFilters = parseVisibleFilters(awaitedSearchParams.filters)
 
   // Resolve city → bbox + name without redirecting
   let cityName: string | undefined
@@ -50,7 +51,7 @@ export default async function WidgetLogementsPage({
     <HydrationBoundary state={dehydratedState}>
       <SearchParamsSync bbox={serverBbox} />
       <WidgetBodyStyle />
-      {showFilters && <WidgetAccommodationFilters showLocationInput={!hasLocation} />}
+      {visibleFilters && <WidgetAccommodationFilters showLocationInput={!hasLocation} visibleFilters={visibleFilters} />}
       <WidgetAccommodationGrid cityName={cityName} />
     </HydrationBoundary>
   )
