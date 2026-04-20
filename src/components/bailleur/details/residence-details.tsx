@@ -6,6 +6,7 @@ import Select from '@codegouvfr/react-dsfr/Select'
 import ToggleSwitch from '@codegouvfr/react-dsfr/ToggleSwitch'
 import { useTranslations } from 'next-intl'
 import { Controller, useFormContext } from 'react-hook-form'
+import { TooltipHoverOnly } from '~/components/tooltip-hover-only'
 import { EResidenceType, RESIDENCE_TYPE_LABELS } from '~/enums/residence-type'
 import { ETargetAudience } from '~/enums/target-audience'
 import { TUpdateResidence } from '~/schemas/accommodations/update-residence'
@@ -27,7 +28,11 @@ export const ResidenceDetails = () => {
               <Input
                 label={
                   <>
-                    {t('accommodationName')} <span className="fr-text-default--error">*</span>
+                    {t('accommodationName')} <span className="fr-text-default--error">*</span>{' '}
+                    <TooltipHoverOnly
+                      id="tooltip-accommodation-name"
+                      title="Le mot « Résidence » n'est conservé que s'il est suivi d'un article (le, la, les, du, des, de…). Sinon, il doit être omis."
+                    />
                   </>
                 }
                 nativeInputProps={register('name')}
