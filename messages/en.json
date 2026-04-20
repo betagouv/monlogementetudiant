@@ -80,6 +80,54 @@
         "title": "Espace étudiant - Gestion de votre espace",
         "description": "Votre espace étudiant"
       }
+    },
+    "landing": {
+      "title": "Trouver un logement étudiant en France",
+      "description": "Découvrez Mon Logement Étudiant, la plateforme officielle pour trouver un logement étudiant, simuler vos aides au logement et préparer votre budget."
+    },
+    "privacyPolicy": {
+      "title": "Politique de confidentialité",
+      "description": "Politique de confidentialité de Mon Logement Étudiant : données collectées, droits des utilisateurs et sous-traitants."
+    },
+    "signUp": {
+      "title": "Création de compte",
+      "description": "Créez votre compte étudiant sur Mon Logement Étudiant pour accéder à nos services personnalisés."
+    },
+    "loginStudent": {
+      "title": "Se connecter à mon espace étudiant",
+      "description": "Connectez-vous à votre espace étudiant Mon Logement Étudiant pour gérer votre profil et vos alertes."
+    },
+    "loginOwner": {
+      "title": "Se connecter à mon espace gestionnaire",
+      "description": "Connectez-vous à votre espace gestionnaire pour administrer vos résidences étudiantes sur Mon Logement Étudiant."
+    },
+    "budget": {
+      "title": "Budget Mon Logement Étudiant",
+      "description": "Consultez le budget alloué au projet Mon Logement Étudiant par phase (investigation, construction)."
+    },
+    "legalMentions": {
+      "title": "Mentions légales",
+      "description": "Mentions légales de Mon Logement Étudiant : éditeur, directeur de publication, hébergeur et conditions d'utilisation."
+    },
+    "siteMap": {
+      "title": "Plan du site",
+      "description": "Plan du site Mon Logement Étudiant : retrouvez l'ensemble des pages disponibles sur la plateforme."
+    },
+    "verificationError": {
+      "title": "Erreur de vérification",
+      "description": "Une erreur est survenue lors de la vérification de votre compte. Veuillez réessayer ou contacter le support."
+    },
+    "accessibility": {
+      "title": "Accessibilité",
+      "description": "Déclaration d'accessibilité de Mon Logement Étudiant : notre engagement pour rendre la plateforme accessible à tous."
+    },
+    "personalData": {
+      "title": "Données personnelles",
+      "description": "Informations sur la gestion de vos données personnelles sur Mon Logement Étudiant."
+    },
+    "cookieManagement": {
+      "title": "Gestion des cookies",
+      "description": "Gérez vos préférences de cookies sur Mon Logement Étudiant."
     }
   },
   "header": {
@@ -877,9 +925,18 @@
     },
     "maximizeChances": {
       "title": "Mettez toutes les chances de votre côté",
-      "completeTodoList": { "title": "Complétez votre liste de priorités", "cta": "Mes priorités" },
-      "estimateAid": { "title": "Estimez vos aides au logement", "cta": "Mes aides" },
-      "createAlerts": { "title": "Créez vous des alertes logements", "cta": "Mes alertes" },
+      "completeTodoList": {
+        "title": "Complétez votre liste de priorités",
+        "cta": "Mes priorités"
+      },
+      "estimateAid": {
+        "title": "Estimez vos aides au logement",
+        "cta": "Mes aides"
+      },
+      "createAlerts": {
+        "title": "Créez vous des alertes logements",
+        "cta": "Mes alertes"
+      },
       "todoListButton": "Mes priorités",
       "myAidButton": "Mes aides",
       "myAlertsButton": "Mes alertes"

@@ -1,8 +1,14 @@
 import { fr } from '@codegouvfr/react-dsfr'
 import { Breadcrumb } from '@codegouvfr/react-dsfr/Breadcrumb'
 import { Table } from '@codegouvfr/react-dsfr/Table'
+import { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 import styles from '../pages.module.css'
+
+export const generateMetadata = async (): Promise<Metadata> => {
+  const t = await getTranslations('metadata')
+  return { title: t('privacyPolicy.title'), description: t('privacyPolicy.description') }
+}
 
 export default async function PolitiqueDeConfidentialite() {
   const breadcrumbT = await getTranslations('breadcrumbs')
