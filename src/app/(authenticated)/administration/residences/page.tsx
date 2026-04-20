@@ -3,10 +3,11 @@
 import Badge from '@codegouvfr/react-dsfr/Badge'
 import Button from '@codegouvfr/react-dsfr/Button'
 import Input from '@codegouvfr/react-dsfr/Input'
+import Pagination from '@codegouvfr/react-dsfr/Pagination'
 import { useQuery } from '@tanstack/react-query'
 import { ColumnDef, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
 import clsx from 'clsx'
-import { parseAsString, useQueryState } from 'nuqs'
+import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
 import { useState } from 'react'
 import { useDebounce } from 'use-debounce'
 import { useTRPC, useTRPCClient } from '~/server/trpc/client'
@@ -86,7 +87,10 @@ function downloadCsv(csv: string, filename: string) {
 }
 
 export default function ResidencesPage() {
-  const [search, setSearch] = useQueryState('search', parseAsString.withDefault(''))
+  const [{ search, page }, setQueryStates] = useQueryStates({
+    search: parseAsString.withDefault(''),
+    page: parseAsInteger.withDefault(1),
+  })
   const [debouncedSearch] = useDebounce(search, 300)
   const trpc = useTRPC()
   const trpcClient = useTRPCClient()
@@ -104,11 +108,14 @@ export default function ResidencesPage() {
   }
 
   const { data, isLoading } = useQuery(
-    trpc.admin.residences.list.queryOptions({ search: debouncedSearch.length >= 2 ? debouncedSearch : undefined }),
+    trpc.admin.residences.list.queryOptions({
+      page,
+      search: debouncedSearch.length >= 2 ? debouncedSearch : undefined,
+    }),
   )
 
   const table = useReactTable({
-    data: data ?? [],
+    data: data?.items ?? [],
     columns,
     getCoreRowModel: getCoreRowModel(),
   })
@@ -131,7 +138,7 @@ export default function ResidencesPage() {
             nativeInputProps={{
               placeholder: 'Résidence, ville, gestionnaire...',
               value: search,
-              onChange: (e) => setSearch(e.target.value),
+              onChange: (e) => setQueryStates({ search: e.target.value, page: 1 }),
             }}
           />
         </div>
@@ -162,7 +169,7 @@ export default function ResidencesPage() {
                   Chargement...
                 </td>
               </tr>
-            ) : (data ?? []).length === 0 ? (
+            ) : (data?.items ?? []).length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className={clsx('fr-p-3w', styles.tableCenterCell)}>
                   Aucune residence
@@ -182,6 +189,21 @@ export default function ResidencesPage() {
           </tbody>
         </table>
       </div>
+
+      {(data?.pageCount ?? 0) > 1 && (
+        <Pagination
+          className="fr-flex fr-justify-content-center fr-mt-3w"
+          count={data!.pageCount}
+          defaultPage={page}
+          getPageLinkProps={(pageNumber) => ({
+            href: '#',
+            onClick: (e) => {
+              e.preventDefault()
+              setQueryStates({ page: pageNumber })
+            },
+          })}
+        />
+      )}
     </>
   )
 }

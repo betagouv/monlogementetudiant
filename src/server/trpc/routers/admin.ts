@@ -471,6 +471,7 @@ const residencesRouter = createTRPCRouter({
   list: adminProcedure
     .input(
       z.object({
+        page: z.number().default(1),
         search: z.string().optional(),
       }),
     )
@@ -488,31 +489,48 @@ const residencesRouter = createTRPCRouter({
       }
 
       const where = conditions.length > 0 ? and(...conditions) : undefined
+      const offset = (input.page - 1) * PAGE_SIZE
 
-      const results = await db
-        .select({
-          id: accommodations.id,
-          name: accommodations.name,
-          slug: accommodations.slug,
-          city: cities.name,
-          citySlug: cities.slug,
-          available: accommodations.available,
-          published: accommodations.published,
-          nbTotalApartments: accommodations.nbTotalApartments,
-          nbAvailableApartments: nbAvailableApartmentsSum,
-          ownerName: owners.name,
-        })
-        .from(accommodations)
-        .leftJoin(owners, eq(accommodations.ownerId, owners.id))
-        .innerJoin(cities, eq(accommodations.cityId, cities.id))
-        .where(where)
-        .orderBy(accommodations.name)
-        .limit(100)
+      const [countResult, results] = await Promise.all([
+        db
+          .select({ count: count() })
+          .from(accommodations)
+          .leftJoin(owners, eq(accommodations.ownerId, owners.id))
+          .innerJoin(cities, eq(accommodations.cityId, cities.id))
+          .where(where),
+        db
+          .select({
+            id: accommodations.id,
+            name: accommodations.name,
+            slug: accommodations.slug,
+            city: cities.name,
+            citySlug: cities.slug,
+            available: accommodations.available,
+            published: accommodations.published,
+            nbTotalApartments: accommodations.nbTotalApartments,
+            nbAvailableApartments: nbAvailableApartmentsSum,
+            ownerName: owners.name,
+          })
+          .from(accommodations)
+          .leftJoin(owners, eq(accommodations.ownerId, owners.id))
+          .innerJoin(cities, eq(accommodations.cityId, cities.id))
+          .where(where)
+          .orderBy(accommodations.name)
+          .limit(PAGE_SIZE)
+          .offset(offset),
+      ])
 
-      return results.map((r) => ({
-        ...r,
-        ownerName: r.ownerName ?? '-',
-      }))
+      const total = countResult[0]?.count ?? 0
+
+      return {
+        items: results.map((r) => ({
+          ...r,
+          ownerName: r.ownerName ?? '-',
+        })),
+        total,
+        pageCount: Math.ceil(total / PAGE_SIZE),
+        page: input.page,
+      }
     }),
 
   exportCsv: adminProcedure
