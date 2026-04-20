@@ -16,7 +16,12 @@ type NewTypology = { id: number; fieldSuffix: string | null }
 export const ResidenceAccommodationList = ({ accommodation }: { accommodation: TAccomodationMy }) => {
   const isImported = accommodation.properties.is_imported
   const t = useTranslations('findAccomodation.card')
-  const { setValue, watch } = useFormContext()
+  const tTypology = useTranslations('bailleur.residences.details.typologyTab')
+  const {
+    setValue,
+    watch,
+    formState: { errors },
+  } = useFormContext()
   const [newTypologies, setNewTypologies] = useState<NewTypology[]>([])
   const [nextId, setNextId] = useState(1)
 
@@ -134,12 +139,45 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
     }
   }
 
+  const hasAnyTypologyError = sortedVisibleTypologies.some((typo) => {
+    const fieldNames = [
+      `nb_${typo.fieldSuffix}`,
+      `nb_${typo.fieldSuffix}_available`,
+      `price_min_${typo.fieldSuffix}`,
+      `price_max_${typo.fieldSuffix}`,
+      `superficie_min_${typo.fieldSuffix}`,
+      `superficie_max_${typo.fieldSuffix}`,
+    ]
+    return fieldNames.some((field) => errors[field])
+  })
+
+  const hasTypologyError = (fieldSuffix: string) => {
+    const fieldNames = [
+      `nb_${fieldSuffix}`,
+      `nb_${fieldSuffix}_available`,
+      `price_min_${fieldSuffix}`,
+      `price_max_${fieldSuffix}`,
+      `superficie_min_${fieldSuffix}`,
+      `superficie_max_${fieldSuffix}`,
+    ]
+    return fieldNames.some((field) => errors[field])
+  }
+
+  const tabLabel = (label: string, fieldSuffix: string) =>
+    hasTypologyError(fieldSuffix) ? (
+      <span>
+        {label} <span style={{ color: 'var(--text-default-error)', fontWeight: 'bold' }}>●</span>
+      </span>
+    ) : (
+      label
+    )
+
   // Construire les tabs
   const tabs = [
     // Onglets triés selon l'ordre de TYPOLOGIES
     ...sortedVisibleTypologies.map((typo) => ({
       tabId: `tab-${typo.fieldSuffix}`,
-      label: typo.type,
+      label: tabLabel(typo.type, typo.fieldSuffix),
     })),
     // Onglets nouveaux (sans type sélectionné)
     ...newTypologies
@@ -171,6 +209,8 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
           <h3 className="fr-mb-0">{accommodation.properties.nb_total_apartments} logements</h3>
           {badgeAvailability}
         </div>
+
+        {hasAnyTypologyError && <p className="fr-error-text fr-mb-2w">{tTypology('tabsHaveErrors')}</p>}
 
         <div>
           <Tabs selectedTabId={selectedTabId} onTabChange={handleTabChange} tabs={tabs}>
