@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fetchCityByInsee, fetchCityFromGeoApi, geocodeAddress } from '../geocoder'
 
-vi.mock('../db', () => ({
+vi.mock('~/server/db', () => ({
   db: {
     select: vi
       .fn()

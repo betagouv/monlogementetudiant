@@ -448,7 +448,31 @@
 .progressFill {
   height: 100%;
   border-radius: 4px;
+  background: var(--background-action-high-blue-france);
   transition: width 0.3s ease;
+}
+
+.progressFillDone {
+  background: var(--background-flat-success);
+}
+
+.logScroll {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.statsGrid3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.errorList {
+  padding-left: 1.5rem;
+  margin: 0;
+}
+
+.activityIcon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
 }
 
 .dangerButton {
