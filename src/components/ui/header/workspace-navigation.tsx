@@ -1,20 +1,22 @@
 'use client'
 
 import MainNavigation, { MainNavigationProps } from '@codegouvfr/react-dsfr/MainNavigation'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { FC } from 'react'
+import { buildHref } from '~/utils/preserve-query-params'
 import styles from './navigation.module.css'
 
 export const WorkspaceHeaderNavigation: FC<{ acceptDossierFacile: boolean }> = ({ acceptDossierFacile }) => {
   const t = useTranslations('navigation.workspace')
   const pathname = usePathname()
+  const searchParams = useSearchParams()
 
   const items: MainNavigationProps.Item[] = [
     {
       isActive: pathname === '/bailleur/tableau-de-bord',
       linkProps: {
-        href: '/bailleur/tableau-de-bord',
+        href: buildHref('/bailleur/tableau-de-bord', searchParams),
         target: '_self',
       },
       text: t('dashboard'),
@@ -22,7 +24,7 @@ export const WorkspaceHeaderNavigation: FC<{ acceptDossierFacile: boolean }> = (
     {
       isActive: pathname === '/bailleur/residences',
       linkProps: {
-        href: '/bailleur/residences',
+        href: buildHref('/bailleur/residences', searchParams),
         target: '_self',
       },
       text: t('residences'),
@@ -32,7 +34,7 @@ export const WorkspaceHeaderNavigation: FC<{ acceptDossierFacile: boolean }> = (
           {
             isActive: pathname === '/bailleur/candidatures',
             linkProps: {
-              href: '/bailleur/candidatures',
+              href: buildHref('/bailleur/candidatures', searchParams),
               target: '_self' as const,
             },
             text: t('candidates'),
@@ -42,7 +44,7 @@ export const WorkspaceHeaderNavigation: FC<{ acceptDossierFacile: boolean }> = (
     {
       isActive: pathname === '/bailleur/centre-d-aide',
       linkProps: {
-        href: '/bailleur/centre-d-aide',
+        href: buildHref('/bailleur/centre-d-aide', searchParams),
         target: '_self',
       },
       text: t('helpCenter'),

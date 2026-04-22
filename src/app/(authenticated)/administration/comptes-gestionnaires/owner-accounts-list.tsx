@@ -110,8 +110,8 @@ export function OwnerAccountsList() {
           />
         </div>
         <div className="fr-col-md-7 fr-flex fr-justify-content-end">
-          <Button iconId="fr-icon-add-line" linkProps={{ href: '/administration/utilisateurs/nouveau' }}>
-            Nouvel utilisateur
+          <Button iconId="fr-icon-add-line" linkProps={{ href: '/administration/comptes-gestionnaires/nouveau' }}>
+            Nouveau compte gestionnaire
           </Button>
         </div>
       </div>
