@@ -9,6 +9,7 @@ import { adminOwnerLinks } from '~/server/db/schema/admin-owner-links'
 import { user } from '~/server/db/schema/auth'
 import { cities } from '~/server/db/schema/cities'
 import { eventStats } from '~/server/db/schema/event-stats'
+import { importJobs } from '~/server/db/schema/import-jobs'
 import { owners } from '~/server/db/schema/owners'
 import { stats } from '~/server/db/schema/stats'
 import { generateSlug } from '~/server/trpc/utils/accommodation-helpers'
@@ -1061,6 +1062,18 @@ const ownerUsageRouter = createTRPCRouter({
     }),
 })
 
+const importsRouter = createTRPCRouter({
+  list: adminProcedure.query(async () => {
+    return db.select().from(importJobs).orderBy(desc(importJobs.createdAt)).limit(50)
+  }),
+
+  getById: adminProcedure.input(z.object({ id: z.number() })).query(async ({ input }) => {
+    const [job] = await db.select().from(importJobs).where(eq(importJobs.id, input.id)).limit(1)
+    if (!job) throw new TRPCError({ code: 'NOT_FOUND' })
+    return job
+  }),
+})
+
 export const adminRouter = createTRPCRouter({
   users: usersRouter,
   owners: ownersRouter,
@@ -1068,4 +1081,5 @@ export const adminRouter = createTRPCRouter({
   stats: statsRouter,
   matomoStats: matomoStatsRouter,
   ownerUsage: ownerUsageRouter,
+  imports: importsRouter,
 })
