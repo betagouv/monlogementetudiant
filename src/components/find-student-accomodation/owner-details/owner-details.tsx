@@ -18,7 +18,6 @@ interface OwnerDetailsProps {
   externalUrl: string | undefined
   title: string
   location: string
-  available: boolean
   nbAvailable: number | null
   acceptWaitingList: boolean
   slug?: string
@@ -31,7 +30,6 @@ interface OwnerDetailsProps {
 export const OwnerDetails = async ({
   nbTotalApartments,
   nbAvailable,
-  available,
   owner,
   externalUrl,
   title,
@@ -95,7 +93,7 @@ export const OwnerDetails = async ({
         acceptDossierFacile={acceptDossierFacile}
       />
       <div className={styles.sidebarOwner}>
-        {!!ownerUrl && available && (
+        {!!ownerUrl && (
           <ConsultOfferButton
             href={ownerUrl}
             slug={slug ?? ''}

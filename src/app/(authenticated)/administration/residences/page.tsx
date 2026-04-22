@@ -19,7 +19,6 @@ type ResidenceRow = {
   slug: string
   city: string
   citySlug: string | null
-  available: boolean
   published: boolean
   nbTotalApartments: number | null
   nbAvailableApartments: number
