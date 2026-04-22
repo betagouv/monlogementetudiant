@@ -23,26 +23,6 @@ import { findAvailableSlug } from '~/server/utils/slug'
 import { createTRPCRouter, ownerProcedure } from '../init'
 import { mapToGeoJsonFeature, priceMaxComputed } from './accommodations'
 
-async function getOrCreateOwner(userId: string, userName: string) {
-  const usr = await db.query.user.findFirst({
-    where: eq(user.id, userId),
-    with: { owner: true },
-  })
-  if (usr?.owner) return usr.owner
-
-  const [created] = await db
-    .insert(owners)
-    .values({
-      name: userName,
-      slug: await findAvailableSlug(generateSlug(userName), db, owners),
-    })
-    .returning()
-
-  await db.update(user).set({ ownerId: created.id }).where(eq(user.id, userId))
-
-  return created
-}
-
 async function verifyOwnerAccess(userId: string, accommodationSlug: string) {
   const usr = await db.query.user.findFirst({
     where: eq(user.id, userId),
@@ -281,11 +261,15 @@ export const bailleurRouter = createTRPCRouter({
     .input(
       ZCreateResidence.omit({ images_files: true }).extend({
         name: z.string().min(1, 'Le nom de la résidence est requis'),
+        ownerId: z.number().int().positive().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id
-      const owner = await getOrCreateOwner(userId, ctx.session.user.name)
+      const owner = await getOwnerForUser(userId, input.ownerId)
+      if (!owner) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'No owner record for this user' })
+      }
 
       const { typologies, ...fields } = input
       const flatTypologies = transformTypologiesToFlat(typologies)

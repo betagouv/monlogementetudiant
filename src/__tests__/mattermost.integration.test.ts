@@ -25,6 +25,7 @@ beforeEach(async () => {
 
 describe('mattermost notifications', () => {
   it('notifies on accommodation creation', async () => {
+    await createOwner({ name: 'Owner Webhook', slug: 'owner-webhook', userId: 'test-owner-id' })
     const result = await ownerCaller.bailleur.create({
       name: 'Résidence Webhook',
       address: '1 rue de la Paix',

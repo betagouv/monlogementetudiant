@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { parseAsInteger, useQueryStates } from 'nuqs'
 import { createToast } from '~/components/ui/createToast'
 import { TCreateResidence } from '~/schemas/accommodations/create-residence'
 import { useTRPC, useTRPCClient } from '~/server/trpc/client'
@@ -13,6 +14,7 @@ export const useCreateResidence = () => {
   const trpc = useTRPC()
   const trpcClient = useTRPCClient()
   const t = useTranslations('toast')
+  const [{ ownerId }] = useQueryStates({ ownerId: parseAsInteger })
 
   return useMutation({
     mutationFn: async (data: TCreateResidence) => {
@@ -21,6 +23,7 @@ export const useCreateResidence = () => {
       const result = await trpcClient.bailleur.create.mutate({
         ...fields,
         name: fields.name!,
+        ownerId: ownerId ?? undefined,
       })
 
       if (images_files?.length && result.slug) {
