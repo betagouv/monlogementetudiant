@@ -13,6 +13,7 @@ import { owners } from '~/server/db/schema/owners'
 import { stats } from '~/server/db/schema/stats'
 import { generateSlug } from '~/server/trpc/utils/accommodation-helpers'
 import { findAvailableSlug } from '~/server/utils/slug'
+import { calculateAvailability } from '~/utils/calculateAvailability'
 import { adminProcedure, createTRPCRouter } from '../init'
 
 const PAGE_SIZE = 20
@@ -557,7 +558,6 @@ const residencesRouter = createTRPCRouter({
           residenceType: accommodations.residenceType,
           targetAudience: accommodations.target_audience,
           published: accommodations.published,
-          available: accommodations.available,
           city: cities.name,
           ownerName: owners.name,
           nbTotalApartments: accommodations.nbTotalApartments,
@@ -643,10 +643,36 @@ const residencesRouter = createTRPCRouter({
 
       if (results.length === 0) return ''
 
-      const headers = Object.keys(results[0]!)
+      const enriched = results.map((row) => {
+        const availability = {
+          nb_t1_available: row.nbT1Available,
+          nb_t1_bis_available: row.nbT1BisAvailable,
+          nb_t2_available: row.nbT2Available,
+          nb_t3_available: row.nbT3Available,
+          nb_t4_available: row.nbT4Available,
+          nb_t5_available: row.nbT5Available,
+          nb_t6_available: row.nbT6Available,
+          nb_t7_more_available: row.nbT7MoreAvailable,
+        }
+        const stock = {
+          nb_t1: row.nbT1,
+          nb_t1_bis: row.nbT1Bis,
+          nb_t2: row.nbT2,
+          nb_t3: row.nbT3,
+          nb_t4: row.nbT4,
+          nb_t5: row.nbT5,
+          nb_t6: row.nbT6,
+          nb_t7_more: row.nbT7More,
+        }
+        const disponibiliteRenseignee = Object.values(availability).some((v) => v !== null && v !== undefined)
+        const nbLogementsDisponibles = calculateAvailability(availability, stock)
+        return { ...row, disponibiliteRenseignee, nbLogementsDisponibles }
+      })
+
+      const headers = Object.keys(enriched[0]!)
       const csvRows = [
         headers.join(';'),
-        ...results.map((row) =>
+        ...enriched.map((row) =>
           headers
             .map((h) => {
               const val = (row as Record<string, unknown>)[h]

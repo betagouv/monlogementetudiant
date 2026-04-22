@@ -4,6 +4,7 @@ import Companie from '@codegouvfr/react-dsfr/picto/Companie'
 import { HydrationBoundary } from '@tanstack/react-query'
 import { ResidenceFilters } from '~/components/bailleur/residence-filters'
 import { ResidenceList } from '~/components/bailleur/residence-list'
+import { buildHref } from '~/utils/preserve-query-params'
 import { getResidencesPageContext } from './get-residences-page-context'
 
 export const dynamic = 'force-dynamic'
@@ -24,16 +25,14 @@ export default async function ResidencesPage({ searchParams }: ResidencesPagePro
   const awaitedSearchParams = await searchParams
   const { dehydratedState } = await getResidencesPageContext(awaitedSearchParams)
 
-  const newResidenceHref = awaitedSearchParams.ownerId
-    ? `/bailleur/residences/nouvelle-residence?ownerId=${awaitedSearchParams.ownerId}`
-    : '/bailleur/residences/nouvelle-residence'
+  const newResidenceHref = buildHref('/bailleur/residences/nouvelle-residence', awaitedSearchParams)
 
   return (
     <HydrationBoundary state={dehydratedState}>
       <div className="fr-container fr-pb-12w">
         <Breadcrumb
           currentPageLabel={<>Gestion des résidences</>}
-          segments={[{ label: 'Tableau de bord', linkProps: { href: '/bailleur/tableau-de-bord' } }]}
+          segments={[{ label: 'Tableau de bord', linkProps: { href: buildHref('/bailleur/tableau-de-bord', awaitedSearchParams) } }]}
           classes={{ root: 'fr-mt-0 fr-mb-2w fr-pt-4w' }}
         />
 
