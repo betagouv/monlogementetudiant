@@ -52,7 +52,6 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
   const {
     address,
     city,
-    available,
     images_urls,
     name,
     nb_total_apartments,
@@ -159,7 +158,6 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
               acceptWaitingList={accept_waiting_list}
               owner={owner}
               nbAvailable={nbAvailable}
-              available={available}
               nbTotalApartments={nb_total_apartments}
               externalUrl={external_url}
               title={name}

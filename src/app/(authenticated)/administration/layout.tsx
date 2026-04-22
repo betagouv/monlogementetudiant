@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { AdminHeaderComponent } from '~/components/administration/admin-header'
 import { AdminNavigation } from '~/components/administration/admin-navigation'
 import { CommonFooter } from '~/components/ui/footer/footer'
@@ -17,8 +17,12 @@ export default async function AdministrationLayout({
 }>) {
   const session = await getServerSession()
 
-  if (!session || session.user.role !== 'admin') {
+  if (!session) {
     redirect('/administration/se-connecter')
+  }
+
+  if (session.user.role !== 'admin') {
+    notFound()
   }
 
   return (

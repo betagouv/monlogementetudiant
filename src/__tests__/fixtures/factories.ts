@@ -174,7 +174,6 @@ export async function createAccommodation(
     slug: `residence-test-${suffix}`,
     postalCode: '42000',
     published: true,
-    available: true,
     imagesCount: 0,
     cityId,
     ...rest,

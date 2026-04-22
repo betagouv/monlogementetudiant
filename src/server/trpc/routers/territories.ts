@@ -123,7 +123,7 @@ function cityAccommodationStatsSubquery() {
     })
     .from(accommodations)
     .leftJoin(owners, eq(accommodations.ownerId, owners.id))
-    .where(and(eq(accommodations.published, true), eq(accommodations.available, true)))
+    .where(eq(accommodations.published, true))
     .groupBy(accommodations.cityId)
     .as('city_accommodation_stats')
 }
@@ -334,7 +334,6 @@ export const territoriesRouter = createTRPCRouter({
           and(
             sql`${accommodations.cityId} = (SELECT ${cities.id} FROM ${cities} WHERE ${cities.slug} = ${slugLower} LIMIT 1)`,
             eq(accommodations.published, true),
-            eq(accommodations.available, true),
           ),
         ),
 
@@ -403,7 +402,6 @@ export const territoriesRouter = createTRPCRouter({
               and(
                 sql`${accommodations.cityId} = (SELECT ${cities.id} FROM ${cities} WHERE ${cities.slug} = ${slugLower} LIMIT 1)`,
                 eq(accommodations.published, true),
-                eq(accommodations.available, true),
               ),
             ),
         ])

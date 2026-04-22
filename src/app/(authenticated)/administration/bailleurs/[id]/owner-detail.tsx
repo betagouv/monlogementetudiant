@@ -33,7 +33,6 @@ const OwnerMapTab = dynamic<{
     slug: string
     city: string
     citySlug: string | null
-    available: boolean
     nbTotalApartments: number | null
     nbAvailableApartments: number
     lat: number | null
@@ -399,7 +398,6 @@ function ResidencesTab({
     citySlug: string | null
     nbTotalApartments: number | null
     nbAvailableApartments: number
-    available: boolean
     published: boolean
   }>
   ownerId: number
