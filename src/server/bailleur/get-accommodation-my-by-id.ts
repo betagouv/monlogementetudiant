@@ -64,7 +64,6 @@ function mapToAccommodationMy(row: AccommodationWithOwnerAndExtras, isImported: 
       residence_type: toResidenceType(row.residenceType),
       target_audience: toTargetAudience(row.target_audience),
       published: row.published,
-      available: row.available,
       accept_waiting_list: row.acceptWaitingList ?? false,
       images_urls: row.imagesUrls ?? null,
       external_url: row.externalUrl ?? undefined,

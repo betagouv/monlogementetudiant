@@ -24,7 +24,6 @@ const ZBaseAccommodationInfo = z.object({
   virtual_tour_url: z.string().nullable(),
   updated_at: z.date(),
   published: z.boolean(),
-  available: z.boolean().nullable(),
   scholarship_holders_priority: z.boolean(),
   social_housing_required: z.boolean(),
   wifi: z.boolean(),
@@ -137,7 +136,6 @@ export const ZAccomodationDetails = ZBaseAccommodationInfo.extend(ZApartmentCoun
   .extend(ZSuperficie.shape)
   .extend(ZAmenities.shape)
   .extend({
-    available: z.boolean(),
     geom: ZGeometry,
     owner: z
       .object({

@@ -15,7 +15,6 @@ type Accommodation = {
   id: number
   name: string
   city: string
-  available: boolean
   nbTotalApartments: number | null
   nbAvailableApartments: number
   lat: number | null
