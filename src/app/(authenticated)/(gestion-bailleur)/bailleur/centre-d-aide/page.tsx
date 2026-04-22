@@ -2,13 +2,17 @@ import Breadcrumb from '@codegouvfr/react-dsfr/Breadcrumb'
 import DocumentSearch from '@codegouvfr/react-dsfr/picto/DocumentSearch'
 import { ContactTeamButton } from '~/components/bailleur/contact-team-button'
 import { FaqQuestionsAnswers } from '~/components/faq/faq-questions-answers'
+import { buildHref } from '~/utils/preserve-query-params'
 
-export default async function CentreDAidePage() {
+type SearchParams = { ownerId?: string }
+
+export default async function CentreDAidePage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const awaitedSearchParams = await searchParams
   return (
     <div className="fr-container fr-pb-12w">
       <Breadcrumb
         currentPageLabel={<>Centre d'aide</>}
-        segments={[{ label: 'Tableau de bord', linkProps: { href: '/bailleur/tableau-de-bord' } }]}
+        segments={[{ label: 'Tableau de bord', linkProps: { href: buildHref('/bailleur/tableau-de-bord', awaitedSearchParams) } }]}
         classes={{ root: 'fr-mt-0 fr-mb-2w fr-pt-4w' }}
       />
       <div className="fr-flex fr-justify-content-space-between fr-align-items-center">

@@ -4,6 +4,7 @@ import { HydrationBoundary } from '@tanstack/react-query'
 import { notFound } from 'next/navigation'
 import { CandidaturesList } from '~/components/bailleur/candidatures/candidatures-list'
 import { getServerSession } from '~/services/better-auth'
+import { buildHref } from '~/utils/preserve-query-params'
 import { getCandidaturesPageContext } from './get-candidatures-page-context'
 
 export const dynamic = 'force-dynamic'
@@ -14,6 +15,7 @@ type SearchParams = {
   status?: string
   recherche?: string
   tri?: string
+  ownerId?: string
 }
 
 type CandidaturesPageProps = {
@@ -34,7 +36,7 @@ export default async function CandidaturesPage({ searchParams }: CandidaturesPag
       <div className="fr-container fr-pb-12w">
         <Breadcrumb
           currentPageLabel="Gestion des candidatures"
-          segments={[{ label: 'Tableau de bord', linkProps: { href: '/bailleur/tableau-de-bord' } }]}
+          segments={[{ label: 'Tableau de bord', linkProps: { href: buildHref('/bailleur/tableau-de-bord', awaitedSearchParams) } }]}
           classes={{ root: 'fr-mt-0 fr-mb-2w fr-pt-4w' }}
         />
 
