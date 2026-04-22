@@ -169,6 +169,13 @@
       "when": 1775747898841,
       "tag": "0023_activity-log",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1776866125994,
+      "tag": "0024_drop_accommodation_available",
+      "breakpoints": true
     }
   ]
 }

@@ -103,14 +103,12 @@ describe('territories.getCityDetails', () => {
       nbTotalApartments: 10,
       priceMin: 300,
       published: true,
-      available: true,
     })
     await createAccommodation({
       cityId: city.id,
       nbTotalApartments: 5,
       priceMin: 250,
       published: true,
-      available: true,
     })
 
     const result = await caller.territories.getCityDetails({ slug: 'saint-etienne' })

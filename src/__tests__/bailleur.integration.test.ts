@@ -339,7 +339,6 @@ describe('admin verifyOwnership bypass', () => {
       slug: 'other-avail-update',
       ownerId: otherOwner.id,
       nbT1: 10,
-      available: false,
       geom: parisPoint,
     })
 
@@ -382,7 +381,6 @@ describe('bailleur.updateAvailability', () => {
       ownerId: owner.id,
       nbT1: 10,
       nbT2: 5,
-      available: false,
       geom: parisPoint,
     })
 
