@@ -23,7 +23,7 @@ export default async function LoginPage() {
           &nbsp;<span className={clsx(fr.cx('fr-text--bold'), authStyles.required)}>*</span>
           &nbsp;{t('subTitlePart2')}
         </p>
-        <MagicLinkSignInForm />
+        <MagicLinkSignInForm callbackURL="/bailleur/tableau-de-bord" />
         <div className={authStyles.dividerContainer}>
           <span className={authStyles.divider}>{t('labels.or')}</span>
         </div>
