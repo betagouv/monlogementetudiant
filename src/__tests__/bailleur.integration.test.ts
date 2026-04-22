@@ -1,6 +1,8 @@
 import { eq } from 'drizzle-orm'
 import { beforeEach, describe, expect, it } from 'vitest'
+import { accommodations } from '../server/db/schema/accommodations'
 import { activityLog } from '../server/db/schema/activity-log'
+import { owners } from '../server/db/schema/owners'
 import {
   createAcademy,
   createAccommodation,
@@ -56,7 +58,8 @@ describe('ownerProcedure authorization', () => {
 })
 
 describe('bailleur.create', () => {
-  it('creates a residence and returns slug', async () => {
+  it('creates a residence for the linked owner and returns slug', async () => {
+    await createOwner({ name: 'Owner Create', slug: 'owner-create', userId: 'test-owner-id' })
     const result = await ownerCaller.bailleur.create({
       name: 'Résidence Test',
       address: '1 rue de la Paix',
@@ -81,9 +84,10 @@ describe('bailleur.create', () => {
     expect(result.slug).toContain('residence-test')
   })
 
-  it('creates owner record automatically and lists it', async () => {
+  it('attaches the created residence to the linked owner and lists it', async () => {
     await createCityWithName('Lyon', 'lyon', ['69001'])
-    await ownerCaller.bailleur.create({
+    const owner = await createOwner({ name: 'Owner List', slug: 'owner-list', userId: 'test-owner-id' })
+    const result = await ownerCaller.bailleur.create({
       name: 'Ma Résidence',
       address: '2 avenue des Champs',
       city: 'Lyon',
@@ -103,8 +107,121 @@ describe('bailleur.create', () => {
       ],
     })
 
+    const db = getTestDb()
+    const [created] = await db.select().from(accommodations).where(eq(accommodations.slug, result.slug))
+    expect(created.ownerId).toBe(owner.id)
+
     const list = await ownerCaller.bailleur.list({ page: 1 })
     expect(list.count).toBeGreaterThanOrEqual(1)
+  })
+
+  it('rejects owner-role user without a linked account_owner', async () => {
+    await expect(
+      ownerCaller.bailleur.create({
+        name: 'No Owner Residence',
+        address: '1 rue de la Paix',
+        city: 'Paris',
+        postal_code: '75001',
+        external_url: 'https://example.com',
+        typologies: [
+          {
+            type: 'T1',
+            price_min: 400,
+            price_max: 600,
+            superficie_min: 15,
+            superficie_max: 25,
+            colocation: false,
+            nb_total: 5,
+            nb_available: 2,
+          },
+        ],
+      }),
+    ).rejects.toThrow('No owner record for this user')
+  })
+
+  it('attaches the residence to the switched owner when admin passes ownerId', async () => {
+    const switched = await createOwner({ name: 'Switched Owner', slug: 'switched-owner' })
+    await createAdminOwnerLink({ userId: 'test-admin-id', ownerId: switched.id })
+
+    const result = await adminCaller.bailleur.create({
+      name: 'Résidence Admin Switch',
+      address: '3 rue Admin',
+      city: 'Paris',
+      postal_code: '75001',
+      external_url: 'https://example.com',
+      ownerId: switched.id,
+      typologies: [
+        {
+          type: 'T1',
+          price_min: 400,
+          price_max: 600,
+          superficie_min: 15,
+          superficie_max: 25,
+          colocation: false,
+          nb_total: 5,
+          nb_available: 2,
+        },
+      ],
+    })
+
+    const db = getTestDb()
+    const [created] = await db.select().from(accommodations).where(eq(accommodations.slug, result.slug))
+    expect(created.ownerId).toBe(switched.id)
+
+    // No new account_owner created for the admin
+    const adminNamedOwners = await db.select().from(owners).where(eq(owners.name, 'Test Admin'))
+    expect(adminNamedOwners).toHaveLength(0)
+  })
+
+  it('rejects admin without any linked owner and no ownerId', async () => {
+    await expect(
+      adminCaller.bailleur.create({
+        name: 'Orphan Admin Residence',
+        address: '4 rue Orphan',
+        city: 'Paris',
+        postal_code: '75001',
+        external_url: 'https://example.com',
+        typologies: [
+          {
+            type: 'T1',
+            price_min: 400,
+            price_max: 600,
+            superficie_min: 15,
+            superficie_max: 25,
+            colocation: false,
+            nb_total: 5,
+            nb_available: 2,
+          },
+        ],
+      }),
+    ).rejects.toThrow('No owner record for this user')
+  })
+
+  it('rejects admin passing ownerId for an owner they are not linked to', async () => {
+    const other = await createOwner({ name: 'Other Owner', slug: 'other-owner' })
+
+    await expect(
+      adminCaller.bailleur.create({
+        name: 'Unauthorized Owner Residence',
+        address: '5 rue Unauth',
+        city: 'Paris',
+        postal_code: '75001',
+        external_url: 'https://example.com',
+        ownerId: other.id,
+        typologies: [
+          {
+            type: 'T1',
+            price_min: 400,
+            price_max: 600,
+            superficie_min: 15,
+            superficie_max: 25,
+            colocation: false,
+            nb_total: 5,
+            nb_available: 2,
+          },
+        ],
+      }),
+    ).rejects.toThrow('No owner record for this user')
   })
 })
 
@@ -489,6 +606,7 @@ describe('activity_log diff accuracy', () => {
   it('logs creation with accommodation.created action', async () => {
     const db = getTestDb()
 
+    await createOwner({ name: 'Owner LogCreate', slug: 'owner-log-create', userId: 'test-owner-id' })
     await db.delete(activityLog)
     await ownerCaller.bailleur.create({
       name: 'Created Residence',

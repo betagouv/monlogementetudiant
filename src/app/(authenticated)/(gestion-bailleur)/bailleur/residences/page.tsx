@@ -24,6 +24,10 @@ export default async function ResidencesPage({ searchParams }: ResidencesPagePro
   const awaitedSearchParams = await searchParams
   const { dehydratedState } = await getResidencesPageContext(awaitedSearchParams)
 
+  const newResidenceHref = awaitedSearchParams.ownerId
+    ? `/bailleur/residences/nouvelle-residence?ownerId=${awaitedSearchParams.ownerId}`
+    : '/bailleur/residences/nouvelle-residence'
+
   return (
     <HydrationBoundary state={dehydratedState}>
       <div className="fr-container fr-pb-12w">
@@ -40,7 +44,7 @@ export default async function ResidencesPage({ searchParams }: ResidencesPagePro
               <h1 className="fr-mb-0">Gestion des résidences</h1>
             </div>
             <div>
-              <Button linkProps={{ href: '/bailleur/residences/nouvelle-residence' }} iconId="ri-add-line">
+              <Button linkProps={{ href: newResidenceHref }} iconId="ri-add-line">
                 Nouvelle résidence
               </Button>
             </div>
