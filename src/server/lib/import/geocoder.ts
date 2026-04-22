@@ -1,0 +1,255 @@
+import { eq, sql } from 'drizzle-orm'
+import { db } from '~/server/db'
+import { cities, departments } from '~/server/db/schema'
+import { generateSlug } from '~/server/trpc/utils/accommodation-helpers'
+import { findAvailableSlug } from '~/server/utils/slug'
+
+interface GeocodeResult {
+  lat: number
+  lng: number
+  city: string
+  address: string
+  postalCode: string
+}
+
+export interface GeoApiCity {
+  nom: string
+  code: string
+  codesPostaux: string[]
+  codeDepartement: string
+  codeEpci?: string
+  population?: number
+  contour?: GeoJSON.Geometry
+}
+
+const GEOCODE_THROTTLE_MS = 200
+let lastGeocodeCall = 0
+
+async function throttle() {
+  const now = Date.now()
+  const elapsed = now - lastGeocodeCall
+  if (elapsed < GEOCODE_THROTTLE_MS) {
+    await new Promise((resolve) => setTimeout(resolve, GEOCODE_THROTTLE_MS - elapsed))
+  }
+  lastGeocodeCall = Date.now()
+}
+
+export async function geocodeAddress(fullAddress: string): Promise<GeocodeResult | null> {
+  const url = `https://data.geopf.fr/geocodage/search?q=${encodeURIComponent(fullAddress)}&limit=1`
+  const maxAttempts = 2
+  const retryDelay = 5000
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      await throttle()
+      const response = await fetch(url)
+      if (response.status === 429 || response.status >= 500) {
+        if (attempt < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, retryDelay))
+          continue
+        }
+        return null
+      }
+      if (!response.ok) return null
+      const data = await response.json()
+      const feature = data?.features?.[0]
+      if (!feature?.geometry?.coordinates || feature.geometry.type !== 'Point') {
+        if (attempt < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, retryDelay))
+          continue
+        }
+        return null
+      }
+      const [lng, lat] = feature.geometry.coordinates
+      const props = feature.properties ?? {}
+      return {
+        lat,
+        lng,
+        city: props.city ?? props.municipality ?? '',
+        address: props.name ?? props.label ?? '',
+        postalCode: props.postcode ?? '',
+      }
+    } catch {
+      if (attempt < maxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, retryDelay))
+        continue
+      }
+      return null
+    }
+  }
+  return null
+}
+
+export async function reverseGeocode(lat: number, lng: number): Promise<GeocodeResult | null> {
+  const url = `https://data.geopf.fr/geocodage/reverse?lon=${lng}&lat=${lat}&limit=1`
+  try {
+    const response = await fetch(url)
+    if (!response.ok) return null
+    const data = await response.json()
+    const feature = data?.features?.[0]
+    if (!feature?.properties) return null
+    const props = feature.properties
+    const [rLng, rLat] = feature.geometry?.coordinates ?? [lng, lat]
+    return {
+      lat: rLat,
+      lng: rLng,
+      city: props.city ?? props.municipality ?? '',
+      address: props.name ?? props.label ?? '',
+      postalCode: props.postcode ?? '',
+    }
+  } catch {
+    return null
+  }
+}
+
+export async function fetchCityFromGeoApi(postalCode: string, name?: string): Promise<GeoApiCity | null> {
+  const url = `https://geo.api.gouv.fr/communes?codePostal=${postalCode}&fields=nom,codesPostaux,codeDepartement,codeEpci,population`
+  const maxAttempts = 2
+  const retryDelay = 5000
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const response = await fetch(url)
+      if (response.status === 429 || response.status >= 500) {
+        if (attempt < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, retryDelay))
+          continue
+        }
+        return null
+      }
+      if (!response.ok) return null
+      const results: GeoApiCity[] = await response.json()
+      if (results.length === 0) return null
+      if (name && results.length > 1) {
+        const normalized = name
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+        const match = results.find((c) => {
+          const n = c.nom
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+          return n === normalized || n.includes(normalized) || normalized.includes(n)
+        })
+        return match ?? results[0]
+      }
+      return results[0]
+    } catch {
+      if (attempt < maxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, retryDelay))
+        continue
+      }
+      return null
+    }
+  }
+  return null
+}
+
+export async function fetchCityByInsee(inseeCode: string): Promise<GeoApiCity | null> {
+  const url = `https://geo.api.gouv.fr/communes/${inseeCode}?fields=nom,codesPostaux,codeDepartement,contour,codeEpci,population`
+  try {
+    const response = await fetch(url)
+    if (!response.ok) return null
+    return await response.json()
+  } catch {
+    return null
+  }
+}
+
+export async function fetchCommunesByDepartment(deptCode: string): Promise<GeoApiCity[]> {
+  const url = `https://geo.api.gouv.fr/departements/${deptCode}/communes?fields=nom,codesPostaux,codeDepartement,contour,codeEpci,population`
+  const maxAttempts = 2
+  const retryDelay = 5000
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      await throttle()
+      const response = await fetch(url)
+      if (response.status === 429 || response.status >= 500) {
+        if (attempt < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, retryDelay))
+          continue
+        }
+        return []
+      }
+      if (!response.ok) return []
+      return await response.json()
+    } catch {
+      if (attempt < maxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, retryDelay))
+        continue
+      }
+      return []
+    }
+  }
+  return []
+}
+
+export async function fillCityFromApi(cityId: number): Promise<boolean> {
+  const city = await db.select({ postalCodes: cities.postalCodes, name: cities.name }).from(cities).where(eq(cities.id, cityId)).limit(1)
+  if (!city[0]) return false
+
+  const postalCode = city[0].postalCodes?.[0]
+  if (!postalCode) return false
+
+  const apiCity = await fetchCityFromGeoApi(postalCode, city[0].name)
+  if (!apiCity) return false
+
+  const updates: Record<string, unknown> = {}
+  if (apiCity.codeEpci) updates.epciCode = apiCity.codeEpci
+  if (apiCity.population != null) updates.population = apiCity.population
+  if (apiCity.codesPostaux?.length) updates.postalCodes = apiCity.codesPostaux
+  if (apiCity.code) updates.inseeCodes = [apiCity.code]
+
+  if (Object.keys(updates).length > 0) {
+    await db.update(cities).set(updates).where(eq(cities.id, cityId))
+  }
+  return true
+}
+
+export async function ensureCity(postalCode: string, cityName: string): Promise<{ name: string; id: number }> {
+  const existing = await db
+    .select({ name: cities.name, id: cities.id })
+    .from(cities)
+    .where(sql`${postalCode} = ANY(${cities.postalCodes})`)
+    .limit(1)
+  if (existing[0]) return existing[0]
+
+  const apiCity = await fetchCityFromGeoApi(postalCode, cityName)
+  if (!apiCity) return { name: cityName, id: 0 }
+
+  const byInsee = await db
+    .select({ name: cities.name, id: cities.id, postalCodes: cities.postalCodes })
+    .from(cities)
+    .where(sql`${apiCity.code} = ANY(${cities.inseeCodes})`)
+    .limit(1)
+  if (byInsee[0]) {
+    if (!byInsee[0].postalCodes.includes(postalCode)) {
+      await db
+        .update(cities)
+        .set({ postalCodes: [...byInsee[0].postalCodes, postalCode] })
+        .where(eq(cities.id, byInsee[0].id))
+    }
+    return { name: byInsee[0].name, id: byInsee[0].id }
+  }
+
+  const dept = await db.select({ id: departments.id }).from(departments).where(eq(departments.code, apiCity.codeDepartement)).limit(1)
+  if (!dept[0]) return { name: apiCity.nom, id: 0 }
+
+  const [newCity] = await db
+    .insert(cities)
+    .values({
+      name: apiCity.nom,
+      slug: await findAvailableSlug(generateSlug(apiCity.nom), db, cities),
+      postalCodes: apiCity.codesPostaux,
+      inseeCodes: [apiCity.code],
+      departmentId: dept[0].id,
+      popular: false,
+      epciCode: apiCity.codeEpci ?? null,
+      population: apiCity.population ?? null,
+    })
+    .returning({ id: cities.id })
+
+  return { name: apiCity.nom, id: newCity.id }
+}
