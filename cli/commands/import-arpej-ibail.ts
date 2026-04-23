@@ -1,5 +1,5 @@
 import { and, eq, sql } from 'drizzle-orm'
-import { accommodations, externalSources } from '../../src/server/db/schema'
+import { accommodations, externalSources, importBlocklist } from '../../src/server/db/schema'
 import { generateAccommodationKey, uploadFile } from '../../src/server/services/s3'
 import { computeDerivedFields, generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
 import { findAvailableSlug } from '../../src/server/utils/slug'
@@ -113,6 +113,21 @@ const command: ImportCommand = {
     for (const residence of residences) {
       try {
         if (options.verbose) console.log(`  🏠 ${residence.title} (${residence.key})`)
+
+        const blockedImport = await db
+          .select({ reason: importBlocklist.reason })
+          .from(importBlocklist)
+          .where(and(eq(importBlocklist.source, IBAIL_SOURCE), eq(importBlocklist.sourceId, residence.key)))
+          .limit(1)
+
+        if (blockedImport[0]) {
+          if (options.verbose) {
+            const reason = blockedImport[0].reason ? ` (${blockedImport[0].reason})` : ''
+            console.log(`    ⏭ Ignorée: résidence bloquée pour l'import${reason}`)
+          }
+          result.skipped++
+          continue
+        }
 
         const existingSource = await db
           .select({ accommodationId: externalSources.accommodationId })

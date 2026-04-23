@@ -6,7 +6,6 @@ import Select from '@codegouvfr/react-dsfr/Select'
 import ToggleSwitch from '@codegouvfr/react-dsfr/ToggleSwitch'
 import { useTranslations } from 'next-intl'
 import { Controller, useFormContext } from 'react-hook-form'
-import { TooltipHoverOnly } from '~/components/tooltip-hover-only'
 import { EResidenceType, RESIDENCE_TYPE_LABELS } from '~/enums/residence-type'
 import { ETargetAudience } from '~/enums/target-audience'
 import { TUpdateResidence } from '~/schemas/accommodations/update-residence'
@@ -26,18 +25,17 @@ export const ResidenceDetails = () => {
           <div className="fr-grid-row fr-grid-row--gutters">
             <div className="fr-col-12 fr-col-md-6">
               <Input
+                classes={{ message: 'fr-flex-gap-2v' }}
                 label={
                   <>
                     {t('accommodationName')} <span className="fr-text-default--error">*</span>{' '}
-                    <TooltipHoverOnly
-                      id="tooltip-accommodation-name"
-                      title="Le mot « Résidence » n'est conservé que s'il est suivi d'un article (le, la, les, du, des, de…). Sinon, il doit être omis."
-                    />
                   </>
                 }
                 nativeInputProps={register('name')}
-                state={errors.name ? 'error' : 'default'}
-                stateRelatedMessage={errors.name?.message}
+                state={errors.name ? 'error' : 'info'}
+                stateRelatedMessage={
+                  errors.name?.message ?? "Le terme « Résidence » n'est conservé que s'il est suivi d'un article ; sinon, il est supprimé."
+                }
               />
             </div>
             <div className="fr-col-12 fr-col-md-6">

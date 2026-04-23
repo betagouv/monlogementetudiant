@@ -8,6 +8,7 @@ import { FeaturesSection } from '~/components/home/features/features'
 import { HeroSection } from '~/components/home/hero-section/hero-section'
 import { NewsSection } from '~/components/home/news/news'
 import { PartnersSection } from '~/components/home/partners/partners'
+import { SocialLandlordsPartnersSection } from '~/components/home/social-landlords-partners/social-landlords-partners'
 import { getCanonicalUrl } from '~/utils/canonical'
 
 export const generateMetadata = async () => {
@@ -36,9 +37,10 @@ export default async function Home() {
         <FeaturesSection />
         <CitiesSection />
       </div>
+      <PartnersSection />
       <FacilitateSection />
       <NewsSection />
-      <PartnersSection />
+      <SocialLandlordsPartnersSection />
       <FAQSection />
     </>
   )

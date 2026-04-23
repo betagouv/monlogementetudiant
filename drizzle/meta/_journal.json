@@ -176,6 +176,13 @@
       "when": 1776866125994,
       "tag": "0024_drop_accommodation_available",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1776900000000,
+      "tag": "0025_import-blocklist",
+      "breakpoints": true
     }
   ]
 }
