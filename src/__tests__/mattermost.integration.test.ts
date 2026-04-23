@@ -47,7 +47,7 @@ describe('mattermost notifications', () => {
     })
 
     expect(notifyAccommodationCreated).toHaveBeenCalledOnce()
-    expect(notifyAccommodationCreated).toHaveBeenCalledWith('Résidence Webhook', expect.any(String), result.slug, 'Test Owner')
+    expect(notifyAccommodationCreated).toHaveBeenCalledWith('Webhook', 'Owner Webhook', result.slug, 'Test Owner')
   })
 
   it('notifies on accommodation update with diff', async () => {
