@@ -109,7 +109,12 @@ export const ResidencePictures = ({ accommodation }: { accommodation: TAccomodat
               onChange={handleFileSelect}
               style={{ display: 'none' }}
             />
-            <Button priority="tertiary" onClick={() => fileInputRef.current?.click()} disabled={uploadMutation.isPending}>
+            <Button
+              priority="tertiary"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadMutation.isPending}
+              nativeButtonProps={{ type: 'button' }}
+            >
               Parcourir...
             </Button>
             <span className={`fr-text--sm fr-mb-0 ${fileError ? 'fr-text--error' : 'fr-text-mention--grey'}`}>{getStatusText()}</span>
