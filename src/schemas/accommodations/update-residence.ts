@@ -195,65 +195,65 @@ export const createUpdateResidenceSchema = (existingData: {
     // Validation superficie obligatoire et min ≤ max
     const superficieValidations = [
       {
-        total: data.nb_t1 ?? existingData.nb_t1,
-        min: data.superficie_min_t1 ?? existingData.superficie_min_t1,
-        max: data.superficie_max_t1 ?? existingData.superficie_max_t1,
+        total: data.nb_t1,
+        min: data.superficie_min_t1,
+        max: data.superficie_max_t1,
         minPath: 'superficie_min_t1',
         maxPath: 'superficie_max_t1',
         type: 'T1',
       },
       {
-        total: data.nb_t1_bis ?? existingData.nb_t1_bis,
-        min: data.superficie_min_t1_bis ?? existingData.superficie_min_t1_bis,
-        max: data.superficie_max_t1_bis ?? existingData.superficie_max_t1_bis,
+        total: data.nb_t1_bis,
+        min: data.superficie_min_t1_bis,
+        max: data.superficie_max_t1_bis,
         minPath: 'superficie_min_t1_bis',
         maxPath: 'superficie_max_t1_bis',
         type: 'T1 bis',
       },
       {
-        total: data.nb_t2 ?? existingData.nb_t2,
-        min: data.superficie_min_t2 ?? existingData.superficie_min_t2,
-        max: data.superficie_max_t2 ?? existingData.superficie_max_t2,
+        total: data.nb_t2,
+        min: data.superficie_min_t2,
+        max: data.superficie_max_t2,
         minPath: 'superficie_min_t2',
         maxPath: 'superficie_max_t2',
         type: 'T2',
       },
       {
-        total: data.nb_t3 ?? existingData.nb_t3,
-        min: data.superficie_min_t3 ?? existingData.superficie_min_t3,
-        max: data.superficie_max_t3 ?? existingData.superficie_max_t3,
+        total: data.nb_t3,
+        min: data.superficie_min_t3,
+        max: data.superficie_max_t3,
         minPath: 'superficie_min_t3',
         maxPath: 'superficie_max_t3',
         type: 'T3',
       },
       {
-        total: data.nb_t4 ?? existingData.nb_t4,
-        min: data.superficie_min_t4 ?? existingData.superficie_min_t4,
-        max: data.superficie_max_t4 ?? existingData.superficie_max_t4,
+        total: data.nb_t4,
+        min: data.superficie_min_t4,
+        max: data.superficie_max_t4,
         minPath: 'superficie_min_t4',
         maxPath: 'superficie_max_t4',
         type: 'T4',
       },
       {
-        total: data.nb_t5 ?? existingData.nb_t5,
-        min: data.superficie_min_t5 ?? existingData.superficie_min_t5,
-        max: data.superficie_max_t5 ?? existingData.superficie_max_t5,
+        total: data.nb_t5,
+        min: data.superficie_min_t5,
+        max: data.superficie_max_t5,
         minPath: 'superficie_min_t5',
         maxPath: 'superficie_max_t5',
         type: 'T5',
       },
       {
-        total: data.nb_t6 ?? existingData.nb_t6,
-        min: data.superficie_min_t6 ?? existingData.superficie_min_t6,
-        max: data.superficie_max_t6 ?? existingData.superficie_max_t6,
+        total: data.nb_t6,
+        min: data.superficie_min_t6,
+        max: data.superficie_max_t6,
         minPath: 'superficie_min_t6',
         maxPath: 'superficie_max_t6',
         type: 'T6',
       },
       {
-        total: data.nb_t7_more ?? existingData.nb_t7_more,
-        min: data.superficie_min_t7_more ?? existingData.superficie_min_t7_more,
-        max: data.superficie_max_t7_more ?? existingData.superficie_max_t7_more,
+        total: data.nb_t7_more,
+        min: data.superficie_min_t7_more,
+        max: data.superficie_max_t7_more,
         minPath: 'superficie_min_t7_more',
         maxPath: 'superficie_max_t7_more',
         type: 'T7+',
@@ -278,11 +278,78 @@ export const createUpdateResidenceSchema = (existingData: {
           })
         }
       }
+      // Validation valeur > 0
+      if (min != null && min <= 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'La superficie doit être supérieure à 0',
+          path: [minPath],
+        })
+      }
+      if (max != null && max <= 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'La superficie doit être supérieure à 0',
+          path: [maxPath],
+        })
+      }
       // Validation min ≤ max
       if (min != null && max != null && min > max) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: `La superficie minimum ${type} ne peut pas être supérieure à la superficie maximum`,
+          path: [minPath],
+        })
+      }
+    }
+
+    // Validation loyer obligatoire et min ≤ max
+    const priceValidations = [
+      { total: data.nb_t1, min: data.price_min_t1, max: data.price_max_t1, minPath: 'price_min_t1', maxPath: 'price_max_t1', type: 'T1' },
+      {
+        total: data.nb_t1_bis,
+        min: data.price_min_t1_bis,
+        max: data.price_max_t1_bis,
+        minPath: 'price_min_t1_bis',
+        maxPath: 'price_max_t1_bis',
+        type: 'T1 bis',
+      },
+      { total: data.nb_t2, min: data.price_min_t2, max: data.price_max_t2, minPath: 'price_min_t2', maxPath: 'price_max_t2', type: 'T2' },
+      { total: data.nb_t3, min: data.price_min_t3, max: data.price_max_t3, minPath: 'price_min_t3', maxPath: 'price_max_t3', type: 'T3' },
+      { total: data.nb_t4, min: data.price_min_t4, max: data.price_max_t4, minPath: 'price_min_t4', maxPath: 'price_max_t4', type: 'T4' },
+      { total: data.nb_t5, min: data.price_min_t5, max: data.price_max_t5, minPath: 'price_min_t5', maxPath: 'price_max_t5', type: 'T5' },
+      { total: data.nb_t6, min: data.price_min_t6, max: data.price_max_t6, minPath: 'price_min_t6', maxPath: 'price_max_t6', type: 'T6' },
+      {
+        total: data.nb_t7_more,
+        min: data.price_min_t7_more,
+        max: data.price_max_t7_more,
+        minPath: 'price_min_t7_more',
+        maxPath: 'price_max_t7_more',
+        type: 'T7+',
+      },
+    ]
+
+    for (const { total, min, max, minPath, maxPath, type } of priceValidations) {
+      if (total != null && total > 0) {
+        if (min == null) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Le loyer minimum est requis pour ${type}`,
+            path: [minPath],
+          })
+        }
+        if (max == null) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Le loyer maximum est requis pour ${type}`,
+            path: [maxPath],
+          })
+        }
+      }
+      if (min != null && max != null && min > max) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Le loyer minimum ${type} ne peut pas être supérieur au loyer maximum`,
           path: [minPath],
         })
       }
