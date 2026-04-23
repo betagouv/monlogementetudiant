@@ -9,6 +9,7 @@ export { dossierFacileApplications, dossierFacileDocuments, dossierFacileTenants
 export { eventStats } from './event-stats'
 export { externalSources } from './external-sources'
 export { favoriteAccommodations } from './favorite-accommodations'
+export { importBlocklist } from './import-blocklist'
 export { newsletterSubscriptions } from './newsletter-subscriptions'
 export { owners } from './owners'
 export { questionsAnswers } from './questions-answers'

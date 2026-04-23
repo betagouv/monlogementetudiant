@@ -68,6 +68,7 @@ export async function cleanTables() {
       admin_owner_link,
       account_owner,
       accommodation_externalsource,
+      accommodation_importblocklist,
       accommodation_favoriteaccommodation,
       newsletter_subscription,
       student_alert,

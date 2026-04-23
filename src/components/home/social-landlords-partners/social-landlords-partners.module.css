@@ -1,0 +1,107 @@
+.partnersSection {
+  background-color: white;
+  display: flex;
+}
+
+.partnersLogos {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  padding: 48px 16px;
+  align-items: center;
+  justify-items: center;
+  flex: 1;
+}
+
+.partnerLogoItem {
+  width: 200px;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.partnerLogoImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.partnersContent {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 4rem 5rem;
+  background-color: #5757ad;
+  color: white;
+  flex: 1;
+}
+
+.partnersContent > * {
+  width: 100%;
+}
+
+.partnersTitle {
+  margin: 0;
+  color: white;
+}
+
+.partnersHighlight {
+  color: #efcb3a !important;
+}
+
+.partnersAvatars {
+  display: flex;
+  position: relative;
+}
+
+.avatarOverlap {
+  margin-left: -12px;
+}
+
+.partnersButton {
+  color: white !important;
+  width: fit-content;
+}
+
+@media (max-width: 767px) {
+  .partnersLogos {
+    padding: 1rem;
+    gap: 1rem;
+    overflow: hidden;
+  }
+
+  .partnerLogoItem {
+    width: min(100%, 160px);
+    height: 72px;
+  }
+
+  .partnersSection {
+    flex-direction: column-reverse;
+  }
+
+  .partnersContent {
+    padding: 2rem 1.5rem;
+    text-align: center;
+    gap: 1.5rem;
+  }
+
+  .partnersTitle {
+    font-size: 1.75rem !important;
+    line-height: 2.25rem;
+  }
+
+  .partnersContent > p {
+    font-size: 1.125rem !important;
+    line-height: 1.75rem;
+  }
+
+  .partnersContact {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .partnersButton {
+    align-self: center;
+  }
+}

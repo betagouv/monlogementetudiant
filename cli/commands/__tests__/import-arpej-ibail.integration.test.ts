@@ -1,6 +1,6 @@
 import { and, eq } from 'drizzle-orm'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { createOwner } from '../../../src/__tests__/fixtures/factories'
+import { createAccommodation, createExternalSource, createImportBlocklist, createOwner } from '../../../src/__tests__/fixtures/factories'
 import { getTestDb } from '../../../src/__tests__/helpers/test-db'
 import { accommodations, externalSources } from '../../../src/server/db/schema'
 
@@ -226,5 +226,71 @@ describe('import-arpej-ibail integration', () => {
 
     const [updated] = await db.select().from(accommodations).where(eq(accommodations.id, created!.id))
     expect(updated!.slug).toBe(originalSlug)
+  })
+
+  it('skips blocked residences before creation', async () => {
+    const db = getTestDb()
+
+    await createOwner({ name: 'ARPEJ', slug: 'arpej-block-create', url: 'https://www.arpej.fr/fr/' })
+    await createImportBlocklist({ source: 'arpej', sourceId: 'res-blocked-create', reason: 'Suppression définitive' })
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => [
+        {
+          key: 'res-blocked-create',
+          title: 'Résidence Bloquée Création',
+          address: '10 Rue Interdite',
+          zip_code: '75010',
+          city: 'Paris',
+        },
+      ],
+      headers: new Headers({ 'X-Pagination-Total-Pages': '1' }),
+    })
+
+    const result = await command.execute({})
+
+    expect(result.created).toBe(0)
+    expect(result.updated).toBe(0)
+    expect(result.skipped).toBe(1)
+
+    const blocked = await db.select().from(accommodations).where(eq(accommodations.name, 'Résidence Bloquée Création'))
+    expect(blocked).toHaveLength(0)
+  })
+
+  it('skips blocked residences before update', async () => {
+    const db = getTestDb()
+
+    await createOwner({ name: 'ARPEJ', slug: 'arpej-block-update', url: 'https://www.arpej.fr/fr/' })
+    const existing = await createAccommodation({
+      name: 'Résidence Préservée',
+      slug: 'residence-preservee',
+      postalCode: '75011',
+    })
+    await createExternalSource({ accommodationId: existing.id, source: 'arpej', sourceId: 'res-blocked-update' })
+    await createImportBlocklist({ source: 'arpej', sourceId: 'res-blocked-update', reason: 'Suppression définitive' })
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => [
+        {
+          key: 'res-blocked-update',
+          title: 'Résidence Modifiée',
+          address: '11 Rue Interdite',
+          zip_code: '75011',
+          city: 'Paris',
+        },
+      ],
+      headers: new Headers({ 'X-Pagination-Total-Pages': '1' }),
+    })
+
+    const result = await command.execute({})
+
+    expect(result.created).toBe(0)
+    expect(result.updated).toBe(0)
+    expect(result.skipped).toBe(1)
+
+    const [unchanged] = await db.select().from(accommodations).where(eq(accommodations.id, existing.id))
+    expect(unchanged.name).toBe('Résidence Préservée')
   })
 })

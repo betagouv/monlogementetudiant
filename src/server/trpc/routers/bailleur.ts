@@ -20,6 +20,7 @@ import { AVAILABILITY_FIELD_MAP, mapFields, UPDATE_FIELD_MAP } from '~/server/tr
 import { resolveCityId } from '~/server/trpc/utils/resolve-city'
 import { getJwtSecret } from '~/server/utils/jwt-secret'
 import { findAvailableSlug } from '~/server/utils/slug'
+import { normalizeAccommodationName } from '~/utils/normalize-accommodation-name'
 import { createTRPCRouter, ownerProcedure } from '../init'
 import { mapToGeoJsonFeature, priceMaxComputed } from './accommodations'
 
@@ -270,10 +271,10 @@ export const bailleurRouter = createTRPCRouter({
         throw new TRPCError({ code: 'FORBIDDEN', message: 'No owner record for this user' })
       }
 
-      const { typologies, ...fields } = input
+      const { typologies, name, ...fields } = input
       const flatTypologies = transformTypologiesToFlat(typologies)
 
-      const slug = await findAvailableSlug(generateSlug(fields.name), db, accommodations)
+      const slug = await findAvailableSlug(generateSlug(name), db, accommodations)
 
       // Geocode address
       const coords = await geocodeAddress(fields.address, fields.city, fields.postal_code)
@@ -285,7 +286,7 @@ export const bailleurRouter = createTRPCRouter({
       const derived = computeDerivedFields({ ...flatTypologies })
 
       const insertValues: typeof accommodations.$inferInsert = {
-        name: fields.name,
+        name: normalizeAccommodationName(name),
         slug,
         address: fields.address,
         postalCode: fields.postal_code,
@@ -394,6 +395,9 @@ export const bailleurRouter = createTRPCRouter({
     const [snapshot] = await db.select().from(accommodations).where(eq(accommodations.slug, slug)).limit(1)
 
     const camelFields = mapFields(fields, UPDATE_FIELD_MAP)
+    if (typeof camelFields.name === 'string') {
+      camelFields.name = normalizeAccommodationName(camelFields.name)
+    }
     const userProvidedKeys = new Set(Object.keys(camelFields))
 
     // Recompute derived fields
