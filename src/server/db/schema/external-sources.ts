@@ -7,7 +7,7 @@ export const externalSources = pgTable(
     id: bigint({ mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
     accommodationId: bigint('accommodation_id', { mode: 'number' })
       .notNull()
-      .references(() => accommodations.id),
+      .references(() => accommodations.id, { onDelete: 'cascade' }),
     source: varchar({ length: 100 }).notNull().default('clef'),
     sourceId: varchar('source_id', { length: 100 }),
   },
