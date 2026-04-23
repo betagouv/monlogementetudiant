@@ -8,6 +8,7 @@ import { departments } from '../../server/db/schema/departments'
 import { dossierFacileApplications, dossierFacileDocuments, dossierFacileTenants } from '../../server/db/schema/dossier-facile'
 import { externalSources } from '../../server/db/schema/external-sources'
 import { favoriteAccommodations } from '../../server/db/schema/favorite-accommodations'
+import { importBlocklist } from '../../server/db/schema/import-blocklist'
 import { owners } from '../../server/db/schema/owners'
 import { studentAlerts } from '../../server/db/schema/student-alerts'
 import { generateSlug } from '../../server/trpc/utils/accommodation-helpers'
@@ -21,6 +22,7 @@ type AccommodationInsert = typeof accommodations.$inferInsert
 type OwnerInsert = typeof owners.$inferInsert
 type ExternalSourceInsert = typeof externalSources.$inferInsert
 type FavoriteAccommodationInsert = typeof favoriteAccommodations.$inferInsert
+type ImportBlocklistInsert = typeof importBlocklist.$inferInsert
 type StudentAlertInsert = typeof studentAlerts.$inferInsert
 type DossierFacileTenantInsert = typeof dossierFacileTenants.$inferInsert
 type DossierFacileApplicationInsert = typeof dossierFacileApplications.$inferInsert
@@ -208,6 +210,19 @@ export async function createFavoriteAccommodation(
 ) {
   const db = getTestDb()
   const [row] = await db.insert(favoriteAccommodations).values(overrides).returning()
+  return row
+}
+
+export async function createImportBlocklist(overrides: Partial<ImportBlocklistInsert> & { source: string; sourceId: string }) {
+  const db = getTestDb()
+  const [row] = await db
+    .insert(importBlocklist)
+    .values({
+      ...overrides,
+      createdAt: overrides.createdAt ?? new Date(),
+    })
+    .onConflictDoNothing()
+    .returning()
   return row
 }
 

@@ -644,6 +644,9 @@
       "description": "Nous centralisons l'ensemble de l'offre de résidences à vocation sociale pour fluidifier le parcours d'accès au logement des étudiants et futurs étudiants",
       "button": "En savoir plus"
     },
+    "institutionalPartners": {
+      "label": "Parmi les partenaires de <bold>Mon Logement Étudiant</bold>"
+    },
     "social": {
       "titlePart1": "Bailleurs sociaux, rejoignez la plateforme nationale du",
       "titlePart2": "logement étudiant",
