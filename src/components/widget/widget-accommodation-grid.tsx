@@ -5,19 +5,21 @@ import { Pagination } from '@codegouvfr/react-dsfr/Pagination'
 import clsx from 'clsx'
 import { useTranslations } from 'next-intl'
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
-import { FC, useEffect } from 'react'
+import { FC, useEffect, useMemo } from 'react'
 import { AccomodationCard } from '~/components/find-student-accomodation/card/find-student-accomodation-card'
+import { FindStudentAccomodationNeighborsResults } from '~/components/find-student-accomodation/results/find-student-accomodation-neighbors-results'
 import { CardSkeleton } from '~/components/ui/skeleton/card-skeleton'
 import { useAccomodations } from '~/hooks/use-accomodations'
 import { trackEvent } from '~/lib/tracking'
+import { TTerritory } from '~/schemas/territories'
 import { sPluriel } from '~/utils/sPluriel'
 import styles from './widget-accommodation-grid.module.css'
 
 type WidgetAccommodationGridProps = {
-  cityName?: string
+  territory?: TTerritory
 }
 
-export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = () => {
+export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = ({ territory }) => {
   const t = useTranslations('findAccomodation.results')
   const [queryStates] = useQueryStates({
     bbox: parseAsString,
@@ -32,6 +34,14 @@ export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = () => {
   })
 
   const { data: accommodations, isLoading } = useAccomodations({ pageSize: 6 })
+
+  const totalPages = accommodations ? Math.ceil(accommodations.count / accommodations.page_size) : 1
+  const currentPage = queryStates.page ?? 1
+  const isLastPage = currentPage >= totalPages
+  const mainAccommodationIds = useMemo(
+    () => (accommodations?.results.features || []).map((feature) => feature.id),
+    [accommodations?.results.features],
+  )
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
@@ -67,8 +77,8 @@ export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = () => {
         <div className={styles.paginationContainer}>
           <Pagination
             showFirstLast={false}
-            count={Math.ceil(accommodations.count / accommodations.page_size)}
-            defaultPage={queryStates.page ?? 1}
+            count={totalPages}
+            defaultPage={currentPage}
             getPageLinkProps={(page: number) => {
               const params = new URLSearchParams()
               if (queryStates.bbox) params.set('bbox', queryStates.bbox)
@@ -90,6 +100,9 @@ export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = () => {
             }}
           />
         </div>
+      )}
+      {territory && isLastPage && (
+        <FindStudentAccomodationNeighborsResults territory={territory} mainAccommodationIds={mainAccommodationIds} />
       )}
       <footer className={styles.footer}>
         Proposé par{' '}
