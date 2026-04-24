@@ -1,0 +1,3 @@
+ALTER TABLE "accommodation_favoriteaccommodation" DROP CONSTRAINT "accommodation_favoriteaccommodation_accommodation_id_accommodation_accommodation_id_fk";
+--> statement-breakpoint
+ALTER TABLE "accommodation_favoriteaccommodation" ADD CONSTRAINT "accommodation_favoriteaccommodation_accommodation_id_accommodation_accommodation_id_fk" FOREIGN KEY ("accommodation_id") REFERENCES "public"."accommodation_accommodation"("id") ON DELETE cascade ON UPDATE no action;
