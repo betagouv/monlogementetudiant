@@ -25,6 +25,7 @@ export default async function WidgetLogementsPage({
     city?: string
     colocation?: string
     crous?: string
+    disponible?: string
     filters?: string
     gestionnaire?: string
     page?: string
@@ -64,6 +65,7 @@ export default async function WidgetLogementsPage({
       pageSize: WIDGET_PAGE_SIZE,
       isAccessible: parsedParams.accessible === 'true' ? true : undefined,
       hasColiving: parsedParams.colocation === 'true' ? true : undefined,
+      onlyWithAvailability: parsedParams.disponible === 'true' ? true : undefined,
       priceMax: parsedParams.prix ?? undefined,
       viewCrous: parsedParams.crous === 'true' ? true : false,
       academyId: parsedParams.academie ? Number(parsedParams.academie) : undefined,
@@ -80,6 +82,7 @@ export default async function WidgetLogementsPage({
         pageSize: EXPANDED_SEARCH_PAGE_SIZE,
         isAccessible: parsedParams.accessible === 'true' ? true : undefined,
         hasColiving: parsedParams.colocation === 'true' ? true : undefined,
+        onlyWithAvailability: parsedParams.disponible === 'true' ? true : undefined,
         viewCrous: parsedParams.crous === 'true',
         ownerSlug: parsedParams.gestionnaire ?? undefined,
         priceMax: expandedPriceMax,

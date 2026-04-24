@@ -1,0 +1,7 @@
+.label {
+  width: unset !important;
+}
+
+.label::before {
+  margin-right: 0.5rem !important;
+}

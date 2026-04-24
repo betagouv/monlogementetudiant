@@ -59,7 +59,7 @@ export const FindStudentAccomodationAutocompleteResults: FC<FindStudentAccomodat
                   const searchParams = new URLSearchParams()
                   const isAcademy = categoryKey === 'academies'
 
-                  const paramsToPreserve = ['colocation', 'accessible', 'prix', 'crous']
+                  const paramsToPreserve = ['colocation', 'accessible', 'prix', 'crous', 'disponible']
                   paramsToPreserve.forEach((param) => {
                     const value = currentSearchParams.get(param)
                     if (value) searchParams.set(param, value)
