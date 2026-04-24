@@ -8,7 +8,7 @@ export const favoriteAccommodations = pgTable(
     userId: varchar('user_id', { length: 255 }).notNull(),
     accommodationId: bigint('accommodation_id', { mode: 'number' })
       .notNull()
-      .references(() => accommodations.id),
+      .references(() => accommodations.id, { onDelete: 'cascade' }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   },
   (t) => [unique().on(t.userId, t.accommodationId), index('favorite_accommodation_user_id_idx').on(t.userId)],
