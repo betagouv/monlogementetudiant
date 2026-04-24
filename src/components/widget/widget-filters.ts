@@ -1,4 +1,4 @@
-export const WIDGET_FILTER_KEYS = ['ville', 'prix', 'colocation', 'crous', 'accessible'] as const
+export const WIDGET_FILTER_KEYS = ['ville', 'disponibilites', 'prix', 'colocation', 'crous', 'accessible'] as const
 export type WidgetFilterKey = (typeof WIDGET_FILTER_KEYS)[number]
 
 export const parseVisibleFilters = (param: string | undefined): WidgetFilterKey[] | null => {

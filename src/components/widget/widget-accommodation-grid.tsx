@@ -31,6 +31,7 @@ export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = ({ terr
     accessible: parseAsString,
     colocation: parseAsString,
     crous: parseAsString,
+    disponible: parseAsString,
   })
 
   const { data: accommodations, isLoading } = useAccomodations({ pageSize: 6 })
@@ -87,6 +88,7 @@ export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = ({ terr
               if (queryStates.colocation) params.set('colocation', queryStates.colocation)
               if (queryStates.prix) params.set('prix', queryStates.prix.toString())
               if (queryStates.crous) params.set('crous', queryStates.crous.toString())
+              if (queryStates.disponible) params.set('disponible', queryStates.disponible)
               if (queryStates.gestionnaire) params.set('gestionnaire', queryStates.gestionnaire)
               if (queryStates.filters) params.set('filters', queryStates.filters)
               params.set('page', page.toString())

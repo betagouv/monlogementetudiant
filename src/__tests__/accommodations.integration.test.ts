@@ -658,6 +658,120 @@ describe('accommodations.list', () => {
   })
 })
 
+describe('accommodations.list — filter combinations', () => {
+  it('filters by onlyWithAvailability', async () => {
+    await createAccommodation({
+      slug: 'available',
+      nbT1Available: 5,
+      geom: { type: 'Point', coordinates: [4.39, 45.44] },
+    })
+    await createAccommodation({
+      slug: 'unavailable',
+      nbT1Available: 0,
+      nbT2Available: 0,
+      acceptWaitingList: false,
+      geom: { type: 'Point', coordinates: [4.39, 45.44] },
+    })
+
+    const result = await caller.accommodations.list({ onlyWithAvailability: true })
+    expect(result.count).toBe(1)
+    expect(result.results.features[0].properties.slug).toBe('available')
+  })
+
+  it('combines isAccessible and hasColiving (intersection)', async () => {
+    await createAccommodation({
+      slug: 'accessible-and-coliving',
+      nbAccessibleApartments: 3,
+      nbColivingApartments: 2,
+      geom: { type: 'Point', coordinates: [4.39, 45.44] },
+    })
+    await createAccommodation({
+      slug: 'only-accessible',
+      nbAccessibleApartments: 3,
+      nbColivingApartments: 0,
+      geom: { type: 'Point', coordinates: [4.39, 45.44] },
+    })
+    await createAccommodation({
+      slug: 'only-coliving',
+      nbAccessibleApartments: 0,
+      nbColivingApartments: 2,
+      geom: { type: 'Point', coordinates: [4.39, 45.44] },
+    })
+
+    const result = await caller.accommodations.list({ isAccessible: true, hasColiving: true })
+    expect(result.count).toBe(1)
+    expect(result.results.features[0].properties.slug).toBe('accessible-and-coliving')
+  })
+
+  it('combines priceMax and viewCrous', async () => {
+    const crousCheap = await createAccommodation({
+      slug: 'crous-cheap',
+      priceMin: 300,
+      geom: { type: 'Point', coordinates: [4.39, 45.44] },
+    })
+    await createExternalSource({ accommodationId: crousCheap.id, source: 'crous' })
+
+    const crousExpensive = await createAccommodation({
+      slug: 'crous-expensive',
+      priceMin: 800,
+      geom: { type: 'Point', coordinates: [4.39, 45.44] },
+    })
+    await createExternalSource({ accommodationId: crousExpensive.id, source: 'crous' })
+
+    await createAccommodation({
+      slug: 'non-crous-cheap',
+      priceMin: 300,
+      geom: { type: 'Point', coordinates: [4.39, 45.44] },
+    })
+
+    const result = await caller.accommodations.list({ viewCrous: true, priceMax: 500 })
+    expect(result.count).toBe(1)
+    expect(result.results.features[0].properties.slug).toBe('crous-cheap')
+  })
+
+  it('stacks all filters together', async () => {
+    const match = await createAccommodation({
+      slug: 'matches-all',
+      priceMin: 300,
+      nbAccessibleApartments: 3,
+      nbColivingApartments: 2,
+      nbT1Available: 5,
+      geom: { type: 'Point', coordinates: [4.39, 45.44] },
+    })
+    await createExternalSource({ accommodationId: match.id, source: 'crous' })
+
+    const tooExpensive = await createAccommodation({
+      slug: 'too-expensive',
+      priceMin: 800,
+      nbAccessibleApartments: 3,
+      nbColivingApartments: 2,
+      nbT1Available: 5,
+      geom: { type: 'Point', coordinates: [4.39, 45.44] },
+    })
+    await createExternalSource({ accommodationId: tooExpensive.id, source: 'crous' })
+
+    const notAccessible = await createAccommodation({
+      slug: 'not-accessible',
+      priceMin: 300,
+      nbAccessibleApartments: 0,
+      nbColivingApartments: 2,
+      nbT1Available: 5,
+      geom: { type: 'Point', coordinates: [4.39, 45.44] },
+    })
+    await createExternalSource({ accommodationId: notAccessible.id, source: 'crous' })
+
+    const result = await caller.accommodations.list({
+      viewCrous: true,
+      priceMax: 500,
+      isAccessible: true,
+      hasColiving: true,
+      onlyWithAvailability: true,
+    })
+    expect(result.count).toBe(1)
+    expect(result.results.features[0].properties.slug).toBe('matches-all')
+  })
+})
+
 describe('accommodations.getBySlug', () => {
   it('returns full detail with owner', async () => {
     const owner = await createOwner({ name: 'CROUS', slug: 'crous', url: 'https://crous.fr' })

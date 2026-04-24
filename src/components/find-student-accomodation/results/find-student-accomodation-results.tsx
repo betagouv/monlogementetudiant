@@ -59,6 +59,7 @@ export const FindStudentAccomodationResultsContent: FC<FindStudentAccomodationRe
     accessible: parseAsString,
     colocation: parseAsString,
     crous: parseAsString,
+    disponible: parseAsString,
     ['recherche-par-carte']: parseAsString,
   })
 
@@ -138,6 +139,9 @@ export const FindStudentAccomodationResultsContent: FC<FindStudentAccomodationRe
                   }
                   if (queryStates.crous) {
                     params.set('crous', queryStates.crous.toString())
+                  }
+                  if (queryStates.disponible) {
+                    params.set('disponible', queryStates.disponible)
                   }
                   params.set('page', page.toString())
                   return {
