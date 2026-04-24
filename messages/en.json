@@ -297,6 +297,9 @@
       "filtersCta": "Filtres",
       "accessbility": "Adapté PMR",
       "accommodations": "Résidences",
+      "availability": "Logements disponibles",
+      "availabilityLegend": "Disponibilités",
+      "advancedFiltersToggle": "Afficher plus de filtres",
       "crous": "Crous",
       "others": "Autres résidences"
     },

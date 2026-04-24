@@ -27,32 +27,34 @@ export const FindStudentAccessibleAccomodationSwitch: FC<FindStudentAccessibleAc
   }
 
   return (
-    <div className={classes.container}>
-      <ToggleSwitch
-        classes={{ label: classes.label }}
-        inputTitle="accessibility"
-        showCheckedHint={false}
-        label={t('header.accessbility')}
-        labelPosition="right"
-        checked={queryStates.accessible === 'true'}
-        onChange={handleChange}
-        disabled={widget && queryStates.crous === 'true'}
-      />
-      <Tooltip kind="hover" title={t('header.tooltip.accessible')} />
-    </div>
+    <ToggleSwitch
+      classes={{ label: classes.label }}
+      inputTitle="accessibility"
+      showCheckedHint={false}
+      label={
+        <span className={classes.labelContent}>
+          {t('header.accessbility')}
+          <Tooltip kind="hover" title={t('header.tooltip.accessible')} />
+        </span>
+      }
+      labelPosition="right"
+      checked={queryStates.accessible === 'true'}
+      onChange={handleChange}
+      disabled={widget && queryStates.crous === 'true'}
+    />
   )
 }
 
 const useStyles = tss.create({
-  container: {
-    alignItems: 'center',
-    display: 'flex',
-    gap: '0.5rem',
-  },
   label: {
     '&::before': {
       marginRight: '0.5rem !important',
     },
     width: 'unset !important',
+  },
+  labelContent: {
+    alignItems: 'center',
+    display: 'inline-flex',
+    gap: '0.5rem',
   },
 })

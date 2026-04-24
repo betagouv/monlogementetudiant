@@ -5,6 +5,7 @@ export const accommodationsParsers = {
   accessible: parseAsString,
   bbox: parseAsString,
   colocation: parseAsString,
+  disponible: parseAsString,
   gestionnaire: parseAsString,
   page: parseAsInteger,
   prix: parseAsInteger,
