@@ -9,6 +9,7 @@ export const getAccommodations = (searchParams: {
   gestionnaire?: string
   center?: string
   colocation?: string
+  disponible?: string
   prix?: string
   page?: string
   page_size?: string
@@ -22,6 +23,7 @@ export const getAccommodations = (searchParams: {
       pageSize: searchParams.page_size ? Number(searchParams.page_size) : 12,
       isAccessible: searchParams.accessible === 'true' ? true : undefined,
       hasColiving: searchParams.colocation === 'true' ? true : undefined,
+      onlyWithAvailability: searchParams.disponible === 'true' ? true : undefined,
       priceMax: searchParams.prix ? Number(searchParams.prix) : undefined,
       viewCrous: searchParams.crous === 'true' ? true : false,
       academyId: searchParams.academie ? Number(searchParams.academie) : undefined,
@@ -49,6 +51,7 @@ export const prefetchAccommodations = async (
     pageSize: queryKeyParams.pageSize ?? 12,
     isAccessible: queryKeyParams.accessible === 'true' ? true : undefined,
     hasColiving: queryKeyParams.colocation === 'true' ? true : undefined,
+    onlyWithAvailability: queryKeyParams.disponible === 'true' ? true : undefined,
     priceMax: queryKeyParams.prix ?? undefined,
     viewCrous: queryKeyParams.crous === 'true' ? true : false,
     academyId: queryKeyParams.academie ? Number(queryKeyParams.academie) : undefined,

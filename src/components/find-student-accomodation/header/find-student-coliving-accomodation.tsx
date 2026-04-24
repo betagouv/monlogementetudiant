@@ -26,27 +26,20 @@ export const FindStudentColivingAccomodationSwitch: FC<FindStudentColivingAccomo
   }
 
   return (
-    <div className={classes.container}>
-      <ToggleSwitch
-        classes={{ label: classes.label }}
-        inputTitle="coliving"
-        showCheckedHint={false}
-        label={t('header.shared')}
-        labelPosition="right"
-        checked={queryStates.colocation === 'true'}
-        disabled={widget && queryStates.crous === 'true'}
-        onChange={handleChange}
-      />
-    </div>
+    <ToggleSwitch
+      classes={{ label: classes.label }}
+      inputTitle="coliving"
+      showCheckedHint={false}
+      label={t('header.shared')}
+      labelPosition="right"
+      checked={queryStates.colocation === 'true'}
+      disabled={widget && queryStates.crous === 'true'}
+      onChange={handleChange}
+    />
   )
 }
 
 const useStyles = tss.create({
-  container: {
-    alignItems: 'center',
-    display: 'flex',
-    gap: '0.5rem',
-  },
   label: {
     '&::before': {
       marginRight: '0.5rem !important',

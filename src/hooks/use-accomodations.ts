@@ -10,7 +10,7 @@ interface UseAccomodationsOptions {
 
 export const useAccomodations = ({ pageSize }: UseAccomodationsOptions = {}) => {
   const [queryStates] = useQueryStates(accommodationsParsers)
-  const { bbox, academie, accessible, colocation, gestionnaire, page, prix, crous } = queryStates
+  const { bbox, academie, accessible, colocation, disponible, gestionnaire, page, prix, crous } = queryStates
   const [rechercheParCarte] = useQueryState('recherche-par-carte', parseAsString)
   const trpc = useTRPC()
 
@@ -40,6 +40,7 @@ export const useAccomodations = ({ pageSize }: UseAccomodationsOptions = {}) => 
       pageSize: pageSize ?? 12,
       isAccessible: accessible === 'true' ? true : undefined,
       hasColiving: colocation === 'true' ? true : undefined,
+      onlyWithAvailability: disponible === 'true' ? true : undefined,
       priceMax: prix ?? undefined,
       viewCrous: crous === 'true' ? true : false,
       academyId: academie ? Number(academie) : undefined,

@@ -1,15 +1,31 @@
 .container {
-  align-items: flex-end;
   border-bottom: 1px solid var(--border-default-grey);
-  display: flex;
-  gap: 1rem;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr) auto;
+  row-gap: 2rem;
+  column-gap: 1rem;
   margin-bottom: 2rem;
   padding-bottom: 1rem;
 }
 
-.checkboxRoot {
-  margin: 0rem !important;
+.mainRow {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+  align-items: start;
+  justify-items: start;
+}
+
+.advancedRow {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+  align-items: center;
+  justify-items: start;
+}
+
+.toggleButton {
+  align-self: end;
 }
 
 .mobileContainer {
