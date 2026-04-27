@@ -241,6 +241,7 @@ describe('multi-address: bailleur.create with multiple addresses', () => {
   it('creates a residence with multiple addresses', async () => {
     const db = getTestDb()
     await createCityWithGeom('Paris', 'paris', ['75001'], squareBoundary(2.35, 48.85))
+    await createOwner({ name: 'Owner Multi Create', slug: 'owner-multi-create', userId: 'test-owner-id' })
 
     const result = await ownerCaller.bailleur.create({
       name: 'Residence Multi Create',

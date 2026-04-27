@@ -297,14 +297,16 @@ const listAccommodationsWithConditions = async ({
 }
 
 export function mapToGeoJsonFeature(row: Record<string, unknown>) {
+  // bigint columns come back as strings from raw SQL queries (db.execute) but as numbers from typed selects
+  const id = typeof row.id === 'string' ? Number(row.id) : (row.id as number)
   return {
     geometry: {
       type: 'Point' as const,
       coordinates: [row.lng as number, row.lat as number],
     },
-    id: row.id as number,
+    id,
     properties: {
-      id: row.id as number,
+      id,
       name: row.name as string,
       slug: row.slug as string,
       address: (row.address as string) ?? '',

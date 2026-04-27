@@ -115,9 +115,7 @@ describe('bailleur.create', () => {
     await expect(
       ownerCaller.bailleur.create({
         name: 'No Owner Residence',
-        address: '1 rue de la Paix',
-        city: 'Paris',
-        postal_code: '75001',
+        addresses: [{ address: '1 rue de la Paix', city: 'Paris', postal_code: '75001' }],
         external_url: 'https://example.com',
         typologies: [
           {
@@ -141,9 +139,7 @@ describe('bailleur.create', () => {
 
     const result = await adminCaller.bailleur.create({
       name: 'Résidence Admin Switch',
-      address: '3 rue Admin',
-      city: 'Paris',
-      postal_code: '75001',
+      addresses: [{ address: '3 rue Admin', city: 'Paris', postal_code: '75001' }],
       external_url: 'https://example.com',
       ownerId: switched.id,
       typologies: [
@@ -173,9 +169,7 @@ describe('bailleur.create', () => {
     await expect(
       adminCaller.bailleur.create({
         name: 'Orphan Admin Residence',
-        address: '4 rue Orphan',
-        city: 'Paris',
-        postal_code: '75001',
+        addresses: [{ address: '4 rue Orphan', city: 'Paris', postal_code: '75001' }],
         external_url: 'https://example.com',
         typologies: [
           {
@@ -199,9 +193,7 @@ describe('bailleur.create', () => {
     await expect(
       adminCaller.bailleur.create({
         name: 'Unauthorized Owner Residence',
-        address: '5 rue Unauth',
-        city: 'Paris',
-        postal_code: '75001',
+        addresses: [{ address: '5 rue Unauth', city: 'Paris', postal_code: '75001' }],
         external_url: 'https://example.com',
         ownerId: other.id,
         typologies: [
