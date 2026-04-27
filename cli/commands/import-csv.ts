@@ -1,6 +1,8 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { and, eq, sql } from 'drizzle-orm'
+import { db } from '~/server/db'
+import { ensureCity, geocodeAddress, reverseGeocode } from '~/server/lib/import/geocoder'
 import { ZUpdateResidence } from '../../src/schemas/accommodations/update-residence'
 import { accommodationAddresses, accommodations, externalSources } from '../../src/server/db/schema'
 import type { CsvRow } from '../../src/server/lib/import/csv-parser'
@@ -8,8 +10,6 @@ import { generateSourceId, normalizeEnum, parseCsvContent, toBool, toDigit } fro
 import { generateAccommodationKey, uploadFile } from '../../src/server/services/s3'
 import { computeDerivedFields, generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
 import { findAvailableSlug } from '../../src/server/utils/slug'
-import { db } from '../lib/db'
-import { ensureCity, geocodeAddress, reverseGeocode } from '../lib/geocoder'
 import type { ImportCommand, ImportOptions, ImportResult } from '../types'
 import { getOrCreateOwner } from '../utils/get-or-create-owner'
 

@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm'
+import { db } from '~/server/db'
 import { cities, departments } from '../../src/server/db/schema'
-import { db } from '../lib/db'
 import type { SyncCommand, SyncOptions, SyncResult } from '../types'
 
 const DATA_URL =

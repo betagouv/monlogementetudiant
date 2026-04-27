@@ -6,20 +6,13 @@ import { accommodations, externalSources } from '../../../src/server/db/schema'
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
 
-const testDb = getTestDb()
-
-vi.mock('../../lib/db', () => ({
-  db: testDb,
-  closeDb: vi.fn(),
-}))
-
 vi.mock('../../../src/server/services/s3', () => ({
   uploadFile: vi.fn(async ({ key }: { key: string }) => `https://s3.gra.io.cloud.ovh.net/bucket/${key}`),
   generateAccommodationKey: vi.fn((ext: string) => `accommodations/mock-uuid.${ext}`),
 }))
 
-vi.mock('../../lib/geocoder', async (importOriginal) => {
-  const original = await importOriginal<typeof import('../../lib/geocoder')>()
+vi.mock('~/server/lib/import/geocoder', async (importOriginal) => {
+  const original = await importOriginal<typeof import('~/server/lib/import/geocoder')>()
   return {
     ...original,
     ensureCity: vi.fn(async (_postalCode: string, cityName: string) => ({ name: cityName, id: 0 })),

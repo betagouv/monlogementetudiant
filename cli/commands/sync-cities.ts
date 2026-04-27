@@ -1,9 +1,9 @@
 import { eq, sql } from 'drizzle-orm'
+import { db } from '~/server/db'
+import { fetchCityFromGeoApi, fetchCommunesByDepartment, fillCityFromApi } from '~/server/lib/import/geocoder'
 import { accommodationAddresses, accommodations, cities, departments } from '../../src/server/db/schema'
 import { generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
 import { findAvailableSlug } from '../../src/server/utils/slug'
-import { db } from '../lib/db'
-import { fetchCityFromGeoApi, fetchCommunesByDepartment, fillCityFromApi } from '../lib/geocoder'
 import type { SyncCommand, SyncOptions, SyncResult } from '../types'
 
 // Paris, Marseille, Lyon — arrondissements hardcodés (même données que Django)

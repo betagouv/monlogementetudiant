@@ -10,13 +10,6 @@ import { accommodationAddresses, accommodations, externalSources, owners } from 
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
 
-const testDb = getTestDb()
-
-vi.mock('../../lib/db', () => ({
-  db: testDb,
-  closeDb: vi.fn(),
-}))
-
 vi.mock('ssh2-sftp-client', () => ({
   default: vi.fn(),
 }))
