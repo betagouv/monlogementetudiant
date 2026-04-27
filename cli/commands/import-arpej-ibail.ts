@@ -1,10 +1,10 @@
 import { and, eq, sql } from 'drizzle-orm'
+import { db } from '~/server/db'
+import { ensureCity, geocodeAddress } from '~/server/lib/import/geocoder'
 import { accommodationAddresses, accommodations, externalSources, importBlocklist } from '../../src/server/db/schema'
 import { generateAccommodationKey, uploadFile } from '../../src/server/services/s3'
 import { computeDerivedFields, generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
 import { findAvailableSlug } from '../../src/server/utils/slug'
-import { db } from '../lib/db'
-import { ensureCity, geocodeAddress } from '../lib/geocoder'
 import type { ImportCommand, ImportOptions, ImportResult } from '../types'
 import { getOrCreateOwner } from '../utils/get-or-create-owner'
 

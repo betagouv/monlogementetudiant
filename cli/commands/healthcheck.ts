@@ -1,8 +1,8 @@
 import { and, eq } from 'drizzle-orm'
+import { closeDb, db } from '~/server/db'
 import { accommodationAddresses } from '../../src/server/db/schema/accommodation-addresses'
 import { accommodations } from '../../src/server/db/schema/accommodations'
 import { cities } from '../../src/server/db/schema/cities'
-import { closeDb, db } from '../lib/db'
 
 const BASE_PATH = '/trouver-un-logement-etudiant/ville'
 

@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm'
+import { db } from '~/server/db'
 import { generateSlug } from '~/server/trpc/utils/accommodation-helpers'
 import { owners } from '../../src/server/db/schema'
-import { db } from '../lib/db'
 
 export async function getOrCreateOwner(name: string, url?: string): Promise<number> {
   const existing = await db.select().from(owners).where(eq(owners.name, name)).limit(1)
