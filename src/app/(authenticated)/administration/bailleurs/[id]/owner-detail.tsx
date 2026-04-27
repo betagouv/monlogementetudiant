@@ -167,7 +167,7 @@ export function OwnerDetail({ id }: { id: string }) {
           {
             label: `Résidence${sPluriel(accCount)} (${accCount})`,
             iconId: 'fr-icon-home-4-line',
-            content: <ResidencesTab accommodations={accommodationsData ?? []} ownerId={ownerId} ownerName={ownerData.name} />,
+            content: <ResidencesTab accommodations={accommodationsData ?? []} ownerId={ownerId} />,
           },
           {
             label: 'Statistiques',
@@ -412,21 +412,9 @@ function UsersTab({
   )
 }
 
-function downloadCsv(csv: string, filename: string) {
-  const bom = '\uFEFF'
-  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
-}
-
 function ResidencesTab({
   accommodations,
   ownerId,
-  ownerName,
 }: {
   accommodations: Array<{
     id: number
@@ -439,23 +427,7 @@ function ResidencesTab({
     published: boolean
   }>
   ownerId: number
-  ownerName: string
 }) {
-  const trpcClient = useTRPCClient()
-  const [exporting, setExporting] = useState(false)
-
-  const handleExportCsv = async () => {
-    setExporting(true)
-    try {
-      const csv = await trpcClient.admin.residences.exportCsv.query({ ownerId })
-      const date = new Date().toISOString().slice(0, 10)
-      const safeName = ownerName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()
-      downloadCsv(csv, `residences-${safeName}-${date}.csv`)
-    } finally {
-      setExporting(false)
-    }
-  }
-
   if (accommodations.length === 0) {
     return <p className="fr-text--sm fr-text-mention--grey">Aucune résidence</p>
   }
@@ -463,8 +435,8 @@ function ResidencesTab({
   return (
     <>
       <div className="fr-flex fr-justify-content-end fr-mb-2w">
-        <Button iconId="fr-icon-download-line" priority="secondary" onClick={handleExportCsv} disabled={exporting}>
-          {exporting ? 'Export en cours...' : 'Export CSV'}
+        <Button iconId="fr-icon-download-line" priority="secondary" linkProps={{ href: `/api/admin/residences/export?ownerId=${ownerId}` }}>
+          Export CSV
         </Button>
       </div>
       <div className={clsx('fr-table', styles.tableWrapper)}>

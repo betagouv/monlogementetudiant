@@ -8,9 +8,8 @@ import { useQuery } from '@tanstack/react-query'
 import { ColumnDef, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
 import clsx from 'clsx'
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
-import { useState } from 'react'
 import { useDebounce } from 'use-debounce'
-import { useTRPC, useTRPCClient } from '~/server/trpc/client'
+import { useTRPC } from '~/server/trpc/client'
 import styles from '../administration.module.css'
 
 type ResidenceRow = {
@@ -74,17 +73,6 @@ const columns: ColumnDef<ResidenceRow, unknown>[] = [
   },
 ]
 
-function downloadCsv(csv: string, filename: string) {
-  const bom = '\uFEFF'
-  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
-}
-
 export default function ResidencesPage() {
   const [{ search, page }, setQueryStates] = useQueryStates({
     search: parseAsString.withDefault(''),
@@ -92,20 +80,6 @@ export default function ResidencesPage() {
   })
   const [debouncedSearch] = useDebounce(search, 300)
   const trpc = useTRPC()
-  const trpcClient = useTRPCClient()
-  const [exporting, setExporting] = useState(false)
-
-  const handleExportCsv = async () => {
-    setExporting(true)
-    try {
-      const csv = await trpcClient.admin.residences.exportCsv.query({})
-      const date = new Date().toISOString().slice(0, 10)
-      downloadCsv(csv, `residences-export-${date}.csv`)
-    } finally {
-      setExporting(false)
-    }
-  }
-
   const { data, isLoading } = useQuery(
     trpc.admin.residences.list.queryOptions({
       page,
@@ -142,8 +116,8 @@ export default function ResidencesPage() {
           />
         </div>
         <div className="fr-col-md-6 fr-flex fr-justify-content-end">
-          <Button iconId="fr-icon-download-line" priority="secondary" onClick={handleExportCsv} disabled={exporting}>
-            {exporting ? 'Export en cours...' : 'Export CSV'}
+          <Button iconId="fr-icon-download-line" priority="secondary" linkProps={{ href: '/api/admin/residences/export' }}>
+            Export CSV
           </Button>
         </div>
       </div>
