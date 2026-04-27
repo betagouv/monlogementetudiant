@@ -36,3 +36,7 @@
 .suggestionItem:hover {
   background-color: var(--background-contrast-grey);
 }
+
+.inputContainer {
+  flex: 1;
+}
