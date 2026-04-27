@@ -12,6 +12,7 @@ import { favoriteAccommodations } from '../../server/db/schema/favorite-accommod
 import { importBlocklist } from '../../server/db/schema/import-blocklist'
 import { owners } from '../../server/db/schema/owners'
 import { studentAlerts } from '../../server/db/schema/student-alerts'
+import { trackingEvents } from '../../server/db/schema/tracking-events'
 import { generateSlug } from '../../server/trpc/utils/accommodation-helpers'
 import { getTestDb } from '../helpers/test-db'
 
@@ -25,6 +26,7 @@ type ExternalSourceInsert = typeof externalSources.$inferInsert
 type FavoriteAccommodationInsert = typeof favoriteAccommodations.$inferInsert
 type ImportBlocklistInsert = typeof importBlocklist.$inferInsert
 type StudentAlertInsert = typeof studentAlerts.$inferInsert
+type TrackingEventInsert = typeof trackingEvents.$inferInsert
 type DossierFacileTenantInsert = typeof dossierFacileTenants.$inferInsert
 type DossierFacileApplicationInsert = typeof dossierFacileApplications.$inferInsert
 type DossierFacileDocumentInsert = typeof dossierFacileDocuments.$inferInsert
@@ -280,6 +282,12 @@ export async function createAlert(
       ...overrides,
     })
     .returning()
+  return row
+}
+
+export async function createTrackingEvent(overrides: Partial<TrackingEventInsert> & { type: TrackingEventInsert['type'] }) {
+  const db = getTestDb()
+  const [row] = await db.insert(trackingEvents).values(overrides).returning()
   return row
 }
 

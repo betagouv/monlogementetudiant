@@ -7,6 +7,8 @@ import { Tag, TagProps } from '@codegouvfr/react-dsfr/Tag'
 import { HydrationBoundary } from '@tanstack/react-query'
 import clsx from 'clsx'
 import { Metadata } from 'next'
+import { headers } from 'next/headers'
+import { after } from 'next/server'
 import { getTranslations } from 'next-intl/server'
 import { AccommodationAvailability } from '~/app/(public)/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-availability'
 import AccommodationDescription from '~/app/(public)/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-description'
@@ -22,6 +24,8 @@ import { OwnerDetails } from '~/components/find-student-accomodation/owner-detai
 import { JsonLd } from '~/components/seo/json-ld'
 import { getAvailableApartmentTypes } from '~/enums/apartment-type'
 import { EResidenceType, RESIDENCE_TYPE_LABELS } from '~/enums/residence-type'
+import { logAccommodationView } from '~/server/services/tracking-event-logger'
+import { getOrCreateTrackingSessionId } from '~/server/services/tracking-session'
 import { getCanonicalUrl } from '~/utils/canonical'
 import { formatCityWithA } from '~/utils/french-contraction'
 import { buildBreadcrumbSchema, buildLodgingSchema } from '~/utils/schema'
@@ -48,6 +52,17 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
   const { slug } = await params
   const { accommodation, cityBbox, dehydratedState, latitude, longitude, nbAvailable, nearbyAccommodations, user } =
     await getAccommodationPageContext(slug)
+
+  const trackingSessionId = await getOrCreateTrackingSessionId()
+  const referer = (await headers()).get('referer')
+  after(() =>
+    logAccommodationView({
+      accommodationId: accommodation.id,
+      userId: user?.id,
+      sessionId: trackingSessionId,
+      metadata: referer ? { referer } : undefined,
+    }),
+  )
 
   const {
     address,
