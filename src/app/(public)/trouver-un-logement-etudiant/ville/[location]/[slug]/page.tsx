@@ -59,6 +59,7 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
     postal_code,
     external_url,
     description,
+    updated_at,
     accept_waiting_list,
     virtual_tour_url,
   } = accommodation
@@ -155,6 +156,7 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
           <div className="fr-hidden-sm">{<AccommodationMap latitude={latitude} longitude={longitude} />}</div>
           <div className={clsx('fr-mt-2w fr-mt-md-0 fr-px-2w fr-px-md-0', styles.stickyColumn)}>
             <OwnerDetails
+              updatedAt={updated_at}
               acceptWaitingList={accept_waiting_list}
               owner={owner}
               nbAvailable={nbAvailable}
