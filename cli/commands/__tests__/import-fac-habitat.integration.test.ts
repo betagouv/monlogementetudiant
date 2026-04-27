@@ -94,14 +94,10 @@ describe('import-fac-habitat integration', () => {
 
     const [created] = await db.select().from(accommodations).where(eq(accommodations.name, 'Résidence Soleil'))
     expect(created).toBeDefined()
-<<<<<<< HEAD
-    expect(created!.postalCode).toBe('75001')
-=======
 
     const [addr] = await db.select().from(accommodationAddresses).where(eq(accommodationAddresses.accommodationId, created!.id))
     expect(addr.postalCode).toBe('75001')
     expect(created!.residenceType).toBe('residence-etudiante')
->>>>>>> becd86f (feat: multiple address)
     expect(created!.published).toBe(true)
     expect(created!.nbT1).toBe(10)
     expect(created!.nbT2).toBe(5)
