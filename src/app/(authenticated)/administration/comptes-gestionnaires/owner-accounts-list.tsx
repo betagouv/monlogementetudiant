@@ -109,7 +109,10 @@ export function OwnerAccountsList() {
             }}
           />
         </div>
-        <div className="fr-col-md-7 fr-flex fr-justify-content-end">
+        <div className="fr-col-md-7 fr-flex fr-justify-content-end fr-flex-gap-2v">
+          <Button iconId="fr-icon-download-line" priority="secondary" linkProps={{ href: '/api/admin/comptes-gestionnaires/export' }}>
+            Export CSV
+          </Button>
           <Button iconId="fr-icon-add-line" linkProps={{ href: '/administration/comptes-gestionnaires/nouveau' }}>
             Nouveau compte gestionnaire
           </Button>
