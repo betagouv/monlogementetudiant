@@ -67,13 +67,7 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
         address: a.address || '',
         city: a.city || '',
         postal_code: a.postal_code || '',
-      })) ?? [
-        {
-          address: accommodation.properties.address || '',
-          city: accommodation.properties.city || '',
-          postal_code: accommodation.properties.postal_code || '',
-        },
-      ],
+      })),
       description: accommodation.properties.description || '',
       external_url: accommodation.properties.external_url || '',
       virtual_tour_url: accommodation.properties.virtual_tour_url || '',

@@ -202,7 +202,6 @@ const listAccommodationsWithConditions = async ({
           ${accommodations.residenceType} as "residenceType",
           ${accommodations.target_audience} as "targetAudience",
           ${accommodations.published} as published,
-          ${accommodations.available} as available,
           ${accommodations.nbTotalApartments} as "nbTotalApartments",
           ${accommodations.nbAccessibleApartments} as "nbAccessibleApartments",
           ${accommodations.nbColivingApartments} as "nbColivingApartments",

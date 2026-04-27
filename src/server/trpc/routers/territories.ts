@@ -125,7 +125,7 @@ function cityAccommodationStatsSubquery() {
     .from(accommodations)
     .innerJoin(accommodationAddresses, eq(accommodationAddresses.accommodationId, accommodations.id))
     .leftJoin(owners, eq(accommodations.ownerId, owners.id))
-    .where(and(eq(accommodations.published, true), eq(accommodations.available, true)))
+    .where(eq(accommodations.published, true))
     .groupBy(accommodationAddresses.cityId)
     .as('city_accommodation_stats')
 }

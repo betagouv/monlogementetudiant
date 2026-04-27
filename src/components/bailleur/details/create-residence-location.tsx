@@ -54,8 +54,8 @@ const AddressAutocompleteRow = ({ index, onRemove, isMain }: { index: number; on
   return (
     <div className="fr-mb-2w">
       <div ref={containerRef} className={styles.container}>
-        <div className="fr-flex fr-align-items-end" style={{ gap: '0.5rem' }}>
-          <div style={{ flex: 1 }}>
+        <div className="fr-flex fr-align-items-end fr-flex-gap-2v">
+          <div className={styles.inputContainer}>
             <Input
               label={label}
               state={hasAddressError ? 'error' : 'default'}
