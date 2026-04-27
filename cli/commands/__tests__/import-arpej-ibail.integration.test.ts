@@ -7,13 +7,6 @@ import { accommodationAddresses, accommodations, externalSources } from '../../.
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
 
-const testDb = getTestDb()
-
-vi.mock('../../lib/db', () => ({
-  db: testDb,
-  closeDb: vi.fn(),
-}))
-
 vi.mock('../../../src/server/services/s3', () => ({
   uploadFile: vi.fn().mockResolvedValue('https://s3.example.com/test.jpg'),
   generateAccommodationKey: vi.fn().mockReturnValue('test-key.jpg'),

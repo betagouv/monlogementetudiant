@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
 
-vi.mock('../../lib/db', () => ({
+vi.mock('~/server/db', () => ({
   db: {
     select: vi.fn(),
     update: vi.fn().mockReturnValue({
@@ -15,7 +15,7 @@ vi.mock('../../lib/db', () => ({
 }))
 
 const { default: command } = await import('../sync-students')
-const { db } = await import('../../lib/db')
+const { db } = await import('~/server/db')
 
 beforeEach(() => {
   mockFetch.mockReset()

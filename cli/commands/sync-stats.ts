@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm'
+import { db } from '~/server/db'
 import { eventStats, stats } from '../../src/server/db/schema'
-import { db } from '../lib/db'
 import { getAllEvents, getCompleteStats } from '../lib/matomo'
 import type { SyncCommand, SyncOptions, SyncResult } from '../types'
 

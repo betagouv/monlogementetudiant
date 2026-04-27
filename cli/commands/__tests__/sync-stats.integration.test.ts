@@ -6,13 +6,6 @@ import { eventStats, stats } from '../../../src/server/db/schema'
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
 
-const testDb = getTestDb()
-
-vi.mock('../../lib/db', () => ({
-  db: testDb,
-  closeDb: vi.fn(),
-}))
-
 vi.mock('../../lib/matomo', () => ({
   getCompleteStats: vi.fn(),
   getAllEvents: vi.fn(),

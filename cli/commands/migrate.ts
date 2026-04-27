@@ -1,5 +1,5 @@
 import { migrate as runMigrations } from 'drizzle-orm/postgres-js/migrator'
-import { closeDb, db } from '../lib/db'
+import { closeDb, db } from '~/server/db'
 
 export async function migrate() {
   if (!process.env.DATABASE_URL) {
