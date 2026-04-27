@@ -13,13 +13,6 @@ const mockFetch = vi.fn().mockImplementation((url: string) => {
 })
 vi.stubGlobal('fetch', mockFetch)
 
-const testDb = getTestDb()
-
-vi.mock('../../lib/db', () => ({
-  db: testDb,
-  closeDb: vi.fn(),
-}))
-
 const { default: command } = await import('../sync-cities')
 
 describe('sync-cities integration', () => {

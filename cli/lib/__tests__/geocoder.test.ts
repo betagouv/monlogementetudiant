@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { fetchCityByInsee, fetchCityFromGeoApi, geocodeAddress } from '../geocoder'
+import { fetchCityByInsee, fetchCityFromGeoApi, geocodeAddress } from '~/server/lib/import/geocoder'
 
 vi.mock('~/server/db', () => ({
   db: {

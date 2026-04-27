@@ -7,13 +7,6 @@ import { cities } from '../../../src/server/db/schema'
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
 
-const testDb = getTestDb()
-
-vi.mock('../../lib/db', () => ({
-  db: testDb,
-  closeDb: vi.fn(),
-}))
-
 const { default: command } = await import('../sync-students')
 
 describe('sync-students integration', () => {

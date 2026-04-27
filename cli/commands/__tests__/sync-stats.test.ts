@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('../../lib/db', () => ({
+vi.mock('~/server/db', () => ({
   db: {
     select: vi.fn(),
     insert: vi.fn(),
@@ -15,7 +15,7 @@ vi.mock('../../lib/matomo', () => ({
 }))
 
 const { default: command } = await import('../sync-stats')
-const { db } = await import('../../lib/db')
+const { db } = await import('~/server/db')
 const { getCompleteStats, getAllEvents } = await import('../../lib/matomo')
 
 const mockStats = {

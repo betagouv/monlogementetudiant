@@ -1,11 +1,11 @@
 import { and, eq, sql } from 'drizzle-orm'
 import * as XLSX from 'xlsx'
+import { db } from '~/server/db'
+import { ensureCity, reverseGeocode } from '~/server/lib/import/geocoder'
 import { sanitizeHTML } from '~/utils/sanitize-html'
 import { accommodationAddresses, accommodations, externalSources } from '../../src/server/db/schema'
 import { computeDerivedFields, generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
 import { findAvailableSlug } from '../../src/server/utils/slug'
-import { db } from '../lib/db'
-import { ensureCity, reverseGeocode } from '../lib/geocoder'
 import type { ImportCommand, ImportOptions, ImportResult } from '../types'
 import { getOrCreateOwner } from '../utils/get-or-create-owner'
 
