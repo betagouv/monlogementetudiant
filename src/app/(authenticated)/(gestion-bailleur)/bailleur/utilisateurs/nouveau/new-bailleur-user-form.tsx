@@ -13,9 +13,7 @@ export function NewBailleurUserForm({ ownerId, canGrantAdministratorRights }: Pr
   const create = useCreateBailleurUser()
   const t = useTranslations('bailleur.users')
 
-  const handleSubmit = (data: BailleurUserFormData) => {
-    create.mutate({ ...data, ownerId })
-  }
+  const handleSubmit = async (data: BailleurUserFormData) => await create.mutateAsync({ ...data, ownerId })
 
   return (
     <BailleurUserForm
