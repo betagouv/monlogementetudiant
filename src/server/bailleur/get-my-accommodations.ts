@@ -80,7 +80,6 @@ export const getMyAccommodations = async (searchParams?: {
         residenceType: accommodations.residenceType,
         targetAudience: accommodations.target_audience,
         published: accommodations.published,
-        available: accommodations.available,
         nbTotalApartments: accommodations.nbTotalApartments,
         nbAccessibleApartments: accommodations.nbAccessibleApartments,
         nbColivingApartments: accommodations.nbColivingApartments,

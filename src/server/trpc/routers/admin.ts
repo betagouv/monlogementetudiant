@@ -515,7 +515,6 @@ const residencesRouter = createTRPCRouter({
             slug: accommodations.slug,
             city: cities.name,
             citySlug: cities.slug,
-            available: accommodations.available,
             published: accommodations.published,
             nbTotalApartments: accommodations.nbTotalApartments,
             nbAvailableApartments: nbAvailableApartmentsSum,

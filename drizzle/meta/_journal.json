@@ -204,6 +204,13 @@
       "when": 1777015630087,
       "tag": "0028_wild_punisher",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1777278885370,
+      "tag": "0029_accommodation-addresses",
+      "breakpoints": true
     }
   ]
 }
