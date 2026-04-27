@@ -10,12 +10,14 @@ import { FindStudentAccommodationCitiesAutocompleteResults } from '~/components/
 import { useSearchCities } from '~/hooks/use-search-cities'
 import { trackEvent } from '~/lib/tracking'
 import { TCity } from '~/schemas/territories'
+import { useTRPCClient } from '~/server/trpc/client'
 
 export const FindStudentAccommodationCitiesAutocompleteInput: FC = () => {
   const t = useTranslations('prepareStudentLife')
   const [_, setBboxQuery] = useQueryState('bbox')
   const { classes } = useStyles()
   const { data, isError, searchQuery, searchQueryState, setSearchQuery, setSearchQueryState } = useSearchCities()
+  const trpcClient = useTRPCClient()
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value)
@@ -28,6 +30,7 @@ export const FindStudentAccommodationCitiesAutocompleteInput: FC = () => {
 
   const handleOnClickItem = (item: TCity) => {
     trackEvent({ category: 'Recherche', action: 'recherche ville', name: item.name })
+    void trpcClient.tracking.logSearch.mutate({ type: 'city', id: item.id }).catch(() => undefined)
     const formattedBbox = `${item.bbox.xmin},${item.bbox.ymin},${item.bbox.xmax},${item.bbox.ymax}`
     setBboxQuery(formattedBbox)
     setSearchQuery(item.name)

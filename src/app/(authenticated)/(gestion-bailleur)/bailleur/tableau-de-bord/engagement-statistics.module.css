@@ -1,0 +1,140 @@
+.section {
+  background: white;
+}
+
+.presets {
+  display: inline-flex;
+  border: 1px solid #dddddd;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.preset {
+  background: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #1f1f1f;
+  border-right: 1px solid #dddddd;
+}
+
+.preset:last-child {
+  border-right: none;
+}
+
+.preset:hover {
+  background: #f6f6f6;
+}
+
+.presetActive {
+  composes: preset;
+  background: white;
+  color: #000091;
+  border: 1px solid #000091;
+  font-weight: 600;
+}
+
+.presetActive:hover {
+  background: #f5f5fe;
+}
+
+.kpiGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .kpiCardNoSideBorder {
+    border-left: none !important;
+    border-right: none !important;
+  }
+}
+
+.kpiIcon::before {
+  --icon-size: 1.5rem !important;
+  background-color: #929292;
+}
+
+.kpiDeltaPositive {
+  color: #18753c;
+}
+
+.kpiDeltaNegative {
+  color: #ce0500;
+}
+
+.kpiValue {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1f1f1f;
+  line-height: 1.1;
+}
+
+.body {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+
+  @media (min-width: 992px) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+.cityGrid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  align-content: start;
+
+  @media (min-width: 576px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.cityItem {
+  border-bottom: 1px solid #eeeeee;
+}
+
+.cityItem:last-child {
+  border-bottom: none;
+}
+
+@media (min-width: 576px) {
+  .cityItem:nth-child(odd) {
+    border-right: 1px solid #eeeeee;
+  }
+
+  .cityItem:nth-last-child(2):nth-child(odd) {
+    border-bottom: none;
+  }
+}
+
+.searchField {
+  width: 12rem;
+}
+
+.residenceList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.residenceItem {
+  border-bottom: 1px solid #eeeeee;
+}
+
+.residenceItem:last-child {
+  border-bottom: none;
+}
+
+.metadataIcon::before {
+  --icon-size: 1rem;
+  margin-right: 4px !important;
+}

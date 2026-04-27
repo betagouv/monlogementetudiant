@@ -225,6 +225,13 @@
       "when": 1777405070029,
       "tag": "0031_kind_legion",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1777405070030,
+      "tag": "0032_common_stellaris",
+      "breakpoints": true
     }
   ]
 }

@@ -33,3 +33,4 @@ export {
 } from './relations'
 export { stats } from './stats'
 export { studentAlerts } from './student-alerts'
+export { trackingEvents } from './tracking-events'

@@ -64,11 +64,12 @@
   }
 }
 
+.tabsWrapper {
+  margin-top: 2rem;
+}
+
 .statisticsContainer {
   background: white;
-  margin-top: 2rem;
-  padding-bottom: 2rem;
-  padding: 2rem;
 }
 
 .statisticsGrid {
