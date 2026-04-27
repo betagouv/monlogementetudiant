@@ -1,4 +1,5 @@
 import clsx from 'clsx'
+import dayjs from 'dayjs'
 import Image from 'next/image'
 import { getTranslations } from 'next-intl/server'
 import { ConsultOfferButton } from '~/components/find-student-accomodation/owner-details/consult-offer-button'
@@ -25,6 +26,7 @@ interface OwnerDetailsProps {
   accommodationSlug: string
   availableApartmentTypes: ApartmentType[]
   acceptDossierFacile: boolean
+  updatedAt: Date
 }
 
 export const OwnerDetails = async ({
@@ -40,6 +42,7 @@ export const OwnerDetails = async ({
   accommodationSlug,
   availableApartmentTypes,
   acceptDossierFacile,
+  updatedAt,
 }: OwnerDetailsProps) => {
   const t = await getTranslations('accomodation')
   const ownerUrl = externalUrl || owner?.url
@@ -75,6 +78,8 @@ export const OwnerDetails = async ({
         {badgeAvailability}
         {waitingListBadge}
       </div>
+      <span className="fr-text--xs fr-mb-0">{t('sidebar.updatedAt', { date: dayjs(updatedAt).format('DD MMMM YYYY') })}</span>
+
       {(nbAvailable === null || nbAvailable === undefined) && (
         <>
           <br />
