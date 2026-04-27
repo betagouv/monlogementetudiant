@@ -5,8 +5,10 @@ import { alertsRouter } from './routers/alerts'
 import { bailleurRouter } from './routers/bailleur'
 import { dossierFacileRouter } from './routers/dossier-facile'
 import { favoritesRouter } from './routers/favorites'
+import { ownerStatisticsRouter } from './routers/owner-statistics'
 import { questionsAnswersRouter } from './routers/questions-answers'
 import { territoriesRouter } from './routers/territories'
+import { trackingRouter } from './routers/tracking'
 
 export const appRouter = createTRPCRouter({
   territories: territoriesRouter,
@@ -17,6 +19,8 @@ export const appRouter = createTRPCRouter({
   questionsAnswers: questionsAnswersRouter,
   admin: adminRouter,
   dossierFacile: dossierFacileRouter,
+  tracking: trackingRouter,
+  ownerStatistics: ownerStatisticsRouter,
 })
 
 export type AppRouter = typeof appRouter

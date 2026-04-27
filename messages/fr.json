@@ -1118,6 +1118,42 @@
       },
       "statistics": {
         "title": "En quelques chiffres"
+      },
+      "engagementStatistics": {
+        "title": "À propos des visiteurs sur Mon Logement étudiant",
+        "periodLabel": "Période",
+        "period": {
+          "7d": "7 jours",
+          "30d": "30 jours",
+          "90d": "90 jours"
+        },
+        "kpi": {
+          "alertsBold": "Étudiants ont activé une alerte",
+          "alertsSuffix": " sur l'une des villes où se situent vos résidences",
+          "favoritesBold": "Étudiants ont mis en favoris",
+          "favoritesSuffix": " une de vos résidences",
+          "consultOfferBold": "Redirections",
+          "consultOfferSuffix": " vers les pages de vos résidences"
+        },
+        "cities": {
+          "title": "Villes où sont situées vos résidences",
+          "searchLabel": "Rechercher une ville",
+          "searchPlaceholder": "Rechercher",
+          "empty": "Aucune ville",
+          "search": "recherche",
+          "alert": "alerte"
+        },
+        "residences": {
+          "title": "Détail par résidence",
+          "searchLabel": "Rechercher une résidence",
+          "searchPlaceholder": "Rechercher",
+          "empty": "Aucune résidence",
+          "unpublished": "(dépubliée)",
+          "view": "visite",
+          "favorite": "favori",
+          "redirection": "redirection"
+        },
+        "loading": "Chargement…"
       }
     },
     "residences": {
