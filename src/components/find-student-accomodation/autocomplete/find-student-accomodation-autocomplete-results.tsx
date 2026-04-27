@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl'
 import { FC } from 'react'
 import { tss } from 'tss-react'
 import { TTerritories, TTerritory } from '~/schemas/territories'
+import { useTRPCClient } from '~/server/trpc/client'
 
 interface FindStudentAccomodationAutocompleteResults {
   data: TTerritories
@@ -25,7 +26,16 @@ export const FindStudentAccomodationAutocompleteResults: FC<FindStudentAccomodat
   const t = useTranslations('findAccomodation')
   const { classes } = useStyles()
   const currentSearchParams = useSearchParams()
+  const trpcClient = useTRPCClient()
   const categories = ['cities', 'academies', 'departments']
+
+  const trackTerritorySelection = (categoryKey: keyof TTerritories, item: TTerritory) => {
+    if (categoryKey === 'cities') {
+      void trpcClient.tracking.logSearch.mutate({ type: 'city', id: item.id }).catch(() => undefined)
+    } else if (categoryKey === 'departments') {
+      void trpcClient.tracking.logSearch.mutate({ type: 'department', id: item.id }).catch(() => undefined)
+    }
+  }
 
   const getCategoryLabelAndIcon = (category: keyof TTerritories): { icon: FrCxArg; label: string } => {
     const labels = {
@@ -76,6 +86,7 @@ export const FindStudentAccomodationAutocompleteResults: FC<FindStudentAccomodat
                         pathname: `/trouver-un-logement-etudiant/${getCategoryKeySingular(categoryKey)}/${slug}`,
                         search: searchParams.toString(),
                       }}
+                      onClick={() => trackTerritorySelection(categoryKey, item)}
                     >
                       <li className={classes.item} key={item.id} tabIndex={0}>
                         {item.name}
