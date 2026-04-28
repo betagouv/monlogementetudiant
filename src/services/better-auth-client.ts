@@ -16,7 +16,10 @@ export async function signInCredentials(email: string, password: string) {
   const result = await authClient.signIn.email({ email, password, callbackURL: '/mon-espace' })
 
   if (result.error) {
-    return { error: result.error.message || 'Authentication failed' }
+    return {
+      error: result.error.message || 'Authentication failed',
+      code: result.error.code,
+    }
   }
 
   const redirectUrl = getRedirectUrlByRole(result.data?.user?.role)

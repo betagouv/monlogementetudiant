@@ -1,6 +1,7 @@
 'use client'
 
 import { fr } from '@codegouvfr/react-dsfr'
+import Alert from '@codegouvfr/react-dsfr/Alert'
 import Button from '@codegouvfr/react-dsfr/Button'
 import { Input } from '@codegouvfr/react-dsfr/Input'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -12,6 +13,7 @@ import { useTranslations } from 'next-intl'
 import { FC, useState } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { tss } from 'tss-react'
+import { resendVerificationEmail } from '~/components/credentials-sign-in/actions'
 import { createToast } from '~/components/ui/createToast'
 import { trackEvent } from '~/lib/tracking'
 import { ZCredentialsSignInForm } from '~/schemas/credentials-sign-in/credentials-sign-in'
@@ -22,6 +24,9 @@ export const CredentialsSignInForm: FC = () => {
   const router = useRouter()
   const { classes } = useStyles()
   const [isLoading, setIsLoading] = useState(false)
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null)
+  const [isResending, setIsResending] = useState(false)
+  const [resent, setResent] = useState(false)
 
   const loginForm = useForm({
     defaultValues: {
@@ -35,16 +40,23 @@ export const CredentialsSignInForm: FC = () => {
   const onSubmit = async () => {
     const data = getValues()
     setIsLoading(true)
+    setUnverifiedEmail(null)
+    setResent(false)
 
     try {
       const result = await signInCredentials(data.email, data.password)
 
       if ('error' in result) {
-        trackEvent({ category: 'Authentification', action: 'connexion etudiant', name: 'erreur' })
-        createToast({
-          priority: 'error',
-          message: 'Email ou mot de passe incorrect.',
-        })
+        if (result.code === 'EMAIL_NOT_VERIFIED') {
+          trackEvent({ category: 'Authentification', action: 'connexion etudiant', name: 'email-non-verifie' })
+          setUnverifiedEmail(data.email)
+        } else {
+          trackEvent({ category: 'Authentification', action: 'connexion etudiant', name: 'erreur' })
+          createToast({
+            priority: 'error',
+            message: 'Email ou mot de passe incorrect.',
+          })
+        }
       } else if (result.success) {
         trackEvent({ category: 'Authentification', action: 'connexion etudiant', name: 'succes' })
         createToast({
@@ -72,10 +84,47 @@ export const CredentialsSignInForm: FC = () => {
     }
   }
 
+  const onResend = async () => {
+    if (!unverifiedEmail) return
+    setIsResending(true)
+
+    try {
+      await resendVerificationEmail(unverifiedEmail)
+      trackEvent({ category: 'Authentification', action: 'connexion etudiant', name: 'renvoi-verification' })
+      setResent(true)
+      createToast({
+        priority: 'success',
+        message: t('unverified.resendSuccess'),
+      })
+    } catch (error) {
+      Sentry.captureException(error, { tags: { feature: 'credentials-sign-in', step: 'resend-verification' } })
+      createToast({
+        priority: 'error',
+        message: t('unverified.resendError'),
+      })
+    } finally {
+      setIsResending(false)
+    }
+  }
+
   return (
     <FormProvider {...loginForm}>
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className={classes.formContainer}>
+          {unverifiedEmail && (
+            <Alert
+              severity="error"
+              title={t('unverified.title')}
+              description={
+                <div className={classes.alertContent}>
+                  <p>{t('unverified.description')}</p>
+                  <Button type="button" priority="secondary" disabled={isResending || resent} onClick={onResend}>
+                    {isResending ? t('unverified.resending') : resent ? t('unverified.resendSuccess') : t('unverified.resendCta')}
+                  </Button>
+                </div>
+              }
+            />
+          )}
           <div className={classes.inputContainer}>
             <Input
               label={
@@ -132,5 +181,11 @@ const useStyles = tss.create({
   },
   required: {
     color: 'red',
+  },
+  alertContent: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+    alignItems: 'flex-start',
   },
 })
