@@ -12,11 +12,21 @@ export interface ImportOptions {
   source?: string
 }
 
+export interface ImportResultResidence {
+  name: string
+  slug: string
+  city: string | null
+  action: 'created' | 'updated'
+}
+
 export interface ImportResult {
   created: number
   updated: number
   skipped: number
   errors: string[]
+  residences?: ImportResultResidence[]
+  ownerName?: string
+  ownerId?: number
 }
 
 export interface SyncCommand {
@@ -39,4 +49,5 @@ export interface SyncResult {
   updated: number
   skipped: number
   errors: string[]
+  context?: Record<string, unknown>
 }

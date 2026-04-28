@@ -34,6 +34,11 @@ const command: SyncCommand = {
     const filtered = records.filter((r) => r.annee_universitaire === ACADEMIC_YEAR)
     console.log(`  🎓 ${filtered.length} pour l'année ${ACADEMIC_YEAR}`)
 
+    result.context = {
+      anneeUniversitaire: ACADEMIC_YEAR,
+      enregistrementsTelecharges: records.length,
+    }
+
     if (!options.dryRun) {
       await db.update(cities).set({ nbStudents: 0 })
     }

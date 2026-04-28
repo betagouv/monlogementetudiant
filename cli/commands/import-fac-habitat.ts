@@ -10,6 +10,7 @@ import { computeDerivedFields, generateSlug } from '../../src/server/trpc/utils/
 import { findAvailableSlug } from '../../src/server/utils/slug'
 import type { ImportCommand, ImportOptions, ImportResult } from '../types'
 import { getOrCreateOwner } from '../utils/get-or-create-owner'
+import { pushResidenceEntry } from './import-utils'
 
 const SOURCE = 'fac-habitat'
 const OWNER_NAME = 'FAC HABITAT'
@@ -239,9 +240,11 @@ const command: ImportCommand = {
   description: 'Import des résidences FAC HABITAT (SFTP ou fichier local)',
 
   async execute(options: ImportOptions): Promise<ImportResult> {
-    const result: ImportResult = { created: 0, updated: 0, skipped: 0, errors: [] }
+    const result: ImportResult = { created: 0, updated: 0, skipped: 0, errors: [], residences: [] }
 
     const ownerId = await getOrCreateOwner(OWNER_NAME)
+    result.ownerName = OWNER_NAME
+    result.ownerId = ownerId
     if (options.verbose) console.log(`  Owner FAC HABITAT id=${ownerId}`)
 
     const residences = await loadResidences(options)
@@ -254,8 +257,9 @@ const command: ImportCommand = {
         if (options.verbose) console.log(`  [${i + 1}/${residences.length}] ${item.name} (${sourceId})`)
 
         const existingSource = await db
-          .select({ accommodationId: externalSources.accommodationId })
+          .select({ accommodationId: externalSources.accommodationId, slug: accommodations.slug })
           .from(externalSources)
+          .innerJoin(accommodations, eq(accommodations.id, externalSources.accommodationId))
           .where(and(eq(externalSources.source, SOURCE), eq(externalSources.sourceId, sourceId)))
           .limit(1)
 
@@ -373,6 +377,12 @@ const command: ImportCommand = {
           await db.delete(accommodationAddresses).where(eq(accommodationAddresses.accommodationId, accommodationId))
           await db.insert(accommodationAddresses).values({ accommodationId, isMain: true, ...addressData })
           result.updated++
+          pushResidenceEntry(result.residences!, {
+            name: item.name,
+            slug: existingSource[0].slug,
+            city: resolvedCity ?? null,
+            action: 'updated',
+          })
         } else {
           const slug = await findAvailableSlug(generateSlug(item.name), db, accommodations)
           const [newAccommodation] = await db
@@ -388,6 +398,7 @@ const command: ImportCommand = {
             sourceId,
           })
           result.created++
+          pushResidenceEntry(result.residences!, { name: item.name, slug, city: resolvedCity ?? null, action: 'created' })
         }
       } catch (error) {
         const rowNum = i + 1

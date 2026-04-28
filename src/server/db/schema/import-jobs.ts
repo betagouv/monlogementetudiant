@@ -9,6 +9,8 @@ export const importJobs = pgTable(
     status: varchar({ length: 20 }).notNull().$type<TImportJobStatus>(),
     source: varchar({ length: 100 }),
     createdBy: text('created_by').notNull(),
+    startedAt: timestamp('started_at', { withTimezone: true }),
+    endedAt: timestamp('ended_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
     summary: jsonb().$type<TImportJobSummary>(),
