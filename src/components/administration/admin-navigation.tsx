@@ -51,7 +51,10 @@ const navSections: NavSection[] = [
   },
   {
     title: 'Système',
-    items: [{ label: 'Journaux', icon: 'fr-icon-article-line', href: '/administration/journaux' }],
+    items: [
+      { label: 'Tâches planifiées', icon: 'fr-icon-time-line', href: '/administration/taches-planifiees' },
+      { label: 'Journaux', icon: 'fr-icon-article-line', href: '/administration/journaux' },
+    ],
   },
 ]
 
