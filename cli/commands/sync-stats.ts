@@ -114,6 +114,12 @@ const command: SyncCommand = {
       }
     }
 
+    result.context = {
+      dateDebut: dates[0],
+      dateFin: dates[dates.length - 1],
+      nbJours: dates.length,
+    }
+
     return result
   },
 }

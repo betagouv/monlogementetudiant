@@ -1,7 +1,7 @@
 import path from 'node:path'
 import { and, eq, sql } from 'drizzle-orm'
 import { ZUpdateResidence } from '~/schemas/accommodations/update-residence'
-import type { TImportJobSummary } from '~/schemas/import-jobs'
+import type { TImportJobResidence, TImportJobSummary } from '~/schemas/import-jobs'
 import { db } from '~/server/db'
 import { accommodations, externalSources, owners } from '~/server/db/schema'
 import { generateAccommodationKey, uploadFile } from '~/server/services/s3'
@@ -324,15 +324,15 @@ export async function executeCsvImport(
 
   const ownerId = await getOrCreateOwner(ownerName, ownerUrl)
 
-  const result: Required<TImportJobSummary> = {
+  const result = {
     created: 0,
     updated: 0,
     skipped: 0,
-    errors: [],
+    errors: [] as string[],
     ownerId,
     ownerName,
-    residences: [],
-  }
+    residences: [] as TImportJobResidence[],
+  } satisfies TImportJobSummary
 
   for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
     const row = rows[rowIndex]

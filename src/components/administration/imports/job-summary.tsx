@@ -7,6 +7,8 @@ import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import styles from '~/app/(authenticated)/administration/administration.module.css'
 import type { TImportJobResidence, TImportJobStatus, TImportJobSummary } from '~/schemas/import-jobs'
+import { JobDuration } from '../shared/job-duration'
+import { JobStatCards } from '../shared/job-stat-cards'
 import { StatusBadge } from './status-badge'
 
 type Job = {
@@ -14,6 +16,8 @@ type Job = {
   status: TImportJobStatus
   source: string | null
   createdAt: Date
+  startedAt?: Date | null
+  endedAt?: Date | null
   summary: TImportJobSummary | null
 }
 
@@ -79,24 +83,17 @@ export function JobSummary({ job }: { job: Job }) {
         <StatusBadge status={job.status} errorCount={summary?.errors?.length ?? 0} />
         {job.source && <span className="fr-text-mention--grey">Source : {job.source}</span>}
         <span className="fr-text-mention--grey">{format(new Date(job.createdAt), 'd MMMM yyyy à HH:mm', { locale: fr })}</span>
+        <JobDuration startedAt={job.startedAt} endedAt={job.endedAt} className="fr-text-mention--grey" />
       </div>
 
       {summary && (
         <>
-          <div className={clsx(styles.statsGrid, styles.statsGrid3)}>
-            <div className={clsx(styles.statCard, styles.statCardGreen)}>
-              <div className={styles.statLabel}>Créées</div>
-              <div className={styles.statValue}>{summary.created ?? 0}</div>
-            </div>
-            <div className={clsx(styles.statCard, styles.statCardBlue)}>
-              <div className={styles.statLabel}>Mises à jour</div>
-              <div className={styles.statValue}>{summary.updated ?? 0}</div>
-            </div>
-            <div className={clsx(styles.statCard, (summary.errors?.length ?? 0) > 0 ? styles.statCardOrange : styles.statCardBlue)}>
-              <div className={styles.statLabel}>Erreurs</div>
-              <div className={styles.statValue}>{summary.errors?.length ?? 0}</div>
-            </div>
-          </div>
+          <JobStatCards
+            created={summary.created}
+            updated={summary.updated}
+            errors={summary.errors}
+            labels={{ created: 'Créées', updated: 'Mises à jour' }}
+          />
 
           {summary.ownerId && summary.ownerName && (
             <div className="fr-mt-3w">
