@@ -1,6 +1,15 @@
 import { z } from 'zod'
 
-export const ZImportJobType = z.enum(['csv'])
+export const ZImportJobType = z.enum([
+  'csv',
+  'arpej-ibail',
+  'fac-habitat',
+  'initiall',
+  'sync-cities',
+  'sync-rents',
+  'sync-students',
+  'sync-stats',
+])
 export type TImportJobType = z.infer<typeof ZImportJobType>
 
 export const ZImportJobStatus = z.enum(['running', 'done', 'error'])
@@ -22,5 +31,6 @@ export const ZImportJobSummary = z.object({
   ownerId: z.number().optional(),
   ownerName: z.string().optional(),
   residences: z.array(ZImportJobResidence).optional(),
+  context: z.record(z.string(), z.unknown()).optional(),
 })
 export type TImportJobSummary = z.infer<typeof ZImportJobSummary>

@@ -45,7 +45,7 @@ describe('import-arpej-ibail integration', () => {
 
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => residences,
+      json: async () => ({ residences }),
       headers: new Headers({
         'X-Pagination-Total-Pages': '1',
       }),
@@ -103,7 +103,7 @@ describe('import-arpej-ibail integration', () => {
 
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => residences,
+      json: async () => ({ residences }),
       headers: new Headers({ 'X-Pagination-Total-Pages': '1' }),
     })
 
@@ -133,7 +133,7 @@ describe('import-arpej-ibail integration', () => {
 
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => updated,
+      json: async () => ({ residences: updated }),
       headers: new Headers({ 'X-Pagination-Total-Pages': '1' }),
     })
     mockFetch.mockResolvedValueOnce({
@@ -177,7 +177,7 @@ describe('import-arpej-ibail integration', () => {
     // First import: create
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => [residence],
+      json: async () => ({ residences: [residence] }),
       headers: new Headers({ 'X-Pagination-Total-Pages': '1' }),
     })
     mockFetch.mockResolvedValueOnce({
@@ -201,7 +201,7 @@ describe('import-arpej-ibail integration', () => {
     // Second import: update (same key, same name)
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => [residence],
+      json: async () => ({ residences: [residence] }),
       headers: new Headers({ 'X-Pagination-Total-Pages': '1' }),
     })
     mockFetch.mockResolvedValueOnce({
@@ -231,15 +231,17 @@ describe('import-arpej-ibail integration', () => {
 
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => [
-        {
-          key: 'res-blocked-create',
-          title: 'Résidence Bloquée Création',
-          address: '10 Rue Interdite',
-          zip_code: '75010',
-          city: 'Paris',
-        },
-      ],
+      json: async () => ({
+        residences: [
+          {
+            key: 'res-blocked-create',
+            title: 'Résidence Bloquée Création',
+            address: '10 Rue Interdite',
+            zip_code: '75010',
+            city: 'Paris',
+          },
+        ],
+      }),
       headers: new Headers({ 'X-Pagination-Total-Pages': '1' }),
     })
 
@@ -267,15 +269,17 @@ describe('import-arpej-ibail integration', () => {
 
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => [
-        {
-          key: 'res-blocked-update',
-          title: 'Résidence Modifiée',
-          address: '11 Rue Interdite',
-          zip_code: '75011',
-          city: 'Paris',
-        },
-      ],
+      json: async () => ({
+        residences: [
+          {
+            key: 'res-blocked-update',
+            title: 'Résidence Modifiée',
+            address: '11 Rue Interdite',
+            zip_code: '75011',
+            city: 'Paris',
+          },
+        ],
+      }),
       headers: new Headers({ 'X-Pagination-Total-Pages': '1' }),
     })
 

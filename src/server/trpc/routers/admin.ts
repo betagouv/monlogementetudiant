@@ -1,7 +1,8 @@
 import { TRPCError } from '@trpc/server'
-import { and, between, count, desc, eq, ilike, isNull, or, sql } from 'drizzle-orm'
+import { and, between, count, desc, eq, ilike, inArray, isNull, or, sql } from 'drizzle-orm'
 import { getTranslations } from 'next-intl/server'
 import { z } from 'zod'
+import { ZImportJobType } from '~/schemas/import-jobs'
 import { BAILLEUR_PERMISSIONS, BAILLEUR_ROLES } from '~/server/bailleur/permissions'
 import { db } from '~/server/db'
 import { accommodationAddresses } from '~/server/db/schema/accommodation-addresses'
@@ -953,6 +954,8 @@ const ownerUsageRouter = createTRPCRouter({
     }),
 })
 
+const CRON_JOB_TYPES = ZImportJobType.options.filter((t) => t !== 'csv')
+
 const importsRouter = createTRPCRouter({
   list: adminProcedure.query(async () => {
     return db.select().from(importJobs).orderBy(desc(importJobs.createdAt)).limit(50)
@@ -962,6 +965,15 @@ const importsRouter = createTRPCRouter({
     const [job] = await db.select().from(importJobs).where(eq(importJobs.id, input.id)).limit(1)
     if (!job) throw new TRPCError({ code: 'NOT_FOUND' })
     return job
+  }),
+
+  lastByType: adminProcedure.query(async () => {
+    // DISTINCT ON (type) : une seule ligne par type, la plus récente
+    return db
+      .selectDistinctOn([importJobs.type])
+      .from(importJobs)
+      .where(inArray(importJobs.type, CRON_JOB_TYPES))
+      .orderBy(importJobs.type, desc(importJobs.createdAt))
   }),
 })
 

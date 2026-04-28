@@ -7,6 +7,7 @@ import { computeDerivedFields, generateSlug } from '../../src/server/trpc/utils/
 import { findAvailableSlug } from '../../src/server/utils/slug'
 import type { ImportCommand, ImportOptions, ImportResult } from '../types'
 import { getOrCreateOwner } from '../utils/get-or-create-owner'
+import { pushResidenceEntry } from './import-utils'
 
 const IBAIL_SOURCE = 'arpej'
 const OWNER_NAME = 'ARPEJ'
@@ -55,7 +56,7 @@ async function fetchResidences(options: ImportOptions): Promise<IbailResidence[]
     if (!res.ok) throw new Error(`iBAIL API error: ${res.status} ${await res.text()}`)
 
     totalPages = Number(res.headers.get('X-Pagination-Total-Pages')) || 1
-    const data: IbailResidence[] = await res.json()
+    const data: IbailResidence[] = (await res.json()).residences ?? []
     all.push(...data)
 
     if (options.limit && all.length >= options.limit) {
@@ -102,9 +103,11 @@ const command: ImportCommand = {
   description: 'Import des résidences ARPEJ via API iBAIL',
 
   async execute(options: ImportOptions): Promise<ImportResult> {
-    const result: ImportResult = { created: 0, updated: 0, skipped: 0, errors: [] }
+    const result: ImportResult = { created: 0, updated: 0, skipped: 0, errors: [], residences: [] }
 
     const ownerId = await getOrCreateOwner(OWNER_NAME, OWNER_URL)
+    result.ownerName = OWNER_NAME
+    result.ownerId = ownerId
     if (options.verbose) console.log(`  🏢 Owner ARPEJ id=${ownerId}`)
 
     const residences = await fetchResidences(options)
@@ -130,8 +133,9 @@ const command: ImportCommand = {
         }
 
         const existingSource = await db
-          .select({ accommodationId: externalSources.accommodationId })
+          .select({ accommodationId: externalSources.accommodationId, slug: accommodations.slug })
           .from(externalSources)
+          .innerJoin(accommodations, eq(accommodations.id, externalSources.accommodationId))
           .where(and(eq(externalSources.source, IBAIL_SOURCE), eq(externalSources.sourceId, residence.key)))
           .limit(1)
 
@@ -184,6 +188,8 @@ const command: ImportCommand = {
           updatedAt: new Date(),
         }
 
+        const cityName = resolvedCityName ?? null
+
         if (options.dryRun) {
           if (existingSource[0]) {
             if (options.verbose) console.log(`    [dry-run] Mise à jour id=${existingSource[0].accommodationId}`)
@@ -201,6 +207,7 @@ const command: ImportCommand = {
           await db.delete(accommodationAddresses).where(eq(accommodationAddresses.accommodationId, accommodationId))
           await db.insert(accommodationAddresses).values({ accommodationId, isMain: true, ...addressData })
           result.updated++
+          pushResidenceEntry(result.residences!, { name: residence.title, slug: existingSource[0].slug, city: cityName, action: 'updated' })
         } else {
           const slug = await findAvailableSlug(generateSlug(residence.title), db, accommodations)
           const [newAccommodation] = await db
@@ -216,6 +223,7 @@ const command: ImportCommand = {
             sourceId: residence.key,
           })
           result.created++
+          pushResidenceEntry(result.residences!, { name: residence.title, slug, city: cityName, action: 'created' })
         }
       } catch (error) {
         const msg = `${residence.title} (${residence.key}): ${error instanceof Error ? error.message : String(error)}`

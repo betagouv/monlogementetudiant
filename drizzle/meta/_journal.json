@@ -218,6 +218,13 @@
       "when": 1777278885371,
       "tag": "0030_bailleur_roles_permissions",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1777405070029,
+      "tag": "0031_kind_legion",
+      "breakpoints": true
     }
   ]
 }
