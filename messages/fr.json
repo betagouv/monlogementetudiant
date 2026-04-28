@@ -688,7 +688,15 @@
       "ownerDescription": "Rejoignez le mouvement en échangeant avec notre équipe",
       "ownerCta": "Prendre rendez-vous"
     },
-    "success": "Si un compte est associé à cette adresse e-mail, vous recevrez un lien sur cette adresse."
+    "success": "Si un compte est associé à cette adresse e-mail, vous recevrez un lien sur cette adresse.",
+    "unverified": {
+      "title": "Compte non confirmé",
+      "description": "Votre compte n'a pas encore été confirmé par email. Cliquez sur le bouton ci-dessous pour recevoir un nouvel email de confirmation.",
+      "resendCta": "Renvoyer l'email de confirmation",
+      "resending": "Envoi en cours...",
+      "resendSuccess": "Email de confirmation envoyé. Vérifiez votre boîte mail.",
+      "resendError": "Une erreur est survenue lors de l'envoi de l'email."
+    }
   },
   "forgotPassword": {
     "title": "Réinitialiser votre mot de passe",
