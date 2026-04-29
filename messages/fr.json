@@ -1146,6 +1146,17 @@
           "availableHousing": "Logements disponibles",
           "deleteType": "Supprimer ce type de logement",
           "tabsHaveErrors": "Certains onglets contiennent des erreurs, veuillez les compléter."
+        },
+        "location": {
+          "sectionTitle": "Adresse de la résidence",
+          "sectionHint": "Vous pouvez ajouter plusieurs adresses postales si vous gérez plusieurs logements étudiants diffus dans la même ville.",
+          "mainAddressLabel": "Adresse",
+          "additionalAddressLabel": "Adresse n°{index}",
+          "invalidAddress": "Veuillez sélectionner une adresse valide",
+          "removeAddress": "Supprimer cette adresse",
+          "searchPlaceholder": "Rechercher une adresse...",
+          "searching": "Recherche en cours...",
+          "addAddress": "Ajouter une adresse"
         }
       }
     }
