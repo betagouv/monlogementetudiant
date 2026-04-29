@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { getBailleurContext } from '~/server/bailleur/get-bailleur-context'
 import { canGrantAdministratorRights } from '~/server/bailleur/permissions'
+import { buildHref } from '~/utils/preserve-query-params'
 import { EditBailleurUserForm } from './edit-bailleur-user-form'
 
 export default async function EditBailleurUserPage({
@@ -25,8 +26,8 @@ export default async function EditBailleurUserPage({
       <Breadcrumb
         currentPageLabel={<>{t('editUser')}</>}
         segments={[
-          { label: t('breadcrumbDashboard'), linkProps: { href: '/bailleur/tableau-de-bord' } },
-          { label: t('pageTitle'), linkProps: { href: '/bailleur/utilisateurs' } },
+          { label: t('breadcrumbDashboard'), linkProps: { href: buildHref('/bailleur/tableau-de-bord', awaitedSearchParams) } },
+          { label: t('pageTitle'), linkProps: { href: buildHref('/bailleur/utilisateurs', awaitedSearchParams) } },
         ]}
         classes={{ root: 'fr-mt-0 fr-mb-2w fr-pt-4w' }}
       />

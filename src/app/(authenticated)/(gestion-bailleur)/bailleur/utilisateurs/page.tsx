@@ -3,6 +3,7 @@ import Button from '@codegouvfr/react-dsfr/Button'
 import Community from '@codegouvfr/react-dsfr/picto/Community'
 import { HydrationBoundary } from '@tanstack/react-query'
 import { getTranslations } from 'next-intl/server'
+import { buildHref } from '~/utils/preserve-query-params'
 import { getUsersPageContext } from './get-users-page-context'
 import { UsersList } from './users-list'
 
@@ -28,7 +29,7 @@ export default async function BailleurUsersPage({ searchParams }: PageProps) {
       <div className="fr-container fr-pb-12w">
         <Breadcrumb
           currentPageLabel={<>{t('pageTitle')}</>}
-          segments={[{ label: t('breadcrumbDashboard'), linkProps: { href: '/bailleur/tableau-de-bord' } }]}
+          segments={[{ label: t('breadcrumbDashboard'), linkProps: { href: buildHref('/bailleur/tableau-de-bord', awaitedSearchParams) } }]}
           classes={{ root: 'fr-mt-0 fr-mb-2w fr-pt-4w' }}
         />
 
@@ -39,7 +40,7 @@ export default async function BailleurUsersPage({ searchParams }: PageProps) {
               <h1 className="fr-mb-0">{t('pageTitle')}</h1>
             </div>
             <div>
-              <Button linkProps={{ href: '/bailleur/utilisateurs/nouveau' }} iconId="ri-add-line">
+              <Button linkProps={{ href: buildHref('/bailleur/utilisateurs/nouveau', awaitedSearchParams) }} iconId="ri-add-line">
                 {t('addUser')}
               </Button>
             </div>

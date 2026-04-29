@@ -56,6 +56,7 @@ export const CandidaturesList = () => {
             if (queryStates.status) params.set('status', queryStates.status)
             if (queryStates.recherche) params.set('recherche', queryStates.recherche)
             if (queryStates.tri !== 'date_desc') params.set('tri', queryStates.tri)
+            if (queryStates.ownerId) params.set('ownerId', queryStates.ownerId.toString())
             params.set('page', page.toString())
             return { href: `/bailleur/candidatures?${params.toString()}` }
           }}
