@@ -1,7 +1,6 @@
 import clsx from 'clsx'
-import dayjs from 'dayjs'
 import Image from 'next/image'
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { ConsultOfferButton } from '~/components/find-student-accomodation/owner-details/consult-offer-button'
 import { DossierFacileLinkButton } from '~/components/find-student-accomodation/owner-details/dossier-facile-candidate-button'
 import { OwnerDetailsActions } from '~/components/find-student-accomodation/owner-details/owner-details-actions'
@@ -11,6 +10,7 @@ import { WaitingListBadge } from '~/components/shared/waiting-list-badge'
 import { TooltipHoverOnly } from '~/components/tooltip-hover-only'
 import { type ApartmentType } from '~/enums/apartment-type'
 import { TAccomodationDetails } from '~/schemas/accommodations/accommodations'
+import { formatDayjs } from '~/utils/dayjs'
 import styles from './owner-details.module.css'
 
 interface OwnerDetailsProps {
@@ -44,7 +44,7 @@ export const OwnerDetails = async ({
   acceptDossierFacile,
   updatedAt,
 }: OwnerDetailsProps) => {
-  const t = await getTranslations('accomodation')
+  const [t, locale] = await Promise.all([getTranslations('accomodation'), getLocale()])
   const ownerUrl = externalUrl || owner?.url
   const badgeAvailability = (
     <AvailabilityBadge nbAvailable={nbAvailable} noAvailabilityText={t('card.noAvailability')} availabilityText={t('card.availability')} />
@@ -78,7 +78,7 @@ export const OwnerDetails = async ({
         {badgeAvailability}
         {waitingListBadge}
       </div>
-      <span className="fr-text--xs fr-mb-0">{t('sidebar.updatedAt', { date: dayjs(updatedAt).format('DD MMMM YYYY') })}</span>
+      <span className="fr-text--xs fr-mb-0">{t('sidebar.updatedAt', { date: formatDayjs(updatedAt, 'DD MMMM YYYY', locale) })}</span>
 
       {(nbAvailable === null || nbAvailable === undefined) && (
         <>

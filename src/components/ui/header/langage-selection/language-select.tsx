@@ -5,11 +5,11 @@ import { useTranslations } from 'next-intl'
 import { FC } from 'react'
 
 import { LanguageLink } from '~/components/ui/header/langage-selection/language-link'
-import { AvailableLocales } from '~/i18n/request'
+import { AvailableLocales, resolveLocale } from '~/i18n/request'
 
 export const LanguageSelect: FC = async () => {
   const cookieStore = await cookies()
-  const lang = cookieStore.get('NEXT_LOCALE')?.value as AvailableLocales
+  const lang = resolveLocale(cookieStore.get('NEXT_LOCALE')?.value)
   const availablesLocales = [AvailableLocales.FR, AvailableLocales.EN]
   const t = useTranslations('languages')
 
