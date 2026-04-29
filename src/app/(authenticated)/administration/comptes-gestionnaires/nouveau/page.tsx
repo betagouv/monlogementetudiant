@@ -14,6 +14,7 @@ export default function NewOwnerAccountPage() {
       <div className="fr-card fr-card--no-border fr-p-3w">
         <UserForm
           defaultValues={{ role: 'owner' }}
+          hideRoleField
           onSubmit={handleSubmit}
           isPending={createUser.isPending}
           submitLabel="Créer le compte gestionnaire"
