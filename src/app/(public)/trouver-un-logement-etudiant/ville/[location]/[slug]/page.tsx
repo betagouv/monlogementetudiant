@@ -87,6 +87,18 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
     accommodation.residence_type === EResidenceType.SOCIALE_JEUNES_ACTIFS ||
     accommodation.residence_type === EResidenceType.JEUNES_TRAVAILLEURS
 
+  const addressList =
+    accommodation.addresses && accommodation.addresses.length > 0
+      ? accommodation.addresses
+      : [{ address, city, postal_code, is_main: true, latitude, longitude }]
+
+  const mapPositions: [number, number][] = (() => {
+    const fromAddresses = addressList
+      .filter((a): a is typeof a & { latitude: number; longitude: number } => a.latitude != null && a.longitude != null)
+      .map((a): [number, number] => [a.latitude, a.longitude])
+    return fromAddresses.length > 0 ? fromAddresses : [[latitude, longitude]]
+  })()
+
   const breadcrumbItems = getAccommodationBreadcrumbItems(name, city, slug)
   const lodgingData = getAccommodationLodgingData({
     name,
@@ -150,10 +162,10 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
             <AccommodationResidence accommodation={accommodation} />
             <AccommodationVirtualTour url={virtual_tour_url} />
             <AccommodationEquipments accommodation={accommodation} />
-            <AccommodationLocalisation address={address} city={city} latitude={latitude} longitude={longitude} postalCode={postal_code} />
+            <AccommodationLocalisation addresses={addressList} positions={mapPositions} />
             <AccommodationDescription title={name} description={description} />
           </div>
-          <div className="fr-hidden-sm">{<AccommodationMap latitude={latitude} longitude={longitude} />}</div>
+          <div className="fr-hidden-sm">{<AccommodationMap positions={mapPositions} />}</div>
           <div className={clsx('fr-mt-2w fr-mt-md-0 fr-px-2w fr-px-md-0', styles.stickyColumn)}>
             <OwnerDetails
               updatedAt={updated_at}

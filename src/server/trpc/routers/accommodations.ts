@@ -625,6 +625,8 @@ export const accommodationsRouter = createTRPCRouter({
         postalCode: accommodationAddresses.postalCode,
         cityName: cities.name,
         isMain: accommodationAddresses.isMain,
+        lat: sql<number | null>`ST_Y(${accommodationAddresses.geom}::geometry)`,
+        lng: sql<number | null>`ST_X(${accommodationAddresses.geom}::geometry)`,
       })
       .from(accommodationAddresses)
       .innerJoin(cities, eq(accommodationAddresses.cityId, cities.id))
@@ -644,6 +646,8 @@ export const accommodationsRouter = createTRPCRouter({
         city: a.cityName,
         postal_code: a.postalCode,
         is_main: a.isMain,
+        latitude: a.lat,
+        longitude: a.lng,
       })),
       residence_type: toResidenceType(row.residenceType),
       target_audience: toTargetAudience(row.targetAudience),
