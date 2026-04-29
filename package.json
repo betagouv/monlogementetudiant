@@ -40,7 +40,7 @@
     "date-fns-tz": "^3.2.0",
     "dayjs": "^1.11.19",
     "dompurify": "^3.3.1",
-    "drizzle-orm": "^0.45.1",
+    "drizzle-orm": "^0.45.2",
     "isomorphic-dompurify": "^3.8.0",
     "jose": "^6.2.1",
     "leaflet": "^1.9.4",
