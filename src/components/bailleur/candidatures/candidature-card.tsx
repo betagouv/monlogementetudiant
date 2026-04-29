@@ -3,9 +3,10 @@
 import Badge from '@codegouvfr/react-dsfr/Badge'
 import { Card } from '@codegouvfr/react-dsfr/Card'
 import clsx from 'clsx'
-import dayjs from 'dayjs'
 import { useRouter } from 'next/navigation'
+import { useLocale } from 'next-intl'
 import { APARTMENT_TYPE_LABELS, type ApartmentType } from '~/enums/apartment-type'
+import { formatDayjs } from '~/utils/dayjs'
 import styles from './candidature-card.module.css'
 
 const STATUS_CONFIG = {
@@ -31,6 +32,7 @@ interface Props {
 
 export const CandidatureCard = ({ candidature }: Props) => {
   const router = useRouter()
+  const locale = useLocale()
   const statusConfig = STATUS_CONFIG[candidature.status as keyof typeof STATUS_CONFIG] ?? STATUS_CONFIG.pending
 
   return (
@@ -48,7 +50,7 @@ export const CandidatureCard = ({ candidature }: Props) => {
             {statusConfig.label}
           </Badge>
           <span className="fr-text-mention--grey fr-text--xs fr-mt-1v" style={{ display: 'block' }}>
-            Postée le {dayjs(candidature.createdAt).format('DD MMMM YYYY')}
+            Postée le {formatDayjs(candidature.createdAt, 'DD MMMM YYYY', locale)}
           </span>
         </>
       }
