@@ -3,6 +3,7 @@ import { and, desc, eq, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { db } from '~/server/db'
 import { accommodations } from '~/server/db/schema/accommodations'
+import { cities } from '~/server/db/schema/cities'
 import { favoriteAccommodations } from '~/server/db/schema/favorite-accommodations'
 import { owners } from '~/server/db/schema/owners'
 import { createTRPCRouter, userProcedure } from '../init'
@@ -18,6 +19,8 @@ export const favoritesRouter = createTRPCRouter({
         createdAt: favoriteAccommodations.createdAt,
         accommodation: {
           ...accommodations,
+          city: cities.name,
+          citySlug: cities.slug,
           priceMaxComputed: priceMaxComputed,
           lat: sql<number>`ST_Y(${accommodations.geom}::geometry)`,
           lng: sql<number>`ST_X(${accommodations.geom}::geometry)`,
@@ -27,6 +30,7 @@ export const favoritesRouter = createTRPCRouter({
       })
       .from(favoriteAccommodations)
       .innerJoin(accommodations, eq(favoriteAccommodations.accommodationId, accommodations.id))
+      .innerJoin(cities, eq(accommodations.cityId, cities.id))
       .leftJoin(owners, eq(accommodations.ownerId, owners.id))
       .where(and(eq(favoriteAccommodations.userId, userId), eq(accommodations.published, true)))
       .orderBy(desc(favoriteAccommodations.createdAt))
