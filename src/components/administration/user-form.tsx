@@ -27,9 +27,10 @@ interface UserFormProps {
   onSubmit: (data: UserFormData) => void
   isPending?: boolean
   submitLabel?: string
+  hideRoleField?: boolean
 }
 
-export const UserForm = ({ defaultValues, onSubmit, isPending, submitLabel = 'Enregistrer' }: UserFormProps) => {
+export const UserForm = ({ defaultValues, onSubmit, isPending, submitLabel = 'Enregistrer', hideRoleField }: UserFormProps) => {
   const tUsers = useTranslations('bailleur.users')
 
   const {
@@ -83,16 +84,18 @@ export const UserForm = ({ defaultValues, onSubmit, isPending, submitLabel = 'En
         state={errors.lastname ? 'error' : 'default'}
         stateRelatedMessage={errors.lastname?.message}
       />
-      <Select
-        label="Rôle"
-        nativeSelectProps={register('role')}
-        state={errors.role ? 'error' : 'default'}
-        stateRelatedMessage={errors.role?.message}
-      >
-        <option value="user">Étudiant</option>
-        <option value="owner">Gestionnaire</option>
-        <option value="admin">Administrateur</option>
-      </Select>
+      {!hideRoleField && (
+        <Select
+          label="Rôle"
+          nativeSelectProps={register('role')}
+          state={errors.role ? 'error' : 'default'}
+          stateRelatedMessage={errors.role?.message}
+        >
+          <option value="user">Étudiant</option>
+          <option value="owner">Gestionnaire</option>
+          <option value="admin">Administrateur</option>
+        </Select>
+      )}
 
       {isOwner && (
         <>
