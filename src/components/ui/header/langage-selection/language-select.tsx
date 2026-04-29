@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { FC } from 'react'
 
 import { LanguageLink } from '~/components/ui/header/langage-selection/language-link'
-import { AvailableLocales, resolveLocale } from '~/i18n/request'
+import { AvailableLocales, resolveLocale } from '~/i18n/locales'
 
 export const LanguageSelect: FC = async () => {
   const cookieStore = await cookies()
