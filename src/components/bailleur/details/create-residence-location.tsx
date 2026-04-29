@@ -2,6 +2,7 @@
 
 import Button from '@codegouvfr/react-dsfr/Button'
 import Input from '@codegouvfr/react-dsfr/Input'
+import { useTranslations } from 'next-intl'
 import { useRef, useState } from 'react'
 import { useFieldArray, useFormContext } from 'react-hook-form'
 import { AddressSuggestion, useAddressAutocomplete } from '~/hooks/use-address-autocomplete'
@@ -9,6 +10,7 @@ import { TCreateResidence } from '~/schemas/accommodations/create-residence'
 import styles from './create-residence-location.module.css'
 
 const AddressAutocompleteRow = ({ index, onRemove, isMain }: { index: number; onRemove?: () => void; isMain: boolean }) => {
+  const t = useTranslations('bailleur.residences.details.location')
   const {
     setValue,
     formState: { errors },
@@ -45,10 +47,10 @@ const AddressAutocompleteRow = ({ index, onRemove, isMain }: { index: number; on
 
   const label = isMain ? (
     <>
-      Adresse <span className="fr-text-default--error">*</span>
+      {t('mainAddressLabel')} <span className="fr-text-default--error">*</span>
     </>
   ) : (
-    `Adresse n\u00B0${index + 1}`
+    t('additionalAddressLabel', { index: index + 1 })
   )
 
   return (
@@ -59,13 +61,13 @@ const AddressAutocompleteRow = ({ index, onRemove, isMain }: { index: number; on
             <Input
               label={label}
               state={hasAddressError ? 'error' : 'default'}
-              stateRelatedMessage={hasAddressError ? 'Veuillez sélectionner une adresse valide' : undefined}
+              stateRelatedMessage={hasAddressError ? t('invalidAddress') : undefined}
               nativeInputProps={{
                 value: inputValue,
                 onChange: handleInputChange,
                 onFocus: () => setShowSuggestions(true),
                 onBlur: () => setTimeout(() => setShowSuggestions(false), 200),
-                placeholder: 'Rechercher une adresse...',
+                placeholder: t('searchPlaceholder'),
                 autoComplete: 'off',
               }}
             />
@@ -75,7 +77,7 @@ const AddressAutocompleteRow = ({ index, onRemove, isMain }: { index: number; on
               type="button"
               priority="secondary"
               iconId="ri-delete-bin-line"
-              title="Supprimer cette adresse"
+              title={t('removeAddress')}
               onClick={onRemove}
               style={{ marginBottom: hasAddressError ? '2rem' : '0.75rem' }}
             />
@@ -84,7 +86,7 @@ const AddressAutocompleteRow = ({ index, onRemove, isMain }: { index: number; on
         {showSuggestions && (suggestions.length > 0 || isLoading) && (
           <ul className={styles.suggestionList}>
             {isLoading ? (
-              <li className={styles.suggestionLoading}>Recherche en cours...</li>
+              <li className={styles.suggestionLoading}>{t('searching')}</li>
             ) : (
               suggestions.map((suggestion, i) => (
                 <li key={i} onClick={() => handleSelectSuggestion(suggestion)} className={styles.suggestionItem}>
@@ -108,6 +110,7 @@ const AddressAutocompleteRow = ({ index, onRemove, isMain }: { index: number; on
 }
 
 export const CreateResidenceLocation = () => {
+  const t = useTranslations('bailleur.residences.details.location')
   const { control } = useFormContext<TCreateResidence>()
   const { fields, append, remove } = useFieldArray({
     control,
@@ -117,10 +120,8 @@ export const CreateResidenceLocation = () => {
   return (
     <div className="fr-border-bottom">
       <div className="fr-p-2w fr-p-md-6w">
-        <h3>Adresse de la résidence</h3>
-        <p className="fr-text--sm fr-text-mention--grey">
-          Vous pouvez ajouter une ou plusieurs adresses postales si vous disposez de plusieurs résidences dans la même ville.
-        </p>
+        <h3>{t('sectionTitle')}</h3>
+        <p className="fr-text--sm fr-text-mention--grey">{t('sectionHint')}</p>
 
         {fields.map((field, index) => (
           <AddressAutocompleteRow
@@ -132,7 +133,7 @@ export const CreateResidenceLocation = () => {
         ))}
 
         <Button type="button" priority="secondary" iconId="ri-add-line" onClick={() => append({ address: '', city: '', postal_code: '' })}>
-          Ajouter une adresse
+          {t('addAddress')}
         </Button>
       </div>
     </div>

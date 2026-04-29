@@ -151,7 +151,7 @@ export const ResidenceLocation = ({ accommodation }: { accommodation: TAccomodat
       </Button>
 
       <div className="fr-mt-2w" style={{ height: '300px', width: '100%' }}>
-        <AccommodationMap key={`${latitude}-${longitude}`} latitude={latitude} longitude={longitude} />
+        <AccommodationMap key={`${latitude}-${longitude}`} positions={[[latitude, longitude]]} />
       </div>
     </div>
   )
