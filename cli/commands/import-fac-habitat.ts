@@ -141,12 +141,10 @@ async function downloadFromSftp(verbose?: boolean): Promise<string> {
 }
 
 function buildTypologyValues(item: FacHabitatResidence) {
-  const nbT1 = item.nb_t1 ?? 0
-  const nbT1Bis = (item.nb_t1_bis ?? 0) + (item.nb_t1_prime ?? 0) + (item.nb_studio_double ?? 0) + (item.nb_duplex ?? 0)
-  const nbT2 = (item.nb_t2 ?? 0) + (item.nb_t2_duplex ?? 0)
-  const nbT3 = (item.nb_t3 ?? 0) + (item.nb_duo ?? 0)
-  const nbT4 = item.nb_t4 ?? 0
-  const nbT5 = (item.nb_t5 ?? 0) + (item.nb_t5_en_colocation ?? 0)
+  const sumIfAny = (...vals: (number | undefined | null)[]) => {
+    const nums = vals.filter((v): v is number => v != null)
+    return nums.length > 0 ? nums.reduce((a, b) => a + b, 0) : null
+  }
 
   const minOf = (...vals: (number | undefined | null)[]) => {
     const nums = vals.filter((v): v is number => v != null && v > 0)
@@ -157,30 +155,38 @@ function buildTypologyValues(item: FacHabitatResidence) {
     return nums.length > 0 ? Math.round(Math.max(...nums)) : null
   }
 
-  const nbT1Available = item.nb_t1_available ?? 0
-  const nbT1BisAvailable =
-    (item.nb_t1_bis_available ?? 0) +
-    (item.nb_t1_prime_available ?? 0) +
-    (item.nb_studio_double_available ?? 0) +
-    (item.nb_duplex_available ?? 0)
-  const nbT2Available = (item.nb_t2_available ?? 0) + (item.nb_t2_duplex_available ?? 0)
-  const nbT3Available = (item.nb_t3_available ?? 0) + (item.nb_duo_available ?? 0)
-  const nbT4Available = item.nb_t4_available ?? 0
-  const nbT5Available = item.nb_t5_en_colocation_available ?? 0
+  const nbT1 = sumIfAny(item.nb_t1)
+  const nbT1Bis = sumIfAny(item.nb_t1_bis, item.nb_t1_prime, item.nb_studio_double, item.nb_duplex)
+  const nbT2 = sumIfAny(item.nb_t2, item.nb_t2_duplex)
+  const nbT3 = sumIfAny(item.nb_t3, item.nb_duo)
+  const nbT4 = sumIfAny(item.nb_t4)
+  const nbT5 = sumIfAny(item.nb_t5, item.nb_t5_en_colocation)
+
+  const nbT1Available = sumIfAny(item.nb_t1_available)
+  const nbT1BisAvailable = sumIfAny(
+    item.nb_t1_bis_available,
+    item.nb_t1_prime_available,
+    item.nb_studio_double_available,
+    item.nb_duplex_available,
+  )
+  const nbT2Available = sumIfAny(item.nb_t2_available, item.nb_t2_duplex_available)
+  const nbT3Available = sumIfAny(item.nb_t3_available, item.nb_duo_available)
+  const nbT4Available = sumIfAny(item.nb_t4_available)
+  const nbT5Available = sumIfAny(item.nb_t5_en_colocation_available)
 
   return {
-    nbT1: nbT1 || null,
-    nbT1Bis: nbT1Bis || null,
-    nbT2: nbT2 || null,
-    nbT3: nbT3 || null,
-    nbT4: nbT4 || null,
-    nbT5: nbT5 || null,
-    nbT1Available: nbT1Available || null,
-    nbT1BisAvailable: nbT1BisAvailable || null,
-    nbT2Available: nbT2Available || null,
-    nbT3Available: nbT3Available || null,
-    nbT4Available: nbT4Available || null,
-    nbT5Available: nbT5Available || null,
+    nbT1,
+    nbT1Bis,
+    nbT2,
+    nbT3,
+    nbT4,
+    nbT5,
+    nbT1Available,
+    nbT1BisAvailable,
+    nbT2Available,
+    nbT3Available,
+    nbT4Available,
+    nbT5Available,
     priceMinT1: minOf(item.t1_rent_min),
     priceMaxT1: maxOf(item.t1_rent_max),
     priceMinT1Bis: minOf(item.t1_bis_rent_min, item.t1_prime_rent_min, item.studio_double_rent_min, item.duplex_rent_min),
