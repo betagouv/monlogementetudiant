@@ -4,7 +4,7 @@ import { fr } from '@codegouvfr/react-dsfr'
 import { useRouter } from 'next/navigation'
 import { FC } from 'react'
 
-import { AvailableLocales } from '~/i18n/request'
+import { AvailableLocales } from '~/i18n/locales'
 
 type LanguageLinkProps = {
   activeLocale: AvailableLocales
