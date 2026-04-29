@@ -49,7 +49,7 @@ export const WorkspaceHeaderNavigation: FC<{ acceptDossierFacile: boolean; canMa
           {
             isActive: pathname.startsWith('/bailleur/utilisateurs'),
             linkProps: {
-              href: '/bailleur/utilisateurs',
+              href: buildHref('/bailleur/utilisateurs', searchParams),
               target: '_self' as const,
             },
             text: t('users'),

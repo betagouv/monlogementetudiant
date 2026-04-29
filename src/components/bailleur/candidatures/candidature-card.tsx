@@ -3,10 +3,11 @@
 import Badge from '@codegouvfr/react-dsfr/Badge'
 import { Card } from '@codegouvfr/react-dsfr/Card'
 import clsx from 'clsx'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useLocale } from 'next-intl'
 import { APARTMENT_TYPE_LABELS, type ApartmentType } from '~/enums/apartment-type'
 import { formatDayjs } from '~/utils/dayjs'
+import { buildHref } from '~/utils/preserve-query-params'
 import styles from './candidature-card.module.css'
 
 const STATUS_CONFIG = {
@@ -32,6 +33,7 @@ interface Props {
 
 export const CandidatureCard = ({ candidature }: Props) => {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const locale = useLocale()
   const statusConfig = STATUS_CONFIG[candidature.status as keyof typeof STATUS_CONFIG] ?? STATUS_CONFIG.pending
 
@@ -41,7 +43,7 @@ export const CandidatureCard = ({ candidature }: Props) => {
       border
       size="small"
       classes={{ root: styles.hover, endDetail: 'fr-justify-content-end' }}
-      nativeDivProps={{ onClick: () => router.push(`/bailleur/candidatures/${candidature.id}`) }}
+      nativeDivProps={{ onClick: () => router.push(buildHref(`/bailleur/candidatures/${candidature.id}`, searchParams)) }}
       title={<span className="fr-text-title--blue-france fr-mb-0">{candidature.studentName ?? 'Candidat'}</span>}
       titleAs="h3"
       start={

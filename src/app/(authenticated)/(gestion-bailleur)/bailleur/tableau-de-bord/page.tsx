@@ -13,6 +13,7 @@ import { CalendlyLink } from '~/components/bailleur/calendly-link'
 import avatarCecilia from '~/images/avatar-cecilia.svg'
 import avatarYasmine from '~/images/avatar-yasmine.svg'
 import { calculateAvailability } from '~/utils/calculateAvailability'
+import { buildHref } from '~/utils/preserve-query-params'
 import { getBailleurDashboardPageContext } from './get-bailleur-dashboard-page-context'
 import styles from './tableau-de-bord.module.css'
 
@@ -89,7 +90,7 @@ export default async function TableauDeBordPage({ searchParams }: TableauDeBordP
                 <span className="fr-hidden fr-unhidden-md ri-question-line" />
                 <div className="fr-flex fr-direction-column fr-flex-gap-2v">
                   <span className="fr-text--bold">{t('dashboard.helpSection.faq.title')}</span>
-                  <Link className="fr-link" href="/bailleur/centre-d-aide">
+                  <Link className="fr-link" href={buildHref('/bailleur/centre-d-aide', awaitedSearchParams)}>
                     {t('dashboard.helpSection.faq.link')}
                   </Link>
                 </div>
@@ -126,7 +127,7 @@ export default async function TableauDeBordPage({ searchParams }: TableauDeBordP
               </div> */}
               <div className={styles.actionCard}>
                 <div className={styles.actionHeader}>
-                  <Link className="fr-link fr-link--no-underline" href="/bailleur/residences">
+                  <Link className="fr-link fr-link--no-underline" href={buildHref('/bailleur/residences', awaitedSearchParams)}>
                     <span className="fr-h6 fr-text-title--blue-france fr-mb-0">
                       {t('dashboard.priorityActions.actions.availability.title')}
                     </span>
@@ -136,7 +137,7 @@ export default async function TableauDeBordPage({ searchParams }: TableauDeBordP
                   </Badge>
                 </div>
                 <div className={styles.actionFooter}>
-                  <Link className="fr-link fr-link--no-underline" href="/bailleur/residences">
+                  <Link className="fr-link fr-link--no-underline" href={buildHref('/bailleur/residences', awaitedSearchParams)}>
                     <span className="ri-arrow-right-line" />
                   </Link>
                 </div>
@@ -201,7 +202,10 @@ export default async function TableauDeBordPage({ searchParams }: TableauDeBordP
               <div key={index} className={clsx('fr-px-3w fr-py-2w', styles.statisticsCard)}>
                 <div>
                   <div className="fr-flex fr-justify-content-space-between fr-align-items-center">
-                    <Link className="fr-link fr-link--no-underline" href={`/bailleur/residences/${res.properties.slug}`}>
+                    <Link
+                      className="fr-link fr-link--no-underline"
+                      href={buildHref(`/bailleur/residences/${res.properties.slug}`, awaitedSearchParams)}
+                    >
                       <span className="fr-text--bold fr-text-title--blue-france fr-text--lg">{res.properties.name}</span>
                     </Link>
                     {!res.properties.published && (
@@ -216,7 +220,10 @@ export default async function TableauDeBordPage({ searchParams }: TableauDeBordP
                 </div>
                 <ResidenceChart available={available} total={total} />
                 <div className="fr-flex fr-justify-content-end">
-                  <Link className="fr-link fr-link--no-underline" href={`/bailleur/residences/${res.properties.slug}`}>
+                  <Link
+                    className="fr-link fr-link--no-underline"
+                    href={buildHref(`/bailleur/residences/${res.properties.slug}`, awaitedSearchParams)}
+                  >
                     <span className="ri-arrow-right-line fr-text-title--blue-france ri-xl" />
                   </Link>
                 </div>

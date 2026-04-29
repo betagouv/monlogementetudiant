@@ -12,6 +12,7 @@ export const useCandidatures = () => {
     status: parseAsStringLiteral(['pending', 'accepted', 'rejected']),
     recherche: parseAsString.withDefault(''),
     tri: parseAsStringLiteral(['date_desc', 'date_asc']).withDefault('date_desc'),
+    ownerId: parseAsInteger,
   })
 
   const [debouncedRecherche] = useDebounce(queryStates.recherche, 300)

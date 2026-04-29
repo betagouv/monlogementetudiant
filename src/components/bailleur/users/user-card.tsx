@@ -4,10 +4,11 @@ import Badge from '@codegouvfr/react-dsfr/Badge'
 import Button from '@codegouvfr/react-dsfr/Button'
 import { createModal } from '@codegouvfr/react-dsfr/Modal'
 import Tag from '@codegouvfr/react-dsfr/Tag'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useDeleteBailleurUser } from '~/hooks/use-bailleur-users'
 import { BAILLEUR_PERMISSIONS, type BailleurPermission, type BailleurRole } from '~/server/bailleur/permissions'
+import { buildHref } from '~/utils/preserve-query-params'
 import styles from './user-card.module.css'
 
 type UserItem = {
@@ -26,6 +27,7 @@ type Props = {
 
 export const UserCard = ({ user, canDelete }: Props) => {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const deleteUser = useDeleteBailleurUser()
   const t = useTranslations('bailleur.users')
 
@@ -49,7 +51,7 @@ export const UserCard = ({ user, canDelete }: Props) => {
             size="small"
             iconId="fr-icon-edit-line"
             title={t('edit')}
-            onClick={() => router.push(`/bailleur/utilisateurs/${user.id}`)}
+            onClick={() => router.push(buildHref(`/bailleur/utilisateurs/${user.id}`, searchParams))}
           />
           {canDelete && (
             <Button
