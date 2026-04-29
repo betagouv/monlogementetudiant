@@ -185,7 +185,7 @@ export const territoriesRouter = createTRPCRouter({
         .leftJoin(departments, eq(cities.departmentId, departments.id))
         .leftJoin(cityStats, eq(cityStats.cityId, cities.id))
         .where(buildWhere(cities.name, tokens))
-        .orderBy(buildRank(cities.name, normalized))
+        .orderBy(sql`(COALESCE(${cityStats.nbTotalApartments}, 0) > 0) DESC`, buildRank(cities.name, normalized))
         .limit(10),
     ])
 
