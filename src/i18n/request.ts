@@ -1,20 +1,6 @@
 import { cookies, headers } from 'next/headers'
 import { getRequestConfig } from 'next-intl/server'
-
-export enum AvailableLocales {
-  EN = 'en',
-  FR = 'fr',
-}
-
-export const resolveLocale = (value?: string | null): AvailableLocales => {
-  const normalizedValue = value?.toLowerCase()
-
-  if (normalizedValue?.startsWith(AvailableLocales.EN)) {
-    return AvailableLocales.EN
-  }
-
-  return AvailableLocales.FR
-}
+import { resolveLocale } from '~/i18n/locales'
 
 export default getRequestConfig(async () => {
   const [cookieStore, headersStore] = await Promise.all([cookies(), headers()])
