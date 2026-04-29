@@ -288,6 +288,38 @@ describe('import-fac-habitat integration', () => {
     await expect(command.execute({})).rejects.toThrow('FAC_HABITAT_SFTP_HOST')
   })
 
+  it('Available fields: null when all sources absent, sum (incl. 0) when any present', async () => {
+    const db = getTestDb()
+
+    await createOwner({ name: 'FAC HABITAT', slug: 'fac-habitat-available' })
+
+    const residence = makeResidence({
+      id: 9001,
+      // T1Bis Available: undefined + 5 + null + undefined => 5
+      nb_t1_bis_available: undefined,
+      nb_t1_prime_available: 5,
+      nb_studio_double_available: null,
+      nb_duplex_available: undefined,
+      // T2 Available: 0 + null => 0
+      nb_t2_available: 0,
+      nb_t2_duplex_available: null,
+      // T3 Available: undefined + null => null
+      nb_t3_available: undefined,
+      nb_duo_available: null,
+    })
+
+    const filePath = writeTmpJson([residence])
+    mockGeocoder()
+
+    await command.execute({ file: filePath })
+
+    const [acc] = await db.select().from(accommodations).where(eq(accommodations.externalReference, '9001'))
+    expect(acc).toBeDefined()
+    expect(acc!.nbT1BisAvailable).toBe(5)
+    expect(acc!.nbT2Available).toBe(0)
+    expect(acc!.nbT3Available).toBeNull()
+  })
+
   it('slug must not change on re-import with same name', async () => {
     const db = getTestDb()
 
