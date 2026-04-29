@@ -4,7 +4,7 @@ import Breadcrumb from '@codegouvfr/react-dsfr/Breadcrumb'
 import Button from '@codegouvfr/react-dsfr/Button'
 import { Tabs } from '@codegouvfr/react-dsfr/Tabs'
 import { useQuery } from '@tanstack/react-query'
-import { notFound } from 'next/navigation'
+import { notFound, useSearchParams } from 'next/navigation'
 import { type ReactNode } from 'react'
 import { CandidatureDetailAccommodation } from '~/components/bailleur/candidatures/candidature-detail-accommodation'
 import { CandidatureDetailDossier } from '~/components/bailleur/candidatures/candidature-detail-dossier'
@@ -12,6 +12,7 @@ import { CandidatureDetailSuivi } from '~/components/bailleur/candidatures/candi
 import { useSignedDocumentUrl } from '~/hooks/use-signed-document-url'
 import { TAccomodationCard } from '~/schemas/accommodations/accommodations'
 import { useTRPC } from '~/server/trpc/client'
+import { buildHref } from '~/utils/preserve-query-params'
 
 type DocumentItem = { id: string; documentCategory: string; documentSubCategory: string | null }
 
@@ -47,6 +48,7 @@ interface CandidatureDetailProps {
 
 export const CandidatureDetail = ({ id }: CandidatureDetailProps) => {
   const trpc = useTRPC()
+  const searchParams = useSearchParams()
   const { data: candidature, isLoading } = useQuery(trpc.bailleur.getCandidature.queryOptions({ id }))
   const { openDocument, isLoading: isOpeningDocument } = useSignedDocumentUrl()
 
@@ -65,8 +67,8 @@ export const CandidatureDetail = ({ id }: CandidatureDetailProps) => {
       <Breadcrumb
         currentPageLabel={candidature.studentName ?? 'Candidat'}
         segments={[
-          { label: 'Tableau de bord', linkProps: { href: '/bailleur/tableau-de-bord' } },
-          { label: 'Gestions de candidatures', linkProps: { href: '/bailleur/candidatures' } },
+          { label: 'Tableau de bord', linkProps: { href: buildHref('/bailleur/tableau-de-bord', searchParams) } },
+          { label: 'Gestions de candidatures', linkProps: { href: buildHref('/bailleur/candidatures', searchParams) } },
         ]}
         classes={{ root: 'fr-mt-0 fr-mb-2w fr-pt-4w' }}
       />

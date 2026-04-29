@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { getBailleurContext } from '~/server/bailleur/get-bailleur-context'
 import { canGrantAdministratorRights } from '~/server/bailleur/permissions'
+import { buildHref } from '~/utils/preserve-query-params'
 import { NewBailleurUserForm } from './new-bailleur-user-form'
 
 export default async function NewBailleurUserPage({ searchParams }: { searchParams: Promise<{ ownerId?: string }> }) {
@@ -18,8 +19,8 @@ export default async function NewBailleurUserPage({ searchParams }: { searchPara
       <Breadcrumb
         currentPageLabel={<>{t('newUser')}</>}
         segments={[
-          { label: t('breadcrumbDashboard'), linkProps: { href: '/bailleur/tableau-de-bord' } },
-          { label: t('pageTitle'), linkProps: { href: '/bailleur/utilisateurs' } },
+          { label: t('breadcrumbDashboard'), linkProps: { href: buildHref('/bailleur/tableau-de-bord', awaited) } },
+          { label: t('pageTitle'), linkProps: { href: buildHref('/bailleur/utilisateurs', awaited) } },
         ]}
         classes={{ root: 'fr-mt-0 fr-mb-2w fr-pt-4w' }}
       />

@@ -10,6 +10,7 @@ import { UpdateResidenceList } from '~/components/bailleur/update-residence-list
 import { AvailabilityBadge } from '~/components/shared/availability-badge'
 import { useMyAccommodations } from '~/hooks/use-my-accommodations'
 import { calculateAvailability } from '~/utils/calculateAvailability'
+import { buildHref } from '~/utils/preserve-query-params'
 import { sPluriel } from '~/utils/sPluriel'
 
 const ResidenceListSkeleton = () => (
@@ -118,7 +119,11 @@ export const ResidenceList: FC = () => {
                 )}
                 key={accommodation.id}
               >
-                <ResidenceCard key={index} accomodation={accommodation} href={`/bailleur/residences/${accommodation.properties.slug}`} />
+                <ResidenceCard
+                  key={index}
+                  accomodation={accommodation}
+                  href={buildHref(`/bailleur/residences/${accommodation.properties.slug}`, { ownerId: queryStates.ownerId?.toString() })}
+                />
                 <UpdateResidenceList accommodation={accommodation}>
                   <div className="fr-flex fr-justify-content-space-between">
                     {!!accommodation.properties.nb_total_apartments && (
