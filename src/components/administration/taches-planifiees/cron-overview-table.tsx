@@ -8,10 +8,10 @@ import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import styles from '~/app/(authenticated)/administration/administration.module.css'
 import type { TImportJobStatus, TImportJobSummary } from '~/schemas/import-jobs'
+import { isImportJob } from '~/schemas/import-jobs'
 import { useTRPC } from '~/server/trpc/client'
 import { StatusBadge } from '../imports/status-badge'
 import { JobDuration } from '../shared/job-duration'
-import { isImportJob } from '~/schemas/import-jobs'
 import { CRON_JOB_DEFS } from './cron-job-defs'
 
 function impactedCount(summary: TImportJobSummary | null): number | null {

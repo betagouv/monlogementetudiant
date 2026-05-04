@@ -40,6 +40,7 @@ export default defineConfig({
           env: {
             BASE_URL: 'http://localhost:3000',
             AUTH_SECRET: 'test-secret-for-integration-tests',
+            BREVO_API_KEY: 'test-brevo-api-key',
           },
         },
       },
