@@ -212,7 +212,7 @@ export async function ensureCity(postalCode: string, cityName: string): Promise<
   const existing = await db
     .select({ name: cities.name, id: cities.id })
     .from(cities)
-    .where(sql`${postalCode} = ANY(${cities.postalCodes})`)
+    .where(sql`${cities.postalCodes} @> ARRAY[${postalCode}]::varchar[]`)
     .limit(1)
   if (existing[0]) return existing[0]
 
@@ -222,7 +222,7 @@ export async function ensureCity(postalCode: string, cityName: string): Promise<
   const byInsee = await db
     .select({ name: cities.name, id: cities.id, postalCodes: cities.postalCodes })
     .from(cities)
-    .where(sql`${apiCity.code} = ANY(${cities.inseeCodes})`)
+    .where(sql`${cities.inseeCodes} @> ARRAY[${apiCity.code}]::varchar[]`)
     .limit(1)
   if (byInsee[0]) {
     if (!byInsee[0].postalCodes.includes(postalCode)) {

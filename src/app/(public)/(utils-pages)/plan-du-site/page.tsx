@@ -54,7 +54,6 @@ export default async function SiteMap() {
               },
               text: t('links.findAccomodation'),
             },
-            { linkProps: { href: '/alerte-logement' }, text: t('links.alertAccomodation') },
             {
               linkProps: {
                 href: '/gestion-des-cookies',
