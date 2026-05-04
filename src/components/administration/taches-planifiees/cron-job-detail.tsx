@@ -9,11 +9,11 @@ import { fr } from 'date-fns/locale'
 import Link from 'next/link'
 import styles from '~/app/(authenticated)/administration/administration.module.css'
 import type { TImportJobResidence, TImportJobStatus, TImportJobSummary } from '~/schemas/import-jobs'
+import { isImportJob } from '~/schemas/import-jobs'
 import { useTRPC } from '~/server/trpc/client'
 import { StatusBadge } from '../imports/status-badge'
 import { JobDuration } from '../shared/job-duration'
 import { JobStatCards } from '../shared/job-stat-cards'
-import { isImportJob } from '~/schemas/import-jobs'
 import { JOB_LABELS } from './cron-job-defs'
 
 function ContextPanel({ context }: { context: Record<string, unknown> }) {

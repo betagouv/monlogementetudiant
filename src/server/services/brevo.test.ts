@@ -12,6 +12,7 @@ describe('brevo service', () => {
     vi.stubEnv('BREVO_TEMPLATE_MAGIC_LINK', '2')
     vi.stubEnv('BREVO_TEMPLATE_VALIDATION', '21')
     vi.stubEnv('BREVO_TEMPLATE_RESET_PASSWORD', '23')
+    vi.stubEnv('BREVO_TEMPLATE_OWNER_WELCOME', '40')
   })
 
   describe('sendTemplateEmail', () => {
@@ -40,9 +41,18 @@ describe('brevo service', () => {
 
     it('throws when BREVO_API_KEY is not set', async () => {
       vi.stubEnv('BREVO_API_KEY', '')
+
+      await expect(import('./brevo')).rejects.toThrow('BREVO_API_KEY is required')
+    })
+
+    it('omits params from body when empty', async () => {
       const { sendTemplateEmail } = await import('./brevo')
 
-      await expect(sendTemplateEmail({ to: 'user@test.com', templateId: 2, params: {} })).rejects.toThrow('BREVO_API_KEY is not set')
+      await sendTemplateEmail({ to: 'user@test.com', templateId: 40 })
+
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body)
+      expect(body).toEqual({ to: [{ email: 'user@test.com' }], templateId: 40 })
+      expect(body.params).toBeUndefined()
     })
 
     it('throws on non-ok response', async () => {
@@ -53,7 +63,7 @@ describe('brevo service', () => {
       })
       const { sendTemplateEmail } = await import('./brevo')
 
-      await expect(sendTemplateEmail({ to: 'user@test.com', templateId: 2, params: {} })).rejects.toThrow(
+      await expect(sendTemplateEmail({ to: 'user@test.com', templateId: 2, params: { X: 'y' } })).rejects.toThrow(
         'Brevo email failed: 400 Bad Request',
       )
     })
@@ -95,6 +105,18 @@ describe('brevo service', () => {
       expect(body.templateId).toBe(23)
       expect(body.params).toEqual({ RESET_LINK: 'https://example.com/reset' })
       expect(body.to).toEqual([{ email: 'user@test.com' }])
+    })
+  })
+
+  describe('sendOwnerWelcomeEmail', () => {
+    it('uses template ID 40 without params', async () => {
+      const { sendOwnerWelcomeEmail } = await import('./brevo')
+
+      await sendOwnerWelcomeEmail('owner@test.com')
+
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body)
+      expect(body).toEqual({ to: [{ email: 'owner@test.com' }], templateId: 40 })
+      expect(body.params).toBeUndefined()
     })
   })
 })
