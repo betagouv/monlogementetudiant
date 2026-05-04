@@ -3,6 +3,7 @@ const BREVO_API_URL = process.env.BREVO_API_URL ?? 'https://api.brevo.com/v3/smt
 const BREVO_TEMPLATE_MAGIC_LINK = Number(process.env.BREVO_TEMPLATE_MAGIC_LINK)
 const BREVO_TEMPLATE_VALIDATION = Number(process.env.BREVO_TEMPLATE_VALIDATION)
 const BREVO_TEMPLATE_RESET_PASSWORD = Number(process.env.BREVO_TEMPLATE_RESET_PASSWORD)
+const BREVO_TEMPLATE_GESTIONNAIRE_WELCOME = Number(process.env.BREVO_TEMPLATE_GESTIONNAIRE_WELCOME)
 
 interface TemplateEmailParams {
   to: string
@@ -65,5 +66,13 @@ export async function sendOwnerAccountActivated(email: string, url: string): Pro
     to: email,
     templateId: BREVO_TEMPLATE_MAGIC_LINK,
     params: { MAGIC_LINK: url },
+  })
+}
+
+export async function sendOwnerWelcomeEmail(email: string): Promise<void> {
+  await sendTemplateEmail({
+    to: email,
+    templateId: BREVO_TEMPLATE_GESTIONNAIRE_WELCOME,
+    params: {},
   })
 }

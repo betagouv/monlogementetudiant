@@ -15,6 +15,7 @@ import { eventStats } from '~/server/db/schema/event-stats'
 import { importJobs } from '~/server/db/schema/import-jobs'
 import { owners } from '~/server/db/schema/owners'
 import { stats } from '~/server/db/schema/stats'
+import { sendOwnerWelcomeEmail } from '~/server/services/brevo'
 import { generateSlug } from '~/server/trpc/utils/accommodation-helpers'
 import { findAvailableSlug } from '~/server/utils/slug'
 import { adminProcedure, createTRPCRouter } from '../init'
@@ -137,6 +138,14 @@ const usersRouter = createTRPCRouter({
           bailleurPermissions,
         })
         .returning()
+
+      if (created.role === 'owner') {
+        try {
+          await sendOwnerWelcomeEmail(created.email)
+        } catch (err) {
+          console.error('Erreur envoi email bienvenue gestionnaire', err)
+        }
+      }
 
       return created
     }),
@@ -958,12 +967,7 @@ const CRON_JOB_TYPES = ZImportJobType.options.filter((t) => t !== 'csv')
 
 const importsRouter = createTRPCRouter({
   list: adminProcedure.query(async () => {
-    return db
-      .select()
-      .from(importJobs)
-      .where(inArray(importJobs.type, IMPORT_JOB_TYPES))
-      .orderBy(desc(importJobs.createdAt))
-      .limit(50)
+    return db.select().from(importJobs).where(inArray(importJobs.type, IMPORT_JOB_TYPES)).orderBy(desc(importJobs.createdAt)).limit(50)
   }),
 
   getById: adminProcedure.input(z.object({ id: z.number() })).query(async ({ input }) => {
