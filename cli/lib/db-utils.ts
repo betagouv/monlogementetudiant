@@ -67,6 +67,12 @@ export async function cleanDatabase(databaseUrl: string): Promise<void> {
   await sql.unsafe(`DROP EXTENSION IF EXISTS "pg_trgm" CASCADE`)
   console.log('  ✓ Extensions unaccent/pg_trgm supprimées')
 
+  // Drop the drizzle schema entirely so pg_restore can recreate it from the dump.
+  // Otherwise __drizzle_migrations from a previous import survives, conflicts on
+  // restore (PK / sequence collisions), and the local tracker drifts from the dump.
+  await sql.unsafe(`DROP SCHEMA IF EXISTS "drizzle" CASCADE`)
+  console.log('  ✓ Schéma drizzle supprimé')
+
   await sql.end()
 }
 

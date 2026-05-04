@@ -1183,6 +1183,18 @@
           "addAddress": "Ajouter une adresse"
         }
       }
+    },
+    "feedback": {
+      "title": "What do you think of the manager space?",
+      "ratingQuestion": "On a scale from 1 to 5, how satisfied are you?",
+      "commentLabel": "Comments, suggestions or issues (optional)",
+      "submit": "Send",
+      "close": "Close",
+      "ariaBanner": "Give your feedback on the manager space",
+      "ariaRating": "Satisfaction rating",
+      "ratingRequired": "Please select a rating.",
+      "successToast": "Thanks for your feedback!",
+      "errorToast": "Failed to send"
     }
   }
 }

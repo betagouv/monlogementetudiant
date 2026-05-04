@@ -13,6 +13,7 @@ export { favoriteAccommodations } from './favorite-accommodations'
 export { importBlocklist } from './import-blocklist'
 export { importJobs } from './import-jobs'
 export { newsletterSubscriptions } from './newsletter-subscriptions'
+export { ownerFeedback, ownerFeedbackStatusEnum } from './owner-feedback'
 export { owners } from './owners'
 export { questionsAnswers } from './questions-answers'
 export {
