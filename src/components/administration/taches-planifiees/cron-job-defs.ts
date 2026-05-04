@@ -5,11 +5,6 @@ export const CRON_JOB_TYPES = ZImportJobType.options.filter((t) => t !== 'csv') 
 
 export type CronJobType = (typeof CRON_JOB_TYPES)[number]
 
-// Helper : tout ce qui ne contient pas "sync" est un import
-export function isImportJob(type: string): boolean {
-  return !type.includes('sync')
-}
-
 type CronJobDef = {
   type: CronJobType
   label: string

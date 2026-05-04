@@ -12,6 +12,13 @@ export const ZImportJobType = z.enum([
 ])
 export type TImportJobType = z.infer<typeof ZImportJobType>
 
+// Tout ce qui ne contient pas "sync" est un import (vs. job de synchro/cron)
+export function isImportJob(type: string): boolean {
+  return !type.includes('sync')
+}
+
+export const IMPORT_JOB_TYPES = ZImportJobType.options.filter(isImportJob)
+
 export const ZImportJobStatus = z.enum(['running', 'done', 'error'])
 export type TImportJobStatus = z.infer<typeof ZImportJobStatus>
 

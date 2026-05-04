@@ -11,7 +11,8 @@ import type { TImportJobStatus, TImportJobSummary } from '~/schemas/import-jobs'
 import { useTRPC } from '~/server/trpc/client'
 import { StatusBadge } from '../imports/status-badge'
 import { JobDuration } from '../shared/job-duration'
-import { CRON_JOB_DEFS, isImportJob } from './cron-job-defs'
+import { isImportJob } from '~/schemas/import-jobs'
+import { CRON_JOB_DEFS } from './cron-job-defs'
 
 function impactedCount(summary: TImportJobSummary | null): number | null {
   if (!summary) return null
