@@ -109,7 +109,7 @@ export const OwnerDetails = async ({
       {nbAvailable === 0 && (
         <>
           <hr className={styles.sidebarSeparator} />
-          <OwnerDetailsAlert location={location} />
+          <OwnerDetailsAlert isAuthenticated={isAuthenticated} />
         </>
       )}
       <hr className={styles.sidebarSeparator} />

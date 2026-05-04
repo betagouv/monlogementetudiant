@@ -12,12 +12,16 @@ export async function resolveCityId(postalCode: string, cityName: string): Promi
   const byBoth = await db
     .select({ id: cities.id })
     .from(cities)
-    .where(sql`${postalCode} = ANY(${cities.postalCodes}) AND LOWER(${cities.name}) = LOWER(${cityName})`)
+    .where(sql`${cities.postalCodes} @> ARRAY[${postalCode}]::varchar[] AND LOWER(${cities.name}) = LOWER(${cityName})`)
     .limit(1)
   if (byBoth[0]) return byBoth[0].id
 
   // 2. Fallback: match by postal code only
-  const byPostal = await db.select({ id: cities.id }).from(cities).where(sql`${postalCode} = ANY(${cities.postalCodes})`).limit(1)
+  const byPostal = await db
+    .select({ id: cities.id })
+    .from(cities)
+    .where(sql`${cities.postalCodes} @> ARRAY[${postalCode}]::varchar[]`)
+    .limit(1)
   if (byPostal[0]) return byPostal[0].id
 
   // 3. Fallback: match by city name only

@@ -99,6 +99,7 @@ export const getServerSession = cache(async () => {
   })
 
   let adminOwners: Array<{ id: number; name: string; slug: string; url: string | null; acceptDossierFacileApplications: boolean }> = []
+
   if (usr?.role === 'admin') {
     const links = await db.query.adminOwnerLinks.findMany({
       where: eq(adminOwnerLinks.userId, results.user.id),

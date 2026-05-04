@@ -33,14 +33,18 @@ export const CommonHeader: FC<CommonHeaderProps> = async ({ withNavigation = tru
           >
             {t('navigation.faq')}
           </Button>,
-          <Button
-            priority="tertiary no outline"
-            key="alerts-cta"
-            iconId="ri-notification-3-line"
-            linkProps={{ href: '/alerte-logement', target: '_self' }}
-          >
-            {t('header.alerts')}
-          </Button>,
+          ...(!auth?.user || auth.user.role === 'user'
+            ? [
+                <Button
+                  priority="tertiary no outline"
+                  key="alerts-cta"
+                  iconId="ri-notification-3-line"
+                  linkProps={{ href: auth?.user ? '/mon-espace/alertes' : '/s-inscrire?from=alerts', target: '_self' }}
+                >
+                  {t('header.alerts')}
+                </Button>,
+              ]
+            : []),
           auth?.user ? <UserConnectedDropdown key="user-dropdown" user={auth.user} /> : <UserSignInDropdown key="user-sign-in-dropdown" />,
         ]}
         brandTop={<BrandTop />}
