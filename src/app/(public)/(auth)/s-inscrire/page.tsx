@@ -1,4 +1,5 @@
 import { fr } from '@codegouvfr/react-dsfr'
+import Alert from '@codegouvfr/react-dsfr/Alert'
 import Button from '@codegouvfr/react-dsfr/Button'
 import clsx from 'clsx'
 import { Metadata } from 'next'
@@ -13,8 +14,13 @@ export const generateMetadata = async (): Promise<Metadata> => {
   return { title: tSignUp('title'), description: tMeta('signUp.description') }
 }
 
-export default async function SignUpPage() {
+interface SignUpPageProps {
+  searchParams: Promise<{ from?: string }>
+}
+
+export default async function SignUpPage({ searchParams }: SignUpPageProps) {
   const t = await getTranslations('signUp')
+  const { from } = await searchParams
   return (
     <>
       <div className={styles.imageContainer}>
@@ -30,6 +36,7 @@ export default async function SignUpPage() {
         >
           {t('backToLogin')}
         </Button>
+        {from === 'alerts' && <Alert severity="info" small description={t('alertsBanner')} className="fr-my-3w" />}
         <h1>{t('title')}</h1>
         <p>
           {t('subTitlePart1')}

@@ -4,14 +4,12 @@ import { alias } from 'drizzle-orm/pg-core'
 import fs from 'fs'
 import path from 'path'
 import { z } from 'zod'
-import { ZAlertAccommodationFormSchema } from '~/schemas/alert-accommodation/alert-accommodation'
 import { db } from '~/server/db'
 import { academies } from '~/server/db/schema/academies'
 import { accommodationAddresses } from '~/server/db/schema/accommodation-addresses'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { cities } from '~/server/db/schema/cities'
 import { departments } from '~/server/db/schema/departments'
-import { newsletterSubscriptions } from '~/server/db/schema/newsletter-subscriptions'
 import { owners } from '~/server/db/schema/owners'
 import { bboxSelect } from '~/server/trpc/utils/spatial-helpers'
 import { normalizeCitySearch, tokenizeQuery } from '~/server/utils/normalize-city-search'
@@ -457,17 +455,5 @@ export const territoriesRouter = createTRPCRouter({
       cities: filteredCities,
       total: filteredCities.length,
     }
-  }),
-
-  subscribeNewsletter: baseProcedure.input(ZAlertAccommodationFormSchema).mutation(async ({ input }) => {
-    const [row] = await db
-      .insert(newsletterSubscriptions)
-      .values({
-        email: input.email,
-        payload: input,
-      })
-      .returning()
-
-    return { id: row.id, email: row.email }
   }),
 })
