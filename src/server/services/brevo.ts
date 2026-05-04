@@ -59,3 +59,11 @@ export async function sendMagicLinkEmail(email: string, url: string): Promise<vo
     params: { MAGIC_LINK: url },
   })
 }
+
+export async function sendOwnerAccountActivated(email: string, url: string): Promise<void> {
+  await sendTemplateEmail({
+    to: email,
+    templateId: BREVO_TEMPLATE_MAGIC_LINK,
+    params: { MAGIC_LINK: url },
+  })
+}
