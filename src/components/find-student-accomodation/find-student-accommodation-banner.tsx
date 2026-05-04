@@ -20,7 +20,7 @@ export const FindStudentAccommodationBanner = async ({ territory, categoryKey }:
     <Notice
       description={t.rich('description', {
         link: (chunks) => (
-          <Link className="fr-link fr-text--bold" style={{ color: 'unset' }} href="/alerte-logement" target="_self" rel="noreferrer">
+          <Link className="fr-link fr-text--bold" style={{ color: 'unset' }} href="/s-inscrire?from=alerts" target="_self" rel="noreferrer">
             {chunks}
           </Link>
         ),

@@ -110,8 +110,6 @@ type MatomoEventCategory =
 | AL1 | `creation alerte` | Nom | Prix max | `create-student-alert.tsx` |
 | AL2 | `modification alerte` | ID alerte | Prix max | `update-student-alert.tsx` |
 | AL3 | `suppression alerte` | ID alerte | — | `delete-student-alert.tsx` |
-| AL4 | `inscription newsletter` | Territoire | — | `alert-accommodation-form.tsx` |
-| AL5 | `inscription alerte logement` | Ville | — | `owner-details-alert.tsx` |
 
 ### Widget
 
