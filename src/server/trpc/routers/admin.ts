@@ -2,7 +2,7 @@ import { TRPCError } from '@trpc/server'
 import { and, between, count, desc, eq, ilike, inArray, isNull, or, sql } from 'drizzle-orm'
 import { getTranslations } from 'next-intl/server'
 import { z } from 'zod'
-import { ZImportJobType } from '~/schemas/import-jobs'
+import { IMPORT_JOB_TYPES, ZImportJobType } from '~/schemas/import-jobs'
 import { BAILLEUR_PERMISSIONS, BAILLEUR_ROLES } from '~/server/bailleur/permissions'
 import { db } from '~/server/db'
 import { accommodationAddresses } from '~/server/db/schema/accommodation-addresses'
@@ -958,7 +958,12 @@ const CRON_JOB_TYPES = ZImportJobType.options.filter((t) => t !== 'csv')
 
 const importsRouter = createTRPCRouter({
   list: adminProcedure.query(async () => {
-    return db.select().from(importJobs).orderBy(desc(importJobs.createdAt)).limit(50)
+    return db
+      .select()
+      .from(importJobs)
+      .where(inArray(importJobs.type, IMPORT_JOB_TYPES))
+      .orderBy(desc(importJobs.createdAt))
+      .limit(50)
   }),
 
   getById: adminProcedure.input(z.object({ id: z.number() })).query(async ({ input }) => {
