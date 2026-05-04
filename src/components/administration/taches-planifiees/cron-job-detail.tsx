@@ -13,7 +13,8 @@ import { useTRPC } from '~/server/trpc/client'
 import { StatusBadge } from '../imports/status-badge'
 import { JobDuration } from '../shared/job-duration'
 import { JobStatCards } from '../shared/job-stat-cards'
-import { isImportJob, JOB_LABELS } from './cron-job-defs'
+import { isImportJob } from '~/schemas/import-jobs'
+import { JOB_LABELS } from './cron-job-defs'
 
 function ContextPanel({ context }: { context: Record<string, unknown> }) {
   const entries = Object.entries(context)
