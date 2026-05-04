@@ -1,5 +1,6 @@
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
+import { OwnerFeedbackBanner } from '~/components/bailleur/owner-feedback-banner'
 import { CommonFooter } from '~/components/ui/footer/footer'
 import { WorkspaceHeaderComponent } from '~/components/ui/header/workspace-header'
 import { getServerSession } from '~/services/better-auth'
@@ -24,18 +25,17 @@ export default async function WorkspaceLayout({
 }>) {
   const session = await getServerSession()
 
-  if (!session) {
+  if (!session || session.user.role === 'user') {
     return notFound()
   }
 
-  if (session.user.role === 'user') {
-    redirect('/mon-espace/tableau-de-bord')
-  }
+  const showFeedbackBanner = session.user.role !== 'admin' && !!session.user.bailleurRole
 
   return (
     <>
       <WorkspaceHeaderComponent />
       <main className={styles.container}>{children}</main>
+      {showFeedbackBanner && <OwnerFeedbackBanner />}
       <CommonFooter />
     </>
   )

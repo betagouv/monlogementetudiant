@@ -1,0 +1,97 @@
+.banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 750;
+  border-top: 4px solid var(--background-action-high-blue-france);
+  background-color: var(--background-default-grey);
+  padding: 1.5rem 0;
+  box-shadow: 0 -4px 12px rgb(0 0 0 / 8%);
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text-title-grey);
+}
+
+.form {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 1.5rem;
+}
+
+.ratingBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.question {
+  margin: 0;
+  color: var(--text-default-grey);
+}
+
+.ratingButtons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ratingButton {
+  min-width: 2.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--background-default-grey);
+  border: 1px solid var(--border-default-grey);
+  border-radius: 0.25rem;
+  color: var(--text-default-grey);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.ratingButton:hover:not(:disabled) {
+  border-color: var(--border-action-high-blue-france);
+}
+
+.ratingButtonSelected {
+  background: var(--background-action-high-blue-france);
+  border-color: var(--background-action-high-blue-france);
+  color: var(--text-inverted-blue-france);
+}
+
+.ratingButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.commentBlock {
+  margin: 0 !important;
+}
+
+@media (max-width: 62em) {
+  .form {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+}
+
+.error {
+  margin: 0;
+  color: var(--text-default-error);
+  font-size: 0.75rem;
+}

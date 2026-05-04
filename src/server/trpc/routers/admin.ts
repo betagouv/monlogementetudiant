@@ -13,6 +13,7 @@ import { user } from '~/server/db/schema/auth'
 import { cities } from '~/server/db/schema/cities'
 import { eventStats } from '~/server/db/schema/event-stats'
 import { importJobs } from '~/server/db/schema/import-jobs'
+import { ownerFeedback } from '~/server/db/schema/owner-feedback'
 import { owners } from '~/server/db/schema/owners'
 import { stats } from '~/server/db/schema/stats'
 import { sendOwnerWelcomeEmail } from '~/server/services/brevo'
@@ -986,6 +987,113 @@ const importsRouter = createTRPCRouter({
   }),
 })
 
+const feedbackRouter = createTRPCRouter({
+  stats: adminProcedure
+    .input(
+      z.object({
+        from: z.string().optional(),
+        to: z.string().optional(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const conditions = [eq(ownerFeedback.status, 'submitted')]
+      if (input.from) {
+        conditions.push(sql`${ownerFeedback.createdAt} >= ${input.from}::date`)
+      }
+      if (input.to) {
+        conditions.push(sql`${ownerFeedback.createdAt} < (${input.to}::date + 1)`)
+      }
+
+      const [row] = await db
+        .select({
+          total: count(),
+          average: sql<number | null>`avg(${ownerFeedback.rating})::float`,
+          withComment: sql<number>`count(*) filter (where ${ownerFeedback.comment} is not null and length(trim(${ownerFeedback.comment})) > 0)::int`,
+          rating1: sql<number>`count(*) filter (where ${ownerFeedback.rating} = 1)::int`,
+          rating2: sql<number>`count(*) filter (where ${ownerFeedback.rating} = 2)::int`,
+          rating3: sql<number>`count(*) filter (where ${ownerFeedback.rating} = 3)::int`,
+          rating4: sql<number>`count(*) filter (where ${ownerFeedback.rating} = 4)::int`,
+          rating5: sql<number>`count(*) filter (where ${ownerFeedback.rating} = 5)::int`,
+        })
+        .from(ownerFeedback)
+        .where(and(...conditions))
+
+      const snoozedRow = await db.select({ count: count() }).from(ownerFeedback).where(eq(ownerFeedback.status, 'snoozed'))
+
+      return {
+        total: row?.total ?? 0,
+        average: row?.average ?? null,
+        withComment: row?.withComment ?? 0,
+        snoozed: snoozedRow[0]?.count ?? 0,
+        distribution: [
+          { rating: 1, count: row?.rating1 ?? 0 },
+          { rating: 2, count: row?.rating2 ?? 0 },
+          { rating: 3, count: row?.rating3 ?? 0 },
+          { rating: 4, count: row?.rating4 ?? 0 },
+          { rating: 5, count: row?.rating5 ?? 0 },
+        ],
+      }
+    }),
+
+  list: adminProcedure
+    .input(
+      z.object({
+        page: z.number().default(1),
+        from: z.string().optional(),
+        to: z.string().optional(),
+        rating: z.number().int().min(1).max(5).optional(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const conditions = [eq(ownerFeedback.status, 'submitted')]
+      if (input.from) {
+        conditions.push(sql`${ownerFeedback.createdAt} >= ${input.from}::date`)
+      }
+      if (input.to) {
+        conditions.push(sql`${ownerFeedback.createdAt} < (${input.to}::date + 1)`)
+      }
+      if (input.rating) {
+        conditions.push(eq(ownerFeedback.rating, input.rating))
+      }
+
+      const where = and(...conditions)
+      const offset = (input.page - 1) * PAGE_SIZE
+
+      const [countResult, results] = await Promise.all([
+        db.select({ count: count() }).from(ownerFeedback).where(where),
+        db
+          .select({
+            id: ownerFeedback.id,
+            rating: ownerFeedback.rating,
+            comment: ownerFeedback.comment,
+            createdAt: ownerFeedback.updatedAt,
+            userId: user.id,
+            userEmail: user.email,
+            userFirstname: user.firstname,
+            userLastname: user.lastname,
+            ownerName: owners.name,
+            bailleurRole: user.bailleurRole,
+          })
+          .from(ownerFeedback)
+          .innerJoin(user, eq(user.id, ownerFeedback.userId))
+          .leftJoin(owners, eq(owners.id, user.ownerId))
+          .where(where)
+          .orderBy(desc(ownerFeedback.updatedAt))
+          .limit(PAGE_SIZE)
+          .offset(offset),
+      ])
+
+      const total = countResult[0]?.count ?? 0
+
+      return {
+        items: results,
+        total,
+        pageCount: Math.ceil(total / PAGE_SIZE),
+        page: input.page,
+      }
+    }),
+})
+
 export const adminRouter = createTRPCRouter({
   users: usersRouter,
   owners: ownersRouter,
@@ -994,4 +1102,5 @@ export const adminRouter = createTRPCRouter({
   matomoStats: matomoStatsRouter,
   ownerUsage: ownerUsageRouter,
   imports: importsRouter,
+  feedback: feedbackRouter,
 })
