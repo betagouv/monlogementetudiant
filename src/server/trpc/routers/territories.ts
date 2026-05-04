@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server'
-import { type AnyColumn, and, asc, eq, ne, type SQL, sql } from 'drizzle-orm'
+import { type AnyColumn, and, asc, eq, inArray, ne, type SQL, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import fs from 'fs'
 import path from 'path'
@@ -102,7 +102,10 @@ function mapCityRow(c: CityRow, stats?: CityStats, nearbyCities: { name: string;
   }
 }
 
-function cityAccommodationStatsSubquery() {
+function cityAccommodationStatsSubquery(cityIdFilter?: SQL) {
+  const conditions: SQL[] = [eq(accommodations.published, true)]
+  if (cityIdFilter) conditions.push(cityIdFilter)
+
   return db
     .select({
       cityId: accommodationAddresses.cityId,
@@ -123,7 +126,7 @@ function cityAccommodationStatsSubquery() {
     .from(accommodations)
     .innerJoin(accommodationAddresses, eq(accommodationAddresses.accommodationId, accommodations.id))
     .leftJoin(owners, eq(accommodations.ownerId, owners.id))
-    .where(eq(accommodations.published, true))
+    .where(and(...conditions))
     .groupBy(accommodationAddresses.cityId)
     .as('city_accommodation_stats')
 }
@@ -135,7 +138,8 @@ export const territoriesRouter = createTRPCRouter({
     const normalized = normalizeCitySearch(q)
     const tokens = tokenizeQuery(normalized)
     if (tokens.length === 0) return empty
-    const cityStats = cityAccommodationStatsSubquery()
+    const matchingCityIds = db.select({ id: cities.id }).from(cities).where(buildWhere(cities.name, tokens))
+    const cityStats = cityAccommodationStatsSubquery(inArray(accommodationAddresses.cityId, matchingCityIds))
 
     const [academyResults, departmentResults, cityResults] = await Promise.all([
       db
@@ -255,7 +259,20 @@ export const territoriesRouter = createTRPCRouter({
     .query(async ({ input }) => {
       const departmentCode = input?.departmentCode
       const popular = input?.popular
-      const cityStats = cityAccommodationStatsSubquery()
+
+      let cityIdFilter: SQL | undefined
+      if (departmentCode || popular) {
+        const cityIdConditions: SQL[] = []
+        if (departmentCode) cityIdConditions.push(eq(departments.code, departmentCode))
+        if (popular) cityIdConditions.push(eq(cities.popular, true))
+        const matchingCityIds = db
+          .select({ id: cities.id })
+          .from(cities)
+          .leftJoin(departments, eq(cities.departmentId, departments.id))
+          .where(and(...cityIdConditions))
+        cityIdFilter = inArray(accommodationAddresses.cityId, matchingCityIds)
+      }
+      const cityStats = cityAccommodationStatsSubquery(cityIdFilter)
 
       const conditions: SQL[] = []
       if (departmentCode) conditions.push(eq(departments.code, departmentCode))
