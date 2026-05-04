@@ -1175,6 +1175,18 @@
           "addAddress": "Ajouter une adresse"
         }
       }
+    },
+    "feedback": {
+      "title": "Que pensez-vous de l'espace gestionnaire ?",
+      "ratingQuestion": "Sur une échelle de 1 à 5, quel est votre niveau de satisfaction ?",
+      "commentLabel": "Commentaires, suggestions ou difficultés (facultatif)",
+      "submit": "Envoyer",
+      "close": "Fermer",
+      "ariaBanner": "Donner votre avis sur l'espace gestionnaire",
+      "ariaRating": "Note de satisfaction",
+      "ratingRequired": "Veuillez sélectionner une note.",
+      "successToast": "Merci pour votre retour !",
+      "errorToast": "Erreur lors de l'envoi"
     }
   }
 }

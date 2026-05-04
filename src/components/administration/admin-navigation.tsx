@@ -54,6 +54,7 @@ const navSections: NavSection[] = [
     items: [
       { label: 'Tâches planifiées', icon: 'fr-icon-time-line', href: '/administration/taches-planifiees' },
       { label: 'Journaux', icon: 'fr-icon-article-line', href: '/administration/journaux' },
+      { label: 'Feedback', icon: 'fr-icon-questionnaire-line', href: '/administration/feedback' },
     ],
   },
 ]
