@@ -96,6 +96,7 @@ jobs:
     steps:
       - checkout
       - install_dependencies
+      - create_dotenv_file
       - run:
           name: 'Wait for PostgreSQL'
           command: for i in $(seq 1 30); do pg_isready -h localhost -U test && break; sleep 2; done
