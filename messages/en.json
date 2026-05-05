@@ -821,20 +821,25 @@
     "subtitle": "Gérez vos finances facilement et visualisez votre budget mensuel en temps réel",
     "sections": {
       "income": {
-        "title": "Revenus mensuels",
+        "title": "Revenus",
         "subtitle": "Renseignez toutes vos sources de revenus"
       },
       "expenses": {
-        "title": "Dépenses mensuelles",
+        "title": "Dépenses",
         "subtitle": "Listez toutes vos dépenses régulières"
       }
     },
     "income": {
       "sourceLabel": "Source de revenus",
+      "frequencyLabel": "Fréquence",
       "amountLabel": "Montant",
       "addIncomeTitle": "Ajouter un revenu",
       "addIncomeLabel": "Ajouter une source de revenu",
       "removeIncomeTitle": "Supprimer un revenu",
+      "frequencies": {
+        "monthly": "Mensuelle",
+        "yearly": "Annuelle"
+      },
       "types": {
         "familyAid": "Aides de ma famille",
         "scholarships": "Bourses (du Crous ou de la Région)",
@@ -848,11 +853,16 @@
     },
     "expenses": {
       "categoryLabel": "Catégorie",
+      "frequencyLabel": "Fréquence",
       "amountLabel": "Montant",
       "amountHint": "Entre {low} € et {high} € en moyenne *",
       "addExpenseTitle": "Ajouter une dépense",
       "addExpenseLabel": "Ajouter une dépense",
       "removeExpenseTitle": "Supprimer une dépense",
+      "frequencies": {
+        "monthly": "Mensuelle",
+        "yearly": "Annuelle"
+      },
       "types": {
         "housing": "Loyer",
         "housingCharges": "Charges d'habitation (Assurance, charges, eau, électricité…)",
@@ -867,18 +877,21 @@
         "otherHealthcare": "Autres frais de santé",
         "enjoyment": "Loisirs (activités sportives, culturelles, sorties entre amis)",
         "childcare": "Garde d'enfant",
-        "other": "Autre"
+        "other": "Autre",
+        "securityDeposit": "Dépôt de garantie appartement (1 mois de loyer)",
+        "agencyFees": "Frais d'agence immobilière",
+        "apartmentEquipment": "Équipement de base de l'appartement (draps, vaisselle, lampe, etc.)"
       }
     },
     "summary": {
       "title": "Résumé du budget",
-      "subtitle": "Résultats de votre simulation",
-      "totalIncome": "Revenus totaux",
-      "totalExpenses": "Dépenses totales",
+      "subtitle": "Résultats de votre simulation en équivalent mensuel",
+      "totalIncome": "Revenus totaux mensuels",
+      "totalExpenses": "Dépenses totales mensuelles",
       "remainingBalance": "Solde restant",
       "savingsRate": "Taux d'épargne : {rate} %",
       "expensesBreakdown": "Répartition des dépenses",
-      "chartTooltipAmount": "Montant",
+      "chartTooltipAmount": "Montant mensuel",
       "hintsCta": "Conseils pratiques pour son budget",
       "hintsTitle": "Pour aller plus loin"
     }
