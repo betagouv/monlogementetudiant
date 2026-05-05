@@ -1,7 +1,7 @@
 import { Breadcrumb } from '@codegouvfr/react-dsfr/Breadcrumb'
 import { getTranslations } from 'next-intl/server'
 import { BudgetSimulatorProvider } from '~/components/budget-simulation/budget-simulator-context'
-import { getCanonicalUrl } from '~/utils/canonical'
+import { getCanonicalUrl, getDefaultOgImage } from '~/utils/canonical'
 import { BudgetSimulatorContent } from './budget-simulator-content'
 import styles from './simuler-budget.module.css'
 
@@ -11,6 +11,17 @@ export const generateMetadata = async () => {
     title: t('budgetSimulator.title'),
     description: t('budgetSimulator.description'),
     alternates: { canonical: getCanonicalUrl('/simuler-budget') },
+    openGraph: {
+      title: t('budgetSimulator.title'),
+      description: t('budgetSimulator.description'),
+      siteName: 'Mon Logement Étudiant',
+      locale: 'fr_FR',
+      type: 'website',
+      images: getDefaultOgImage(),
+    },
+    twitter: {
+      card: 'summary_large_image' as const,
+    },
   }
 }
 
