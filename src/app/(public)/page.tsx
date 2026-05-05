@@ -9,7 +9,7 @@ import { HeroSection } from '~/components/home/hero-section/hero-section'
 import { NewsSection } from '~/components/home/news/news'
 import { PartnersSection } from '~/components/home/partners/partners'
 import { SocialLandlordsPartnersSection } from '~/components/home/social-landlords-partners/social-landlords-partners'
-import { getCanonicalUrl } from '~/utils/canonical'
+import { getCanonicalUrl, getDefaultOgImage } from '~/utils/canonical'
 
 export const generateMetadata = async () => {
   const t = await getTranslations('metadata')
@@ -21,6 +21,17 @@ export const generateMetadata = async () => {
       follow: process.env.NEXT_PUBLIC_APP_ENV === 'production',
     },
     alternates: { canonical: getCanonicalUrl() },
+    openGraph: {
+      title: t('home.title'),
+      description: t('home.description'),
+      siteName: 'Mon Logement Étudiant',
+      locale: 'fr_FR',
+      type: 'website',
+      images: getDefaultOgImage(),
+    },
+    twitter: {
+      card: 'summary_large_image' as const,
+    },
   }
 }
 

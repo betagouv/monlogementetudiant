@@ -3,7 +3,7 @@ import clsx from 'clsx'
 import { getTranslations } from 'next-intl/server'
 import PrepareBudgetContent from '~/app/(public)/preparer-mon-budget-etudiant/components/prepare-budget-content'
 import { PrepareBudgetSidemenu } from '~/app/(public)/preparer-mon-budget-etudiant/components/prepare-budget-sidemenu'
-import { getCanonicalUrl } from '~/utils/canonical'
+import { getCanonicalUrl, getDefaultOgImage } from '~/utils/canonical'
 import styles from './preparer-mon-budget-etudiant.module.css'
 
 export const generateMetadata = async () => {
@@ -12,6 +12,17 @@ export const generateMetadata = async () => {
     title: t('prepareBudget.title'),
     description: t('prepareBudget.description'),
     alternates: { canonical: getCanonicalUrl('/preparer-mon-budget-etudiant') },
+    openGraph: {
+      title: t('prepareBudget.title'),
+      description: t('prepareBudget.description'),
+      siteName: 'Mon Logement Étudiant',
+      locale: 'fr_FR',
+      type: 'website',
+      images: getDefaultOgImage(),
+    },
+    twitter: {
+      card: 'summary_large_image' as const,
+    },
   }
 }
 

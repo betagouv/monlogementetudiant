@@ -12,6 +12,7 @@ import { Signout } from '~/components/signout'
 import Toaster from '~/components/ui/toaster'
 import { DsfrHead, getHtmlAttributes } from '~/dsfr/dsfr-head'
 import { DsfrProvider, StartDsfrOnHydration } from '~/dsfr/dsfr-provider'
+import { getDefaultOgImage } from '~/utils/canonical'
 import { buildOrganizationSchema, buildWebSiteSchema } from '~/utils/schema'
 
 export const generateMetadata = async () => {
@@ -22,6 +23,15 @@ export const generateMetadata = async () => {
     robots: {
       index: process.env.NEXT_PUBLIC_APP_ENV === 'production',
       follow: process.env.NEXT_PUBLIC_APP_ENV === 'production',
+    },
+    openGraph: {
+      siteName: 'Mon Logement Étudiant',
+      locale: 'fr_FR',
+      type: 'website',
+      images: getDefaultOgImage(),
+    },
+    twitter: {
+      card: 'summary_large_image' as const,
     },
   }
 }

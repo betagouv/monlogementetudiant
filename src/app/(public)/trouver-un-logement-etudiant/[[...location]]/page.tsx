@@ -11,7 +11,7 @@ import { FindStudentAccomodationResultsSections } from '~/components/find-studen
 import { FindStudentAccomodationSortView } from '~/components/find-student-accomodation/sort-view/find-student-accomodation-sort-view'
 import { SearchParamsSync } from '~/components/search-params-sync'
 import { JsonLd } from '~/components/seo/json-ld'
-import { getCanonicalUrl } from '~/utils/canonical'
+import { getCanonicalUrl, getDefaultOgImage } from '~/utils/canonical'
 import { formatCityWithA } from '~/utils/french-contraction'
 import { buildBreadcrumbSchema, buildFaqSchema } from '~/utils/schema'
 import { getSearchBreadcrumbItems, getSearchFaqItems } from './get-search-json-ld'
@@ -49,6 +49,17 @@ export async function generateMetadata({
       title: t('searchDetails.title', { locationFormatted }),
       description: t('searchDetails.description', { locationFormatted }),
       alternates: { canonical },
+      openGraph: {
+        title: t('searchDetails.title', { locationFormatted }),
+        description: t('searchDetails.description', { locationFormatted }),
+        siteName: 'Mon Logement Étudiant',
+        locale: 'fr_FR',
+        type: 'website',
+        images: getDefaultOgImage(),
+      },
+      twitter: {
+        card: 'summary_large_image' as const,
+      },
     }
   }
 
@@ -56,6 +67,17 @@ export async function generateMetadata({
     title: t('search.title'),
     description: t('search.description'),
     alternates: { canonical },
+    openGraph: {
+      title: t('search.title'),
+      description: t('search.description'),
+      siteName: 'Mon Logement Étudiant',
+      locale: 'fr_FR',
+      type: 'website',
+      images: getDefaultOgImage(),
+    },
+    twitter: {
+      card: 'summary_large_image' as const,
+    },
   }
 }
 
