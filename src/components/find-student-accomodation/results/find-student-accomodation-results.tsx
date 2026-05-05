@@ -64,7 +64,7 @@ export const FindStudentAccomodationResultsContent: FC<FindStudentAccomodationRe
   })
 
   useEffect(() => {
-    if (!!accommodations?.results?.features && accommodations.results.features.length < 6) {
+    if (accommodations?.results?.features && accommodations.results.features.length < 6) {
       window.scrollTo({ behavior: 'smooth', top: 0 })
     }
   }, [accommodations?.results.features.length])
