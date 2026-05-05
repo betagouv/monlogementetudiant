@@ -294,6 +294,31 @@ describe('bailleur.update', () => {
     expect(detail?.properties.description).toBe('Updated description')
   })
 
+  it('preserves total apartments and price minimum when only images are updated', async () => {
+    const db = getTestDb()
+    const owner = await createOwner({ name: 'Owner Image Update', slug: 'owner-image-update', userId: 'test-owner-id' })
+    await createAccommodation({
+      name: 'Image Update',
+      slug: 'image-update',
+      ownerId: owner.id,
+      nbTotalApartments: 42,
+      priceMin: 500,
+      imagesUrls: ['https://example.com/old.jpg'],
+      imagesCount: 1,
+      geom: parisPoint,
+    })
+
+    await ownerCaller.bailleur.update({
+      slug: 'image-update',
+      images_urls: ['https://example.com/old.jpg', 'https://example.com/new.jpg'],
+    })
+
+    const [updated] = await db.select().from(accommodations).where(eq(accommodations.slug, 'image-update'))
+    expect(updated.nbTotalApartments).toBe(42)
+    expect(updated.priceMin).toBe(500)
+    expect(updated.imagesCount).toBe(2)
+  })
+
   it('rejects update of accommodation owned by another user', async () => {
     const otherOwner = await createOwner({ name: 'Other Update', slug: 'other-update', userId: 'test-owner-id-2' })
     await createAccommodation({ name: 'Not Mine', slug: 'not-mine-update', ownerId: otherOwner.id })

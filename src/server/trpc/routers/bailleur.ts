@@ -94,6 +94,22 @@ async function verifyOwnership(slug: string, userId: string) {
 
 const PAGE_SIZE = 20
 
+const TYPOLOGY_COUNT_FIELDS = ['nb_t1', 'nb_t1_bis', 'nb_t2', 'nb_t3', 'nb_t4', 'nb_t5', 'nb_t6', 'nb_t7_more'] as const
+const PRICE_MIN_FIELDS = [
+  'price_min_t1',
+  'price_min_t1_bis',
+  'price_min_t2',
+  'price_min_t3',
+  'price_min_t4',
+  'price_min_t5',
+  'price_min_t6',
+  'price_min_t7_more',
+] as const
+
+function hasOwnField<T extends string>(fields: Record<string, unknown>, key: T) {
+  return Object.hasOwn(fields, key)
+}
+
 const accommodationSelectFields = {
   id: accommodations.id,
   name: accommodations.name,
@@ -429,11 +445,22 @@ export const bailleurRouter = createTRPCRouter({
       }
       const userProvidedKeys = new Set(Object.keys(camelFields))
 
-      // Recompute derived fields
-      const derived = computeDerivedFields(fields)
-      camelFields.nbTotalApartments = derived.nbTotalApartments
-      camelFields.priceMin = derived.priceMin
-      camelFields.imagesCount = derived.imagesCount
+      const hasTypologyCountUpdate = TYPOLOGY_COUNT_FIELDS.some((key) => hasOwnField(fields, key))
+      const hasPriceMinUpdate = PRICE_MIN_FIELDS.some((key) => hasOwnField(fields, key))
+      const hasImagesUpdate = hasOwnField(fields, 'images_urls')
+
+      if (hasTypologyCountUpdate) {
+        const derived = computeDerivedFields(fields)
+        camelFields.nbTotalApartments = derived.nbTotalApartments ?? snapshot?.nbTotalApartments ?? null
+      }
+      if (hasPriceMinUpdate) {
+        const derived = computeDerivedFields(fields)
+        camelFields.priceMin = derived.priceMin
+      }
+      if (hasImagesUpdate) {
+        const derived = computeDerivedFields(fields)
+        camelFields.imagesCount = derived.imagesCount
+      }
 
       // Handle addresses update
       if (inputAddresses !== undefined) {
