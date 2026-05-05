@@ -32,7 +32,7 @@ const columns: ColumnDef<ResidenceRow, unknown>[] = [
   },
   {
     accessorKey: 'ownerName',
-    header: 'Gesttionaire',
+    header: 'Gestionaire',
   },
   {
     accessorKey: 'city',
