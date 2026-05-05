@@ -1,7 +1,7 @@
 'use client'
 
 import Button from '@codegouvfr/react-dsfr/Button'
-import { useRouter } from 'next/navigation'
+import { loginRequiredFavoritesModal } from '~/components/auth/login-required-modal'
 import { useCreateFavorite } from '~/hooks/use-create-favorite'
 import { useDeleteFavorite } from '~/hooks/use-delete-favorite'
 import { useFavorites } from '~/hooks/use-favorites'
@@ -14,8 +14,6 @@ export const FAVORITE_BUTTON_TITLES = {
 } as const
 
 export const SaveAccommodationFavoriteButton = ({ slug, withLabel = false, user }: { slug: string; withLabel?: boolean; user?: TUser }) => {
-  const router = useRouter()
-
   const { data: favorites } = useFavorites(user)
 
   const { mutateAsync, isLoading } = useCreateFavorite()
@@ -23,7 +21,7 @@ export const SaveAccommodationFavoriteButton = ({ slug, withLabel = false, user 
 
   const handleSave = async () => {
     if (!user) {
-      router.push('/s-inscrire')
+      loginRequiredFavoritesModal.open()
       return
     }
     await mutateAsync({ accommodationSlug: slug })

@@ -765,7 +765,6 @@
     "title": "Création de compte",
     "subTitlePart1": "Les champs marqués du symbole",
     "subTitlePart2": "sont obligatoires.",
-    "alertsBanner": "Pour recevoir des alertes logements, créez votre compte étudiant ou connectez-vous.",
     "labels": {
       "firstname": "Prénom",
       "lastname": "Nom",
@@ -948,6 +947,15 @@
       "title": "Ma liste de priorités",
       "description": "Complétez votre liste de priorités pour mettre toutes les chances de votre côté"
     }
+  },
+  "loginRequiredModal": {
+    "title": "Vous n'êtes pas connecté",
+    "description": {
+      "favorites": "Pour ajouter une résidence en favoris, il est nécessaire d'être connecté ou de créer un compte sur Mon Logement Étudiant.",
+      "alerts": "Pour recevoir des alertes logements, il est nécessaire d'être connecté ou de créer un compte sur Mon Logement Étudiant."
+    },
+    "login": "Se connecter",
+    "signup": "Créer un compte"
   },
   "toast": {
     "residenceCreated": "Résidence créée avec succès",

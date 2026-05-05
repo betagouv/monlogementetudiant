@@ -2,6 +2,7 @@ import { Button } from '@codegouvfr/react-dsfr/Button'
 import { Header } from '@codegouvfr/react-dsfr/Header'
 import { getTranslations } from 'next-intl/server'
 import { FC } from 'react'
+import { AlertsLoginRequiredButton } from '~/components/auth/login-required-button'
 import { BrandTop } from '~/components/ui/brand-top'
 import { Banner } from '~/components/ui/header/banner/banner'
 import { HeaderNavigation } from '~/components/ui/header/navigation'
@@ -35,14 +36,20 @@ export const CommonHeader: FC<CommonHeaderProps> = async ({ withNavigation = tru
           </Button>,
           ...(!auth?.user || auth.user.role === 'user'
             ? [
-                <Button
-                  priority="tertiary no outline"
-                  key="alerts-cta"
-                  iconId="ri-notification-3-line"
-                  linkProps={{ href: auth?.user ? '/mon-espace/alertes' : '/s-inscrire?from=alerts', target: '_self' }}
-                >
-                  {t('header.alerts')}
-                </Button>,
+                auth?.user ? (
+                  <Button
+                    priority="tertiary no outline"
+                    key="alerts-cta"
+                    iconId="ri-notification-3-line"
+                    linkProps={{ href: '/mon-espace/alertes', target: '_self' }}
+                  >
+                    {t('header.alerts')}
+                  </Button>
+                ) : (
+                  <AlertsLoginRequiredButton priority="tertiary no outline" key="alerts-cta" iconId="ri-notification-3-line">
+                    {t('header.alerts')}
+                  </AlertsLoginRequiredButton>
+                ),
               ]
             : []),
           auth?.user ? <UserConnectedDropdown key="user-dropdown" user={auth.user} /> : <UserSignInDropdown key="user-sign-in-dropdown" />,
