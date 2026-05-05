@@ -7,11 +7,11 @@ import clsx from 'clsx'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { RentSearchModal } from '~/components/ui/rent-search-modal'
-import { EXPENSE_RANGES, ExpenseType, useBudgetSimulator } from './budget-simulator-context'
+import { DEFAULT_EXPENSE_FREQUENCIES, EXPENSE_RANGES, ExpenseType, useBudgetSimulator } from './budget-simulator-context'
 import styles from './forms.module.css'
 
 export function ExpenseForm() {
-  const { state, updateMonthlyExpenses, addExpenseType, removeExpenseType } = useBudgetSimulator()
+  const { state, updateMonthlyExpenses, updateExpenseFrequencies, addExpenseType, removeExpenseType } = useBudgetSimulator()
   const t = useTranslations('budgetSimulator.expenses')
 
   const handleExpenseChange = (type: ExpenseType, value: number) => {
@@ -33,6 +33,9 @@ export function ExpenseForm() {
     'enjoyment',
     'childcare',
     'other',
+    'securityDeposit',
+    'agencyFees',
+    'apartmentEquipment',
   ] as ExpenseType[]
 
   const handleAddExpenseType = () => {
@@ -51,7 +54,7 @@ export function ExpenseForm() {
     <div className="fr-flex fr-direction-column fr-flex-gap-4v">
       {state.activeExpenseTypes.map((type) => {
         return (
-          <div key={type} className="fr-flex fr-flex-gap-4v">
+          <div key={type} className={clsx('fr-flex fr-flex-gap-4v', styles.formRow)}>
             <div className={clsx('fr-flex-basis-0 fr-flex-grow-1', styles.sourceSelect)}>
               <Select
                 className={styles.select}
@@ -59,11 +62,13 @@ export function ExpenseForm() {
                 nativeSelectProps={{
                   value: type,
                   onChange: (e) => {
-                    // Remove old type and add new one
                     const oldAmount = state.monthlyExpenses[type]
                     removeExpenseType(type)
                     addExpenseType(e.target.value as ExpenseType)
                     updateMonthlyExpenses({ [e.target.value as ExpenseType]: oldAmount })
+                    updateExpenseFrequencies({
+                      [e.target.value as ExpenseType]: DEFAULT_EXPENSE_FREQUENCIES[e.target.value as ExpenseType],
+                    })
                   },
                 }}
               >
@@ -74,6 +79,18 @@ export function ExpenseForm() {
                       {t(`types.${expenseType}`)}
                     </option>
                   ))}
+              </Select>
+            </div>
+            <div className={clsx('fr-flex-basis-0 fr-flex-grow-1', styles.frequencySelect)}>
+              <Select
+                label={t('frequencyLabel')}
+                nativeSelectProps={{
+                  value: state.expenseFrequencies[type],
+                  onChange: (e) => updateExpenseFrequencies({ [type]: e.target.value as 'monthly' | 'yearly' }),
+                }}
+              >
+                <option value="monthly">{t('frequencies.monthly')}</option>
+                <option value="yearly">{t('frequencies.yearly')}</option>
               </Select>
             </div>
             <div className={clsx('fr-flex-basis-0 fr-flex-grow-1', styles.amountInput)}>

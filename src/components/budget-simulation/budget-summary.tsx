@@ -6,15 +6,21 @@ import { useTranslations } from 'next-intl'
 import { useEffect, useRef } from 'react'
 import { ExpensesPieChart } from '~/components/budget-simulation/expenses-pie-chart'
 import { trackEvent } from '~/lib/tracking'
-import { useBudgetSimulator } from './budget-simulator-context'
+import { getMonthlyEquivalent, useBudgetSimulator } from './budget-simulator-context'
 import styles from './budget-summary.module.css'
 
 export function BudgetSummary() {
   const { state } = useBudgetSimulator()
   const t = useTranslations('budgetSimulator.summary')
 
-  const totalIncomes = Object.values(state.monthlyIncomes).reduce((sum, amount) => sum + amount, 0)
-  const totalExpenses = Object.values(state.monthlyExpenses).reduce((sum, amount) => sum + amount, 0)
+  const totalIncomes = state.activeIncomeTypes.reduce(
+    (sum, type) => sum + getMonthlyEquivalent(state.monthlyIncomes[type], state.incomeFrequencies[type]),
+    0,
+  )
+  const totalExpenses = state.activeExpenseTypes.reduce(
+    (sum, type) => sum + getMonthlyEquivalent(state.monthlyExpenses[type], state.expenseFrequencies[type]),
+    0,
+  )
   const remainingBalance = totalIncomes - totalExpenses
   const hasTrackedCompletion = useRef(false)
 

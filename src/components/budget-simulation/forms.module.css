@@ -1,12 +1,25 @@
-/* Mobile-specific form layouts */
 @media (max-width: 767px) {
-  .sourceSelect {
-    flex: 0 0 55% !important;
+  .formRow {
+    flex-wrap: wrap;
   }
 
-  .amountInput {
-    flex: 0 0 30% !important;
+  .sourceSelect {
+    flex: 0 0 100% !important;
   }
+
+  .frequencySelect,
+  .amountInput {
+    flex: 0 0 calc(50% - 0.5rem) !important;
+  }
+}
+
+/* Mobile-specific form layouts */
+.frequencySelect {
+  max-width: 132px;
+}
+
+.amountInput {
+  max-width: 126px;
 }
 
 .select {

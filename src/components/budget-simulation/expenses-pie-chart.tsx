@@ -3,7 +3,7 @@
 import clsx from 'clsx'
 import { useTranslations } from 'next-intl'
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
-import { useBudgetSimulator } from './budget-simulator-context'
+import { getMonthlyEquivalent, useBudgetSimulator } from './budget-simulator-context'
 import styles from './budget-summary.module.css'
 
 const expensesColors = {
@@ -21,6 +21,9 @@ const expensesColors = {
   enjoyment: '#FB9175',
   childcare: '#F0E68C',
   other: '#D3D3D3',
+  securityDeposit: '#C5E1A5',
+  agencyFees: '#FFD180',
+  apartmentEquipment: '#80CBC4',
 }
 
 export function ExpensesPieChart() {
@@ -30,7 +33,7 @@ export function ExpensesPieChart() {
   const activeExpenses = state.activeExpenseTypes
     .map((type) => ({
       name: t(`expenses.types.${type}`),
-      value: state.monthlyExpenses[type],
+      value: getMonthlyEquivalent(state.monthlyExpenses[type], state.expenseFrequencies[type]),
       type,
     }))
     .filter((expense) => expense.value > 0)

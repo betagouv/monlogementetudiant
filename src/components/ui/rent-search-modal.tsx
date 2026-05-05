@@ -60,7 +60,7 @@ export const RentSearchModal = ({ onApply, onCancel }: RentSearchModalProps) => 
   return (
     <>
       <Button priority="tertiary no outline" className="fr-link fr-text--underline fr-text--sm" {...rentSearchModal.buttonProps}>
-        Besoin d'aide pour estimer ?
+        Besoin d'aide ?
       </Button>
 
       <rentSearchModal.Component

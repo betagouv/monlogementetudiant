@@ -5,14 +5,12 @@ import { Input } from '@codegouvfr/react-dsfr/Input'
 import { Select } from '@codegouvfr/react-dsfr/Select'
 import clsx from 'clsx'
 import { useTranslations } from 'next-intl'
-import { useBudgetSimulator } from './budget-simulator-context'
+import { DEFAULT_INCOME_FREQUENCIES, type IncomeType, useBudgetSimulator } from './budget-simulator-context'
 import styles from './forms.module.css'
 
 export function IncomeForm() {
-  const { state, updateMonthlyIncomes, addIncomeType, removeIncomeType } = useBudgetSimulator()
+  const { state, updateMonthlyIncomes, updateIncomeFrequencies, addIncomeType, removeIncomeType } = useBudgetSimulator()
   const t = useTranslations('budgetSimulator.income')
-
-  type IncomeType = keyof typeof state.monthlyIncomes
 
   const incomeTypes: IncomeType[] = [
     'familyAid',
@@ -46,18 +44,18 @@ export function IncomeForm() {
   return (
     <div className="fr-flex fr-direction-column fr-flex-gap-4v">
       {state.activeIncomeTypes.map((type) => (
-        <div key={type} className="fr-flex fr-align-items-end fr-flex-gap-4v">
+        <div key={type} className={clsx('fr-flex fr-align-items-end fr-flex-gap-4v', styles.formRow)}>
           <div className={clsx('fr-flex-basis-0 fr-flex-grow-1', styles.sourceSelect)}>
             <Select
               label={t('sourceLabel')}
               nativeSelectProps={{
                 value: type,
                 onChange: (e) => {
-                  // Remove old type and add new one
                   const oldAmount = state.monthlyIncomes[type]
                   removeIncomeType(type)
                   addIncomeType(e.target.value as IncomeType)
                   updateMonthlyIncomes({ [e.target.value as IncomeType]: oldAmount })
+                  updateIncomeFrequencies({ [e.target.value as IncomeType]: DEFAULT_INCOME_FREQUENCIES[e.target.value as IncomeType] })
                 },
               }}
             >
@@ -68,6 +66,18 @@ export function IncomeForm() {
                     {t(`types.${incomeType}`)}
                   </option>
                 ))}
+            </Select>
+          </div>
+          <div className={clsx('fr-flex-basis-0 fr-flex-grow-1', styles.frequencySelect)}>
+            <Select
+              label={t('frequencyLabel')}
+              nativeSelectProps={{
+                value: state.incomeFrequencies[type],
+                onChange: (e) => updateIncomeFrequencies({ [type]: e.target.value as 'monthly' | 'yearly' }),
+              }}
+            >
+              <option value="monthly">{t('frequencies.monthly')}</option>
+              <option value="yearly">{t('frequencies.yearly')}</option>
             </Select>
           </div>
           <div className={clsx('fr-flex-basis-0 fr-flex-grow-1', styles.amountInput)}>
