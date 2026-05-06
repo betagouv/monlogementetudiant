@@ -3,7 +3,7 @@ import { and, eq, sql } from 'drizzle-orm'
 import { ZUpdateResidence } from '~/schemas/accommodations/update-residence'
 import type { TImportJobResidence, TImportJobSummary } from '~/schemas/import-jobs'
 import { db } from '~/server/db'
-import { accommodations, externalSources, owners } from '~/server/db/schema'
+import { accommodationAddresses, accommodations, externalSources, owners } from '~/server/db/schema'
 import { generateAccommodationKey, uploadFile } from '~/server/services/s3'
 import { computeDerivedFields, generateSlug } from '~/server/trpc/utils/accommodation-helpers'
 import { findAvailableSlug } from '~/server/utils/slug'
@@ -396,6 +396,13 @@ export async function executeCsvImport(
 
       const imagesUrls = await processImages(row.pictures ?? '')
 
+      const addressData = {
+        address: resolvedAddress,
+        postalCode: resolvedPostalCode,
+        cityId: resolvedCityId,
+        ...(geom ? { geom } : {}),
+      }
+
       const derived = computeDerivedFields({
         nb_t1: toDigit(row.nb_t1),
         nb_t1_bis: toDigit(row.nb_t1_bis),
@@ -419,14 +426,9 @@ export async function executeCsvImport(
       const accommodationData = {
         name,
         description: row.description?.trim() || null,
-        address: resolvedAddress,
-        city: resolvedCity,
-        cityId: resolvedCityId,
-        postalCode: resolvedPostalCode,
         residenceType: normalizeEnum(row.residence_type),
         target_audience: (normalizeEnum(row.target_audience) ?? 'etudiants') as 'etudiants' | 'mixte-etudiants-jeunes-actifs',
         published: true,
-        ...(geom ? { geom } : {}),
         nbT1: toDigit(row.nb_t1),
         nbT1Bis: toDigit(row.nb_t1_bis),
         nbT2: toDigit(row.nb_t2),
@@ -497,14 +499,17 @@ export async function executeCsvImport(
       let action: 'created' | 'updated'
 
       if (existingSource[0]) {
-        await db.update(accommodations).set(accommodationData).where(eq(accommodations.id, existingSource[0].accommodationId))
+        const accommodationId = existingSource[0].accommodationId
+        await db.update(accommodations).set(accommodationData).where(eq(accommodations.id, accommodationId))
+        await db.delete(accommodationAddresses).where(eq(accommodationAddresses.accommodationId, accommodationId))
+        await db.insert(accommodationAddresses).values({ accommodationId, isMain: true, ...addressData })
         result.updated++
         action = 'updated'
 
         const updated = await db
           .select({ slug: accommodations.slug })
           .from(accommodations)
-          .where(eq(accommodations.id, existingSource[0].accommodationId))
+          .where(eq(accommodations.id, accommodationId))
           .limit(1)
         result.residences.push({ name, slug: updated[0]?.slug ?? '', city: resolvedCity || null, action: 'updated' })
       } else {
@@ -514,6 +519,7 @@ export async function executeCsvImport(
           .values({ ...accommodationData, slug, createdAt: new Date() })
           .returning({ id: accommodations.id })
 
+        await db.insert(accommodationAddresses).values({ accommodationId: newAccommodation.id, isMain: true, ...addressData })
         await db.insert(externalSources).values({ accommodationId: newAccommodation.id, source, sourceId })
         result.created++
         action = 'created'
