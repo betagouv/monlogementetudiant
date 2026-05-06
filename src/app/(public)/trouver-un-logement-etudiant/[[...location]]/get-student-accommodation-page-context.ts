@@ -59,8 +59,11 @@ export const getStudentAccommodationPageContext = cache(
 
     const queryClient = getQueryClient()
 
-    const sessionPromise = getServerSession()
-    const favoritesPromise = queryClient.prefetchQuery(trpc.favorites.list.queryOptions())
+    const session = await getServerSession()
+
+    if (session?.user.role === 'user') {
+      await queryClient.prefetchQuery(trpc.favorites.list.queryOptions())
+    }
 
     // Fetch main results first so we can extract IDs for the expanded search exclusion
     await prefetchAccommodations(awaitedSearchParams, { bbox: serverBbox, academie: serverAcademie, cityId: serverCityId })
@@ -101,8 +104,6 @@ export const getStudentAccommodationPageContext = cache(
         }),
       )
     }
-
-    const [_, session] = await Promise.all([favoritesPromise, sessionPromise])
 
     return {
       dehydratedState: dehydrate(queryClient),

@@ -21,7 +21,10 @@ export const getAccommodationPageContext = cache(async (slug: string) => {
   const [longitude, latitude] = coordinates
 
   const queryClient = getQueryClient()
-  const prefetchPromises: Promise<unknown>[] = [queryClient.prefetchQuery(trpc.favorites.list.queryOptions())]
+  const prefetchPromises: Promise<unknown>[] = []
+  if (session?.user.role === 'user') {
+    prefetchPromises.push(queryClient.prefetchQuery(trpc.favorites.list.queryOptions()))
+  }
   if (session) {
     prefetchPromises.push(
       queryClient.prefetchQuery(trpc.dossierFacile.tenant.queryOptions()),
