@@ -2,7 +2,7 @@
 
 import { ToggleSwitch } from '@codegouvfr/react-dsfr/ToggleSwitch'
 import { useTranslations } from 'next-intl'
-import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
+import { parseAsBoolean, parseAsInteger, useQueryStates } from 'nuqs'
 import { FC } from 'react'
 import { trackEvent } from '~/lib/tracking'
 import styles from './find-student-accommodation-availability-switch.module.css'
@@ -13,15 +13,15 @@ type FindStudentAccommodationAvailabilitySwitchProps = {
 
 export const FindStudentAccommodationAvailabilitySwitch: FC<FindStudentAccommodationAvailabilitySwitchProps> = ({ widget = false }) => {
   const [queryStates, setQueryStates] = useQueryStates({
-    disponible: parseAsString,
+    disponible: parseAsBoolean,
     page: parseAsInteger,
-    crous: parseAsString,
+    crous: parseAsBoolean,
   })
   const t = useTranslations('findAccomodation')
 
   const handleChange = (value: boolean) => {
     trackEvent({ category: 'Recherche', action: 'filtre disponibilites', name: value ? 'active' : 'inactive' })
-    setQueryStates({ disponible: value ? 'true' : 'false', page: 1 })
+    setQueryStates({ disponible: value, page: 1 })
   }
 
   return (
@@ -34,8 +34,8 @@ export const FindStudentAccommodationAvailabilitySwitch: FC<FindStudentAccommoda
         showCheckedHint={false}
         label={t('header.availability')}
         labelPosition="right"
-        checked={queryStates.disponible === 'true'}
-        disabled={widget && queryStates.crous === 'true'}
+        checked={!!queryStates.disponible}
+        disabled={widget && !!queryStates.crous}
         onChange={handleChange}
       />
     </div>

@@ -2,14 +2,14 @@
 
 import { SegmentedControl } from '@codegouvfr/react-dsfr/SegmentedControl'
 import { useTranslations } from 'next-intl'
-import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
+import { parseAsBoolean, parseAsInteger, useQueryStates } from 'nuqs'
 import { FC } from 'react'
 import { trackEvent } from '~/lib/tracking'
 
 export const FindStudentAccommodationCrousFilter: FC = () => {
   const t = useTranslations('findAccomodation.header')
   const [queryStates, setQueryStates] = useQueryStates({
-    crous: parseAsString,
+    crous: parseAsBoolean,
     page: parseAsInteger,
   })
 
@@ -21,9 +21,9 @@ export const FindStudentAccommodationCrousFilter: FC = () => {
           nativeInputProps: {
             onChange: () => {
               trackEvent({ category: 'Recherche', action: 'filtre crous', name: 'active' })
-              setQueryStates({ crous: 'true', page: 1 })
+              setQueryStates({ crous: true, page: 1 })
             },
-            checked: queryStates.crous === 'true',
+            checked: !!queryStates.crous,
           },
           label: t('crous'),
         },
@@ -31,9 +31,9 @@ export const FindStudentAccommodationCrousFilter: FC = () => {
           nativeInputProps: {
             onChange: () => {
               trackEvent({ category: 'Recherche', action: 'filtre crous', name: 'inactive' })
-              setQueryStates({ crous: 'false', page: 1 })
+              setQueryStates({ crous: false, page: 1 })
             },
-            checked: queryStates.crous === 'false' || !queryStates.crous,
+            checked: queryStates.crous === false || queryStates.crous === null,
           },
           label: t('others'),
         },

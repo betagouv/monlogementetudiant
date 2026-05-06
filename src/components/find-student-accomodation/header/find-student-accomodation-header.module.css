@@ -36,3 +36,18 @@
   flex-direction: column;
   gap: 1rem;
 }
+
+.mobileRow {
+  align-items: flex-end;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.mobileRow > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.mobileRow :global(.fr-input-group) {
+  max-width: none;
+}
