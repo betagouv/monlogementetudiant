@@ -297,6 +297,9 @@
       "availability": "Logements disponibles",
       "availabilityLegend": "Disponibilités",
       "advancedFiltersToggle": "Afficher plus de filtres",
+      "applyFilters": "Appliquer",
+      "priceChip": "Moins de {prix}€",
+      "removeFilter": "Retirer le filtre {filter}",
       "crous": "Crous",
       "others": "Autres résidences"
     },
