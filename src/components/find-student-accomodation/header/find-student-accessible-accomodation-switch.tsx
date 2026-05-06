@@ -3,7 +3,7 @@
 import { ToggleSwitch } from '@codegouvfr/react-dsfr/ToggleSwitch'
 import { Tooltip } from '@codegouvfr/react-dsfr/Tooltip'
 import { useTranslations } from 'next-intl'
-import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
+import { parseAsBoolean, parseAsInteger, useQueryStates } from 'nuqs'
 import { FC } from 'react'
 import { tss } from 'tss-react'
 import { trackEvent } from '~/lib/tracking'
@@ -14,16 +14,16 @@ type FindStudentAccessibleAccomodationSwitchProps = {
 
 export const FindStudentAccessibleAccomodationSwitch: FC<FindStudentAccessibleAccomodationSwitchProps> = ({ widget = false }) => {
   const [queryStates, setQueryStates] = useQueryStates({
-    accessible: parseAsString,
+    accessible: parseAsBoolean,
     page: parseAsInteger,
-    crous: parseAsString,
+    crous: parseAsBoolean,
   })
   const t = useTranslations('findAccomodation')
   const { classes } = useStyles()
 
   const handleChange = (value: boolean) => {
     trackEvent({ category: 'Recherche', action: 'filtre accessible', name: value ? 'active' : 'inactive' })
-    setQueryStates({ accessible: value ? 'true' : 'false', page: 1 })
+    setQueryStates({ accessible: value, page: 1 })
   }
 
   return (
@@ -38,9 +38,9 @@ export const FindStudentAccessibleAccomodationSwitch: FC<FindStudentAccessibleAc
         </span>
       }
       labelPosition="right"
-      checked={queryStates.accessible === 'true'}
+      checked={!!queryStates.accessible}
       onChange={handleChange}
-      disabled={widget && queryStates.crous === 'true'}
+      disabled={widget && !!queryStates.crous}
     />
   )
 }

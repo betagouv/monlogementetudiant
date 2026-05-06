@@ -2,7 +2,7 @@
 
 import Range from '@codegouvfr/react-dsfr/Range'
 import { useTranslations } from 'next-intl'
-import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
+import { parseAsBoolean, parseAsInteger, useQueryStates } from 'nuqs'
 import { useAccomodations } from '~/hooks/use-accomodations'
 import { trackEvent } from '~/lib/tracking'
 
@@ -22,9 +22,9 @@ export const FindStudentAccommodationPrice = ({ pageSize, widget }: FindStudentA
   const [queryStates, setQueryStates] = useQueryStates({
     prix: parseAsInteger.withDefault(max ?? 1000),
     page: parseAsInteger,
-    crous: parseAsString,
+    crous: parseAsBoolean,
   })
-  const isCrous = queryStates.crous === 'true'
+  const isCrous = !!queryStates.crous
 
   const prix = Math.min(queryStates.prix, max ?? 1000)
 
