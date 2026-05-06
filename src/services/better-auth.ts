@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { hashPassword, verifyPassword as verifyScryptPassword } from 'better-auth/crypto'
@@ -22,6 +23,7 @@ export const auth = betterAuth({
   session: {
     expiresIn: oneDay,
     updateAge: oneDay,
+    deferSessionRefresh: true,
   },
   advanced: {
     // force la suppression des cookies (django)
@@ -88,9 +90,24 @@ export const auth = betterAuth({
 export const getServerSession = cache(async () => {
   const requestHeaders = await headers()
 
-  const results = await auth.api.getSession({
-    headers: requestHeaders,
-  })
+  let results: Awaited<ReturnType<typeof auth.api.getSession>>
+  try {
+    results = await auth.api.getSession({
+      headers: requestHeaders,
+    })
+  } catch (error) {
+    // Safety net: better-auth may still attempt a cookie write in some edge cases
+    // (expired session cleanup, forced invalidation) despite deferSessionRefresh: true.
+    // Return null to let layouts redirect to login cleanly instead of crashing the page.
+    if (error instanceof Error && error.message.includes('Cookies can only be modified')) {
+      Sentry.captureMessage('auth: getServerSession cookie write blocked in Server Component', {
+        level: 'warning',
+        extra: { message: error.message },
+      })
+      return null
+    }
+    throw error
+  }
 
   if (!results) return results
 
