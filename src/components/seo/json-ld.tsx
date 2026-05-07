@@ -3,5 +3,12 @@ type JsonLdProps = {
 }
 
 export function JsonLd({ data }: JsonLdProps) {
-  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />
+  const schemas = Array.isArray(data) ? data : [data]
+  return (
+    <>
+      {schemas.map((schema, index) => (
+        <script key={index} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
+      ))}
+    </>
+  )
 }
