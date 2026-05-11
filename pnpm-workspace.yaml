@@ -2,3 +2,14 @@ packages:
   - "."
 
 minimumReleaseAge: 21600
+
+allowBuilds:
+  '@parcel/watcher': true
+  '@prisma/engines': true
+  '@sentry/cli': true
+  '@swc/core': true
+  cpu-features: true
+  esbuild: true
+  prisma: true
+  sharp: true
+  ssh2: true
