@@ -56,10 +56,10 @@ const envSchema = z.object({
   MATOMO_TOKEN: requiredInProd,
   MATOMO_ID_SITE: requiredInProd,
 
-  // CLI : Scalingo backup
-  SCALINGO_API_TOKEN: requiredInProd,
-  SCALINGO_APP: requiredInProd,
-  SCALINGO_DB_ADDON_ID: requiredInProd,
+  // CLI : Scalingo backup -- Local env only
+  SCALINGO_API_TOKEN: z.string().optional(),
+  SCALINGO_APP: z.string().optional(),
+  SCALINGO_DB_ADDON_ID: z.string().optional(),
   SCALINGO_REGION: z.string().default('osc-secnum-fr1'),
 
   // CLI : FacHabitat SFTP
@@ -67,7 +67,7 @@ const envSchema = z.object({
   FAC_HABITAT_SFTP_USERNAME: requiredInProd,
   FAC_HABITAT_SFTP_PORT: z.coerce.number().default(22),
   FAC_HABITAT_SFTP_PASSWORD: requiredInProd,
-  FAC_HABITAT_SFTP_REMOTE_PATH: requiredInProd,
+  FAC_HABITAT_SFTP_REMOTE_PATH: z.string().optional(),
 
   // CLI : iBail/ARPEJ
   IBAIL_API_HOST: requiredInProdUrl,
