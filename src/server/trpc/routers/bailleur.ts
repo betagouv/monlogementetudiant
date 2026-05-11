@@ -454,7 +454,17 @@ export const bailleurRouter = createTRPCRouter({
         camelFields.nbTotalApartments = derived.nbTotalApartments ?? snapshot?.nbTotalApartments ?? null
       }
       if (hasPriceMinUpdate) {
-        const derived = computeDerivedFields(fields)
+        const currentPrices = {
+          price_min_t1: snapshot?.priceMinT1,
+          price_min_t1_bis: snapshot?.priceMinT1Bis,
+          price_min_t2: snapshot?.priceMinT2,
+          price_min_t3: snapshot?.priceMinT3,
+          price_min_t4: snapshot?.priceMinT4,
+          price_min_t5: snapshot?.priceMinT5,
+          price_min_t6: snapshot?.priceMinT6,
+          price_min_t7_more: snapshot?.priceMinT7More,
+        }
+        const derived = computeDerivedFields({ ...currentPrices, ...fields })
         camelFields.priceMin = derived.priceMin
       }
       if (hasImagesUpdate) {
