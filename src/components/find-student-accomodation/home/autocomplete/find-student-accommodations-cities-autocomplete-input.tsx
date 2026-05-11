@@ -30,7 +30,7 @@ export const FindStudentAccommodationCitiesAutocompleteInput: FC = () => {
 
   const handleOnClickItem = (item: TCity) => {
     trackEvent({ category: 'Recherche', action: 'recherche ville', name: item.name })
-    void trpcClient.tracking.logSearch.mutate({ type: 'city', id: item.id }).catch(() => undefined)
+    trpcClient.tracking.logSearch.mutate({ type: 'city', id: item.id }).catch(() => undefined)
     const formattedBbox = `${item.bbox.xmin},${item.bbox.ymin},${item.bbox.xmax},${item.bbox.ymax}`
     setBboxQuery(formattedBbox)
     setSearchQuery(item.name)
