@@ -11,14 +11,15 @@ import { verifyDjangoPassword } from '~/lib/django-password'
 import { db } from '~/server/db'
 import * as schema from '~/server/db/schema'
 import { adminOwnerLinks } from '~/server/db/schema/admin-owner-links'
+import { env } from '~/server/env'
 import { sendMagicLinkEmail, sendResetPasswordEmail, sendVerificationEmail } from '~/server/services/brevo'
 
 export const oneDay = 24 * 60 * 60
 
 export const auth = betterAuth({
-  secret: process.env.AUTH_SECRET,
-  baseURL: process.env.BASE_URL,
-  trustedOrigins: [process.env.BASE_URL!, 'http://localhost:3000'],
+  secret: env.AUTH_SECRET,
+  baseURL: env.BASE_URL,
+  trustedOrigins: [env.BASE_URL, 'http://localhost:3000'],
   database: drizzleAdapter(db, { provider: 'pg', schema }),
   session: {
     expiresIn: oneDay,

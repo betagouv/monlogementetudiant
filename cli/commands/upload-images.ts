@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
+import { env } from '~/server/env'
 import { uploadFile } from '../../src/server/services/s3'
 
 const IMAGE_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif'])
@@ -18,7 +19,7 @@ function getMimeType(ext: string): string {
 }
 
 function generateKey(name: string, ext: string): string {
-  const suffixDir = process.env.S3_SUFFIX_DIR ?? ''
+  const suffixDir = env.S3_SUFFIX_DIR
   const uuidHex = randomUUID().replace(/-/g, '')
   return `accommodations${suffixDir}/${name}/pictures/${uuidHex}.${ext}`
 }
@@ -33,7 +34,7 @@ export async function uploadImages(dir: string, opts: { name: string }) {
     throw new Error('Le paramètre --name est requis')
   }
 
-  console.log(`Destination S3 : accommodations${process.env.S3_SUFFIX_DIR ?? ''}/${name}/pictures/\n`)
+  console.log(`Destination S3 : accommodations${env.S3_SUFFIX_DIR}/${name}/pictures/\n`)
 
   const folders = fs
     .readdirSync(dir)

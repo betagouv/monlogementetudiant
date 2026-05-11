@@ -17,10 +17,6 @@ const { getCompleteStats, getAllEvents } = await import('../../lib/matomo')
 beforeEach(() => {
   vi.mocked(getCompleteStats).mockReset()
   vi.mocked(getAllEvents).mockReset()
-
-  process.env.MATOMO_URL = 'https://matomo.example.com/'
-  process.env.MATOMO_TOKEN = 'test-token'
-  process.env.MATOMO_ID_SITE = '1'
 })
 
 describe('sync-stats integration', () => {

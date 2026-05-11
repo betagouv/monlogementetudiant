@@ -10,6 +10,7 @@ import { z } from 'zod'
 import { CalendlyLink } from '~/components/bailleur/calendly-link'
 import avatarCecilia from '~/images/avatar-cecilia.svg'
 import avatarYasmine from '~/images/avatar-yasmine.svg'
+import { env } from '~/server/env'
 import { buildHref } from '~/utils/preserve-query-params'
 import { DashboardTabs } from './dashboard-tabs'
 import { getBailleurDashboardPageContext } from './get-bailleur-dashboard-page-context'
@@ -20,7 +21,7 @@ type TableauDeBordPageProps = {
 }
 
 export default async function TableauDeBordPage({ searchParams }: TableauDeBordPageProps) {
-  const calendlyUrl = z.string().parse(process.env.NEXT_PUBLIC_CALENDLY_URL)
+  const calendlyUrl = z.string().parse(env.NEXT_PUBLIC_CALENDLY_URL)
   const awaitedSearchParams = await searchParams
   const t = await getTranslations('bailleur')
   const { session, accommodations } = await getBailleurDashboardPageContext(awaitedSearchParams)

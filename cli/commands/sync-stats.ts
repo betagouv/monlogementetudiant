@@ -1,5 +1,6 @@
 import { eq } from 'drizzle-orm'
 import { db } from '~/server/db'
+import { env } from '~/server/env'
 import { eventStats, stats } from '../../src/server/db/schema'
 import { getAllEvents, getCompleteStats } from '../lib/matomo'
 import type { SyncCommand, SyncOptions, SyncResult } from '../types'
@@ -93,7 +94,7 @@ const command: SyncCommand = {
   async execute(options: SyncOptions): Promise<SyncResult> {
     const result: SyncResult = { updated: 0, skipped: 0, errors: [] }
 
-    if (!process.env.MATOMO_URL || !process.env.MATOMO_TOKEN || !process.env.MATOMO_ID_SITE) {
+    if (!env.MATOMO_URL || !env.MATOMO_TOKEN || !env.MATOMO_ID_SITE) {
       throw new Error('Missing env vars: MATOMO_URL, MATOMO_TOKEN, MATOMO_ID_SITE')
     }
 

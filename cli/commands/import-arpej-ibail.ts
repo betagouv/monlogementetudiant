@@ -1,5 +1,6 @@
 import { and, eq, sql } from 'drizzle-orm'
 import { db } from '~/server/db'
+import { env } from '~/server/env'
 import { ensureCity, geocodeAddress } from '~/server/lib/import/geocoder'
 import { accommodationAddresses, accommodations, externalSources, importBlocklist } from '../../src/server/db/schema'
 import { generateAccommodationKey, uploadFile } from '../../src/server/services/s3'
@@ -30,9 +31,7 @@ interface IbailResidence {
 }
 
 async function fetchResidences(options: ImportOptions): Promise<IbailResidence[]> {
-  const host = process.env.IBAIL_API_HOST
-  const authKey = process.env.IBAIL_API_AUTH_KEY
-  const authSecret = process.env.IBAIL_API_AUTH_SECRET
+  const { IBAIL_API_HOST: host, IBAIL_API_AUTH_KEY: authKey, IBAIL_API_AUTH_SECRET: authSecret } = env
 
   if (!host || !authKey || !authSecret) {
     throw new Error('Missing env vars: IBAIL_API_HOST, IBAIL_API_AUTH_KEY, IBAIL_API_AUTH_SECRET')

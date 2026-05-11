@@ -7,6 +7,7 @@ import { getTranslations } from 'next-intl/server'
 import { z } from 'zod'
 import { MagicLinkSignInForm } from '~/components/magic-link-sign-in/magic-link-sign-in'
 import background from '~/images/background-owner.webp'
+import { env } from '~/server/env'
 import authStyles from '../../auth.module.css'
 
 export const generateMetadata = async (): Promise<Metadata> => {
@@ -16,7 +17,7 @@ export const generateMetadata = async (): Promise<Metadata> => {
 
 export default async function LoginPage() {
   const t = await getTranslations('login')
-  const calendlyUrl = z.string().parse(process.env.NEXT_PUBLIC_CALENDLY_URL)
+  const calendlyUrl = z.string().parse(env.NEXT_PUBLIC_CALENDLY_URL)
   return (
     <>
       <div className={authStyles.imageContainer}>

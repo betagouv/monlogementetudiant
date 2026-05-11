@@ -4,6 +4,7 @@ import { drizzle } from 'drizzle-orm/postgres-js'
 import { readFileSync } from 'fs'
 import path from 'path'
 import postgres from 'postgres'
+import { env } from '~/server/env'
 import * as schema from '../../src/server/db/schema'
 
 interface DjangoUser {
@@ -19,11 +20,7 @@ interface DjangoUser {
 }
 
 export async function migrateUsers() {
-  const databaseUrl = process.env.DATABASE_URL
-  if (!databaseUrl) {
-    console.error('✗ DATABASE_URL environment variable is required')
-    process.exit(1)
-  }
+  const databaseUrl = env.DATABASE_URL
 
   console.log("✓ Variables d'environnement chargées")
 

@@ -5,13 +5,14 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { db } from '~/server/db'
 import { user as userTable } from '~/server/db/schema'
+import { env } from '~/server/env'
 import { syncDossierFacileTenantFromCode } from '~/server/services/dossier-facile/sync'
 import { getJwtSecret } from '~/server/utils/jwt-secret'
 
 const STATE_COOKIE_NAME = 'df_oauth_state'
 
 export async function GET(request: Request) {
-  const baseUrl = process.env.BASE_URL || 'http://localhost:3000'
+  const baseUrl = env.BASE_URL
   const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
   const state = searchParams.get('state')

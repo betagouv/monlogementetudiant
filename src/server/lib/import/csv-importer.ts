@@ -4,6 +4,7 @@ import { ZUpdateResidence } from '~/schemas/accommodations/update-residence'
 import type { TImportJobResidence, TImportJobSummary } from '~/schemas/import-jobs'
 import { db } from '~/server/db'
 import { accommodationAddresses, accommodations, externalSources, owners } from '~/server/db/schema'
+import { env } from '~/server/env'
 import { generateAccommodationKey, uploadFile } from '~/server/services/s3'
 import { computeDerivedFields, generateSlug } from '~/server/trpc/utils/accommodation-helpers'
 import { findAvailableSlug } from '~/server/utils/slug'
@@ -206,7 +207,7 @@ async function processImages(picturesRaw: string): Promise<string[]> {
     .filter((u) => u !== '' && (u.startsWith('http://') || u.startsWith('https://')))
 
   const result: string[] = []
-  const bucket = process.env.S3_BUCKET ?? ''
+  const bucket = env.S3_BUCKET
 
   for (const url of urls) {
     try {

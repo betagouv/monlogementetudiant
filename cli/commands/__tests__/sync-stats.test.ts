@@ -1,5 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+const mockEnv = vi.hoisted(() => ({
+  MATOMO_URL: 'https://matomo.example.com/' as string | undefined,
+  MATOMO_TOKEN: 'test-token' as string | undefined,
+  MATOMO_ID_SITE: '1' as string | undefined,
+}))
+
+vi.mock('~/server/env', () => ({ env: mockEnv }))
+
 vi.mock('~/server/db', () => ({
   db: {
     select: vi.fn(),
@@ -66,9 +74,9 @@ beforeEach(() => {
   vi.mocked(getCompleteStats).mockReset()
   vi.mocked(getAllEvents).mockReset()
 
-  process.env.MATOMO_URL = 'https://matomo.example.com/'
-  process.env.MATOMO_TOKEN = 'test-token'
-  process.env.MATOMO_ID_SITE = '1'
+  mockEnv.MATOMO_URL = 'https://matomo.example.com/'
+  mockEnv.MATOMO_TOKEN = 'test-token'
+  mockEnv.MATOMO_ID_SITE = '1'
 })
 
 describe('sync-stats', () => {
@@ -123,7 +131,7 @@ describe('sync-stats', () => {
   })
 
   it('throws when env vars are missing', async () => {
-    delete process.env.MATOMO_URL
+    mockEnv.MATOMO_URL = undefined
 
     await expect(command.execute({})).rejects.toThrow('Missing env vars')
   })

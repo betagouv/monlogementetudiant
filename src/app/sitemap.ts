@@ -1,11 +1,11 @@
 import type { MetadataRoute } from 'next'
-import { z } from 'zod'
 import { getAccommodations } from '~/server/accommodations/get-accommodations'
+import { env } from '~/server/env'
 import { getPopularCities } from '~/server/territories/get-popular-cities'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const popularCities = await getPopularCities()
-  const baseUrl = z.string().parse(process.env.BASE_URL)
+  const baseUrl = env.BASE_URL
   const lastModified = new Date()
 
   const findStudentAccommodationMetadata: MetadataRoute.Sitemap = popularCities.map((city) => ({
