@@ -297,6 +297,8 @@
       "availability": "Logements disponibles",
       "availabilityLegend": "Disponibilités",
       "advancedFiltersToggle": "Afficher plus de filtres",
+      "advancedFiltersShow": "Plus de filtres",
+      "advancedFiltersHide": "Fermer",
       "applyFilters": "Appliquer",
       "priceChip": "Moins de {prix}€",
       "removeFilter": "Retirer le filtre {filter}",
