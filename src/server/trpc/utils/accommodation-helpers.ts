@@ -1,4 +1,5 @@
 import slugify from 'slugify'
+import { env } from '~/server/env'
 
 slugify.extend({
   '&': 'et',
@@ -83,7 +84,7 @@ export function computeDerivedFields(data: {
 
 export async function geocodeAddress(address: string, city: string, postalCode: string): Promise<{ lon: number; lat: number } | null> {
   const query = `${address} ${postalCode} ${city}`
-  const baseUrl = process.env.GEOCODING_API_URL ?? 'https://data.geopf.fr/geocodage/search'
+  const baseUrl = env.GEOCODING_API_URL
   const url = `${baseUrl}?q=${encodeURIComponent(query)}&limit=1`
 
   try {

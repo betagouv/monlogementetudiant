@@ -4,6 +4,7 @@ import * as path from 'node:path'
 import { and, eq, sql } from 'drizzle-orm'
 import SftpClient from 'ssh2-sftp-client'
 import { db } from '~/server/db'
+import { env } from '~/server/env'
 import { ensureCity, geocodeAddress } from '~/server/lib/import/geocoder'
 import { accommodationAddresses, accommodations, externalSources } from '../../src/server/db/schema'
 import { computeDerivedFields, generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
@@ -105,11 +106,13 @@ interface FacHabitatResidence {
 }
 
 async function downloadFromSftp(verbose?: boolean): Promise<string> {
-  const host = process.env.FAC_HABITAT_SFTP_HOST
-  const username = process.env.FAC_HABITAT_SFTP_USERNAME
-  const port = Number(process.env.FAC_HABITAT_SFTP_PORT) || 22
-  const password = process.env.FAC_HABITAT_SFTP_PASSWORD
-  const remotePath = process.env.FAC_HABITAT_SFTP_REMOTE_PATH || DEFAULT_REMOTE_PATH
+  const {
+    FAC_HABITAT_SFTP_HOST: host,
+    FAC_HABITAT_SFTP_USERNAME: username,
+    FAC_HABITAT_SFTP_PORT: port,
+    FAC_HABITAT_SFTP_PASSWORD: password,
+  } = env
+  const remotePath = env.FAC_HABITAT_SFTP_REMOTE_PATH || DEFAULT_REMOTE_PATH
 
   if (!host || !username) {
     throw new Error('Variables manquantes : FAC_HABITAT_SFTP_HOST, FAC_HABITAT_SFTP_USERNAME')

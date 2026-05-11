@@ -10,6 +10,12 @@ import { accommodationAddresses, accommodations, externalSources, owners } from 
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
 
+const mockEnv = vi.hoisted(() => ({
+  S3_BUCKET: 'test-bucket' as string,
+}))
+
+vi.mock('~/server/env', () => ({ env: mockEnv }))
+
 vi.mock('../../../src/server/services/s3', () => ({
   uploadFile: vi.fn(async ({ key }: { key: string }) => `https://s3.gra.io.cloud.ovh.net/bucket/${key}`),
   generateAccommodationKey: vi.fn((ext: string) => `accommodations/mock-uuid.${ext}`),
@@ -203,6 +209,7 @@ function makeRow(overrides: Record<string, string> = {}): string[] {
 
 beforeEach(() => {
   mockFetch.mockReset()
+  mockEnv.S3_BUCKET = 'test-bucket'
 })
 
 describe('import-csv integration', () => {
@@ -434,7 +441,7 @@ describe('import-csv integration', () => {
   it('handles pictures with S3 URLs from current bucket (kept as-is)', async () => {
     const db = getTestDb()
 
-    vi.stubEnv('S3_BUCKET', 'monlogementetudiant-s3-staging')
+    mockEnv.S3_BUCKET = 'monlogementetudiant-s3-staging'
     const s3Url = 'https://monlogementetudiant-s3-staging.s3.gra.io.cloud.ovh.net/accommodations/image1.jpg'
     const filePath = writeTmpCsv([makeRow({ pictures: s3Url })])
 
@@ -445,7 +452,6 @@ describe('import-csv integration', () => {
     expect(accs[0].imagesCount).toBe(1)
     // Should NOT have fetched the image since it's already on our bucket
     expect(mockFetch).not.toHaveBeenCalled()
-    vi.unstubAllEnvs()
   })
 
   it('handles pictures with external URLs (re-uploaded)', async () => {
@@ -472,7 +478,7 @@ describe('import-csv integration', () => {
   it('handles multiple pictures separated by pipe', async () => {
     const db = getTestDb()
 
-    vi.stubEnv('S3_BUCKET', 'monlogementetudiant-s3-staging')
+    mockEnv.S3_BUCKET = 'monlogementetudiant-s3-staging'
     const s3Url1 = 'https://monlogementetudiant-s3-staging.s3.gra.io.cloud.ovh.net/img1.jpg'
     const s3Url2 = 'https://monlogementetudiant-s3-staging.s3.gra.io.cloud.ovh.net/img2.jpg'
     const filePath = writeTmpCsv([makeRow({ pictures: `${s3Url1}|${s3Url2}` })])
@@ -482,14 +488,13 @@ describe('import-csv integration', () => {
     const accs = await db.select().from(accommodations)
     expect(accs[0].imagesUrls).toHaveLength(2)
     expect(accs[0].imagesCount).toBe(2)
-    vi.unstubAllEnvs()
   })
 
   it('re-uploads staging S3 images when running in prod', async () => {
     const db = getTestDb()
 
     // Simulate prod environment with prod bucket
-    vi.stubEnv('S3_BUCKET', 'monlogementetudiant-s3')
+    mockEnv.S3_BUCKET = 'monlogementetudiant-s3'
 
     // Image URL from staging bucket
     const stagingUrl = 'https://monlogementetudiant-s3-staging.s3.gra.io.cloud.ovh.net/accommodations/image1.jpg'
@@ -510,7 +515,6 @@ describe('import-csv integration', () => {
     expect(accs[0].imagesUrls).toHaveLength(1)
     // The URL should now point to our (mocked) prod bucket, not staging
     expect(accs[0].imagesUrls![0]).not.toContain('staging')
-    vi.unstubAllEnvs()
   })
 
   it('handles BOM-encoded CSV', async () => {

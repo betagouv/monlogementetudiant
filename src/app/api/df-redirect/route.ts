@@ -3,12 +3,13 @@ import { jwtVerify } from 'jose'
 import { NextResponse } from 'next/server'
 import { db } from '~/server/db'
 import { dossierFacileDocuments, dossierFacileTenants } from '~/server/db/schema'
+import { env } from '~/server/env'
 import { getJwtSecret } from '~/server/utils/jwt-secret'
 
 const ERROR_PAGE = '/dossier-facile/error'
 
 function errorRedirect(errorType: string) {
-  const baseUrl = process.env.BASE_URL || 'http://localhost:3000'
+  const baseUrl = env.BASE_URL
   return NextResponse.redirect(`${baseUrl}${ERROR_PAGE}?error_type=${errorType}`)
 }
 

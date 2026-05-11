@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
-import { z } from 'zod'
+import { env } from '~/server/env'
 
 export async function GET() {
-  const baseUrl = z.string().parse(process.env.BASE_URL)
+  const baseUrl = env.BASE_URL
 
   const content = `# Mon Logement Étudiant
 

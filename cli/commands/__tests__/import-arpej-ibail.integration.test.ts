@@ -16,9 +16,6 @@ const { default: command } = await import('../import-arpej-ibail')
 
 beforeEach(() => {
   mockFetch.mockReset()
-  process.env.IBAIL_API_HOST = 'https://ibail.example.com'
-  process.env.IBAIL_API_AUTH_KEY = 'test-key'
-  process.env.IBAIL_API_AUTH_SECRET = 'test-secret'
 })
 
 describe('import-arpej-ibail integration', () => {

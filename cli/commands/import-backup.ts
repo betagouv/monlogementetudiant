@@ -2,6 +2,7 @@ import { execSync } from 'child_process'
 import { existsSync, readdirSync, rmSync, statSync } from 'fs'
 import { mkdir } from 'fs/promises'
 import path from 'path'
+import { env } from '~/server/env'
 import { cleanDatabase, ensureExtensions, restoreBackup } from '../lib/db-utils'
 import { ScalingoBackupService } from '../lib/scalingo-backup'
 
@@ -13,11 +14,7 @@ interface ImportBackupOpts {
 }
 
 export async function importBackup(opts: ImportBackupOpts) {
-  const databaseUrl = process.env.DATABASE_URL
-  if (!databaseUrl) {
-    console.error('✗ DATABASE_URL environment variable is required')
-    process.exit(1)
-  }
+  const databaseUrl = env.DATABASE_URL
 
   console.log("✓ Variables d'environnement chargées")
 

@@ -14,6 +14,7 @@
     "test": "vitest",
     "test:unit": "vitest --project unit",
     "test:integration": "vitest --project integration --run",
+    "check-env": "tsx --env-file=.env src/server/env.ts",
     "cli": "tsx --env-file=.env cli/index.ts"
   },
   "dependencies": {
@@ -78,5 +79,8 @@
     "sass": "^1.99.0",
     "typescript": "^6.0.3",
     "vitest": "^4.1.5"
+  },
+  "volta": {
+    "node": "23.11.1"
   }
 }

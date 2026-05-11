@@ -2,6 +2,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const sendMock = vi.fn()
 
+const mockEnv = vi.hoisted(() => ({
+  S3_ENDPOINT: 'https://s3.test.example.com',
+  S3_REGION: 'gra',
+  S3_BUCKET: 'test-bucket',
+  S3_ACCESS_KEY_ID: 'test-key',
+  S3_SECRET_ACCESS_KEY: 'test-secret',
+  S3_SUFFIX_DIR: '',
+}))
+
+vi.mock('~/server/env', () => ({ env: mockEnv }))
+
 vi.mock('@aws-sdk/client-s3', () => {
   return {
     S3Client: class {
@@ -20,15 +31,10 @@ vi.mock('@aws-sdk/client-s3', () => {
   }
 })
 
-vi.stubEnv('S3_ENDPOINT', 'https://s3.test.example.com')
-vi.stubEnv('S3_REGION', 'gra')
-vi.stubEnv('S3_BUCKET', 'test-bucket')
-vi.stubEnv('S3_ACCESS_KEY_ID', 'test-key')
-vi.stubEnv('S3_SECRET_ACCESS_KEY', 'test-secret')
-
 describe('s3 service', () => {
   beforeEach(() => {
     sendMock.mockReset()
+    mockEnv.S3_SUFFIX_DIR = ''
   })
 
   describe('generateAccommodationKey', () => {
@@ -48,16 +54,11 @@ describe('s3 service', () => {
     })
 
     it('includes S3_SUFFIX_DIR when set', async () => {
-      vi.stubEnv('S3_SUFFIX_DIR', '-staging')
+      mockEnv.S3_SUFFIX_DIR = '-staging'
       const { generateAccommodationKey } = await import('./s3')
       const key = generateAccommodationKey('png')
 
       expect(key).toMatch(/^accommodations-staging\/[a-f0-9]{32}\.png$/)
-      vi.unstubAllEnvs()
-      vi.stubEnv('S3_ENDPOINT', 'https://s3.test.example.com')
-      vi.stubEnv('S3_BUCKET', 'test-bucket')
-      vi.stubEnv('S3_ACCESS_KEY_ID', 'test-key')
-      vi.stubEnv('S3_SECRET_ACCESS_KEY', 'test-secret')
     })
 
     it('uses correct extension', async () => {

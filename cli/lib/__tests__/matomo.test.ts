@@ -1,25 +1,12 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
-
-process.env.MATOMO_URL = 'https://matomo.example.com/'
-process.env.MATOMO_TOKEN = 'test-token'
-process.env.MATOMO_ID_SITE = '1'
 
 const { getCompleteStats, getAllEvents } = await import('../matomo')
 
 beforeEach(() => {
   mockFetch.mockReset()
-  process.env.MATOMO_URL = 'https://matomo.example.com/'
-  process.env.MATOMO_TOKEN = 'test-token'
-  process.env.MATOMO_ID_SITE = '1'
-})
-
-afterEach(() => {
-  delete process.env.MATOMO_URL
-  delete process.env.MATOMO_TOKEN
-  delete process.env.MATOMO_ID_SITE
 })
 
 describe('getCompleteStats', () => {

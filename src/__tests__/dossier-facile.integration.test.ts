@@ -8,6 +8,12 @@ import { getTestDb } from './helpers/test-db'
 
 const WEBHOOK_API_KEY = 'test-webhook-secret'
 
+const mockEnv = vi.hoisted(() => ({
+  DOSSIERFACILE_WEBHOOK_API_KEY: 'test-webhook-secret' as string | undefined,
+}))
+
+vi.mock('~/server/env', () => ({ env: mockEnv }))
+
 function webhookRequest(body: unknown, apiKey?: string): Request {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
   if (apiKey !== undefined) {
@@ -26,7 +32,7 @@ async function callWebhook(body: unknown, apiKey: string = WEBHOOK_API_KEY) {
 }
 
 beforeEach(async () => {
-  vi.stubEnv('DOSSIERFACILE_WEBHOOK_API_KEY', WEBHOOK_API_KEY)
+  mockEnv.DOSSIERFACILE_WEBHOOK_API_KEY = WEBHOOK_API_KEY
   await createUser({ id: 'test-user-id', name: 'Test User', email: 'test@test.com', role: 'user' })
   await createUser({ id: 'test-user-id-2', name: 'Test User 2', email: 'test2@test.com', role: 'user' })
   await createUser({ id: 'test-owner-id', name: 'Test Owner', email: 'owner@test.com', role: 'owner' })
@@ -55,7 +61,7 @@ describe('DossierFacile Webhook', () => {
     })
 
     it('returns 500 when DOSSIERFACILE_WEBHOOK_API_KEY is not configured', async () => {
-      vi.stubEnv('DOSSIERFACILE_WEBHOOK_API_KEY', '')
+      mockEnv.DOSSIERFACILE_WEBHOOK_API_KEY = undefined
       const { POST } = await import('../app/api/dossier-facile/webhook/route')
       const req = new Request('http://localhost/api/dossier-facile/webhook', {
         method: 'POST',

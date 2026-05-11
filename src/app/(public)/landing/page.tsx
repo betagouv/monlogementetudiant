@@ -27,6 +27,7 @@ import poingFerme from '~/images/poing-ferme.svg'
 import sogima from '~/images/sogima.svg'
 import studefi from '~/images/studefi.svg'
 import visibilityAvatar from '~/images/visibility.webp'
+import { env } from '~/server/env'
 import styles from './landing.module.css'
 
 export const generateMetadata = async (): Promise<Metadata> => {
@@ -36,7 +37,7 @@ export const generateMetadata = async (): Promise<Metadata> => {
 
 export default async function LandingPage() {
   const t = await getTranslations('landing')
-  const calendlyUrl = z.string().parse(process.env.NEXT_PUBLIC_CALENDLY_URL)
+  const calendlyUrl = z.string().parse(env.NEXT_PUBLIC_CALENDLY_URL)
 
   return (
     <>

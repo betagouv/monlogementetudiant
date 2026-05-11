@@ -9,6 +9,7 @@ import { HeroSection } from '~/components/home/hero-section/hero-section'
 import { NewsSection } from '~/components/home/news/news'
 import { PartnersSection } from '~/components/home/partners/partners'
 import { SocialLandlordsPartnersSection } from '~/components/home/social-landlords-partners/social-landlords-partners'
+import { env } from '~/server/env'
 import { getCanonicalUrl, getDefaultOgImage } from '~/utils/canonical'
 
 export const generateMetadata = async () => {
@@ -17,8 +18,8 @@ export const generateMetadata = async () => {
     description: t('home.description'),
     title: t('home.title'),
     robots: {
-      index: process.env.NEXT_PUBLIC_APP_ENV === 'production',
-      follow: process.env.NEXT_PUBLIC_APP_ENV === 'production',
+      index: env.NEXT_PUBLIC_APP_ENV === 'production',
+      follow: env.NEXT_PUBLIC_APP_ENV === 'production',
     },
     alternates: { canonical: getCanonicalUrl() },
     openGraph: {
