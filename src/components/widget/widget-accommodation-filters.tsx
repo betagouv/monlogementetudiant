@@ -89,13 +89,9 @@ export const WidgetAccommodationFilters: FC<WidgetAccommodationFiltersProps> = (
         {visibleFilters.includes('prix') && <FindStudentAccommodationPrice pageSize={6} widget />}
         {visibleFilters.includes('crous') && <FindStudentAccommodationCrousFilter />}
         {hasAdvancedFilters && (
-          <Button
-            className={classes.toggleButton}
-            iconId={showAdvanced ? 'fr-icon-subtract-line' : 'fr-icon-add-line'}
-            priority="secondary"
-            title={tHeader('advancedFiltersToggle')}
-            onClick={() => setShowAdvanced((v) => !v)}
-          />
+          <Button className={classes.toggleButton} priority="tertiary" onClick={() => setShowAdvanced((v) => !v)}>
+            {showAdvanced ? tHeader('advancedFiltersHide') : tHeader('advancedFiltersShow')}
+          </Button>
         )}
       </div>
 

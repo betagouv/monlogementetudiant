@@ -1,6 +1,7 @@
 'use client'
 
 import Button from '@codegouvfr/react-dsfr/Button'
+import clsx from 'clsx'
 import { useTranslations } from 'next-intl'
 import { parseAsBoolean, useQueryStates } from 'nuqs'
 import { FC, useState } from 'react'
@@ -29,18 +30,14 @@ export const FindStudentAccomodationHeader: FC = () => {
     <>
       <div className="fr-hidden fr-unhidden-md">
         <div className={styles.container}>
-          <div className={styles.mainRow}>
+          <div className={clsx(styles.mainRow, showAdvanced && styles.mainRowOpen)}>
             <FindStudentAccomodationAutocompleteInput />
             <FindStudentAccommodationAvailabilitySwitch />
             <FindStudentAccommodationPrice />
             <FindStudentAccommodationCrousFilter />
-            <Button
-              className={styles.toggleButton}
-              iconId={showAdvanced ? 'fr-icon-subtract-line' : 'fr-icon-add-line'}
-              priority="secondary"
-              title={t('advancedFiltersToggle')}
-              onClick={() => setShowAdvanced((v) => !v)}
-            />
+            <Button className={styles.toggleButton} priority="tertiary" onClick={() => setShowAdvanced((v) => !v)}>
+              {showAdvanced ? t('advancedFiltersHide') : t('advancedFiltersShow')}
+            </Button>
           </div>
           {showAdvanced && (
             <div className={styles.advancedRow}>
