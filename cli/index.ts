@@ -1,6 +1,9 @@
 import { program } from 'commander'
+import { compareCrous } from './commands/compare-crous'
 import { healthcheck, healthcheckCities } from './commands/healthcheck'
 import { importBackup } from './commands/import-backup'
+import { importCrousRents } from './commands/import-crous-rents'
+import { importCrousSurfaces } from './commands/import-crous-surfaces'
 import { migrate } from './commands/migrate'
 import { migrateUsers } from './commands/migrate-users'
 import { uploadImages } from './commands/upload-images'
@@ -11,6 +14,35 @@ program.name('mle').description('MLE CLI tools')
 program.command('migrate-users').description('Migrate Django users to better-auth').action(migrateUsers)
 
 program.command('migrate').description('Apply Drizzle migrations').action(migrate)
+
+program
+  .command('compare-crous <file>')
+  .description('Compare les donnees CROUS du XLSX avec les residences CROUS en BDD')
+  .option('--owner <name-or-slug>', 'Owner CROUS a comparer', 'crous')
+  .option('--csv <path>', 'Ecrire le rapport dans un fichier CSV')
+  .option('--json', 'Afficher les incoherences en JSON')
+  .option('--verbose', 'Afficher toutes les incoherences')
+  .option('--limit <n>', 'Limiter le nombre de residences du fichier', parseInt)
+  .option('--exit-code', 'Retourner un code 1 si des incoherences sont detectees')
+  .action((file, opts) => compareCrous(file, opts))
+
+program
+  .command('import-crous-surfaces <file>')
+  .description('Importe les superficies min/max par typologie depuis le XLSX CROUS')
+  .option('--owner <name-or-slug>', 'Owner CROUS a mettre a jour', 'crous')
+  .option('--dry-run', 'Simuler sans modifier la BDD')
+  .option('--verbose', 'Afficher les residences traitees')
+  .option('--limit <n>', 'Limiter le nombre de residences du fichier', parseInt)
+  .action((file, opts) => importCrousSurfaces(file, opts))
+
+program
+  .command('import-crous-rents <file>')
+  .description('Importe les loyers min/max par typologie depuis le XLSX CROUS')
+  .option('--owner <name-or-slug>', 'Owner CROUS a mettre a jour', 'crous')
+  .option('--dry-run', 'Simuler sans modifier la BDD')
+  .option('--verbose', 'Afficher les residences traitees')
+  .option('--limit <n>', 'Limiter le nombre de residences du fichier', parseInt)
+  .action((file, opts) => importCrousRents(file, opts))
 
 program
   .command('import-backup')
