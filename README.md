@@ -82,6 +82,9 @@ cli/
     migrate-users.ts     # Migration users Django
     import-backup.ts     # Import backup Scalingo
     import-arpej-ibail.ts # Import résidences ARPEJ (API iBAIL)
+    import-crous.ts       # Import résidences CROUS depuis XLSX
+    import-crous-rents.ts # Import loyers min/max CROUS par typologie depuis XLSX
+    import-crous-surfaces.ts # Import superficies min/max CROUS par typologie depuis XLSX
     import-csv.ts        # Import générique depuis CSV
     import-fac-habitat.ts # Import résidences FAC HABITAT (SFTP)
     upload-images.ts     # Upload images locales vers S3
@@ -217,6 +220,30 @@ Options spécifiques :
 - `--file <path>` : utiliser un fichier JSON local au lieu du SFTP
 
 Variables d'env requises : `FAC_HABITAT_SFTP_HOST`, `FAC_HABITAT_SFTP_USERNAME`, `FAC_HABITAT_SFTP_PASSWORD`, `FAC_HABITAT_SFTP_PORT` (défaut : 22), `S3_*` (upload images)
+
+#### Commandes CROUS XLSX
+
+Ces commandes utilisent le fichier XLSX CROUS contenant les onglets `Liste résidences` et `Liste types de lgt`.
+
+```bash
+pnpm cli compare-crous "/chemin/vers/Liste_des_residencesTUL.xlsx" --csv /tmp/compare-crous-report.csv
+pnpm cli import-crous-surfaces "/chemin/vers/Liste_des_residencesTUL.xlsx" --dry-run --verbose
+pnpm cli import-crous-rents "/chemin/vers/Liste_des_residencesTUL.xlsx" --dry-run --verbose
+```
+
+`compare-crous` compare le fichier avec les résidences de l'owner `crous` en BDD. Le rapport sort une ligne par différence avec les colonnes `status`, `sourceId`, `dbId`, `dbSlug`, `residence`, `field`, `fileValue`, `dbValue`, `reason`. Pour écrire un CSV, utiliser `--csv <path>`. Pour forcer un code retour `1` en cas d'incohérence, ajouter `--exit-code`.
+
+`import-crous-surfaces` met uniquement à jour les colonnes `superficie_min/max_*` par typologie (`T1`, `T1bis`, `T2`, etc.). `import-crous-rents` met uniquement à jour les colonnes `price_min/max_*` par typologie et recalcule `price_min`.
+
+Options communes :
+- `--owner <name-or-slug>` : owner à comparer ou mettre à jour (défaut : `crous`)
+- `--dry-run` : disponible sur les imports, simule sans écriture
+- `--verbose` : affiche les résidences traitées
+- `--limit <n>` : limite le nombre de résidences du fichier
+
+Attention : dans certains exports CROUS, `uairne` n'est pas unique. Les commandes détectent ces doublons. Quand un `uairne` est unique, le matching se fait par `uairne`. Quand il est dupliqué, les imports privilégient le nom/slug et évitent d'écraser une autre résidence portant le même `uairne`. Le comparateur conserve le `sourceId` affiché, mais tient compte de ce cas pour éviter les faux rapprochements.
+
+Le comparateur distingue aussi les écarts de nom dus au script SQL de normalisation qui retire `Résidence` en renseignant `reason=name_normalized_by_residence_sql`.
 
 #### `upload-images` — Upload d'images locales vers S3
 
