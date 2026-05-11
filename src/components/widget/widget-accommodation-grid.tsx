@@ -2,6 +2,7 @@
 
 import { fr } from '@codegouvfr/react-dsfr'
 import { Pagination } from '@codegouvfr/react-dsfr/Pagination'
+import { useQuery } from '@tanstack/react-query'
 import clsx from 'clsx'
 import { useTranslations } from 'next-intl'
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
@@ -12,6 +13,7 @@ import { CardSkeleton } from '~/components/ui/skeleton/card-skeleton'
 import { useAccomodations } from '~/hooks/use-accomodations'
 import { trackEvent } from '~/lib/tracking'
 import { TTerritory } from '~/schemas/territories'
+import { useTRPC } from '~/server/trpc/client'
 import { sPluriel } from '~/utils/sPluriel'
 import styles from './widget-accommodation-grid.module.css'
 
@@ -21,6 +23,7 @@ type WidgetAccommodationGridProps = {
 
 export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = ({ territory }) => {
   const t = useTranslations('findAccomodation.results')
+  const trpc = useTRPC()
   const [queryStates] = useQueryStates({
     bbox: parseAsString,
     city: parseAsString,
@@ -34,7 +37,25 @@ export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = ({ terr
     disponible: parseAsString,
   })
 
-  const { data: accommodations, isLoading } = useAccomodations({ pageSize: 6 })
+  const queryCitySlug = queryStates.city ?? undefined
+  const shouldResolveQueryCity = !territory && !!queryCitySlug
+  const { data: queryCity } = useQuery({
+    ...trpc.territories.getBySlug.queryOptions({
+      type: 'ville' as const,
+      slug: queryCitySlug!,
+    }),
+    enabled: shouldResolveQueryCity,
+  })
+  const effectiveTerritory = territory ?? queryCity
+  const effectiveCitySlug =
+    effectiveTerritory && 'slug' in effectiveTerritory && typeof effectiveTerritory.slug === 'string'
+      ? effectiveTerritory.slug
+      : queryCitySlug
+  const { data: accommodations, isLoading } = useAccomodations({
+    cityId: effectiveTerritory?.id,
+    citySlug: effectiveCitySlug,
+    pageSize: 6,
+  })
 
   const totalPages = accommodations ? Math.ceil(accommodations.count / accommodations.page_size) : 1
   const currentPage = queryStates.page ?? 1
@@ -103,8 +124,15 @@ export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = ({ terr
           />
         </div>
       )}
-      {territory && isLastPage && (
-        <FindStudentAccomodationNeighborsResults territory={territory} mainAccommodationIds={mainAccommodationIds} />
+      {effectiveTerritory && isLastPage && (
+        <div className={clsx(accommodations && accommodations.count <= accommodations.page_size && 'fr-mt-4w')}>
+          <FindStudentAccomodationNeighborsResults
+            territory={effectiveTerritory}
+            mainAccommodationIds={mainAccommodationIds}
+            showFavorite={false}
+            targetBlank
+          />
+        </div>
       )}
       <footer className={styles.footer}>
         Proposé par{' '}
