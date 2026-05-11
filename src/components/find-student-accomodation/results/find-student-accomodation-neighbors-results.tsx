@@ -15,6 +15,8 @@ import styles from './find-student-accomodation-neighbors-results.module.css'
 
 type FindStudentAccomodationNeighborsResultsProps = {
   mainAccommodationIds: number[]
+  showFavorite?: boolean
+  targetBlank?: boolean
   territory?: TTerritory
   user?: TUser
 }
@@ -23,6 +25,8 @@ export const FindStudentAccomodationNeighborsResults: FC<FindStudentAccomodation
   territory,
   user,
   mainAccommodationIds,
+  showFavorite = true,
+  targetBlank = false,
 }) => {
   const t = useTranslations('findAccomodation.results')
   const trpc = useTRPC()
@@ -31,6 +35,7 @@ export const FindStudentAccomodationNeighborsResults: FC<FindStudentAccomodation
     accessible: parseAsString,
     colocation: parseAsString,
     crous: parseAsString,
+    disponible: parseAsString,
     gestionnaire: parseAsString,
   })
 
@@ -45,6 +50,7 @@ export const FindStudentAccomodationNeighborsResults: FC<FindStudentAccomodation
       pageSize: EXPANDED_SEARCH_PAGE_SIZE,
       isAccessible: queryStates.accessible === 'true' ? true : undefined,
       hasColiving: queryStates.colocation === 'true' ? true : undefined,
+      onlyWithAvailability: queryStates.disponible === 'true' ? true : undefined,
       viewCrous: queryStates.crous === 'true',
       ownerSlug: queryStates.gestionnaire ?? undefined,
       priceMax: expandedPriceMax,
@@ -67,7 +73,13 @@ export const FindStudentAccomodationNeighborsResults: FC<FindStudentAccomodation
 
       <div className={styles.grid}>
         {expandedFeatures.map((accommodation) => (
-          <AccomodationCard key={accommodation.id} accomodation={accommodation} user={user} />
+          <AccomodationCard
+            key={accommodation.id}
+            accomodation={accommodation}
+            showFavorite={showFavorite}
+            targetBlank={targetBlank}
+            user={user}
+          />
         ))}
         {showLoadingState && Array.from({ length: 6 }).map((_, index) => <CardSkeleton key={index} />)}
       </div>

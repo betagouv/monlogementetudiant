@@ -1,6 +1,4 @@
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query'
-import { expandBbox } from '~/components/map/map-utils'
-import { SearchParamsSync } from '~/components/search-params-sync'
 import { WidgetAccommodationFilters } from '~/components/widget/widget-accommodation-filters'
 import { WidgetAccommodationGrid } from '~/components/widget/widget-accommodation-grid'
 import { WidgetBodyStyle } from '~/components/widget/widget-body-style'
@@ -21,7 +19,6 @@ export default async function WidgetLogementsPage({
 }: {
   searchParams: Promise<{
     accessible?: string
-    bbox?: string
     city?: string
     colocation?: string
     crous?: string
@@ -34,23 +31,17 @@ export default async function WidgetLogementsPage({
 }) {
   const awaitedSearchParams = await searchParams
 
-  const hasLocation = !!awaitedSearchParams.city || !!awaitedSearchParams.bbox
+  const hasLocation = !!awaitedSearchParams.city
   const visibleFilters = parseVisibleFilters(awaitedSearchParams.filters)
 
   let city: TCity | undefined
-  let serverBbox: string | undefined
 
   if (awaitedSearchParams.city) {
     const territories = await getTerritories(awaitedSearchParams.city)
     city = territories.cities?.find((c) => c.name === awaitedSearchParams.city || c.slug === awaitedSearchParams.city)
-
-    if (city?.bbox && !awaitedSearchParams.bbox) {
-      const expanded = expandBbox(city.bbox.xmin, city.bbox.ymin, city.bbox.xmax, city.bbox.ymax)
-      serverBbox = `${expanded.west},${expanded.south},${expanded.east},${expanded.north}`
-    }
   }
 
-  await prefetchAccommodations(awaitedSearchParams, { bbox: serverBbox, pageSize: WIDGET_PAGE_SIZE })
+  await prefetchAccommodations(awaitedSearchParams, { cityId: city?.id, pageSize: WIDGET_PAGE_SIZE })
 
   const queryClient = getQueryClient()
 
@@ -59,8 +50,7 @@ export default async function WidgetLogementsPage({
     const expandedPriceMax = computeExpandedPriceMax(parsedParams.prix ?? undefined)
 
     const mainQueryInput = {
-      bbox: serverBbox ?? parsedParams.bbox ?? undefined,
-      cityId: undefined,
+      cityId: city.id,
       page: parsedParams.page ?? 1,
       pageSize: WIDGET_PAGE_SIZE,
       isAccessible: parsedParams.accessible === 'true' ? true : undefined,
@@ -95,7 +85,6 @@ export default async function WidgetLogementsPage({
 
   return (
     <HydrationBoundary state={dehydratedState}>
-      <SearchParamsSync bbox={serverBbox} />
       <WidgetBodyStyle />
       {visibleFilters && <WidgetAccommodationFilters showLocationInput={!hasLocation} visibleFilters={visibleFilters} />}
       <WidgetAccommodationGrid territory={city} />

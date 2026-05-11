@@ -3,7 +3,7 @@
 import Button from '@codegouvfr/react-dsfr/Button'
 import Input from '@codegouvfr/react-dsfr/Input'
 import { useTranslations } from 'next-intl'
-import { parseAsString, useQueryState, useQueryStates } from 'nuqs'
+import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
 import { FC, useState } from 'react'
 import { tss } from 'tss-react'
 import { FindStudentAccessibleAccomodationSwitch } from '~/components/find-student-accomodation/header/find-student-accessible-accomodation-switch'
@@ -11,7 +11,6 @@ import { FindStudentAccommodationAvailabilitySwitch } from '~/components/find-st
 import { FindStudentAccommodationCrousFilter } from '~/components/find-student-accomodation/header/find-student-accommodation-crous-filter'
 import { FindStudentAccommodationPrice } from '~/components/find-student-accomodation/header/find-student-accommodation-price'
 import { FindStudentColivingAccomodationSwitch } from '~/components/find-student-accomodation/header/find-student-coliving-accomodation'
-import { expandBbox } from '~/components/map/map-utils'
 import { WidgetFilterKey } from '~/components/widget/widget-filters'
 import { useSearchCities } from '~/hooks/use-search-cities'
 import { TCity } from '~/schemas/territories'
@@ -26,7 +25,10 @@ export const WidgetAccommodationFilters: FC<WidgetAccommodationFiltersProps> = (
   const t = useTranslations('findAccomodation')
   const tHeader = useTranslations('findAccomodation.header')
   const { classes } = useStyles()
-  const [, setBbox] = useQueryState('bbox', parseAsString)
+  const [, setLocationQueryStates] = useQueryStates({
+    city: parseAsString,
+    page: parseAsInteger,
+  })
   const { data: cities, isError, searchQuery, setSearchQuery, searchQueryState, setSearchQueryState } = useSearchCities()
   const [showResults, setShowResults] = useState(false)
 
@@ -44,8 +46,7 @@ export const WidgetAccommodationFilters: FC<WidgetAccommodationFiltersProps> = (
   }
 
   const handleCitySelect = (city: TCity) => {
-    const expanded = expandBbox(city.bbox.xmin, city.bbox.ymin, city.bbox.xmax, city.bbox.ymax)
-    setBbox(`${expanded.west},${expanded.south},${expanded.east},${expanded.north}`)
+    setLocationQueryStates({ city: city.slug, page: 1 })
     setSearchQuery(city.name)
     setSearchQueryState(city.slug)
     setShowResults(false)

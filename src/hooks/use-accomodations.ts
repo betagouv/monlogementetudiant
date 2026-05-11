@@ -5,10 +5,12 @@ import { accommodationsParsers } from '~/lib/accommodations-search-params'
 import { useTRPC } from '~/server/trpc/client'
 
 interface UseAccomodationsOptions {
+  cityId?: number
+  citySlug?: string
   pageSize?: number
 }
 
-export const useAccomodations = ({ pageSize }: UseAccomodationsOptions = {}) => {
+export const useAccomodations = ({ cityId: cityIdOverride, citySlug, pageSize }: UseAccomodationsOptions = {}) => {
   const [queryStates] = useQueryStates(accommodationsParsers)
   const { bbox, academie, accessible, colocation, disponible, gestionnaire, page, prix, crous } = queryStates
   const [rechercheParCarte] = useQueryState('recherche-par-carte', parseAsString)
@@ -20,17 +22,17 @@ export const useAccomodations = ({ pageSize }: UseAccomodationsOptions = {}) => 
   const citySlugFromPath = villeIndex !== -1 ? decodeURIComponent(pathSegments[villeIndex + 1] ?? '') || undefined : undefined
 
   const isMapSearch = rechercheParCarte === 'true'
-  const effectiveCitySlug = citySlugFromPath && !isMapSearch ? citySlugFromPath : undefined
+  const effectiveCitySlug = citySlug ?? (citySlugFromPath && !isMapSearch ? citySlugFromPath : undefined)
 
   const { data: territory } = useQuery({
     ...trpc.territories.getBySlug.queryOptions({
       type: 'ville' as const,
       slug: effectiveCitySlug!,
     }),
-    enabled: !!effectiveCitySlug,
+    enabled: !!effectiveCitySlug && !cityIdOverride,
   })
 
-  const cityId = effectiveCitySlug ? territory?.id : undefined
+  const cityId = cityIdOverride ?? (effectiveCitySlug ? territory?.id : undefined)
 
   return useQuery({
     ...trpc.accommodations.list.queryOptions({
