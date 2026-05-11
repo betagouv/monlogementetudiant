@@ -4,8 +4,19 @@ import * as XLSX from 'xlsx'
 import { closeDb, db } from '~/server/db'
 import { accommodations, externalSources, owners } from '~/server/db/schema'
 import { generateSlug } from '~/server/trpc/utils/accommodation-helpers'
-
-type TypoCategory = 't1' | 't1bis' | 't2' | 't3' | 't4' | 't5' | 't6' | 't7more'
+import {
+  buildDisplaySourceId,
+  buildMatchSourceId,
+  CATEGORIES,
+  cleanNumber,
+  getDuplicatedUairnes,
+  getSheet,
+  mapTypologie,
+  maxValue,
+  minValue,
+  normalizeText,
+  type TypoCategory,
+} from '../lib/crous-helpers'
 
 type CrousResidenceRow = {
   code_crous?: number
@@ -40,6 +51,7 @@ type ExpectedResidence = {
   codeCrous: number | null
   codeResidence: number
   name: string
+  normalizedName: string
   typologies: Map<TypoCategory, Bounds>
 }
 
@@ -73,8 +85,6 @@ type Options = {
   exitCode?: boolean
 }
 
-const CATEGORIES: TypoCategory[] = ['t1', 't1bis', 't2', 't3', 't4', 't5', 't6', 't7more']
-
 const DB_FIELDS: Record<
   TypoCategory,
   {
@@ -99,27 +109,9 @@ const DB_FIELDS: Record<
   },
 }
 
-function normalizeText(value: string): string {
-  return value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-zA-Z0-9]+/g, ' ')
-    .trim()
-    .toLowerCase()
-}
-
 function formatValue(value: number | string | null | undefined): string {
   if (value == null || value === '') return '-'
   return String(value)
-}
-
-function cleanNumber(value: unknown): number | null {
-  if (typeof value === 'number' && Number.isFinite(value) && value > 0) return Math.round(value)
-  if (typeof value !== 'string') return null
-
-  const parsed = Number.parseFloat(value.replace(',', '.'))
-  if (!Number.isFinite(parsed) || parsed <= 0) return null
-  return Math.round(parsed)
 }
 
 function titleCaseLikeSql(value: string): string {
@@ -137,8 +129,8 @@ function titleCaseLikeSql(value: string): string {
     .replace(/(^|\s)(Sur)(\s|$)/g, '$1sur$3')
     .replace(/(^|\s)(Et)(\s|$)/g, '$1et$3')
     .replace(/(^|\s)(Pour)(\s|$)/g, '$1pour$3')
-    .replace(/(^|\s)(L)(['’])/g, '$1l$3')
-    .replace(/(^|\s)(D)(['’])/g, '$1d$3')
+    .replace(/(^|\s)(L)([''])/g, '$1l$3')
+    .replace(/(^|\s)(D)([''])/g, '$1d$3')
     .replace(/\s+/g, ' ')
     .trim()
 }
@@ -147,7 +139,7 @@ function applyResidenceSqlNameNormalization(name: string): string | null {
   const trimmed = name.trim()
   if (!/^r[eé]sidences?\s/i.test(trimmed)) return null
 
-  const keepResidence = /^r[eé]sidences?\s+(le|la|les|du|de|des|en|l['’]|d['’])(\s|$)/i.test(trimmed)
+  const keepResidence = /^r[eé]sidences?\s+(le|la|les|du|de|des|en|l['']|d[''])(\s|$)/i.test(trimmed)
   const body = trimmed.replace(/^r[eé]sidences?\s+/i, '')
   const pretty = titleCaseLikeSql(body)
 
@@ -159,18 +151,6 @@ function isResidenceSqlNameDiff(fileName: string, dbName: string): boolean {
   return normalized != null && normalizeText(normalized) === normalizeText(dbName)
 }
 
-function mapTypologie(typologie: string | undefined): TypoCategory {
-  const value = (typologie ?? '').trim().toUpperCase()
-  if (value === 'APT1BIS' || value === 'APT1BIS+') return 't1bis'
-  if (value === 'APT2' || value === 'APT2+') return 't2'
-  if (value === 'APT3' || value === 'APT3+') return 't3'
-  if (value === 'APT4' || value === 'APT4+') return 't4'
-  if (value === 'APT5' || value === 'APT5+') return 't5'
-  if (value === 'APT6' || value === 'APT6+') return 't6'
-  if (value === 'APT7' || value === 'APT7+') return 't7more'
-  return 't1'
-}
-
 function mergeBounds(current: Bounds | undefined, next: Bounds): Bounds {
   return {
     loyerMin: minValue(current?.loyerMin, next.loyerMin),
@@ -178,46 +158,6 @@ function mergeBounds(current: Bounds | undefined, next: Bounds): Bounds {
     surfaceMin: minValue(current?.surfaceMin, next.surfaceMin),
     surfaceMax: maxValue(current?.surfaceMax, next.surfaceMax),
   }
-}
-
-function minValue(a: number | null | undefined, b: number | null): number | null {
-  const values = [a, b].filter((value): value is number => value != null)
-  return values.length > 0 ? Math.min(...values) : null
-}
-
-function maxValue(a: number | null | undefined, b: number | null): number | null {
-  const values = [a, b].filter((value): value is number => value != null)
-  return values.length > 0 ? Math.max(...values) : null
-}
-
-function buildDisplaySourceId(row: CrousResidenceRow): string {
-  const uairne = row.uairne?.trim()
-  if (uairne) return uairne
-  return `${row.code_crous}-${row.code_residence}`
-}
-
-function buildMatchSourceId(row: CrousResidenceRow, duplicatedUairnes: Set<string>): string {
-  const uairne = row.uairne?.trim()
-  if (uairne && !duplicatedUairnes.has(uairne)) return uairne
-  return `${row.code_crous}-${row.code_residence}`
-}
-
-function getDuplicatedUairnes(rows: CrousResidenceRow[]): Set<string> {
-  const counts = new Map<string, number>()
-  for (const row of rows) {
-    const uairne = row.uairne?.trim()
-    if (uairne) counts.set(uairne, (counts.get(uairne) ?? 0) + 1)
-  }
-  return new Set([...counts.entries()].filter(([, count]) => count > 1).map(([uairne]) => uairne))
-}
-
-function getSheet(workbook: XLSX.WorkBook, name: string, fallbackIndex: number): XLSX.WorkSheet {
-  const normalizedName = normalizeText(name)
-  const sheetName =
-    workbook.SheetNames.find((candidate) => normalizeText(candidate) === normalizedName) ?? workbook.SheetNames[fallbackIndex]
-  const sheet = workbook.Sheets[sheetName]
-  if (!sheet) throw new Error(`Onglet XLSX introuvable: ${name}`)
-  return sheet
 }
 
 function loadExpectedResidences(filePath: string, limit?: number): ExpectedResidence[] {
@@ -252,15 +192,19 @@ function loadExpectedResidences(filePath: string, limit?: number): ExpectedResid
       (row): row is CrousResidenceRow & { code_residence: number; nom_residence: string } => !!row.code_residence && !!row.nom_residence,
     )
     .slice(0, limit)
-    .map((row) => ({
-      sourceId: buildDisplaySourceId(row),
-      matchSourceId: buildMatchSourceId(row, duplicatedUairnes),
-      hasDuplicatedSourceId: !!row.uairne?.trim() && duplicatedUairnes.has(row.uairne.trim()),
-      codeCrous: row.code_crous ?? null,
-      codeResidence: row.code_residence,
-      name: row.nom_residence.trim(),
-      typologies: typologiesByResidence.get(`${row.code_crous ?? ''}:${row.code_residence}`) ?? new Map(),
-    }))
+    .map((row) => {
+      const name = row.nom_residence.trim()
+      return {
+        sourceId: buildDisplaySourceId(row),
+        matchSourceId: buildMatchSourceId(row, duplicatedUairnes),
+        hasDuplicatedSourceId: !!row.uairne?.trim() && duplicatedUairnes.has(row.uairne.trim()),
+        codeCrous: row.code_crous ?? null,
+        codeResidence: row.code_residence,
+        name,
+        normalizedName: normalizeText(name),
+        typologies: typologiesByResidence.get(`${row.code_crous ?? ''}:${row.code_residence}`) ?? new Map(),
+      }
+    })
 }
 
 function getDbTypologies(row: typeof accommodations.$inferSelect): Map<TypoCategory, Bounds> {
@@ -335,16 +279,7 @@ function compareResidence(expected: ExpectedResidence, actual: DbResidence | nul
 
   for (const category of actualCategories) {
     if (!expectedCategories.has(category)) {
-      differences.push({
-        status: 'different',
-        sourceId: expected.sourceId,
-        dbId: actual.id,
-        dbSlug: actual.slug,
-        residence: expected.name,
-        field: `${category}.typologie`,
-        fileValue: 'absente',
-        dbValue: 'presente',
-      })
+      pushDifference(differences, expected, actual, `${category}.typologie`, 'absente', 'presente')
     }
   }
 
@@ -402,7 +337,7 @@ function printReport(differences: Difference[], verbose: boolean) {
 
 async function loadDbResidences(ownerNameOrSlug: string): Promise<DbResidence[]> {
   const [owner] = await db
-    .select({ id: owners.id, name: owners.name, slug: owners.slug })
+    .select({ id: owners.id })
     .from(owners)
     .where(or(eq(sql`lower(${owners.slug})`, ownerNameOrSlug.toLowerCase()), eq(sql`lower(${owners.name})`, ownerNameOrSlug.toLowerCase())))
     .limit(1)
@@ -439,9 +374,10 @@ export async function compareCrous(filePath: string, options: Options) {
     for (const residence of dbResidences) {
       if (residence.sourceId) bySourceId.set(residence.sourceId, residence)
       if (residence.externalReference) bySourceId.set(residence.externalReference, residence)
-
       const normalizedName = normalizeText(residence.name)
-      byName.set(normalizedName, [...(byName.get(normalizedName) ?? []), residence])
+      const existing = byName.get(normalizedName)
+      if (existing) existing.push(residence)
+      else byName.set(normalizedName, [residence])
       bySlug.set(residence.slug, residence)
     }
 
@@ -450,7 +386,7 @@ export async function compareCrous(filePath: string, options: Options) {
 
     for (const expected of expectedResidences) {
       const bySource = bySourceId.get(expected.matchSourceId)
-      const nameMatches = byName.get(normalizeText(expected.name)) ?? []
+      const nameMatches = byName.get(expected.normalizedName) ?? []
       const byExpectedSlug = bySlug.get(generateSlug(expected.name))
       const byUniqueName = nameMatches.length === 1 ? nameMatches[0] : null
       const actual = expected.hasDuplicatedSourceId ? (byUniqueName ?? byExpectedSlug ?? bySource ?? null) : (bySource ?? byUniqueName)
