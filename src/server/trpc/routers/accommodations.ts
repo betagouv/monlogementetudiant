@@ -105,7 +105,7 @@ const applyCommonListFilters = async (conditions: SQL[], input: TCommonListFilte
     conditions.push(sql`(${sql.join(orAvailable, sql` OR `)})`)
   }
 
-  if (priceMax) {
+  if (priceMax != null) {
     conditions.push(sql`${accommodations.priceMin} IS NOT NULL AND ${accommodations.priceMin} <= ${priceMax}`)
   }
 
