@@ -18,7 +18,7 @@ export const ConsultOfferButton = ({ href, slug, priority = 'tertiary' }: Consul
   const handleClick = () => {
     trackEvent({ category: 'Logement', action: 'consulter offre', name: slug })
     if (slug) {
-      void trpcClient.tracking.logConsultOffer.mutate({ accommodationSlug: slug }).catch(() => undefined)
+      trpcClient.tracking.logConsultOffer.mutate({ accommodationSlug: slug }).catch(() => undefined)
     }
   }
 

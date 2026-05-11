@@ -46,7 +46,7 @@ export default function JournauxPage() {
               <button
                 type="button"
                 className={!qs.action ? statStyles.dateRangePresetActive : statStyles.dateRangePreset}
-                onClick={() => void setQs({ action: null, page: 1 })}
+                onClick={() => setQs({ action: null, page: 1 })}
               >
                 Toutes
               </button>
@@ -55,7 +55,7 @@ export default function JournauxPage() {
                   key={action}
                   type="button"
                   className={qs.action === action ? statStyles.dateRangePresetActive : statStyles.dateRangePreset}
-                  onClick={() => void setQs({ action: qs.action === action ? null : action, page: 1 })}
+                  onClick={() => setQs({ action: qs.action === action ? null : action, page: 1 })}
                 >
                   {ACTION_LABELS[action] ?? action}
                 </button>
@@ -91,7 +91,7 @@ export default function JournauxPage() {
                     href: '#',
                     onClick: (e: React.MouseEvent) => {
                       e.preventDefault()
-                      void setQs({ page: p })
+                      setQs({ page: p })
                     },
                   })}
                 />

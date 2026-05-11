@@ -11,7 +11,7 @@ export function AccommodationViewTracker({ accommodationId }: { accommodationId:
     if (trackedRef.current) return
     trackedRef.current = true
 
-    void trpcClient.tracking.logAccommodationView
+    trpcClient.tracking.logAccommodationView
       .mutate({
         accommodationId,
         referer: document.referrer || undefined,

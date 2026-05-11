@@ -31,9 +31,9 @@ export const FindStudentAccomodationAutocompleteResults: FC<FindStudentAccomodat
 
   const trackTerritorySelection = (categoryKey: keyof TTerritories, item: TTerritory) => {
     if (categoryKey === 'cities') {
-      void trpcClient.tracking.logSearch.mutate({ type: 'city', id: item.id }).catch(() => undefined)
+      trpcClient.tracking.logSearch.mutate({ type: 'city', id: item.id }).catch(() => undefined)
     } else if (categoryKey === 'departments') {
-      void trpcClient.tracking.logSearch.mutate({ type: 'department', id: item.id }).catch(() => undefined)
+      trpcClient.tracking.logSearch.mutate({ type: 'department', id: item.id }).catch(() => undefined)
     }
   }
 
