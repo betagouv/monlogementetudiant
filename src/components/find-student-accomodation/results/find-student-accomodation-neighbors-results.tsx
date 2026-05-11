@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
-import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
+import { parseAsBoolean, parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
 import { FC } from 'react'
 import { AccomodationCard } from '~/components/find-student-accomodation/card/find-student-accomodation-card'
 import { CardSkeleton } from '~/components/ui/skeleton/card-skeleton'
@@ -32,10 +32,10 @@ export const FindStudentAccomodationNeighborsResults: FC<FindStudentAccomodation
   const trpc = useTRPC()
   const [queryStates] = useQueryStates({
     prix: parseAsInteger,
-    accessible: parseAsString,
-    colocation: parseAsString,
-    crous: parseAsString,
-    disponible: parseAsString,
+    accessible: parseAsBoolean,
+    colocation: parseAsBoolean,
+    crous: parseAsBoolean,
+    disponible: parseAsBoolean,
     gestionnaire: parseAsString,
   })
 
@@ -48,10 +48,10 @@ export const FindStudentAccomodationNeighborsResults: FC<FindStudentAccomodation
       radius: EXPANDED_SEARCH_RADIUS_KM,
       page: 1,
       pageSize: EXPANDED_SEARCH_PAGE_SIZE,
-      isAccessible: queryStates.accessible === 'true' ? true : undefined,
-      hasColiving: queryStates.colocation === 'true' ? true : undefined,
-      onlyWithAvailability: queryStates.disponible === 'true' ? true : undefined,
-      viewCrous: queryStates.crous === 'true',
+      isAccessible: queryStates.accessible || undefined,
+      hasColiving: queryStates.colocation || undefined,
+      onlyWithAvailability: queryStates.disponible || undefined,
+      viewCrous: !!queryStates.crous,
       ownerSlug: queryStates.gestionnaire ?? undefined,
       priceMax: expandedPriceMax,
       excludeIds: mainAccommodationIds,

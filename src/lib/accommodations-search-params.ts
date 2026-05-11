@@ -1,15 +1,15 @@
-import { createSearchParamsCache, parseAsInteger, parseAsString } from 'nuqs/server'
+import { createSearchParamsCache, parseAsBoolean, parseAsInteger, parseAsString } from 'nuqs/server'
 
 export const accommodationsParsers = {
   academie: parseAsString,
-  accessible: parseAsString,
+  accessible: parseAsBoolean,
   bbox: parseAsString,
-  colocation: parseAsString,
-  disponible: parseAsString,
+  colocation: parseAsBoolean,
+  disponible: parseAsBoolean,
   gestionnaire: parseAsString,
   page: parseAsInteger,
   prix: parseAsInteger,
-  crous: parseAsString,
+  crous: parseAsBoolean,
 }
 
 export const accommodationsSearchParamsCache = createSearchParamsCache(accommodationsParsers)

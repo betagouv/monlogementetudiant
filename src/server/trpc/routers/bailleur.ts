@@ -18,7 +18,6 @@ import { dossierFacileApplications, dossierFacileDocuments, dossierFacileTenants
 import { owners } from '~/server/db/schema/owners'
 import { classifyActions, computeDiff } from '~/server/services/accommodation-diff'
 import { logActivity } from '~/server/services/activity-logger'
-import { notifyAccommodationCreated, notifyAccommodationUpdated } from '~/server/services/mattermost'
 import { computeDerivedFields, generateSlug, geocodeAddress } from '~/server/trpc/utils/accommodation-helpers'
 import { AVAILABILITY_FIELD_MAP, mapFields, UPDATE_FIELD_MAP } from '~/server/trpc/utils/field-mapping'
 import { resolveCityId } from '~/server/trpc/utils/resolve-city'
@@ -415,7 +414,6 @@ export const bailleurRouter = createTRPCRouter({
       )
       await db.insert(accommodationAddresses).values(resolved)
 
-      notifyAccommodationCreated(created.name, owner.name, created.slug, ctx.session.user.name)
       await logActivity({
         userId: ctx.session.user.id,
         userName: ctx.session.user.name,
@@ -508,7 +506,6 @@ export const bailleurRouter = createTRPCRouter({
 
       if (snapshot) {
         const diff = computeDiff(snapshot as Record<string, unknown>, camelFields, userProvidedKeys)
-        notifyAccommodationUpdated(updated.name, owner?.name ?? '-', updated.slug, ctx.session.user.name, diff)
         for (const { action, diff: actionDiff } of classifyActions(diff)) {
           await logActivity({
             userId: ctx.session.user.id,
@@ -551,7 +548,6 @@ export const bailleurRouter = createTRPCRouter({
       if (snapshot) {
         const userKeys = new Set(Object.keys(camelFields))
         const diff = computeDiff(snapshot as Record<string, unknown>, setFields, userKeys)
-        notifyAccommodationUpdated(updated.name, owner?.name ?? '-', updated.slug, ctx.session.user.name, diff)
         for (const { action, diff: actionDiff } of classifyActions(diff)) {
           await logActivity({
             userId: ctx.session.user.id,
