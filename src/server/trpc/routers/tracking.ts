@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { db } from '~/server/db'
 import { accommodationAddresses } from '~/server/db/schema/accommodation-addresses'
 import { accommodations } from '~/server/db/schema/accommodations'
-import { logTrackingEvent, TRACKING_DEDUPE } from '~/server/services/tracking-event-logger'
+import { logAccommodationView, logTrackingEvent, TRACKING_DEDUPE } from '~/server/services/tracking-event-logger'
 import { getOrCreateTrackingSessionId } from '~/server/services/tracking-session'
 import { baseProcedure, createTRPCRouter } from '../init'
 
@@ -24,6 +24,23 @@ export const trackingRouter = createTRPCRouter({
         userId: ctx.session?.user.id,
         sessionId,
         dedupeSeconds: TRACKING_DEDUPE.SEARCH_SECONDS,
+      })
+    }),
+
+  logAccommodationView: baseProcedure
+    .input(
+      z.object({
+        accommodationId: z.number().int().positive(),
+        referer: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const sessionId = await getOrCreateTrackingSessionId()
+      await logAccommodationView({
+        accommodationId: input.accommodationId,
+        userId: ctx.session?.user.id,
+        sessionId,
+        metadata: input.referer ? { referer: input.referer } : undefined,
       })
     }),
 

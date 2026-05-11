@@ -79,10 +79,10 @@ export const getStudentAccommodationPageContext = cache(
         cityId: serverCityId ?? undefined,
         page: parsedParams.page ?? 1,
         pageSize: 12,
-        isAccessible: parsedParams.accessible === 'true' ? true : undefined,
-        hasColiving: parsedParams.colocation === 'true' ? true : undefined,
+        isAccessible: parsedParams.accessible || undefined,
+        hasColiving: parsedParams.colocation || undefined,
         priceMax: parsedParams.prix ?? undefined,
-        viewCrous: parsedParams.crous === 'true' ? true : false,
+        viewCrous: !!parsedParams.crous,
         academyId: (serverAcademie ?? parsedParams.academie) ? Number(serverAcademie ?? parsedParams.academie) : undefined,
         ownerSlug: parsedParams.gestionnaire ?? undefined,
       }

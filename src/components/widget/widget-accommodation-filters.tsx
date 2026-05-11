@@ -3,7 +3,7 @@
 import Button from '@codegouvfr/react-dsfr/Button'
 import Input from '@codegouvfr/react-dsfr/Input'
 import { useTranslations } from 'next-intl'
-import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
+import { parseAsBoolean, parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
 import { FC, useState } from 'react'
 import { tss } from 'tss-react'
 import { FindStudentAccessibleAccomodationSwitch } from '~/components/find-student-accomodation/header/find-student-accessible-accomodation-switch'
@@ -33,12 +33,12 @@ export const WidgetAccommodationFilters: FC<WidgetAccommodationFiltersProps> = (
   const [showResults, setShowResults] = useState(false)
 
   const [{ accessible, colocation }] = useQueryStates({
-    accessible: parseAsString,
-    colocation: parseAsString,
+    accessible: parseAsBoolean,
+    colocation: parseAsBoolean,
   })
 
   const hasAdvancedFilters = visibleFilters.includes('accessible') || visibleFilters.includes('colocation')
-  const [showAdvanced, setShowAdvanced] = useState(() => accessible === 'true' || colocation === 'true')
+  const [showAdvanced, setShowAdvanced] = useState(() => !!accessible || !!colocation)
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value)

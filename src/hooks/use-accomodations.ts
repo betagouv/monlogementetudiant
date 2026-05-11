@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { usePathname } from 'next/navigation'
-import { parseAsString, useQueryState, useQueryStates } from 'nuqs'
+import { parseAsBoolean, useQueryState, useQueryStates } from 'nuqs'
 import { accommodationsParsers } from '~/lib/accommodations-search-params'
 import { useTRPC } from '~/server/trpc/client'
 
@@ -13,7 +13,7 @@ interface UseAccomodationsOptions {
 export const useAccomodations = ({ cityId: cityIdOverride, citySlug, pageSize }: UseAccomodationsOptions = {}) => {
   const [queryStates] = useQueryStates(accommodationsParsers)
   const { bbox, academie, accessible, colocation, disponible, gestionnaire, page, prix, crous } = queryStates
-  const [rechercheParCarte] = useQueryState('recherche-par-carte', parseAsString)
+  const [rechercheParCarte] = useQueryState('recherche-par-carte', parseAsBoolean)
   const trpc = useTRPC()
 
   const pathname = usePathname()
@@ -21,7 +21,7 @@ export const useAccomodations = ({ cityId: cityIdOverride, citySlug, pageSize }:
   const villeIndex = pathSegments.indexOf('ville')
   const citySlugFromPath = villeIndex !== -1 ? decodeURIComponent(pathSegments[villeIndex + 1] ?? '') || undefined : undefined
 
-  const isMapSearch = rechercheParCarte === 'true'
+  const isMapSearch = !!rechercheParCarte
   const effectiveCitySlug = citySlug ?? (citySlugFromPath && !isMapSearch ? citySlugFromPath : undefined)
 
   const { data: territory } = useQuery({
@@ -40,11 +40,11 @@ export const useAccomodations = ({ cityId: cityIdOverride, citySlug, pageSize }:
       cityId,
       page: page ?? 1,
       pageSize: pageSize ?? 12,
-      isAccessible: accessible === 'true' ? true : undefined,
-      hasColiving: colocation === 'true' ? true : undefined,
-      onlyWithAvailability: disponible === 'true' ? true : undefined,
+      isAccessible: accessible || undefined,
+      hasColiving: colocation || undefined,
+      onlyWithAvailability: disponible || undefined,
       priceMax: prix ?? undefined,
-      viewCrous: crous === 'true' ? true : false,
+      viewCrous: !!crous,
       academyId: academie ? Number(academie) : undefined,
       ownerSlug: gestionnaire ?? undefined,
     }),

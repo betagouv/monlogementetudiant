@@ -6,7 +6,7 @@ import clsx from 'clsx'
 import dynamic from 'next/dynamic'
 import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
+import { parseAsBoolean, parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
 import { FC, Suspense, useEffect, useMemo } from 'react'
 import { tss } from 'tss-react'
 import { AccomodationCard } from '~/components/find-student-accomodation/card/find-student-accomodation-card'
@@ -56,11 +56,11 @@ export const FindStudentAccomodationResultsContent: FC<FindStudentAccomodationRe
     page: parseAsInteger,
     bbox: parseAsString,
     prix: parseAsInteger,
-    accessible: parseAsString,
-    colocation: parseAsString,
-    crous: parseAsString,
-    disponible: parseAsString,
-    ['recherche-par-carte']: parseAsString,
+    accessible: parseAsBoolean,
+    colocation: parseAsBoolean,
+    crous: parseAsBoolean,
+    disponible: parseAsBoolean,
+    ['recherche-par-carte']: parseAsBoolean,
   })
 
   useEffect(() => {
@@ -118,7 +118,7 @@ export const FindStudentAccomodationResultsContent: FC<FindStudentAccomodationRe
                   const params = new URLSearchParams()
                   if (queryStates.vue) params.set('vue', queryStates.vue)
 
-                  const hasMapInteraction = queryStates['recherche-par-carte'] === 'true'
+                  const hasMapInteraction = !!queryStates['recherche-par-carte']
                   if (hasMapInteraction && queryStates.bbox) {
                     params.set('bbox', queryStates.bbox)
                     params.set('recherche-par-carte', 'true')
@@ -129,19 +129,19 @@ export const FindStudentAccomodationResultsContent: FC<FindStudentAccomodationRe
                   }
 
                   if (queryStates.accessible) {
-                    params.set('accessible', queryStates.accessible)
+                    params.set('accessible', 'true')
                   }
                   if (queryStates.colocation) {
-                    params.set('colocation', queryStates.colocation)
+                    params.set('colocation', 'true')
                   }
                   if (queryStates.prix) {
                     params.set('prix', queryStates.prix.toString())
                   }
                   if (queryStates.crous) {
-                    params.set('crous', queryStates.crous.toString())
+                    params.set('crous', 'true')
                   }
                   if (queryStates.disponible) {
-                    params.set('disponible', queryStates.disponible)
+                    params.set('disponible', 'true')
                   }
                   params.set('page', page.toString())
                   return {
