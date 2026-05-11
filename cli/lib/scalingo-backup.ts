@@ -3,6 +3,7 @@ import { mkdir } from 'fs/promises'
 import path from 'path'
 import { Readable } from 'stream'
 import { pipeline } from 'stream/promises'
+import { env } from '~/server/env'
 
 interface Backup {
   id: string
@@ -21,10 +22,7 @@ export class ScalingoBackupService {
   private readonly region: string
 
   constructor() {
-    const apiToken = process.env.SCALINGO_API_TOKEN
-    const appName = process.env.SCALINGO_APP
-    const addonId = process.env.SCALINGO_DB_ADDON_ID
-    const region = process.env.SCALINGO_REGION || 'osc-secnum-fr1'
+    const { SCALINGO_API_TOKEN: apiToken, SCALINGO_APP: appName, SCALINGO_DB_ADDON_ID: addonId, SCALINGO_REGION: region } = env
 
     if (!apiToken || !appName || !addonId) {
       throw new Error('Missing required env vars: SCALINGO_API_TOKEN, SCALINGO_APP, SCALINGO_DB_ADDON_ID')

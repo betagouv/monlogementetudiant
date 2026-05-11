@@ -1,8 +1,8 @@
 import type { MetadataRoute } from 'next'
-import { z } from 'zod'
+import { env } from '~/server/env'
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = z.string().parse(process.env.BASE_URL)
+  const baseUrl = env.BASE_URL
 
   return {
     rules: [

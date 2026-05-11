@@ -2,6 +2,7 @@ import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { and, eq, sql } from 'drizzle-orm'
 import { db } from '~/server/db'
+import { env } from '~/server/env'
 import { ensureCity, geocodeAddress, reverseGeocode } from '~/server/lib/import/geocoder'
 import { ZUpdateResidence } from '../../src/schemas/accommodations/update-residence'
 import { accommodationAddresses, accommodations, externalSources } from '../../src/server/db/schema'
@@ -49,7 +50,7 @@ async function processImages(picturesRaw: string, verbose?: boolean): Promise<st
     .filter((u) => u !== '' && (u.startsWith('http://') || u.startsWith('https://')))
 
   const result: string[] = []
-  const bucket = process.env.S3_BUCKET ?? ''
+  const bucket = env.S3_BUCKET
 
   for (const url of urls) {
     try {

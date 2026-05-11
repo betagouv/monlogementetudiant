@@ -1,6 +1,7 @@
 import { and, eq, sql } from 'drizzle-orm'
 import * as XLSX from 'xlsx'
 import { db } from '~/server/db'
+import { env } from '~/server/env'
 import { ensureCity, reverseGeocode } from '~/server/lib/import/geocoder'
 import { sanitizeHTML } from '~/utils/sanitize-html'
 import { accommodationAddresses, accommodations, externalSources } from '../../src/server/db/schema'
@@ -381,7 +382,7 @@ const command: ImportCommand = {
     }
 
     // Healthcheck
-    const baseUrl = process.env.BASE_URL
+    const baseUrl = env.BASE_URL
     if (baseUrl && processedEntries.length > 0 && !options.dryRun) {
       const failed = await healthCheck(processedEntries, baseUrl, options.verbose ?? false)
       if (failed.length > 0) {

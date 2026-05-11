@@ -1,7 +1,7 @@
-import { z } from 'zod'
+import { env } from '~/server/env'
 
 function getBaseUrl() {
-  return z.string().parse(process.env.BASE_URL)
+  return env.BASE_URL
 }
 
 export type BreadcrumbItem = {

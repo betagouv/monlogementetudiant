@@ -4,11 +4,12 @@ import { NextResponse } from 'next/server'
 import { ZWebhookBodySchema } from '~/schemas/dossier-facile/dossier-facile-webhook'
 import { db } from '~/server/db'
 import { dossierFacileDocuments, dossierFacileTenants } from '~/server/db/schema'
+import { env } from '~/server/env'
 import { normalizeStatus } from '~/server/services/dossier-facile/sync'
 import { extractWebhookData } from '~/server/services/dossier-facile/webhook'
 
 export async function POST(request: Request) {
-  const apiKey = process.env.DOSSIERFACILE_WEBHOOK_API_KEY
+  const apiKey = env.DOSSIERFACILE_WEBHOOK_API_KEY
   if (!apiKey) {
     console.error('[DossierFacile Webhook] DOSSIERFACILE_WEBHOOK_API_KEY is not configured')
     return NextResponse.json({ error: 'Webhook not configured' }, { status: 500 })

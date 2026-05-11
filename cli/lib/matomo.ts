@@ -1,6 +1,8 @@
-const MATOMO_URL = process.env.MATOMO_URL!
-const MATOMO_TOKEN = process.env.MATOMO_TOKEN!
-const MATOMO_ID_SITE = process.env.MATOMO_ID_SITE!
+import { env } from '~/server/env'
+
+const MATOMO_URL = env.MATOMO_URL!
+const MATOMO_TOKEN = env.MATOMO_TOKEN!
+const MATOMO_ID_SITE = env.MATOMO_ID_SITE!
 
 interface MatomoParams {
   method: string

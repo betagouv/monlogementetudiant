@@ -1,7 +1,8 @@
-import { type TDossierFacileEnv, ZDossierFacileEnvSchema } from '~/schemas/dossier-facile/dossier-facile-env-var'
+import { z } from 'zod'
 import { type TConnectedTenant, ZConnectedTenantSchema } from '~/schemas/dossier-facile/dossier-facile-profile'
 import { db } from '~/server/db'
 import { dossierFacileTenants } from '~/server/db/schema'
+import { env } from '~/server/env'
 
 export class DossierFacileError extends Error {
   constructor(
@@ -13,8 +14,20 @@ export class DossierFacileError extends Error {
   }
 }
 
-export function validateDossierFacileConfig() {
-  const result = ZDossierFacileEnvSchema.safeParse(process.env)
+const ZDossierFacileConfig = z.object({
+  DOSSIERFACILE_CLIENT_ID: z.string().min(1),
+  DOSSIERFACILE_CLIENT_SECRET: z.string().min(1),
+  DOSSIERFACILE_AUTHORIZE_URL: z.string().min(1),
+  DOSSIERFACILE_TOKEN_URL: z.string().min(1),
+  DOSSIERFACILE_TENANT_PROFILE_URL: z.string().min(1),
+  DOSSIERFACILE_REDIRECT_URI: z.string().min(1),
+  DOSSIERFACILE_SCOPE: z.string(),
+})
+
+type TDossierFacileEnv = z.infer<typeof ZDossierFacileConfig>
+
+export function validateDossierFacileConfig(): TDossierFacileEnv {
+  const result = ZDossierFacileConfig.safeParse(env)
   if (!result.success) {
     const missing = result.error.issues.map((i) => i.path.join('.')).join(', ')
     throw new Error(`Missing/invalid DossierFacile env vars: ${missing}`)
@@ -23,25 +36,25 @@ export function validateDossierFacileConfig() {
 }
 
 export function buildDossierFacileAuthorizationUrl(state: string, loginHint?: string): string {
-  const env = validateDossierFacileConfig()
+  const dfConfig = validateDossierFacileConfig()
   const params = new URLSearchParams({
-    client_id: env.DOSSIERFACILE_CLIENT_ID,
+    client_id: dfConfig.DOSSIERFACILE_CLIENT_ID,
     response_type: 'code',
-    redirect_uri: env.DOSSIERFACILE_REDIRECT_URI,
-    scope: env.DOSSIERFACILE_SCOPE || 'openid',
+    redirect_uri: dfConfig.DOSSIERFACILE_REDIRECT_URI,
+    scope: dfConfig.DOSSIERFACILE_SCOPE || 'openid',
     state,
   })
   if (loginHint) {
     params.set('login_hint', loginHint)
   }
-  return `${env.DOSSIERFACILE_AUTHORIZE_URL}?${params.toString()}`
+  return `${dfConfig.DOSSIERFACILE_AUTHORIZE_URL}?${params.toString()}`
 }
 
-async function exchangeCodeForToken(env: TDossierFacileEnv, code: string): Promise<string> {
+async function exchangeCodeForToken(dfConfig: TDossierFacileEnv, code: string): Promise<string> {
   let response: Response
   try {
-    const credentials = btoa(`${env.DOSSIERFACILE_CLIENT_ID}:${env.DOSSIERFACILE_CLIENT_SECRET}`)
-    response = await fetch(env.DOSSIERFACILE_TOKEN_URL, {
+    const credentials = btoa(`${dfConfig.DOSSIERFACILE_CLIENT_ID}:${dfConfig.DOSSIERFACILE_CLIENT_SECRET}`)
+    response = await fetch(dfConfig.DOSSIERFACILE_TOKEN_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -50,7 +63,7 @@ async function exchangeCodeForToken(env: TDossierFacileEnv, code: string): Promi
       body: new URLSearchParams({
         grant_type: 'authorization_code',
         code,
-        redirect_uri: env.DOSSIERFACILE_REDIRECT_URI,
+        redirect_uri: dfConfig.DOSSIERFACILE_REDIRECT_URI,
       }),
     })
   } catch {
@@ -73,10 +86,10 @@ async function exchangeCodeForToken(env: TDossierFacileEnv, code: string): Promi
   return payload.access_token as string
 }
 
-async function getUserDossierFacile(env: TDossierFacileEnv, accessToken: string): Promise<TConnectedTenant> {
+async function getUserDossierFacile(dfConfig: TDossierFacileEnv, accessToken: string): Promise<TConnectedTenant> {
   let response: Response
   try {
-    response = await fetch(env.DOSSIERFACILE_TENANT_PROFILE_URL, {
+    response = await fetch(dfConfig.DOSSIERFACILE_TENANT_PROFILE_URL, {
       headers: { Authorization: `Bearer ${accessToken}` },
     })
   } catch {
@@ -172,8 +185,8 @@ export async function syncDossierFacileTenantFromCode(
   code: string,
   user: { firstname: string; lastname: string; email: string },
 ) {
-  const env = validateDossierFacileConfig()
-  const accessToken = await exchangeCodeForToken(env, code)
-  const profile = await getUserDossierFacile(env, accessToken)
+  const dfConfig = validateDossierFacileConfig()
+  const accessToken = await exchangeCodeForToken(dfConfig, code)
+  const profile = await getUserDossierFacile(dfConfig, accessToken)
   return syncDossierFacileTenantFromProfile(userId, profile, user)
 }
