@@ -2,6 +2,7 @@
   "name": "mle-client",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@11.0.9",
   "scripts": {
     "predev": "react-dsfr update-icons && cp node_modules/@codegouvfr/react-dsfr/dsfr/favicon/favicon.svg public/favicon.svg && cp node_modules/@codegouvfr/react-dsfr/dsfr/favicon/favicon.ico public/favicon.ico",
     "prebuild": "react-dsfr update-icons && cp node_modules/@codegouvfr/react-dsfr/dsfr/favicon/favicon.svg public/favicon.svg && cp node_modules/@codegouvfr/react-dsfr/dsfr/favicon/favicon.ico public/favicon.ico",

@@ -112,7 +112,7 @@ commands:
     steps:
       - run:
           name: 'Install pnpm'
-          command: sudo npm install -g pnpm
+          command: sudo corepack enable && corepack use pnpm@11.0.9
           
   install_dependencies:
     steps:
