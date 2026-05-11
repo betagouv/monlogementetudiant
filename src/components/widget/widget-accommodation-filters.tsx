@@ -2,11 +2,13 @@
 
 import Button from '@codegouvfr/react-dsfr/Button'
 import Input from '@codegouvfr/react-dsfr/Input'
+import { createModal } from '@codegouvfr/react-dsfr/Modal'
 import { useTranslations } from 'next-intl'
 import { parseAsBoolean, parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
 import { FC, useState } from 'react'
 import { tss } from 'tss-react'
 import { FindStudentAccessibleAccomodationSwitch } from '~/components/find-student-accomodation/header/find-student-accessible-accomodation-switch'
+import { FindStudentAccommodationActiveFilters } from '~/components/find-student-accomodation/header/find-student-accommodation-active-filters'
 import { FindStudentAccommodationAvailabilitySwitch } from '~/components/find-student-accomodation/header/find-student-accommodation-availability-switch'
 import { FindStudentAccommodationCrousFilter } from '~/components/find-student-accomodation/header/find-student-accommodation-crous-filter'
 import { FindStudentAccommodationPrice } from '~/components/find-student-accomodation/header/find-student-accommodation-price'
@@ -14,6 +16,11 @@ import { FindStudentColivingAccomodationSwitch } from '~/components/find-student
 import { WidgetFilterKey } from '~/components/widget/widget-filters'
 import { useSearchCities } from '~/hooks/use-search-cities'
 import { TCity } from '~/schemas/territories'
+
+const widgetMobileFiltersModal = createModal({
+  id: 'widget-mobile-filters-modal',
+  isOpenedByDefault: false,
+})
 
 type WidgetAccommodationFiltersProps = {
   initialCity?: string
@@ -24,7 +31,7 @@ type WidgetAccommodationFiltersProps = {
 export const WidgetAccommodationFilters: FC<WidgetAccommodationFiltersProps> = ({ initialCity, showLocationInput, visibleFilters }) => {
   const t = useTranslations('findAccomodation')
   const tHeader = useTranslations('findAccomodation.header')
-  const { classes } = useStyles()
+  const { classes, cx } = useStyles()
   const [, setLocationQueryStates] = useQueryStates({
     city: parseAsString,
     page: parseAsInteger,
@@ -52,57 +59,85 @@ export const WidgetAccommodationFilters: FC<WidgetAccommodationFiltersProps> = (
     setShowResults(false)
   }
 
-  return (
-    <div className={classes.container}>
-      <div className={classes.mainRow}>
-        {showLocationInput && visibleFilters.includes('ville') && (
-          <div className={classes.locationCell}>
-            <Input
-              classes={{ root: classes.input }}
-              label={t('header.inputLabel')}
-              iconId="ri-map-pin-2-line"
-              nativeInputProps={{
-                onChange: handleInputChange,
-                onFocus: () => {
-                  setShowResults(true)
-                  setSearchQuery('')
-                  setSearchQueryState('')
-                },
-                value: searchQuery || initialCity || '',
-                placeholder: t('header.inputLabel'),
-              }}
-              state={isError ? 'error' : 'default'}
-            />
-            {showResults && cities && cities.length > 0 && !searchQueryState && (
-              <div className={classes.dropdown}>
-                <ul className={classes.list}>
-                  {cities.map((city) => (
-                    <li key={city.id} className={classes.dropdownItem} onClick={() => handleCitySelect(city)}>
-                      {city.name} {city.department_code ? `(${city.department_code})` : ''}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        )}
-        {visibleFilters.includes('disponibilites') && <FindStudentAccommodationAvailabilitySwitch widget />}
-        {visibleFilters.includes('prix') && <FindStudentAccommodationPrice pageSize={6} widget />}
-        {visibleFilters.includes('crous') && <FindStudentAccommodationCrousFilter />}
-        {hasAdvancedFilters && (
-          <Button className={classes.toggleButton} priority="tertiary" onClick={() => setShowAdvanced((v) => !v)}>
-            {showAdvanced ? tHeader('advancedFiltersHide') : tHeader('advancedFiltersShow')}
-          </Button>
-        )}
-      </div>
+  const showVilleInput = showLocationInput && visibleFilters.includes('ville')
 
-      {hasAdvancedFilters && showAdvanced && (
-        <div className={classes.advancedRow}>
-          {visibleFilters.includes('accessible') && <FindStudentAccessibleAccomodationSwitch widget />}
-          {visibleFilters.includes('colocation') && <FindStudentColivingAccomodationSwitch widget />}
+  const locationInputContent = showVilleInput ? (
+    <div className={classes.locationCell}>
+      <Input
+        classes={{ root: classes.input }}
+        label={t('header.inputLabel')}
+        iconId="ri-map-pin-2-line"
+        nativeInputProps={{
+          onChange: handleInputChange,
+          onFocus: () => {
+            setShowResults(true)
+            setSearchQuery('')
+            setSearchQueryState('')
+          },
+          value: searchQuery || initialCity || '',
+          placeholder: t('header.inputLabel'),
+        }}
+        state={isError ? 'error' : 'default'}
+      />
+      {showResults && cities && cities.length > 0 && !searchQueryState && (
+        <div className={classes.dropdown}>
+          <ul className={classes.list}>
+            {cities.map((city) => (
+              <li key={city.id} className={classes.dropdownItem} onClick={() => handleCitySelect(city)}>
+                {city.name} {city.department_code ? `(${city.department_code})` : ''}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>
+  ) : null
+
+  return (
+    <>
+      {/* Desktop */}
+      <div className={cx(classes.container, 'fr-hidden fr-unhidden-md')}>
+        <div className={classes.mainRow}>
+          {locationInputContent}
+          {visibleFilters.includes('disponibilites') && <FindStudentAccommodationAvailabilitySwitch widget />}
+          {visibleFilters.includes('prix') && <FindStudentAccommodationPrice pageSize={6} widget />}
+          {visibleFilters.includes('crous') && <FindStudentAccommodationCrousFilter />}
+          {hasAdvancedFilters && (
+            <Button className={classes.toggleButton} priority="tertiary" onClick={() => setShowAdvanced((v) => !v)}>
+              {showAdvanced ? tHeader('advancedFiltersHide') : tHeader('advancedFiltersShow')}
+            </Button>
+          )}
+        </div>
+
+        {hasAdvancedFilters && showAdvanced && (
+          <div className={classes.advancedRow}>
+            {visibleFilters.includes('accessible') && <FindStudentAccessibleAccomodationSwitch widget />}
+            {visibleFilters.includes('colocation') && <FindStudentColivingAccomodationSwitch widget />}
+          </div>
+        )}
+      </div>
+
+      {/* Mobile */}
+      <div className={cx(classes.mobileContainer, 'fr-hidden-md')}>
+        <div className={cx(classes.mobileRow, !showVilleInput && classes.mobileRowNoInput)}>
+          {locationInputContent}
+          <Button iconId="ri-equalizer-line" priority="secondary" title={tHeader('filtersCta')} {...widgetMobileFiltersModal.buttonProps} />
+        </div>
+        <FindStudentAccommodationActiveFilters />
+        <widgetMobileFiltersModal.Component
+          title={tHeader('filtersCta')}
+          buttons={[{ children: tHeader('applyFilters'), onClick: () => widgetMobileFiltersModal.close() }]}
+        >
+          <div className={classes.modalFilters}>
+            {visibleFilters.includes('crous') && <FindStudentAccommodationCrousFilter />}
+            {visibleFilters.includes('disponibilites') && <FindStudentAccommodationAvailabilitySwitch />}
+            {visibleFilters.includes('prix') && <FindStudentAccommodationPrice />}
+            {visibleFilters.includes('accessible') && <FindStudentAccessibleAccomodationSwitch />}
+            {visibleFilters.includes('colocation') && <FindStudentColivingAccomodationSwitch />}
+          </div>
+        </widgetMobileFiltersModal.Component>
+      </div>
+    </>
   )
 }
 
@@ -160,5 +195,31 @@ const useStyles = tss.create({
     borderBottom: '1px solid #e0e0e0',
     cursor: 'pointer',
     padding: '8px',
+  },
+  mobileContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    marginBottom: '1rem',
+  },
+  mobileRow: {
+    alignItems: 'flex-end',
+    display: 'flex',
+    gap: '0.5rem',
+    '& > :first-child': {
+      flex: 1,
+      minWidth: 0,
+    },
+  },
+  mobileRowNoInput: {
+    justifyContent: 'flex-start',
+    '& > :first-child': {
+      flex: 'unset',
+    },
+  },
+  modalFilters: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '2rem',
   },
 })
