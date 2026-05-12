@@ -23,9 +23,13 @@ const LOWERCASE_WORDS = ['des', 'de', 'du', 'en', 'les', 'la', 'le', 'aux', 'sur
 
 const APOSTROPHES = "['’]"
 
+const ROMAN_NUMERAL = /^[IVXLCDM]+$/
+
 function initcap(input: string): string {
-  return input.toLowerCase().replace(/[\p{L}\p{N}]+/gu, (word) => {
-    const [first, ...rest] = [...word]
+  return input.replace(/[\p{L}\p{N}]+/gu, (word) => {
+    if (ROMAN_NUMERAL.test(word) && word === word.toUpperCase()) return word
+    const lower = word.toLowerCase()
+    const [first, ...rest] = [...lower]
     return first.toUpperCase() + rest.join('')
   })
 }

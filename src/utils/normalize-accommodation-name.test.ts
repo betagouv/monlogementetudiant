@@ -210,6 +210,25 @@ describe('normalizeAccommodationName', () => {
     })
   })
 
+  describe('chiffres romains', () => {
+    it('préserve les chiffres romains en majuscules', () => {
+      expect(normalizeAccommodationName('Ernest II')).toBe('Ernest II')
+    })
+
+    it('préserve les chiffres romains en majuscules dans un nom tout en majuscules', () => {
+      expect(normalizeAccommodationName('ERNEST II')).toBe('Ernest II')
+    })
+
+    it('préserve les chiffres romains en majuscules avec préfixe Résidence', () => {
+      expect(normalizeAccommodationName('RESIDENCE NAPOLEON III')).toBe('Napoleon III')
+    })
+
+    it('est idempotent sur un nom avec chiffres romains', () => {
+      const normalized = normalizeAccommodationName('Ernest II')
+      expect(normalizeAccommodationName(normalized)).toBe(normalized)
+    })
+  })
+
   describe('idempotence', () => {
     it('est idempotent sur un nom déjà normalisé avec article', () => {
       const normalized = normalizeAccommodationName('RESIDENCE DE LA MER')
