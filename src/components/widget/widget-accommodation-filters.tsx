@@ -96,7 +96,7 @@ export const WidgetAccommodationFilters: FC<WidgetAccommodationFiltersProps> = (
   return (
     <>
       {/* Desktop */}
-      <div className={cx(classes.container, 'fr-hidden fr-unhidden-md')}>
+      <div className={classes.container}>
         <div className={classes.mainRow}>
           {locationInputContent}
           {visibleFilters.includes('disponibilites') && <FindStudentAccommodationAvailabilitySwitch widget />}
@@ -118,7 +118,7 @@ export const WidgetAccommodationFilters: FC<WidgetAccommodationFiltersProps> = (
       </div>
 
       {/* Mobile */}
-      <div className={cx(classes.mobileContainer, 'fr-hidden-md')}>
+      <div className={classes.mobileContainer}>
         <div className={cx(classes.mobileRow, !showVilleInput && classes.mobileRowNoInput)}>
           {locationInputContent}
           <Button iconId="ri-equalizer-line" priority="secondary" title={tHeader('filtersCta')} {...widgetMobileFiltersModal.buttonProps} />
@@ -148,6 +148,9 @@ const useStyles = tss.create({
     rowGap: '2rem',
     columnGap: '1rem',
     marginBottom: '1rem',
+    '@media (max-width: 767px)': {
+      display: 'none',
+    },
   },
   mainRow: {
     display: 'grid',
@@ -201,6 +204,9 @@ const useStyles = tss.create({
     flexDirection: 'column',
     gap: '1rem',
     marginBottom: '1rem',
+    '@media (min-width: 768px)': {
+      display: 'none',
+    },
   },
   mobileRow: {
     alignItems: 'flex-end',
