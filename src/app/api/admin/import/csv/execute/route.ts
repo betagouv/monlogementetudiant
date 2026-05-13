@@ -1,6 +1,7 @@
 import { TextEncoder } from 'node:util'
 import * as Sentry from '@sentry/nextjs'
 import { eq } from 'drizzle-orm'
+import { FEATURES } from '~/lib/features'
 import { db } from '~/server/db'
 import { importJobs } from '~/server/db/schema'
 import type { CsvProgressEvent } from '~/server/lib/import/csv-importer'
@@ -12,6 +13,8 @@ function sseEvent(data: unknown): string {
 }
 
 export async function POST(request: Request) {
+  if (!FEATURES.csvImport) return new Response(null, { status: 404 })
+
   const session = await getServerSession()
   if (!session || session.user.role !== 'admin') {
     return new Response('Unauthorized', { status: 401 })
