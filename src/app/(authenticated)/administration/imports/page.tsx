@@ -1,13 +1,17 @@
 import clsx from 'clsx'
+import { notFound } from 'next/navigation'
 import styles from '~/app/(authenticated)/administration/administration.module.css'
 import { CsvImportForm } from '~/components/administration/imports/csv-import-form'
 import { JobHistoryList } from '~/components/administration/imports/job-history-list'
+import { FEATURES } from '~/lib/features'
 
 export const metadata = {
   title: 'Imports — Administration',
 }
 
 export default function ImportsPage() {
+  if (!FEATURES.csvImport) notFound()
+
   return (
     <>
       <div className="fr-mb-3w">

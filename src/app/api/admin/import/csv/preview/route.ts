@@ -1,9 +1,12 @@
 import * as Sentry from '@sentry/nextjs'
 import { NextResponse } from 'next/server'
+import { FEATURES } from '~/lib/features'
 import { previewCsv } from '~/server/lib/import/csv-importer'
 import { getServerSession } from '~/services/better-auth'
 
 export async function POST(request: Request) {
+  if (!FEATURES.csvImport) return new Response(null, { status: 404 })
+
   const session = await getServerSession()
   if (!session || session.user.role !== 'admin') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

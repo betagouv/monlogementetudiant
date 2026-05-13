@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import styles from '~/app/(authenticated)/administration/administration.module.css'
 import { useAdminStats } from '~/hooks/use-admin-stats'
 import { useAdminUser } from '~/hooks/use-admin-user'
+import { FEATURES } from '~/lib/features'
 
 type NavItem = {
   label: string
@@ -46,7 +47,7 @@ const navSections: NavSection[] = [
     items: [
       { label: 'Résidences', icon: 'fr-icon-home-4-line', href: '/administration/residences' },
       { label: 'Candidatures', icon: 'fr-icon-file-text-line', href: '/administration/candidatures' },
-      { label: 'Imports', icon: 'fr-icon-upload-2-line', href: '/administration/imports' },
+      ...(FEATURES.csvImport ? [{ label: 'Imports', icon: 'fr-icon-upload-2-line', href: '/administration/imports' }] : []),
     ],
   },
   {
