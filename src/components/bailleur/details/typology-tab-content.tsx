@@ -5,6 +5,7 @@ import Input from '@codegouvfr/react-dsfr/Input'
 import Select from '@codegouvfr/react-dsfr/Select'
 import { useTranslations } from 'next-intl'
 import { useFormContext } from 'react-hook-form'
+import { useIsAdmin } from '~/hooks/use-is-admin'
 import { getTypologyLabel, TYPOLOGY_TYPES } from '~/schemas/accommodations/create-residence'
 import { isPerPersonTypology } from '~/utils/is-per-person-typology'
 
@@ -34,7 +35,8 @@ type TypologyTabContentProps =
     }
 
 export const TypologyTabContent = (props: TypologyTabContentProps) => {
-  const isImported = props.mode === 'update' ? props.isImported : false
+  const isAdmin = useIsAdmin()
+  const isImported = props.mode === 'update' ? props.isImported && !isAdmin : false
   const t = useTranslations('bailleur.residences.details.typologyTab')
   const {
     register,
