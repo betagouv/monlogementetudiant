@@ -6,6 +6,7 @@ import { parseAsString, useQueryState } from 'nuqs'
 import { useEffect, useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { AvailabilityBadge } from '~/components/shared/availability-badge'
+import { useIsAdmin } from '~/hooks/use-is-admin'
 import { TAccomodationMy } from '~/schemas/accommodations/accommodations'
 import { TYPOLOGIES } from '~/schemas/accommodations/create-residence'
 import { calculateAvailability } from '~/utils/calculateAvailability'
@@ -14,6 +15,7 @@ import { TypologyTabContent } from './typology-tab-content'
 type NewTypology = { id: number; fieldSuffix: string | null }
 
 export const ResidenceAccommodationList = ({ accommodation }: { accommodation: TAccomodationMy }) => {
+  const isAdmin = useIsAdmin()
   const isImported = accommodation.properties.is_imported
   const t = useTranslations('findAccomodation.card')
   const tTypology = useTranslations('bailleur.residences.details.typologyTab')
@@ -82,7 +84,7 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
   // Typologies disponibles pour ajout
   const availableTypologies = TYPOLOGIES.filter((typo) => !usedFieldSuffixes.includes(typo.fieldSuffix))
 
-  const canAddMore = availableTypologies.length > 0 && !isImported
+  const canAddMore = availableTypologies.length > 0 && (!isImported || isAdmin)
 
   const handleAddNewTypology = () => {
     const newId = nextId
@@ -229,7 +231,7 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
                   fieldSuffix={typo.fieldSuffix}
                   typologyType={typo.type}
                   isImported={isImported}
-                  onDelete={!isImported ? () => handleDeleteExistingTypology(typo.fieldSuffix) : undefined}
+                  onDelete={!isImported || isAdmin ? () => handleDeleteExistingTypology(typo.fieldSuffix) : undefined}
                 />
               </div>
             ))}
