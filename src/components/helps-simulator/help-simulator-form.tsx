@@ -28,8 +28,8 @@ const stepSchemas = {
 } as const
 
 const STEP_FIELDS: Record<number, (keyof HelpSimulatorFormData)[]> = {
-  1: ['age', 'status'],
-  2: ['city', 'hasGuarantor', 'changingRegion', 'boursierLycee'],
+  1: ['age', 'status', 'currentYear', 'isProfessionalLicence', 'scholarship', 'changingRegion'],
+  2: ['city', 'hasGuarantor'],
   3: ['monthlyIncome', 'monthlyRent', 'rentUnknown'],
 }
 
@@ -46,13 +46,15 @@ export const HelpSimulatorForm: FC<HelpSimulatorFormProps> = ({ onScrollToTop })
     defaultValues: {
       age: urlState.age ?? undefined,
       status: urlState.status ?? undefined,
+      currentYear: urlState.currentYear ?? undefined,
+      isProfessionalLicence: urlState.isProfessionalLicence ?? undefined,
+      scholarship: urlState.scholarship ?? undefined,
       monthlyIncome: urlState.monthlyIncome ?? undefined,
       monthlyRent: urlState.monthlyRent ?? undefined,
       rentUnknown: urlState.rentUnknown ?? false,
       city: urlState.city || '',
       hasGuarantor: urlState.hasGuarantor ?? undefined,
       changingRegion: urlState.changingRegion ?? undefined,
-      boursierLycee: urlState.boursierLycee ?? undefined,
     },
   })
 
@@ -63,6 +65,15 @@ export const HelpSimulatorForm: FC<HelpSimulatorFormProps> = ({ onScrollToTop })
     }
     if (urlState.status !== null && urlState.status !== currentValues.status) {
       form.setValue('status', urlState.status)
+    }
+    if (urlState.currentYear !== null && urlState.currentYear !== currentValues.currentYear) {
+      form.setValue('currentYear', urlState.currentYear)
+    }
+    if (urlState.isProfessionalLicence !== null && urlState.isProfessionalLicence !== currentValues.isProfessionalLicence) {
+      form.setValue('isProfessionalLicence', urlState.isProfessionalLicence)
+    }
+    if (urlState.scholarship !== null && urlState.scholarship !== currentValues.scholarship) {
+      form.setValue('scholarship', urlState.scholarship)
     }
     if (urlState.monthlyIncome !== null && urlState.monthlyIncome !== currentValues.monthlyIncome) {
       form.setValue('monthlyIncome', urlState.monthlyIncome)
@@ -81,9 +92,6 @@ export const HelpSimulatorForm: FC<HelpSimulatorFormProps> = ({ onScrollToTop })
     }
     if (urlState.changingRegion !== null && urlState.changingRegion !== currentValues.changingRegion) {
       form.setValue('changingRegion', urlState.changingRegion)
-    }
-    if (urlState.boursierLycee !== null && urlState.boursierLycee !== currentValues.boursierLycee) {
-      form.setValue('boursierLycee', urlState.boursierLycee)
     }
   }, [urlState, form])
 
@@ -139,13 +147,15 @@ export const HelpSimulatorForm: FC<HelpSimulatorFormProps> = ({ onScrollToTop })
       setUrlState({
         age: values.age,
         status: values.status,
+        currentYear: values.currentYear ?? null,
+        isProfessionalLicence: values.isProfessionalLicence ?? null,
+        scholarship: values.scholarship ?? null,
         monthlyIncome: values.monthlyIncome,
         monthlyRent: values.monthlyRent ?? null,
         rentUnknown: values.rentUnknown,
         city: values.city,
         hasGuarantor: values.hasGuarantor,
         changingRegion: values.changingRegion ?? null,
-        boursierLycee: values.boursierLycee ?? null,
       })
       trackEvent({ category: 'Simulateur', action: 'completion simulateur aides' })
       setCurrentStep(4)
@@ -157,13 +167,15 @@ export const HelpSimulatorForm: FC<HelpSimulatorFormProps> = ({ onScrollToTop })
     form.reset({
       age: undefined,
       status: undefined,
+      currentYear: undefined,
+      isProfessionalLicence: undefined,
+      scholarship: undefined,
       monthlyIncome: undefined,
       monthlyRent: undefined,
       rentUnknown: false,
       city: '',
       hasGuarantor: undefined,
       changingRegion: undefined,
-      boursierLycee: undefined,
     })
     clearUrlState()
     setCurrentStep(1)
