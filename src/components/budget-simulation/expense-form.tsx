@@ -7,7 +7,7 @@ import clsx from 'clsx'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { RentSearchModal } from '~/components/ui/rent-search-modal'
-import { DEFAULT_EXPENSE_FREQUENCIES, EXPENSE_RANGES, ExpenseType, useBudgetSimulator } from './budget-simulator-context'
+import { CVEC_AMOUNT, DEFAULT_EXPENSE_FREQUENCIES, EXPENSE_RANGES, ExpenseType, useBudgetSimulator } from './budget-simulator-context'
 import styles from './forms.module.css'
 
 export function ExpenseForm() {
@@ -115,6 +115,7 @@ export function ExpenseForm() {
                     })}
                   </span>
                 )}
+                {type === 'cvec' && <span className="fr-text--xs fr-mb-0">{t('cvecHint', { amount: CVEC_AMOUNT })}</span>}
                 {type === 'housing' && (
                   <RentSearchModal
                     onApply={(selectedCity) => {

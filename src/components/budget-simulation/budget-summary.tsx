@@ -22,6 +22,14 @@ export function BudgetSummary() {
     0,
   )
   const remainingBalance = totalIncomes - totalExpenses
+
+  const yearlyExpensesTotal = state.activeExpenseTypes
+    .filter((type) => state.expenseFrequencies[type] === 'yearly')
+    .reduce((sum, type) => sum + state.monthlyExpenses[type], 0)
+  const monthlyExpensesTotal = state.activeExpenseTypes
+    .filter((type) => state.expenseFrequencies[type] === 'monthly')
+    .reduce((sum, type) => sum + state.monthlyExpenses[type], 0)
+  const firstMonthTotal = monthlyExpensesTotal + yearlyExpensesTotal
   const hasTrackedCompletion = useRef(false)
 
   useEffect(() => {
@@ -56,6 +64,9 @@ export function BudgetSummary() {
           <div className="fr-flex fr-direction-column fr-justify-content-space-between">
             <span className="fr-text--sm fr-text-inverted--grey fr-text--bold fr-mb-0">{t('totalExpenses')}</span>
             <span className={clsx(styles.totalExpenses, 'fr-h3 fr-mb-0')}>{formatAmount(totalExpenses)}</span>
+            <span className="fr-text--xs fr-text-mention--grey fr-mb-0">
+              {t('annualTotal', { amount: formatAmount(totalExpenses * 12) })}
+            </span>
           </div>
         </div>
         <div
@@ -79,6 +90,17 @@ export function BudgetSummary() {
         </div>
       </div>
       <ExpensesPieChart />
+      {yearlyExpensesTotal > 0 && (
+        <div className={clsx(styles.border, 'fr-flex fr-direction-column fr-mt-4w fr-mb-2w fr-py-2w fr-px-4w')}>
+          <span className="fr-text-inverted--grey fr-h6 fr-mb-2w">{t('schoolYearBudgetTitle')}</span>
+          <p className="fr-text--sm fr-text-inverted--grey fr-mb-0">
+            {t('schoolYearBudgetDescription', {
+              firstMonth: formatAmount(firstMonthTotal),
+              followingMonths: formatAmount(monthlyExpensesTotal),
+            })}
+          </p>
+        </div>
+      )}
       <div className={clsx(styles.border, 'fr-flex fr-flex-gap-4v fr-direction-column fr-mt-4w fr-mb-2w fr-py-2w fr-px-4w')}>
         <span className="fr-text-inverted--grey fr-h4 fr-mb-0">{t('hintsTitle')}</span>
         <Button iconId="fr-icon-money-euro-circle-line" linkProps={{ href: '/preparer-mon-budget-etudiant', target: '_self' }}>

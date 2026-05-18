@@ -107,6 +107,8 @@ export const EXPENSE_RANGES = {
   apartmentEquipment: { lowRange: 150, highRange: 600 },
 } as const
 
+export const CVEC_AMOUNT = 103 // montant fixé par décret, 2025-2026
+
 export function getMonthlyEquivalent(amount: number, frequency: BudgetFrequency) {
   return frequency === 'yearly' ? amount / 12 : amount
 }

@@ -227,13 +227,19 @@ Ces commandes utilisent le fichier XLSX CROUS contenant les onglets `Liste rési
 
 ```bash
 pnpm cli compare-crous "/chemin/vers/Liste_des_residencesTUL.xlsx" --csv /tmp/compare-crous-report.csv
+pnpm cli import crous --file "/chemin/vers/Liste_des_residencesTUL.xlsx" --dry-run --verbose
+pnpm cli import-crous-typologies "/chemin/vers/Liste_des_residencesTUL.xlsx" --dry-run --verbose
 pnpm cli import-crous-surfaces "/chemin/vers/Liste_des_residencesTUL.xlsx" --dry-run --verbose
 pnpm cli import-crous-rents "/chemin/vers/Liste_des_residencesTUL.xlsx" --dry-run --verbose
 ```
 
 `compare-crous` compare le fichier avec les résidences de l'owner `crous` en BDD. Le rapport sort une ligne par différence avec les colonnes `status`, `sourceId`, `dbId`, `dbSlug`, `residence`, `field`, `fileValue`, `dbValue`, `reason`. Pour écrire un CSV, utiliser `--csv <path>`. Pour forcer un code retour `1` en cas d'incohérence, ajouter `--exit-code`.
 
-`import-crous-surfaces` met uniquement à jour les colonnes `superficie_min/max_*` par typologie (`T1`, `T1bis`, `T2`, etc.). `import-crous-rents` met uniquement à jour les colonnes `price_min/max_*` par typologie et recalcule `price_min`.
+`import crous` est l'import CROUS complet. Il crée ou met à jour les résidences et importe aussi, par défaut, les compteurs de typologies, les compteurs de colocation, les loyers min/max et les superficies min/max depuis l'onglet `Liste types de lgt`.
+
+Les commandes dédiées restent disponibles pour rejouer une correction ciblée sans toucher au reste de la fiche : `import-crous-typologies` met à jour uniquement les compteurs `nb_t*` et `nb_coliving_apartments`, `import-crous-surfaces` met uniquement à jour les colonnes `superficie_min/max_*` par typologie (`T1`, `T1bis`, `T2`, etc.), et `import-crous-rents` met uniquement à jour les colonnes `price_min/max_*` par typologie et recalcule `price_min`.
+
+Par défaut, `import-crous-typologies` est non destructif : il met à jour les typologies présentes dans le fichier sans vider les compteurs absents, afin de ne pas masquer des surfaces déjà importées dans l'interface. Pour faire un remplacement strict des compteurs par le contenu du fichier, ajouter `--replace`.
 
 Options communes :
 - `--owner <name-or-slug>` : owner à comparer ou mettre à jour (défaut : `crous`)
