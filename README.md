@@ -181,7 +181,7 @@ pnpm cli audit-storage --csv ./reports/ --write
 Audite la cohérence entre le bucket S3 et la base de données. Détecte deux types de problèmes :
 
 - **URLs cassées** : une URL stockée dans `imagesUrls` pointe vers une clé S3 absente, ou retourne une réponse non-200 (ACL mal configuré, mauvaise construction d'URL)
-- **Fichiers orphelins** : un objet existe en S3 sous le préfixe `accommodations/` mais n'est référencé par aucune résidence en base
+- **Fichiers orphelins** : un objet existe en S3 mais n'est référencé par aucune résidence en base
 
 Pour chaque URL en base, le script fait une requête `HEAD` HTTP pour vérifier que l'image est effectivement accessible en affichage (pas seulement que la clé existe dans S3).
 

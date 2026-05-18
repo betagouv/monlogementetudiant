@@ -73,7 +73,7 @@ export async function auditStorage(options: AuditStorageOptions): Promise<void> 
     console.log('🔍 Audit du stockage S3... (vérification HTTP activée — peut être long)')
     if (!options.write) console.log('   Mode dry-run — utilisez --write pour appliquer les corrections')
 
-    const result = await findStorageIssues({ fetch: true })
+    const result = await findStorageIssues({ fetch: true, verbose: options.verbose })
 
     printSummary(result, options)
 
