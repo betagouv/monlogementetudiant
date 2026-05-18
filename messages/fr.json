@@ -864,6 +864,7 @@
       "addExpenseTitle": "Ajouter une dépense",
       "addExpenseLabel": "Ajouter une dépense",
       "removeExpenseTitle": "Supprimer une dépense",
+      "cvecHint": "La CVEC est fixée à {amount} € pour 2025-2026",
       "frequencies": {
         "monthly": "Mensuelle",
         "yearly": "Annuelle"
@@ -876,7 +877,7 @@
         "communication": "Téléphone et internet",
         "transport": "Transports (quotidiens et pour rentrer chez moi)",
         "registrationFees": "Frais d'inscription dans mon établissement d'enseignement",
-        "cvec": "CVEC",
+        "cvec": "CVEC (Contribution Vie Étudiante et de Campus)",
         "studyMaterials": "Matériel pour les études (ordinateur, impressions, livres, papier, petit matériel)",
         "mutuelle": "Mutuelle",
         "otherHealthcare": "Autres frais de santé",
@@ -898,7 +899,10 @@
       "expensesBreakdown": "Répartition des dépenses",
       "chartTooltipAmount": "Montant mensuel",
       "hintsCta": "Conseils pratiques pour son budget",
-      "hintsTitle": "Pour aller plus loin"
+      "hintsTitle": "Pour aller plus loin",
+      "annualTotal": "Soit {amount} par an",
+      "schoolYearBudgetTitle": "Budget de rentrée",
+      "schoolYearBudgetDescription": "Pour la rentrée scolaire, vous devez prévoir {firstMonth}, puis {followingMonths} par mois pour les mois suivants."
     }
   },
   "verification": {

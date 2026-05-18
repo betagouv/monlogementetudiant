@@ -7,6 +7,17 @@ import { sanitizeHTML } from '~/utils/sanitize-html'
 import { accommodationAddresses, accommodations, externalSources } from '../../src/server/db/schema'
 import { computeDerivedFields, generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
 import { findAvailableSlug } from '../../src/server/utils/slug'
+import {
+  buildMatchSourceId,
+  cleanNumber,
+  getDuplicatedUairnes,
+  getSheet,
+  mapTypologie,
+  maxValue,
+  minValue,
+  normalizeText,
+  type TypoCategory,
+} from '../lib/crous-helpers'
 import type { ImportCommand, ImportOptions, ImportResult } from '../types'
 import { getOrCreateOwner } from '../utils/get-or-create-owner'
 
@@ -28,6 +39,7 @@ interface CrousResidence {
 }
 
 interface CrousTypology {
+  code_crous?: number
   code_residence: number
   code_lgt: number
   nom_lgt: string
@@ -37,20 +49,6 @@ interface CrousTypology {
   surface_max?: number
   loyer_min?: number
   loyer_max?: number
-}
-
-type TypoCategory = 't1' | 't1bis' | 't2' | 't3' | 't4' | 't5' | 't6'
-
-function mapTypologie(typo: string): TypoCategory {
-  const t = typo.toUpperCase()
-  if (t === 'APT1BIS' || t === 'APT1BIS+') return 't1bis'
-  if (t === 'CHAMBRE' || t === 'APT1' || t === 'APT1+') return 't1'
-  if (t === 'APT2' || t === 'APT2+') return 't2'
-  if (t === 'APT3' || t === 'APT3+') return 't3'
-  if (t === 'APT4' || t === 'APT4+') return 't4'
-  if (t === 'APT5' || t === 'APT5+') return 't5'
-  if (t === 'APT6' || t === 'APT6+') return 't6'
-  return 't1'
 }
 
 function normalizeCity(city: string): string {
@@ -74,54 +72,93 @@ function parseAddress(raw: string): { address: string; postalCode: string; city:
 }
 
 function buildTypologyFromRows(rows: CrousTypology[]) {
-  const byCategory = new Map<TypoCategory, { mins: number[]; maxes: number[]; count: number }>()
+  const byCategory = new Map<
+    TypoCategory,
+    { rentMin: number | null; rentMax: number | null; surfaceMin: number | null; surfaceMax: number | null; count: number }
+  >()
+  let colivingCount = 0
 
   for (const row of rows) {
     const cat = mapTypologie(row.typologie)
     let entry = byCategory.get(cat)
     if (!entry) {
-      entry = { mins: [], maxes: [], count: 0 }
+      entry = { rentMin: null, rentMax: null, surfaceMin: null, surfaceMax: null, count: 0 }
       byCategory.set(cat, entry)
     }
     entry.count++
-    if (row.loyer_min != null && row.loyer_min > 0) entry.mins.push(Math.round(row.loyer_min))
-    if (row.loyer_max != null && row.loyer_max > 0) entry.maxes.push(Math.round(row.loyer_max))
+    entry.rentMin = minValue(entry.rentMin, cleanNumber(row.loyer_min))
+    entry.rentMax = maxValue(entry.rentMax, cleanNumber(row.loyer_max))
+    entry.surfaceMin = minValue(entry.surfaceMin, cleanNumber(row.surface_min))
+    entry.surfaceMax = maxValue(entry.surfaceMax, cleanNumber(row.surface_max))
+
+    const typologie = row.typologie?.trim().toUpperCase() ?? ''
+    const name = row.nom_lgt?.trim().toUpperCase() ?? ''
+    if (typologie.endsWith('+') || name.includes('COLOCATION')) colivingCount++
   }
 
-  const minOf = (nums: number[]) => (nums.length > 0 ? Math.min(...nums) : null)
-  const maxOf = (nums: number[]) => (nums.length > 0 ? Math.max(...nums) : null)
   const get = (cat: TypoCategory) => byCategory.get(cat)
 
   return {
-    priceMinT1: minOf(get('t1')?.mins ?? []),
-    priceMaxT1: maxOf(get('t1')?.maxes ?? []),
-    priceMinT1Bis: minOf(get('t1bis')?.mins ?? []),
-    priceMaxT1Bis: maxOf(get('t1bis')?.maxes ?? []),
-    priceMinT2: minOf(get('t2')?.mins ?? []),
-    priceMaxT2: maxOf(get('t2')?.maxes ?? []),
-    priceMinT3: minOf(get('t3')?.mins ?? []),
-    priceMaxT3: maxOf(get('t3')?.maxes ?? []),
-    priceMinT4: minOf(get('t4')?.mins ?? []),
-    priceMaxT4: maxOf(get('t4')?.maxes ?? []),
-    priceMinT5: minOf(get('t5')?.mins ?? []),
-    priceMaxT5: maxOf(get('t5')?.maxes ?? []),
-    priceMinT6: minOf(get('t6')?.mins ?? []),
-    priceMaxT6: maxOf(get('t6')?.maxes ?? []),
+    nbT1: get('t1')?.count ?? null,
+    nbT1Bis: get('t1bis')?.count ?? null,
+    nbT2: get('t2')?.count ?? null,
+    nbT3: get('t3')?.count ?? null,
+    nbT4: get('t4')?.count ?? null,
+    nbT5: get('t5')?.count ?? null,
+    nbT6: get('t6')?.count ?? null,
+    nbT7More: get('t7more')?.count ?? null,
+    nbColivingApartments: colivingCount || null,
+    priceMinT1: get('t1')?.rentMin ?? null,
+    priceMaxT1: get('t1')?.rentMax ?? null,
+    priceMinT1Bis: get('t1bis')?.rentMin ?? null,
+    priceMaxT1Bis: get('t1bis')?.rentMax ?? null,
+    priceMinT2: get('t2')?.rentMin ?? null,
+    priceMaxT2: get('t2')?.rentMax ?? null,
+    priceMinT3: get('t3')?.rentMin ?? null,
+    priceMaxT3: get('t3')?.rentMax ?? null,
+    priceMinT4: get('t4')?.rentMin ?? null,
+    priceMaxT4: get('t4')?.rentMax ?? null,
+    priceMinT5: get('t5')?.rentMin ?? null,
+    priceMaxT5: get('t5')?.rentMax ?? null,
+    priceMinT6: get('t6')?.rentMin ?? null,
+    priceMaxT6: get('t6')?.rentMax ?? null,
+    priceMinT7More: get('t7more')?.rentMin ?? null,
+    priceMaxT7More: get('t7more')?.rentMax ?? null,
+    superficieMinT1: get('t1')?.surfaceMin ?? null,
+    superficieMaxT1: get('t1')?.surfaceMax ?? null,
+    superficieMinT1Bis: get('t1bis')?.surfaceMin ?? null,
+    superficieMaxT1Bis: get('t1bis')?.surfaceMax ?? null,
+    superficieMinT2: get('t2')?.surfaceMin ?? null,
+    superficieMaxT2: get('t2')?.surfaceMax ?? null,
+    superficieMinT3: get('t3')?.surfaceMin ?? null,
+    superficieMaxT3: get('t3')?.surfaceMax ?? null,
+    superficieMinT4: get('t4')?.surfaceMin ?? null,
+    superficieMaxT4: get('t4')?.surfaceMax ?? null,
+    superficieMinT5: get('t5')?.surfaceMin ?? null,
+    superficieMaxT5: get('t5')?.surfaceMax ?? null,
+    superficieMinT6: get('t6')?.surfaceMin ?? null,
+    superficieMaxT6: get('t6')?.surfaceMax ?? null,
+    superficieMinT7More: get('t7more')?.surfaceMin ?? null,
+    superficieMaxT7More: get('t7more')?.surfaceMax ?? null,
   }
 }
 
-function loadXlsx(filePath: string): { residences: CrousResidence[]; typologiesByResidence: Map<number, CrousTypology[]> } {
+function buildResidenceKey(row: { code_crous?: number; code_residence: number }) {
+  return `${row.code_crous ?? ''}:${row.code_residence}`
+}
+
+function loadXlsx(filePath: string): { residences: CrousResidence[]; typologiesByResidence: Map<string, CrousTypology[]> } {
   const wb = XLSX.readFile(filePath)
 
-  const wsResidences = wb.Sheets[wb.SheetNames[0]]
+  const wsResidences = getSheet(wb, 'Liste residences', 0)
   const rawResidences = XLSX.utils.sheet_to_json<CrousResidence>(wsResidences)
 
-  const wsTypologies = wb.Sheets[wb.SheetNames[1]]
+  const wsTypologies = getSheet(wb, 'Liste types de lgt', 1)
   const rawTypologies = XLSX.utils.sheet_to_json<CrousTypology>(wsTypologies)
 
-  const typologiesByResidence = new Map<number, CrousTypology[]>()
+  const typologiesByResidence = new Map<string, CrousTypology[]>()
   for (const t of rawTypologies) {
-    const code = t.code_residence
+    const code = buildResidenceKey(t)
     if (!typologiesByResidence.has(code)) {
       typologiesByResidence.set(code, [])
     }
@@ -131,7 +168,15 @@ function loadXlsx(filePath: string): { residences: CrousResidence[]; typologiesB
   return { residences: rawResidences, typologiesByResidence }
 }
 
-async function findExistingAccommodation(sourceId: string, name: string, ownerId: number): Promise<{ id: number; slug: string } | null> {
+async function findExistingAccommodation({
+  sourceId,
+  name,
+  ownerId,
+}: {
+  sourceId: string
+  name: string
+  ownerId: number
+}): Promise<{ id: number; slug: string } | null> {
   // 1. Match by external_sources table
   const bySource = await db
     .select({ accommodationId: externalSources.accommodationId })
@@ -155,6 +200,19 @@ async function findExistingAccommodation(sourceId: string, name: string, ownerId
     .where(and(eq(accommodations.externalReference, sourceId), eq(accommodations.ownerId, ownerId)))
     .limit(1)
   if (byRef[0]) return byRef[0]
+
+  const normalizedName = normalizeText(name)
+  const byName = await db
+    .select({ id: accommodations.id, slug: accommodations.slug, name: accommodations.name })
+    .from(accommodations)
+    .where(eq(accommodations.ownerId, ownerId))
+
+  const nameMatches = byName.filter((acc) => normalizeText(acc.name) === normalizedName)
+  if (nameMatches.length === 1) return { id: nameMatches[0].id, slug: nameMatches[0].slug }
+
+  const expectedSlug = generateSlug(name)
+  const bySlug = byName.find((acc) => acc.slug === expectedSlug)
+  if (bySlug) return { id: bySlug.id, slug: bySlug.slug }
 
   return null
 }
@@ -202,6 +260,7 @@ const command: ImportCommand = {
     }
 
     const { residences, typologiesByResidence } = loadXlsx(options.file)
+    const duplicatedUairnes = getDuplicatedUairnes(residences)
     const items = options.limit ? residences.slice(0, options.limit) : residences
     console.log(`  ${items.length} résidences chargées (${typologiesByResidence.size} résidences avec typologies)`)
 
@@ -219,7 +278,7 @@ const command: ImportCommand = {
           continue
         }
 
-        const sourceId = item.uairne?.trim() || `${item.code_crous}-${item.code_residence}`
+        const sourceId = buildMatchSourceId(item, duplicatedUairnes)
         if (options.verbose) console.log(`  [${i + 1}/${items.length}] ${name} (${sourceId})`)
 
         // Parse address
@@ -257,10 +316,18 @@ const command: ImportCommand = {
           console.log(`    ⚠ Ville non résolue pour "${name}" (adresse: "${rawAddress}")`)
         }
 
-        const typoRows = typologiesByResidence.get(item.code_residence) ?? []
+        const typoRows = typologiesByResidence.get(buildResidenceKey(item)) ?? []
         const typology = buildTypologyFromRows(typoRows)
 
         const derived = computeDerivedFields({
+          nb_t1: typology.nbT1,
+          nb_t1_bis: typology.nbT1Bis,
+          nb_t2: typology.nbT2,
+          nb_t3: typology.nbT3,
+          nb_t4: typology.nbT4,
+          nb_t5: typology.nbT5,
+          nb_t6: typology.nbT6,
+          nb_t7_more: typology.nbT7More,
           price_min_t1: typology.priceMinT1,
           price_min_t1_bis: typology.priceMinT1Bis,
           price_min_t2: typology.priceMinT2,
@@ -268,14 +335,21 @@ const command: ImportCommand = {
           price_min_t4: typology.priceMinT4,
           price_min_t5: typology.priceMinT5,
           price_min_t6: typology.priceMinT6,
+          price_min_t7_more: typology.priceMinT7More,
         })
 
-        // Check if residence already exists
-        const existing = options.dryRun ? null : await findExistingAccommodation(sourceId, name, ownerId)
+        // Check if residence already exists. Dry-run still resolves the match so the
+        // preview reports whether the command would create or update.
+        const existing = await findExistingAccommodation({ sourceId, name, ownerId })
 
         if (options.dryRun) {
-          if (options.verbose) console.log(`    [dry-run] Création`)
-          result.created++
+          if (existing) {
+            if (options.verbose) console.log(`    [dry-run] Mise à jour id=${existing.id}, slug=${existing.slug}`)
+            result.updated++
+          } else {
+            if (options.verbose) console.log(`    [dry-run] Création`)
+            result.created++
+          }
           continue
         }
 
@@ -295,6 +369,16 @@ const command: ImportCommand = {
           target_audience: 'etudiants' as const,
           published: true,
           available: true,
+          nbTotalApartments: derived.nbTotalApartments,
+          nbColivingApartments: typology.nbColivingApartments,
+          nbT1: typology.nbT1,
+          nbT1Bis: typology.nbT1Bis,
+          nbT2: typology.nbT2,
+          nbT3: typology.nbT3,
+          nbT4: typology.nbT4,
+          nbT5: typology.nbT5,
+          nbT6: typology.nbT6,
+          nbT7More: typology.nbT7More,
           priceMinT1: typology.priceMinT1,
           priceMaxT1: typology.priceMaxT1,
           priceMinT1Bis: typology.priceMinT1Bis,
@@ -309,6 +393,24 @@ const command: ImportCommand = {
           priceMaxT5: typology.priceMaxT5,
           priceMinT6: typology.priceMinT6,
           priceMaxT6: typology.priceMaxT6,
+          priceMinT7More: typology.priceMinT7More,
+          priceMaxT7More: typology.priceMaxT7More,
+          superficieMinT1: typology.superficieMinT1,
+          superficieMaxT1: typology.superficieMaxT1,
+          superficieMinT1Bis: typology.superficieMinT1Bis,
+          superficieMaxT1Bis: typology.superficieMaxT1Bis,
+          superficieMinT2: typology.superficieMinT2,
+          superficieMaxT2: typology.superficieMaxT2,
+          superficieMinT3: typology.superficieMinT3,
+          superficieMaxT3: typology.superficieMaxT3,
+          superficieMinT4: typology.superficieMinT4,
+          superficieMaxT4: typology.superficieMaxT4,
+          superficieMinT5: typology.superficieMinT5,
+          superficieMaxT5: typology.superficieMaxT5,
+          superficieMinT6: typology.superficieMinT6,
+          superficieMaxT6: typology.superficieMaxT6,
+          superficieMinT7More: typology.superficieMinT7More,
+          superficieMaxT7More: typology.superficieMaxT7More,
           priceMin: derived.priceMin,
           externalReference: sourceId,
           externalUrl: CROUS_EXTERNAL_URL,
@@ -331,8 +433,14 @@ const command: ImportCommand = {
             console.log(`    Mise à jour id=${existing.id}, name =${updated.name} slug=${updated.slug} priceMinT1=${updated.priceMinT1}`)
           }
 
-          // Backfill external_sources if needed
-          await db.insert(externalSources).values({ accommodationId: existing.id, source: SOURCE, sourceId }).onConflictDoNothing()
+          // Backfill/update external_sources if needed.
+          await db
+            .insert(externalSources)
+            .values({ accommodationId: existing.id, source: SOURCE, sourceId })
+            .onConflictDoUpdate({
+              target: [externalSources.source, externalSources.accommodationId],
+              set: { sourceId },
+            })
 
           if (resolvedCity) {
             processedEntries.push({ slug: updated.slug, city: resolvedCity })

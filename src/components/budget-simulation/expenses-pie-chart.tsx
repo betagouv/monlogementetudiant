@@ -37,6 +37,7 @@ export function ExpensesPieChart() {
       type,
     }))
     .filter((expense) => expense.value > 0)
+    .sort((a, b) => b.value - a.value)
 
   if (activeExpenses.length === 0) {
     return null

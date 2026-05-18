@@ -4,6 +4,7 @@ import { healthcheck, healthcheckCities } from './commands/healthcheck'
 import { importBackup } from './commands/import-backup'
 import { importCrousRents } from './commands/import-crous-rents'
 import { importCrousSurfaces } from './commands/import-crous-surfaces'
+import { importCrousTypologies } from './commands/import-crous-typologies'
 import { migrate } from './commands/migrate'
 import { migrateUsers } from './commands/migrate-users'
 import { uploadImages } from './commands/upload-images'
@@ -43,6 +44,16 @@ program
   .option('--verbose', 'Afficher les residences traitees')
   .option('--limit <n>', 'Limiter le nombre de residences du fichier', parseInt)
   .action((file, opts) => importCrousRents(file, opts))
+
+program
+  .command('import-crous-typologies <file>')
+  .description('Importe les compteurs de typologies et colocation depuis le XLSX CROUS')
+  .option('--owner <name-or-slug>', 'Owner CROUS a mettre a jour', 'crous')
+  .option('--dry-run', 'Simuler sans modifier la BDD')
+  .option('--verbose', 'Afficher les residences traitees')
+  .option('--limit <n>', 'Limiter le nombre de residences du fichier', parseInt)
+  .option('--replace', 'Remplacer les compteurs de typologies absents par null')
+  .action((file, opts) => importCrousTypologies(file, opts))
 
 program
   .command('import-backup')
