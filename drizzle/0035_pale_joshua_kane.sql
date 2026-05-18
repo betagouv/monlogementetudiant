@@ -1,0 +1,1 @@
+ALTER TABLE "accommodation_accommodation" ADD COLUMN "rental_charges_details" text;

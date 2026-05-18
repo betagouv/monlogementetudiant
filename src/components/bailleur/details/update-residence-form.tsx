@@ -69,6 +69,7 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
         postal_code: a.postal_code || '',
       })),
       description: accommodation.properties.description || '',
+      rental_charges_details: accommodation.properties.rental_charges_details || '',
       external_url: accommodation.properties.external_url || '',
       virtual_tour_url: accommodation.properties.virtual_tour_url || '',
       accept_waiting_list: accommodation.properties.accept_waiting_list || false,

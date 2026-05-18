@@ -40,6 +40,7 @@ export const UPDATE_FIELD_MAP: FieldMap = {
   residence_type: 'residenceType',
   target_audience: 'target_audience',
   description: 'description',
+  rental_charges_details: 'rentalChargesDetails',
   external_url: 'externalUrl',
   virtual_tour_url: 'virtualTourUrl',
   accept_waiting_list: 'acceptWaitingList',
