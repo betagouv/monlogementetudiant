@@ -109,6 +109,7 @@ export const getAccommodationMyById = async (slug: string): Promise<TAccomodatio
       name: row.name,
       slug: row.slug,
       description: row.description ?? null,
+      rental_charges_details: row.rentalChargesDetails ?? null,
       address: mainAddress?.address ?? '',
       city: mainAddress?.cityName ?? '',
       postal_code: mainAddress?.postalCode ?? '',

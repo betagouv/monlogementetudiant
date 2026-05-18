@@ -193,6 +193,7 @@
       "priceFrom": "À partir de {price} €"
     },
     "charges": "Charges comprises",
+    "rentalChargesDetails": "Ce qui est compris dans les charges locatives",
     "availableAccommodations": "Logements de la résidence étudiante",
     "availableAccommodationsCount": "{count} logements dans la résidence étudiante",
     "location": {
