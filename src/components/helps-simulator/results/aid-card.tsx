@@ -12,7 +12,8 @@ const AID_LOGOS: Record<string, string> = {
   visale: '/images/visale.svg',
   'mobili-jeune': '/images/al.svg',
   'loca-pass': '/images/al.svg',
-  'crous-mobilite': '/images/logo-crous.svg',
+  'crous-mobilite-parcoursup': '/images/logo-crous.svg',
+  'crous-mobilite-master': '/images/logo-crous.svg',
 }
 
 const AID_LINKS: Record<string, string> = {
@@ -21,7 +22,12 @@ const AID_LINKS: Record<string, string> = {
   visale: 'https://www.visale.fr/',
   'mobili-jeune': 'https://mobilijeune.actionlogement.fr/eligibilite',
   'loca-pass': 'https://www.actionlogement.fr/l-avance-loca-pass',
-  'crous-mobilite': 'https://www.etudiant.gouv.fr/fr/aides-specifiques-702',
+  'crous-mobilite-parcoursup': 'https://www.messervices.etudiant.gouv.fr',
+  'crous-mobilite-master': 'https://www.service-public.gouv.fr/particuliers/vosdroits/F34343',
+}
+
+const AID_LINK_LABELS: Record<string, string> = {
+  'crous-mobilite-parcoursup': "L'aide à la mobilité Parcoursup",
 }
 
 const POTENTIALLY_ELIGIBLE_AIDS = ['caf-aides-logement', 'mobili-jeune']
@@ -33,6 +39,7 @@ interface AidCardProps {
 export const AidCard: FC<AidCardProps> = ({ aid }) => {
   const logo = AID_LOGOS[aid.id]
   const link = AID_LINKS[aid.id]
+  const linkLabel = AID_LINK_LABELS[aid.id]
   const isPotentiallyEligible = POTENTIALLY_ELIGIBLE_AIDS.includes(aid.id)
 
   return (
@@ -84,7 +91,7 @@ export const AidCard: FC<AidCardProps> = ({ aid }) => {
             iconPosition="right"
             linkProps={{ href: link, target: '_blank', rel: 'noopener noreferrer' }}
           >
-            {aid.isEligible ? "Demander l'aide" : 'En savoir plus'}
+            {linkLabel ?? (aid.isEligible ? "Demander l'aide" : 'En savoir plus')}
           </Button>
         )}
       </div>

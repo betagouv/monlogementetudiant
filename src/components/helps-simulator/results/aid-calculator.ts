@@ -2,7 +2,7 @@ import { type HelpSimulatorFormData } from '~/components/helps-simulator/help-si
 
 // Types
 export type Zone = 1 | 2 | 3
-export type AidId = 'caf-aides-logement' | 'visale' | 'mobili-jeune' | 'loca-pass' | 'crous-mobilite'
+export type AidId = 'caf-aides-logement' | 'visale' | 'mobili-jeune' | 'loca-pass' | 'crous-mobilite-parcoursup' | 'crous-mobilite-master'
 
 interface AidDefinition {
   name: string
@@ -51,9 +51,15 @@ const AID_DEFINITIONS: Record<AidId, AidDefinition> = {
     name: 'Avance Loca-Pass',
     description: "Prêt à 0% d'Action Logement pour financer votre dépôt de garantie (jusqu'à 1 200€).",
   },
-  'crous-mobilite': {
-    name: 'Aide à la mobilité CROUS (Parcoursup)',
-    description: 'Aide ponctuelle de 500€ pour les anciens boursiers du lycée qui changent de région via Parcoursup.',
+  'crous-mobilite-parcoursup': {
+    name: 'Aide à la mobilité Parcoursup',
+    description:
+      "Vous êtes en Terminale, vous avez une bourse de lycée et vous voulez partir étudier dans une autre académie l'année prochaine ? Alors vous pouvez demander l'aide à la mobilité Parcoursup, d'un montant de 500 €. Vous pourrez en faire la demande à partir du mois de juin 2026 via le portail messervices.etudiant.gouv.fr. L'aide sera versée début septembre, une fois que vous serez bien inscrit dans l'enseignement supérieur.",
+  },
+  'crous-mobilite-master': {
+    name: 'Aide à la mobilité en Master du CROUS',
+    description:
+      "Vous allez obtenir votre licence cette année et vous voulez vous inscrire en Master 1 dans une autre région académique l'année prochaine ? Si vous êtes boursier du CROUS, vous pouvez bénéficier d'une aide à la mobilité de 1 000 €. Vous n'avez pas de démarche particulière à faire pour demander l'aide à la mobilité. Vous devrez fournir une copie des documents suivants : attestation de réussite de licence et certificat d'inscription en 1re année de Master 1. Attention, l'obtention d'une licence professionnelle ne vous permet pas de bénéficier de l'aide.",
   },
 }
 
@@ -349,27 +355,76 @@ function calculateLocaPass(input: HelpSimulatorFormData): AidResult {
   })
 }
 
-// function calculateCrousMobilite(input: HelpSimulatorFormData): AidResult {
-//   if (input.changingRegion !== 'yes') {
-//     return buildAidResult('crous-mobilite', {
-//       isEligible: false,
-//       ineligibilityReason: 'Vous ne changez pas de région via Parcoursup',
-//     })
-//   }
+function calculateCrousMobiliteParcoursup(input: HelpSimulatorFormData): AidResult {
+  if (input.currentYear !== 'terminale') {
+    return buildAidResult('crous-mobilite-parcoursup', {
+      isEligible: false,
+      ineligibilityReason: 'Réservé aux lycéens en Terminale',
+    })
+  }
 
-//   if (input.boursierLycee !== 'yes') {
-//     return buildAidResult('crous-mobilite', {
-//       isEligible: false,
-//       ineligibilityReason: "Vous n'étiez pas boursier(e) au lycée",
-//     })
-//   }
+  if (input.scholarship !== 'bourse-lycee') {
+    return buildAidResult('crous-mobilite-parcoursup', {
+      isEligible: false,
+      ineligibilityReason: 'Réservé aux boursiers de lycée',
+    })
+  }
 
-//   return buildAidResult('crous-mobilite', {
-//     isEligible: true,
-//     amount: 500,
-//     amountLabel: '500€ (aide ponctuelle)',
-//   })
-// }
+  if (input.changingRegion !== 'yes') {
+    return buildAidResult('crous-mobilite-parcoursup', {
+      isEligible: false,
+      ineligibilityReason: "Vous devez changer de région ou d'académie l'année prochaine",
+    })
+  }
+
+  return buildAidResult('crous-mobilite-parcoursup', {
+    isEligible: true,
+    amount: 500,
+    amountLabel: '500 € (aide ponctuelle)',
+  })
+}
+
+function calculateCrousMobiliteMaster(input: HelpSimulatorFormData): AidResult {
+  if (input.currentYear !== 'licence3') {
+    return buildAidResult('crous-mobilite-master', {
+      isEligible: false,
+      ineligibilityReason: 'Réservé aux étudiants en 3ème année de licence',
+    })
+  }
+
+  if (input.isProfessionalLicence === 'yes') {
+    return buildAidResult('crous-mobilite-master', {
+      isEligible: false,
+      ineligibilityReason: "L'obtention d'une licence professionnelle ne permet pas de bénéficier de cette aide",
+    })
+  }
+
+  if (input.scholarship !== 'bourse-crous') {
+    return buildAidResult('crous-mobilite-master', {
+      isEligible: false,
+      ineligibilityReason: 'Réservé aux boursiers du CROUS',
+    })
+  }
+
+  if (input.changingRegion !== 'yes') {
+    return buildAidResult('crous-mobilite-master', {
+      isEligible: false,
+      ineligibilityReason: "Vous devez vous inscrire dans une autre région académique l'année prochaine",
+    })
+  }
+
+  const warningMessage =
+    input.isProfessionalLicence === 'unknown'
+      ? 'Si votre licence est professionnelle, vous ne pourrez pas bénéficier de cette aide.'
+      : undefined
+
+  return buildAidResult('crous-mobilite-master', {
+    isEligible: true,
+    amount: 1000,
+    amountLabel: '1 000 € (aide ponctuelle)',
+    warningMessage,
+  })
+}
 
 // Main calculation function
 export function calculateAllAids(input: HelpSimulatorFormData): CalculationResult {
@@ -379,13 +434,18 @@ export function calculateAllAids(input: HelpSimulatorFormData): CalculationResul
   const visaleResult = calculateVisale(input)
   const mobiliJeuneResult = calculateMobiliJeune(input)
   const locaPassResult = calculateLocaPass(input)
-  // Aide CROUS Mobilité - désactivée pour la prochaine release (questions Parcoursup commentées)
-  // const crousMobiliteResult = calculateCrousMobilite(input)
 
-  const aids = [cafResult, visaleResult, mobiliJeuneResult, locaPassResult]
+  const aids: AidResult[] = [cafResult, visaleResult, mobiliJeuneResult, locaPassResult]
+
+  aids.push(calculateCrousMobiliteParcoursup(input))
+  aids.push(calculateCrousMobiliteMaster(input))
 
   const eligibleCount = aids.filter((aid) => aid.isEligible).length
-  const totalEstimatedMonthly = aids.reduce((total, aid) => total + (aid.amount || 0), 0)
+
+  // Les aides mobilité sont ponctuelles, on ne les inclut pas dans le total mensuel estimé
+  const mobilityAidIds: AidId[] = ['crous-mobilite-parcoursup', 'crous-mobilite-master']
+  const totalEstimatedMonthly = aids.filter((aid) => !mobilityAidIds.includes(aid.id)).reduce((total, aid) => total + (aid.amount || 0), 0)
+
   const localAids = getLocalAids(input.city)
 
   return {

@@ -7,7 +7,10 @@ export const helpSimulatorSchema = z.object({
   age: requiredNumber('Veuillez renseigner votre âge')
     .refine((val) => val >= 16, { message: 'Vous devez avoir au moins 16 ans' })
     .refine((val) => val <= 99, { message: 'Âge invalide' }),
-  status: z.enum(['student', 'apprentice', 'employed-student'], { error: 'Veuillez sélectionner votre statut' }),
+  status: z.enum(['student', 'apprentice', 'employed-student', 'lyceen'], { error: 'Veuillez sélectionner votre statut' }),
+  currentYear: z.enum(['terminale', 'licence3', 'other']).optional(),
+  isProfessionalLicence: z.enum(['yes', 'no', 'unknown']).optional(),
+  scholarship: z.enum(['bourse-lycee', 'bourse-crous', 'allocation-speciale', 'non']).optional(),
   monthlyIncome: requiredNumber('Veuillez renseigner vos revenus mensuels').refine((val) => val >= 0, {
     message: 'Le montant doit être positif',
   }),
@@ -15,13 +18,36 @@ export const helpSimulatorSchema = z.object({
   rentUnknown: z.boolean().optional(),
   city: z.string({ error: 'Veuillez renseigner une ville' }).min(1, 'Veuillez renseigner une ville'),
   hasGuarantor: z.enum(['yes', 'no', 'unknown'], { error: 'Veuillez sélectionner votre situation' }),
-  changingRegion: z.enum(['yes', 'no']).optional(),
-  boursierLycee: z.enum(['yes', 'no']).optional(),
+  changingRegion: z.enum(['yes', 'no', 'unknown']).optional(),
 })
 
 export type HelpSimulatorFormData = z.infer<typeof helpSimulatorSchema>
 
-export const step1Schema = helpSimulatorSchema.pick({ age: true, status: true })
+export const step1Schema = helpSimulatorSchema
+  .pick({ age: true, status: true, currentYear: true, isProfessionalLicence: true, scholarship: true, changingRegion: true })
+  .superRefine((data, ctx) => {
+    const isMobilityCandidate = data.currentYear === 'terminale' || data.currentYear === 'licence3'
+
+    if (isMobilityCandidate) {
+      if (!data.scholarship) {
+        ctx.addIssue({ code: 'custom', message: 'Veuillez indiquer votre situation de bourse', path: ['scholarship'] })
+      }
+      if (!data.changingRegion) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Veuillez indiquer si vous allez étudier dans une autre zone',
+          path: ['changingRegion'],
+        })
+      }
+      if (data.currentYear === 'licence3' && !data.isProfessionalLicence) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Veuillez indiquer si votre licence est professionnelle',
+          path: ['isProfessionalLicence'],
+        })
+      }
+    }
+  })
 
 export const step2Schema = z.object({
   monthlyIncome: requiredNumber('Veuillez renseigner vos revenus mensuels').refine((val) => val >= 0, {
@@ -33,4 +59,4 @@ export const step2Schema = z.object({
   rentUnknown: z.boolean().optional(),
 })
 
-export const step3Schema = helpSimulatorSchema.pick({ city: true, hasGuarantor: true, changingRegion: true, boursierLycee: true })
+export const step3Schema = helpSimulatorSchema.pick({ city: true, hasGuarantor: true })
