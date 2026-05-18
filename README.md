@@ -88,6 +88,11 @@ cli/
     import-csv.ts        # Import générique depuis CSV
     import-fac-habitat.ts # Import résidences FAC HABITAT (SFTP)
     upload-images.ts     # Upload images locales vers S3
+    storage/
+      types.ts             # Types partagés (BrokenUrl, UnreferencedFile, AuditResult)
+      findStorageIssues.ts # Détection : listing S3 + cross-ref DB + HEAD HTTP
+      fixStorageIssues.ts  # Correction : update DB + suppression S3
+      auditStorage.ts      # Entry point (résumé console + CSV optionnel)
     sync-cities.ts       # Sync villes (geo.api.gouv.fr) + rattrapage toutes communes
     sync-rents.ts        # Sync loyers moyens (data.gouv.fr)
     sync-students.ts     # Sync nb étudiants (enseignementsup)
@@ -163,6 +168,34 @@ Options :
 | `--base-url <url>` | URL de base pour les tests HTTP (défaut : `http://localhost:3000`) |
 
 Le process exit avec le code `1` si des erreurs sont détectées.
+
+#### `audit-storage` — Auditer le stockage S3
+
+```bash
+pnpm cli audit-storage
+pnpm cli audit-storage --verbose
+pnpm cli audit-storage --csv ./reports/ --verbose
+pnpm cli audit-storage --csv ./reports/ --write
+```
+
+Audite la cohérence entre le bucket S3 et la base de données. Détecte deux types de problèmes :
+
+- **URLs cassées** : une URL stockée dans `imagesUrls` pointe vers une clé S3 absente, ou retourne une réponse non-200 (ACL mal configuré, mauvaise construction d'URL)
+- **Fichiers orphelins** : un objet existe en S3 mais n'est référencé par aucune résidence en base
+
+Pour chaque URL en base, le script fait une requête `HEAD` HTTP pour vérifier que l'image est effectivement accessible en affichage (pas seulement que la clé existe dans S3).
+
+Sans `--write`, tout s'exécute en dry-run : aucune modification n'est appliquée.
+
+Options :
+
+| Option | Description |
+|--------|-------------|
+| `--verbose` | Affiche le détail de chaque URL cassée et fichier orphelin |
+| `--csv <dir>` | Écrit deux CSV dans le dossier : `broken-urls-{timestamp}.csv` et `unreferenced-files-{timestamp}.csv` |
+| `--write` | Applique les corrections : supprime les URLs cassées des tableaux `imagesUrls` en base (et met à jour `imagesCount`), supprime les fichiers orphelins de S3 |
+
+Variables d'env requises : `DATABASE_URL`, `S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`
 
 ---
 
@@ -376,7 +409,7 @@ Toutes les variables sont dans `.env.dist`. Celles spécifiques au CLI :
 | `FAC_HABITAT_SFTP_USERNAME` | `import fac-habitat` |
 | `FAC_HABITAT_SFTP_PASSWORD` | `import fac-habitat` |
 | `FAC_HABITAT_SFTP_PORT` | `import fac-habitat` |
-| `S3_*` | `import arpej-ibail`, `import csv`, `import fac-habitat`, `upload-images` |
+| `S3_*` | `import arpej-ibail`, `import csv`, `import fac-habitat`, `upload-images`, `audit-storage` |
 
 ## Architecture
 

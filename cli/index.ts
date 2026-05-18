@@ -7,6 +7,7 @@ import { importCrousSurfaces } from './commands/import-crous-surfaces'
 import { importCrousTypologies } from './commands/import-crous-typologies'
 import { migrate } from './commands/migrate'
 import { migrateUsers } from './commands/migrate-users'
+import { auditStorage } from './commands/storage/auditStorage'
 import { uploadImages } from './commands/upload-images'
 import { runImport, runSync } from './factory'
 
@@ -106,5 +107,13 @@ program
   .option('--verbose', 'Afficher le détail de chaque ville')
   .option('--base-url <url>', 'URL de base pour les tests HTTP', 'http://localhost:3000')
   .action((opts) => healthcheckCities(opts))
+
+program
+  .command('audit-storage')
+  .description('Audite le stockage S3 : URLs cassées et fichiers non référencés en base')
+  .option('--csv <dir>', 'Écrire les rapports CSV dans ce dossier')
+  .option('--verbose', 'Afficher le détail de chaque problème')
+  .option('--write', 'Appliquer les corrections (URLs cassées retirées de la base, fichiers orphelins supprimés de S3)')
+  .action((opts) => auditStorage(opts))
 
 program.parse()
