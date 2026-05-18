@@ -29,6 +29,7 @@ export const CreateResidenceForm = () => {
       residence_type: '' as TCreateResidence['residence_type'],
       target_audience: '' as TCreateResidence['target_audience'],
       description: '',
+      rental_charges_details: '',
       external_url: '',
       virtual_tour_url: '',
       accept_waiting_list: false,

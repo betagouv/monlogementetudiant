@@ -91,6 +91,7 @@ export const accommodations = pgTable(
     socialHousingRequired: boolean('social_housing_required'),
 
     // Media/URLs
+    rentalChargesDetails: text('rental_charges_details'),
     imagesUrls: text('images_urls').array(),
     imagesCount: integer('images_count').notNull(),
     externalUrl: varchar('external_url', { length: 255 }),

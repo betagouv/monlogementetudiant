@@ -17,6 +17,7 @@ export const ZUpdateResidence = z.object({
     .min(1, 'Au moins une adresse est requise')
     .optional(),
   description: z.string().optional(),
+  rental_charges_details: z.string().optional(),
   external_url: z.url('Veuillez saisir une URL valide').optional().or(z.literal('')),
   virtual_tour_url: z.string().optional(),
 

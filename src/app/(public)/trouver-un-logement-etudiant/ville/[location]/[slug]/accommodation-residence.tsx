@@ -154,18 +154,29 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
                     </span>
                   )}
 
-                  <div className={styles.pricesTiles}>
-                    <span className="fr-text--bold">
-                      {accommodation.min && accommodation.max && accommodation.min !== accommodation.max
-                        ? `De ${accommodation.min} à ${accommodation.max} €`
-                        : `${accommodation.min} €`}
-                      {isPerPersonTypology(accommodation.type) ? ' par personne' : ''}
-                    </span>
+                  <div className="fr-flex fr-align-items-center fr-flex-gap-2v">
+                    <div className={styles.pricesTiles}>
+                      <span className="fr-text--bold">
+                        {accommodation.min && accommodation.max && accommodation.min !== accommodation.max
+                          ? `De ${accommodation.min} à ${accommodation.max} €`
+                          : `${accommodation.min} €`}
+                        {isPerPersonTypology(accommodation.type) ? ' par personne' : ''}
+                      </span>
+                    </div>
+                    <span className="fr-text--xs fr-mb-0">{t('charges')}</span>
                   </div>
-                  <span className="fr-text--xs fr-mb-0">{t('charges')}</span>
                 </div>
               ))}
             </div>
+            {accommodation.rental_charges_details && (
+              <div className="fr-mt-3w fr-px-2w">
+                <p className="fr-text--sm fr-mb-0 fr-text--bold">
+                  <span className="ri-building-line" aria-hidden />
+                  {t('rentalChargesDetails')}
+                </p>
+                <p className="fr-text--sm fr-mb-0 fr-text-mention--grey">{accommodation.rental_charges_details}</p>
+              </div>
+            )}
             {social_housing_required && (
               <div>
                 <hr className="fr-mt-3w fr-mb-0" />

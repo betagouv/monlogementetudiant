@@ -28,6 +28,7 @@ const ZBaseAccommodationInfo = z.object({
   accept_waiting_list: z.boolean(),
   images_urls: z.array(z.string()).nullable(),
   description: z.string().nullable(),
+  rental_charges_details: z.string().nullable(),
   external_url: z.string().optional(),
   virtual_tour_url: z.string().nullable(),
   updated_at: z.date(),

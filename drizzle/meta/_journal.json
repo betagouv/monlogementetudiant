@@ -246,6 +246,13 @@
       "when": 1777904117557,
       "tag": "0034_owner_feedback",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1779112426617,
+      "tag": "0035_pale_joshua_kane",
+      "breakpoints": true
     }
   ]
 }
