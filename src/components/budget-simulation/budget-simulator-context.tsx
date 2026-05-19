@@ -92,6 +92,8 @@ export const DEFAULT_EXPENSE_FREQUENCIES: Record<ExpenseType, BudgetFrequency> =
   apartmentEquipment: 'yearly',
 }
 
+export const YEARLY_ONLY_EXPENSE_TYPES = ['registrationFees', 'cvec'] as const satisfies ExpenseType[]
+
 export const EXPENSE_RANGES = {
   housingCharges: { lowRange: 85, highRange: 100 },
   dailyLife: { lowRange: 60, highRange: 75 },
@@ -107,7 +109,7 @@ export const EXPENSE_RANGES = {
   apartmentEquipment: { lowRange: 150, highRange: 600 },
 } as const
 
-export const CVEC_AMOUNT = 103 // montant fixé par décret, 2025-2026
+export const CVEC_AMOUNT = 105 // montant fixé par décret, 2025-2026
 
 export function getMonthlyEquivalent(amount: number, frequency: BudgetFrequency) {
   return frequency === 'yearly' ? amount / 12 : amount
@@ -173,7 +175,13 @@ export function BudgetSimulatorProvider({ children }: BudgetSimulatorProviderPro
   }
 
   const updateExpenseFrequencies = (frequencies: Partial<Record<keyof MonthlyExpenses, BudgetFrequency>>) => {
-    setState((prev) => ({ ...prev, expenseFrequencies: { ...prev.expenseFrequencies, ...frequencies } }))
+    const nextFrequencies = { ...frequencies }
+    for (const type of YEARLY_ONLY_EXPENSE_TYPES) {
+      if (type in nextFrequencies) {
+        nextFrequencies[type] = 'yearly'
+      }
+    }
+    setState((prev) => ({ ...prev, expenseFrequencies: { ...prev.expenseFrequencies, ...nextFrequencies } }))
   }
 
   const addIncomeType = (type: keyof MonthlyIncomes) => {
