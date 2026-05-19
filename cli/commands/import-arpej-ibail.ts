@@ -52,7 +52,7 @@ function normalizeResidence(residence: IbailResidence) {
     rentAmountFrom: toInteger(residence.rent_amount_from ?? availability?.rent_amount_from),
     rentAmountTo: toInteger(residence.rent_amount_to ?? availability?.rent_amount_to),
     accommodationQuantity: residence.accommodation_quantity ?? availability?.accommodation_quantity ?? null,
-    availableAccommodationQuantity: residence.available_accommodation_quantity ?? availability?.count ?? null,
+    availableAccommodationQuantity: availability?.count ?? residence.available_accommodation_quantity ?? null,
     surfaceFrom: toInteger(availability?.surface_from),
     surfaceTo: toInteger(availability?.surface_to),
     imageSources: residence.images ?? residence.pictures ?? [],
@@ -205,7 +205,6 @@ const command: ImportCommand = {
         }
 
         const accommodationData = {
-          name: residence.title,
           description: (residence.description as string) ?? null,
           residenceType: 'universitaire-conventionnee',
           published: true,
@@ -264,6 +263,7 @@ const command: ImportCommand = {
             .insert(accommodations)
             .values({
               ...accommodationData,
+              name: residence.title,
               imagesUrls: imageUrls.length > 0 ? imageUrls : null,
               imagesCount: derived.imagesCount,
               slug,

@@ -165,6 +165,60 @@ describe('import-arpej-ibail integration', () => {
     expect(created!.externalUrl).toBe('https://www.arpej.fr/fr/residence/alexandre-manceau-residence-etudiante-palaiseau/')
   })
 
+  it('uses current availability count over legacy available accommodation quantity', async () => {
+    const db = getTestDb()
+
+    await createOwner({ name: 'ARPEJ', slug: 'arpej-current-availability', url: 'https://www.arpej.fr/fr/' })
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        residences: [
+          {
+            key: 'RO',
+            title: 'Résidence Jacky Dodin',
+            address: '44 rue de la Guinguette',
+            address_complement: null,
+            zip_code: '59100',
+            city: 'Roubaix',
+            available_accommodation_quantity: 0,
+            availability: {
+              surface_from: 19.04,
+              surface_to: 44.72,
+              rent_amount_from: 479.89,
+              accommodation_quantity: 149,
+              count: 4,
+              url: 'https://ibail.arpej.fr/residences/RO',
+            },
+            pictures: [],
+          },
+        ],
+      }),
+      headers: new Headers({ 'X-Pagination-Total-Pages': '1' }),
+    })
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        features: [
+          {
+            geometry: { type: 'Point', coordinates: [3.174, 50.692] },
+            properties: { city: 'Roubaix', name: '44 rue de la Guinguette', postcode: '59100' },
+          },
+        ],
+      }),
+    })
+
+    const result = await command.execute({})
+
+    expect(result.created).toBe(1)
+
+    const [created] = await db.select().from(accommodations).where(eq(accommodations.name, 'Résidence Jacky Dodin'))
+    expect(created!.nbT1).toBe(149)
+    expect(created!.nbT1Available).toBe(4)
+    expect(created!.nbTotalApartments).toBe(149)
+  })
+
   it('does not wipe existing description and images when current API sends no values', async () => {
     const db = getTestDb()
 
@@ -300,7 +354,7 @@ describe('import-arpej-ibail integration', () => {
     expect(updated!.superficieMaxT1).toBe(32)
   })
 
-  it('updates existing accommodation on re-import', async () => {
+  it('updates existing accommodation on re-import without changing its name', async () => {
     const db = getTestDb()
 
     await createOwner({ name: 'ARPEJ', slug: 'arpej-2', url: 'https://www.arpej.fr/fr/' })
@@ -370,7 +424,7 @@ describe('import-arpej-ibail integration', () => {
     expect(sources).toHaveLength(1)
 
     const acc = await db.select().from(accommodations).where(eq(accommodations.id, sources[0].accommodationId))
-    expect(acc[0].name).toBe('Résidence Lune Renovée')
+    expect(acc[0].name).toBe('Résidence Lune')
   })
 
   it('slug must not change on re-import with same name', async () => {
