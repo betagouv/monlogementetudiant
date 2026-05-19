@@ -35,7 +35,7 @@ export const FindStudentAccommodationAvailabilitySwitch: FC<FindStudentAccommoda
         label={t('header.availability')}
         labelPosition="right"
         checked={!!queryStates.disponible}
-        disabled={widget && !!queryStates.crous}
+        disabled={!!queryStates.crous}
         onChange={handleChange}
       />
     </div>
