@@ -3,6 +3,8 @@
 import Range from '@codegouvfr/react-dsfr/Range'
 import { useTranslations } from 'next-intl'
 import { parseAsBoolean, parseAsInteger, useQueryStates } from 'nuqs'
+import { useEffect, useState } from 'react'
+import { useDebouncedCallback } from 'use-debounce'
 import { useAccomodations } from '~/hooks/use-accomodations'
 import { trackEvent } from '~/lib/tracking'
 
@@ -27,6 +29,16 @@ export const FindStudentAccommodationPrice = ({ pageSize, widget }: FindStudentA
   const isCrous = !!queryStates.crous
 
   const prix = Math.min(queryStates.prix, max ?? 1000)
+  const [localPrix, setLocalPrix] = useState(prix)
+
+  useEffect(() => {
+    setLocalPrix(prix)
+  }, [prix])
+
+  const debouncedSetPrix = useDebouncedCallback((nextPrix: number) => {
+    trackEvent({ category: 'Recherche', action: 'filtre prix', value: nextPrix })
+    setQueryStates({ prix: nextPrix, page: 1 })
+  }, 300)
 
   return (
     <Range
@@ -39,11 +51,11 @@ export const FindStudentAccommodationPrice = ({ pageSize, widget }: FindStudentA
       suffix=" €"
       style={{ width: '260px' }}
       nativeInputProps={{
-        value: prix,
+        value: localPrix,
         onChange: (e) => {
-          const prix = Number(e.target.value)
-          trackEvent({ category: 'Recherche', action: 'filtre prix', value: prix })
-          setQueryStates({ prix, page: 1 })
+          const nextPrix = Number(e.target.value)
+          setLocalPrix(nextPrix)
+          debouncedSetPrix(nextPrix)
         },
       }}
     />
