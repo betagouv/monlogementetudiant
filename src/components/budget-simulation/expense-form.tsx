@@ -7,7 +7,14 @@ import clsx from 'clsx'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { RentSearchModal } from '~/components/ui/rent-search-modal'
-import { CVEC_AMOUNT, DEFAULT_EXPENSE_FREQUENCIES, EXPENSE_RANGES, ExpenseType, useBudgetSimulator } from './budget-simulator-context'
+import {
+  CVEC_AMOUNT,
+  DEFAULT_EXPENSE_FREQUENCIES,
+  EXPENSE_RANGES,
+  ExpenseType,
+  useBudgetSimulator,
+  YEARLY_ONLY_EXPENSE_TYPES,
+} from './budget-simulator-context'
 import styles from './forms.module.css'
 
 export function ExpenseForm() {
@@ -53,6 +60,8 @@ export function ExpenseForm() {
   return (
     <div className="fr-flex fr-direction-column fr-flex-gap-4v">
       {state.activeExpenseTypes.map((type) => {
+        const yearlyOnly = YEARLY_ONLY_EXPENSE_TYPES.includes(type as (typeof YEARLY_ONLY_EXPENSE_TYPES)[number])
+
         return (
           <div key={type} className={clsx('fr-flex fr-flex-gap-4v', styles.formRow)}>
             <div className={clsx('fr-flex-basis-0 fr-flex-grow-1', styles.sourceSelect)}>
@@ -89,7 +98,7 @@ export function ExpenseForm() {
                   onChange: (e) => updateExpenseFrequencies({ [type]: e.target.value as 'monthly' | 'yearly' }),
                 }}
               >
-                <option value="monthly">{t('frequencies.monthly')}</option>
+                {!yearlyOnly && <option value="monthly">{t('frequencies.monthly')}</option>}
                 <option value="yearly">{t('frequencies.yearly')}</option>
               </Select>
             </div>
