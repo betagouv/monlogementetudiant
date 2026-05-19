@@ -17,17 +17,51 @@ const OWNER_URL = 'https://www.arpej.fr/fr/'
 interface IbailResidence {
   key: string
   title: string
+  url?: string | null
   address: string
-  address_complement?: string
+  address_complement?: string | null
   zip_code: string
   city: string
   rent_amount_from?: number
   rent_amount_to?: number
   accommodation_quantity?: number
   available_accommodation_quantity?: number
-  description?: string
+  description?: string | null
   images?: { url: string }[]
+  pictures?: { url: string }[]
+  availability?: {
+    surface_from?: number | null
+    surface_to?: number | null
+    rent_amount_from?: number | null
+    rent_amount_to?: number | null
+    accommodation_quantity?: number | null
+    count?: number | null
+    url?: string | null
+  } | null
   [key: string]: unknown
+}
+
+function toInteger(value: number | null | undefined): number | null {
+  return value == null ? null : Math.round(value)
+}
+
+function normalizeResidence(residence: IbailResidence) {
+  const availability = residence.availability
+
+  return {
+    rentAmountFrom: toInteger(residence.rent_amount_from ?? availability?.rent_amount_from),
+    rentAmountTo: toInteger(residence.rent_amount_to ?? availability?.rent_amount_to),
+    accommodationQuantity: residence.accommodation_quantity ?? availability?.accommodation_quantity ?? null,
+    availableAccommodationQuantity: residence.available_accommodation_quantity ?? availability?.count ?? null,
+    surfaceFrom: toInteger(availability?.surface_from),
+    surfaceTo: toInteger(availability?.surface_to),
+    imageSources: residence.images ?? residence.pictures ?? [],
+    externalUrl: residence.url ?? availability?.url ?? OWNER_URL,
+  }
+}
+
+function omitNullish<T extends Record<string, unknown>>(data: T): Partial<T> {
+  return Object.fromEntries(Object.entries(data).filter(([, value]) => value != null)) as Partial<T>
 }
 
 async function fetchResidences(options: ImportOptions): Promise<IbailResidence[]> {
@@ -138,6 +172,7 @@ const command: ImportCommand = {
           .where(and(eq(externalSources.source, IBAIL_SOURCE), eq(externalSources.sourceId, residence.key)))
           .limit(1)
 
+        const normalized = normalizeResidence(residence)
         const fullAddress = [residence.address, residence.address_complement, `${residence.zip_code} ${residence.city}`]
           .filter(Boolean)
           .join(', ')
@@ -152,18 +187,18 @@ const command: ImportCommand = {
         }
 
         let imageUrls: string[] = []
-        if (residence.images?.length && !options.dryRun) {
-          imageUrls = await uploadImages(residence.images, options.verbose ?? false)
+        if (normalized.imageSources.length && !options.dryRun) {
+          imageUrls = await uploadImages(normalized.imageSources, options.verbose ?? false)
         }
 
         const derived = computeDerivedFields({
-          nb_t1: residence.accommodation_quantity ?? null,
-          price_min_t1: residence.rent_amount_from ?? null,
+          nb_t1: normalized.accommodationQuantity,
+          price_min_t1: normalized.rentAmountFrom,
           images_urls: imageUrls.length > 0 ? imageUrls : null,
         })
 
         const addressData = {
-          address: geo?.address ?? residence.address,
+          address: geo?.address ?? residence.address.trim(),
           postalCode: resolvedPostalCode,
           cityId: resolvedCityId,
           ...(geo ? { geom: sql`ST_SetSRID(ST_MakePoint(${geo.lng}, ${geo.lat}), 4326)` } : {}),
@@ -174,16 +209,16 @@ const command: ImportCommand = {
           description: (residence.description as string) ?? null,
           residenceType: 'universitaire-conventionnee',
           published: true,
-          nbT1: residence.accommodation_quantity ?? null,
-          nbT1Available: residence.available_accommodation_quantity ?? null,
-          priceMinT1: residence.rent_amount_from ?? null,
-          priceMaxT1: residence.rent_amount_to ?? null,
+          nbT1: normalized.accommodationQuantity,
+          nbT1Available: normalized.availableAccommodationQuantity,
+          priceMinT1: normalized.rentAmountFrom,
+          priceMaxT1: normalized.rentAmountTo,
           priceMin: derived.priceMin,
           nbTotalApartments: derived.nbTotalApartments,
-          imagesUrls: imageUrls.length > 0 ? imageUrls : null,
-          imagesCount: derived.imagesCount,
+          superficieMinT1: normalized.surfaceFrom,
+          superficieMaxT1: normalized.surfaceTo,
           ownerId,
-          externalUrl: OWNER_URL,
+          externalUrl: normalized.externalUrl,
           updatedAt: new Date(),
         }
 
@@ -202,16 +237,38 @@ const command: ImportCommand = {
 
         if (existingSource[0]) {
           const accommodationId = existingSource[0].accommodationId
-          await db.update(accommodations).set(accommodationData).where(eq(accommodations.id, accommodationId))
-          await db.delete(accommodationAddresses).where(eq(accommodationAddresses.accommodationId, accommodationId))
-          await db.insert(accommodationAddresses).values({ accommodationId, isMain: true, ...addressData })
+          const updateData: Partial<typeof accommodations.$inferInsert> = {
+            ...omitNullish(accommodationData),
+            ...(imageUrls.length > 0 ? { imagesUrls: imageUrls, imagesCount: derived.imagesCount } : {}),
+          }
+
+          await db.update(accommodations).set(updateData).where(eq(accommodations.id, accommodationId))
+
+          const existingAddress = await db
+            .select({ id: accommodationAddresses.id })
+            .from(accommodationAddresses)
+            .where(and(eq(accommodationAddresses.accommodationId, accommodationId), eq(accommodationAddresses.isMain, true)))
+            .limit(1)
+          const addressUpdateData = omitNullish(addressData)
+
+          if (existingAddress[0]) {
+            await db.update(accommodationAddresses).set(addressUpdateData).where(eq(accommodationAddresses.id, existingAddress[0].id))
+          } else {
+            await db.insert(accommodationAddresses).values({ accommodationId, isMain: true, ...addressData })
+          }
           result.updated++
           pushResidenceEntry(result.residences!, { name: residence.title, slug: existingSource[0].slug, city: cityName, action: 'updated' })
         } else {
           const slug = await findAvailableSlug(generateSlug(residence.title), db, accommodations)
           const [newAccommodation] = await db
             .insert(accommodations)
-            .values({ ...accommodationData, slug, createdAt: new Date() })
+            .values({
+              ...accommodationData,
+              imagesUrls: imageUrls.length > 0 ? imageUrls : null,
+              imagesCount: derived.imagesCount,
+              slug,
+              createdAt: new Date(),
+            })
             .returning({ id: accommodations.id })
 
           await db.insert(accommodationAddresses).values({ accommodationId: newAccommodation.id, isMain: true, ...addressData })
