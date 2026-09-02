@@ -1,4 +1,5 @@
 import { generateId } from 'better-auth'
+import { createLocalAccountIssuer } from 'better-auth/db'
 import { sql } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import { readFileSync } from 'fs'
@@ -82,6 +83,7 @@ export async function migrateUsers() {
               id: generateId(),
               userId: inserted[0].id,
               accountId: djangoUser.email,
+              issuer: createLocalAccountIssuer('credential'),
               providerId: 'credential',
               password: djangoUser.password,
               createdAt: new Date(djangoUser.date_joined),
