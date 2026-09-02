@@ -1,4 +1,5 @@
 import { hashPassword } from 'better-auth/crypto'
+import { createLocalAccountIssuer } from 'better-auth/db'
 import { describe, expect, it } from 'vitest'
 import { account } from '~/server/db/schema/auth'
 import { auth } from '~/services/better-auth'
@@ -19,6 +20,7 @@ async function createCredentialUser(overrides: { id: string; email: string; emai
     id: `account-${overrides.id}`,
     userId: overrides.id,
     accountId: overrides.id,
+    issuer: createLocalAccountIssuer('credential'),
     providerId: 'credential',
     password: hash,
   })
