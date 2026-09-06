@@ -1531,7 +1531,15 @@
           "sortViewsDesc": "Plus vues",
           "sortViewsAsc": "Moins vues"
         },
-        "loading": "Chargement…"
+        "loading": "Chargement…",
+        "export": {
+          "cta": "Extraire les statistiques",
+          "title": "Extraire les statistiques",
+          "description": "Le fichier CSV contient les statistiques de toutes vos résidences sur la période choisie.",
+          "periodLegend": "Période à extraire",
+          "cancel": "Annuler",
+          "submit": "Télécharger le CSV"
+        }
       }
     },
     "residences": {

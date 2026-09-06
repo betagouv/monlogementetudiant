@@ -9,11 +9,19 @@ import { cities } from '~/server/db/schema/cities'
 import { favoriteAccommodations } from '~/server/db/schema/favorite-accommodations'
 import { studentAlerts } from '~/server/db/schema/student-alerts'
 import { trackingEvents } from '~/server/db/schema/tracking-events'
+import {
+  getDateRange,
+  getPreviousDateRange,
+  listAccommodationStats,
+  TYPE_CONSULT_OFFER,
+  TYPE_VIEWED,
+  ZStatisticsPeriod,
+} from '~/server/statistics/accommodation-stats'
 import { DAY_MS } from '~/utils/time'
 import { createTRPCRouter, ownerProcedure } from '../init'
 
 const periodInput = z.object({
-  period: z.enum(['7d', '30d', '90d']).default('30d'),
+  period: ZStatisticsPeriod.default('30d'),
   ownerId: z.number().int().positive().optional(),
 })
 
@@ -24,26 +32,6 @@ const paginatedInput = periodInput.extend({
   page: z.number().int().positive().default(1),
   search: z.string().default(''),
 })
-
-type Period = z.infer<typeof periodInput>['period']
-
-function periodToDays(period: Period): number {
-  return period === '7d' ? 7 : period === '30d' ? 30 : 90
-}
-
-function getDateRange(period: Period): { from: Date; to: Date; days: number } {
-  const days = periodToDays(period)
-  const to = new Date()
-  const from = new Date(to.getTime() - days * DAY_MS)
-  return { from, to, days }
-}
-
-function getPreviousDateRange(period: Period): { from: Date; to: Date } {
-  const days = periodToDays(period)
-  const to = new Date(Date.now() - days * DAY_MS)
-  const from = new Date(to.getTime() - days * DAY_MS)
-  return { from, to }
-}
 
 function computeDelta(current: number, previous: number): number | null {
   if (previous === 0) return current === 0 ? 0 : null
@@ -94,8 +82,6 @@ async function withQueryLogging<T>(label: string, fn: () => Promise<T>): Promise
 
 const TYPE_SEARCH_CITY = 'search.city'
 const TYPE_SEARCH_DEPARTMENT = 'search.department'
-const TYPE_VIEWED = 'accommodation.viewed'
-const TYPE_CONSULT_OFFER = 'accommodation.consult_offer'
 
 async function countAlerts(ownerId: number, cityIds: number[], departmentIds: number[], from: Date, to: Date): Promise<number> {
   if (cityIds.length === 0 && departmentIds.length === 0) return 0
@@ -314,9 +300,6 @@ export const ownerStatisticsRouter = createTRPCRouter({
     .input(paginatedInput.extend({ sort: z.enum(['views_desc', 'views_asc']).default('views_desc') }))
     .query(async ({ ctx, input }) => {
       const owner = await resolveOwnerOrThrow(ctx.session.user.id, input.ownerId)
-      const { from, to } = getDateRange(input.period)
-      const fromIso = from.toISOString()
-      const toIso = to.toISOString()
 
       const search = input.search.trim()
       const conditions = [eq(accommodations.ownerId, owner.id)]
@@ -326,57 +309,17 @@ export const ownerStatisticsRouter = createTRPCRouter({
       const where = and(...conditions)
       const offset = (input.page - 1) * ACCOMMODATIONS_PAGE_SIZE
 
-      const searchSql = search ? sql`AND immutable_unaccent(a.name) ILIKE immutable_unaccent(${`%${search}%`})` : sql``
-      const orderBy = input.sort === 'views_asc' ? sql`ORDER BY "nbViews" ASC, a.name ASC` : sql`ORDER BY "nbViews" DESC, a.name ASC`
-
       const [[{ count: total = 0 } = { count: 0 }], items] = await Promise.all([
         withQueryLogging('byAccommodation:count', () => db.select({ count: sql<number>`count(*)::int` }).from(accommodations).where(where)),
         withQueryLogging('byAccommodation:items', () =>
-          db.execute<{
-            accommodationId: number
-            name: string
-            slug: string
-            published: boolean
-            postalCode: string | null
-            cityName: string | null
-            nbViews: number
-            nbConsultOffer: number
-            nbFavorites: number
-          }>(sql`
-          SELECT
-            a.id::int AS "accommodationId",
-            a.name AS "name",
-            a.slug AS "slug",
-            a.published AS "published",
-            addr.postal_code AS "postalCode",
-            c.name AS "cityName",
-            (
-              SELECT count(*)::int FROM tracking_event te
-              WHERE te.accommodation_id = a.id
-                AND te.type = ${TYPE_VIEWED}
-                AND te.created_at BETWEEN ${fromIso}::timestamptz AND ${toIso}::timestamptz
-            ) AS "nbViews",
-            (
-              SELECT count(*)::int FROM tracking_event te
-              WHERE te.accommodation_id = a.id
-                AND te.type = ${TYPE_CONSULT_OFFER}
-                AND te.created_at BETWEEN ${fromIso}::timestamptz AND ${toIso}::timestamptz
-            ) AS "nbConsultOffer",
-            (
-              SELECT count(*)::int FROM favorite_accommodation fa
-              WHERE fa.accommodation_id = a.id
-                AND fa.created_at BETWEEN ${fromIso}::timestamptz AND ${toIso}::timestamptz
-            ) AS "nbFavorites"
-          FROM accommodation a
-          LEFT JOIN accommodation_address addr
-            ON addr.accommodation_id = a.id AND addr.is_main = true
-          LEFT JOIN city c ON c.id = addr.city_id
-          WHERE a.owner_id = ${owner.id}
-          ${searchSql}
-          ${orderBy}
-          LIMIT ${ACCOMMODATIONS_PAGE_SIZE}
-          OFFSET ${offset}
-        `),
+          listAccommodationStats({
+            ownerId: owner.id,
+            period: input.period,
+            search,
+            sort: input.sort,
+            limit: ACCOMMODATIONS_PAGE_SIZE,
+            offset,
+          }),
         ),
       ])
 

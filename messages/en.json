@@ -1531,7 +1531,15 @@
           "sortViewsDesc": "Most viewed",
           "sortViewsAsc": "Least viewed"
         },
-        "loading": "Loading..."
+        "loading": "Loading...",
+        "export": {
+          "cta": "Export statistics",
+          "title": "Export statistics",
+          "description": "The CSV file contains the statistics of all your residences over the chosen period.",
+          "periodLegend": "Period to export",
+          "cancel": "Cancel",
+          "submit": "Download CSV"
+        }
       }
     },
     "residences": {
