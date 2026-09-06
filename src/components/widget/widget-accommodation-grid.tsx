@@ -4,17 +4,19 @@ import { useQuery } from '@tanstack/react-query'
 import clsx from 'clsx'
 import { useTranslations } from 'next-intl'
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
-import { FC, useEffect, useMemo } from 'react'
+import { FC, useMemo } from 'react'
 import { AccomodationCard } from '~/components/find-student-accomodation/card/find-student-accomodation-card'
 import { FindStudentAccomodationNeighborsResults } from '~/components/find-student-accomodation/results/find-student-accomodation-neighbors-results'
 import { NewWindowHint } from '~/components/ui/new-window'
 import { Pagination } from '~/components/ui/pagination'
 import { CardSkeleton } from '~/components/ui/skeleton/card-skeleton'
+import { useWidgetCampaign } from '~/components/widget/widget-campaign-context'
 import { useAccomodations } from '~/hooks/use-accomodations'
 import { trackEvent } from '~/lib/tracking'
 import { TTerritory } from '~/schemas/territories'
 import { useTRPC } from '~/server/trpc/client'
 import { sPluriel } from '~/utils/sPluriel'
+import { appendWidgetCampaign } from '~/utils/widget-campaign'
 import styles from './widget-accommodation-grid.module.css'
 
 type WidgetAccommodationGridProps = {
@@ -60,15 +62,8 @@ export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = ({ terr
   const totalPages = accommodations ? Math.ceil(accommodations.count / accommodations.pageSize) : 1
   const currentPage = queryStates.page ?? 1
   const isLastPage = currentPage >= totalPages
+  const widgetCampaign = useWidgetCampaign()
   const mainAccommodationIds = useMemo(() => (accommodations?.results || []).map((feature) => feature.id), [accommodations?.results])
-
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search)
-    const referrer = urlParams.get('referrer') || document.referrer
-    if (referrer) {
-      trackEvent({ category: 'Widget', action: 'chargement widget', name: referrer })
-    }
-  }, [])
 
   return (
     <div>
@@ -132,7 +127,7 @@ export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = ({ terr
       <footer className={styles.footer}>
         Proposé par{' '}
         <a
-          href="https://monlogementetudiant.beta.gouv.fr"
+          href={appendWidgetCampaign('https://monlogementetudiant.beta.gouv.fr', widgetCampaign)}
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => trackEvent({ category: 'Widget', action: 'clic vers site principal' })}

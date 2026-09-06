@@ -6,13 +6,16 @@ import { useTranslations } from 'next-intl'
 import { useEffect, useRef } from 'react'
 import { ExpensesPieChart } from '~/components/budget-simulation/expenses-pie-chart'
 import { LiveRegion } from '~/components/ui/live-region'
+import { useWidgetCampaign } from '~/components/widget/widget-campaign-context'
 import { trackEvent } from '~/lib/tracking'
+import { appendWidgetCampaign } from '~/utils/widget-campaign'
 import { getMonthlyEquivalent, useBudgetSimulator } from './budget-simulator-context'
 import styles from './budget-summary.module.css'
 
 export function BudgetSummary() {
   const { state } = useBudgetSimulator()
   const t = useTranslations('budgetSimulator.summary')
+  const widgetCampaign = useWidgetCampaign()
 
   const totalIncomes = state.activeIncomeTypes.reduce(
     (sum, type) => sum + getMonthlyEquivalent(state.monthlyIncomes[type], state.incomeFrequencies[type]),
@@ -112,7 +115,10 @@ export function BudgetSummary() {
       )}
       <div className={clsx(styles.border, 'fr-flex fr-flex-gap-4v fr-direction-column fr-mt-4w fr-mb-2w fr-py-2w fr-px-4w')}>
         <h3 className="fr-text-inverted--grey fr-h4 fr-mb-0">{t('hintsTitle')}</h3>
-        <Button iconId="fr-icon-money-euro-circle-line" linkProps={{ href: '/preparer-mon-budget-etudiant', target: '_self' }}>
+        <Button
+          iconId="fr-icon-money-euro-circle-line"
+          linkProps={{ href: appendWidgetCampaign('/preparer-mon-budget-etudiant', widgetCampaign), target: '_self' }}
+        >
           {t('hintsCta')}
         </Button>
       </div>
