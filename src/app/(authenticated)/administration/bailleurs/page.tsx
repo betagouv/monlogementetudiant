@@ -4,6 +4,7 @@ import { Alert } from '@codegouvfr/react-dsfr/Alert'
 import Button from '@codegouvfr/react-dsfr/Button'
 import Input from '@codegouvfr/react-dsfr/Input'
 import { SegmentedControl } from '@codegouvfr/react-dsfr/SegmentedControl'
+import Tag from '@codegouvfr/react-dsfr/Tag'
 import { ColumnDef } from '@tanstack/react-table'
 import clsx from 'clsx'
 import Image from 'next/image'
@@ -12,7 +13,9 @@ import { parseAsInteger, parseAsString, parseAsStringLiteral, useQueryStates } f
 import { useState } from 'react'
 import { useDebounce } from 'use-debounce'
 import { AdminDataTable } from '~/components/administration/admin-data-table'
+import { ContactModeBadge } from '~/components/administration/contact-mode-badge'
 import { Pagination } from '~/components/ui/pagination'
+import { EOwnerContactMode, OWNER_CONTACT_MODE_LABELS, OWNER_CONTACT_MODES } from '~/enums/owner-contact-mode'
 import { useAdminOwners } from '~/hooks/use-admin-owners'
 import { getAvatarColor, getInitials } from '~/utils/avatar'
 import { getFaviconUrl } from '~/utils/get-favicon-url'
@@ -25,6 +28,7 @@ type OwnerRow = {
   slug: string
   url: string | null
   imageBase64: string | null
+  contactMode: EOwnerContactMode
   accommodationCount: number
   nbTotalApartments: number
   userCount: number
@@ -91,6 +95,12 @@ const columns: ColumnDef<OwnerRow, unknown>[] = [
     enableSorting: true,
   },
   {
+    accessorKey: 'contactMode',
+    header: 'Candidatures',
+    enableSorting: true,
+    cell: ({ row }) => <ContactModeBadge mode={row.original.contactMode} small />,
+  },
+  {
     id: 'actions',
     header: '',
     enableSorting: false,
@@ -103,17 +113,21 @@ const columns: ColumnDef<OwnerRow, unknown>[] = [
 ]
 
 export default function OwnersPage() {
-  const [{ view, search, page }, setQueryStates] = useQueryStates({
+  const [{ view, search, page, contactMode }, setQueryStates] = useQueryStates({
     view: parseAsStringLiteral(['grid', 'table']).withDefault('grid'),
     search: parseAsString.withDefault(''),
     page: parseAsInteger.withDefault(1),
+    contactMode: parseAsStringLiteral(OWNER_CONTACT_MODES),
   })
   const [debouncedSearch] = useDebounce(search, 300)
 
   const { data, isLoading, isError, error } = useAdminOwners({
     page,
     search: debouncedSearch.length >= 2 ? debouncedSearch : undefined,
+    contactMode: contactMode ?? undefined,
   })
+
+  const modeCounts = data?.contactModeCounts
 
   return (
     <>
@@ -172,6 +186,25 @@ export default function OwnersPage() {
         </div>
       </div>
 
+      <div className="fr-flex fr-align-items-center fr-flex-gap-2v fr-mb-3w fr-flex-wrap">
+        <span className="fr-text--sm fr-text--bold fr-mb-0">Mode de candidatures :</span>
+        <Tag as="button" small pressed={!contactMode} onClick={() => setQueryStates({ contactMode: null, page: 1 })}>
+          Tous
+        </Tag>
+        {OWNER_CONTACT_MODES.map((mode) => (
+          <Tag
+            key={mode}
+            as="button"
+            small
+            pressed={contactMode === mode}
+            onClick={() => setQueryStates({ contactMode: contactMode === mode ? null : mode, page: 1 })}
+          >
+            {OWNER_CONTACT_MODE_LABELS[mode]}
+            {modeCounts ? ` (${modeCounts[mode]})` : ''}
+          </Tag>
+        ))}
+      </div>
+
       {isError && (
         <Alert
           severity="error"
@@ -217,7 +250,8 @@ export default function OwnersPage() {
                     </div>
                   </div>
                   <div className={styles.gCardBottom}>
-                    <span>{owner.url ?? '-'}</span>
+                    <span className={styles.gCardBottomUrl}>{owner.url ?? '-'}</span>
+                    <ContactModeBadge mode={owner.contactMode} small />
                   </div>
                 </Link>
               ))}

@@ -1,3 +1,4 @@
+import { EOwnerContactMode, OWNER_CONTACT_MODE_LABELS } from '~/enums/owner-contact-mode'
 import { getTypologyLabel, TYPOLOGIES, type TypologyType } from '~/schemas/accommodations/typology'
 
 /**
@@ -93,6 +94,11 @@ const ACCOMMODATION_FIELD_LABELS: Record<string, string> = {
   wifi: 'Wifi',
 }
 
+/** Champs de la fiche gestionnaire (table `owner`). */
+const OWNER_FIELD_LABELS: Record<string, string> = {
+  contactMode: 'Mode de réception des candidatures',
+}
+
 export type ParsedDiffField = { typology: TypologyType; field: TypologyField } | null
 
 /** Reconnaît une clé de typologie, dans l'une ou l'autre convention. */
@@ -114,11 +120,17 @@ export function parseTypologyDiffKey(key: string): ParsedDiffField {
 export function formatDiffFieldLabel(key: string): string {
   const typology = parseTypologyDiffKey(key)
   if (typology) return `${getTypologyLabel(typology.typology)} · ${TYPOLOGY_FIELD_LABELS[typology.field]}`
-  return ACCOMMODATION_FIELD_LABELS[key] ?? key
+  return ACCOMMODATION_FIELD_LABELS[key] ?? OWNER_FIELD_LABELS[key] ?? key
 }
 
-/** Rendu d'une valeur de diff : booléens en français, absence explicite, listes comptées. */
-export function formatDiffValue(value: unknown): string {
+/**
+ * Rendu d'une valeur de diff : booléens en français, absence explicite, listes comptées.
+ * `key` permet de traduire les valeurs d'énumération stockées en brut (ex. `dossier_facile`).
+ */
+export function formatDiffValue(value: unknown, key?: string): string {
+  if (key === 'contactMode' && typeof value === 'string' && value in OWNER_CONTACT_MODE_LABELS) {
+    return OWNER_CONTACT_MODE_LABELS[value as EOwnerContactMode]
+  }
   if (value == null || value === '') return '—'
   if (typeof value === 'boolean') return value ? 'Oui' : 'Non'
   if (Array.isArray(value)) return `${value.length} élément(s)`
