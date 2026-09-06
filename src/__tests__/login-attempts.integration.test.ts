@@ -10,7 +10,11 @@ import { adminCaller } from './helpers/test-caller'
 
 const readAttempt = async (token: string) => {
   const db = getTestDb()
-  const [row] = await db.select().from(loginAttempts).where(eq(loginAttempts.tokenHash, hashLoginToken(token))).limit(1)
+  const [row] = await db
+    .select()
+    .from(loginAttempts)
+    .where(eq(loginAttempts.tokenHash, hashLoginToken(token)))
+    .limit(1)
   return row ?? null
 }
 
@@ -32,7 +36,14 @@ beforeEach(async () => {
 
 describe('recordMagicLinkSent', () => {
   it('rattache le lien envoyé au compte et à son gestionnaire', async () => {
-    await createUser({ id: 'gest-id', name: 'Gestionnaire', email: 'gest@bailleur.fr', role: 'owner', firstname: 'Léa', lastname: 'Martin' })
+    await createUser({
+      id: 'gest-id',
+      name: 'Gestionnaire',
+      email: 'gest@bailleur.fr',
+      role: 'owner',
+      firstname: 'Léa',
+      lastname: 'Martin',
+    })
     const owner = await createOwner({ name: 'Bailleur Connexion', slug: 'bailleur-connexion', userId: 'gest-id' })
 
     await recordMagicLinkSent({ email: 'gest@bailleur.fr', token: 'token-envoi' })
@@ -107,7 +118,14 @@ describe('recordMagicLinkVerification', () => {
 
 describe('admin.connections.list', () => {
   beforeEach(async () => {
-    await createUser({ id: 'gest-id', name: 'Gestionnaire', email: 'gest@bailleur.fr', role: 'owner', firstname: 'Léa', lastname: 'Martin' })
+    await createUser({
+      id: 'gest-id',
+      name: 'Gestionnaire',
+      email: 'gest@bailleur.fr',
+      role: 'owner',
+      firstname: 'Léa',
+      lastname: 'Martin',
+    })
     await createOwner({ name: 'Bailleur Connexion', slug: 'bailleur-connexion', userId: 'gest-id' })
   })
 

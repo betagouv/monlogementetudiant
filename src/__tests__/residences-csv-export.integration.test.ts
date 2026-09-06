@@ -29,7 +29,14 @@ async function readCsv(response: Response) {
 
 beforeEach(async () => {
   mockSession.current = { user: { role: 'admin' } }
-  await createUser({ id: 'test-gestionnaire-id', name: 'Gestionnaire', email: 'gest@test.com', role: 'owner', firstname: 'Léa', lastname: 'Martin' })
+  await createUser({
+    id: 'test-gestionnaire-id',
+    name: 'Gestionnaire',
+    email: 'gest@test.com',
+    role: 'owner',
+    firstname: 'Léa',
+    lastname: 'Martin',
+  })
 })
 
 describe('GET /api/admin/residences/export', () => {
