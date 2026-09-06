@@ -774,7 +774,25 @@ export const bailleurRouter = createTRPCRouter({
       const owner = await getOwnerForUser(ctx.session.user.id, input.ownerId)
       if (!owner) throw new TRPCError({ code: 'NOT_FOUND', message: 'Owner not found' })
 
+      const previousMode = owner.contactMode
       await db.update(owners).set({ contactMode: input.mode, updatedBy: ctx.session.user.id }).where(eq(owners.id, owner.id))
+
+      // Le choix du mode (DossierFacile / coordonnées / aucun) est tracé dans le journal : c'est
+      // l'indicateur d'adoption suivi côté administration. On n'enregistre que les vrais changements.
+      if (previousMode !== input.mode) {
+        await logActivity({
+          userId: ctx.session.user.id,
+          userName: ctx.session.user.name,
+          action: 'owner.contact_mode_updated',
+          entityType: 'owner',
+          entityId: String(owner.id),
+          entityName: owner.name,
+          ownerId: owner.id,
+          ownerName: owner.name,
+          metadata: { diff: { contactMode: { old: previousMode, new: input.mode } } },
+        })
+      }
+
       return { contactMode: input.mode }
     }),
 

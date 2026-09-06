@@ -5,6 +5,7 @@ export const ACTION_LABELS: Record<string, string> = {
   'accommodation.published': 'Résidence publiée',
   'accommodation.unpublished': 'Résidence dépubliée',
   'owner.created': 'Gestionnaire créé',
+  'owner.contact_mode_updated': 'Mode de candidatures modifié',
 }
 
 export const ACTION_ICONS: Record<string, string> = {
@@ -14,6 +15,7 @@ export const ACTION_ICONS: Record<string, string> = {
   'accommodation.published': 'fr-icon-check-line',
   'accommodation.unpublished': 'fr-icon-close-circle-line',
   'owner.created': 'fr-icon-building-line',
+  'owner.contact_mode_updated': 'fr-icon-mail-line',
 }
 
 export const ACTION_COLORS: Record<string, string> = {
@@ -23,6 +25,7 @@ export const ACTION_COLORS: Record<string, string> = {
   'accommodation.published': 'var(--background-flat-success)',
   'accommodation.unpublished': 'var(--background-flat-error)',
   'owner.created': 'var(--background-flat-warning)',
+  'owner.contact_mode_updated': 'var(--background-flat-purple-glycine)',
 }
 
 export const ALL_ACTIONS = Object.keys(ACTION_LABELS)

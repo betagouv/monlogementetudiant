@@ -12,6 +12,8 @@ import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { LinkAdminToOwnerDialog } from '~/components/administration/link-admin-to-owner-dialog'
+import { ActivityItem, type ActivityEntry } from '~/components/administration/activity-item'
+import { ContactModeBadge } from '~/components/administration/contact-mode-badge'
 import { LinkUserToOwnerDialog } from '~/components/administration/link-user-to-owner-dialog'
 import { OwnerForm } from '~/components/administration/owner-form'
 import { OwnerLogoForm } from '~/components/administration/owner-logo-form'
@@ -131,6 +133,10 @@ export function OwnerDetail({ id }: { id: string }) {
                 {userCount} utilisateur{sPluriel(userCount)}
               </span>
             </div>
+            <div className="fr-flex fr-align-items-center fr-flex-gap-2v fr-mt-1v">
+              <span className="fr-text--xs fr-text-mention--grey fr-mb-0">Candidatures :</span>
+              <ContactModeBadge mode={ownerData.contactMode} small />
+            </div>
           </div>
         </div>
         <div className={styles.kpiRow}>
@@ -216,6 +222,7 @@ export function OwnerDetail({ id }: { id: string }) {
                       <p className="fr-text--sm fr-text-mention--grey fr-mb-0">Aucune modification enregistrée</p>
                     )}
                   </div>
+                  <ContactModeHistory ownerId={ownerId} />
                   <div className={styles.dangerZone}>
                     <h3 className={clsx('fr-h6 fr-mb-2w', styles.dangerZoneTitle)}>Zone de danger</h3>
                     <Button priority="tertiary" onClick={() => deleteOwnerModal.open()} disabled={deleteOwner.isPending}>
@@ -246,6 +253,32 @@ export function OwnerDetail({ id }: { id: string }) {
         Êtes-vous sûr de vouloir supprimer ce gestionnaire ? Cette action est irréversible.
       </deleteOwnerModal.Component>
     </>
+  )
+}
+
+/**
+ * Historique des changements de mode de réception des candidatures pour ce gestionnaire.
+ * Alimenté par le journal d'activité (`owner.contact_mode_updated`), qu'ils viennent de
+ * l'espace gestionnaire (self-service) ou d'une modification faite ici en administration.
+ */
+function ContactModeHistory({ ownerId }: { ownerId: number }) {
+  const trpc = useTRPC()
+  const { data, isLoading } = useQuery(
+    trpc.admin.ownerUsage.activityLog.queryOptions({ ownerId, action: 'owner.contact_mode_updated', pageSize: 5 }),
+  )
+  const items = data?.items ?? []
+
+  return (
+    <div className={clsx(styles.card, 'fr-p-3w fr-mb-3w')}>
+      <h3 className="fr-h6 fr-mb-1w">Mode de candidatures</h3>
+      {isLoading ? (
+        <p className="fr-text--sm fr-text-mention--grey fr-mb-0">Chargement...</p>
+      ) : items.length === 0 ? (
+        <p className="fr-text--sm fr-text-mention--grey fr-mb-0">Aucun changement enregistré</p>
+      ) : (
+        items.map((item: ActivityEntry) => <ActivityItem key={item.id} item={item} />)
+      )}
+    </div>
   )
 }
 

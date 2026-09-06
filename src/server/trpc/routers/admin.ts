@@ -2,7 +2,7 @@ import { TRPCError } from '@trpc/server'
 import { and, between, count, desc, eq, ilike, inArray, isNull, or, sql } from 'drizzle-orm'
 import { getTranslations } from 'next-intl/server'
 import { z } from 'zod'
-import { ZOwnerContactMode } from '~/enums/owner-contact-mode'
+import { EOwnerContactMode, OWNER_CONTACT_MODES, ZOwnerContactMode } from '~/enums/owner-contact-mode'
 import { FEATURES } from '~/lib/features'
 import { IMPORT_JOB_TYPES, ZImportJobType } from '~/schemas/import-jobs'
 import { BAILLEUR_PERMISSIONS, BAILLEUR_ROLES } from '~/server/bailleur/permissions'
@@ -19,11 +19,13 @@ import { importJobs } from '~/server/db/schema/import-jobs'
 import { ownerFeedback } from '~/server/db/schema/owner-feedback'
 import { owners } from '~/server/db/schema/owners'
 import { stats } from '~/server/db/schema/stats'
+import { logActivity } from '~/server/services/activity-logger'
 import { sendAdminResetPasswordEmail, sendOwnerWelcomeEmail } from '~/server/services/brevo'
 import { generateSlug } from '~/server/trpc/utils/accommodation-helpers'
 import { findAvailableSlug } from '~/server/utils/slug'
 import { adminProcedure, createTRPCRouter } from '../init'
 import { adminCandidaturesRouter } from './admin-candidatures'
+import { adminConnectionsRouter } from './admin-connections'
 import { consumersRouter } from './admin-consumers'
 
 const PAGE_SIZE = 20
@@ -331,19 +333,25 @@ const ownersRouter = createTRPCRouter({
       z.object({
         page: z.number().default(1),
         search: z.string().optional(),
+        contactMode: ZOwnerContactMode.optional(),
       }),
     )
     .query(async ({ input }) => {
+      const searchCondition = input.search && input.search.length >= 2 ? ilike(owners.name, `%${input.search}%`) : undefined
       const conditions = []
 
-      if (input.search && input.search.length >= 2) {
-        conditions.push(ilike(owners.name, `%${input.search}%`))
+      if (searchCondition) {
+        conditions.push(searchCondition)
+      }
+
+      if (input.contactMode) {
+        conditions.push(eq(owners.contactMode, input.contactMode))
       }
 
       const where = conditions.length > 0 ? and(...conditions) : undefined
       const offset = (input.page - 1) * PAGE_SIZE
 
-      const [countResult, results] = await Promise.all([
+      const [countResult, results, modeRows] = await Promise.all([
         db.select({ count: count() }).from(owners).where(where),
         db
           .select({
@@ -352,6 +360,7 @@ const ownersRouter = createTRPCRouter({
             slug: owners.slug,
             url: owners.url,
             image: owners.image,
+            contactMode: owners.contactMode,
             accommodationCount: sql<number>`(SELECT count(*)::int FROM accommodation WHERE owner_id = "owner"."id")`,
             nbTotalApartments: sql<number>`(SELECT coalesce(sum(coalesce(nb_total_apartments, 0)), 0)::int FROM accommodation WHERE owner_id = "owner"."id")`,
             userCount: sql<number>`(SELECT count(*)::int FROM "user" WHERE owner_id = "owner"."id")`,
@@ -369,15 +378,21 @@ const ownersRouter = createTRPCRouter({
           .orderBy(owners.name)
           .limit(PAGE_SIZE)
           .offset(offset),
+        // Répartition des modes de réception des candidatures : volontairement calculée hors du
+        // filtre de mode (mais dans la recherche), pour rester un repère stable quand on filtre.
+        db.select({ mode: owners.contactMode, n: count() }).from(owners).where(searchCondition).groupBy(owners.contactMode),
       ])
 
       const total = countResult[0]?.count ?? 0
+      const contactModeCounts = Object.fromEntries(OWNER_CONTACT_MODES.map((mode) => [mode, 0])) as Record<EOwnerContactMode, number>
+      for (const row of modeRows) contactModeCounts[row.mode] = row.n
 
       return {
         items: results.map(({ image, ...r }) => ({
           ...r,
           imageBase64: image ? `data:image/jpeg;base64,${Buffer.from(image).toString('base64')}` : null,
         })),
+        contactModeCounts,
         total,
         pageCount: Math.ceil(total / PAGE_SIZE),
         page: input.page,
@@ -478,10 +493,32 @@ const ownersRouter = createTRPCRouter({
       if (fields.landingUrl !== undefined) updateData.landingUrl = fields.landingUrl
       if (fields.contactMode !== undefined) updateData.contactMode = fields.contactMode
 
+      // Relevé avant écriture : le mode de réception des candidatures est tracé dans le journal
+      // (cf. `owner.contact_mode_updated`), il faut donc connaître la valeur précédente.
+      let previousMode: EOwnerContactMode | null = null
+      if (fields.contactMode !== undefined) {
+        const [before] = await db.select({ contactMode: owners.contactMode }).from(owners).where(eq(owners.id, id)).limit(1)
+        previousMode = before?.contactMode ?? null
+      }
+
       // `updatedAt` est tamponné automatiquement par le `$onUpdate` de la colonne.
       const [updated] = await db.update(owners).set(updateData).where(eq(owners.id, id)).returning()
       if (!updated) {
         throw new TRPCError({ code: 'NOT_FOUND', message: (await getAdminErrorTranslations())('ownerNotFound') })
+      }
+
+      if (fields.contactMode !== undefined && previousMode !== fields.contactMode) {
+        await logActivity({
+          userId: ctx.session.user.id,
+          userName: ctx.session.user.name,
+          action: 'owner.contact_mode_updated',
+          entityType: 'owner',
+          entityId: String(updated.id),
+          entityName: updated.name,
+          ownerId: updated.id,
+          ownerName: updated.name,
+          metadata: { diff: { contactMode: { old: previousMode, new: fields.contactMode } } },
+        })
       }
 
       const { image, ...rest } = updated
@@ -1244,4 +1281,5 @@ export const adminRouter = createTRPCRouter({
   feedback: feedbackRouter,
   consumers: consumersRouter,
   candidatures: adminCandidaturesRouter,
+  connections: adminConnectionsRouter,
 })
