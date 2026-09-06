@@ -11,20 +11,13 @@ import { useMemo } from 'react'
 import { useDebounce } from 'use-debounce'
 import { AdminDataTable } from '~/components/administration/admin-data-table'
 import { Pagination } from '~/components/ui/pagination'
-import {
-  ELoginOutcome,
-  FAILED_LOGIN_OUTCOMES,
-  isFailedLoginOutcome,
-  LOGIN_OUTCOME_LABELS,
-  LOGIN_OUTCOMES,
-} from '~/enums/login-attempt-status'
+import { ELoginOutcome, FAILED_LOGIN_OUTCOMES, LOGIN_OUTCOME_LABELS, LOGIN_OUTCOMES } from '~/enums/login-attempt-status'
 import { useAdminConnections, useAdminStrandedAccounts } from '~/hooks/use-admin-connections'
 import { getDateFrom } from '~/utils/date-helpers'
 import styles from '../administration.module.css'
 import statStyles from '../statistiques/statistiques.module.css'
 
 const PRESETS = ['7', '15', '30', '90'] as const
-type Preset = (typeof PRESETS)[number]
 
 const OUTCOME_SEVERITY: Record<ELoginOutcome, 'success' | 'warning' | 'error' | 'info' | undefined> = {
   [ELoginOutcome.COMPLETED]: 'success',
@@ -86,9 +79,7 @@ const columns: ColumnDef<ConnectionRow, unknown>[] = [
     cell: ({ row }) => (
       <div>
         <div className="fr-text--sm fr-text--bold">{row.original.accountName ?? row.original.email ?? 'Compte inconnu'}</div>
-        {row.original.accountName && row.original.email && (
-          <div className="fr-text--xs fr-text-mention--grey">{row.original.email}</div>
-        )}
+        {row.original.accountName && row.original.email && <div className="fr-text--xs fr-text-mention--grey">{row.original.email}</div>}
       </div>
     ),
   },
@@ -233,8 +224,8 @@ export default function ConnexionsPage() {
               {stranded && stranded.length > 0 && (
                 <>
                   {' — '}
-                  {stranded.length} compte{stranded.length > 1 ? 's' : ''} n&apos;{stranded.length > 1 ? 'ont' : 'a'} jamais réussi à
-                  se connecter sur la période.
+                  {stranded.length} compte{stranded.length > 1 ? 's' : ''} n&apos;{stranded.length > 1 ? 'ont' : 'a'} jamais réussi à se
+                  connecter sur la période.
                 </>
               )}
             </>
@@ -339,9 +330,7 @@ export default function ConnexionsPage() {
                   <tr key={`${account.email ?? 'inconnu'}-${account.ownerId ?? 0}`}>
                     <td>
                       <div className="fr-text--sm fr-text--bold">{account.accountName ?? account.email ?? 'Compte inconnu'}</div>
-                      {account.accountName && account.email && (
-                        <div className="fr-text--xs fr-text-mention--grey">{account.email}</div>
-                      )}
+                      {account.accountName && account.email && <div className="fr-text--xs fr-text-mention--grey">{account.email}</div>}
                     </td>
                     <td className="fr-text--sm">
                       {account.ownerName && account.ownerId ? (

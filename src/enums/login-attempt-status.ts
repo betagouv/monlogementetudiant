@@ -54,6 +54,3 @@ export const LOGIN_OUTCOME_LABELS: Record<ELoginOutcome, string> = {
 
 /** Issues qui méritent un avertissement : le gestionnaire a voulu se connecter et n'y est pas arrivé. */
 export const FAILED_LOGIN_OUTCOMES = [ELoginOutcome.NEVER_CLICKED, ELoginOutcome.EXPIRED, ELoginOutcome.INVALID] as const
-
-export const isFailedLoginOutcome = (outcome: ELoginOutcome): boolean =>
-  (FAILED_LOGIN_OUTCOMES as readonly ELoginOutcome[]).includes(outcome)
