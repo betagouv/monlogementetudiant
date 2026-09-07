@@ -6,17 +6,8 @@ import { db } from '~/server/db'
 import { user } from '~/server/db/schema/auth'
 import { loginAttempts } from '~/server/db/schema/login-attempts'
 
-/**
- * Durée de validité d'un lien de connexion, en secondes. Partagée entre la configuration du
- * plugin `magicLink` et le suivi : c'est elle qui permet de distinguer « jamais ouvert » de
- * « ouvert trop tard » sans relire la table `verification`, que Better Auth purge à l'usage.
- */
 export const MAGIC_LINK_EXPIRES_IN_SECONDS = 600
 
-/**
- * Empreinte du jeton. On ne conserve jamais le jeton en clair : cette table sert au suivi et ne
- * doit pas offrir un second exemplaire utilisable des liens de connexion.
- */
 export const hashLoginToken = (token: string): string => createHash('sha256').update(token).digest('hex')
 
 /** Enregistre l'envoi d'un lien de connexion. N'échoue jamais bruyamment : le suivi ne doit pas bloquer une connexion. */
@@ -41,13 +32,6 @@ export async function recordMagicLinkSent(params: { email: string; token: string
   }
 }
 
-/**
- * Enregistre l'issue d'une vérification de lien.
- *
- * Better Auth ne distingue pas le lien périmé du lien inconnu : les deux ressortent en
- * `INVALID_TOKEN`, parce que le jeton est consommé (donc supprimé) avant même que son expiration
- * soit regardée. C'est notre propre ligne, elle jamais purgée, qui permet de trancher.
- */
 export async function recordMagicLinkVerification(params: { token: string; success: boolean; userAgent: string | null }): Promise<void> {
   try {
     const tokenHash = hashLoginToken(params.token)

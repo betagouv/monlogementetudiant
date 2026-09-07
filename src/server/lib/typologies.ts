@@ -202,12 +202,6 @@ export async function persistTypologies(
         nbTotal: sql`excluded.nb_total`,
         nbAvailable: sql`excluded.nb_available`,
         colocation: sql`excluded.colocation`,
-        // Voir `stampsAvailability` : une disponibilité effacée repart sans date, et une écriture
-        // sans auteur laisse le suivi tel quel. Réenregistrer un formulaire sans toucher aux
-        // dispos ne les fait pas non plus passer pour fraîchement mises à jour.
-        //
-        // Les valeurs sont passées en littéral typé : hors d'un `values()`, Drizzle ne fait pas
-        // passer le paramètre par le mapper de la colonne et postgres-js reçoit une `Date` brute.
         availabilityUpdatedAt: updatedBy
           ? sql`case
               when excluded.nb_available is null then null

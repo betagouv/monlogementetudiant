@@ -9,11 +9,6 @@ import { adminProcedure, createTRPCRouter } from '../init'
 
 const PAGE_SIZE = 25
 
-/**
- * Issue d'une tentative, telle qu'affichée. Quatre états sont stockés ; le cinquième —
- * « lien expiré sans avoir jamais été ouvert », le plus fréquent des échecs — se déduit ici plutôt
- * que d'être réécrit en base par une tâche planifiée.
- */
 const OUTCOME_SQL = sql<ELoginOutcome>`
   case
     when ${loginAttempts.status} = ${ELoginAttemptStatus.COMPLETED} then ${ELoginOutcome.COMPLETED}
