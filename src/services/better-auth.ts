@@ -16,6 +16,7 @@ import * as schema from '~/server/db/schema'
 import { adminOwnerLinks } from '~/server/db/schema/admin-owner-links'
 import { env } from '~/server/env'
 import { sendMagicLinkEmail, sendResetPasswordEmail, sendVerificationEmail } from '~/server/services/brevo'
+import { MAGIC_LINK_EXPIRES_IN_SECONDS, recordMagicLinkSent } from '~/server/services/login-attempts'
 
 export const oneDay = 24 * 60 * 60
 
@@ -89,8 +90,8 @@ export const auth = betterAuth({
   },
   plugins: [
     magicLink({
-      expiresIn: 600,
-      sendMagicLink: async ({ email, url }) => {
+      expiresIn: MAGIC_LINK_EXPIRES_IN_SECONDS,
+      sendMagicLink: async ({ email, url, token }) => {
         const usr = await db.query.user.findFirst({
           where: eq(schema.user.email, email),
           columns: { role: true },
@@ -105,6 +106,9 @@ export const auth = betterAuth({
         buffer.searchParams.set('url', url)
         logLocalAuthLink('connexion', email, buffer.toString())
         await sendMagicLinkEmail(email, buffer.toString())
+        // Suivi du parcours de connexion (espace administration > Connexions). Enregistré après
+        // l'envoi : la table décrit les liens réellement partis, pas les demandes ignorées.
+        await recordMagicLinkSent({ email, token })
       },
     }),
     // Clés d'API pour l'API publique v1 : attribution du trafic + rate-limit par clé (stocké en PG).

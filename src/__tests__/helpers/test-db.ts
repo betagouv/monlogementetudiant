@@ -69,6 +69,7 @@ export async function cleanTables() {
       owner,
       external_source,
       import_blocklist,
+      login_attempt,
       favorite_accommodation,
       housing_aid_simulation,
       newsletter_subscription,

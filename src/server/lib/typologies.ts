@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm'
+import { and, eq, notInArray, sql } from 'drizzle-orm'
 import type { TypologyType } from '~/schemas/accommodations/typology'
 import { db } from '~/server/db'
 import { accommodationTypologies } from '~/server/db/schema/accommodation-typologies'
@@ -139,16 +139,99 @@ function toRow(accommodationId: number, t: TypologyDraft): typeof accommodationT
   }
 }
 
-/** Replace all typology rows of an accommodation (delete-then-insert). */
-export async function persistTypologies(tx: DbOrTx, accommodationId: number, typologies: TypologyDraft[]): Promise<void> {
-  await tx.delete(accommodationTypologies).where(eq(accommodationTypologies.accommodationId, accommodationId))
+/** Auteur de l'écriture, pour l'horodatage des disponibilités. Absent pour un import ou un script. */
+export type PersistTypologiesOptions = { updatedBy?: string | null }
+
+/**
+ * Aligne les typologies d'une résidence sur `typologies` : les types fournis sont créés ou mis à
+ * jour en place, les types absents sont supprimés.
+ *
+ * Historiquement un delete-then-insert, ce qui réattribuait un identifiant neuf à chaque
+ * enregistrement — y compris quand rien ne changeait — et faisait perdre toute colonne portée par
+ * la ligne. L'upsert conserve l'identité de la ligne, ce dont dépend l'horodatage des
+ * disponibilités : sans lui, chaque enregistrement du formulaire, même sans toucher aux dispos,
+ * remettrait le compteur à zéro.
+ */
+export async function persistTypologies(
+  tx: DbOrTx,
+  accommodationId: number,
+  typologies: TypologyDraft[],
+  options: PersistTypologiesOptions = {},
+): Promise<void> {
+  const keptTypes = typologies.map((t) => t.type)
+
+  await tx
+    .delete(accommodationTypologies)
+    .where(
+      keptTypes.length > 0
+        ? and(eq(accommodationTypologies.accommodationId, accommodationId), notInArray(accommodationTypologies.type, keptTypes))
+        : eq(accommodationTypologies.accommodationId, accommodationId),
+    )
+
   if (typologies.length === 0) return
-  await tx.insert(accommodationTypologies).values(typologies.map((t) => toRow(accommodationId, t)))
+
+  const now = new Date()
+  const updatedBy = options.updatedBy ?? null
+
+  // Deux règles gouvernent l'horodatage, dans cet ordre :
+  //
+  // 1. une typologie sans disponibilité ne porte pas de date — dater une donnée absente n'aurait
+  //    aucun sens ;
+  // 2. seule une action de gestionnaire en pose une. Un import ou un script n'a pas d'auteur : il
+  //    écrit la disponibilité sans toucher au suivi, et surtout sans effacer la trace laissée par
+  //    un gestionnaire — ce qu'on mesure ici, c'est que le parc est tenu à jour par quelqu'un, pas
+  //    qu'un flux automatique tourne.
+  const stampsAvailability = (nbAvailable: number | null) => nbAvailable != null && updatedBy != null
+
+  await tx
+    .insert(accommodationTypologies)
+    .values(
+      typologies.map((t) => ({
+        ...toRow(accommodationId, t),
+        availabilityUpdatedAt: stampsAvailability(t.nbAvailable) ? now : null,
+        availabilityUpdatedBy: stampsAvailability(t.nbAvailable) ? updatedBy : null,
+      })),
+    )
+    .onConflictDoUpdate({
+      target: [accommodationTypologies.accommodationId, accommodationTypologies.type],
+      set: {
+        priceMin: sql`excluded.price_min`,
+        priceMax: sql`excluded.price_max`,
+        superficieMin: sql`excluded.superficie_min`,
+        superficieMax: sql`excluded.superficie_max`,
+        nbTotal: sql`excluded.nb_total`,
+        nbAvailable: sql`excluded.nb_available`,
+        colocation: sql`excluded.colocation`,
+        // Voir `stampsAvailability` : une disponibilité effacée repart sans date, et une écriture
+        // sans auteur laisse le suivi tel quel. Réenregistrer un formulaire sans toucher aux
+        // dispos ne les fait pas non plus passer pour fraîchement mises à jour.
+        //
+        // Les valeurs sont passées en littéral typé : hors d'un `values()`, Drizzle ne fait pas
+        // passer le paramètre par le mapper de la colonne et postgres-js reçoit une `Date` brute.
+        availabilityUpdatedAt: updatedBy
+          ? sql`case
+              when excluded.nb_available is null then null
+              when ${accommodationTypologies.nbAvailable} is distinct from excluded.nb_available then ${now.toISOString()}::timestamptz
+              else ${accommodationTypologies.availabilityUpdatedAt} end`
+          : sql`case when excluded.nb_available is null then null else ${accommodationTypologies.availabilityUpdatedAt} end`,
+        availabilityUpdatedBy: updatedBy
+          ? sql`case
+              when excluded.nb_available is null then null
+              when ${accommodationTypologies.nbAvailable} is distinct from excluded.nb_available then ${updatedBy}::text
+              else ${accommodationTypologies.availabilityUpdatedBy} end`
+          : sql`case when excluded.nb_available is null then null else ${accommodationTypologies.availabilityUpdatedBy} end`,
+      },
+    })
 }
 
 /** Replace all typologies of an accommodation with `drafts` (empty drafts skipped), then refresh aggregates. */
-export async function syncTypologies(tx: DbOrTx, accommodationId: number, drafts: TypologyDraft[]): Promise<void> {
-  await persistTypologies(tx, accommodationId, drafts.filter(hasAnyValue))
+export async function syncTypologies(
+  tx: DbOrTx,
+  accommodationId: number,
+  drafts: TypologyDraft[],
+  options: PersistTypologiesOptions = {},
+): Promise<void> {
+  await persistTypologies(tx, accommodationId, drafts.filter(hasAnyValue), options)
   await recomputeAndPersistAggregates(tx, accommodationId)
 }
 
@@ -157,7 +240,12 @@ export async function syncTypologies(tx: DbOrTx, accommodationId: number, drafts
  * rents/surfaces): for each patch, only the provided fields overwrite the existing row of that type;
  * untouched dimensions are preserved. Types that end up all-null are dropped. Refreshes aggregates.
  */
-export async function mergeTypologies(tx: DbOrTx, accommodationId: number, patches: TypologyPatch[]): Promise<void> {
+export async function mergeTypologies(
+  tx: DbOrTx,
+  accommodationId: number,
+  patches: TypologyPatch[],
+  options: PersistTypologiesOptions = {},
+): Promise<void> {
   const current = await tx.select().from(accommodationTypologies).where(eq(accommodationTypologies.accommodationId, accommodationId))
   const byType = new Map<TypologyType, TypologyDraft>(current.map((r) => [r.type, typologyDraft(r.type, r)]))
   for (const patch of patches) {
@@ -168,7 +256,7 @@ export async function mergeTypologies(tx: DbOrTx, accommodationId: number, patch
     }
     byType.set(patch.type, merged)
   }
-  await persistTypologies(tx, accommodationId, [...byType.values()].filter(hasAnyValue))
+  await persistTypologies(tx, accommodationId, [...byType.values()].filter(hasAnyValue), options)
   await recomputeAndPersistAggregates(tx, accommodationId)
 }
 

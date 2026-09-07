@@ -1,4 +1,4 @@
-import { and, eq, inArray } from 'drizzle-orm'
+import { and, eq, inArray, sql } from 'drizzle-orm'
 import { NextRequest } from 'next/server'
 import { TYPOLOGIES } from '~/schemas/accommodations/typology'
 import { db } from '~/server/db'
@@ -91,6 +91,29 @@ export async function GET(request: NextRequest) {
     typologiesByAccommodation.set(tRow.accommodationId, list)
   }
 
+  // Dernière mise à jour des disponibilités, par résidence.
+  //
+  // Portée par `accommodation_typology` (colonnes `availability_updated_*`), tamponnée quand un
+  // gestionnaire renseigne une disponibilité — les imports et les scripts n'y touchent pas. Une
+  // résidence a une ligne par typologie : on retient la plus récente, et l'auteur qui va avec.
+  const availabilityUpdates = accIds.length
+    ? await db.execute<{ accommodationId: number; updatedAt: string; updatedByName: string | null }>(sql`
+        SELECT DISTINCT ON (t.accommodation_id)
+          t.accommodation_id::int AS "accommodationId",
+          t.availability_updated_at AS "updatedAt",
+          nullif(trim(concat_ws(' ', u.firstname, u.lastname)), '') AS "updatedByName"
+        FROM accommodation_typology t
+        LEFT JOIN "user" u ON u.id = t.availability_updated_by
+        WHERE t.accommodation_id IN (${sql.join(
+          accIds.map((id) => sql`${id}`),
+          sql`, `,
+        )})
+          AND t.availability_updated_at IS NOT NULL
+        ORDER BY t.accommodation_id, t.availability_updated_at DESC
+      `)
+    : []
+  const availabilityByAccommodation = new Map(availabilityUpdates.map((row) => [row.accommodationId, row]))
+
   const enriched = results.map((rawRow) => {
     const byType = typologiesByType(typologiesByAccommodation.get(rawRow.id) ?? [])
     // Flatten typologies back into per-typology columns for the CSV (admins expect flat columns).
@@ -106,13 +129,26 @@ export async function GET(request: NextRequest) {
     }
     const nbLogementsDisponibles = calculateAvailability(byType)
     const region = getRegionByDepartmentCode(rawRow.departmentCode)
-    return { ...rawRow, ...flat, region, disponibiliteRenseignee: nbLogementsDisponibles != null, nbLogementsDisponibles }
+    const lastAvailabilityUpdate = availabilityByAccommodation.get(rawRow.id)
+    return {
+      ...rawRow,
+      ...flat,
+      region,
+      disponibiliteRenseignee: nbLogementsDisponibles != null,
+      nbLogementsDisponibles,
+      availabilityUpdatedAt: lastAvailabilityUpdate?.updatedAt ?? null,
+      availabilityUpdatedBy: lastAvailabilityUpdate?.updatedByName ?? null,
+    }
   })
 
-  // region est calculée hors select : on la replace juste après departmentName pour regrouper les colonnes territoire
-  const headers = enriched[0] ? Object.keys(enriched[0]).filter((h) => h !== 'region') : []
+  // Colonnes calculées hors select : on les replace au milieu des colonnes qu'elles complètent
+  // (territoire pour `region`, horodatage pour le suivi des dispos) plutôt qu'en fin de fichier.
+  const REPOSITIONED = ['region', 'availabilityUpdatedAt', 'availabilityUpdatedBy']
+  const headers = enriched[0] ? Object.keys(enriched[0]).filter((h) => !REPOSITIONED.includes(h)) : []
   const deptIndex = headers.indexOf('departmentName')
   if (deptIndex !== -1) headers.splice(deptIndex + 1, 0, 'region')
+  const updatedIndex = headers.indexOf('updatedAt')
+  if (updatedIndex !== -1) headers.splice(updatedIndex + 1, 0, 'availabilityUpdatedAt', 'availabilityUpdatedBy')
   const lines = [
     headers.join(';'),
     ...enriched.map((row) =>

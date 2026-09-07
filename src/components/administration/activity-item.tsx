@@ -7,7 +7,7 @@ import { formatDiffFieldLabel, formatDiffValue } from '~/utils/activity-fields'
 import { formatRelativeDate } from '~/utils/date-helpers'
 import styles from './activity-item.module.css'
 
-type ActivityEntry = {
+export type ActivityEntry = {
   id: number
   createdAt: Date | string
   userName: string | null
@@ -63,8 +63,8 @@ export function ActivityItem({ item, showOwner = false }: { item: ActivityEntry;
               {Object.entries(meta.diff).map(([field, { old: oldVal, new: newVal }]) => (
                 <tr key={field}>
                   <td className={styles.diffField}>{formatDiffFieldLabel(field)}</td>
-                  <td className={styles.diffOld}>{formatDiffValue(oldVal)}</td>
-                  <td className={styles.diffNew}>{formatDiffValue(newVal)}</td>
+                  <td className={styles.diffOld}>{formatDiffValue(oldVal, field)}</td>
+                  <td className={styles.diffNew}>{formatDiffValue(newVal, field)}</td>
                 </tr>
               ))}
             </tbody>
