@@ -9,7 +9,8 @@ export default async function WidgetCalculatricePage() {
     <>
       <WidgetBodyStyle />
       <BudgetSimulatorProvider>
-        <BudgetSimulatorContent />
+        {/* `_top` : sans cela le lien chargerait une page entière du site dans l'encart du partenaire. */}
+        <BudgetSimulatorContent ctaTarget="_top" />
       </BudgetSimulatorProvider>
     </>
   )

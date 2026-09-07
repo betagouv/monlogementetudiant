@@ -7,7 +7,8 @@ export default async function WidgetSimulateurAidesPage() {
   return (
     <>
       <WidgetBodyStyle />
-      <HelpSimulator />
+      {/* `_top` : sans cela le lien chargerait une page entière du site dans l'encart du partenaire. */}
+      <HelpSimulator ctaTarget="_top" />
     </>
   )
 }

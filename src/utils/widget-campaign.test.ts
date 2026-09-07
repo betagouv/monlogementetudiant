@@ -27,10 +27,22 @@ describe('getWidgetNameFromPathname', () => {
     expect(getWidgetNameFromPathname('/widget/simulateur-aides')).toBe('simulateur-aides')
   })
 
-  it('ne reconnaît rien hors des pages widget', () => {
-    expect(getWidgetNameFromPathname('/trouver-un-logement-etudiant')).toBeNull()
-    expect(getWidgetNameFromPathname('/widget/inconnu')).toBeNull()
+  it.each([
+    '/trouver-un-logement-etudiant',
+    '/trouver-un-logement-etudiant/ville/Paris/residence',
+    '/preparer-mon-budget-etudiant',
+    '/simuler-mes-aides-au-logement',
+    '/simuler-budget',
+    '/bailleur/tableau-de-bord',
+    '/widget/inconnu',
+    '/widgetize',
+  ])('ne reconnaît rien sur %s', (pathname) => {
+    expect(getWidgetNameFromPathname(pathname)).toBeNull()
+  })
+
+  it('ne reconnaît rien sans chemin', () => {
     expect(getWidgetNameFromPathname(null)).toBeNull()
+    expect(getWidgetNameFromPathname(undefined)).toBeNull()
   })
 })
 
@@ -60,10 +72,33 @@ describe('buildWidgetCampaignParams', () => {
 describe('appendWidgetCampaign', () => {
   const campaign = { partner: 'crous-paris.fr', widget: 'logements' } as const
 
-  it('laisse le lien intact hors contexte widget', () => {
+  /**
+   * Valeur rendue par le contexte quand aucun `WidgetCampaignProvider` n'est monté — c'est-à-dire
+   * partout hors des pages widget. Les composants de carte et de simulateur étant partagés avec le
+   * site principal, cet invariant est ce qui garantit qu'une URL du site ne se retrouve jamais
+   * décorée de paramètres de campagne.
+   */
+  const OUTSIDE_WIDGET = { partner: null, widget: null } as const
+
+  it.each([
+    '/trouver-un-logement-etudiant',
+    '/trouver-un-logement-etudiant/ville/Paris/residence-du-parc',
+    '/trouver-un-logement-etudiant?ville=Lyon&prix=500',
+    '/preparer-mon-budget-etudiant',
+    '/simuler-mes-aides-au-logement#resultats',
+    'https://monlogementetudiant.beta.gouv.fr',
+  ])('laisse %s strictement inchangé hors contexte widget', (href) => {
+    expect(appendWidgetCampaign(href, OUTSIDE_WIDGET)).toBe(href)
+  })
+
+  it('laisse le lien intact même si un partenaire est connu mais qu’on n’est pas dans un widget', () => {
     const href = '/trouver-un-logement-etudiant/ville/Paris/residence'
 
     expect(appendWidgetCampaign(href, { partner: 'crous-paris.fr', widget: null })).toBe(href)
+  })
+
+  it('n’ajoute pas de point d’interrogation orphelin à un lien sans paramètre', () => {
+    expect(appendWidgetCampaign('/preparer-mon-budget-etudiant', OUTSIDE_WIDGET)).not.toContain('?')
   })
 
   it('marque un lien relatif', () => {

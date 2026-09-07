@@ -8,11 +8,12 @@ import { ExpensesPieChart } from '~/components/budget-simulation/expenses-pie-ch
 import { LiveRegion } from '~/components/ui/live-region'
 import { useWidgetCampaign } from '~/components/widget/widget-campaign-context'
 import { trackEvent } from '~/lib/tracking'
-import { appendWidgetCampaign } from '~/utils/widget-campaign'
+import { appendWidgetCampaign, type TOutboundLinkTarget } from '~/utils/widget-campaign'
 import { getMonthlyEquivalent, useBudgetSimulator } from './budget-simulator-context'
 import styles from './budget-summary.module.css'
 
-export function BudgetSummary() {
+/** `ctaTarget` : cible du bouton de fin de parcours. `_top` pour une intégration en iframe (widget). */
+export function BudgetSummary({ ctaTarget = '_self' }: { ctaTarget?: TOutboundLinkTarget } = {}) {
   const { state } = useBudgetSimulator()
   const t = useTranslations('budgetSimulator.summary')
   const widgetCampaign = useWidgetCampaign()
@@ -117,7 +118,7 @@ export function BudgetSummary() {
         <h3 className="fr-text-inverted--grey fr-h4 fr-mb-0">{t('hintsTitle')}</h3>
         <Button
           iconId="fr-icon-money-euro-circle-line"
-          linkProps={{ href: appendWidgetCampaign('/preparer-mon-budget-etudiant', widgetCampaign), target: '_self' }}
+          linkProps={{ href: appendWidgetCampaign('/preparer-mon-budget-etudiant', widgetCampaign), target: ctaTarget }}
         >
           {t('hintsCta')}
         </Button>

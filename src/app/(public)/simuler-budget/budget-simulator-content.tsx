@@ -4,9 +4,11 @@ import { BudgetSection } from '~/components/budget-simulation/budget-section'
 import { BudgetSummary } from '~/components/budget-simulation/budget-summary'
 import { ExpenseForm } from '~/components/budget-simulation/expense-form'
 import { IncomeForm } from '~/components/budget-simulation/income-form'
+import type { TOutboundLinkTarget } from '~/utils/widget-campaign'
 import styles from './simuler-budget.module.css'
 
-export function BudgetSimulatorContent() {
+/** `ctaTarget` : passé tel quel au résumé, pour que le widget fasse sortir son bouton de l'iframe. */
+export function BudgetSimulatorContent({ ctaTarget }: { ctaTarget?: TOutboundLinkTarget } = {}) {
   const t = useTranslations('budgetSimulator.sections')
 
   return (
@@ -33,7 +35,7 @@ export function BudgetSimulatorContent() {
         </BudgetSection>
       </div>
       <div className={clsx(styles.summaryContainer, 'fr-col-md-5')}>
-        <BudgetSummary />
+        <BudgetSummary ctaTarget={ctaTarget} />
       </div>
     </div>
   )
