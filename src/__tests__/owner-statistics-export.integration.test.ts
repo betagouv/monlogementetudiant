@@ -22,6 +22,7 @@ vi.mock('~/services/better-auth', () => ({
 }))
 
 import { GET } from '~/app/api/bailleur/statistiques/export/route'
+import { getDateRange, getPreviousDateRange, periodToDays, ZStatisticsPeriod } from '~/server/statistics/accommodation-stats'
 
 const request = (query = 'period=30d') => new NextRequest(`http://localhost/api/bailleur/statistiques/export?${query}`)
 
@@ -57,6 +58,34 @@ async function setupOwnerWithStats() {
 
 beforeEach(() => {
   mockSession.current = { user: { id: 'gest-id', role: 'owner' } }
+})
+
+describe('périodes de statistiques', () => {
+  const DAY_MS = 24 * 60 * 60 * 1000
+
+  it('traduit chaque période en nombre de jours', () => {
+    // Verrou sur le parse du suffixe : ajouter une période exprimée autrement (`1y`…) casserait
+    // silencieusement ce calcul, `Number.parseInt` renvoyant alors 1.
+    expect(ZStatisticsPeriod.options).toEqual(['7d', '30d', '90d'])
+    expect(ZStatisticsPeriod.options.map(periodToDays)).toEqual([7, 30, 90])
+  })
+
+  it('couvre bien la durée demandée, jusqu’à maintenant', () => {
+    const { from, to, days } = getDateRange('30d')
+
+    expect(days).toBe(30)
+    expect(to.getTime()).toBeGreaterThan(Date.now() - 5_000)
+    expect(Math.round((to.getTime() - from.getTime()) / DAY_MS)).toBe(30)
+  })
+
+  it('place la période précédente juste avant la courante, de même durée', () => {
+    const current = getDateRange('7d')
+    const previous = getPreviousDateRange('7d')
+
+    expect(Math.round((previous.to.getTime() - previous.from.getTime()) / DAY_MS)).toBe(7)
+    // La borne haute de la période précédente est la borne basse de la courante.
+    expect(Math.abs(previous.to.getTime() - current.from.getTime())).toBeLessThan(5_000)
+  })
 })
 
 describe('GET /api/bailleur/statistiques/export', () => {
