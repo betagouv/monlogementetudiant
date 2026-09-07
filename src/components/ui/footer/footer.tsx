@@ -64,8 +64,8 @@ export const CommonFooter = async () => {
       text: t('footer.bottom.budget'),
     },
     {
-      linkProps: { href: '/simuler-budget' },
-      text: t('footer.bottom.budgetCalculator'),
+      linkProps: { href: 'https://info.monlogementetudiant.beta.gouv.fr/kit-de-communication/' },
+      text: t('footer.bottom.communicationKit'),
     },
     {
       linkProps: {
