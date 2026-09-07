@@ -1,9 +1,26 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { closeDb } from '~/server/db'
+import { type TCsvColumn, toCsv } from '~/utils/csv'
 import { findStorageIssues } from './findStorageIssues'
 import { fixBrokenUrls, fixUnreferencedFiles } from './fixStorageIssues'
-import type { AuditResult } from './types'
+import type { AuditResult, BrokenUrl, UnreferencedFile } from './types'
+
+const BROKEN_URL_COLUMNS: TCsvColumn<BrokenUrl>[] = [
+  { key: 'accommodationId', header: 'Accommodation ID' },
+  { key: 'accommodationName', header: 'Accommodation Name' },
+  { key: 'accommodationSlug', header: 'Slug' },
+  { key: 'url', header: 'URL' },
+  { key: 'key', header: 'S3 Key' },
+  { key: 'reason', header: 'Reason' },
+  { key: 'httpStatus', header: 'HTTP Status' },
+]
+
+const UNREFERENCED_FILE_COLUMNS: TCsvColumn<UnreferencedFile>[] = [
+  { key: 'key', header: 'Key' },
+  { key: 'size', header: 'Size (bytes)' },
+  { key: 'lastModified', header: 'Last Modified' },
+]
 
 interface AuditStorageOptions {
   csv?: string
@@ -47,24 +64,13 @@ function printSummary(result: AuditResult, options: AuditStorageOptions): void {
 
 function writeCsv(result: AuditResult, dir: string): void {
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
-  const BOM = '﻿'
 
   const brokenPath = path.join(dir, `broken-urls-${timestamp}.csv`)
-  const brokenLines = [
-    'Accommodation ID;Accommodation Name;Slug;URL;S3 Key;Reason;HTTP Status',
-    ...result.brokenUrls.map((b) =>
-      [b.accommodationId, b.accommodationName, b.accommodationSlug, b.url, b.key, b.reason, b.httpStatus ?? ''].join(';'),
-    ),
-  ]
-  fs.writeFileSync(brokenPath, BOM + brokenLines.join('\n'), 'utf-8')
+  fs.writeFileSync(brokenPath, toCsv(BROKEN_URL_COLUMNS, result.brokenUrls), 'utf-8')
   console.log(`\n📄 Rapport URLs cassées       : ${brokenPath}`)
 
   const unrefPath = path.join(dir, `unreferenced-files-${timestamp}.csv`)
-  const unrefLines = [
-    'Key;Size (bytes);Last Modified',
-    ...result.unreferencedFiles.map((f) => [f.key, f.size, f.lastModified?.toISOString() ?? ''].join(';')),
-  ]
-  fs.writeFileSync(unrefPath, BOM + unrefLines.join('\n'), 'utf-8')
+  fs.writeFileSync(unrefPath, toCsv(UNREFERENCED_FILE_COLUMNS, result.unreferencedFiles), 'utf-8')
   console.log(`📄 Rapport fichiers orphelins : ${unrefPath}`)
 }
 

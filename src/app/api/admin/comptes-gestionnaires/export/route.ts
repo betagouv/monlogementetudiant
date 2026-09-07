@@ -3,6 +3,21 @@ import { db } from '~/server/db'
 import { user } from '~/server/db/schema/auth'
 import { owners } from '~/server/db/schema/owners'
 import { getServerSession } from '~/services/better-auth'
+import { type TCsvColumn, toCsv } from '~/utils/csv'
+
+type TOwnerAccountCsvRow = {
+  prenom: string
+  nom: string
+  email: string
+  nom_gestionnaire: string
+}
+
+const COLUMNS: TCsvColumn<TOwnerAccountCsvRow>[] = [
+  { key: 'prenom', header: 'prenom' },
+  { key: 'nom', header: 'nom' },
+  { key: 'email', header: 'email' },
+  { key: 'nom_gestionnaire', header: 'nom_gestionnaire' },
+]
 
 export async function GET() {
   const session = await getServerSession()
@@ -22,10 +37,7 @@ export async function GET() {
     .where(inArray(user.role, ['user', 'owner']))
     .orderBy(owners.name, user.lastname, user.firstname)
 
-  const headers = ['prenom', 'nom', 'email', 'nom_gestionnaire'] as const
-  const lines = [headers.join(';'), ...rows.map((r) => headers.map((h) => r[h] ?? '').join(';'))]
-  // BOM so Excel reads UTF-8 accents correctly
-  const csv = `﻿${lines.join('\n')}`
+  const csv = toCsv(COLUMNS, rows)
   const date = new Date().toISOString().slice(0, 10)
 
   return new Response(csv, {
