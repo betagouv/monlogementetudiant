@@ -93,32 +93,26 @@ export async function GET(request: NextRequest) {
 
   // Dernière mise à jour des disponibilités, par résidence.
   //
-  // Aucune colonne ne la porte : `accommodation.updated_at` bouge à la moindre modification de la
-  // fiche, et `accommodation_typology` n'est pas horodatée. La seule trace datée est le journal
-  // d'activité, où une mise à jour de dispos apparaît soit sous l'action dédiée, soit dans le diff
-  // d'une modification de fiche (clés `typologies.<type>.nbAvailable`, ou `nb<T>Available` pour les
-  // entrées antérieures au passage aux typologies).
-  //
-  // Une seule requête agrégée plutôt qu'une sous-requête corrélée par résidence : `activity_log`
-  // n'est pas indexée sur `metadata->>'slug'`.
-  const availabilityUpdates = await db.execute<{ slug: string; updatedAt: string; userName: string | null }>(sql`
-    SELECT DISTINCT ON (metadata->>'slug')
-      metadata->>'slug' AS "slug",
-      created_at AS "updatedAt",
-      user_name AS "userName"
-    FROM activity_log
-    WHERE entity_type = 'accommodation'
-      AND metadata->>'slug' IS NOT NULL
-      AND (
-        action = 'accommodation.availability_updated'
-        OR EXISTS (
-          SELECT 1 FROM jsonb_object_keys(metadata->'diff') AS k
-          WHERE k ILIKE '%available%'
-        )
-      )
-    ORDER BY metadata->>'slug', created_at DESC
-  `)
-  const availabilityBySlug = new Map(availabilityUpdates.map((row) => [row.slug, row]))
+  // Portée par `accommodation_typology` (colonnes `availability_updated_*`), tamponnée quand un
+  // gestionnaire renseigne une disponibilité — les imports et les scripts n'y touchent pas. Une
+  // résidence a une ligne par typologie : on retient la plus récente, et l'auteur qui va avec.
+  const availabilityUpdates = accIds.length
+    ? await db.execute<{ accommodationId: number; updatedAt: string; updatedByName: string | null }>(sql`
+        SELECT DISTINCT ON (t.accommodation_id)
+          t.accommodation_id::int AS "accommodationId",
+          t.availability_updated_at AS "updatedAt",
+          nullif(trim(concat_ws(' ', u.firstname, u.lastname)), '') AS "updatedByName"
+        FROM accommodation_typology t
+        LEFT JOIN "user" u ON u.id = t.availability_updated_by
+        WHERE t.accommodation_id IN (${sql.join(
+          accIds.map((id) => sql`${id}`),
+          sql`, `,
+        )})
+          AND t.availability_updated_at IS NOT NULL
+        ORDER BY t.accommodation_id, t.availability_updated_at DESC
+      `)
+    : []
+  const availabilityByAccommodation = new Map(availabilityUpdates.map((row) => [row.accommodationId, row]))
 
   const enriched = results.map((rawRow) => {
     const byType = typologiesByType(typologiesByAccommodation.get(rawRow.id) ?? [])
@@ -135,7 +129,7 @@ export async function GET(request: NextRequest) {
     }
     const nbLogementsDisponibles = calculateAvailability(byType)
     const region = getRegionByDepartmentCode(rawRow.departmentCode)
-    const lastAvailabilityUpdate = availabilityBySlug.get(rawRow.slug)
+    const lastAvailabilityUpdate = availabilityByAccommodation.get(rawRow.id)
     return {
       ...rawRow,
       ...flat,
@@ -143,7 +137,7 @@ export async function GET(request: NextRequest) {
       disponibiliteRenseignee: nbLogementsDisponibles != null,
       nbLogementsDisponibles,
       availabilityUpdatedAt: lastAvailabilityUpdate?.updatedAt ?? null,
-      availabilityUpdatedBy: lastAvailabilityUpdate?.userName ?? null,
+      availabilityUpdatedBy: lastAvailabilityUpdate?.updatedByName ?? null,
     }
   })
 
