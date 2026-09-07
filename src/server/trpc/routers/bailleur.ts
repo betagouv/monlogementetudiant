@@ -306,6 +306,7 @@ export const bailleurRouter = createTRPCRouter({
           tx,
           row.id,
           typologies.map((t) => typologyDraft(t.type, t)),
+          { updatedBy: ctx.session.user.id },
         )
         return row
       })
@@ -421,6 +422,7 @@ export const bailleurRouter = createTRPCRouter({
             tx,
             accommodationId,
             typologies.map((t) => typologyDraft(t.type, t)),
+            { updatedBy: ctx.session.user.id },
           )
         const [row] = await tx
           .update(accommodations)
@@ -509,7 +511,7 @@ export const bailleurRouter = createTRPCRouter({
       const aggregates = typologyAggregates(newTypologies)
 
       const updated = await db.transaction(async (tx) => {
-        await persistTypologies(tx, accommodationId, newTypologies)
+        await persistTypologies(tx, accommodationId, newTypologies, { updatedBy: ctx.session.user.id })
         const [row] = await tx
           .update(accommodations)
           .set({
