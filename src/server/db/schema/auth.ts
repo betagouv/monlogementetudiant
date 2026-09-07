@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm'
-import { bigint, boolean, date, index, integer, pgEnum, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
+import { bigint, boolean, date, index, integer, pgEnum, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core'
 
 export const scholarshipStatusEnum = pgEnum('scholarship_status', ['yes', 'no', 'unknown'])
 export const scholarshipTypeEnum = pgEnum('scholarship_type', [
@@ -60,23 +60,35 @@ export const session = pgTable('session', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
-export const account = pgTable('account', {
-  id: text().primaryKey(),
-  userId: text('user_id')
-    .notNull()
-    .references(() => user.id, { onDelete: 'cascade' }),
-  accountId: text('account_id').notNull(),
-  providerId: text('provider_id').notNull(),
-  accessToken: text('access_token'),
-  refreshToken: text('refresh_token'),
-  accessTokenExpiresAt: timestamp('access_token_expires_at', { withTimezone: true }),
-  refreshTokenExpiresAt: timestamp('refresh_token_expires_at', { withTimezone: true }),
-  scope: text(),
-  idToken: text('id_token'),
-  password: text(),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-})
+/**
+ * Depuis Better Auth 1.7, l'identité d'un compte est portée par le couple `(issuer, accountId)` et
+ * plus par `accountId` seul. `issuer` est un espace de noms synthétique : `local:<providerId>` pour
+ * les méthodes locales (chez nous uniquement `local:credential`), `local:oauth:<providerId>` pour un
+ * provider OAuth sans issuer propre. La colonne est obligatoire côté lib — `sign-in` filtre dessus,
+ * donc une valeur absente déconnecte le compte en silence plutôt que de lever une erreur.
+ */
+export const account = pgTable(
+  'account',
+  {
+    id: text().primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    accountId: text('account_id').notNull(),
+    issuer: text().notNull(),
+    providerId: text('provider_id').notNull(),
+    accessToken: text('access_token'),
+    refreshToken: text('refresh_token'),
+    accessTokenExpiresAt: timestamp('access_token_expires_at', { withTimezone: true }),
+    refreshTokenExpiresAt: timestamp('refresh_token_expires_at', { withTimezone: true }),
+    scope: text(),
+    idToken: text('id_token'),
+    password: text(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex('account_issuer_account_id_idx').on(t.issuer, t.accountId)],
+)
 
 export const verification = pgTable('verification', {
   id: text().primaryKey(),

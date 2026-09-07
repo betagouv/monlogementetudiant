@@ -56,7 +56,10 @@ type HandlerModule = {
 
 async function loadHandler(): Promise<HandlerModule> {
   vi.resetModules()
-  const module = (await import('../../../../cache-handler.mjs')) as HandlerModule
+  // Double assertion : TS infère le constructeur du handler depuis le `.mjs`, donc son `ctx`
+  // est le `FileSystemCacheContext` interne de Next, qui n'a plus de recouvrement avec le
+  // `Record<string, unknown>` volontairement lâche décrit ci-dessus.
+  const module = (await import('../../../../cache-handler.mjs')) as unknown as HandlerModule
   module.__testing.clearMemory()
   return module
 }

@@ -1,4 +1,5 @@
 import { hashPassword, verifyPassword as verifyScryptPassword } from 'better-auth/crypto'
+import { createLocalAccountIssuer } from 'better-auth/db'
 import { pbkdf2Sync } from 'crypto'
 import { and, eq } from 'drizzle-orm'
 import { describe, expect, it } from 'vitest'
@@ -19,6 +20,7 @@ async function createAccountWithHash(userId: string, hash: string) {
     id: `account-${userId}`,
     userId,
     accountId: userId,
+    issuer: createLocalAccountIssuer('credential'),
     providerId: 'credential',
     password: hash,
   })
