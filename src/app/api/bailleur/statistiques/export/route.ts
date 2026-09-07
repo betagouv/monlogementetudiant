@@ -3,6 +3,7 @@ import { getOwnerForUser } from '~/server/bailleur/get-owner-for-user'
 import { getDateRange, listAccommodationStats, ZStatisticsPeriod } from '~/server/statistics/accommodation-stats'
 import { getServerSession } from '~/services/better-auth'
 import { type TCsvColumn, toCsv } from '~/utils/csv'
+import { formatIsoDate } from '~/utils/dayjs'
 
 type TStatsCsvRow = {
   residence: string
@@ -28,8 +29,6 @@ const COLUMNS: TCsvColumn<TStatsCsvRow>[] = [
   { key: 'periodeDebut', header: 'Début de période' },
   { key: 'periodeFin', header: 'Fin de période' },
 ]
-
-const toIsoDate = (date: Date) => date.toISOString().slice(0, 10)
 
 /**
  * Extraction CSV des statistiques d'engagement de toutes les résidences d'un gestionnaire, sur la
@@ -70,15 +69,15 @@ export async function GET(request: NextRequest) {
       vues: row.nbViews,
       consultationsOffre: row.nbConsultOffer,
       favoris: row.nbFavorites,
-      periodeDebut: toIsoDate(from),
-      periodeFin: toIsoDate(to),
+      periodeDebut: formatIsoDate(from),
+      periodeFin: formatIsoDate(to),
     })),
   )
 
   return new Response(csv, {
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',
-      'Content-Disposition': `attachment; filename="statistiques-${owner.slug}-${period.data}-${toIsoDate(to)}.csv"`,
+      'Content-Disposition': `attachment; filename="statistiques-${owner.slug}-${period.data}-${formatIsoDate(to)}.csv"`,
     },
   })
 }

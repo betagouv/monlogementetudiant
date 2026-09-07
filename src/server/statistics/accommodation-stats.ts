@@ -1,7 +1,7 @@
+import dayjs from 'dayjs'
 import { sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { db } from '~/server/db'
-import { DAY_MS } from '~/utils/time'
 
 export const ZStatisticsPeriod = z.enum(['7d', '30d', '90d'])
 
@@ -10,22 +10,23 @@ export type TStatisticsPeriod = z.infer<typeof ZStatisticsPeriod>
 export const TYPE_VIEWED = 'accommodation.viewed'
 export const TYPE_CONSULT_OFFER = 'accommodation.consult_offer'
 
+/** `'30d'` → `30`. Le suffixe est fixé par `ZStatisticsPeriod`, le parse ne peut pas échouer. */
 export function periodToDays(period: TStatisticsPeriod): number {
-  return period === '7d' ? 7 : period === '30d' ? 30 : 90
+  return Number.parseInt(period, 10)
 }
 
+/** Période courante : des `days` derniers jours à maintenant. */
 export function getDateRange(period: TStatisticsPeriod): { from: Date; to: Date; days: number } {
   const days = periodToDays(period)
-  const to = new Date()
-  const from = new Date(to.getTime() - days * DAY_MS)
-  return { from, to, days }
+  const to = dayjs()
+  return { from: to.subtract(days, 'day').toDate(), to: to.toDate(), days }
 }
 
+/** Période immédiatement antérieure, de même durée : sert à calculer les évolutions. */
 export function getPreviousDateRange(period: TStatisticsPeriod): { from: Date; to: Date } {
   const days = periodToDays(period)
-  const to = new Date(Date.now() - days * DAY_MS)
-  const from = new Date(to.getTime() - days * DAY_MS)
-  return { from, to }
+  const to = dayjs().subtract(days, 'day')
+  return { from: to.subtract(days, 'day').toDate(), to: to.toDate() }
 }
 
 export type TAccommodationStatsRow = {
