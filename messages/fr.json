@@ -136,8 +136,8 @@
       "description": "Plan du site Mon Logement Étudiant : retrouvez l'ensemble des pages disponibles sur la plateforme."
     },
     "verificationError": {
-      "title": "Erreur de vérification",
-      "description": "Une erreur est survenue lors de la vérification de votre compte. Veuillez réessayer ou contacter le support."
+      "title": "Lien de connexion expiré",
+      "description": "Ce lien de connexion n'est plus valable. Demandez-en un nouveau depuis la page de connexion."
     },
     "verificationBuffer": {
       "title": "Vérification du lien de connexion",
@@ -161,6 +161,8 @@
     "description": "Faciliter l'accès au logement social pour les étudiants",
     "alerts": "Alertes logements",
     "login": "Se connecter",
+    "studentSpace": "Espace Étudiant",
+    "ownerSpace": "Espace Gestionnaire",
     "tally": "Donnez votre avis",
     "banner": {
       "title": "Lancement de la plateforme :",
@@ -1092,13 +1094,13 @@
   },
   "verification": {
     "error": {
-      "title": "Erreur de vérification",
-      "description": "Une erreur est survenue lors de la vérification de votre compte. Le lien de vérification est peut-être expiré ou invalide.",
+      "title": "Lien de connexion expiré",
+      "description": "Ce lien de connexion n'est plus valable : il a expiré ou il a déjà été utilisé.",
       "whatToDo": "Que faire maintenant ?",
       "instructions": {
-        "checkLink": "Vérifiez que vous avez cliqué sur le bon lien de vérification",
-        "expiration": "Le lien de vérification expire après 5 minutes.",
-        "checkEmail": "Assurez-vous que votre adresse email est correcte"
+        "checkLink": "Vérifiez que vous avez cliqué sur le lien du dernier email reçu",
+        "expiration": "Le lien de connexion expire après 10 minutes et ne peut servir qu'une seule fois.",
+        "checkEmail": "Demandez un nouveau lien depuis la page de connexion ci-dessous"
       },
       "buttons": {
         "login": "Se connecter"

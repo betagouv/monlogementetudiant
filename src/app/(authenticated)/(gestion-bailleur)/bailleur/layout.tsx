@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { ContactModePromoBanner } from '~/components/bailleur/contact-mode-promo-banner'
 import { OwnerFeedbackBanner } from '~/components/bailleur/owner-feedback-banner'
@@ -26,7 +26,14 @@ export default async function WorkspaceLayout({
 }>) {
   const session = await getServerSession()
 
-  if (!session || session.user.role === 'user') {
+  // Une session absente n'est pas une page introuvable : c'est le cas d'un lien de connexion périmé
+  // ou d'une session expirée, on renvoie l'utilisateur au formulaire de connexion.
+  if (!session) {
+    redirect('/gestionnaire/se-connecter')
+  }
+
+  // Un étudiant authentifié, en revanche, n'a pas à découvrir l'existence de l'espace gestionnaire.
+  if (session.user.role === 'user') {
     return notFound()
   }
 
