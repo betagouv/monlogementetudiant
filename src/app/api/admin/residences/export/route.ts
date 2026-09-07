@@ -11,6 +11,7 @@ import { owners } from '~/server/db/schema/owners'
 import { typologiesByType } from '~/server/lib/typologies'
 import { getServerSession } from '~/services/better-auth'
 import { calculateAvailability } from '~/utils/calculateAvailability'
+import { type TCsvColumn, toCsv } from '~/utils/csv'
 import { getRegionByDepartmentCode } from '~/utils/french-regions'
 
 export async function GET(request: NextRequest) {
@@ -110,28 +111,13 @@ export async function GET(request: NextRequest) {
   })
 
   // region est calculée hors select : on la replace juste après departmentName pour regrouper les colonnes territoire
-  const headers = enriched[0] ? Object.keys(enriched[0]).filter((h) => h !== 'region') : []
-  const deptIndex = headers.indexOf('departmentName')
-  if (deptIndex !== -1) headers.splice(deptIndex + 1, 0, 'region')
-  const lines = [
-    headers.join(';'),
-    ...enriched.map((row) =>
-      headers
-        .map((h) => {
-          const val = (row as Record<string, unknown>)[h]
-          if (val === null || val === undefined) return ''
-          if (val instanceof Date) return val.toISOString()
-          const str = String(val)
-          if (str.includes(';') || str.includes('"') || str.includes('\n')) {
-            return `"${str.replace(/"/g, '""')}"`
-          }
-          return str
-        })
-        .join(';'),
-    ),
-  ]
-  // BOM so Excel reads UTF-8 accents correctly
-  const csv = `﻿${lines.join('\n')}`
+  const keys = enriched[0] ? Object.keys(enriched[0]).filter((h) => h !== 'region') : []
+  const deptIndex = keys.indexOf('departmentName')
+  if (deptIndex !== -1) keys.splice(deptIndex + 1, 0, 'region')
+
+  // L'en-tête reprend le nom de la clé : le fichier est relu par des admins qui connaissent le schéma.
+  const columns: TCsvColumn<Record<string, unknown>>[] = keys.map((key) => ({ key, header: key }))
+  const csv = toCsv(columns, enriched)
   const date = new Date().toISOString().slice(0, 10)
 
   return new Response(csv, {

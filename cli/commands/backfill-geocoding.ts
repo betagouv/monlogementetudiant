@@ -2,6 +2,32 @@ import { writeFileSync } from 'node:fs'
 import { sql } from 'drizzle-orm'
 import { closeDb, db } from '~/server/db'
 import { resolveAddressLocation, type TGeocodeDecision } from '~/server/lib/geocoding/resolve'
+import { type TCsvColumn, toCsv } from '~/utils/csv'
+
+/** Une ligne du rapport CSV : les champs de géocodage ne sont remplis que pour les décisions « apply ». */
+type TGeocodingCsvRow = {
+  slug: string
+  code_postal: string
+  adresse: string | null
+  action: TGeocodeDecision['action']
+  confiance: string | null
+  motif: string
+  lat: number | null
+  lng: number | null
+  insee: string | null
+}
+
+const CSV_COLUMNS: TCsvColumn<TGeocodingCsvRow>[] = [
+  { key: 'slug', header: 'slug' },
+  { key: 'code_postal', header: 'code_postal' },
+  { key: 'adresse', header: 'adresse' },
+  { key: 'action', header: 'action' },
+  { key: 'confiance', header: 'confiance' },
+  { key: 'motif', header: 'motif' },
+  { key: 'lat', header: 'lat' },
+  { key: 'lng', header: 'lng' },
+  { key: 'insee', header: 'insee' },
+]
 
 type Phase = 'geom' | 'city' | 'report'
 
@@ -215,24 +241,21 @@ export async function backfillGeocoding(options: BackfillOptions = {}): Promise<
     console.log(`\n  apply=${applies.length}  keep=${keeps.length}  flag=${flags.length}`)
 
     if (csv) {
-      const lines = ['slug;code_postal;adresse;action;confiance;motif;lat;lng;insee']
-      for (const { row, decision } of decisions) {
+      const csvRows: TGeocodingCsvRow[] = decisions.map(({ row, decision }) => {
         const apply = decision.action === 'apply' ? decision : null
-        lines.push(
-          [
-            row.slug,
-            row.postalCode,
-            (row.address ?? '').replace(/;/g, ','),
-            decision.action,
-            apply?.confidence ?? '',
-            decision.reason,
-            apply?.lat ?? '',
-            apply?.lng ?? '',
-            apply?.inseeCode ?? '',
-          ].join(';'),
-        )
-      }
-      writeFileSync(csv, `${lines.join('\n')}\n`)
+        return {
+          slug: row.slug,
+          code_postal: row.postalCode,
+          adresse: row.address,
+          action: decision.action,
+          confiance: apply?.confidence ?? null,
+          motif: decision.reason,
+          lat: apply?.lat ?? null,
+          lng: apply?.lng ?? null,
+          insee: apply?.inseeCode ?? null,
+        }
+      })
+      writeFileSync(csv, `${toCsv(CSV_COLUMNS, csvRows)}\n`)
       console.log(`  Rapport écrit dans ${csv}`)
     }
 
