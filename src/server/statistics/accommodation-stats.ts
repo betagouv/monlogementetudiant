@@ -51,12 +51,6 @@ type ListAccommodationStatsParams = {
   offset?: number
 }
 
-/**
- * Statistiques d'engagement par résidence sur une période.
- *
- * Partagée entre l'affichage paginé du tableau de bord et l'extraction CSV, pour que le fichier
- * téléchargé ne puisse pas diverger de ce que le gestionnaire voit à l'écran.
- */
 export async function listAccommodationStats({
   ownerId,
   period,
