@@ -136,8 +136,8 @@
       "description": "Mon Logement Étudiant sitemap: find all pages available on the platform."
     },
     "verificationError": {
-      "title": "Verification error",
-      "description": "An error occurred while verifying your account. Please try again or contact support."
+      "title": "Sign-in link expired",
+      "description": "This sign-in link is no longer valid. Request a new one from the sign-in page."
     },
     "verificationBuffer": {
       "title": "Verifying sign-in link",
@@ -161,6 +161,8 @@
     "description": "Making access to social housing easier for students",
     "alerts": "Housing alerts",
     "login": "Sign in",
+    "studentSpace": "Student area",
+    "ownerSpace": "Manager area",
     "tally": "Give your feedback",
     "banner": {
       "title": "Platform launch:",
@@ -1092,13 +1094,13 @@
   },
   "verification": {
     "error": {
-      "title": "Verification error",
-      "description": "An error occurred while verifying your account. The verification link may have expired or be invalid.",
+      "title": "Sign-in link expired",
+      "description": "This sign-in link is no longer valid: it has expired or has already been used.",
       "whatToDo": "What should you do now?",
       "instructions": {
-        "checkLink": "Check that you clicked the correct verification link",
-        "expiration": "The verification link expires after 5 minutes.",
-        "checkEmail": "Make sure your email address is correct"
+        "checkLink": "Check that you clicked the link from the most recent email",
+        "expiration": "The sign-in link expires after 10 minutes and can only be used once.",
+        "checkEmail": "Request a new link from the sign-in page below"
       },
       "buttons": {
         "login": "Sign in"
