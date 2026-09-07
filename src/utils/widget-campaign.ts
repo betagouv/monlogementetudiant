@@ -19,6 +19,14 @@ export const WIDGET_NAMES = ['logements', 'calculatrice', 'simulateur-aides'] as
 
 export type TWidgetName = (typeof WIDGET_NAMES)[number]
 
+/**
+ * Cible d'un lien qui quitte le simulateur. `_self` garde la navigation dans le cadre courant —
+ * c'est le comportement du site principal. Dans une iframe partenaire, `_top` la fait sortir du
+ * cadre pour ramener le visiteur sur le site plutôt que d'y afficher une page entière dans
+ * l'encart du partenaire.
+ */
+export type TOutboundLinkTarget = '_self' | '_top'
+
 export type TWidgetCampaign = {
   /** Hostname du site partenaire qui héberge le widget. */
   partner: string | null
