@@ -188,16 +188,22 @@ export default function OwnersPage() {
 
       <div className="fr-flex fr-align-items-center fr-flex-gap-2v fr-mb-3w fr-flex-wrap">
         <span className="fr-text--sm fr-text--bold fr-mb-0">Mode de candidatures :</span>
-        <Tag as="button" small pressed={!contactMode} onClick={() => setQueryStates({ contactMode: null, page: 1 })}>
+        <Tag
+          small
+          pressed={!contactMode}
+          nativeButtonProps={{ type: 'button', onClick: () => setQueryStates({ contactMode: null, page: 1 }) }}
+        >
           Tous
         </Tag>
         {OWNER_CONTACT_MODES.map((mode) => (
           <Tag
             key={mode}
-            as="button"
             small
             pressed={contactMode === mode}
-            onClick={() => setQueryStates({ contactMode: contactMode === mode ? null : mode, page: 1 })}
+            nativeButtonProps={{
+              type: 'button',
+              onClick: () => setQueryStates({ contactMode: contactMode === mode ? null : mode, page: 1 }),
+            }}
           >
             {OWNER_CONTACT_MODE_LABELS[mode]}
             {modeCounts ? ` (${modeCounts[mode]})` : ''}

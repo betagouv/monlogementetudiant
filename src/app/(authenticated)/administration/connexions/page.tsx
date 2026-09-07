@@ -258,16 +258,18 @@ export default function ConnexionsPage() {
 
       <div className="fr-flex fr-align-items-center fr-flex-gap-2v fr-mb-3w fr-flex-wrap">
         <span className="fr-text--sm fr-text--bold fr-mb-0">Issue :</span>
-        <Tag as="button" small pressed={!qs.outcome} onClick={() => setQs({ outcome: null, page: 1 })}>
+        <Tag small pressed={!qs.outcome} nativeButtonProps={{ type: 'button', onClick: () => setQs({ outcome: null, page: 1 }) }}>
           Toutes
         </Tag>
         {LOGIN_OUTCOMES.map((outcome) => (
           <Tag
             key={outcome}
-            as="button"
             small
             pressed={qs.outcome === outcome}
-            onClick={() => setQs({ outcome: qs.outcome === outcome ? null : outcome, page: 1 })}
+            nativeButtonProps={{
+              type: 'button',
+              onClick: () => setQs({ outcome: qs.outcome === outcome ? null : outcome, page: 1 }),
+            }}
           >
             {LOGIN_OUTCOME_LABELS[outcome]}
             {counts ? ` (${counts[outcome]})` : ''}
