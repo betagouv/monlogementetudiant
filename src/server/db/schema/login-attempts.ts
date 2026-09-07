@@ -10,18 +10,6 @@ export const loginAttemptStatusEnum = pgEnum('login_attempt_status', [
   ELoginAttemptStatus.INVALID,
 ])
 
-/**
- * Suivi du parcours de connexion des gestionnaires et des administrateurs, qui se fait
- * exclusivement par lien e-mail (magic link). Une ligne = un lien envoyé, complétée au moment
- * où le lien est vérifié.
- *
- * `email`, `userId` et `ownerId` sont nullables : une vérification peut arriver avec un jeton
- * qu'on ne sait rattacher à rien (lien forgé, tronqué par un client mail…), et ce cas est
- * précisément un signal à afficher.
- *
- * Le jeton lui-même n'est jamais stocké, seulement son SHA-256 : cette table sert au suivi, elle
- * ne doit pas devenir une seconde copie exploitable des identifiants de connexion.
- */
 export const loginAttempts = pgTable(
   'login_attempt',
   {

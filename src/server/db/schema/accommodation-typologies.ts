@@ -22,19 +22,6 @@ export const accommodationTypologies = pgTable(
     nbAvailable: integer('nb_available'),
     colocation: boolean('colocation').notNull().default(false),
 
-    // Dernière modification du nombre de logements disponibles de cette typologie, par un
-    // gestionnaire.
-    //
-    // Trois restrictions, toutes appliquées par `persistTypologies` (server/lib/typologies.ts) :
-    // le suivi ne porte que sur `nbAvailable`, pour qu'un ajustement de loyer ne fasse pas croire
-    // que les dispos ont été revues ; une typologie sans disponibilité reste à `NULL`, faute de
-    // quoi la date porterait sur une donnée absente ; et seule une action de gestionnaire pose la
-    // date — un import ou un script écrit la disponibilité sans toucher au suivi ni effacer la
-    // trace laissée par un gestionnaire.
-    //
-    // `NULL` se lit donc « aucun gestionnaire n'a renseigné cette disponibilité depuis la mise en
-    // place du suivi ». La migration 0058 reprend ce qui est reconstituable depuis le journal
-    // d'activité, qui n'enregistre lui aussi que les actions de gestionnaire.
     availabilityUpdatedAt: timestamp('availability_updated_at', { withTimezone: true }),
     availabilityUpdatedBy: text('availability_updated_by').references(() => user.id, { onDelete: 'set null' }),
   },
