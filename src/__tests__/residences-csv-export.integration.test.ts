@@ -64,12 +64,13 @@ describe('GET /api/admin/residences/export', () => {
     expect(headers).toContain('availabilityUpdatedBy')
 
     const row = rows.find((r) => r.slug === 'residence-export')
-    expect(row?.availabilityUpdatedBy).toBe('Test Gestionnaire')
+    expect(row?.availabilityUpdatedBy).toBe('Léa Martin')
     expect(new Date(row!.availabilityUpdatedAt).getTime()).toBeGreaterThan(Date.now() - 60_000)
   })
 
-  it('laisse les colonnes vides pour une résidence dont les dispos n’ont jamais été touchées', async () => {
+  it('laisse les colonnes vides pour une résidence dont aucune dispo n’a jamais été renseignée', async () => {
     const owner = await createOwner({ name: 'Bailleur Muet', slug: 'bailleur-muet' })
+    // `nbTotal` sans `nbAvailable` : le parc est décrit, sa disponibilité n'a jamais été donnée.
     await createAccommodation({ name: 'Résidence Muette', slug: 'residence-muette', ownerId: owner.id }, [
       typologyDraft('t1', { nbTotal: 4 }),
     ])
@@ -96,6 +97,6 @@ describe('GET /api/admin/residences/export', () => {
     const { rows } = await readCsv(await GET(request()))
 
     const row = rows.find((r) => r.slug === 'residence-form')
-    expect(row?.availabilityUpdatedBy).toBe('Test Gestionnaire')
+    expect(row?.availabilityUpdatedBy).toBe('Léa Martin')
   })
 })
