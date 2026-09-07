@@ -8,8 +8,9 @@
     { "command": "0 5 1 * * npx tsx cli/index.ts purge-logs" },
     { "command": "0 3 * * * npx tsx cli/index.ts sync stats" },
     { "command": "0 4 * * * npx tsx cli/index.ts import initiall --owner-slug initiall" },
+    { "command": "0 7 * * * npx tsx cli/index.ts expire-alerts" },
     { "command": "*/30 * * * * npx tsx cli/index.ts send-alert-jobs" },
-    { "command": "0 8 * * * npx tsx cli/index.ts detect-alert-jobs ; npx tsx cli/index.ts expire-alerts" },
+    { "command": "0 8 * * * npx tsx cli/index.ts detect-alert-jobs" },
     { "command": "30 3 * * * npx tsx cli/index.ts purge-contact-requests" },
     { "command": "0 5 * * * npx tsx cli/index.ts backup-db" }
   ]
