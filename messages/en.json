@@ -963,7 +963,8 @@
     "constructionDate": "November 2024 to March 2025 (build)",
     "constructionDatePart2": "April to September 2025 (build)",
     "accelerationDate": "October 2025 to March 2026 (acceleration)",
-    "total": "The cumulative total expenses from October 2024 to the end of March 2026 therefore amount to",
+    "accelerationDatePart2": "April to August 2026 (acceleration)",
+    "total": "The cumulative total expenses from October 2024 to the end of August 2026 therefore amount to",
     "table": {
       "coaching": "Coaching",
       "development": "Development",
