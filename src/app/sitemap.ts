@@ -22,12 +22,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const allAccommodationPages = await Promise.all(accommodationPagePromises)
   const allFeatures = allAccommodationPages.flatMap((page) => page.results)
 
-  const accommodations: MetadataRoute.Sitemap = allFeatures.map((feature) => ({
-    url: `${baseUrl}/trouver-un-logement-etudiant/ville/${feature.city.replace(' ', '-').toLowerCase()}/${feature.slug}`,
-    lastModified,
-    changeFrequency: 'weekly',
-    priority: 0.8,
-  }))
+  const accommodations: MetadataRoute.Sitemap = allFeatures
+    .filter((feature) => !!feature.citySlug)
+    .map((feature) => ({
+      url: `${baseUrl}/trouver-un-logement-etudiant/ville/${feature.citySlug}/${feature.slug}`,
+      lastModified,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    }))
 
   return [
     {

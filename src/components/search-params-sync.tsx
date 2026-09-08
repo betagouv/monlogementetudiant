@@ -3,18 +3,20 @@
 import { parseAsString, useQueryStates } from 'nuqs'
 import { useEffect } from 'react'
 
-export function SearchParamsSync({ bbox, academie }: { bbox?: string; academie?: string }) {
+/**
+ * Recopie dans l'URL le territoire résolu côté serveur, quand il n'y est pas déjà.
+ *
+ * Seules les académies passent encore par un paramètre d'URL : villes et départements sont
+ * déduits du pathname et filtrés sur leur frontière, sans bbox intermédiaire.
+ */
+export function SearchParamsSync({ academie }: { academie?: string }) {
   const [queryStates, setQueryStates] = useQueryStates({
-    bbox: parseAsString,
     academie: parseAsString,
   })
 
   useEffect(() => {
-    const updates: Record<string, string> = {}
-    if (bbox && !queryStates.bbox) updates.bbox = bbox
-    if (academie && !queryStates.academie) updates.academie = academie
-    if (Object.keys(updates).length > 0) {
-      setQueryStates(updates, { history: 'replace', shallow: true })
+    if (academie && !queryStates.academie) {
+      setQueryStates({ academie }, { history: 'replace', shallow: true })
     }
   }, [])
 

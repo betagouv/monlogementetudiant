@@ -36,7 +36,7 @@ export const StudentAlertCountButton = ({ alert }: { alert: TAlert }) => {
 
     if (alert.academy) {
       searchParams.set('academie', alert.academy.id.toString())
-      return `/trouver-un-logement-etudiant/academie/${alert.academy.name}?${searchParams.toString()}`
+      return `/trouver-un-logement-etudiant/academie/${alert.academy.slug}?${searchParams.toString()}`
     }
 
     if (alert.department) {
@@ -44,7 +44,7 @@ export const StudentAlertCountButton = ({ alert }: { alert: TAlert }) => {
       const expanded = expandBbox(bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax)
       searchParams.set('bbox', `${expanded.west},${expanded.south},${expanded.east},${expanded.north}`)
       searchParams.set('vue', 'carte')
-      return `/trouver-un-logement-etudiant/departement/${alert.department.name}?${searchParams.toString()}`
+      return `/trouver-un-logement-etudiant/departement/${alert.department.slug}?${searchParams.toString()}`
     }
 
     return '/trouver-un-logement-etudiant'

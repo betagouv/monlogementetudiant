@@ -5,6 +5,7 @@ const ZAlertDepartment = z
   .object({
     id: z.number(),
     name: z.string(),
+    slug: z.string(),
     code: z.string(),
   })
   .extend(ZBbox.shape)
@@ -22,6 +23,7 @@ const ZAlertAcademy = z
   .object({
     id: z.number(),
     name: z.string(),
+    slug: z.string(),
   })
   .extend(ZBbox.shape)
 

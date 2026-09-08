@@ -33,8 +33,8 @@ import { getAccommodationBreadcrumbItems, getAccommodationLodgingData } from './
 import { getAccommodationPageContext } from './get-accommodation-page-context'
 import styles from './logement.module.css'
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string; location: string }> }): Promise<Metadata> {
-  const { slug, location } = await params
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
   const { accommodation } = await getAccommodationPageContext(slug)
   const t = await getTranslations('metadata')
   const cityFormatted = formatCityWithA(accommodation.city)
@@ -42,7 +42,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: t('accommodation.title', { name: accommodation.name, cityFormatted }),
     description: t('accommodation.description', { name: accommodation.name, cityFormatted }),
-    alternates: { canonical: getCanonicalUrl(`/trouver-un-logement-etudiant/ville/${location}/${slug}`) },
+    // Le segment ville est décoratif dans cette route : on ancre la canonique sur le slug de la
+    // ville, pour ne pas déclarer une URL différente selon le lien emprunté (nom, nom accentué…).
+    alternates: { canonical: getCanonicalUrl(`/trouver-un-logement-etudiant/ville/${accommodation.citySlug}/${slug}`) },
   }
 }
 

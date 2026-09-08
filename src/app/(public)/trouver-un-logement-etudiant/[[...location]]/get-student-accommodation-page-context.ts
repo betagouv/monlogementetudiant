@@ -13,6 +13,16 @@ type Category = (typeof VALID_CATEGORIES)[number]
 
 const getSingleSearchParam = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value)
 
+const buildSearchQuery = (params: Record<string, string | string[] | undefined>) => {
+  const search = new URLSearchParams()
+  for (const [key, value] of Object.entries(params)) {
+    if (Array.isArray(value)) value.forEach((item) => search.append(key, item))
+    else if (value != null) search.set(key, value)
+  }
+  const query = search.toString()
+  return query ? `?${query}` : ''
+}
+
 export const getStudentAccommodationPageContext = cache(
   async (awaitedParams: { location: string[] }, awaitedSearchParams: Record<string, string | string[] | undefined>) => {
     const routeCategoryKey = awaitedParams?.location?.[0] || ''
@@ -39,6 +49,14 @@ export const getStudentAccommodationPageContext = cache(
         )
       } catch {
         redirect(`/trouver-un-logement-etudiant`)
+      }
+
+      // Le segment peut être un nom (`/ville/La Rochelle`, liens historiques et URLs indexées) :
+      // `getBySlug` sait le résoudre, on renvoie ensuite sur l'URL canonique en slug.
+      if (territory && territory.slug !== routeLocation) {
+        redirect(
+          `/trouver-un-logement-etudiant/${routeCategoryKey}/${encodeURIComponent(territory.slug)}${buildSearchQuery(awaitedSearchParams)}`,
+        )
       }
     }
 
