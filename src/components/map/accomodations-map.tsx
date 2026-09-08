@@ -15,9 +15,9 @@ import { parseAsBoolean, parseAsString, useQueryState, useQueryStates } from 'nu
 import { useAccomodations } from '~/hooks/use-accomodations'
 import { useTRPC } from '~/server/trpc/client'
 
-const BoundsHandler: FC<{ markerPositions: L.LatLngTuple[]; cityBounds?: L.LatLngBoundsExpression }> = ({
+const BoundsHandler: FC<{ markerPositions: L.LatLngTuple[]; territoryBounds?: L.LatLngBoundsExpression }> = ({
   markerPositions,
-  cityBounds,
+  territoryBounds,
 }) => {
   const map = useMap()
   const [queryStates, setQueryStates] = useQueryStates({
@@ -35,12 +35,12 @@ const BoundsHandler: FC<{ markerPositions: L.LatLngTuple[]; cityBounds?: L.LatLn
       ])
     } else if (markerPositions.length > 0) {
       map.fitBounds(markerPositions, { padding: [20, 20] })
-    } else if (cityBounds) {
-      map.fitBounds(cityBounds, { padding: [50, 50] })
+    } else if (territoryBounds) {
+      map.fitBounds(territoryBounds, { padding: [50, 50] })
     } else {
       map.setView([46.5, 2.4], 6)
     }
-  }, [queryStates.bbox, markerPositions, cityBounds, map])
+  }, [queryStates.bbox, markerPositions, territoryBounds, map])
 
   useMapEvents({
     dragend: (e) => {
@@ -147,9 +147,14 @@ export const AccomodationsMap: FC = () => {
   const isMapSearch = !!rechercheParCarte
 
   const pathSegments = pathname.split('/')
-  const villeIndex = pathSegments.indexOf('ville')
-  const citySlugFromPath = villeIndex !== -1 ? decodeURIComponent(pathSegments[villeIndex + 1] ?? '') || undefined : undefined
+  const slugFromPath = (segment: string) => {
+    const index = pathSegments.indexOf(segment)
+    return index !== -1 ? decodeURIComponent(pathSegments[index + 1] ?? '') || undefined : undefined
+  }
+  const citySlugFromPath = slugFromPath('ville')
+  const departmentSlugFromPath = slugFromPath('departement')
   const effectiveCitySlug = citySlugFromPath && !isMapSearch ? citySlugFromPath : undefined
+  const effectiveDepartmentSlug = !effectiveCitySlug && departmentSlugFromPath && !isMapSearch ? departmentSlugFromPath : undefined
 
   const trpc = useTRPC()
   const { data: territory } = useQuery({
@@ -157,10 +162,18 @@ export const AccomodationsMap: FC = () => {
     enabled: !!effectiveCitySlug,
   })
 
-  const cityBounds: L.LatLngBoundsExpression | undefined = territory?.bbox
+  // Les pages département ne posent plus de bbox dans l'URL (le filtre se fait sur la frontière) :
+  // on cadre quand même la carte sur le département quand aucun marqueur n'est disponible.
+  const { data: departmentTerritory } = useQuery({
+    ...trpc.territories.getBySlug.queryOptions({ type: 'departement', slug: effectiveDepartmentSlug! }),
+    enabled: !!effectiveDepartmentSlug,
+  })
+
+  const territoryBbox = territory?.bbox ?? departmentTerritory?.bbox
+  const territoryBounds: L.LatLngBoundsExpression | undefined = territoryBbox
     ? [
-        [territory.bbox.ymin, territory.bbox.xmin],
-        [territory.bbox.ymax, territory.bbox.xmax],
+        [territoryBbox.ymin, territoryBbox.xmin],
+        [territoryBbox.ymax, territoryBbox.xmax],
       ]
     : undefined
 
@@ -201,12 +214,12 @@ export const AccomodationsMap: FC = () => {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
-        <BoundsHandler markerPositions={markerPositions} cityBounds={cityBounds} />
+        <BoundsHandler markerPositions={markerPositions} territoryBounds={territoryBounds} />
         <CustomZoomControls />
         {markers}
       </MapContainer>
     )
-  }, [markers, markerPositions, cityBounds, queryStates.bbox])
+  }, [markers, markerPositions, territoryBounds, queryStates.bbox])
 
   return memoizedMap
 }

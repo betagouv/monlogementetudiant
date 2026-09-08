@@ -68,20 +68,28 @@ export async function createAcademy(
   return row
 }
 
-export async function createDepartment(overrides: Omit<Partial<DepartmentInsert>, 'academyId'> & { academyId: number }) {
+export async function createDepartment(
+  overrides: Omit<Partial<DepartmentInsert>, 'academyId' | 'boundary'> & {
+    academyId: number
+    boundary?: { type: string; coordinates: number[][][][] }
+  },
+) {
   const db = getTestDb()
-  const name = overrides.name ?? 'Loire'
-  const code = overrides.code ?? '42'
-  const slug = overrides.slug ?? buildTestSlug(name || code, ++departmentCounter)
+  const { boundary, ...rest } = overrides
+  const name = rest.name ?? 'Loire'
+  const code = rest.code ?? '42'
+  const slug = rest.slug ?? buildTestSlug(name || code, ++departmentCounter)
+  const values = {
+    name,
+    code,
+    slug,
+    ...rest,
+    ...(boundary ? { boundary: sql`ST_SetSRID(ST_GeomFromGeoJSON(${JSON.stringify(boundary)}), 4326)` } : {}),
+  }
   const [row] = await db
     .insert(departments)
-    .values({
-      name,
-      code,
-      slug,
-      ...overrides,
-    })
-    .returning()
+    .values(values as typeof departments.$inferInsert)
+    .returning({ id: departments.id, name: departments.name, slug: departments.slug, code: departments.code })
   return row
 }
 

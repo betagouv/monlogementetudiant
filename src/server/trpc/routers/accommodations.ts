@@ -46,10 +46,11 @@ export const accommodationsRouter = createTRPCRouter({
         academyId: z.number().optional(),
         ownerSlug: z.string().optional(),
         cityId: z.number().optional(),
+        departmentId: z.number().optional(),
       }),
     )
     .query(async ({ input }) => {
-      const { bbox, center, radius, page, pageSize, academyId } = input
+      const { bbox, center, radius, page, pageSize, academyId, departmentId } = input
 
       const conditions: SQL[] = [eq(accommodations.published, true), sql`${accommodationAddresses.geom} IS NOT NULL`]
       // On applique tous les filtres SAUF crous : les conditions résultantes servent à compter les deux buckets,
@@ -63,6 +64,12 @@ export const accommodationsRouter = createTRPCRouter({
         )
         // Prefer the address in the searched city
         addressOrderHint = sql`CASE WHEN ${accommodationAddresses.cityId} = ${input.cityId} THEN 0 ELSE 1 END, ${accommodationAddresses.isMain} DESC`
+      } else if (departmentId) {
+        // Filtre sur la frontière réelle du département : une bbox laisserait passer les résidences
+        // des départements voisins qui tombent dans le rectangle englobant (ex. Belfort dans le Haut-Rhin).
+        conditions.push(
+          sql`ST_Within(${accommodationAddresses.geom}, (SELECT ${departments.boundary} FROM ${departments} WHERE ${departments.id} = ${departmentId}))`,
+        )
       } else if (academyId) {
         conditions.push(
           sql`ST_Within(${accommodationAddresses.geom}, (SELECT ${academies.boundary} FROM ${academies} WHERE ${academies.id} = ${academyId}))`,

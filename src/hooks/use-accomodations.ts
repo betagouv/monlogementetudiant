@@ -18,11 +18,19 @@ export const useAccomodations = ({ cityId: cityIdOverride, citySlug, pageSize }:
 
   const pathname = usePathname()
   const pathSegments = pathname.split('/')
-  const villeIndex = pathSegments.indexOf('ville')
-  const citySlugFromPath = villeIndex !== -1 ? decodeURIComponent(pathSegments[villeIndex + 1] ?? '') || undefined : undefined
+  const slugFromPath = (segment: string) => {
+    const index = pathSegments.indexOf(segment)
+    return index !== -1 ? decodeURIComponent(pathSegments[index + 1] ?? '') || undefined : undefined
+  }
+  const citySlugFromPath = slugFromPath('ville')
+  const departmentSlugFromPath = slugFromPath('departement')
 
   const isMapSearch = !!rechercheParCarte
   const effectiveCitySlug = citySlug ?? city ?? (citySlugFromPath && !isMapSearch ? citySlugFromPath : undefined)
+  // Sur une page département, on filtre par l'id du département (frontière réelle) plutôt que par la
+  // bbox, qui remontait les résidences des départements limitrophes.
+  const effectiveDepartmentSlug =
+    !effectiveCitySlug && !cityIdOverride && departmentSlugFromPath && !isMapSearch ? departmentSlugFromPath : undefined
 
   const { data: territory } = useQuery({
     ...trpc.territories.getBySlug.queryOptions({
@@ -32,12 +40,22 @@ export const useAccomodations = ({ cityId: cityIdOverride, citySlug, pageSize }:
     enabled: !!effectiveCitySlug && !cityIdOverride,
   })
 
+  const { data: departmentTerritory } = useQuery({
+    ...trpc.territories.getBySlug.queryOptions({
+      type: 'departement' as const,
+      slug: effectiveDepartmentSlug!,
+    }),
+    enabled: !!effectiveDepartmentSlug,
+  })
+
   const cityId = cityIdOverride ?? (effectiveCitySlug ? territory?.id : undefined)
+  const departmentId = effectiveDepartmentSlug ? departmentTerritory?.id : undefined
 
   return useQuery({
     ...trpc.accommodations.list.queryOptions({
-      bbox: cityId ? undefined : (bbox ?? undefined),
+      bbox: cityId || departmentId ? undefined : (bbox ?? undefined),
       cityId,
+      departmentId,
       page: page ?? 1,
       pageSize: pageSize ?? 12,
       isAccessible: accessible || undefined,
@@ -48,6 +66,6 @@ export const useAccomodations = ({ cityId: cityIdOverride, citySlug, pageSize }:
       academyId: academie ? Number(academie) : undefined,
       ownerSlug: gestionnaire ?? undefined,
     }),
-    enabled: effectiveCitySlug ? !!cityId : true,
+    enabled: effectiveCitySlug ? !!cityId : effectiveDepartmentSlug ? !!departmentId : true,
   })
 }

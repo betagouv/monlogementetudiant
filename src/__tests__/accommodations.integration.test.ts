@@ -252,6 +252,54 @@ describe('accommodations.list', () => {
     expect(result.results[0].slug).toBe('near-nantes-accessible')
   })
 
+  it('departmentId filters on the department boundary, not on its bounding box', async () => {
+    const academy = await createAcademy({ name: 'Académie de Strasbourg' })
+    // Frontière en L : sa bbox (6.8→7.6 / 47.4→48.3) déborde à l'ouest sur le département voisin,
+    // exactement la configuration qui faisait remonter Belfort et Montbéliard dans le Haut-Rhin.
+    const department = await createDepartment({
+      academyId: academy.id,
+      code: '68',
+      name: 'Haut-Rhin',
+      slug: 'haut-rhin',
+      boundary: {
+        type: 'MultiPolygon',
+        coordinates: [
+          [
+            [
+              [6.8, 48.0],
+              [7.0, 48.0],
+              [7.0, 47.4],
+              [7.6, 47.4],
+              [7.6, 48.3],
+              [6.8, 48.3],
+              [6.8, 48.0],
+            ],
+          ],
+        ],
+      },
+    })
+    const city = await createCity({ departmentId: department.id, name: 'Mulhouse', slug: 'mulhouse' })
+
+    await createAccommodation({
+      slug: 'cite-universitaire-de-mulhouse',
+      cityId: city.id,
+      geom: { type: 'Point', coordinates: [7.34, 47.75] },
+    })
+    // Hors frontière mais dans la bbox du département (département limitrophe)
+    await createAccommodation({
+      slug: 'residence-duvillard-belfort',
+      geom: { type: 'Point', coordinates: [6.86, 47.64] },
+    })
+
+    const result = await caller.accommodations.list({ departmentId: department.id })
+    expect(result.count).toBe(1)
+    expect(result.results[0].slug).toBe('cite-universitaire-de-mulhouse')
+
+    // La même recherche par bbox laisse passer la résidence du département voisin.
+    const bboxResult = await caller.accommodations.list({ bbox: '6.8,47.4,7.6,48.3' })
+    expect(bboxResult.count).toBe(2)
+  })
+
   it('cityId combined with other filters', async () => {
     const academy = await createAcademy({ name: 'Académie de Bordeaux' })
     const department = await createDepartment({ academyId: academy.id, code: '33', name: 'Gironde' })
