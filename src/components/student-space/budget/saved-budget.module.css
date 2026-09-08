@@ -1,0 +1,11 @@
+.summaryCard {
+  background-color: #272747;
+}
+
+.euroIcon {
+  color: #4b9f6c;
+}
+
+.iconSize:before {
+  --icon-size: 2.5rem;
+}
