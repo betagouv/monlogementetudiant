@@ -9,7 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslations } from 'next-intl'
 import { useForm } from 'react-hook-form'
 import { createToast } from '~/components/ui/createToast'
-import { RequiredFieldsNotice, RequiredLabel } from '~/components/ui/required-mark'
+import { OptionalLabel, RequiredFieldsNotice } from '~/components/ui/required-mark'
 import { useUpdateStudentProfile } from '~/hooks/use-update-student-profile'
 import { SCHOLARSHIP_TYPES, type TUpdateStudentProfileForm, ZUpdateStudentProfileForm } from '~/schemas/student/update-profile'
 import { authClient } from '~/services/better-auth-client'
@@ -82,7 +82,7 @@ export const StudentProfileForm = ({ initialValues }: StudentProfileFormProps) =
       <div className="fr-grid-row fr-grid-row--gutters">
         <div className="fr-col-12 fr-col-md-6">
           <Input
-            label={<RequiredLabel>{t('lastname')}</RequiredLabel>}
+            label={t('lastname')}
             state={errors.lastname ? 'error' : undefined}
             stateRelatedMessage={errors.lastname?.message}
             nativeInputProps={{ ...register('lastname'), autoComplete: 'family-name', 'aria-required': true }}
@@ -90,7 +90,7 @@ export const StudentProfileForm = ({ initialValues }: StudentProfileFormProps) =
         </div>
         <div className="fr-col-12 fr-col-md-6">
           <Input
-            label={<RequiredLabel>{t('firstname')}</RequiredLabel>}
+            label={t('firstname')}
             state={errors.firstname ? 'error' : undefined}
             stateRelatedMessage={errors.firstname?.message}
             nativeInputProps={{ ...register('firstname'), autoComplete: 'given-name', 'aria-required': true }}
@@ -101,7 +101,7 @@ export const StudentProfileForm = ({ initialValues }: StudentProfileFormProps) =
         </div>
         <div className="fr-col-12 fr-col-md-6">
           <Input
-            label={t('phone')}
+            label={<OptionalLabel>{t('phone')}</OptionalLabel>}
             state={errors.phone ? 'error' : undefined}
             stateRelatedMessage={errors.phone?.message}
             nativeInputProps={{
@@ -119,7 +119,7 @@ export const StudentProfileForm = ({ initialValues }: StudentProfileFormProps) =
         </div>
         <div className="fr-col-12 fr-col-md-6">
           <Input
-            label={t('birthdate')}
+            label={<OptionalLabel>{t('birthdate')}</OptionalLabel>}
             hintText={t('birthdateHint')}
             state={errors.birthdate ? 'error' : undefined}
             stateRelatedMessage={errors.birthdate?.message}
@@ -190,7 +190,7 @@ export const StudentProfileForm = ({ initialValues }: StudentProfileFormProps) =
       <div className="fr-border-top fr-pt-4w fr-mt-2w fr-grid-row fr-grid-row--gutters">
         <div className="fr-col-12 fr-col-md-6">
           <PasswordInput
-            label={t('currentPassword')}
+            label={<OptionalLabel>{t('currentPassword')}</OptionalLabel>}
             hintText={t('passwordHint')}
             messagesHint=""
             messages={errors.currentPassword ? [{ severity: 'error', message: errors.currentPassword.message ?? '' }] : []}
@@ -199,7 +199,7 @@ export const StudentProfileForm = ({ initialValues }: StudentProfileFormProps) =
         </div>
         <div className="fr-col-12 fr-col-md-6">
           <PasswordInput
-            label={t('newPassword')}
+            label={<OptionalLabel>{t('newPassword')}</OptionalLabel>}
             hintText={t('passwordHint')}
             messagesHint=""
             messages={errors.newPassword ? [{ severity: 'error', message: errors.newPassword.message ?? '' }] : []}
@@ -208,7 +208,7 @@ export const StudentProfileForm = ({ initialValues }: StudentProfileFormProps) =
         </div>
         <div className="fr-col-12 fr-col-md-6">
           <PasswordInput
-            label={t('confirmPassword')}
+            label={<OptionalLabel>{t('confirmPassword')}</OptionalLabel>}
             hintText={t('passwordHint')}
             messagesHint=""
             messages={errors.confirmPassword ? [{ severity: 'error', message: errors.confirmPassword.message ?? '' }] : []}

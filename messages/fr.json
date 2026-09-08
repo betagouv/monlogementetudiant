@@ -8,7 +8,8 @@
     "newWindow": "nouvelle fenêtre",
     "linkNewWindow": "{label} (nouvelle fenêtre)",
     "required": "(obligatoire)",
-    "requiredFieldsNotice": "Les champs suivis d’un astérisque (*) sont obligatoires.",
+    "optional": "(optionnel)",
+    "requiredFieldsNotice": "Sauf mention contraire, tous les champs sont obligatoires.",
     "suggestionsAvailable": "{count} suggestion{pluralize} disponible{pluralize}"
   },
   "passwordInput": {

@@ -2,6 +2,7 @@ import Button from '@codegouvfr/react-dsfr/Button'
 import clsx from 'clsx'
 import { getTranslations } from 'next-intl/server'
 import { ResetPasswordForm } from '~/components/reset-password/reset-password-form'
+import { RequiredFieldsNotice } from '~/components/ui/required-mark'
 import styles from '../auth.module.css'
 
 export default async function ResetPasswordPage() {
@@ -9,6 +10,7 @@ export default async function ResetPasswordPage() {
   return (
     <div className={clsx(styles.container, 'fr-container')}>
       <h1>{t('title')}</h1>
+      <RequiredFieldsNotice />
       <ResetPasswordForm />
       <hr className="fr-mt-3w" />
       <Button priority="secondary" iconPosition="left" iconId="ri-arrow-left-line" linkProps={{ href: '/se-connecter' }}>

@@ -14,7 +14,6 @@ import { FormProvider, useForm } from 'react-hook-form'
 import { tss } from 'tss-react'
 import { resendVerificationEmail } from '~/components/credentials-sign-in/actions'
 import { createToast } from '~/components/ui/createToast'
-import { RequiredLabel } from '~/components/ui/required-mark'
 import { trackEvent } from '~/lib/tracking'
 import { ZCredentialsSignInForm } from '~/schemas/credentials-sign-in/credentials-sign-in'
 import { signInCredentials } from '~/services/better-auth-client'
@@ -127,19 +126,21 @@ export const CredentialsSignInForm: FC = () => {
           )}
           <div className={classes.inputContainer}>
             <Input
-              label={<RequiredLabel>{t('labels.email')}</RequiredLabel>}
+              label={t('labels.email')}
               state={formState.errors.email ? 'error' : undefined}
               stateRelatedMessage={formState.errors.email?.message}
               nativeInputProps={{
                 ...register('email'),
+                'aria-required': true,
               }}
             />
             <PasswordInput
-              label={<RequiredLabel>{t('labels.password')}</RequiredLabel>}
+              label={t('labels.password')}
               messagesHint=""
               messages={formState.errors.password ? [{ severity: 'error', message: formState.errors.password.message ?? '' }] : []}
               nativeInputProps={{
                 ...register('password'),
+                'aria-required': true,
               }}
             />
           </div>

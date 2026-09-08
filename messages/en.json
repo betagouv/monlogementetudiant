@@ -8,7 +8,8 @@
     "newWindow": "new window",
     "linkNewWindow": "{label} (new window)",
     "required": "(required)",
-    "requiredFieldsNotice": "Fields marked with an asterisk (*) are required.",
+    "optional": "(optional)",
+    "requiredFieldsNotice": "Unless otherwise stated, all fields are required.",
     "suggestionsAvailable": "{count} suggestion{pluralize} available"
   },
   "passwordInput": {
