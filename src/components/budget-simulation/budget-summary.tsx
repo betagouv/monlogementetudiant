@@ -9,8 +9,9 @@ import { LiveRegion } from '~/components/ui/live-region'
 import { useWidgetCampaign } from '~/components/widget/widget-campaign-context'
 import { trackEvent } from '~/lib/tracking'
 import { appendWidgetCampaign, type TOutboundLinkTarget } from '~/utils/widget-campaign'
-import { getMonthlyEquivalent, useBudgetSimulator } from './budget-simulator-context'
+import { formatBudgetAmount, useBudgetSimulator, useBudgetTotals } from './budget-simulator-context'
 import styles from './budget-summary.module.css'
+import { BudgetSummaryActions } from './budget-summary-actions'
 
 /** `ctaTarget` : cible du bouton de fin de parcours. `_top` pour une intégration en iframe (widget). */
 export function BudgetSummary({ ctaTarget = '_self' }: { ctaTarget?: TOutboundLinkTarget } = {}) {
@@ -18,15 +19,7 @@ export function BudgetSummary({ ctaTarget = '_self' }: { ctaTarget?: TOutboundLi
   const t = useTranslations('budgetSimulator.summary')
   const widgetCampaign = useWidgetCampaign()
 
-  const totalIncomes = state.activeIncomeTypes.reduce(
-    (sum, type) => sum + getMonthlyEquivalent(state.monthlyIncomes[type], state.incomeFrequencies[type]),
-    0,
-  )
-  const totalExpenses = state.activeExpenseTypes.reduce(
-    (sum, type) => sum + getMonthlyEquivalent(state.monthlyExpenses[type], state.expenseFrequencies[type]),
-    0,
-  )
-  const remainingBalance = totalIncomes - totalExpenses
+  const { totalIncomes, totalExpenses, remainingBalance } = useBudgetTotals()
 
   const yearlyExpensesTotal = state.activeExpenseTypes
     .filter((type) => state.expenseFrequencies[type] === 'yearly')
@@ -48,12 +41,9 @@ export function BudgetSummary({ ctaTarget = '_self' }: { ctaTarget?: TOutboundLi
     }
   }, [totalIncomes, totalExpenses, remainingBalance])
 
-  const formatAmount = (amount: number) => {
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'EUR',
-    }).format(amount)
-  }
+  const formatAmount = formatBudgetAmount
+
+  const savingsRate = totalIncomes > 0 && remainingBalance >= 0 ? (remainingBalance / totalIncomes) * 100 : null
 
   return (
     <div className="fr-flex fr-direction-column fr-pt-4w fr-pb-6w fr-px-5w">
@@ -99,10 +89,16 @@ export function BudgetSummary({ ctaTarget = '_self' }: { ctaTarget?: TOutboundLi
               {remainingBalance >= 0 ? '+' : ''}
               {formatAmount(remainingBalance)}
             </span>
+            {savingsRate !== null && (
+              <span className="fr-text--xs fr-text-mention--grey fr-mb-0">
+                {t('savingsRate', { rate: new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(savingsRate) })}
+              </span>
+            )}
           </div>
         </div>
       </div>
-      <ExpensesPieChart />
+      <BudgetSummaryActions ctaTarget={ctaTarget} />
+      <ExpensesPieChart horizontal />
       {yearlyExpensesTotal > 0 && (
         <div className={clsx(styles.border, 'fr-flex fr-direction-column fr-mt-4w fr-mb-2w fr-py-2w fr-px-4w')}>
           <h3 className="fr-text-inverted--grey fr-h6 fr-mb-2w">{t('schoolYearBudgetTitle')}</h3>
@@ -117,6 +113,8 @@ export function BudgetSummary({ ctaTarget = '_self' }: { ctaTarget?: TOutboundLi
       <div className={clsx(styles.border, 'fr-flex fr-flex-gap-4v fr-direction-column fr-mt-4w fr-mb-2w fr-py-2w fr-px-4w')}>
         <h3 className="fr-text-inverted--grey fr-h4 fr-mb-0">{t('hintsTitle')}</h3>
         <Button
+          priority="secondary"
+          className="whiteButton"
           iconId="fr-icon-money-euro-circle-line"
           linkProps={{ href: appendWidgetCampaign('/preparer-mon-budget-etudiant', widgetCampaign), target: ctaTarget }}
         >

@@ -37,3 +37,15 @@
     width: 50%;
   }
 }
+
+.chartContainer {
+  height: 200px;
+  width: 100%;
+}
+
+.chartContainerHorizontal {
+  @media (min-width: 768px) {
+    width: 45%;
+    flex-shrink: 0;
+  }
+}

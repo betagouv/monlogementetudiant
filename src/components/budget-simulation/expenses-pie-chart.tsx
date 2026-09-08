@@ -26,7 +26,12 @@ const expensesColors = {
   apartmentEquipment: '#80CBC4',
 }
 
-export function ExpensesPieChart() {
+interface ExpensesPieChartProps {
+  className?: string
+  horizontal?: boolean
+}
+
+export function ExpensesPieChart({ className, horizontal = false }: ExpensesPieChartProps = {}) {
   const { state } = useBudgetSimulator()
   const t = useTranslations('budgetSimulator')
 
@@ -46,7 +51,7 @@ export function ExpensesPieChart() {
   const totalExpenses = activeExpenses.reduce((sum, expense) => sum + expense.value, 0)
 
   return (
-    <div className={clsx(styles.border, 'fr-mt-4w fr-mb-2w')}>
+    <div className={clsx(styles.border, className ?? 'fr-mt-4w fr-mb-2w')}>
       <div className="fr-py-2w fr-px-4w">
         <h3 className="fr-text-inverted--grey fr-h6 fr-mb-0">{t('summary.expensesBreakdown')}</h3>
       </div>
@@ -70,8 +75,11 @@ export function ExpensesPieChart() {
         </tbody>
       </table>
 
-      <div className="fr-flex fr-direction-column fr-justify-content-center fr-align-items-center" aria-hidden="true">
-        <div style={{ height: '200px', width: '100%' }}>
+      <div
+        className={clsx('fr-flex fr-direction-column fr-justify-content-center fr-align-items-center', horizontal && 'fr-direction-md-row')}
+        aria-hidden="true"
+      >
+        <div className={clsx(styles.chartContainer, horizontal && styles.chartContainerHorizontal)}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie data={activeExpenses} cx="50%" cy="50%" innerRadius={60} outerRadius={80} dataKey="value">
