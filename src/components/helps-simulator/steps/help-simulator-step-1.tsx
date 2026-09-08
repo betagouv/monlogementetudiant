@@ -12,6 +12,7 @@ import clsx from 'clsx'
 import { FC, ReactNode, useEffect } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { type HelpSimulatorFormData } from '~/components/helps-simulator/help-simulator-schema'
+import { RequiredLabel } from '~/components/ui/required-mark'
 import styles from './help-simulator-step-1.module.css'
 
 type Status = HelpSimulatorFormData['status'][number]
@@ -89,7 +90,7 @@ export const HelpSimulatorStep1: FC = () => {
   return (
     <>
       <Input
-        label="Quel âge avez-vous ?"
+        label={<RequiredLabel>Quel âge avez-vous ?</RequiredLabel>}
         state={errors.age ? 'error' : undefined}
         stateRelatedMessage={errors.age?.message}
         nativeInputProps={{
@@ -107,7 +108,9 @@ export const HelpSimulatorStep1: FC = () => {
         aria-describedby={errors.status ? 'status-error' : undefined}
         aria-invalid={errors.status ? true : undefined}
       >
-        <legend className={styles.legend}>Quel est votre statut ? (plusieurs choix possibles)</legend>
+        <legend className={styles.legend}>
+          <RequiredLabel>Quel est votre statut ? (plusieurs choix possibles)</RequiredLabel>
+        </legend>
         <div className={clsx(styles.grid, errors.status && styles.gridError)}>
           {STATUS_OPTIONS.map(({ value, label, illustration }) => {
             const checked = status.includes(value)
@@ -176,7 +179,7 @@ export const HelpSimulatorStep1: FC = () => {
 
       {isMobilityCandidate && currentYear === 'licence3' && (
         <RadioButtons
-          legend="Votre licence est-elle une licence professionnelle ?"
+          legend={<RequiredLabel>Votre licence est-elle une licence professionnelle ?</RequiredLabel>}
           name="isProfessionalLicence"
           state={errors.isProfessionalLicence ? 'error' : undefined}
           stateRelatedMessage={errors.isProfessionalLicence?.message}
@@ -205,9 +208,11 @@ export const HelpSimulatorStep1: FC = () => {
       {isMobilityCandidate && (
         <RadioButtons
           legend={
-            currentYear === 'terminale'
-              ? "L'année prochaine, allez-vous étudier dans une zone différente de votre lieu de résidence actuel ?"
-              : "L'année prochaine, allez-vous entrer en Master 1 dans une région différente de votre lieu de résidence actuel ?"
+            <RequiredLabel>
+              {currentYear === 'terminale'
+                ? "L'année prochaine, allez-vous étudier dans une zone différente de votre lieu de résidence actuel ?"
+                : "L'année prochaine, allez-vous entrer en Master 1 dans une région différente de votre lieu de résidence actuel ?"}
+            </RequiredLabel>
           }
           name="changingRegion"
           state={errors.changingRegion ? 'error' : undefined}
@@ -236,7 +241,7 @@ export const HelpSimulatorStep1: FC = () => {
 
       {isMobilityCandidate && (
         <RadioButtons
-          legend="Êtes-vous boursier ?"
+          legend={<RequiredLabel>Êtes-vous boursier ?</RequiredLabel>}
           name="scholarship"
           state={errors.scholarship ? 'error' : undefined}
           stateRelatedMessage={errors.scholarship?.message}

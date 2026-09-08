@@ -4,6 +4,7 @@ import { Input } from '@codegouvfr/react-dsfr/Input'
 import { RadioButtons } from '@codegouvfr/react-dsfr/RadioButtons'
 import { useTranslations } from 'next-intl'
 import { useFormContext } from 'react-hook-form'
+import { RequiredFieldsNotice, RequiredLabel } from '~/components/ui/required-mark'
 
 export const StudentProfileFields = () => {
   const t = useTranslations('student.profile')
@@ -18,21 +19,22 @@ export const StudentProfileFields = () => {
 
   return (
     <>
+      <RequiredFieldsNotice />
       <Input
-        label={t('phone')}
+        label={<RequiredLabel>{t('phone')}</RequiredLabel>}
         state={phoneError ? 'error' : 'default'}
         stateRelatedMessage={phoneError}
         nativeInputProps={{ ...register('phone'), type: 'tel', autoComplete: 'tel', 'aria-required': true }}
       />
       <Input
-        label={t('birthdate')}
+        label={<RequiredLabel>{t('birthdate')}</RequiredLabel>}
         hintText={t('birthdateHint')}
         state={birthdateError ? 'error' : 'default'}
         stateRelatedMessage={birthdateError}
         nativeInputProps={{ ...register('birthdate'), type: 'date', autoComplete: 'bday', 'aria-required': true }}
       />
       <RadioButtons
-        legend={t('scholarship')}
+        legend={<RequiredLabel>{t('scholarship')}</RequiredLabel>}
         state={scholarshipStatusError ? 'error' : 'default'}
         stateRelatedMessage={scholarshipStatusError}
         orientation="horizontal"

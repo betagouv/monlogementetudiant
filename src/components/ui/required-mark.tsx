@@ -29,16 +29,6 @@ export const RequiredLabel = ({ children }: { children: ReactNode }) => (
   </>
 )
 
-export const OptionalLabel = ({ children }: { children: ReactNode }) => {
-  const t = useTranslations('accessibility')
-
-  return (
-    <>
-      {children} {t('optional')}
-    </>
-  )
-}
-
 /** Mention à placer en tête de formulaire, comme l'exige la convention de l'astérisque. */
 export const RequiredFieldsNotice = () => {
   const t = useTranslations('accessibility')

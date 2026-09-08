@@ -11,7 +11,6 @@ import { FormProvider, useForm } from 'react-hook-form'
 import { StudentProfileFields } from '~/components/student-space/profile/student-profile-fields'
 import { createToast } from '~/components/ui/createToast'
 import { ModalPortal } from '~/components/ui/modal-portal'
-import { RequiredFieldsNotice } from '~/components/ui/required-mark'
 import { useDsfrModalIsBound } from '~/hooks/use-dsfr-modal-is-bound'
 import { type TStudentProfileInfo, ZStudentProfileInfo } from '~/schemas/student-profile/student-profile'
 import { authClient } from '~/services/better-auth-client'
@@ -91,7 +90,6 @@ export const CompleteProfileModal = ({ mandatory = false, autoOpen = false, onCo
         <FormProvider {...form}>
           <form onSubmit={handleSubmit} className="fr-flex fr-direction-column fr-flex-gap-4v">
             <span>{t('modalIntro')}</span>
-            <RequiredFieldsNotice />
             <StudentProfileFields />
             <div className="fr-flex fr-justify-content-end fr-flex-gap-2v">
               {!mandatory && (

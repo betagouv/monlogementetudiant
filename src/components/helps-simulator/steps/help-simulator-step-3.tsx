@@ -9,6 +9,7 @@ import { useFormContext } from 'react-hook-form'
 import { tss } from 'tss-react'
 import { type HelpSimulatorFormData } from '~/components/helps-simulator/help-simulator-schema'
 import { LiveRegion } from '~/components/ui/live-region'
+import { RequiredLabel } from '~/components/ui/required-mark'
 import { useCombobox } from '~/hooks/use-combobox'
 import { useSearchCities } from '~/hooks/use-search-cities'
 import { TCity } from '~/schemas/territories'
@@ -57,7 +58,7 @@ export const HelpSimulatorStep3: FC = () => {
     <>
       <div className={classes.autocompleteContainer}>
         <Input
-          label="Dans quelle ville cherchez-vous un logement ?"
+          label={<RequiredLabel>Dans quelle ville cherchez-vous un logement ?</RequiredLabel>}
           state={errors.city ? 'error' : isError ? 'error' : undefined}
           stateRelatedMessage={errors.city?.message}
           nativeInputProps={{
@@ -87,7 +88,7 @@ export const HelpSimulatorStep3: FC = () => {
         )}
       </div>
       <RadioButtons
-        legend="Avez-vous un garant ?"
+        legend={<RequiredLabel>Avez-vous un garant ?</RequiredLabel>}
         hintText="Un garant, c'est une personne qui s'engage à payer à votre place si vous ne pouvez plus le faire."
         name="hasGuarantor"
         state={errors.hasGuarantor ? 'error' : undefined}

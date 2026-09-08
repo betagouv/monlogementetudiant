@@ -9,6 +9,7 @@ import { useTranslations } from 'next-intl'
 import { FC } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { tss } from 'tss-react'
+import { RequiredLabel } from '~/components/ui/required-mark'
 import { usePasswordRuleMessages } from '~/hooks/use-password-rule-messages'
 import { useResetPassword } from '~/hooks/use-reset-password'
 import { trackEvent } from '~/lib/tracking'
@@ -59,21 +60,19 @@ export const ResetPasswordForm: FC = () => {
         <div className={classes.formContainer}>
           <div className={classes.inputContainer}>
             <PasswordInput
-              label={t('labels.newPassword')}
+              label={<RequiredLabel>{t('labels.newPassword')}</RequiredLabel>}
               messagesHint={passwordRules.messagesHint}
               messages={passwordRules.messages}
               nativeInputProps={{
                 ...register('password'),
-                'aria-required': true,
               }}
             />
             <PasswordInput
-              label={t('labels.confirmPassword')}
+              label={<RequiredLabel>{t('labels.confirmPassword')}</RequiredLabel>}
               messagesHint=""
               messages={confirmPassword ? [{ severity: 'error', message: confirmPassword.message ?? '' }] : []}
               nativeInputProps={{
                 ...register('confirmPassword'),
-                'aria-required': true,
               }}
             />
           </div>

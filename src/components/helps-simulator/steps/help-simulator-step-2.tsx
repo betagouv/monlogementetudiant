@@ -6,6 +6,7 @@ import { Range } from '@codegouvfr/react-dsfr/Range'
 import { FC } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { type HelpSimulatorFormData } from '~/components/helps-simulator/help-simulator-schema'
+import { RequiredLabel } from '~/components/ui/required-mark'
 
 export const HelpSimulatorStep2: FC = () => {
   const {
@@ -21,7 +22,7 @@ export const HelpSimulatorStep2: FC = () => {
   return (
     <>
       <Input
-        label="Vos revenus mensuels"
+        label={<RequiredLabel>Vos revenus mensuels</RequiredLabel>}
         hintText="Salaire en euros"
         state={errors.monthlyIncome ? 'error' : undefined}
         stateRelatedMessage={errors.monthlyIncome?.message}
@@ -34,7 +35,7 @@ export const HelpSimulatorStep2: FC = () => {
       />
       <div>
         <Range
-          label="Montant de votre loyer mensuel"
+          label={rentUnknown ? 'Montant de votre loyer mensuel' : <RequiredLabel>Montant de votre loyer mensuel</RequiredLabel>}
           hintText="Hors charges, en euros"
           min={100}
           max={1000}
