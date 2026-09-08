@@ -8,11 +8,12 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslations } from 'next-intl'
 import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
+import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import {
-  ADMIN_ONLY_PERMISSIONS,
   BAILLEUR_PERMISSIONS,
   BAILLEUR_ROLES,
   type BailleurPermission,
+  canGrantApplicationsPermission,
   MAX_BAILLEUR_ADMINISTRATORS,
 } from '~/server/bailleur/permissions'
 
@@ -31,11 +32,13 @@ type Props = {
   onSubmit: (data: BailleurUserFormData) => void
   isPending?: boolean
   submitLabel?: string
-  /**
-   * Quand `false`, la case `administrator` et les permissions sensibles
-   * (manage_users, manage_applications) sont desactivees.
-   */
+  /** Quand `false`, le choix `administrator` n'est pas propose. */
   canGrantAdministratorRights?: boolean
+  /**
+   * Parcours de candidature du bailleur. `none` rend « Gestion des candidats » non cochable :
+   * l'autorisation n'ouvre aucun ecran tant qu'aucun parcours n'est choisi.
+   */
+  ownerContactMode: EOwnerContactMode
   /**
    * Quand `true`, le bailleur a deja son quota d'administrateurs : le choix reste selectionnable
    * (l'utilisateur doit pouvoir declencher l'explication) mais un texte d'aide l'annonce.
@@ -50,6 +53,7 @@ export const BailleurUserForm = ({
   submitLabel,
   canGrantAdministratorRights = true,
   administratorLimitReached = false,
+  ownerContactMode,
 }: Props) => {
   const t = useTranslations('bailleur.users')
 
@@ -75,6 +79,7 @@ export const BailleurUserForm = ({
   const bailleurRole = watch('bailleurRole')
   const selectedPermissions = watch('bailleurPermissions')
   const isAdministrator = bailleurRole === 'administrator'
+  const canGrantApplications = canGrantApplicationsPermission(ownerContactMode)
 
   const togglePermission = (permission: BailleurPermission, checked: boolean) => {
     const current = selectedPermissions ?? []
@@ -129,14 +134,19 @@ export const BailleurUserForm = ({
         legend={t('form.permissions')}
         hintText={isAdministrator ? t('form.administratorHint') : t('form.gestionnaireHint')}
         options={BAILLEUR_PERMISSIONS.map((permission) => {
-          const isSensitive = ADMIN_ONLY_PERMISSIONS.includes(permission)
-          const disabled = isAdministrator || (isSensitive && !canGrantAdministratorRights)
+          const blockedByContactMode = permission === 'manage_applications' && !canGrantApplications
           return {
             label: t(`permission.${permission}`),
+            hintText:
+              permission === 'manage_applications'
+                ? blockedByContactMode
+                  ? t('permission.applicationsRequiresContactMode')
+                  : t('permission.applicationsRgpdHint')
+                : undefined,
             nativeInputProps: {
               value: permission,
               checked: isAdministrator ? true : (selectedPermissions ?? []).includes(permission),
-              disabled,
+              disabled: isAdministrator || blockedByContactMode,
               onChange: (e) => togglePermission(permission, e.target.checked),
             },
           }

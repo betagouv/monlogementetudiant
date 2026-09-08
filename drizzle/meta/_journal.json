@@ -421,6 +421,13 @@
       "when": 1788860250287,
       "tag": "0059_contact_request_student_info",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1788876669563,
+      "tag": "0060_bailleur_permissions_cleanup",
+      "breakpoints": true
     }
   ]
 }

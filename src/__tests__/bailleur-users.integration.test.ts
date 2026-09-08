@@ -1,10 +1,11 @@
 import { eq } from 'drizzle-orm'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { user } from '../server/db/schema/auth'
 import { createOwner, createUser } from './fixtures/factories'
 import { getTestDb } from './helpers/test-db'
 import './helpers/setup-integration'
-import { adminCaller, authenticatedCaller, caller, gestionnaireCallerFactory, ownerCaller } from './helpers/test-caller'
+import { adminCaller, authenticatedCaller, caller, gestionnaireCallerFactory, ownerCaller, ownerCaller2 } from './helpers/test-caller'
 
 // Mock magic-link email to avoid hitting Brevo during tests.
 vi.mock('~/services/better-auth', async () => {
@@ -29,7 +30,13 @@ beforeEach(async () => {
   await createUser({ id: 'test-owner-id-2', name: 'Test Owner 2', email: 'owner2@test.com', role: 'owner' })
   await createUser({ id: 'test-admin-id', name: 'Test Admin', email: 'admin@test.com', role: 'admin' })
 
-  const owner = await createOwner({ name: 'Bailleur A', slug: 'bailleur-a', userId: 'test-owner-id' })
+  // Parcours choisi : sans lui, `manage_applications` n'est pas accordable (protection des donnees).
+  const owner = await createOwner({
+    name: 'Bailleur A',
+    slug: 'bailleur-a',
+    userId: 'test-owner-id',
+    contactMode: EOwnerContactMode.CONTACTS,
+  })
   const ownerB = await createOwner({ name: 'Bailleur B', slug: 'bailleur-b', userId: 'test-owner-id-2' })
 
   // Administrator is the current user
@@ -46,16 +53,20 @@ describe('bailleur.users.list', () => {
     await expect(authenticatedCaller.bailleur.users.list({})).rejects.toThrow('Owner or admin role required')
   })
 
-  it('rejects gestionnaire without manage_users permission', async () => {
+  it('rejects any gestionnaire: managing accounts follows the role, not a permission', async () => {
     const db = getTestDb()
     await createUser({ id: 'gest-no-perm', name: 'G', email: 'g@test.com', role: 'owner' })
     await db
       .update(user)
-      .set({ ownerId: 1, bailleurRole: 'gestionnaire', bailleurPermissions: ['manage_residences'] })
+      .set({ ownerId: 1, bailleurRole: 'gestionnaire', bailleurPermissions: ['manage_residences', 'manage_applications'] })
       .where(eq(user.id, 'gest-no-perm'))
-    const gestCaller = gestionnaireCallerFactory({ id: 'gest-no-perm', email: 'g@test.com', permissions: ['manage_residences'] })
+    const gestCaller = gestionnaireCallerFactory({
+      id: 'gest-no-perm',
+      email: 'g@test.com',
+      permissions: ['manage_residences', 'manage_applications'],
+    })
 
-    await expect(gestCaller.bailleur.users.list({})).rejects.toThrow(/Permission denied|FORBIDDEN/)
+    await expect(gestCaller.bailleur.users.list({})).rejects.toThrow(/Administrateur du bailleur requis|FORBIDDEN/)
   })
 
   it('returns only users of the current bailleur (with role=owner)', async () => {
@@ -121,13 +132,13 @@ describe('bailleur.users.create', () => {
       firstname: 'New',
       lastname: 'Manager',
       bailleurRole: 'gestionnaire',
-      bailleurPermissions: ['manage_residences', 'manage_availability'],
+      bailleurPermissions: ['manage_residences', 'manage_applications'],
     })
 
     expect(created?.role).toBe('owner')
     expect(created?.ownerId).toBe(1)
     expect(created?.bailleurRole).toBe('gestionnaire')
-    expect(created?.bailleurPermissions).toEqual(['manage_residences', 'manage_availability'])
+    expect(created?.bailleurPermissions).toEqual(['manage_residences', 'manage_applications'])
 
     const stored = await db.query.user.findFirst({ where: eq(user.email, 'new@bailleur-a.com') })
     expect(stored?.bailleurRole).toBe('gestionnaire')
@@ -158,8 +169,8 @@ describe('bailleur.users.create', () => {
     ).rejects.toThrow(/existe deja/)
   })
 
-  it('rejects gestionnaire without manage_users permission', async () => {
-    const gestCaller = gestionnaireCallerFactory({ permissions: ['manage_residences'] })
+  it('rejects any gestionnaire from creating an account', async () => {
+    const gestCaller = gestionnaireCallerFactory({ permissions: ['manage_residences', 'manage_applications'] })
     await expect(
       gestCaller.bailleur.users.create({
         email: 'blocked@test.com',
@@ -168,76 +179,31 @@ describe('bailleur.users.create', () => {
         bailleurRole: 'gestionnaire',
         bailleurPermissions: [],
       }),
-    ).rejects.toThrow(/Permission denied|FORBIDDEN/)
+    ).rejects.toThrow(/Administrateur du bailleur requis|FORBIDDEN/)
   })
 
-  it('rejects gestionnaire (even with manage_users) from creating another administrator', async () => {
-    const db = getTestDb()
-    await createUser({ id: 'gest-can-mgr-users', name: 'G', email: 'gmu@a.com', role: 'owner' })
-    await db
-      .update(user)
-      .set({ ownerId: 1, bailleurRole: 'gestionnaire', bailleurPermissions: ['manage_users'] })
-      .where(eq(user.id, 'gest-can-mgr-users'))
-    const gestCaller = gestionnaireCallerFactory({ id: 'gest-can-mgr-users', email: 'gmu@a.com', permissions: ['manage_users'] })
-
+  it('refuses manage_applications when the bailleur has no application journey', async () => {
+    // Bailleur B n'a pas choisi de parcours : l'autorisation n'ouvre aucun ecran, on la refuse.
     await expect(
-      gestCaller.bailleur.users.create({
-        email: 'promoted@test.com',
-        firstname: 'X',
-        lastname: 'Y',
-        bailleurRole: 'administrator',
-        bailleurPermissions: [],
-      }),
-    ).rejects.toThrow(/administrateur/)
-  })
-
-  it('rejects gestionnaire from granting manage_users or manage_applications', async () => {
-    const db = getTestDb()
-    await createUser({ id: 'gest-can-mgr-users-2', name: 'G', email: 'gmu2@a.com', role: 'owner' })
-    await db
-      .update(user)
-      .set({ ownerId: 1, bailleurRole: 'gestionnaire', bailleurPermissions: ['manage_users'] })
-      .where(eq(user.id, 'gest-can-mgr-users-2'))
-    const gestCaller = gestionnaireCallerFactory({ id: 'gest-can-mgr-users-2', email: 'gmu2@a.com', permissions: ['manage_users'] })
-
-    await expect(
-      gestCaller.bailleur.users.create({
-        email: 'sensitive@test.com',
-        firstname: 'X',
-        lastname: 'Y',
-        bailleurRole: 'gestionnaire',
-        bailleurPermissions: ['manage_users', 'manage_residences'],
-      }),
-    ).rejects.toThrow(/manage_users/)
-
-    await expect(
-      gestCaller.bailleur.users.create({
-        email: 'sensitive2@test.com',
+      ownerCaller2.bailleur.users.create({
+        email: 'sans-parcours@bailleur-b.com',
         firstname: 'X',
         lastname: 'Y',
         bailleurRole: 'gestionnaire',
         bailleurPermissions: ['manage_applications'],
       }),
-    ).rejects.toThrow(/manage_applications/)
+    ).rejects.toThrow(/parcours de candidature/)
   })
 
-  it('allows gestionnaire to grant non-sensitive permissions', async () => {
-    const db = getTestDb()
-    await createUser({ id: 'gest-mgr-3', name: 'G', email: 'gmu3@a.com', role: 'owner' })
-    await db
-      .update(user)
-      .set({ ownerId: 1, bailleurRole: 'gestionnaire', bailleurPermissions: ['manage_users'] })
-      .where(eq(user.id, 'gest-mgr-3'))
-    const gestCaller = gestionnaireCallerFactory({ id: 'gest-mgr-3', email: 'gmu3@a.com', permissions: ['manage_users'] })
-
-    const created = await gestCaller.bailleur.users.create({
-      email: 'ok@test.com',
+  it('allows manage_residences when the bailleur has no application journey', async () => {
+    const created = await ownerCaller2.bailleur.users.create({
+      email: 'residences-only@bailleur-b.com',
       firstname: 'X',
       lastname: 'Y',
       bailleurRole: 'gestionnaire',
-      bailleurPermissions: ['manage_residences', 'manage_availability'],
+      bailleurPermissions: ['manage_residences'],
     })
-    expect(created?.bailleurPermissions).toEqual(['manage_residences', 'manage_availability'])
+    expect(created?.bailleurPermissions).toEqual(['manage_residences'])
   })
 
   it('allows creating a second administrator', async () => {
@@ -301,10 +267,10 @@ describe('bailleur.users.update', () => {
     const updated = await ownerCaller.bailleur.users.update({
       id: 'target-user',
       bailleurRole: 'gestionnaire',
-      bailleurPermissions: ['manage_availability', 'manage_applications'],
+      bailleurPermissions: ['manage_residences', 'manage_applications'],
     })
 
-    expect(updated?.bailleurPermissions).toEqual(['manage_availability', 'manage_applications'])
+    expect(updated?.bailleurPermissions).toEqual(['manage_residences', 'manage_applications'])
   })
 
   it('updates the email of a gestionnaire', async () => {
@@ -369,38 +335,38 @@ describe('bailleur.users.update', () => {
     ).rejects.toThrow(/ne pouvez pas retirer votre propre/)
   })
 
-  it('rejects gestionnaire from promoting another user to administrator via update', async () => {
+  it('rejects any gestionnaire from updating an account', async () => {
     const db = getTestDb()
     await createUser({ id: 'gest-up-1', name: 'G', email: 'gu1@a.com', role: 'owner' })
     await db
       .update(user)
-      .set({ ownerId: 1, bailleurRole: 'gestionnaire', bailleurPermissions: ['manage_users'] })
+      .set({ ownerId: 1, bailleurRole: 'gestionnaire', bailleurPermissions: ['manage_residences', 'manage_applications'] })
       .where(eq(user.id, 'gest-up-1'))
-    const gestCaller = gestionnaireCallerFactory({ id: 'gest-up-1', email: 'gu1@a.com', permissions: ['manage_users'] })
+    const gestCaller = gestionnaireCallerFactory({
+      id: 'gest-up-1',
+      email: 'gu1@a.com',
+      permissions: ['manage_residences', 'manage_applications'],
+    })
 
     await expect(
       gestCaller.bailleur.users.update({
         id: 'target-user',
         bailleurRole: 'administrator',
       }),
-    ).rejects.toThrow(/administrateur/)
+    ).rejects.toThrow(/Administrateur du bailleur requis|FORBIDDEN/)
   })
 
-  it('rejects gestionnaire from granting sensitive permissions via update', async () => {
+  it('refuses granting manage_applications without an application journey', async () => {
     const db = getTestDb()
-    await createUser({ id: 'gest-up-2', name: 'G', email: 'gu2@a.com', role: 'owner' })
-    await db
-      .update(user)
-      .set({ ownerId: 1, bailleurRole: 'gestionnaire', bailleurPermissions: ['manage_users'] })
-      .where(eq(user.id, 'gest-up-2'))
-    const gestCaller = gestionnaireCallerFactory({ id: 'gest-up-2', email: 'gu2@a.com', permissions: ['manage_users'] })
+    await createUser({ id: 'target-b', name: 'Target B', email: 'target@b.com', role: 'owner' })
+    await db.update(user).set({ ownerId: 2, bailleurRole: 'gestionnaire' }).where(eq(user.id, 'target-b'))
 
     await expect(
-      gestCaller.bailleur.users.update({
-        id: 'target-user',
-        bailleurPermissions: ['manage_users'],
+      ownerCaller2.bailleur.users.update({
+        id: 'target-b',
+        bailleurPermissions: ['manage_applications'],
       }),
-    ).rejects.toThrow(/manage_users/)
+    ).rejects.toThrow(/parcours de candidature/)
   })
 
   it('rejects promoting a gestionnaire when the bailleur already has 2 administrators', async () => {
@@ -445,15 +411,11 @@ describe('bailleur.users.update', () => {
 
   it('rejects demoting the last administrator of the bailleur', async () => {
     const db = getTestDb()
-    // test-owner-id est le seul administrateur ; un gestionnaire porteur de manage_users tente de le retrograder.
-    await createUser({ id: 'gest-demoter', name: 'G', email: 'gd@a.com', role: 'owner' })
-    await db
-      .update(user)
-      .set({ ownerId: 1, bailleurRole: 'gestionnaire', bailleurPermissions: ['manage_users'] })
-      .where(eq(user.id, 'gest-demoter'))
-    const gestCaller = gestionnaireCallerFactory({ id: 'gest-demoter', email: 'gd@a.com', permissions: ['manage_users'] })
+    // test-owner-id est le seul administrateur ; un admin plateforme rattache au bailleur tente de le
+    // retrograder (il ne peut pas etre sa propre cible, ce qui isole bien la regle du dernier admin).
+    await db.update(user).set({ ownerId: 1 }).where(eq(user.id, 'test-admin-id'))
 
-    await expect(gestCaller.bailleur.users.update({ id: 'test-owner-id', bailleurRole: 'gestionnaire' })).rejects.toThrow(
+    await expect(adminCaller.bailleur.users.update({ id: 'test-owner-id', bailleurRole: 'gestionnaire' })).rejects.toThrow(
       /dernier administrateur/,
     )
   })
@@ -463,11 +425,14 @@ describe('bailleur.users.update', () => {
     await createUser({ id: 'gest-self', name: 'G', email: 'gs@a.com', role: 'owner' })
     await db
       .update(user)
-      .set({ ownerId: 1, bailleurRole: 'gestionnaire', bailleurPermissions: ['manage_users'] })
+      .set({ ownerId: 1, bailleurRole: 'gestionnaire', bailleurPermissions: ['manage_residences'] })
       .where(eq(user.id, 'gest-self'))
-    const gestCaller = gestionnaireCallerFactory({ id: 'gest-self', email: 'gs@a.com', permissions: ['manage_users'] })
+    const gestCaller = gestionnaireCallerFactory({ id: 'gest-self', email: 'gs@a.com', permissions: ['manage_residences'] })
 
-    await expect(gestCaller.bailleur.users.update({ id: 'gest-self', firstname: 'Autoproclame' })).rejects.toThrow(/votre propre compte/)
+    // Le refus tombe desormais au niveau du role : `canEditOwnAccount` reste une garde defensive.
+    await expect(gestCaller.bailleur.users.update({ id: 'gest-self', firstname: 'Autoproclame' })).rejects.toThrow(
+      /Administrateur du bailleur requis|FORBIDDEN/,
+    )
   })
 
   it('allows an administrator to edit their own name and email', async () => {
@@ -482,17 +447,16 @@ describe('bailleur.users.update', () => {
     expect(updated?.name).toBe('Admin Bailleur')
   })
 
-  it('still lets a gestionnaire read their own record via getById', async () => {
+  it('rejects a gestionnaire reading a record via getById, even their own', async () => {
     const db = getTestDb()
     await createUser({ id: 'gest-read-self', name: 'G', email: 'grs@a.com', role: 'owner' })
     await db
       .update(user)
-      .set({ ownerId: 1, bailleurRole: 'gestionnaire', bailleurPermissions: ['manage_users'] })
+      .set({ ownerId: 1, bailleurRole: 'gestionnaire', bailleurPermissions: ['manage_residences'] })
       .where(eq(user.id, 'gest-read-self'))
-    const gestCaller = gestionnaireCallerFactory({ id: 'gest-read-self', email: 'grs@a.com', permissions: ['manage_users'] })
+    const gestCaller = gestionnaireCallerFactory({ id: 'gest-read-self', email: 'grs@a.com', permissions: ['manage_residences'] })
 
-    const own = await gestCaller.bailleur.users.getById({ id: 'gest-read-self' })
-    expect(own.email).toBe('grs@a.com')
+    await expect(gestCaller.bailleur.users.getById({ id: 'gest-read-self' })).rejects.toThrow(/Administrateur du bailleur requis|FORBIDDEN/)
   })
 
   it('rejects update of a user from a different bailleur', async () => {
@@ -503,7 +467,7 @@ describe('bailleur.users.update', () => {
     await expect(
       ownerCaller.bailleur.users.update({
         id: 'other-bailleur-user',
-        bailleurPermissions: ['manage_users'],
+        bailleurPermissions: ['manage_residences'],
       }),
     ).rejects.toThrow(/non trouve|NOT_FOUND/)
   })
@@ -568,23 +532,17 @@ describe('bailleur.users.delete', () => {
   })
 
   it('prevents deletion of the last administrator', async () => {
-    // test-owner-id is the only administrator of bailleur A
-    // Try to delete via a gestionnaire caller with manage_users permission
+    // test-owner-id est le seul administrateur du bailleur A ; la suppression est tentee par un
+    // admin plateforme rattache au bailleur, pour ne pas buter d'abord sur l'auto-suppression.
     const db = getTestDb()
-    await createUser({ id: 'gest-with-users-perm', name: 'G', email: 'gwu@a.com', role: 'owner' })
-    await db
-      .update(user)
-      .set({ ownerId: 1, bailleurRole: 'gestionnaire', bailleurPermissions: ['manage_users'] })
-      .where(eq(user.id, 'gest-with-users-perm'))
+    await db.update(user).set({ ownerId: 1 }).where(eq(user.id, 'test-admin-id'))
 
-    const gestCaller = gestionnaireCallerFactory({ id: 'gest-with-users-perm', email: 'gwu@a.com', permissions: ['manage_users'] })
-
-    await expect(gestCaller.bailleur.users.delete({ id: 'test-owner-id' })).rejects.toThrow(/dernier administrateur/)
+    await expect(adminCaller.bailleur.users.delete({ id: 'test-owner-id' })).rejects.toThrow(/dernier administrateur/)
   })
 
-  it('rejects gestionnaire without manage_users permission', async () => {
-    const gestCaller = gestionnaireCallerFactory({ permissions: ['manage_residences'] })
-    await expect(gestCaller.bailleur.users.delete({ id: 'gest-to-delete' })).rejects.toThrow(/Permission denied|FORBIDDEN/)
+  it('rejects any gestionnaire from deleting an account', async () => {
+    const gestCaller = gestionnaireCallerFactory({ permissions: ['manage_residences', 'manage_applications'] })
+    await expect(gestCaller.bailleur.users.delete({ id: 'gest-to-delete' })).rejects.toThrow(/Administrateur du bailleur requis|FORBIDDEN/)
   })
 })
 

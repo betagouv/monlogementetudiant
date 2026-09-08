@@ -1416,7 +1416,7 @@
         "bailleurRole": "Role",
         "bailleurRoleAdminScope": "Role in the landlord area",
         "permissions": "Permissions",
-        "administratorHint": "An administrator automatically has all permissions.",
+        "administratorHint": "An administrator automatically has all permissions, including user management.",
         "gestionnaireHint": "Select the permissions to grant to the manager.",
         "errors": {
           "emailInvalid": "Invalid email",
@@ -1429,10 +1429,10 @@
         "gestionnaire": "Manager"
       },
       "permission": {
-        "manage_users": "User management",
         "manage_residences": "Residence management",
-        "manage_availability": "Residence availability",
-        "manage_applications": "Student files",
+        "manage_applications": "Candidate management",
+        "applicationsRgpdHint": "To protect personal data, we recommend granting the Candidate management permission only to managers who genuinely need it for their duties.",
+        "applicationsRequiresContactMode": "Available once you have chosen an application journey (contact details or DossierFacile).",
         "allAsAdministrator": "All (administrator)"
       },
       "toast": {

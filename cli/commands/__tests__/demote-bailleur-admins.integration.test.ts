@@ -5,7 +5,9 @@ import { eq, inArray } from 'drizzle-orm'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createOwner, createUser } from '../../../src/__tests__/fixtures/factories'
 import { getTestDb } from '../../../src/__tests__/helpers/test-db'
+import { EOwnerContactMode } from '../../../src/enums/owner-contact-mode'
 import { user } from '../../../src/server/db/schema/auth'
+import { owners } from '../../../src/server/db/schema/owners'
 
 const { demoteBailleurAdmins } = await import('../demote-bailleur-admins')
 
@@ -63,14 +65,23 @@ describe('demote-bailleur-admins', () => {
     expect((await readUser('boss'))?.bailleurRole).toBe('administrator')
   })
 
-  it('sets exactly manage_applications, manage_availability and manage_residences', async () => {
+  it('sets only manage_residences when the bailleur has no application journey', async () => {
     const file = writeCsv(['B,Oss,boss@bailleur.fr,Bailleur CLI,oui', 'M,Un,membre-1@bailleur.fr,Bailleur CLI,'])
 
     await demoteBailleurAdmins({ file, dryRun: false })
 
     const membre = await readUser('membre-1')
-    expect([...(membre?.bailleurPermissions ?? [])].sort()).toEqual(['manage_applications', 'manage_availability', 'manage_residences'])
-    expect(membre?.bailleurPermissions).not.toContain('manage_users')
+    expect([...(membre?.bailleurPermissions ?? [])].sort()).toEqual(['manage_residences'])
+  })
+
+  it('adds manage_applications once the bailleur has chosen an application journey', async () => {
+    await db.update(owners).set({ contactMode: EOwnerContactMode.CONTACTS }).where(eq(owners.id, ownerId))
+    const file = writeCsv(['B,Oss,boss@bailleur.fr,Bailleur CLI,oui', 'M,Un,membre-1@bailleur.fr,Bailleur CLI,'])
+
+    await demoteBailleurAdmins({ file, dryRun: false })
+
+    const membre = await readUser('membre-1')
+    expect([...(membre?.bailleurPermissions ?? [])].sort()).toEqual(['manage_applications', 'manage_residences'])
   })
 
   it('writes nothing in dry-run mode', async () => {

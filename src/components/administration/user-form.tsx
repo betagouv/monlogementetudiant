@@ -9,7 +9,13 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslations } from 'next-intl'
 import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
-import { BAILLEUR_PERMISSIONS, BAILLEUR_ROLES, type BailleurPermission } from '~/server/bailleur/permissions'
+import { EOwnerContactMode } from '~/enums/owner-contact-mode'
+import {
+  BAILLEUR_PERMISSIONS,
+  BAILLEUR_ROLES,
+  type BailleurPermission,
+  canGrantApplicationsPermission,
+} from '~/server/bailleur/permissions'
 
 const userFormSchema = z.object({
   email: z.string().email('Email invalide'),
@@ -28,9 +34,17 @@ interface UserFormProps {
   isPending?: boolean
   submitLabel?: string
   hideRoleField?: boolean
+  ownerContactMode?: EOwnerContactMode
 }
 
-export const UserForm = ({ defaultValues, onSubmit, isPending, submitLabel = 'Enregistrer', hideRoleField }: UserFormProps) => {
+export const UserForm = ({
+  defaultValues,
+  onSubmit,
+  isPending,
+  submitLabel = 'Enregistrer',
+  hideRoleField,
+  ownerContactMode = EOwnerContactMode.NONE,
+}: UserFormProps) => {
   const tUsers = useTranslations('bailleur.users')
 
   const {
@@ -47,7 +61,8 @@ export const UserForm = ({ defaultValues, onSubmit, isPending, submitLabel = 'En
       firstname: '',
       lastname: '',
       role: 'user',
-      bailleurRole: null,
+      // Gestionnaire par defaut : le role administrateur se donne explicitement.
+      bailleurRole: 'gestionnaire',
       bailleurPermissions: [],
       ...defaultValues,
     },
@@ -58,6 +73,7 @@ export const UserForm = ({ defaultValues, onSubmit, isPending, submitLabel = 'En
   const selectedPermissions = watch('bailleurPermissions') ?? []
   const isOwner = role === 'owner'
   const isAdministrator = bailleurRole === 'administrator'
+  const canGrantApplications = canGrantApplicationsPermission(ownerContactMode)
 
   const togglePermission = (permission: BailleurPermission, checked: boolean) => {
     const next = checked ? [...selectedPermissions, permission] : selectedPermissions.filter((p) => p !== permission)
@@ -121,15 +137,24 @@ export const UserForm = ({ defaultValues, onSubmit, isPending, submitLabel = 'En
           <Checkbox
             legend={tUsers('form.permissions')}
             hintText={isAdministrator ? tUsers('form.administratorHint') : tUsers('form.gestionnaireHint')}
-            options={BAILLEUR_PERMISSIONS.map((permission) => ({
-              label: tUsers(`permission.${permission}`),
-              nativeInputProps: {
-                value: permission,
-                checked: isAdministrator ? true : selectedPermissions.includes(permission),
-                disabled: isAdministrator,
-                onChange: (e) => togglePermission(permission, e.target.checked),
-              },
-            }))}
+            options={BAILLEUR_PERMISSIONS.map((permission) => {
+              const blockedByContactMode = permission === 'manage_applications' && !canGrantApplications
+              return {
+                label: tUsers(`permission.${permission}`),
+                hintText:
+                  permission === 'manage_applications'
+                    ? blockedByContactMode
+                      ? tUsers('permission.applicationsRequiresContactMode')
+                      : tUsers('permission.applicationsRgpdHint')
+                    : undefined,
+                nativeInputProps: {
+                  value: permission,
+                  checked: isAdministrator ? true : selectedPermissions.includes(permission),
+                  disabled: isAdministrator || blockedByContactMode,
+                  onChange: (e) => togglePermission(permission, e.target.checked),
+                },
+              }
+            })}
           />
         </>
       )}

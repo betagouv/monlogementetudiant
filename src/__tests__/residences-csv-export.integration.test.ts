@@ -54,7 +54,7 @@ describe('GET /api/admin/residences/export', () => {
       typologyDraft('t1', { nbTotal: 10, nbAvailable: 2 }),
     ])
 
-    const caller = gestionnaireCallerFactory({ permissions: ['manage_availability'] })
+    const caller = gestionnaireCallerFactory({ permissions: ['manage_residences'] })
     await caller.bailleur.updateAvailability({ slug: 'residence-export', availability: [{ type: 't1', nbAvailable: 5 }] })
 
     const { headers, rows } = await readCsv(await GET(request()))

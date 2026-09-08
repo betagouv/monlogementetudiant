@@ -6,7 +6,7 @@ import { EOwnerContactMode, OWNER_CONTACT_MODES, ZOwnerContactMode } from '~/enu
 import { FEATURES } from '~/lib/features'
 import { IMPORT_JOB_TYPES, ZImportJobType } from '~/schemas/import-jobs'
 import { assertAdministratorSlotAvailable } from '~/server/bailleur/administrator-limit'
-import { BAILLEUR_PERMISSIONS, BAILLEUR_ROLES } from '~/server/bailleur/permissions'
+import { BAILLEUR_PERMISSIONS, BAILLEUR_ROLES, sanitizeGestionnairePermissions } from '~/server/bailleur/permissions'
 import { db } from '~/server/db'
 import { accommodationAddresses } from '~/server/db/schema/accommodation-addresses'
 import { accommodationTypologies } from '~/server/db/schema/accommodation-typologies'
@@ -134,7 +134,7 @@ const usersRouter = createTRPCRouter({
       // Pas de controle du plafond d'administrateurs ici : la creation ne rattache aucun bailleur
       // (`ownerId` reste nul, le rattachement passe par `linkToOwner`, ou le plafond est verifie).
       const id = crypto.randomUUID()
-      const bailleurRole = input.role === 'owner' ? (input.bailleurRole ?? 'administrator') : null
+      const bailleurRole = input.role === 'owner' ? (input.bailleurRole ?? 'gestionnaire') : null
       const bailleurPermissions = input.role === 'owner' && bailleurRole === 'gestionnaire' ? (input.bailleurPermissions ?? []) : []
 
       const [created] = await db
@@ -178,8 +178,7 @@ const usersRouter = createTRPCRouter({
       const { id, ...fields } = input
       const updateData: Record<string, unknown> = {}
 
-      // Lu en amont : sert au recalcul du `name` et au controle du plafond d'administrateurs.
-      const current = await db.query.user.findFirst({ where: eq(user.id, id) })
+      const current = await db.query.user.findFirst({ where: eq(user.id, id), with: { owner: true } })
       if (!current) {
         throw new TRPCError({ code: 'NOT_FOUND', message: (await getAdminErrorTranslations())('userNotFound') })
       }
@@ -204,7 +203,9 @@ const usersRouter = createTRPCRouter({
           }
         }
         if (fields.bailleurPermissions !== undefined && fields.bailleurRole !== 'administrator') {
-          updateData.bailleurPermissions = fields.bailleurPermissions
+          updateData.bailleurPermissions = current.owner
+            ? sanitizeGestionnairePermissions(fields.bailleurPermissions, current.owner.contactMode)
+            : fields.bailleurPermissions
         }
       }
 
