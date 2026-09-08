@@ -10,10 +10,12 @@ import styles from './users-list.module.css'
 
 type Props = {
   currentUserId: string
+  /** Un gestionnaire ne peut pas editer sa propre fiche : seul un administrateur le peut. */
+  currentUserIsAdministrator: boolean
   ownerId: number
 }
 
-export function UsersList({ currentUserId, ownerId }: Props) {
+export function UsersList({ currentUserId, currentUserIsAdministrator, ownerId }: Props) {
   const t = useTranslations('bailleur.users')
   const [{ recherche }, setQueryStates] = useQueryStates({
     recherche: parseAsString.withDefault(''),
@@ -53,7 +55,13 @@ export function UsersList({ currentUserId, ownerId }: Props) {
       ) : (
         <div className={styles.grid}>
           {items.map((u) => (
-            <UserCard key={u.id} user={u} canDelete={u.id !== currentUserId} ownerId={ownerId} />
+            <UserCard
+              key={u.id}
+              user={u}
+              canEdit={u.id !== currentUserId || currentUserIsAdministrator}
+              canDelete={u.id !== currentUserId}
+              ownerId={ownerId}
+            />
           ))}
         </div>
       )}

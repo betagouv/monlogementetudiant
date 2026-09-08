@@ -3,6 +3,7 @@ import Button from '@codegouvfr/react-dsfr/Button'
 import Community from '@codegouvfr/react-dsfr/picto/Community'
 import { HydrationBoundary } from '@tanstack/react-query'
 import { getTranslations } from 'next-intl/server'
+import { canEditOwnAccount } from '~/server/bailleur/permissions'
 import { buildHref } from '~/utils/preserve-query-params'
 import { getUsersPageContext } from './get-users-page-context'
 import { UsersList } from './users-list'
@@ -47,7 +48,7 @@ export default async function BailleurUsersPage({ searchParams }: PageProps) {
           </div>
         </div>
         <hr className="fr-mt-2w fr-mb-0" />
-        <UsersList currentUserId={ctx.session.user.id} ownerId={ctx.owner.id} />
+        <UsersList currentUserId={ctx.session.user.id} currentUserIsAdministrator={canEditOwnAccount(ctx.user)} ownerId={ctx.owner.id} />
       </div>
     </HydrationBoundary>
   )

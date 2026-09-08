@@ -18,6 +18,13 @@ export const CONTACT_STUDENT_NAME_SQL = sql<string | null>`coalesce(
   ${user.name}
 )`
 
+/**
+ * Statut boursier d'une demande de contact, même règle de repli que le nom : la valeur saisie dans
+ * le formulaire prime — c'est la seule dont dispose un visiteur sans compte — et le profil du compte
+ * prend le relais une fois la ligne anonymisée.
+ */
+export const CONTACT_SCHOLARSHIP_STATUS_SQL = sql<string | null>`coalesce(${contactRequests.scholarshipStatus}, ${user.scholarshipStatus})`
+
 /** Version SQL, pour les projections de liste (mode `dossier_facile`). */
 export const DOSSIER_FACILE_STUDENT_NAME_SQL = sql<string | null>`coalesce(${dossierFacileTenants.name}, ${user.name})`
 
