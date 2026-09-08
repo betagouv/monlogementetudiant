@@ -13,7 +13,6 @@ import {
   FindStudentAccommodationPlaceholderImageCard,
 } from '~/components/find-student-accomodation/card/find-student-accommodation-image-card'
 import { AvailabilityBadge } from '~/components/shared/availability-badge'
-import { TooltipHoverOnly } from '~/components/tooltip-hover-only'
 import { useWidgetCampaign } from '~/components/widget/widget-campaign-context'
 import { trackEvent } from '~/lib/tracking'
 import { TUser } from '~/lib/types'
@@ -58,7 +57,13 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
           imageComponent: <FindStudentAccommodationPlaceholderImageCard id={accomodation.id} />,
         }
   const badgeAvailability = (
-    <AvailabilityBadge nbAvailable={nbAvailable} noAvailabilityText={t('noAvailability')} availabilityText={t('availability')} as="span" />
+    <AvailabilityBadge
+      nbAvailable={nbAvailable}
+      noAvailabilityText={t('noAvailability')}
+      availabilityText={t('availability')}
+      unknownAvailabilityText={t('unknownAvailability')}
+      as="span"
+    />
   )
 
   const showWaitingListBadge = acceptWaitingList && (nbAvailable === null || nbAvailable === undefined || nbAvailable === 0)
@@ -101,22 +106,7 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
           {!!nbTotalApartments && <span className={clsx('ri-community-line', styles.description)}>{`${nbTotalApartments} logements`}</span>}
           {badgeAvailability && <span className={clsx('fr-mt-1v', styles.badgeLine)}>{badgeAvailability}</span>}
           {showWaitingListBadge && (
-            <span className={clsx('fr-mt-1v', styles.badgeLine)}>
-              <Badge severity="info" small as="span">
-                {t('waitingList')}
-              </Badge>
-            </span>
-          )}
-          {(nbAvailable === null || nbAvailable === undefined) && (
-            <>
-              <br />
-              <span>
-                <TooltipHoverOnly id={`tooltip-availability-${accomodation.id}`} title={t('unknownAvailabilityTooltip')}>
-                  <span className={clsx('ri-information-line', styles.description)} />
-                </TooltipHoverOnly>
-                {t('unknownAvailability')}
-              </span>
-            </>
+            <span className={clsx('ri-folder-2-line fr-mt-1v', styles.badgeLine, styles.description)}>{t('waitingList')}</span>
           )}
         </>
       }
