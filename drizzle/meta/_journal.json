@@ -414,6 +414,13 @@
       "when": 1788756812124,
       "tag": "0058_typology_availability_tracking",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1788808928246,
+      "tag": "0059_budget_simulation",
+      "breakpoints": true
     }
   ]
 }

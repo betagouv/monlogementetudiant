@@ -45,6 +45,9 @@
       "todo": {
         "title": "Mes priorités"
       },
+      "budget": {
+        "title": "Mon budget"
+      },
       "housingAid": {
         "title": "Mes aides au logement"
       },
@@ -1086,6 +1089,10 @@
       "savingsRate": "Taux d'épargne : {rate} %",
       "expensesBreakdown": "Répartition des dépenses",
       "chartTooltipAmount": "Montant mensuel",
+      "saveCta": "Enregistrer le résultat de ma simulation",
+      "downloadPdfCta": "Télécharger en PDF",
+      "saveSuccessToast": "Simulation enregistrée dans votre espace personnel.",
+      "saveErrorToast": "Une erreur est survenue lors de la sauvegarde de la simulation.",
       "hintsCta": "Conseils pratiques pour son budget",
       "hintsTitle": "Pour aller plus loin",
       "annualTotal": "Soit {amount} par an",
@@ -1130,6 +1137,7 @@
       "backToHome": "Retour à la recherche",
       "dashboard": "Tableau de bord",
       "todoList": "Mes priorités ({done}/{total})",
+      "budget": "Mon budget",
       "housingAid": "Aides au logement",
       "favorites": "Favoris et candidatures",
       "alerts": "Alertes logements",
@@ -1217,6 +1225,10 @@
       "emptyState": "Vous n'avez pas encore conservé de simulation d'aides au logement.",
       "emptyCta": "Simuler mes aides",
       "restartCta": "Recommencer la simulation d'aides"
+    },
+    "budget": {
+      "title": "Mon budget",
+      "description": "Retrouvez le résultat de votre simulation et tenez votre budget à jour"
     },
     "personalInformations": {
       "title": "Informations personnelles",

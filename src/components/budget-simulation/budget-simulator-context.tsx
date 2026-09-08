@@ -2,48 +2,13 @@
 
 import { createContext, type ReactNode, useContext, useEffect, useState } from 'react'
 import { trackEvent } from '~/lib/tracking'
+import type { TBudgetFrequency, TBudgetSimulation } from '~/schemas/budget-simulation'
 
-export type BudgetFrequency = 'monthly' | 'yearly'
+export type BudgetFrequency = TBudgetFrequency
 
-interface MonthlyIncomes {
-  familyAid: number // Aides de ma famille
-  scholarships: number // Bourses (du Crous ou de la Région)
-  cafHousingAid: number // Aides au logement de la CAF
-  otherPublicAid: number // Autres aides publiques
-  salary: number // Job étudiant
-  studentLoan: number // Prêt étudiant (ex : prêt étudiant garanti par l'Etat)
-  other: number // Autres revenus
-  savings: number // Argent mis de côté
-}
-
-interface MonthlyExpenses {
-  housing: number // Loyer
-  housingCharges: number // Charges d'habitation (Assurance, charges, eau, électricité…)
-  food: number // Alimentation (restauration collective et courses d'alimentation)
-  dailyLife: number // Vie quotidienne (habillement, produit d'hygiène…)
-  communication: number // Téléphone et internet
-  transport: number // Transports (quotidiens et pour rentrer chez moi)
-  registrationFees: number // Frais d'inscription dans mon établissement d'enseignement
-  cvec: number // CVEC
-  studyMaterials: number // Matériel pour les études (ordinateur, impressions, livres, papier, petit matériel)
-  mutuelle: number // Mutuelle
-  otherHealthcare: number // Autres frais de santé
-  enjoyment: number // Loisirs (activités sportives, culturelles, sorties entre amis)
-  childcare: number // Garde d'enfant
-  other: number // Autre
-  securityDeposit: number // Dépôt de garantie appartement
-  agencyFees: number // Frais d'agence immobilière
-  apartmentEquipment: number // Équipement de base de l'appartement
-}
-
-interface BudgetSimulatorState {
-  monthlyIncomes: MonthlyIncomes
-  monthlyExpenses: MonthlyExpenses
-  incomeFrequencies: Record<keyof MonthlyIncomes, BudgetFrequency>
-  expenseFrequencies: Record<keyof MonthlyExpenses, BudgetFrequency>
-  activeIncomeTypes: (keyof MonthlyIncomes)[]
-  activeExpenseTypes: (keyof MonthlyExpenses)[]
-}
+type MonthlyIncomes = TBudgetSimulation['monthlyIncomes']
+type MonthlyExpenses = TBudgetSimulation['monthlyExpenses']
+type BudgetSimulatorState = TBudgetSimulation
 
 interface BudgetSimulatorContextType {
   state: BudgetSimulatorState
@@ -115,52 +80,58 @@ export function getMonthlyEquivalent(amount: number, frequency: BudgetFrequency)
   return frequency === 'yearly' ? amount / 12 : amount
 }
 
+export const DEFAULT_BUDGET_SIMULATOR_STATE: BudgetSimulatorState = {
+  monthlyIncomes: {
+    familyAid: 0,
+    scholarships: 0,
+    cafHousingAid: 0,
+    otherPublicAid: 0,
+    salary: 0,
+    studentLoan: 0,
+    other: 0,
+    savings: 0,
+  },
+  incomeFrequencies: DEFAULT_INCOME_FREQUENCIES,
+  monthlyExpenses: {
+    housing: 0,
+    housingCharges: 0,
+    food: 0,
+    dailyLife: 0,
+    communication: 0,
+    transport: 0,
+    registrationFees: 0,
+    cvec: 0,
+    studyMaterials: 0,
+    mutuelle: 0,
+    otherHealthcare: 0,
+    enjoyment: 0,
+    childcare: 0,
+    other: 0,
+    securityDeposit: 0,
+    agencyFees: 0,
+    apartmentEquipment: 0,
+  },
+  expenseFrequencies: DEFAULT_EXPENSE_FREQUENCIES,
+  activeIncomeTypes: ['salary', 'scholarships', 'familyAid'],
+  activeExpenseTypes: ['housing', 'food', 'transport'],
+}
+
 const BudgetSimulatorContext = createContext<BudgetSimulatorContextType | undefined>(undefined)
 
 interface BudgetSimulatorProviderProps {
   children: ReactNode
+  initialState?: BudgetSimulatorState
+  trackStart?: boolean
 }
 
-export function BudgetSimulatorProvider({ children }: BudgetSimulatorProviderProps) {
+export function BudgetSimulatorProvider({ children, initialState, trackStart = true }: BudgetSimulatorProviderProps) {
   useEffect(() => {
-    trackEvent({ category: 'Simulateur', action: 'demarrage simulateur budget' })
-  }, [])
+    if (trackStart) {
+      trackEvent({ category: 'Simulateur', action: 'demarrage simulateur budget' })
+    }
+  }, [trackStart])
 
-  const [state, setState] = useState<BudgetSimulatorState>({
-    monthlyIncomes: {
-      familyAid: 0,
-      scholarships: 0,
-      cafHousingAid: 0,
-      otherPublicAid: 0,
-      salary: 0,
-      studentLoan: 0,
-      other: 0,
-      savings: 0,
-    },
-    incomeFrequencies: DEFAULT_INCOME_FREQUENCIES,
-    monthlyExpenses: {
-      housing: 0,
-      housingCharges: 0,
-      food: 0,
-      dailyLife: 0,
-      communication: 0,
-      transport: 0,
-      registrationFees: 0,
-      cvec: 0,
-      studyMaterials: 0,
-      mutuelle: 0,
-      otherHealthcare: 0,
-      enjoyment: 0,
-      childcare: 0,
-      other: 0,
-      securityDeposit: 0,
-      agencyFees: 0,
-      apartmentEquipment: 0,
-    },
-    expenseFrequencies: DEFAULT_EXPENSE_FREQUENCIES,
-    activeIncomeTypes: ['salary', 'scholarships', 'familyAid'],
-    activeExpenseTypes: ['housing', 'food', 'transport'],
-  })
+  const [state, setState] = useState<BudgetSimulatorState>(initialState ?? DEFAULT_BUDGET_SIMULATOR_STATE)
 
   const updateMonthlyIncomes = (incomes: Partial<MonthlyIncomes>) => {
     setState((prev) => ({ ...prev, monthlyIncomes: { ...prev.monthlyIncomes, ...incomes } }))
@@ -244,4 +215,23 @@ export function useBudgetSimulator() {
     throw new Error('useBudgetSimulator must be used within a BudgetSimulatorProvider')
   }
   return context
+}
+
+export function useBudgetTotals() {
+  const { state } = useBudgetSimulator()
+
+  const totalIncomes = state.activeIncomeTypes.reduce(
+    (sum, type) => sum + getMonthlyEquivalent(state.monthlyIncomes[type], state.incomeFrequencies[type]),
+    0,
+  )
+  const totalExpenses = state.activeExpenseTypes.reduce(
+    (sum, type) => sum + getMonthlyEquivalent(state.monthlyExpenses[type], state.expenseFrequencies[type]),
+    0,
+  )
+
+  return { totalIncomes, totalExpenses, remainingBalance: totalIncomes - totalExpenses }
+}
+
+export function formatBudgetAmount(amount: number) {
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount)
 }
