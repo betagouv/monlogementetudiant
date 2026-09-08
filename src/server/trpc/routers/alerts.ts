@@ -48,6 +48,7 @@ async function fetchTerritoryMaps(alerts: { cityId: number | null; departmentId:
           .select({
             id: departments.id,
             name: departments.name,
+            slug: departments.slug,
             code: departments.code,
             bbox: bboxSelect(departments),
           })
@@ -59,6 +60,7 @@ async function fetchTerritoryMaps(alerts: { cityId: number | null; departmentId:
           .select({
             id: academies.id,
             name: academies.name,
+            slug: academies.slug,
             bbox: bboxSelect(academies),
           })
           .from(academies)
@@ -75,6 +77,7 @@ async function fetchTerritoryMaps(alerts: { cityId: number | null; departmentId:
           .select({
             id: departments.id,
             name: departments.name,
+            slug: departments.slug,
             code: departments.code,
             bbox: bboxSelect(departments),
           })
@@ -91,7 +94,7 @@ async function fetchTerritoryMaps(alerts: { cityId: number | null; departmentId:
   }
 }
 
-const DEFAULT_DEPT = { id: 0, name: '', code: '', bbox: { xmin: 0, xmax: 0, ymin: 0, ymax: 0 } }
+const DEFAULT_DEPT = { id: 0, name: '', slug: '', code: '', bbox: { xmin: 0, xmax: 0, ymin: 0, ymax: 0 } }
 
 /** Format a single alert row into the API response shape. */
 function formatAlert(
@@ -122,10 +125,10 @@ function formatAlert(
   }
 
   const dep = alert.departmentId ? maps.deptMap.get(alert.departmentId) : null
-  const department = dep ? { id: dep.id, name: dep.name, code: dep.code, bbox: dep.bbox } : null
+  const department = dep ? { id: dep.id, name: dep.name, slug: dep.slug, code: dep.code, bbox: dep.bbox } : null
 
   const acad = alert.academyId ? maps.academyMap.get(alert.academyId) : null
-  const academy = acad ? { id: acad.id, name: acad.name, bbox: acad.bbox } : null
+  const academy = acad ? { id: acad.id, name: acad.name, slug: acad.slug, bbox: acad.bbox } : null
 
   const expiresAt = alert.expiryReminderSentAt
     ? new Date(alert.expiryReminderSentAt.getTime() + ALERT_EXPIRY_REMINDER_DAYS * DAY_MS)

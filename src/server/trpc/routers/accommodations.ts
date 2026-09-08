@@ -65,8 +65,6 @@ export const accommodationsRouter = createTRPCRouter({
         // Prefer the address in the searched city
         addressOrderHint = sql`CASE WHEN ${accommodationAddresses.cityId} = ${input.cityId} THEN 0 ELSE 1 END, ${accommodationAddresses.isMain} DESC`
       } else if (departmentId) {
-        // Filtre sur la frontière réelle du département : une bbox laisserait passer les résidences
-        // des départements voisins qui tombent dans le rectangle englobant (ex. Belfort dans le Haut-Rhin).
         conditions.push(
           sql`ST_Within(${accommodationAddresses.geom}, (SELECT ${departments.boundary} FROM ${departments} WHERE ${departments.id} = ${departmentId}))`,
         )

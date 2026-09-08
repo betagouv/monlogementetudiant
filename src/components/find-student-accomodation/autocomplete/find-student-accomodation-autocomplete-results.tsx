@@ -84,14 +84,13 @@ export const FindStudentAccomodationAutocompleteResults: FC<FindStudentAccomodat
                   if (isAcademy) {
                     searchParams.set('academie', item.id.toString())
                   }
-                  const slug = 'slug' in item ? item.slug : item.name
                   return (
                     <li className={classes.item} key={item.id}>
                       <Link
                         className={classes.itemLink}
                         role="option"
                         href={{
-                          pathname: `/trouver-un-logement-etudiant/${getCategoryKeySingular(categoryKey)}/${slug}`,
+                          pathname: `/trouver-un-logement-etudiant/${getCategoryKeySingular(categoryKey)}/${item.slug}`,
                           search: searchParams.toString(),
                         }}
                         onClick={() => trackTerritorySelection(categoryKey, item)}
