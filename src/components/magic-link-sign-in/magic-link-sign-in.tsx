@@ -9,7 +9,6 @@ import { FC } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { tss } from 'tss-react'
 import { createToast } from '~/components/ui/createToast'
-import { RequiredLabel } from '~/components/ui/required-mark'
 import { trackEvent } from '~/lib/tracking'
 import { TMagicLinkSignInForm, ZMagicLinkSignInForm } from '~/schemas/magic-link-sign-in/magic-link-sign-in'
 import { sendMagicLink } from './actions'
@@ -51,11 +50,12 @@ export const MagicLinkSignInForm: FC<{ callbackURL?: string; type?: 'owner' | 'a
         <div className={classes.formContainer}>
           <div className={classes.inputContainer}>
             <Input
-              label={<RequiredLabel>{t('labels.email')}</RequiredLabel>}
+              label={t('labels.email')}
               state={formState.errors.email ? 'error' : undefined}
               stateRelatedMessage={formState.errors.email?.message}
               nativeInputProps={{
                 ...register('email'),
+                'aria-required': true,
               }}
             />
           </div>

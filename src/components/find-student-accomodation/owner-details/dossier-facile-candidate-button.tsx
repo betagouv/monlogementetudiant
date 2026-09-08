@@ -17,7 +17,7 @@ import { CompleteProfileModal, completeProfileModal } from '~/components/student
 import { createToast } from '~/components/ui/createToast'
 import { ModalPortal } from '~/components/ui/modal-portal'
 import { NewWindowHint } from '~/components/ui/new-window'
-import { RequiredFieldsNotice, RequiredLabel } from '~/components/ui/required-mark'
+import { OptionalLabel, RequiredFieldsNotice } from '~/components/ui/required-mark'
 import type { ApartmentType } from '~/enums/apartment-type'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { trackEvent } from '~/lib/tracking'
@@ -200,7 +200,7 @@ const ContactRequestModal = ({ accommodationSlug }: { accommodationSlug: string 
             <RequiredFieldsNotice />
             <div className={styles.formGrid}>
               <LockableInput
-                label={<RequiredLabel>{t('firstname')}</RequiredLabel>}
+                label={t('firstname')}
                 name="firstname"
                 type="text"
                 autoComplete="given-name"
@@ -209,7 +209,7 @@ const ContactRequestModal = ({ accommodationSlug }: { accommodationSlug: string 
                 form={form}
               />
               <LockableInput
-                label={<RequiredLabel>{t('lastname')}</RequiredLabel>}
+                label={t('lastname')}
                 name="lastname"
                 type="text"
                 autoComplete="family-name"
@@ -218,7 +218,7 @@ const ContactRequestModal = ({ accommodationSlug }: { accommodationSlug: string 
                 form={form}
               />
               <LockableInput
-                label={<RequiredLabel>{t('email')}</RequiredLabel>}
+                label={t('email')}
                 name="email"
                 type="email"
                 autoComplete="email"
@@ -226,7 +226,14 @@ const ContactRequestModal = ({ accommodationSlug }: { accommodationSlug: string 
                 lockedValue={known.email}
                 form={form}
               />
-              <LockableInput label={t('phone')} name="phone" type="tel" autoComplete="tel-national" lockedValue={known.phone} form={form} />
+              <LockableInput
+                label={<OptionalLabel>{t('phone')}</OptionalLabel>}
+                name="phone"
+                type="tel"
+                autoComplete="tel-national"
+                lockedValue={known.phone}
+                form={form}
+              />
             </div>
             <Checkbox
               state={form.formState.errors.consent ? 'error' : 'default'}

@@ -1,8 +1,6 @@
 .toast {
   max-width: 480px !important;
-  border-radius: 8px;
   box-shadow: 0 8px 24px -6px rgb(0 0 36 / 12%);
-  overflow: hidden;
   background-color: var(--background-default-grey);
 }
 
