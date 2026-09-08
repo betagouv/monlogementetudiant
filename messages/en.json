@@ -45,6 +45,9 @@
       "todo": {
         "title": "My priorities"
       },
+      "budget": {
+        "title": "My budget"
+      },
       "housingAid": {
         "title": "My housing aid"
       },
@@ -265,7 +268,7 @@
         "dossierFacileApply": "Apply with DossierFacile",
         "dossierFacileApplied": "Application sent",
         "dossierFacileSelectType": "Accommodation type",
-        "consultDescription": "You will be redirected to the manager's website",
+        "consultDescription": "You will be redirected to the residence's website",
         "dossierFacileDescription": "Certified digital rental file",
         "link": "Copy link",
         "email": "Send by email",
@@ -1086,6 +1089,10 @@
       "savingsRate": "Savings rate: {rate}%",
       "expensesBreakdown": "Expense breakdown",
       "chartTooltipAmount": "Monthly amount",
+      "saveCta": "Save my simulation results",
+      "downloadPdfCta": "Download as PDF",
+      "saveSuccessToast": "Simulation saved to your personal space.",
+      "saveErrorToast": "An error occurred while saving the simulation.",
       "hintsCta": "Practical advice for your budget",
       "hintsTitle": "Go further",
       "annualTotal": "That is {amount} per year",
@@ -1130,6 +1137,7 @@
       "backToHome": "Back to search",
       "dashboard": "Dashboard",
       "todoList": "My priorities ({done}/{total})",
+      "budget": "My budget",
       "housingAid": "Housing aid",
       "favorites": "Favorites and applications",
       "alerts": "Housing alerts",
@@ -1217,6 +1225,10 @@
       "emptyState": "You have not saved a housing aid simulation yet.",
       "emptyCta": "Simulate my aid",
       "restartCta": "Restart the aid simulation"
+    },
+    "budget": {
+      "title": "My budget",
+      "description": "Find your simulation results and keep your budget up to date"
     },
     "personalInformations": {
       "title": "Personal information",

@@ -1,4 +1,4 @@
-import Alert from '@codegouvfr/react-dsfr/Alert'
+import clsx from 'clsx'
 
 interface WaitingListBadgeProps {
   acceptWaitingList: boolean
@@ -12,5 +12,5 @@ export function WaitingListBadge({ acceptWaitingList, nbAvailable, waitingListTe
     return null
   }
 
-  return <Alert description={waitingListText} severity="info" small className={className} />
+  return <span className={clsx('ri-folder-2-line fr-flex fr-align-items-center fr-text--sm fr-mb-0', className)}>{waitingListText}</span>
 }
