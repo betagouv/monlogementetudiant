@@ -91,8 +91,10 @@ export default async function FindStudentAccommodationPage({
 }) {
   const awaitedParams = await params
   const awaitedSearchParams = await searchParams
-  const { dehydratedState, user, territory, isAcademy, serverBbox, serverAcademie, routeCategoryKey } =
-    await getStudentAccommodationPageContext(awaitedParams, awaitedSearchParams)
+  const { dehydratedState, user, territory, isAcademy, serverAcademie, routeCategoryKey } = await getStudentAccommodationPageContext(
+    awaitedParams,
+    awaitedSearchParams,
+  )
 
   const breadcrumbItems = getSearchBreadcrumbItems(territory, routeCategoryKey)
   const faqItems = getSearchFaqItems()
@@ -100,7 +102,7 @@ export default async function FindStudentAccommodationPage({
   return (
     <HydrationBoundary state={dehydratedState}>
       <JsonLd data={[buildBreadcrumbSchema(breadcrumbItems), buildFaqSchema(faqItems)]} />
-      <SearchParamsSync bbox={serverBbox} academie={serverAcademie} />
+      <SearchParamsSync academie={serverAcademie} />
       <div className="fr-container">
         <FindStudentAccommodationTitle location={territory?.name} />
         <FindStudentAccomodationHeader />
