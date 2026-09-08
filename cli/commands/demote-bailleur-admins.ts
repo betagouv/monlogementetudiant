@@ -1,6 +1,12 @@
 import * as fs from 'node:fs'
 import { and, eq, inArray, sql } from 'drizzle-orm'
-import { type BailleurPermission, DEFAULT_GESTIONNAIRE_PERMISSIONS, MAX_BAILLEUR_ADMINISTRATORS } from '~/server/bailleur/permissions'
+import { EOwnerContactMode } from '~/enums/owner-contact-mode'
+import {
+  type BailleurPermission,
+  DEFAULT_GESTIONNAIRE_PERMISSIONS,
+  MAX_BAILLEUR_ADMINISTRATORS,
+  sanitizeGestionnairePermissions,
+} from '~/server/bailleur/permissions'
 import { closeDb, db } from '~/server/db'
 import { user } from '~/server/db/schema/auth'
 import { owners } from '~/server/db/schema/owners'
@@ -33,12 +39,17 @@ type DbUser = {
   ownerId: number | null
   bailleurRole: 'administrator' | 'gestionnaire' | null
   bailleurPermissions: BailleurPermission[]
+  contactMode: EOwnerContactMode | null
 }
 
-/** Comparaison ensembliste : l'ordre des permissions en base n'est pas garanti. */
-function hasTargetPermissions(permissions: BailleurPermission[]): boolean {
-  if (permissions.length !== DEFAULT_GESTIONNAIRE_PERMISSIONS.length) return false
-  return DEFAULT_GESTIONNAIRE_PERMISSIONS.every((p) => permissions.includes(p))
+function targetPermissions(u: Pick<DbUser, 'contactMode'>): BailleurPermission[] {
+  return sanitizeGestionnairePermissions(DEFAULT_GESTIONNAIRE_PERMISSIONS, u.contactMode ?? EOwnerContactMode.NONE)
+}
+
+function hasTargetPermissions(permissions: BailleurPermission[], u: Pick<DbUser, 'contactMode'>): boolean {
+  const expected = targetPermissions(u)
+  if (permissions.length !== expected.length) return false
+  return expected.every((p) => permissions.includes(p))
 }
 
 function countByOwner(users: DbUser[]): Map<number, number> {
@@ -129,8 +140,10 @@ export async function demoteBailleurAdmins(options: DemoteBailleurAdminsOptions)
         ownerId: user.ownerId,
         bailleurRole: user.bailleurRole,
         bailleurPermissions: user.bailleurPermissions,
+        contactMode: owners.contactMode,
       })
       .from(user)
+      .leftJoin(owners, eq(owners.id, user.ownerId))
       .where(inArray(sql`lower(${user.email})`, emails))
 
     const byEmail = new Map(dbUsers.map((u) => [u.email.trim().toLowerCase(), u]))
@@ -155,7 +168,7 @@ export async function demoteBailleurAdmins(options: DemoteBailleurAdminsOptions)
         sansBailleur.push(email)
         continue
       }
-      if (dbUser.bailleurRole === 'gestionnaire' && hasTargetPermissions(dbUser.bailleurPermissions ?? [])) {
+      if (dbUser.bailleurRole === 'gestionnaire' && hasTargetPermissions(dbUser.bailleurPermissions ?? [], dbUser)) {
         dejaConformes.push(email)
         continue
       }
@@ -274,17 +287,29 @@ export async function demoteBailleurAdmins(options: DemoteBailleurAdminsOptions)
     // 6. Ecriture.
     const prefix = options.dryRun ? '  [dry-run]' : ' '
     if (!options.dryRun) {
-      for (let i = 0; i < aRetrograder.length; i += CHUNK_SIZE) {
-        const chunk = aRetrograder.slice(i, i + CHUNK_SIZE)
-        await db
-          .update(user)
-          .set({ bailleurRole: 'gestionnaire', bailleurPermissions: DEFAULT_GESTIONNAIRE_PERMISSIONS, updatedAt: new Date() })
-          .where(
-            inArray(
-              user.id,
-              chunk.map((u) => u.id),
-            ),
-          )
+      // Les permissions posees dependent du parcours du bailleur : on regroupe par jeu de
+      // permissions plutot que d'ecrire la meme valeur pour tout le monde.
+      const parJeu = new Map<string, DbUser[]>()
+      for (const u of aRetrograder) {
+        const key = targetPermissions(u).join(',')
+        const bucket = parJeu.get(key)
+        if (bucket) bucket.push(u)
+        else parJeu.set(key, [u])
+      }
+      for (const [, groupe] of parJeu) {
+        const permissions = targetPermissions(groupe[0])
+        for (let i = 0; i < groupe.length; i += CHUNK_SIZE) {
+          const chunk = groupe.slice(i, i + CHUNK_SIZE)
+          await db
+            .update(user)
+            .set({ bailleurRole: 'gestionnaire', bailleurPermissions: permissions, updatedAt: new Date() })
+            .where(
+              inArray(
+                user.id,
+                chunk.map((u) => u.id),
+              ),
+            )
+        }
       }
       for (let i = 0; i < promotions.length; i += CHUNK_SIZE) {
         const chunk = promotions.slice(i, i + CHUNK_SIZE)
@@ -302,7 +327,8 @@ export async function demoteBailleurAdmins(options: DemoteBailleurAdminsOptions)
     }
 
     console.log(`\n${prefix} ${aRetrograder.length} compte(s) retrograde(s) en gestionnaire`)
-    console.log(`${prefix} permissions posees : ${DEFAULT_GESTIONNAIRE_PERMISSIONS.join(', ')}`)
+    // `manage_applications` n'est posee que si le bailleur a choisi un parcours de candidature.
+    console.log(`${prefix} permissions posees : ${DEFAULT_GESTIONNAIRE_PERMISSIONS.join(', ')} (selon le parcours du bailleur)`)
     if (promote) console.log(`${prefix} ${promotions.length} compte(s) promu(s) administrateur (permissions remises a [])`)
     if (options.dryRun) console.log('\n  Relancez avec --apply pour ecrire en base.')
   } finally {

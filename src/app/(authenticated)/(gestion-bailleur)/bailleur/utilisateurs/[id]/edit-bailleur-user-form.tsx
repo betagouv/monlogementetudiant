@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl'
 import { AdminLimitReachedModal, adminLimitModal } from '~/components/bailleur/users/admin-limit-modal'
 import { BailleurUserForm, type BailleurUserFormData } from '~/components/bailleur/users/bailleur-user-form'
+import type { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { useBailleurUser, useUpdateBailleurUser } from '~/hooks/use-bailleur-users'
 import { MAX_BAILLEUR_ADMINISTRATORS } from '~/server/bailleur/permissions'
 
@@ -12,9 +13,10 @@ type Props = {
   canGrantAdministratorRights: boolean
   /** Administrateurs du bailleur hors utilisateur edite : editer un administrateur en place ne doit pas buter sur le plafond. */
   otherAdministratorCount: number
+  ownerContactMode: EOwnerContactMode
 }
 
-export function EditBailleurUserForm({ id, ownerId, canGrantAdministratorRights, otherAdministratorCount }: Props) {
+export function EditBailleurUserForm({ id, ownerId, canGrantAdministratorRights, otherAdministratorCount, ownerContactMode }: Props) {
   const { data, isLoading } = useBailleurUser(id, ownerId)
   const update = useUpdateBailleurUser()
   const t = useTranslations('bailleur.users')
@@ -47,6 +49,7 @@ export function EditBailleurUserForm({ id, ownerId, canGrantAdministratorRights,
         submitLabel={t('submitUpdate')}
         canGrantAdministratorRights={canGrantAdministratorRights}
         administratorLimitReached={limitReached && data.bailleurRole !== 'administrator'}
+        ownerContactMode={ownerContactMode}
       />
       <AdminLimitReachedModal />
     </>

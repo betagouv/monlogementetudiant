@@ -10,12 +10,7 @@ export const scholarshipTypeEnum = pgEnum('scholarship_type', [
   'other',
 ])
 export const bailleurRoleEnum = pgEnum('bailleur_role', ['administrator', 'gestionnaire'])
-export const bailleurPermissionEnum = pgEnum('bailleur_permission', [
-  'manage_users',
-  'manage_residences',
-  'manage_availability',
-  'manage_applications',
-])
+export const bailleurPermissionEnum = pgEnum('bailleur_permission', ['manage_residences', 'manage_applications'])
 
 export const user = pgTable(
   'user',

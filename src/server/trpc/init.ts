@@ -1,6 +1,6 @@
 import { initTRPC, TRPCError } from '@trpc/server'
 import superjson from 'superjson'
-import { type BailleurPermission, hasPermission } from '~/server/bailleur/permissions'
+import { type BailleurPermission, hasPermission, isBailleurAdministrator } from '~/server/bailleur/permissions'
 import { getClientIp } from '~/server/contacts/rate-limit'
 import { getServerSession } from '~/services/better-auth'
 
@@ -60,3 +60,15 @@ export const bailleurProcedure = (permission: BailleurPermission) =>
     }
     return next({ ctx })
   })
+
+export const bailleurAdministratorProcedure = ownerProcedure.use(async ({ ctx, next }) => {
+  const u = {
+    role: ctx.session.user.role,
+    bailleurRole: ctx.session.user.bailleurRole ?? null,
+    bailleurPermissions: ctx.session.user.bailleurPermissions ?? [],
+  }
+  if (!isBailleurAdministrator(u)) {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'Administrateur du bailleur requis' })
+  }
+  return next({ ctx })
+})

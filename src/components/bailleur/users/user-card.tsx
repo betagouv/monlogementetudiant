@@ -7,7 +7,7 @@ import Tag from '@codegouvfr/react-dsfr/Tag'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useDeleteBailleurUser } from '~/hooks/use-bailleur-users'
-import { BAILLEUR_PERMISSIONS, type BailleurPermission, type BailleurRole } from '~/server/bailleur/permissions'
+import type { BailleurPermission, BailleurRole } from '~/server/bailleur/permissions'
 import { buildHref } from '~/utils/preserve-query-params'
 import styles from './user-card.module.css'
 
@@ -39,7 +39,7 @@ export const UserCard = ({ user, canEdit, canDelete, ownerId }: Props) => {
   })
 
   const role = user.bailleurRole ?? 'gestionnaire'
-  const displayedPermissions = role === 'administrator' ? [...BAILLEUR_PERMISSIONS] : user.bailleurPermissions
+  const isAdministrator = role === 'administrator'
 
   return (
     <div className={styles.card}>
@@ -75,10 +75,12 @@ export const UserCard = ({ user, canEdit, canDelete, ownerId }: Props) => {
       <p className={styles.email}>{user.email}</p>
 
       <div className={styles.permissions}>
-        {displayedPermissions.length === 0 ? (
+        {isAdministrator ? (
+          <Tag small>{t('permission.allAsAdministrator')}</Tag>
+        ) : user.bailleurPermissions.length === 0 ? (
           <span className="fr-text-mention--grey fr-text--xs">{t('noPermissions')}</span>
         ) : (
-          displayedPermissions.map((p) => (
+          user.bailleurPermissions.map((p) => (
             <Tag key={p} small>
               {t(`permission.${p}`)}
             </Tag>

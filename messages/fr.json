@@ -1416,7 +1416,7 @@
         "bailleurRole": "Rôle",
         "bailleurRoleAdminScope": "Rôle dans l'espace bailleur",
         "permissions": "Permissions",
-        "administratorHint": "Un administrateur dispose automatiquement de toutes les permissions.",
+        "administratorHint": "Un administrateur dispose automatiquement de toutes les permissions, y compris la gestion des utilisateurs.",
         "gestionnaireHint": "Sélectionnez les permissions à accorder au gestionnaire.",
         "errors": {
           "emailInvalid": "Email invalide",
@@ -1429,10 +1429,10 @@
         "gestionnaire": "Gestionnaire"
       },
       "permission": {
-        "manage_users": "Gestion des utilisateurs",
         "manage_residences": "Gestion des résidences",
-        "manage_availability": "Disponibilités des résidences",
-        "manage_applications": "Dossiers étudiants",
+        "manage_applications": "Gestion des candidats",
+        "applicationsRgpdHint": "Pour des raisons de protection des données personnelles, nous vous invitons à limiter l’autorisation de Gestion des candidats uniquement aux gestionnaires qui en ont réellement besoin dans le cadre de leurs missions.",
+        "applicationsRequiresContactMode": "Disponible une fois que vous aurez choisi un parcours de candidature (coordonnées à recontacter ou DossierFacile).",
         "allAsAdministrator": "Toutes (administrateur)"
       },
       "toast": {

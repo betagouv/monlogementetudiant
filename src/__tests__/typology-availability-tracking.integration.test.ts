@@ -165,7 +165,7 @@ describe('bailleur.updateAvailability — horodatage de bout en bout', () => {
     const db = getTestDb()
     await persistTypologies(db, accommodationId, [typologyDraft('t1', { nbTotal: 10, nbAvailable: 1 })])
 
-    const caller = gestionnaireCallerFactory({ permissions: ['manage_availability'] })
+    const caller = gestionnaireCallerFactory({ permissions: ['manage_residences'] })
     await caller.bailleur.updateAvailability({ slug: 'residence-dispo', availability: [{ type: 't1', nbAvailable: 6 }] })
 
     const t1 = await readTypology(accommodationId, 't1')
