@@ -9,6 +9,7 @@ export { alertJobSourceEnum, alertJobStatusEnum, alertJobs } from './alert-jobs'
 export { apikey } from './api-key'
 export { apiKeyUsageDaily } from './api-key-usage'
 export { account, session, user, verification } from './auth'
+export { budgetSimulations } from './budget-simulations'
 export { cities } from './cities'
 export { contactRequests } from './contacts'
 export { departments } from './departments'
@@ -30,6 +31,7 @@ export {
   accommodationsRelations,
   accommodationTypologiesRelations,
   adminOwnerLinksRelations,
+  budgetSimulationsRelations,
   citiesRelations,
   contactRequestsRelations,
   departmentsRelations,
