@@ -44,6 +44,7 @@ export async function GET(request: NextRequest) {
       departmentCode: departments.code,
       departmentName: departments.name,
       ownerName: owners.name,
+      ownerLandingUrl: owners.landingUrl,
       nbTotalApartments: accommodations.nbTotalApartments,
       nbAccessibleApartments: accommodations.nbAccessibleApartments,
       nbColivingApartments: accommodations.nbColivingApartments,
@@ -151,8 +152,12 @@ export async function GET(request: NextRequest) {
   const updatedIndex = keys.indexOf('updatedAt')
   if (updatedIndex !== -1) keys.splice(updatedIndex + 1, 0, 'availabilityUpdatedAt', 'availabilityUpdatedBy')
 
-  // L'en-tête reprend le nom de la clé : le fichier est relu par des admins qui connaissent le schéma.
-  const columns: TCsvColumn<Record<string, unknown>>[] = keys.map((key) => ({ key, header: key }))
+  // L'en-tête reprend généralement le nom de la clé : le fichier est relu par des admins qui
+  // connaissent le schéma. L'URL de présentation du bailleur garde toutefois son libellé métier.
+  const columns: TCsvColumn<Record<string, unknown>>[] = keys.map((key) => ({
+    key,
+    header: key === 'ownerLandingUrl' ? 'Page de présentation du bailleur' : key,
+  }))
   const csv = toCsv(columns, enriched)
   const date = new Date().toISOString().slice(0, 10)
 

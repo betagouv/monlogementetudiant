@@ -68,6 +68,22 @@ describe('GET /api/admin/residences/export', () => {
     expect(new Date(row!.availabilityUpdatedAt).getTime()).toBeGreaterThan(Date.now() - 60_000)
   })
 
+  it('expose la page de présentation du bailleur', async () => {
+    const landingUrl = 'https://bailleur.example/residences-etudiantes'
+    const owner = await createOwner({
+      name: 'Bailleur Présentation',
+      slug: 'bailleur-presentation',
+      landingUrl,
+    })
+    await createAccommodation({ name: 'Résidence Présentation', slug: 'residence-presentation', ownerId: owner.id })
+
+    const { headers, rows } = await readCsv(await GET(request()))
+
+    const column = 'Page de présentation du bailleur'
+    expect(headers.indexOf(column)).toBe(headers.indexOf('ownerName') + 1)
+    expect(rows.find((row) => row.slug === 'residence-presentation')?.[column]).toBe(landingUrl)
+  })
+
   it('laisse les colonnes vides pour une résidence dont aucune dispo n’a jamais été renseignée', async () => {
     const owner = await createOwner({ name: 'Bailleur Muet', slug: 'bailleur-muet' })
     // `nbTotal` sans `nbAvailable` : le parc est décrit, sa disponibilité n'a jamais été donnée.
