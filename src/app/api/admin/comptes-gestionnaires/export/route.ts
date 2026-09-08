@@ -1,4 +1,4 @@
-import { eq, inArray } from 'drizzle-orm'
+import { eq, inArray, sql } from 'drizzle-orm'
 import { db } from '~/server/db'
 import { user } from '~/server/db/schema/auth'
 import { owners } from '~/server/db/schema/owners'
@@ -10,6 +10,7 @@ type TOwnerAccountCsvRow = {
   nom: string
   email: string
   nom_gestionnaire: string
+  role: string
 }
 
 const COLUMNS: TCsvColumn<TOwnerAccountCsvRow>[] = [
@@ -17,7 +18,19 @@ const COLUMNS: TCsvColumn<TOwnerAccountCsvRow>[] = [
   { key: 'nom', header: 'nom' },
   { key: 'email', header: 'email' },
   { key: 'nom_gestionnaire', header: 'nom_gestionnaire' },
+  { key: 'role', header: 'role' },
 ]
+
+// Les administrateurs remontent en bloc en tete du fichier, les autres comptes ensuite ; chaque bloc
+// est classe par nom de bailleur. Un CASE plutot qu'un `... DESC` sur le booleen : un `bailleur_role`
+// nul rend la comparaison NULL, que Postgres placerait en tete du tri descendant.
+const ADMINISTRATORS_FIRST = sql`case when ${user.bailleurRole} = 'administrator' then 0 else 1 end`
+
+const ROLE_LABEL = sql<string>`case
+  when ${user.bailleurRole} = 'administrator' then 'Administrateur'
+  when ${user.bailleurRole} = 'gestionnaire' then 'Gestionnaire'
+  else ''
+end`
 
 export async function GET() {
   const session = await getServerSession()
@@ -31,11 +44,12 @@ export async function GET() {
       nom: user.lastname,
       email: user.email,
       nom_gestionnaire: owners.name,
+      role: ROLE_LABEL,
     })
     .from(user)
     .innerJoin(owners, eq(owners.id, user.ownerId))
     .where(inArray(user.role, ['user', 'owner']))
-    .orderBy(owners.name, user.lastname, user.firstname)
+    .orderBy(ADMINISTRATORS_FIRST, owners.name, user.lastname, user.firstname)
 
   const csv = toCsv(COLUMNS, rows)
   const date = new Date().toISOString().slice(0, 10)

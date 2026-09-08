@@ -239,6 +239,52 @@ describe('bailleur.users.create', () => {
     })
     expect(created?.bailleurPermissions).toEqual(['manage_residences', 'manage_availability'])
   })
+
+  it('allows creating a second administrator', async () => {
+    // test-owner-id est le seul administrateur du bailleur A : il reste une place.
+    const created = await ownerCaller.bailleur.users.create({
+      email: 'admin2@test.com',
+      firstname: 'Second',
+      lastname: 'Administrateur',
+      bailleurRole: 'administrator',
+      bailleurPermissions: [],
+    })
+
+    expect(created?.bailleurRole).toBe('administrator')
+  })
+
+  it('rejects creating a third administrator', async () => {
+    const db = getTestDb()
+    await createUser({ id: 'admin-2-create', name: 'Admin 2', email: 'a2c@a.com', role: 'owner' })
+    await db.update(user).set({ ownerId: 1, bailleurRole: 'administrator' }).where(eq(user.id, 'admin-2-create'))
+
+    await expect(
+      ownerCaller.bailleur.users.create({
+        email: 'admin3@test.com',
+        firstname: 'Troisieme',
+        lastname: 'Administrateur',
+        bailleurRole: 'administrator',
+        bailleurPermissions: [],
+      }),
+    ).rejects.toThrow(/ne peut compter plus de 2 administrateurs/)
+  })
+
+  it('does not count platform admins linked to the bailleur towards the limit', async () => {
+    const db = getTestDb()
+    // Un admin plateforme rattache au bailleur n'occupe pas une place d'administrateur bailleur.
+    await createUser({ id: 'platform-admin-linked', name: 'PA', email: 'pa@a.com', role: 'admin' })
+    await db.update(user).set({ ownerId: 1, bailleurRole: 'administrator' }).where(eq(user.id, 'platform-admin-linked'))
+
+    const created = await ownerCaller.bailleur.users.create({
+      email: 'admin-ok@test.com',
+      firstname: 'Second',
+      lastname: 'Administrateur',
+      bailleurRole: 'administrator',
+      bailleurPermissions: [],
+    })
+
+    expect(created?.bailleurRole).toBe('administrator')
+  })
 })
 
 describe('bailleur.users.update', () => {
@@ -355,6 +401,98 @@ describe('bailleur.users.update', () => {
         bailleurPermissions: ['manage_users'],
       }),
     ).rejects.toThrow(/manage_users/)
+  })
+
+  it('rejects promoting a gestionnaire when the bailleur already has 2 administrators', async () => {
+    const db = getTestDb()
+    // test-owner-id est deja administrateur : on en ajoute un second pour saturer le quota.
+    await createUser({ id: 'admin-2', name: 'Admin 2', email: 'admin2@a.com', role: 'owner' })
+    await db.update(user).set({ ownerId: 1, bailleurRole: 'administrator' }).where(eq(user.id, 'admin-2'))
+
+    await expect(ownerCaller.bailleur.users.update({ id: 'target-user', bailleurRole: 'administrator' })).rejects.toThrow(
+      /ne peut compter plus de 2 administrateurs/,
+    )
+  })
+
+  it('allows editing an existing administrator when the limit is reached', async () => {
+    const db = getTestDb()
+    await createUser({ id: 'admin-2', name: 'Admin 2', email: 'admin2@a.com', role: 'owner' })
+    await db.update(user).set({ ownerId: 1, bailleurRole: 'administrator' }).where(eq(user.id, 'admin-2'))
+
+    // Le quota est plein, mais admin-2 occupe deja une des deux places : editer son nom doit passer.
+    const updated = await ownerCaller.bailleur.users.update({
+      id: 'admin-2',
+      firstname: 'Renomme',
+      lastname: 'Administrateur',
+      bailleurRole: 'administrator',
+    })
+
+    expect(updated?.firstname).toBe('Renomme')
+    expect(updated?.bailleurRole).toBe('administrator')
+  })
+
+  it('does not count administrators of another bailleur towards the limit', async () => {
+    const db = getTestDb()
+    // Deux administrateurs sur le bailleur B ne doivent pas bloquer une promotion sur le bailleur A.
+    await createUser({ id: 'b-admin-1', name: 'B1', email: 'b1@b.com', role: 'owner' })
+    await createUser({ id: 'b-admin-2', name: 'B2', email: 'b2@b.com', role: 'owner' })
+    await db.update(user).set({ ownerId: 2, bailleurRole: 'administrator' }).where(eq(user.id, 'b-admin-1'))
+    await db.update(user).set({ ownerId: 2, bailleurRole: 'administrator' }).where(eq(user.id, 'b-admin-2'))
+
+    const updated = await ownerCaller.bailleur.users.update({ id: 'target-user', bailleurRole: 'administrator' })
+    expect(updated?.bailleurRole).toBe('administrator')
+  })
+
+  it('rejects demoting the last administrator of the bailleur', async () => {
+    const db = getTestDb()
+    // test-owner-id est le seul administrateur ; un gestionnaire porteur de manage_users tente de le retrograder.
+    await createUser({ id: 'gest-demoter', name: 'G', email: 'gd@a.com', role: 'owner' })
+    await db
+      .update(user)
+      .set({ ownerId: 1, bailleurRole: 'gestionnaire', bailleurPermissions: ['manage_users'] })
+      .where(eq(user.id, 'gest-demoter'))
+    const gestCaller = gestionnaireCallerFactory({ id: 'gest-demoter', email: 'gd@a.com', permissions: ['manage_users'] })
+
+    await expect(gestCaller.bailleur.users.update({ id: 'test-owner-id', bailleurRole: 'gestionnaire' })).rejects.toThrow(
+      /dernier administrateur/,
+    )
+  })
+
+  it('rejects a gestionnaire editing their own account', async () => {
+    const db = getTestDb()
+    await createUser({ id: 'gest-self', name: 'G', email: 'gs@a.com', role: 'owner' })
+    await db
+      .update(user)
+      .set({ ownerId: 1, bailleurRole: 'gestionnaire', bailleurPermissions: ['manage_users'] })
+      .where(eq(user.id, 'gest-self'))
+    const gestCaller = gestionnaireCallerFactory({ id: 'gest-self', email: 'gs@a.com', permissions: ['manage_users'] })
+
+    await expect(gestCaller.bailleur.users.update({ id: 'gest-self', firstname: 'Autoproclame' })).rejects.toThrow(/votre propre compte/)
+  })
+
+  it('allows an administrator to edit their own name and email', async () => {
+    const updated = await ownerCaller.bailleur.users.update({
+      id: 'test-owner-id',
+      firstname: 'Admin',
+      lastname: 'Bailleur',
+      email: 'admin.bailleur@a.com',
+    })
+
+    expect(updated?.email).toBe('admin.bailleur@a.com')
+    expect(updated?.name).toBe('Admin Bailleur')
+  })
+
+  it('still lets a gestionnaire read their own record via getById', async () => {
+    const db = getTestDb()
+    await createUser({ id: 'gest-read-self', name: 'G', email: 'grs@a.com', role: 'owner' })
+    await db
+      .update(user)
+      .set({ ownerId: 1, bailleurRole: 'gestionnaire', bailleurPermissions: ['manage_users'] })
+      .where(eq(user.id, 'gest-read-self'))
+    const gestCaller = gestionnaireCallerFactory({ id: 'gest-read-self', email: 'grs@a.com', permissions: ['manage_users'] })
+
+    const own = await gestCaller.bailleur.users.getById({ id: 'gest-read-self' })
+    expect(own.email).toBe('grs@a.com')
   })
 
   it('rejects update of a user from a different bailleur', async () => {

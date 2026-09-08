@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { EOwnerContactMode, OWNER_CONTACT_MODES, ZOwnerContactMode } from '~/enums/owner-contact-mode'
 import { FEATURES } from '~/lib/features'
 import { IMPORT_JOB_TYPES, ZImportJobType } from '~/schemas/import-jobs'
+import { assertAdministratorSlotAvailable } from '~/server/bailleur/administrator-limit'
 import { BAILLEUR_PERMISSIONS, BAILLEUR_ROLES } from '~/server/bailleur/permissions'
 import { db } from '~/server/db'
 import { accommodationAddresses } from '~/server/db/schema/accommodation-addresses'
@@ -130,6 +131,8 @@ const usersRouter = createTRPCRouter({
         throw new TRPCError({ code: 'CONFLICT', message: (await getAdminErrorTranslations())('userAlreadyExists') })
       }
 
+      // Pas de controle du plafond d'administrateurs ici : la creation ne rattache aucun bailleur
+      // (`ownerId` reste nul, le rattachement passe par `linkToOwner`, ou le plafond est verifie).
       const id = crypto.randomUUID()
       const bailleurRole = input.role === 'owner' ? (input.bailleurRole ?? 'administrator') : null
       const bailleurPermissions = input.role === 'owner' && bailleurRole === 'gestionnaire' ? (input.bailleurPermissions ?? []) : []
@@ -175,15 +178,18 @@ const usersRouter = createTRPCRouter({
       const { id, ...fields } = input
       const updateData: Record<string, unknown> = {}
 
+      // Lu en amont : sert au recalcul du `name` et au controle du plafond d'administrateurs.
+      const current = await db.query.user.findFirst({ where: eq(user.id, id) })
+      if (!current) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: (await getAdminErrorTranslations())('userNotFound') })
+      }
+
       if (fields.email !== undefined) updateData.email = fields.email
       if (fields.firstname !== undefined) updateData.firstname = fields.firstname
       if (fields.lastname !== undefined) updateData.lastname = fields.lastname
       if (fields.role !== undefined) updateData.role = fields.role
       if (fields.firstname !== undefined || fields.lastname !== undefined) {
-        const current = await db.query.user.findFirst({ where: eq(user.id, id) })
-        if (current) {
-          updateData.name = `${fields.firstname ?? current.firstname} ${fields.lastname ?? current.lastname}`
-        }
+        updateData.name = `${fields.firstname ?? current.firstname} ${fields.lastname ?? current.lastname}`
       }
 
       // Coherence: si on passe le role application a user/admin, on remet a null les champs bailleur
@@ -202,12 +208,21 @@ const usersRouter = createTRPCRouter({
         }
       }
 
+      // Plafond d'administrateurs : uniquement sur une promotion, et seulement si le compte est deja
+      // rattache a un bailleur (sinon le rattachement passera par `linkToOwner`, qui controle aussi).
+      const nextRole = fields.role ?? current.role
+      if (
+        nextRole === 'owner' &&
+        updateData.bailleurRole === 'administrator' &&
+        current.bailleurRole !== 'administrator' &&
+        current.ownerId != null
+      ) {
+        await assertAdministratorSlotAvailable(current.ownerId, current.id)
+      }
+
       updateData.updatedAt = new Date()
 
       const [updated] = await db.update(user).set(updateData).where(eq(user.id, id)).returning()
-      if (!updated) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: (await getAdminErrorTranslations())('userNotFound') })
-      }
 
       return updated
     }),
@@ -221,15 +236,22 @@ const usersRouter = createTRPCRouter({
   }),
 
   linkToOwner: adminProcedure.input(z.object({ userId: z.string(), ownerId: z.number() })).mutation(async ({ input }) => {
+    const target = await db.query.user.findFirst({ where: eq(user.id, input.userId) })
+    if (!target) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: (await getAdminErrorTranslations())('userNotFound') })
+    }
+
+    // Point de passage oblige : `users.create` ne rattache aucun bailleur, c'est ici que le plafond
+    // d'administrateurs peut etre verifie avant qu'un compte n'entre dans un bailleur.
+    if (target.role === 'owner' && target.bailleurRole === 'administrator') {
+      await assertAdministratorSlotAvailable(input.ownerId, input.userId)
+    }
+
     const [updated] = await db
       .update(user)
       .set({ ownerId: input.ownerId, updatedAt: new Date() })
       .where(eq(user.id, input.userId))
       .returning()
-
-    if (!updated) {
-      throw new TRPCError({ code: 'NOT_FOUND', message: (await getAdminErrorTranslations())('userNotFound') })
-    }
 
     return updated
   }),

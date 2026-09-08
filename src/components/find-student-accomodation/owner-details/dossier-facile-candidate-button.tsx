@@ -4,6 +4,7 @@ import Button from '@codegouvfr/react-dsfr/Button'
 import Checkbox from '@codegouvfr/react-dsfr/Checkbox'
 import Input from '@codegouvfr/react-dsfr/Input'
 import { createModal } from '@codegouvfr/react-dsfr/Modal'
+import { RadioButtons } from '@codegouvfr/react-dsfr/RadioButtons'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
@@ -21,6 +22,7 @@ import { RequiredFieldsNotice, RequiredLabel } from '~/components/ui/required-ma
 import type { ApartmentType } from '~/enums/apartment-type'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { trackEvent } from '~/lib/tracking'
+import { ZBirthDate, ZScholarshipStatus } from '~/schemas/student-profile/student-profile'
 import { useTRPC, useTRPCClient } from '~/server/trpc/client'
 import { authClient } from '~/services/better-auth-client'
 import { isStudentProfileComplete } from '~/utils/student-profile'
@@ -91,12 +93,14 @@ const ZContactRequestForm = z.object({
   lastname: z.string().trim().min(1, 'Le nom est requis'),
   email: z.string().trim().email("L'e-mail est invalide"),
   phone: z.string().trim(),
+  birthdate: ZBirthDate,
+  scholarshipStatus: ZScholarshipStatus,
   consent: z.boolean().refine((value) => value, 'Vous devez accepter le partage de vos informations'),
 })
 
 type TContactRequestForm = z.infer<typeof ZContactRequestForm>
 
-type TContactRequestField = 'firstname' | 'lastname' | 'email' | 'phone'
+type TContactRequestField = 'firstname' | 'lastname' | 'email' | 'phone' | 'birthdate'
 
 /**
  * Une information déjà connue du compte n'est pas redemandée : elle s'affiche verrouillée.
@@ -105,6 +109,7 @@ type TContactRequestField = 'firstname' | 'lastname' | 'email' | 'phone'
  */
 const LockableInput = ({
   label,
+  hintText,
   name,
   type,
   autoComplete,
@@ -113,8 +118,9 @@ const LockableInput = ({
   form,
 }: {
   label: ReactNode
+  hintText?: string
   name: TContactRequestField
-  type: 'text' | 'email' | 'tel'
+  type: 'text' | 'email' | 'tel' | 'date'
   autoComplete: string
   required?: boolean
   lockedValue: string
@@ -129,9 +135,46 @@ const LockableInput = ({
   return (
     <Input
       label={label}
+      hintText={hintText}
       state={error ? 'error' : 'default'}
       stateRelatedMessage={error}
       nativeInputProps={{ type, ...form.register(name), autoComplete, 'aria-required': required }}
+    />
+  )
+}
+
+/** Pendant de `LockableInput` pour le statut boursier : une valeur connue s'affiche verrouillée. */
+const LockableScholarshipStatus = ({
+  lockedValue,
+  form,
+}: {
+  lockedValue: TContactRequestForm['scholarshipStatus'] | ''
+  form: UseFormReturn<TContactRequestForm>
+}) => {
+  const t = useTranslations('accomodation.sidebar.contactRequestModal')
+  const options = [
+    { value: 'yes', label: t('scholarshipYes') },
+    { value: 'no', label: t('scholarshipNo') },
+    { value: 'unknown', label: t('scholarshipUnknown') },
+  ] as const
+
+  if (lockedValue) {
+    const label = options.find((option) => option.value === lockedValue)?.label ?? ''
+    return <Input label={t('scholarship')} disabled nativeInputProps={{ type: 'text', value: label, readOnly: true }} />
+  }
+
+  const error = form.formState.errors.scholarshipStatus?.message
+
+  return (
+    <RadioButtons
+      legend={<RequiredLabel>{t('scholarship')}</RequiredLabel>}
+      state={error ? 'error' : 'default'}
+      stateRelatedMessage={error}
+      orientation="horizontal"
+      options={options.map((option) => ({
+        label: option.label,
+        nativeInputProps: { ...form.register('scholarshipStatus'), value: option.value, 'aria-required': true },
+      }))}
     />
   )
 }
@@ -154,6 +197,10 @@ const ContactRequestModal = ({ accommodationSlug }: { accommodationSlug: string 
     lastname: account?.lastname || '',
     email: account?.email || '',
     phone: account?.phone || '',
+    birthdate: account?.birthdate || '',
+    // Le cast couvre le cas « pas encore renseigné » : la chaîne vide ne coche aucun radio et
+    // échoue à la validation, comme pour un visiteur qui n'aurait rien saisi.
+    scholarshipStatus: (account?.scholarshipStatus || '') as TContactRequestForm['scholarshipStatus'],
   }
   const hasKnownFields = Object.values(known).some(Boolean)
 
@@ -227,7 +274,18 @@ const ContactRequestModal = ({ accommodationSlug }: { accommodationSlug: string 
                 form={form}
               />
               <LockableInput label={t('phone')} name="phone" type="tel" autoComplete="tel-national" lockedValue={known.phone} form={form} />
+              <LockableInput
+                label={<RequiredLabel>{t('birthdate')}</RequiredLabel>}
+                hintText={t('birthdateHint')}
+                name="birthdate"
+                type="date"
+                autoComplete="bday"
+                required
+                lockedValue={known.birthdate}
+                form={form}
+              />
             </div>
+            <LockableScholarshipStatus lockedValue={known.scholarshipStatus} form={form} />
             <Checkbox
               state={form.formState.errors.consent ? 'error' : 'default'}
               stateRelatedMessage={form.formState.errors.consent?.message}

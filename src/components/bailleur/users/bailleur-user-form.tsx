@@ -8,7 +8,13 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslations } from 'next-intl'
 import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
-import { ADMIN_ONLY_PERMISSIONS, BAILLEUR_PERMISSIONS, BAILLEUR_ROLES, type BailleurPermission } from '~/server/bailleur/permissions'
+import {
+  ADMIN_ONLY_PERMISSIONS,
+  BAILLEUR_PERMISSIONS,
+  BAILLEUR_ROLES,
+  type BailleurPermission,
+  MAX_BAILLEUR_ADMINISTRATORS,
+} from '~/server/bailleur/permissions'
 
 const formSchema = z.object({
   email: z.string().email('bailleur.users.form.errors.emailInvalid'),
@@ -30,9 +36,21 @@ type Props = {
    * (manage_users, manage_applications) sont desactivees.
    */
   canGrantAdministratorRights?: boolean
+  /**
+   * Quand `true`, le bailleur a deja son quota d'administrateurs : le choix reste selectionnable
+   * (l'utilisateur doit pouvoir declencher l'explication) mais un texte d'aide l'annonce.
+   */
+  administratorLimitReached?: boolean
 }
 
-export const BailleurUserForm = ({ defaultValues, onSubmit, isPending, submitLabel, canGrantAdministratorRights = true }: Props) => {
+export const BailleurUserForm = ({
+  defaultValues,
+  onSubmit,
+  isPending,
+  submitLabel,
+  canGrantAdministratorRights = true,
+  administratorLimitReached = false,
+}: Props) => {
   const t = useTranslations('bailleur.users')
 
   const {
@@ -93,6 +111,7 @@ export const BailleurUserForm = ({ defaultValues, onSubmit, isPending, submitLab
         render={({ field }) => (
           <RadioButtons
             legend={t('form.bailleurRole')}
+            hintText={administratorLimitReached ? t('adminLimit.hint', { max: MAX_BAILLEUR_ADMINISTRATORS }) : undefined}
             orientation="horizontal"
             options={BAILLEUR_ROLES.filter((role) => canGrantAdministratorRights || role !== 'administrator').map((role) => ({
               label: t(`role.${role}`),

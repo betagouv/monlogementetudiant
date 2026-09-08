@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { hasPermission, hasRole, type PermissionCheckUser } from '~/server/bailleur/permissions'
+import {
+  canEditOwnAccount,
+  DEFAULT_GESTIONNAIRE_PERMISSIONS,
+  hasPermission,
+  hasRole,
+  isBailleurAdministrator,
+  MAX_BAILLEUR_ADMINISTRATORS,
+  type PermissionCheckUser,
+} from '~/server/bailleur/permissions'
 
 const admin: PermissionCheckUser = { role: 'admin', bailleurRole: null, bailleurPermissions: [] }
 const administrator: PermissionCheckUser = { role: 'owner', bailleurRole: 'administrator', bailleurPermissions: [] }
@@ -56,5 +64,50 @@ describe('hasPermission', () => {
 
   it('student has no permissions', () => {
     expect(hasPermission(student, 'manage_residences')).toBe(false)
+  })
+})
+
+describe('isBailleurAdministrator', () => {
+  it('is true for a platform admin', () => {
+    expect(isBailleurAdministrator(admin)).toBe(true)
+  })
+
+  it('is true for a bailleur administrator', () => {
+    expect(isBailleurAdministrator(administrator)).toBe(true)
+  })
+
+  it('is false for a gestionnaire even with manage_users', () => {
+    const gestionnaireWithUsers: PermissionCheckUser = {
+      role: 'owner',
+      bailleurRole: 'gestionnaire',
+      bailleurPermissions: ['manage_users'],
+    }
+    expect(isBailleurAdministrator(gestionnaireWithUsers)).toBe(false)
+  })
+})
+
+describe('canEditOwnAccount', () => {
+  it('allows administrators and platform admins', () => {
+    expect(canEditOwnAccount(administrator)).toBe(true)
+    expect(canEditOwnAccount(admin)).toBe(true)
+  })
+
+  it('refuses a gestionnaire, even carrying manage_users', () => {
+    expect(canEditOwnAccount(gestionnaireEmpty)).toBe(false)
+    expect(canEditOwnAccount({ role: 'owner', bailleurRole: 'gestionnaire', bailleurPermissions: ['manage_users'] })).toBe(false)
+  })
+})
+
+describe('constantes de retrogradation', () => {
+  it('plafonne les administrateurs a 2', () => {
+    expect(MAX_BAILLEUR_ADMINISTRATORS).toBe(2)
+  })
+
+  it('les permissions par defaut du gestionnaire couvrent dossiers, disponibilites et residences', () => {
+    expect([...DEFAULT_GESTIONNAIRE_PERMISSIONS].sort()).toEqual(['manage_applications', 'manage_availability', 'manage_residences'])
+  })
+
+  it('les permissions par defaut du gestionnaire excluent manage_users', () => {
+    expect(DEFAULT_GESTIONNAIRE_PERMISSIONS).not.toContain('manage_users')
   })
 })

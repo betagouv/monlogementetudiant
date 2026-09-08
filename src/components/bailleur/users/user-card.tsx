@@ -22,11 +22,12 @@ type UserItem = {
 
 type Props = {
   user: UserItem
+  canEdit: boolean
   canDelete: boolean
   ownerId?: number
 }
 
-export const UserCard = ({ user, canDelete, ownerId }: Props) => {
+export const UserCard = ({ user, canEdit, canDelete, ownerId }: Props) => {
   const router = useRouter()
   const searchParams = useSearchParams()
   const deleteUser = useDeleteBailleurUser()
@@ -47,13 +48,15 @@ export const UserCard = ({ user, canDelete, ownerId }: Props) => {
           {t(`role.${role}`)}
         </Badge>
         <div className={styles.actions}>
-          <Button
-            priority="tertiary no outline"
-            size="small"
-            iconId="fr-icon-edit-line"
-            title={t('edit')}
-            onClick={() => router.push(buildHref(`/bailleur/utilisateurs/${user.id}`, searchParams))}
-          />
+          {canEdit && (
+            <Button
+              priority="tertiary no outline"
+              size="small"
+              iconId="fr-icon-edit-line"
+              title={t('edit')}
+              onClick={() => router.push(buildHref(`/bailleur/utilisateurs/${user.id}`, searchParams))}
+            />
+          )}
           {canDelete && (
             <Button
               priority="tertiary no outline"

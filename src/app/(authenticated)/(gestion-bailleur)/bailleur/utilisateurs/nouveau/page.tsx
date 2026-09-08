@@ -1,6 +1,7 @@
 import Breadcrumb from '@codegouvfr/react-dsfr/Breadcrumb'
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
+import { countBailleurAdministrators } from '~/server/bailleur/administrator-limit'
 import { getBailleurContext } from '~/server/bailleur/get-bailleur-context'
 import { canGrantAdministratorRights } from '~/server/bailleur/permissions'
 import { buildHref } from '~/utils/preserve-query-params'
@@ -13,6 +14,7 @@ export default async function NewBailleurUserPage({ searchParams }: { searchPara
 
   const t = await getTranslations('bailleur.users')
   const canGrantAdmin = canGrantAdministratorRights(ctx.user)
+  const administratorCount = await countBailleurAdministrators(ctx.owner.id)
 
   return (
     <div className="fr-container fr-pb-12w">
@@ -26,7 +28,7 @@ export default async function NewBailleurUserPage({ searchParams }: { searchPara
       />
       <h1>{t('addUser')}</h1>
       <div className="fr-card fr-card--no-border fr-p-3w">
-        <NewBailleurUserForm ownerId={ctx.owner.id} canGrantAdministratorRights={canGrantAdmin} />
+        <NewBailleurUserForm ownerId={ctx.owner.id} canGrantAdministratorRights={canGrantAdmin} administratorCount={administratorCount} />
       </div>
     </div>
   )

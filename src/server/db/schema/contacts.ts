@@ -1,8 +1,8 @@
 import { sql } from 'drizzle-orm'
-import { bigint, index, pgTable, text, timestamp, unique, uniqueIndex, uuid } from 'drizzle-orm/pg-core'
+import { bigint, date, index, pgTable, text, timestamp, unique, uniqueIndex, uuid } from 'drizzle-orm/pg-core'
 import { EContactStatus } from '~/enums/contact-status'
 import { accommodations } from './accommodations'
-import { user } from './auth'
+import { scholarshipStatusEnum, user } from './auth'
 
 export const contactRequests = pgTable(
   'contact_request',
@@ -16,6 +16,13 @@ export const contactRequests = pgTable(
     lastname: text('lastname'),
     email: text('email'),
     phone: text('phone'),
+    /**
+     * Infos étudiant saisies dans le formulaire « Être recontacté ». Renseignées aussi pour un
+     * visiteur sans compte ; côté compte connecté elles doublent celles du profil, qui restent la
+     * référence si elles changent après coup.
+     */
+    birthdate: date('birthdate', { mode: 'string' }),
+    scholarshipStatus: scholarshipStatusEnum('scholarship_status'),
     apartmentType: text('apartment_type'),
     /** HMAC de l'IP émettrice (jamais l'IP en clair) — sert au rate-limit anti-spam des demandes visiteur. */
     ipHash: text('ip_hash'),

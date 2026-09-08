@@ -56,9 +56,10 @@ const findTenantsOutOfRetention = async (): Promise<string[]> => {
  * **Demandes de contact** — deux passes :
  * 1. suppression des demandes visiteur jamais confirmées par double opt-in au-delà de 7 jours :
  *    elles n'ont jamais été transmises à personne, il n'y a rien à en conserver ;
- * 2. anonymisation des demandes de plus de 30 jours — la ligne survit, seules les coordonnées
- *    partent. Ce qui reste (résidence, date, statut, type de logement, et `user_id` quand la demande
- *    est liée à un compte) suffit à l'historique et aux compteurs.
+ * 2. anonymisation des demandes de plus de 30 jours — la ligne survit, seules les données
+ *    personnelles partent (coordonnées, date de naissance, statut boursier). Ce qui reste
+ *    (résidence, date, statut, type de logement, et `user_id` quand la demande est liée à un
+ *    compte) suffit à l'historique et aux compteurs.
  *
  * **DossierFacile** — la ligne `dossier_facile_tenant` est supprimée, et sa cascade emporte les
  * documents mis en cache comme les candidatures. Couper les seuls liens ne suffisait pas : la ligne
@@ -100,6 +101,8 @@ export const purgeContactRequests = async ({ dryRun = false } = {}): Promise<Pur
       lastname: null,
       email: null,
       phone: null,
+      birthdate: null,
+      scholarshipStatus: null,
       ipHash: null,
       anonymizedAt: new Date(),
       updatedAt: new Date(),
