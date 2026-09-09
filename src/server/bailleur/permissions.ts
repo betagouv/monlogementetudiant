@@ -1,3 +1,4 @@
+import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { bailleurPermissionEnum, bailleurRoleEnum } from '~/server/db/schema/auth'
 
 export const BAILLEUR_PERMISSIONS = bailleurPermissionEnum.enumValues
@@ -23,9 +24,45 @@ export function hasPermission(u: PermissionCheckUser, permission: BailleurPermis
   return u.bailleurPermissions.includes(permission)
 }
 
-// Permissions sensibles : seuls les administrateurs (bailleur ou plateforme) peuvent les accorder.
-export const ADMIN_ONLY_PERMISSIONS: BailleurPermission[] = ['manage_users', 'manage_applications']
+// Administrateur au sens large : administrateur du bailleur, ou admin plateforme qui agit en son nom.
+export function isBailleurAdministrator(u: PermissionCheckUser): boolean {
+  return u.role === 'admin' || u.bailleurRole === 'administrator'
+}
 
 export function canGrantAdministratorRights(u: PermissionCheckUser): boolean {
-  return u.role === 'admin' || u.bailleurRole === 'administrator'
+  return isBailleurAdministrator(u)
+}
+
+// Modifier son propre compte (nom, email, rôle, permissions) reste réservé aux administrateurs.
+// Garde défensive : l'écran des utilisateurs n'est déjà atteignable que par un administrateur.
+export function canEditOwnAccount(u: PermissionCheckUser): boolean {
+  return isBailleurAdministrator(u)
+}
+
+export const MAX_BAILLEUR_ADMINISTRATORS = 2
+
+export function canGrantApplicationsPermission(contactMode: EOwnerContactMode): boolean {
+  return contactMode !== EOwnerContactMode.NONE
+}
+
+export function grantablePermissions(contactMode: EOwnerContactMode): BailleurPermission[] {
+  return BAILLEUR_PERMISSIONS.filter((p) => p !== 'manage_applications' || canGrantApplicationsPermission(contactMode))
+}
+
+export function sanitizeGestionnairePermissions(permissions: BailleurPermission[], contactMode: EOwnerContactMode): BailleurPermission[] {
+  const grantable = grantablePermissions(contactMode)
+  return permissions.filter((p) => grantable.includes(p))
+}
+
+export const DEFAULT_GESTIONNAIRE_PERMISSIONS: BailleurPermission[] = ['manage_applications', 'manage_residences']
+
+// Autorisations pre-cochees a la creation d'un gestionnaire : un compte sans autorisation
+// n'ouvre aucun ecran, il est renvoye au tableau de bord depuis chaque section.
+export function defaultGestionnairePermissions(contactMode: EOwnerContactMode): BailleurPermission[] {
+  return sanitizeGestionnairePermissions(DEFAULT_GESTIONNAIRE_PERMISSIONS, contactMode)
+}
+
+// Un gestionnaire doit conserver au moins une autorisation, sinon son compte est inerte.
+export function hasUsableGestionnairePermissions(permissions: BailleurPermission[]): boolean {
+  return permissions.length > 0
 }

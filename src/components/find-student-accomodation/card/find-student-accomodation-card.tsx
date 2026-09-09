@@ -14,11 +14,13 @@ import {
 } from '~/components/find-student-accomodation/card/find-student-accommodation-image-card'
 import { AvailabilityBadge } from '~/components/shared/availability-badge'
 import { TooltipHoverOnly } from '~/components/tooltip-hover-only'
+import { useWidgetCampaign } from '~/components/widget/widget-campaign-context'
 import { trackEvent } from '~/lib/tracking'
 import { TUser } from '~/lib/types'
 import { TAccomodationCard } from '~/schemas/accommodations/accommodations'
 import { calculateAvailability } from '~/utils/calculateAvailability'
 import { getAccommodationPath } from '~/utils/get-accommodation-url'
+import { appendWidgetCampaign } from '~/utils/widget-campaign'
 import styles from './find-student-accomodation-card.module.css'
 
 type AccomodationCardProps = {
@@ -39,6 +41,7 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
   user,
 }) => {
   const [selectedAccommodation] = useQueryState('id', parseAsString)
+  const widgetCampaign = useWidgetCampaign()
   const t = useTranslations('findAccomodation.card')
   const tA11y = useTranslations('accessibility')
   const { city, imagesUrls, name, nbTotalApartments, postalCode, priceMin, acceptWaitingList } = accomodation
@@ -66,7 +69,9 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
       }
     : {}
 
-  const redirectUri = href ?? getAccommodationPath(city, accomodation.slug)
+  // Depuis un widget, la carte fait sortir le visiteur de l'iframe vers le site principal : le lien
+  // porte la campagne, seul moyen de rattacher ensuite la visite au widget et à son partenaire.
+  const redirectUri = appendWidgetCampaign(href ?? getAccommodationPath(city, accomodation.slug), widgetCampaign)
 
   return (
     <Card

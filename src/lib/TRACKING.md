@@ -115,7 +115,7 @@ type MatomoEventCategory =
 
 | ID | Action | Name | Fichier | Status |
 |----|--------|------|---------|--------|
-| W1 | `chargement widget` | Domaine referrer | `widget-accommodation-grid.tsx` 
+| W1 | `chargement widget` | Domaine referrer | `widget-load-tracker.tsx` (monte dans `(widget)/layout.tsx`, donc sur les trois widgets) 
 | W2 | `filtre widget` | Type filtre | `widget-accommodation-filters.tsx` | A faire (les filtres sont partages avec le site principal, tracking via R2-R5) |
 | W3 | `clic logement widget` | Slug | via `find-student-accomodation-card.tsx` (L1) | Fait (via L1 partage) |
 | W4 | `pagination widget` | N page | `widget-accommodation-grid.tsx` 
@@ -167,4 +167,33 @@ type MatomoEventCategory =
 
 | Index | Nom | Valeur | Scope | Utilisation |
 |-------|-----|--------|-------|-------------|
-| 1 | `widget_referrer` | Hostname du site embedant | `visit` | Attribution des conversions widget 
+| 1 | `widget_referrer` | Hostname du site embedant | `visit` | Attribution des conversions widget
+
+### Campagne des liens sortants
+
+Un widget est une iframe hébergée chez le partenaire : quand un visiteur en suit un lien, il arrive
+sur le site principal et Matomo n'enregistre qu'un référent — le même que pour un lien classique posé
+sur ce site. Les liens sortants portent donc les paramètres de campagne Matomo, posés par
+`appendWidgetCampaign` (`src/utils/widget-campaign.ts`) à partir du contexte
+`WidgetCampaignProvider`.
+
+| Paramètre | Valeur | Reconnu par |
+|-----------|--------|-------------|
+| `mtm_campaign` | `widget` (constant) | cœur de Matomo |
+| `mtm_kwd` | Hostname du partenaire | cœur de Matomo |
+| `mtm_source` | Hostname du partenaire | extension Marketing Campaigns Reporting |
+| `mtm_medium` | `widget` | extension Marketing Campaigns Reporting |
+| `mtm_content` | `logements` / `calculatrice` / `simulateur-aides` | extension Marketing Campaigns Reporting |
+
+Lecture dans Matomo : **Acquisition > Campagnes**, campagne `widget` pour l'ensemble des visites
+d'origine widget, mot-clé pour le partenaire. Les trois derniers paramètres sont sans effet si
+l'extension n'est pas installée — les deux premiers portent à eux seuls l'origine et le partenaire.
+
+Le hostname du partenaire vient du paramètre `referrer` posé par les scripts d'intégration
+(`public/widget/embed*.js`), avec repli sur `document.referrer` pour une iframe recopiée à la main.
+Sans partenaire identifiable, le lien reste marqué `mtm_campaign=widget`, sans mot-clé.
+
+Liens couverts : cartes de résidence (widget logements, y compris les résultats voisins), lien de
+pied de widget vers le site principal, CTA « trouver un logement » du simulateur d'aides et CTA
+« préparer mon budget » de la calculatrice. Hors widget, ces mêmes composants rendent leurs liens
+inchangés. 

@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { createToast } from '~/components/ui/createToast'
+import type { BailleurPermission } from '~/server/bailleur/permissions'
 import { useTRPC, useTRPCClient } from '~/server/trpc/client'
 
 export const useAdminUpdateUser = () => {
@@ -19,7 +20,7 @@ export const useAdminUpdateUser = () => {
       lastname?: string
       role?: 'admin' | 'owner' | 'user'
       bailleurRole?: 'administrator' | 'gestionnaire' | null
-      bailleurPermissions?: Array<'manage_users' | 'manage_residences' | 'manage_availability' | 'manage_applications'>
+      bailleurPermissions?: BailleurPermission[]
     }) => trpcClient.admin.users.update.mutate(data),
     onSuccess: async (updated) => {
       await queryClient.invalidateQueries({ queryKey: trpc.admin.users.list.queryKey() })

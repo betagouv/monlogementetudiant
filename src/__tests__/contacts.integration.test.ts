@@ -25,7 +25,9 @@ const contactInput = {
   lastname: 'Tutu',
   email: 'tototutu@tete.com',
   phone: '0102030405',
-}
+  birthdate: '2003-04-15',
+  scholarshipStatus: 'yes',
+} as const
 
 /** Fait vieillir une demande pour franchir une fenêtre de rétention sans attendre. */
 const ageContactRequest = (id: string, days: number) =>
@@ -50,6 +52,9 @@ describe('contacts.create', () => {
     expect(result).not.toBeNull()
     expect(result!.userId).toBeNull()
     expect(result!.email).toBe(contactInput.email)
+    // Un visiteur sans compte n'a que le formulaire pour porter ces informations.
+    expect(result!.birthdate).toBe(contactInput.birthdate)
+    expect(result!.scholarshipStatus).toBe(contactInput.scholarshipStatus)
   })
 
   it('rejects when the accommodation has no availability', async () => {
@@ -113,6 +118,8 @@ describe('jeton de rattachement', () => {
       firstname: contactInput.firstname,
       email: contactInput.email,
       phone: contactInput.phone,
+      birthdate: contactInput.birthdate,
+      scholarshipStatus: contactInput.scholarshipStatus,
     })
   })
 
@@ -244,6 +251,20 @@ describe('rétention côté gestionnaire', () => {
     await expect(ownerCaller.bailleur.getContact({ id: request!.id })).resolves.toBeDefined()
   })
 
+  it('carries the student info of a guest request through to the manager', async () => {
+    await setupOwnedResidence('res-info-guest')
+    const request = await caller.contacts.create({ accommodationSlug: 'res-info-guest', ...contactInput })
+    await getTestDb().update(contactRequests).set({ confirmedAt: new Date() }).where(eq(contactRequests.id, request!.id))
+
+    // Sans compte rattaché, ces informations ne peuvent venir que de la demande elle-même.
+    const detail = await ownerCaller.bailleur.getContact({ id: request!.id })
+    expect(detail.studentBirthdate).toBe(contactInput.birthdate)
+    expect(detail.scholarshipStatus).toBe(contactInput.scholarshipStatus)
+
+    const board = await ownerCaller.bailleur.listContactsByResidence({ slug: 'res-info-guest' })
+    expect(board.items[0]!.scholarshipStatus).toBe(contactInput.scholarshipStatus)
+  })
+
   it('hides a request past 30 days everywhere, including by direct URL', async () => {
     await setupOwnedResidence('res-ret-old')
     const request = await authenticatedCaller.contacts.create({ accommodationSlug: 'res-ret-old', ...contactInput })
@@ -339,6 +360,8 @@ describe('purgeContactRequests', () => {
     expect(row!.email).toBeNull()
     expect(row!.firstname).toBeNull()
     expect(row!.phone).toBeNull()
+    expect(row!.birthdate).toBeNull()
+    expect(row!.scholarshipStatus).toBeNull()
     expect(row!.ipHash).toBeNull()
     expect(row!.anonymizedAt).not.toBeNull()
     // L'historique survit : qui, où, quand, avec quelle issue.

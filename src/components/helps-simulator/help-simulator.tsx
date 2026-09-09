@@ -7,16 +7,21 @@ import { FC, useEffect, useRef } from 'react'
 import { HelpSimulatorForm } from '~/components/helps-simulator/help-simulator-form'
 import { HelpSimulatorHeader } from '~/components/helps-simulator/help-simulator-header'
 import { useHelpSimulatorStep } from '~/components/helps-simulator/use-help-simulator-step'
+import { useWidgetCampaign } from '~/components/widget/widget-campaign-context'
+import { appendWidgetCampaign, type TOutboundLinkTarget } from '~/utils/widget-campaign'
 import styles from './help-simulator-cta.module.css'
 
 interface HelpSimulatorProps {
   onHeightChange?: (height: number) => void
+  /** Cible du bouton de fin de parcours. `_top` pour une intégration en iframe (widget). */
+  ctaTarget?: TOutboundLinkTarget
 }
 
-export const HelpSimulator: FC<HelpSimulatorProps> = ({ onHeightChange }) => {
+export const HelpSimulator: FC<HelpSimulatorProps> = ({ onHeightChange, ctaTarget = '_self' }) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const [currentStep] = useHelpSimulatorStep()
   const t = useTranslations('simulator.cta')
+  const widgetCampaign = useWidgetCampaign()
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
 
@@ -55,7 +60,11 @@ export const HelpSimulator: FC<HelpSimulatorProps> = ({ onHeightChange }) => {
             {t('titleLine2')}
           </h2>
           <p className={clsx('fr-text--lg fr-mb-3w', styles.subtitle)}>{t('subtitle')}</p>
-          <Button linkProps={{ href: '/trouver-un-logement-etudiant' }} iconId="ri-arrow-right-line" iconPosition="right">
+          <Button
+            linkProps={{ href: appendWidgetCampaign('/trouver-un-logement-etudiant', widgetCampaign), target: ctaTarget }}
+            iconId="ri-arrow-right-line"
+            iconPosition="right"
+          >
             {t('button')}
           </Button>
         </div>

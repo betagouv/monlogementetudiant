@@ -33,7 +33,7 @@ export const getAccommodations = (searchParams: {
 
 export const prefetchAccommodations = async (
   awaitedSearchParams: Record<string, string | string[] | undefined>,
-  overrides?: { bbox?: string; academie?: string; cityId?: number; pageSize?: number },
+  overrides?: { bbox?: string; academie?: string; cityId?: number; departmentId?: number; pageSize?: number },
 ) => {
   const parsedParams = accommodationsSearchParamsCache.parse(awaitedSearchParams)
   const queryKeyParams = {
@@ -45,8 +45,9 @@ export const prefetchAccommodations = async (
   }
 
   const queryInput = {
-    bbox: overrides?.cityId ? undefined : (queryKeyParams.bbox ?? undefined),
+    bbox: overrides?.cityId || overrides?.departmentId ? undefined : (queryKeyParams.bbox ?? undefined),
     cityId: overrides?.cityId ?? undefined,
+    departmentId: overrides?.departmentId ?? undefined,
     page: queryKeyParams.page ?? 1,
     pageSize: queryKeyParams.pageSize ?? 12,
     isAccessible: queryKeyParams.accessible || undefined,
@@ -64,19 +65,21 @@ export const prefetchAccommodations = async (
   const hasOverrides =
     (overrides?.bbox && overrides.bbox !== parsedParams.bbox) ||
     (overrides?.academie && overrides.academie !== parsedParams.academie) ||
-    overrides?.cityId
+    overrides?.cityId ||
+    overrides?.departmentId
 
   if (hasOverrides) {
     const data = client.getQueryData(trpc.accommodations.list.queryOptions(queryInput).queryKey)
     if (data) {
       // Seed the cache key the client will use on first render (before SearchParamsSync updates the URL)
-      // Client derives cityId from pathname via getBySlug, not from URL params.
-      // On first render, pathname is available so cityId matches the server prefetch.
-      // But we also seed a key without cityId for the brief moment before hydration.
+      // Client derives cityId/departmentId from pathname via getBySlug, not from URL params.
+      // On first render, pathname is available so these ids match the server prefetch.
+      // But we also seed a key without them for the brief moment before hydration.
       const clientQueryInput = {
         ...queryInput,
         bbox: parsedParams.bbox ?? undefined,
         cityId: undefined,
+        departmentId: undefined,
         academyId: parsedParams.academie ? Number(parsedParams.academie) : undefined,
       }
       client.setQueryData(trpc.accommodations.list.queryOptions(clientQueryInput).queryKey, data)

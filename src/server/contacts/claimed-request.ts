@@ -8,6 +8,8 @@ export type TClaimedContactRequest = {
   lastname: string | null
   email: string | null
   phone: string | null
+  birthdate: string | null
+  scholarshipStatus: string | null
 }
 
 /**
@@ -24,7 +26,7 @@ export const getClaimedContactRequest = async (token: string | undefined): Promi
   const request = await db.query.contactRequests.findFirst({
     // Une demande déjà rattachée à un compte n'a plus à alimenter un formulaire d'inscription.
     where: and(eq(contactRequests.id, id), isNull(contactRequests.userId)),
-    columns: { firstname: true, lastname: true, email: true, phone: true },
+    columns: { firstname: true, lastname: true, email: true, phone: true, birthdate: true, scholarshipStatus: true },
   })
 
   return request ?? null

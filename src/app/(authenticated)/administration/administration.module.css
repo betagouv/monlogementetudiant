@@ -123,6 +123,10 @@
   background: var(--background-flat-info);
 }
 
+.statCardRed::before {
+  background: var(--background-flat-error);
+}
+
 .statLabel {
   font-size: 0.75rem;
   color: var(--text-mention-grey);
@@ -306,6 +310,12 @@
   justify-content: space-between;
   font-size: 0.75rem;
   color: var(--text-mention-grey);
+}
+
+.gCardBottomUrl {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .gCardAdd {

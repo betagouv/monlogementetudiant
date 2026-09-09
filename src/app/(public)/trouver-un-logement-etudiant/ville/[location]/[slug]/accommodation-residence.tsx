@@ -99,19 +99,13 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
                     </span>
                   )}
 
-                  <div className="fr-flex fr-direction-column fr-direction-md-row fr-align-items-md-center fr-flex-gap-2v">
-                    <div className={styles.pricesTiles}>
-                      <span className="fr-text--bold">
-                        {accommodation.min && accommodation.max && accommodation.min !== accommodation.max
-                          ? `De ${accommodation.min} à ${accommodation.max} €`
-                          : `${accommodation.min} €`}
-                      </span>
-                    </div>
-                    <div className="fr-flex fr-direction-column">
-                      {isPerPersonTypology(accommodation.type) && <span className="fr-text--xs fr-mb-0">{t('perPerson')}</span>}
-                      <span className="fr-text--xs fr-mb-0">{t('charges')}</span>
-                    </div>
-                  </div>
+                  <p className="fr-mb-0">
+                    {accommodation.min && accommodation.max && accommodation.min !== accommodation.max
+                      ? `De ${accommodation.min} à ${accommodation.max} €`
+                      : `${accommodation.min} €`}{' '}
+                    {isPerPersonTypology(accommodation.type) && `${t('perPerson')} `}
+                    {t('charges')}
+                  </p>
                 </div>
               ))}
             </div>
@@ -148,7 +142,7 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
         </div>
         {!!accommodation.targetAudience &&
           [ETargetAudience.DIFFUS_MIXTE, ETargetAudience.DIFFUS_ETUDIANTS].includes(accommodation.targetAudience) && (
-            <div className="fr-flex fr-direction-column fr-direction-md-row fr-align-items-md-center fr-flex-gap-2v fr-border fr-border-radius--8 fr-px-3w fr-py-2w">
+            <div className="fr-flex fr-direction-column fr-direction-md-row fr-align-items-md-center fr-flex-gap-2v fr-border fr-px-3w fr-py-2w">
               <span className={clsx('ri-community-line fr-hidden fr-unhidden-sm', styles.diffusIcon)} aria-hidden />
               <p className="fr-mb-0 fr-flex fr-direction-column">
                 <span className="fr-text--bold">
@@ -164,7 +158,7 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
           )}
         {(accommodation.residenceType === EResidenceType.JEUNES_TRAVAILLEURS ||
           accommodation.residenceType === EResidenceType.SOCIALE_JEUNES_ACTIFS) && <FjtRsjaNotice />}
-        <div className="fr-flex fr-direction-column fr-direction-md-row fr-justify-content-space-between fr-align-items-md-center fr-flex-gap-2v fr-border fr-border-radius--8 fr-px-3w fr-py-2w">
+        <div className="fr-flex fr-direction-column fr-direction-md-row fr-justify-content-space-between fr-align-items-md-center fr-flex-gap-2v fr-border fr-px-3w fr-py-2w">
           <span className={clsx('ri-calculator-line fr-hidden fr-unhidden-sm', styles.simulatorIcon)} aria-hidden />
           <p className="fr-mb-0 fr-flex fr-direction-column">
             <span className="fr-text--bold">{t('simulator')}</span>

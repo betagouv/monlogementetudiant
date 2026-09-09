@@ -9,6 +9,7 @@ import { backfillGeocoding } from './commands/backfill-geocoding'
 import { backupDb } from './commands/backup-db'
 import { compareCrous } from './commands/compare-crous'
 import { cronSelftest } from './commands/cron-selftest'
+import { demoteBailleurAdmins } from './commands/demote-bailleur-admins'
 import { detectAlertJobsCommand } from './commands/detect-alert-jobs'
 import { expireAlertsCommand } from './commands/expire-alerts'
 import { healthcheck, healthcheckCities } from './commands/healthcheck'
@@ -74,6 +75,17 @@ program
     (value: string, previous: string[] | undefined) => [...(previous ?? []), value],
   )
   .action((opts) => backfillCacheControl(opts))
+
+program
+  .command('demote-bailleur-admins')
+  .description('Aligne les rôles bailleurs sur un CSV : colonne « admin » vide → gestionnaire, « oui » → administrateur')
+  .requiredOption('--file <path>', 'Chemin du CSV (colonnes attendues : email, admin)')
+  .option('--apply', 'Écrire en base (par défaut : dry-run)')
+  .option('--no-promote', 'Ne pas promouvoir les lignes « oui » : limiter le run aux rétrogradations')
+  .option('--verbose', 'Afficher chaque compte traité')
+  .option('--limit <n>', 'Limiter le nombre de lignes CSV lues', parseInt)
+  .option('--allow-no-admin', 'Forcer même si un bailleur se retrouve sans administrateur')
+  .action((opts) => demoteBailleurAdmins({ ...opts, dryRun: !opts.apply }))
 
 program.command('migrate').description('Apply Drizzle migrations').action(migrate)
 

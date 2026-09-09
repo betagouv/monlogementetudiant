@@ -1,3 +1,4 @@
+import type { BailleurPermission } from '~/server/bailleur/permissions'
 import { createCallerFactory } from '~/server/trpc/init'
 import { appRouter } from '~/server/trpc/router'
 
@@ -122,12 +123,7 @@ export const ownerCaller2 = createCaller({
 } as unknown as Parameters<typeof createCaller>[0])
 
 export const gestionnaireCallerFactory = (
-  options: {
-    id?: string
-    email?: string
-    ownerSuffix?: string
-    permissions?: Array<'manage_users' | 'manage_residences' | 'manage_availability' | 'manage_applications'>
-  } = {},
+  options: { id?: string; email?: string; ownerSuffix?: string; permissions?: BailleurPermission[] } = {},
 ) => {
   const id = options.id ?? 'test-gestionnaire-id'
   const email = options.email ?? 'gestionnaire@test.com'

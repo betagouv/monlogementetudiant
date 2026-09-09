@@ -140,6 +140,36 @@ function cityAccommodationStatsSubquery(cityIdFilter?: SQL) {
     .as('city_accommodation_stats')
 }
 
+/**
+ * Résolution tolérante d'un segment d'URL de territoire.
+ *
+ * Le segment peut arriver « humanisé » : liens historiques construits sur le nom
+ * (`/ville/La Rochelle`), URLs déjà indexées, ou saisie libre du formulaire d'accueil. On tente
+ * toujours le slug exact en premier (index unique), et seulement en cas d'échec une comparaison
+ * désaccentuée espaces→tirets : les slugs de villes sont désaccentués (`creteil`) là où ceux des
+ * départements ne le sont pas (`la-réunion`), les deux importeurs ne les génèrent pas pareil.
+ */
+const resolveLooseSlug = async (table: typeof cities | typeof academies | typeof departments, raw: string): Promise<string | null> => {
+  const dashed = raw
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_]+/g, '-')
+  const deaccented = dashed.normalize('NFD').replace(/\p{Diacritic}/gu, '')
+  const candidates = [...new Set([dashed, deaccented])]
+
+  // Chemin indexé : couvre les liens historiques construits sur le nom (`La Rochelle`, `Créteil`).
+  const [byCandidate] = await db.select({ slug: table.slug }).from(table).where(inArray(table.slug, candidates)).limit(1)
+  if (byCandidate) return byCandidate.slug
+
+  // Dernier recours (seq scan) : slug stocké accentué alors que l'URL ne l'est pas (`la-reunion`).
+  const [byUnaccent] = await db
+    .select({ slug: table.slug })
+    .from(table)
+    .where(sql`immutable_unaccent(LOWER(${table.slug})) = immutable_unaccent(${dashed})`)
+    .limit(1)
+  return byUnaccent?.slug ?? null
+}
+
 export const territoriesRouter = createTRPCRouter({
   search: baseProcedure.input(z.object({ q: z.string() })).query(async ({ input }) => {
     const { q } = input
@@ -395,76 +425,72 @@ export const territoriesRouter = createTRPCRouter({
       const slugLower = input.slug.toLowerCase()
 
       if (input.type === 'ville') {
-        const [cityRows, accommodationStats] = await Promise.all([
-          db
-            .select({
-              id: cities.id,
-              name: cities.name,
-              slug: cities.slug,
-              departmentCode: departments.code,
-              postalCodes: cities.postalCodes,
-              epciCode: sql<string>`COALESCE(${cities.epciCode}, '')`,
-              inseeCodes: cities.inseeCodes,
-              averageIncome: cities.averageIncome,
-              averageRent: cities.averageRent,
-              popular: cities.popular,
-              nbStudents: sql<number>`COALESCE(${cities.nbStudents}, 0)`,
-              bbox: bboxSelect(cities),
-            })
-            .from(cities)
-            .leftJoin(departments, eq(cities.departmentId, departments.id))
-            .where(eq(cities.slug, slugLower))
-            .limit(1),
+        const citySelect = {
+          id: cities.id,
+          name: cities.name,
+          slug: cities.slug,
+          departmentCode: departments.code,
+          postalCodes: cities.postalCodes,
+          epciCode: sql<string>`COALESCE(${cities.epciCode}, '')`,
+          inseeCodes: cities.inseeCodes,
+          averageIncome: cities.averageIncome,
+          averageRent: cities.averageRent,
+          popular: cities.popular,
+          nbStudents: sql<number>`COALESCE(${cities.nbStudents}, 0)`,
+          bbox: bboxSelect(cities),
+        }
+        const selectCityWhere = (where: SQL) =>
+          db.select(citySelect).from(cities).leftJoin(departments, eq(cities.departmentId, departments.id)).where(where).limit(1)
 
-          db
-            .select({
-              nbTotalApartments: sql<number>`COALESCE(SUM(${accommodations.nbTotalApartments}), 0)::int`,
-              priceMin: sql<number | null>`MIN(${accommodations.priceMin})`,
-              nbT1: cityTypeTotal('t1'),
-              nbT1Bis: cityTypeTotal('t1_bis'),
-              nbT2: cityTypeTotal('t2'),
-              nbT3: cityTypeTotal('t3'),
-              nbT4: cityTypeTotal('t4'),
-              nbT5: cityTypeTotal('t5'),
-              nbT6: cityTypeTotal('t6'),
-              nbT7More: cityTypeTotal('t7_more'),
-            })
-            .from(accommodations)
-            .innerJoin(accommodationAddresses, eq(accommodationAddresses.accommodationId, accommodations.id))
-            .where(
-              and(
-                sql`${accommodationAddresses.cityId} = (SELECT ${cities.id} FROM ${cities} WHERE ${cities.slug} = ${slugLower} LIMIT 1)`,
-                eq(accommodations.published, true),
-              ),
-            ),
-        ])
-
-        const city = cityRows[0]
+        let [city] = await selectCityWhere(eq(cities.slug, slugLower))
+        if (!city) {
+          const resolved = await resolveLooseSlug(cities, input.slug)
+          if (resolved) [city] = await selectCityWhere(eq(cities.slug, resolved))
+        }
         if (!city) throw new TRPCError({ code: 'NOT_FOUND', message: `City not found: ${input.slug}` })
+
+        const accommodationStats = await db
+          .select({
+            nbTotalApartments: sql<number>`COALESCE(SUM(${accommodations.nbTotalApartments}), 0)::int`,
+            priceMin: sql<number | null>`MIN(${accommodations.priceMin})`,
+            nbT1: cityTypeTotal('t1'),
+            nbT1Bis: cityTypeTotal('t1_bis'),
+            nbT2: cityTypeTotal('t2'),
+            nbT3: cityTypeTotal('t3'),
+            nbT4: cityTypeTotal('t4'),
+            nbT5: cityTypeTotal('t5'),
+            nbT6: cityTypeTotal('t6'),
+            nbT7More: cityTypeTotal('t7_more'),
+          })
+          .from(accommodations)
+          .innerJoin(accommodationAddresses, eq(accommodationAddresses.accommodationId, accommodations.id))
+          .where(and(eq(accommodationAddresses.cityId, city.id), eq(accommodations.published, true)))
 
         return mapCityRow(city, accommodationStats[0] ?? undefined)
       }
 
       if (input.type === 'academie') {
-        const rows = await db
-          .select({ id: academies.id, name: academies.name, slug: academies.slug, bbox: bboxSelect(academies) })
-          .from(academies)
-          .where(eq(academies.slug, slugLower))
-          .limit(1)
+        const academySelect = { id: academies.id, name: academies.name, slug: academies.slug, bbox: bboxSelect(academies) }
+        let [academy] = await db.select(academySelect).from(academies).where(eq(academies.slug, slugLower)).limit(1)
+        if (!academy) {
+          const resolved = await resolveLooseSlug(academies, input.slug)
+          if (resolved) [academy] = await db.select(academySelect).from(academies).where(eq(academies.slug, resolved)).limit(1)
+        }
 
-        if (!rows[0]) throw new TRPCError({ code: 'NOT_FOUND', message: `Academy not found: ${input.slug}` })
-        return rows[0]
+        if (!academy) throw new TRPCError({ code: 'NOT_FOUND', message: `Academy not found: ${input.slug}` })
+        return academy
       }
 
       // departement
-      const rows = await db
-        .select({ id: departments.id, name: departments.name, slug: departments.slug, bbox: bboxSelect(departments) })
-        .from(departments)
-        .where(eq(departments.slug, slugLower))
-        .limit(1)
+      const departmentSelect = { id: departments.id, name: departments.name, slug: departments.slug, bbox: bboxSelect(departments) }
+      let [department] = await db.select(departmentSelect).from(departments).where(eq(departments.slug, slugLower)).limit(1)
+      if (!department) {
+        const resolved = await resolveLooseSlug(departments, input.slug)
+        if (resolved) [department] = await db.select(departmentSelect).from(departments).where(eq(departments.slug, resolved)).limit(1)
+      }
 
-      if (!rows[0]) throw new TRPCError({ code: 'NOT_FOUND', message: `Department not found: ${input.slug}` })
-      return rows[0]
+      if (!department) throw new TRPCError({ code: 'NOT_FOUND', message: `Department not found: ${input.slug}` })
+      return department
     }),
 
   rentSearch: baseProcedure.input(z.object({ q: z.string().min(1) })).query(({ input }) => {

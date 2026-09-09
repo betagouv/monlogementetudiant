@@ -4,6 +4,7 @@ import { env } from '~/server/env'
 const GEO_API_URL = 'https://geo.api.gouv.fr'
 const THROTTLE_MS = 150
 const CANDIDATE_LIMIT = 10
+const FETCH_TIMEOUT_MS = 10000
 
 // --- Réponses des APIs externes ---------------------------------------------
 
@@ -128,7 +129,7 @@ async function throttledJson(url: string): Promise<unknown | null> {
 
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
-      const response = await fetch(url)
+      const response = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) })
       if (response.status === 429 || response.status >= 500) {
         if (attempt < 2) continue
         return null

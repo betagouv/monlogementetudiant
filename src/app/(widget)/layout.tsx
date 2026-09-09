@@ -1,4 +1,6 @@
 import { Suspense } from 'react'
+import { WidgetCampaignProvider } from '~/components/widget/widget-campaign-context'
+import { WidgetLoadTracker } from '~/components/widget/widget-load-tracker'
 import WidgetMatomo from '~/components/widget/widget-matomo'
 import styles from './layout.module.css'
 
@@ -19,7 +21,12 @@ export default function WidgetLayout({
       <Suspense>
         <WidgetMatomo />
       </Suspense>
-      {children}
+      <Suspense>
+        <WidgetCampaignProvider>
+          <WidgetLoadTracker />
+          {children}
+        </WidgetCampaignProvider>
+      </Suspense>
     </main>
   )
 }

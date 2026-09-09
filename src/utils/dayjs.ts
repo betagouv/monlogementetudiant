@@ -8,6 +8,8 @@ export const formatDayjs = (date: dayjs.ConfigType, formatString: string, locale
   return dayjs(date).locale(resolveLocale(locale)).format(formatString)
 }
 
+export const formatIsoDate = (date: dayjs.ConfigType): string => dayjs(date).format('YYYY-MM-DD')
+
 /** Âge en années révolues, ou `null` si la date est absente/invalide. */
 export const computeAge = (birthdate: dayjs.ConfigType): number | null => {
   if (!birthdate) return null

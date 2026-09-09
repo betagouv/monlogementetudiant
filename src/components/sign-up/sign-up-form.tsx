@@ -34,8 +34,9 @@ export const SignUpForm: FC<Props> = ({ prefill }) => {
       email: prefill?.email ?? '',
       password: '',
       phone: prefill?.phone ?? '',
-      birthdate: '',
-      // scholarshipStatus laissé indéfini jusqu'à sélection
+      birthdate: prefill?.birthdate ?? '',
+      // Repris de la demande de contact quand elle en portait un, laissé indéfini jusqu'à sélection sinon.
+      scholarshipStatus: (prefill?.scholarshipStatus as TSignUpForm['scholarshipStatus']) ?? undefined,
     },
     resolver: zodResolver(ZSignUpForm),
   })

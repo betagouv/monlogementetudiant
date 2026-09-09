@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server'
-import { and, asc, count, desc, eq, gt, ilike, inArray, ne, or, type SQL, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, gt, ilike, inArray, ne, or, type SQL, sql } from 'drizzle-orm'
 import { sanitize } from 'isomorphic-dompurify'
 import { SignJWT } from 'jose'
 
@@ -11,10 +11,26 @@ import { ZCreateResidence } from '~/schemas/accommodations/create-residence'
 import { getTypologyLabel } from '~/schemas/accommodations/typology'
 import { ZUpdateResidence } from '~/schemas/accommodations/update-residence'
 import { ZUpdateResidenceList } from '~/schemas/accommodations/update-residence-list'
-import { zCreateBailleurUser, zUpdateBailleurUser } from '~/schemas/bailleur-users/bailleur-user-form'
-import { getOwnerForUser } from '~/server/bailleur/get-owner-for-user'
-import { ADMIN_ONLY_PERMISSIONS, canGrantAdministratorRights } from '~/server/bailleur/permissions'
 import {
+  GESTIONNAIRE_PERMISSIONS_REQUIRED,
+  gestionnairePermissionsAreUsable,
+  zCreateBailleurUser,
+  zUpdateBailleurUser,
+} from '~/schemas/bailleur-users/bailleur-user-form'
+import {
+  assertAdministratorSlotAvailable,
+  assertNotLastAdministrator,
+  LAST_ADMINISTRATOR_MESSAGE,
+} from '~/server/bailleur/administrator-limit'
+import { getOwnerForUser } from '~/server/bailleur/get-owner-for-user'
+import {
+  type BailleurPermission,
+  canEditOwnAccount,
+  canGrantApplicationsPermission,
+  sanitizeGestionnairePermissions,
+} from '~/server/bailleur/permissions'
+import {
+  CONTACT_SCHOLARSHIP_STATUS_SQL,
   CONTACT_STUDENT_NAME_SQL,
   contactStudentName,
   DOSSIER_FACILE_STUDENT_NAME_SQL,
@@ -50,7 +66,7 @@ import { findAvailableSlug } from '~/server/utils/slug'
 import { isDossierFacileSelectable } from '~/utils/feature-flags'
 import { normalizeAccommodationName } from '~/utils/normalize-accommodation-name'
 import { RICH_TEXT_ALLOWED_ATTR, RICH_TEXT_ALLOWED_TAGS } from '~/utils/sanitize-config'
-import { bailleurProcedure, createTRPCRouter, ownerProcedure } from '../init'
+import { bailleurAdministratorProcedure, bailleurProcedure, createTRPCRouter, ownerProcedure } from '../init'
 import { priceMaxComputed, rowsToAccommodationDTOs } from './accommodations'
 
 // Somme des disponibilités (tous types d'appartement) d'une résidence.
@@ -59,6 +75,15 @@ const DISPONIBILITES_SQL = sql<number>`coalesce(${accommodations.nbAvailableApar
 
 // La règle « dossier validé » est désormais inséparable de la fenêtre de rétention : les deux
 // vivent dans `visibleDossierFacileApplication` (src/server/candidatures/visibility.ts).
+
+function assertPermissionsMatchContactMode(permissions: BailleurPermission[], contactMode: EOwnerContactMode) {
+  if (permissions.includes('manage_applications') && !canGrantApplicationsPermission(contactMode)) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: "L'autorisation Gestion des candidats requiert d'avoir choisi un parcours de candidature",
+    })
+  }
+}
 
 async function assertOwnsAccommodation(userId: string, accommodationWhere: SQL) {
   const usr = await db.query.user.findFirst({
@@ -306,6 +331,7 @@ export const bailleurRouter = createTRPCRouter({
           tx,
           row.id,
           typologies.map((t) => typologyDraft(t.type, t)),
+          { updatedBy: ctx.session.user.id },
         )
         return row
       })
@@ -421,6 +447,7 @@ export const bailleurRouter = createTRPCRouter({
             tx,
             accommodationId,
             typologies.map((t) => typologyDraft(t.type, t)),
+            { updatedBy: ctx.session.user.id },
           )
         const [row] = await tx
           .update(accommodations)
@@ -463,7 +490,7 @@ export const bailleurRouter = createTRPCRouter({
       return updated
     }),
 
-  updateAvailability: bailleurProcedure('manage_availability')
+  updateAvailability: bailleurProcedure('manage_residences')
     .input(z.object({ slug: z.string() }).merge(ZUpdateResidenceList))
     .mutation(async ({ ctx, input }) => {
       const { slug, availability } = input
@@ -509,7 +536,7 @@ export const bailleurRouter = createTRPCRouter({
       const aggregates = typologyAggregates(newTypologies)
 
       const updated = await db.transaction(async (tx) => {
-        await persistTypologies(tx, accommodationId, newTypologies)
+        await persistTypologies(tx, accommodationId, newTypologies, { updatedBy: ctx.session.user.id })
         const [row] = await tx
           .update(accommodations)
           .set({
@@ -774,7 +801,25 @@ export const bailleurRouter = createTRPCRouter({
       const owner = await getOwnerForUser(ctx.session.user.id, input.ownerId)
       if (!owner) throw new TRPCError({ code: 'NOT_FOUND', message: 'Owner not found' })
 
+      const previousMode = owner.contactMode
       await db.update(owners).set({ contactMode: input.mode, updatedBy: ctx.session.user.id }).where(eq(owners.id, owner.id))
+
+      // Le choix du mode (DossierFacile / coordonnées / aucun) est tracé dans le journal : c'est
+      // l'indicateur d'adoption suivi côté administration. On n'enregistre que les vrais changements.
+      if (previousMode !== input.mode) {
+        await logActivity({
+          userId: ctx.session.user.id,
+          userName: ctx.session.user.name,
+          action: 'owner.contact_mode_updated',
+          entityType: 'owner',
+          entityId: String(owner.id),
+          entityName: owner.name,
+          ownerId: owner.id,
+          ownerName: owner.name,
+          metadata: { diff: { contactMode: { old: previousMode, new: input.mode } } },
+        })
+      }
+
       return { contactMode: input.mode }
     }),
 
@@ -912,7 +957,7 @@ export const bailleurRouter = createTRPCRouter({
           .select({
             id: contactRequests.id,
             studentName: CONTACT_STUDENT_NAME_SQL,
-            scholarshipStatus: user.scholarshipStatus,
+            scholarshipStatus: CONTACT_SCHOLARSHIP_STATUS_SQL,
             apartmentType: contactRequests.apartmentType,
             status: contactRequests.status,
             createdAt: contactRequests.createdAt,
@@ -956,8 +1001,8 @@ export const bailleurRouter = createTRPCRouter({
         studentName: contactStudentName(request),
         studentEmail: request.email ?? request.user?.email ?? null,
         studentPhone: request.phone ?? request.user?.phone ?? null,
-        studentBirthdate: request.user?.birthdate ?? null,
-        scholarshipStatus: request.user?.scholarshipStatus ?? null,
+        studentBirthdate: request.birthdate ?? request.user?.birthdate ?? null,
+        scholarshipStatus: request.scholarshipStatus ?? request.user?.scholarshipStatus ?? null,
       }
     }),
 
@@ -995,7 +1040,7 @@ export const bailleurRouter = createTRPCRouter({
     }),
 
   users: createTRPCRouter({
-    list: bailleurProcedure('manage_users')
+    list: bailleurAdministratorProcedure
       .input(z.object({ ownerId: z.number().optional(), search: z.string().optional() }))
       .query(async ({ ctx, input }) => {
         const owner = await getOwnerForUser(ctx.session.user.id, input.ownerId)
@@ -1028,7 +1073,9 @@ export const bailleurRouter = createTRPCRouter({
         return { items, ownerId: owner.id }
       }),
 
-    getById: bailleurProcedure('manage_users')
+    // Reserve aux administrateurs, comme le reste de `users.*` : le seul consommateur est le
+    // formulaire d'edition, lui-meme accessible aux seuls administrateurs.
+    getById: bailleurAdministratorProcedure
       .input(z.object({ id: z.string(), ownerId: z.number().optional() }))
       .query(async ({ ctx, input }) => {
         const owner = await getOwnerForUser(ctx.session.user.id, input.ownerId)
@@ -1049,34 +1096,25 @@ export const bailleurRouter = createTRPCRouter({
         }
       }),
 
-    create: bailleurProcedure('manage_users')
-      .input(zCreateBailleurUser.extend({ ownerId: z.number().optional() }))
+    create: bailleurAdministratorProcedure
+      .input(
+        zCreateBailleurUser
+          .extend({ ownerId: z.number().optional() })
+          .refine(gestionnairePermissionsAreUsable, GESTIONNAIRE_PERMISSIONS_REQUIRED),
+      )
       .mutation(async ({ ctx, input }) => {
         const owner = await getOwnerForUser(ctx.session.user.id, input.ownerId)
         if (!owner) throw new TRPCError({ code: 'FORBIDDEN', message: 'Bailleur introuvable' })
 
-        const callerCanGrantAdminRights = canGrantAdministratorRights({
-          role: ctx.session.user.role,
-          bailleurRole: ctx.session.user.bailleurRole ?? null,
-          bailleurPermissions: ctx.session.user.bailleurPermissions ?? [],
-        })
-
-        if (!callerCanGrantAdminRights) {
-          if (input.bailleurRole === 'administrator') {
-            throw new TRPCError({ code: 'FORBIDDEN', message: 'Seul un administrateur peut creer un autre administrateur' })
-          }
-          const sensitiveRequested = input.bailleurPermissions.filter((p) => ADMIN_ONLY_PERMISSIONS.includes(p))
-          if (sensitiveRequested.length > 0) {
-            throw new TRPCError({
-              code: 'FORBIDDEN',
-              message: `Seul un administrateur peut accorder ces permissions: ${sensitiveRequested.join(', ')}`,
-            })
-          }
-        }
+        assertPermissionsMatchContactMode(input.bailleurPermissions, owner.contactMode)
 
         const existing = await db.query.user.findFirst({ where: eq(user.email, input.email) })
         if (existing) {
           throw new TRPCError({ code: 'CONFLICT', message: 'Un utilisateur existe deja avec cet email' })
+        }
+
+        if (input.bailleurRole === 'administrator') {
+          await assertAdministratorSlotAvailable(owner.id)
         }
 
         const id = crypto.randomUUID()
@@ -1091,7 +1129,8 @@ export const bailleurRouter = createTRPCRouter({
             role: 'owner',
             ownerId: owner.id,
             bailleurRole: input.bailleurRole,
-            bailleurPermissions: input.bailleurRole === 'administrator' ? [] : input.bailleurPermissions,
+            bailleurPermissions:
+              input.bailleurRole === 'administrator' ? [] : sanitizeGestionnairePermissions(input.bailleurPermissions, owner.contactMode),
           })
           .returning()
 
@@ -1104,8 +1143,12 @@ export const bailleurRouter = createTRPCRouter({
         return created
       }),
 
-    update: bailleurProcedure('manage_users')
-      .input(zUpdateBailleurUser.extend({ ownerId: z.number().optional() }))
+    update: bailleurAdministratorProcedure
+      .input(
+        zUpdateBailleurUser
+          .extend({ ownerId: z.number().optional() })
+          .refine(gestionnairePermissionsAreUsable, GESTIONNAIRE_PERMISSIONS_REQUIRED),
+      )
       .mutation(async ({ ctx, input }) => {
         const owner = await getOwnerForUser(ctx.session.user.id, input.ownerId)
         if (!owner) throw new TRPCError({ code: 'FORBIDDEN', message: 'Bailleur introuvable' })
@@ -1115,28 +1158,22 @@ export const bailleurRouter = createTRPCRouter({
         })
         if (!target) throw new TRPCError({ code: 'NOT_FOUND', message: 'Utilisateur non trouve' })
 
-        const callerCanGrantAdminRights = canGrantAdministratorRights({
+        const caller = {
           role: ctx.session.user.role,
           bailleurRole: ctx.session.user.bailleurRole ?? null,
           bailleurPermissions: ctx.session.user.bailleurPermissions ?? [],
-        })
+        }
 
-        if (!callerCanGrantAdminRights) {
-          if (input.bailleurRole === 'administrator') {
-            throw new TRPCError({
-              code: 'FORBIDDEN',
-              message: 'Seul un administrateur peut promouvoir un utilisateur au role administrateur',
-            })
-          }
-          if (input.bailleurPermissions !== undefined) {
-            const sensitiveRequested = input.bailleurPermissions.filter((p) => ADMIN_ONLY_PERMISSIONS.includes(p))
-            if (sensitiveRequested.length > 0) {
-              throw new TRPCError({
-                code: 'FORBIDDEN',
-                message: `Seul un administrateur peut accorder ces permissions: ${sensitiveRequested.join(', ')}`,
-              })
-            }
-          }
+        // Garde defensive : l'ecran des utilisateurs n'est deja atteignable que par un administrateur.
+        if (target.id === ctx.session.user.id && !canEditOwnAccount(caller)) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Vous ne pouvez pas modifier votre propre compte : contactez un administrateur de votre bailleur',
+          })
+        }
+
+        if (input.bailleurPermissions !== undefined) {
+          assertPermissionsMatchContactMode(input.bailleurPermissions, owner.contactMode)
         }
 
         const updateData: Record<string, unknown> = { updatedAt: new Date() }
@@ -1161,18 +1198,28 @@ export const bailleurRouter = createTRPCRouter({
           }
         }
         if (input.bailleurPermissions !== undefined && input.bailleurRole !== 'administrator') {
-          updateData.bailleurPermissions = input.bailleurPermissions
+          updateData.bailleurPermissions = sanitizeGestionnairePermissions(input.bailleurPermissions, owner.contactMode)
         }
 
         if (target.id === ctx.session.user.id && updateData.bailleurRole && updateData.bailleurRole !== 'administrator') {
           throw new TRPCError({ code: 'BAD_REQUEST', message: 'Vous ne pouvez pas retirer votre propre role administrateur' })
         }
 
+        // Promotion seulement : editer le nom d'un administrateur en place ne doit pas buter sur le plafond.
+        if (input.bailleurRole === 'administrator' && target.bailleurRole !== 'administrator') {
+          await assertAdministratorSlotAvailable(owner.id, target.id)
+        }
+
+        // Pendant de la garde de `delete` : une retrogradation ne doit pas laisser le bailleur sans administrateur.
+        if (input.bailleurRole !== undefined && input.bailleurRole !== 'administrator' && target.bailleurRole === 'administrator') {
+          await assertNotLastAdministrator(owner.id, target.id, LAST_ADMINISTRATOR_MESSAGE)
+        }
+
         const [updated] = await db.update(user).set(updateData).where(eq(user.id, input.id)).returning()
         return updated
       }),
 
-    delete: bailleurProcedure('manage_users')
+    delete: bailleurAdministratorProcedure
       .input(z.object({ id: z.string(), ownerId: z.number().optional() }))
       .mutation(async ({ ctx, input }) => {
         if (input.id === ctx.session.user.id) {
@@ -1188,17 +1235,7 @@ export const bailleurRouter = createTRPCRouter({
         if (!target) throw new TRPCError({ code: 'NOT_FOUND', message: 'Utilisateur non trouve' })
 
         if (target.bailleurRole === 'administrator') {
-          const [{ administratorCount }] = await db
-            .select({ administratorCount: count() })
-            .from(user)
-            .where(and(eq(user.ownerId, owner.id), eq(user.bailleurRole, 'administrator'), ne(user.id, target.id)))
-
-          if (administratorCount === 0) {
-            throw new TRPCError({
-              code: 'BAD_REQUEST',
-              message: 'Impossible de supprimer le dernier administrateur du bailleur',
-            })
-          }
+          await assertNotLastAdministrator(owner.id, target.id, 'Impossible de supprimer le dernier administrateur du bailleur')
         }
 
         await db.delete(user).where(eq(user.id, input.id))

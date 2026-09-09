@@ -136,8 +136,8 @@
       "description": "Mon Logement Étudiant sitemap: find all pages available on the platform."
     },
     "verificationError": {
-      "title": "Verification error",
-      "description": "An error occurred while verifying your account. Please try again or contact support."
+      "title": "Sign-in link expired",
+      "description": "This sign-in link is no longer valid. Request a new one from the sign-in page."
     },
     "verificationBuffer": {
       "title": "Verifying sign-in link",
@@ -161,6 +161,8 @@
     "description": "Making access to social housing easier for students",
     "alerts": "Housing alerts",
     "login": "Sign in",
+    "studentSpace": "Student area",
+    "ownerSpace": "Manager area",
     "tally": "Give your feedback",
     "banner": {
       "title": "Platform launch:",
@@ -180,7 +182,7 @@
     "bottom": {
       "privacy": "Privacy policy",
       "budget": "Mon Logement Étudiant budget",
-      "budgetCalculator": "Student budget calculator",
+      "communicationKit": "Communication kit",
       "terms": "Terms and conditions"
     }
   },
@@ -282,6 +284,12 @@
         "lastname": "Last name",
         "email": "Email",
         "phone": "Phone",
+        "birthdate": "Date of birth",
+        "birthdateHint": "Format dd/mm/yyyy",
+        "scholarship": "Do you receive a scholarship?",
+        "scholarshipYes": "Yes",
+        "scholarshipNo": "No",
+        "scholarshipUnknown": "I don't know",
         "consentStart": "I agree to share this information so I can be contacted according to the",
         "privacyPolicy": "privacy policy",
         "consentEnd": "of Mon Logement Étudiant",
@@ -955,7 +963,8 @@
     "constructionDate": "November 2024 to March 2025 (build)",
     "constructionDatePart2": "April to September 2025 (build)",
     "accelerationDate": "October 2025 to March 2026 (acceleration)",
-    "total": "The cumulative total expenses from October 2024 to the end of March 2026 therefore amount to",
+    "accelerationDatePart2": "April to August 2026 (acceleration)",
+    "total": "The cumulative total expenses from October 2024 to the end of August 2026 therefore amount to",
     "table": {
       "coaching": "Coaching",
       "development": "Development",
@@ -1092,13 +1101,13 @@
   },
   "verification": {
     "error": {
-      "title": "Verification error",
-      "description": "An error occurred while verifying your account. The verification link may have expired or be invalid.",
+      "title": "Sign-in link expired",
+      "description": "This sign-in link is no longer valid: it has expired or has already been used.",
       "whatToDo": "What should you do now?",
       "instructions": {
-        "checkLink": "Check that you clicked the correct verification link",
-        "expiration": "The verification link expires after 5 minutes.",
-        "checkEmail": "Make sure your email address is correct"
+        "checkLink": "Check that you clicked the link from the most recent email",
+        "expiration": "The sign-in link expires after 10 minutes and can only be used once.",
+        "checkEmail": "Request a new link from the sign-in page below"
       },
       "buttons": {
         "login": "Sign in"
@@ -1391,6 +1400,12 @@
       "noPermissions": "No permission",
       "deleteModalTitle": "Confirm deletion",
       "deleteConfirm": "Are you sure you want to delete {firstname} {lastname}? This action cannot be undone.",
+      "adminLimit": {
+        "modalTitle": "Maximum number of administrators reached",
+        "body": "A landlord can have at most {max} administrators. To appoint a new one, first demote an existing administrator to manager.",
+        "close": "Got it",
+        "hint": "All {max} administrator seats are already taken."
+      },
       "submitCreate": "Create user",
       "submitUpdate": "Update",
       "saving": "Saving...",
@@ -1401,12 +1416,13 @@
         "bailleurRole": "Role",
         "bailleurRoleAdminScope": "Role in the landlord area",
         "permissions": "Permissions",
-        "administratorHint": "An administrator automatically has all permissions.",
+        "administratorHint": "An administrator automatically has all permissions, including user management.",
         "gestionnaireHint": "Select the permissions to grant to the manager.",
         "errors": {
           "emailInvalid": "Invalid email",
           "firstnameRequired": "First name is required",
-          "lastnameRequired": "Last name is required"
+          "lastnameRequired": "Last name is required",
+          "permissionsRequired": "Select at least one permission"
         }
       },
       "role": {
@@ -1414,10 +1430,10 @@
         "gestionnaire": "Manager"
       },
       "permission": {
-        "manage_users": "User management",
         "manage_residences": "Residence management",
-        "manage_availability": "Residence availability",
-        "manage_applications": "Student files",
+        "manage_applications": "Candidate management",
+        "applicationsRgpdHint": "To protect personal data, we recommend granting the Candidate management permission only to managers who genuinely need it for their duties.",
+        "applicationsRequiresContactMode": "Available once you have chosen an application journey (contact details or DossierFacile).",
         "allAsAdministrator": "All (administrator)"
       },
       "toast": {
@@ -1531,7 +1547,15 @@
           "sortViewsDesc": "Most viewed",
           "sortViewsAsc": "Least viewed"
         },
-        "loading": "Loading..."
+        "loading": "Loading...",
+        "export": {
+          "cta": "Export statistics",
+          "title": "Export statistics",
+          "description": "The CSV file contains the statistics of all your residences over the chosen period.",
+          "periodLegend": "Period to export",
+          "cancel": "Cancel",
+          "submit": "Download CSV"
+        }
       }
     },
     "residences": {

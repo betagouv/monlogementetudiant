@@ -10,9 +10,7 @@ export function getSearchBreadcrumbItems(territory: TTerritory | undefined, rout
       ? [
           {
             name: territory.name,
-            item: getCanonicalUrl(
-              `/trouver-un-logement-etudiant/${routeCategoryKey}/${'slug' in territory ? territory.slug : territory.name}`,
-            ),
+            item: getCanonicalUrl(`/trouver-un-logement-etudiant/${routeCategoryKey}/${territory.slug}`),
           },
         ]
       : []),

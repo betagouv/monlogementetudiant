@@ -16,7 +16,7 @@ export const FjtRsjaNotice = () => {
 
   return (
     <>
-      <div className="fr-flex fr-direction-column fr-direction-md-row fr-align-items-md-center fr-flex-gap-2v fr-border fr-border-radius--8 fr-px-3w fr-py-2w">
+      <div className="fr-flex fr-direction-column fr-direction-md-row fr-align-items-md-center fr-flex-gap-2v fr-border fr-px-3w fr-py-2w">
         <span className={clsx('ri-briefcase-line fr-hidden fr-unhidden-sm', styles.fjtIcon)} aria-hidden />
         <p className="fr-mb-0 fr-flex fr-direction-column fr-flex-gap-1v">
           <span>

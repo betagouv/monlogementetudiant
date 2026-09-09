@@ -10,9 +10,10 @@ interface DashboardTabsProps {
   accommodations: TGetAccomodationsResponse
   page: number
   ownerId?: string
+  canManageResidences: boolean
 }
 
-export function DashboardTabs({ accommodations, page, ownerId }: DashboardTabsProps) {
+export function DashboardTabs({ accommodations, page, ownerId, canManageResidences }: DashboardTabsProps) {
   const [selectedTabId, setSelectedTabId] = useState('residences')
 
   const tabs = [
@@ -23,7 +24,7 @@ export function DashboardTabs({ accommodations, page, ownerId }: DashboardTabsPr
   return (
     <Tabs selectedTabId={selectedTabId} onTabChange={setSelectedTabId} tabs={tabs}>
       <div className={selectedTabId === 'residences' ? '' : 'fr-hidden'}>
-        <DashboardResidences accommodations={accommodations} page={page} ownerId={ownerId} />
+        <DashboardResidences accommodations={accommodations} page={page} ownerId={ownerId} canManageResidences={canManageResidences} />
       </div>
       <div className={selectedTabId === 'statistics' ? '' : 'fr-hidden'}>
         <EngagementStatistics ownerId={ownerId ? Number(ownerId) : undefined} />

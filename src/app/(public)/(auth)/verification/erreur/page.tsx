@@ -11,8 +11,24 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export default async function VerificationErrorPage() {
+/** Le lien de connexion étant propre à un espace, on ramène l'utilisateur au bon formulaire. */
+const LOGIN_PATH_BY_ROLE: Record<string, string> = {
+  owner: '/gestionnaire/se-connecter',
+  admin: '/administration/se-connecter',
+}
+
+const DEFAULT_LOGIN_PATH = '/se-connecter'
+
+interface VerificationErrorPageProps {
+  searchParams: Promise<{ role?: string }>
+}
+
+export default async function VerificationErrorPage({ searchParams }: VerificationErrorPageProps) {
   const t = await getTranslations('verification.error')
+  const { role } = await searchParams
+
+  // Appelant inconnu ou paramètre absent : le login étudiant, qui est l'espace grand public.
+  const loginPath = (role && LOGIN_PATH_BY_ROLE[role]) ?? DEFAULT_LOGIN_PATH
 
   return (
     <div className="fr-container">
@@ -33,7 +49,7 @@ export default async function VerificationErrorPage() {
               <div className="fr-btns-group">
                 <Button
                   linkProps={{
-                    href: '/se-connecter',
+                    href: loginPath,
                   }}
                   priority="secondary"
                 >

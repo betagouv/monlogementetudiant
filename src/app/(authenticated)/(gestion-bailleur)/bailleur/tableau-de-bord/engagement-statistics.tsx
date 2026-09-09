@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { parseAsInteger, parseAsString, parseAsStringLiteral, useQueryStates } from 'nuqs'
 import type { ReactNode } from 'react'
+import { ExportStatisticsModal } from '~/components/bailleur/statistics/export-statistics-modal'
 import { Pagination } from '~/components/ui/pagination'
 import { type CitySort, type ResidenceSort, useOwnerStatistics } from '~/hooks/use-owner-statistics'
 import { buildHref } from '~/utils/preserve-query-params'
@@ -67,18 +68,21 @@ export function EngagementStatistics({ ownerId }: EngagementStatisticsProps) {
     <section className={styles.section}>
       <div className="fr-flex fr-direction-column fr-direction-md-row fr-justify-content-space-between fr-align-items-start fr-align-items-md-center fr-flex-gap-4v">
         <span className="fr-h5 fr-mb-0">{t('title')}</span>
-        <div className={styles.presets} role="group" aria-label={t('periodLabel')}>
-          {PERIODS.map((p) => (
-            <button
-              key={p}
-              type="button"
-              className={p === period ? styles.presetActive : styles.preset}
-              onClick={() => setQueryStates({ period: p, residencePage: 1, cityPage: 1 })}
-              aria-pressed={p === period}
-            >
-              {t(`period.${p}` as 'period.7d' | 'period.30d' | 'period.90d')}
-            </button>
-          ))}
+        <div className="fr-flex fr-align-items-center fr-flex-gap-2v fr-flex-wrap">
+          <div className={styles.presets} role="group" aria-label={t('periodLabel')}>
+            {PERIODS.map((p) => (
+              <button
+                key={p}
+                type="button"
+                className={p === period ? styles.presetActive : styles.preset}
+                onClick={() => setQueryStates({ period: p, residencePage: 1, cityPage: 1 })}
+                aria-pressed={p === period}
+              >
+                {t(`period.${p}` as 'period.7d' | 'period.30d' | 'period.90d')}
+              </button>
+            ))}
+          </div>
+          <ExportStatisticsModal ownerId={ownerId} currentPeriod={period} />
         </div>
       </div>
 

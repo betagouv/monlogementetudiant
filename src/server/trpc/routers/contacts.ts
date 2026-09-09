@@ -4,6 +4,7 @@ import { and, eq, gte } from 'drizzle-orm'
 import { z } from 'zod'
 import { APARTMENT_TYPES } from '~/enums/apartment-type'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
+import { ZBirthDate, ZScholarshipStatus } from '~/schemas/student-profile/student-profile'
 import { contactRetentionCutoff } from '~/server/candidatures/visibility'
 import { createClaimToken } from '~/server/contacts/claim-token'
 import { assertContactRequestRateLimit, hashIp } from '~/server/contacts/rate-limit'
@@ -68,6 +69,8 @@ export const contactsRouter = createTRPCRouter({
           .email()
           .transform((email) => email.toLowerCase()),
         phone: z.string().trim().optional(),
+        birthdate: ZBirthDate,
+        scholarshipStatus: ZScholarshipStatus,
         apartmentType: z.enum(APARTMENT_TYPES).optional(),
       }),
     )
@@ -104,6 +107,8 @@ export const contactsRouter = createTRPCRouter({
           lastname: input.lastname,
           email: input.email,
           phone: input.phone || null,
+          birthdate: input.birthdate,
+          scholarshipStatus: input.scholarshipStatus,
           apartmentType: input.apartmentType ?? null,
           ipHash,
           // Étudiant connecté : Better Auth a déjà prouvé l'adresse, pas de double opt-in à demander.

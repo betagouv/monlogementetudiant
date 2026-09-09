@@ -81,6 +81,7 @@ cli/
     matomo.ts            # Service API Matomo
   commands/
     migrate-users.ts     # Migration users Django
+    demote-bailleur-admins.ts # Aligne les rôles bailleurs sur un CSV (rétrogradations + promotions)
     backfill-brevo-contacts.ts # Rattrapage des contacts Brevo (étudiants + gestionnaires)
     backfill-geocoding.ts # Recalage des geom aberrantes et des city_id mal résolus
     import-backup.ts     # Import backup Scalingo
@@ -111,6 +112,47 @@ cli/
 ---
 
 ### Commandes standalone
+
+#### `demote-bailleur-admins` — Aligner les rôles bailleurs sur un CSV
+
+```bash
+pnpm cli demote-bailleur-admins --file ~/comptes.csv                        # dry-run (défaut)
+pnpm cli demote-bailleur-admins --file ~/comptes.csv --verbose              # dry-run détaillé
+pnpm cli demote-bailleur-admins --file ~/comptes.csv --apply                # écriture
+pnpm cli demote-bailleur-admins --file ~/comptes.csv --apply --no-promote   # rétrogradations seules
+```
+
+Le CSV attend au minimum les colonnes `email` et `admin` (le fichier de référence a
+`prenom,nom,email,nom_gestionnaire,admin`).
+
+- **`admin` vide** → le compte passe en `gestionnaire` avec les permissions « Dossiers étudiants »,
+  « Disponibilités des résidences » et « Gestion des résidences » — volontairement sans
+  « Gestion des utilisateurs ».
+- **`admin` = `oui`** → le compte devient administrateur s'il ne l'est pas déjà (permissions remises à
+  `[]`, conformément à l'invariant du routeur). `--no-promote` désactive ce volet : la commande se
+  contente alors de signaler les comptes attendus administrateurs qui ne le sont pas en base.
+
+Le rapport de rapprochement est imprimé **avant** toute écriture et avant un éventuel abandon : on voit
+donc toujours pourquoi un run s'arrête. Les administrateurs attendus mais absents de la base sont
+signalés à part — c'est le symptôme d'un CSV et d'une base qui ne décrivent pas le même état.
+
+Le fichier n'est **pas** versionné : il contient des emails nominatifs, d'où un script paramétré plutôt
+qu'une migration SQL. La commande est idempotente (un compte déjà conforme est ignoré), dédoublonne les
+emails, rapproche par email insensible à la casse, et signale les emails absents de la base.
+
+Filet de sécurité : avant toute écriture, la commande projette l'état final de chaque bailleur
+(administrateurs actuels − rétrogradés + promus) et abandonne en listant les bailleurs fautifs si l'un
+d'eux tomberait à **zéro** administrateur (`--allow-no-admin` force le passage) ou dépasserait
+**2** administrateurs alors qu'on y promeut quelqu'un. Une rétrogradation seule ne bute jamais sur le
+plafond : elle ne peut qu'améliorer un bailleur historiquement au-dessus de la limite.
+
+Sur Scalingo, le CSV doit être envoyé dans le conteneur one-off (`scalingo run --file` le dépose dans
+`/tmp/uploads/`) :
+
+```bash
+scalingo --app mle-prod --region osc-secnum-fr1 run --file ~/comptes.csv \
+  pnpm cli demote-bailleur-admins --file /tmp/uploads/comptes.csv --apply
+```
 
 #### `migrate-users` — Migrer les users Django vers better-auth
 

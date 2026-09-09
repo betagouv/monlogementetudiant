@@ -12,11 +12,13 @@ import { LinkUserOwnerDialog } from '~/components/administration/link-user-owner
 import { RoleBadge } from '~/components/administration/role-badge'
 import { UserForm, UserFormData } from '~/components/administration/user-form'
 import { createToast } from '~/components/ui/createToast'
+import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { useAdminDeleteUser } from '~/hooks/use-admin-delete-user'
 import { useAdminResetUserPassword } from '~/hooks/use-admin-reset-user-password'
 import { useAdminSetEmailVerified } from '~/hooks/use-admin-set-email-verified'
 import { useAdminUpdateUser } from '~/hooks/use-admin-update-user'
 import { useAdminUser } from '~/hooks/use-admin-user'
+import type { BailleurPermission } from '~/server/bailleur/permissions'
 import { useTRPC, useTRPCClient } from '~/server/trpc/client'
 
 const deleteUserModal = createModal({
@@ -69,13 +71,12 @@ export function UserDetail({ id }: { id: string }) {
                 lastname: userData.lastname,
                 role: userData.role as 'admin' | 'owner' | 'user',
                 bailleurRole: userData.bailleurRole as 'administrator' | 'gestionnaire' | null,
-                bailleurPermissions: (userData.bailleurPermissions ?? []) as Array<
-                  'manage_users' | 'manage_residences' | 'manage_availability' | 'manage_applications'
-                >,
+                bailleurPermissions: (userData.bailleurPermissions ?? []) as BailleurPermission[],
               }}
               onSubmit={handleSubmit}
               isPending={updateUser.isPending}
               submitLabel="Mettre à jour"
+              ownerContactMode={userData.owner?.contactMode ?? EOwnerContactMode.NONE}
             />
           </div>
         </div>

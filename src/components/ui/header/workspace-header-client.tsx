@@ -20,6 +20,8 @@ type WorkspaceHeaderClientProps = {
   showSwitcher: boolean
   contactMode: EOwnerContactMode
   canManageUsers: boolean
+  canManageResidences: boolean
+  canManageApplications: boolean
   isAdmin: boolean
 }
 
@@ -30,6 +32,8 @@ export function WorkspaceHeaderClient({
   showSwitcher,
   contactMode,
   canManageUsers,
+  canManageResidences,
+  canManageApplications,
   isAdmin,
 }: WorkspaceHeaderClientProps) {
   const t = useTranslations()
@@ -58,7 +62,15 @@ export function WorkspaceHeaderClient({
             <span className="fr-ml-1w fr-badge fr-badge--new fr-badge--no-icon fr-text--uppercase">{t('bailleur.header.title')}</span>
           </>
         }
-        navigation={<WorkspaceHeaderNavigation contactMode={selectedContactMode} canManageUsers={canManageUsers} isAdmin={isAdmin} />}
+        navigation={
+          <WorkspaceHeaderNavigation
+            contactMode={selectedContactMode}
+            canManageUsers={canManageUsers}
+            canManageResidences={canManageResidences}
+            canManageApplications={canManageApplications}
+            isAdmin={isAdmin}
+          />
+        }
         className="fr-header"
       />
     </div>

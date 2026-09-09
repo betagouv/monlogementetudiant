@@ -1,5 +1,6 @@
-import { bigint, boolean, index, integer, pgEnum, pgTable, unique } from 'drizzle-orm/pg-core'
+import { bigint, boolean, index, integer, pgEnum, pgTable, text, timestamp, unique } from 'drizzle-orm/pg-core'
 import { accommodations } from './accommodations'
+import { user } from './auth'
 
 // Typology types — kept in sync with TYPOLOGY_TYPES in src/schemas/accommodations/create-residence.ts.
 // Values mirror the domain `ZTypology.type` so child rows map 1:1 to the domain model.
@@ -20,6 +21,9 @@ export const accommodationTypologies = pgTable(
     nbTotal: integer('nb_total'),
     nbAvailable: integer('nb_available'),
     colocation: boolean('colocation').notNull().default(false),
+
+    availabilityUpdatedAt: timestamp('availability_updated_at', { withTimezone: true }),
+    availabilityUpdatedBy: text('availability_updated_by').references(() => user.id, { onDelete: 'set null' }),
   },
   (t) => [
     unique('accommodation_typology_accommodation_id_type_unique').on(t.accommodationId, t.type),

@@ -1,4 +1,4 @@
-import { and, eq, inArray } from 'drizzle-orm'
+import { and, eq, inArray, sql } from 'drizzle-orm'
 import { NextRequest } from 'next/server'
 import { TYPOLOGIES } from '~/schemas/accommodations/typology'
 import { db } from '~/server/db'
@@ -11,6 +11,7 @@ import { owners } from '~/server/db/schema/owners'
 import { typologiesByType } from '~/server/lib/typologies'
 import { getServerSession } from '~/services/better-auth'
 import { calculateAvailability } from '~/utils/calculateAvailability'
+import { type TCsvColumn, toCsv } from '~/utils/csv'
 import { getRegionByDepartmentCode } from '~/utils/french-regions'
 
 export async function GET(request: NextRequest) {
@@ -43,6 +44,7 @@ export async function GET(request: NextRequest) {
       departmentCode: departments.code,
       departmentName: departments.name,
       ownerName: owners.name,
+      ownerLandingUrl: owners.landingUrl,
       nbTotalApartments: accommodations.nbTotalApartments,
       nbAccessibleApartments: accommodations.nbAccessibleApartments,
       nbColivingApartments: accommodations.nbColivingApartments,
@@ -91,6 +93,29 @@ export async function GET(request: NextRequest) {
     typologiesByAccommodation.set(tRow.accommodationId, list)
   }
 
+  // Dernière mise à jour des disponibilités, par résidence.
+  //
+  // Portée par `accommodation_typology` (colonnes `availability_updated_*`), tamponnée quand un
+  // gestionnaire renseigne une disponibilité — les imports et les scripts n'y touchent pas. Une
+  // résidence a une ligne par typologie : on retient la plus récente, et l'auteur qui va avec.
+  const availabilityUpdates = accIds.length
+    ? await db.execute<{ accommodationId: number; updatedAt: string; updatedByName: string | null }>(sql`
+        SELECT DISTINCT ON (t.accommodation_id)
+          t.accommodation_id::int AS "accommodationId",
+          t.availability_updated_at AS "updatedAt",
+          nullif(trim(concat_ws(' ', u.firstname, u.lastname)), '') AS "updatedByName"
+        FROM accommodation_typology t
+        LEFT JOIN "user" u ON u.id = t.availability_updated_by
+        WHERE t.accommodation_id IN (${sql.join(
+          accIds.map((id) => sql`${id}`),
+          sql`, `,
+        )})
+          AND t.availability_updated_at IS NOT NULL
+        ORDER BY t.accommodation_id, t.availability_updated_at DESC
+      `)
+    : []
+  const availabilityByAccommodation = new Map(availabilityUpdates.map((row) => [row.accommodationId, row]))
+
   const enriched = results.map((rawRow) => {
     const byType = typologiesByType(typologiesByAccommodation.get(rawRow.id) ?? [])
     // Flatten typologies back into per-typology columns for the CSV (admins expect flat columns).
@@ -106,32 +131,34 @@ export async function GET(request: NextRequest) {
     }
     const nbLogementsDisponibles = calculateAvailability(byType)
     const region = getRegionByDepartmentCode(rawRow.departmentCode)
-    return { ...rawRow, ...flat, region, disponibiliteRenseignee: nbLogementsDisponibles != null, nbLogementsDisponibles }
+    const lastAvailabilityUpdate = availabilityByAccommodation.get(rawRow.id)
+    return {
+      ...rawRow,
+      ...flat,
+      region,
+      disponibiliteRenseignee: nbLogementsDisponibles != null,
+      nbLogementsDisponibles,
+      availabilityUpdatedAt: lastAvailabilityUpdate?.updatedAt ?? null,
+      availabilityUpdatedBy: lastAvailabilityUpdate?.updatedByName ?? null,
+    }
   })
 
-  // region est calculée hors select : on la replace juste après departmentName pour regrouper les colonnes territoire
-  const headers = enriched[0] ? Object.keys(enriched[0]).filter((h) => h !== 'region') : []
-  const deptIndex = headers.indexOf('departmentName')
-  if (deptIndex !== -1) headers.splice(deptIndex + 1, 0, 'region')
-  const lines = [
-    headers.join(';'),
-    ...enriched.map((row) =>
-      headers
-        .map((h) => {
-          const val = (row as Record<string, unknown>)[h]
-          if (val === null || val === undefined) return ''
-          if (val instanceof Date) return val.toISOString()
-          const str = String(val)
-          if (str.includes(';') || str.includes('"') || str.includes('\n')) {
-            return `"${str.replace(/"/g, '""')}"`
-          }
-          return str
-        })
-        .join(';'),
-    ),
-  ]
-  // BOM so Excel reads UTF-8 accents correctly
-  const csv = `﻿${lines.join('\n')}`
+  // Colonnes calculées hors select : on les replace au milieu des colonnes qu'elles complètent
+  // (territoire pour `region`, horodatage pour le suivi des dispos) plutôt qu'en fin de fichier.
+  const REPOSITIONED = ['region', 'availabilityUpdatedAt', 'availabilityUpdatedBy']
+  const keys = enriched[0] ? Object.keys(enriched[0]).filter((h) => !REPOSITIONED.includes(h)) : []
+  const deptIndex = keys.indexOf('departmentName')
+  if (deptIndex !== -1) keys.splice(deptIndex + 1, 0, 'region')
+  const updatedIndex = keys.indexOf('updatedAt')
+  if (updatedIndex !== -1) keys.splice(updatedIndex + 1, 0, 'availabilityUpdatedAt', 'availabilityUpdatedBy')
+
+  // L'en-tête reprend généralement le nom de la clé : le fichier est relu par des admins qui
+  // connaissent le schéma. L'URL de présentation du bailleur garde toutefois son libellé métier.
+  const columns: TCsvColumn<Record<string, unknown>>[] = keys.map((key) => ({
+    key,
+    header: key === 'ownerLandingUrl' ? 'Page de présentation du bailleur' : key,
+  }))
+  const csv = toCsv(columns, enriched)
   const date = new Date().toISOString().slice(0, 10)
 
   return new Response(csv, {

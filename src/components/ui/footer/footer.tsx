@@ -20,7 +20,7 @@ export const CommonFooter = async () => {
     {
       links: sortedPopularCities.slice(0, ITEMS_PER_COLUMN).map((city) => ({
         linkProps: {
-          href: `/trouver-un-logement-etudiant/ville/${city.name}?vue=carte&bbox=${city.expandedBbox.west},${city.expandedBbox.south},${city.expandedBbox.east},${city.expandedBbox.north}`,
+          href: `/trouver-un-logement-etudiant/ville/${city.slug}?vue=carte&bbox=${city.expandedBbox.west},${city.expandedBbox.south},${city.expandedBbox.east},${city.expandedBbox.north}`,
         },
         text: t('footer.cityLink', { city: city.name }),
       })),
@@ -28,7 +28,7 @@ export const CommonFooter = async () => {
     {
       links: sortedPopularCities.slice(ITEMS_PER_COLUMN, ITEMS_PER_COLUMN * 2).map((city) => ({
         linkProps: {
-          href: `/trouver-un-logement-etudiant/ville/${city.name}?vue=carte&bbox=${city.expandedBbox.west},${city.expandedBbox.south},${city.expandedBbox.east},${city.expandedBbox.north}`,
+          href: `/trouver-un-logement-etudiant/ville/${city.slug}?vue=carte&bbox=${city.expandedBbox.west},${city.expandedBbox.south},${city.expandedBbox.east},${city.expandedBbox.north}`,
         },
         text: t('footer.cityLink', { city: city.name }),
       })),
@@ -36,7 +36,7 @@ export const CommonFooter = async () => {
     {
       links: sortedPopularCities.slice(ITEMS_PER_COLUMN * 2, ITEMS_PER_COLUMN * 3).map((city) => ({
         linkProps: {
-          href: `/trouver-un-logement-etudiant/ville/${city.name}?vue=carte&bbox=${city.expandedBbox.west},${city.expandedBbox.south},${city.expandedBbox.east},${city.expandedBbox.north}`,
+          href: `/trouver-un-logement-etudiant/ville/${city.slug}?vue=carte&bbox=${city.expandedBbox.west},${city.expandedBbox.south},${city.expandedBbox.east},${city.expandedBbox.north}`,
         },
         text: t('footer.cityLink', { city: city.name }),
       })),
@@ -44,7 +44,7 @@ export const CommonFooter = async () => {
     {
       links: sortedPopularCities.slice(ITEMS_PER_COLUMN * 3).map((city) => ({
         linkProps: {
-          href: `/trouver-un-logement-etudiant/ville/${city.name}?vue=carte&bbox=${city.expandedBbox.west},${city.expandedBbox.south},${city.expandedBbox.east},${city.expandedBbox.north}`,
+          href: `/trouver-un-logement-etudiant/ville/${city.slug}?vue=carte&bbox=${city.expandedBbox.west},${city.expandedBbox.south},${city.expandedBbox.east},${city.expandedBbox.north}`,
         },
         text: t('footer.cityLink', { city: city.name }),
       })),
@@ -64,8 +64,8 @@ export const CommonFooter = async () => {
       text: t('footer.bottom.budget'),
     },
     {
-      linkProps: { href: '/simuler-budget' },
-      text: t('footer.bottom.budgetCalculator'),
+      linkProps: { href: 'https://info.monlogementetudiant.beta.gouv.fr/kit-de-communication/' },
+      text: t('footer.bottom.communicationKit'),
     },
     {
       linkProps: {

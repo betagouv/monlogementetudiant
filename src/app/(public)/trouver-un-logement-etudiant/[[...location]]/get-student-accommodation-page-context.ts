@@ -1,7 +1,6 @@
 import { dehydrate } from '@tanstack/react-query'
 import { redirect } from 'next/navigation'
 import { cache } from 'react'
-import { expandBbox } from '~/components/map/map-utils'
 import { computeExpandedPriceMax, EXPANDED_SEARCH_PAGE_SIZE, EXPANDED_SEARCH_RADIUS_KM } from '~/lib/accommodations-expanded-search'
 import { accommodationsSearchParamsCache } from '~/lib/accommodations-search-params'
 import { TTerritory } from '~/schemas/territories'
@@ -13,6 +12,16 @@ const VALID_CATEGORIES = ['ville', 'academie', 'departement'] as const
 type Category = (typeof VALID_CATEGORIES)[number]
 
 const getSingleSearchParam = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value)
+
+const buildSearchQuery = (params: Record<string, string | string[] | undefined>) => {
+  const search = new URLSearchParams()
+  for (const [key, value] of Object.entries(params)) {
+    if (Array.isArray(value)) value.forEach((item) => search.append(key, item))
+    else if (value != null) search.set(key, value)
+  }
+  const query = search.toString()
+  return query ? `?${query}` : ''
+}
 
 export const getStudentAccommodationPageContext = cache(
   async (awaitedParams: { location: string[] }, awaitedSearchParams: Record<string, string | string[] | undefined>) => {
@@ -41,21 +50,25 @@ export const getStudentAccommodationPageContext = cache(
       } catch {
         redirect(`/trouver-un-logement-etudiant`)
       }
-    }
 
-    const territoryBbox = territory?.bbox
-      ? expandBbox(territory.bbox.xmin, territory.bbox.ymin, territory.bbox.xmax, territory.bbox.ymax)
-      : undefined
+      // Le segment peut être un nom (`/ville/La Rochelle`, liens historiques et URLs indexées) :
+      // `getBySlug` sait le résoudre, on renvoie ensuite sur l'URL canonique en slug.
+      if (territory && territory.slug !== routeLocation) {
+        redirect(
+          `/trouver-un-logement-etudiant/${routeCategoryKey}/${encodeURIComponent(territory.slug)}${buildSearchQuery(awaitedSearchParams)}`,
+        )
+      }
+    }
 
     const isAcademy = routeCategoryKey === 'academie'
     const isCity = routeCategoryKey === 'ville'
-    const serverBbox =
-      !isAcademy && !isCity && territoryBbox
-        ? `${territoryBbox.west},${territoryBbox.south},${territoryBbox.east},${territoryBbox.north}`
-        : undefined
-    const serverAcademie = isAcademy && territory ? territory.id.toString() : undefined
+    const isDepartment = routeCategoryKey === 'departement'
     const isMapSearch = getSingleSearchParam(awaitedSearchParams['recherche-par-carte']) === 'true'
+    const serverAcademie = isAcademy && territory ? territory.id.toString() : undefined
     const serverCityId = isCity && territory && !isMapSearch ? territory.id : undefined
+    // Département : on filtre sur la frontière (ST_Within côté serveur) et non sur la bbox, qui
+    // faisait remonter les résidences des départements voisins tombant dans le rectangle englobant.
+    const serverDepartmentId = isDepartment && territory && !isMapSearch ? territory.id : undefined
 
     const queryClient = getQueryClient()
 
@@ -66,7 +79,11 @@ export const getStudentAccommodationPageContext = cache(
     }
 
     // Fetch main results first so we can extract IDs for the expanded search exclusion
-    await prefetchAccommodations(awaitedSearchParams, { bbox: serverBbox, academie: serverAcademie, cityId: serverCityId })
+    await prefetchAccommodations(awaitedSearchParams, {
+      academie: serverAcademie,
+      cityId: serverCityId,
+      departmentId: serverDepartmentId,
+    })
 
     const cityName = routeCategoryKey === 'ville' ? territory?.name : undefined
     if (cityName) {
@@ -75,7 +92,7 @@ export const getStudentAccommodationPageContext = cache(
 
       const parsedParams = accommodationsSearchParamsCache.parse(awaitedSearchParams)
       const serverQueryInput = {
-        bbox: serverCityId ? undefined : (serverBbox ?? parsedParams.bbox ?? undefined),
+        bbox: serverCityId ? undefined : (parsedParams.bbox ?? undefined),
         cityId: serverCityId ?? undefined,
         page: parsedParams.page ?? 1,
         pageSize: 12,
@@ -110,7 +127,6 @@ export const getStudentAccommodationPageContext = cache(
       user: session?.user,
       territory,
       isAcademy,
-      serverBbox,
       serverAcademie,
       routeCategoryKey,
     }

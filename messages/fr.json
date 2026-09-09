@@ -136,8 +136,8 @@
       "description": "Plan du site Mon Logement Étudiant : retrouvez l'ensemble des pages disponibles sur la plateforme."
     },
     "verificationError": {
-      "title": "Erreur de vérification",
-      "description": "Une erreur est survenue lors de la vérification de votre compte. Veuillez réessayer ou contacter le support."
+      "title": "Lien de connexion expiré",
+      "description": "Ce lien de connexion n'est plus valable. Demandez-en un nouveau depuis la page de connexion."
     },
     "verificationBuffer": {
       "title": "Vérification du lien de connexion",
@@ -161,6 +161,8 @@
     "description": "Faciliter l'accès au logement social pour les étudiants",
     "alerts": "Alertes logements",
     "login": "Se connecter",
+    "studentSpace": "Espace Étudiant",
+    "ownerSpace": "Espace Gestionnaire",
     "tally": "Donnez votre avis",
     "banner": {
       "title": "Lancement de la plateforme :",
@@ -180,7 +182,7 @@
     "bottom": {
       "privacy": "Politique de confidentialité",
       "budget": "Budget Mon Logement Étudiant",
-      "budgetCalculator": "Calculatrice de budget étudiant",
+      "communicationKit": "Kit de communication",
       "terms": "Conditions générales d'utilisation"
     }
   },
@@ -283,6 +285,12 @@
         "lastname": "Nom",
         "email": "E-mail",
         "phone": "Téléphone",
+        "birthdate": "Date de naissance",
+        "birthdateHint": "Format jj/mm/aaaa",
+        "scholarship": "Êtes-vous boursier ?",
+        "scholarshipYes": "Oui",
+        "scholarshipNo": "Non",
+        "scholarshipUnknown": "Je ne sais pas",
         "consentStart": "J’accepte de partager ces informations afin d’être recontacté selon la",
         "privacyPolicy": "politique de confidentialité",
         "consentEnd": "de Mon Logement Étudiant",
@@ -955,7 +963,8 @@
     "constructionDate": "Novembre 2024 à mars 2025 (construction)",
     "constructionDatePart2": "Avril à septembre 2025 (construction)",
     "accelerationDate": "Octobre 2025 à mars 2026 (accélération)",
-    "total": "Le total cumulé des dépenses d’octobre 2024 à fin mars 2026 s’élève donc à",
+    "accelerationDatePart2": "Avril à Août 2026 (accélération)",
+    "total": "Le total cumulé des dépenses d’octobre 2024 à fin août 2026 s’élève donc à",
     "table": {
       "coaching": "Coaching",
       "development": "Développement",
@@ -1092,13 +1101,13 @@
   },
   "verification": {
     "error": {
-      "title": "Erreur de vérification",
-      "description": "Une erreur est survenue lors de la vérification de votre compte. Le lien de vérification est peut-être expiré ou invalide.",
+      "title": "Lien de connexion expiré",
+      "description": "Ce lien de connexion n'est plus valable : il a expiré ou il a déjà été utilisé.",
       "whatToDo": "Que faire maintenant ?",
       "instructions": {
-        "checkLink": "Vérifiez que vous avez cliqué sur le bon lien de vérification",
-        "expiration": "Le lien de vérification expire après 5 minutes.",
-        "checkEmail": "Assurez-vous que votre adresse email est correcte"
+        "checkLink": "Vérifiez que vous avez cliqué sur le lien du dernier email reçu",
+        "expiration": "Le lien de connexion expire après 10 minutes et ne peut servir qu'une seule fois.",
+        "checkEmail": "Demandez un nouveau lien depuis la page de connexion ci-dessous"
       },
       "buttons": {
         "login": "Se connecter"
@@ -1391,6 +1400,12 @@
       "noPermissions": "Aucune permission",
       "deleteModalTitle": "Confirmer la suppression",
       "deleteConfirm": "Êtes-vous sûr de vouloir supprimer {firstname} {lastname} ? Cette action est irréversible.",
+      "adminLimit": {
+        "modalTitle": "Nombre maximum d'administrateurs atteint",
+        "body": "Un bailleur ne peut compter que {max} administrateurs. Pour en désigner un nouveau, rétrogradez d'abord un administrateur existant en gestionnaire.",
+        "close": "J'ai compris",
+        "hint": "Les {max} places d'administrateur sont déjà occupées."
+      },
       "submitCreate": "Créer l'utilisateur",
       "submitUpdate": "Mettre à jour",
       "saving": "Enregistrement...",
@@ -1401,12 +1416,13 @@
         "bailleurRole": "Rôle",
         "bailleurRoleAdminScope": "Rôle dans l'espace bailleur",
         "permissions": "Permissions",
-        "administratorHint": "Un administrateur dispose automatiquement de toutes les permissions.",
+        "administratorHint": "Un administrateur dispose automatiquement de toutes les permissions, y compris la gestion des utilisateurs.",
         "gestionnaireHint": "Sélectionnez les permissions à accorder au gestionnaire.",
         "errors": {
           "emailInvalid": "Email invalide",
           "firstnameRequired": "Le prénom est requis",
-          "lastnameRequired": "Le nom est requis"
+          "lastnameRequired": "Le nom est requis",
+          "permissionsRequired": "Sélectionnez au moins une autorisation"
         }
       },
       "role": {
@@ -1414,10 +1430,10 @@
         "gestionnaire": "Gestionnaire"
       },
       "permission": {
-        "manage_users": "Gestion des utilisateurs",
         "manage_residences": "Gestion des résidences",
-        "manage_availability": "Disponibilités des résidences",
-        "manage_applications": "Dossiers étudiants",
+        "manage_applications": "Gestion des candidats",
+        "applicationsRgpdHint": "Pour des raisons de protection des données personnelles, nous vous invitons à limiter l’autorisation de Gestion des candidats uniquement aux gestionnaires qui en ont réellement besoin dans le cadre de leurs missions.",
+        "applicationsRequiresContactMode": "Disponible une fois que vous aurez choisi un parcours de candidature (coordonnées à recontacter ou DossierFacile).",
         "allAsAdministrator": "Toutes (administrateur)"
       },
       "toast": {
@@ -1531,7 +1547,15 @@
           "sortViewsDesc": "Plus vues",
           "sortViewsAsc": "Moins vues"
         },
-        "loading": "Chargement…"
+        "loading": "Chargement…",
+        "export": {
+          "cta": "Extraire les statistiques",
+          "title": "Extraire les statistiques",
+          "description": "Le fichier CSV contient les statistiques de toutes vos résidences sur la période choisie.",
+          "periodLegend": "Période à extraire",
+          "cancel": "Annuler",
+          "submit": "Télécharger le CSV"
+        }
       }
     },
     "residences": {
