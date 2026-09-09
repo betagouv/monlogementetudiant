@@ -11,7 +11,12 @@ import { ZCreateResidence } from '~/schemas/accommodations/create-residence'
 import { getTypologyLabel } from '~/schemas/accommodations/typology'
 import { ZUpdateResidence } from '~/schemas/accommodations/update-residence'
 import { ZUpdateResidenceList } from '~/schemas/accommodations/update-residence-list'
-import { zCreateBailleurUser, zUpdateBailleurUser } from '~/schemas/bailleur-users/bailleur-user-form'
+import {
+  GESTIONNAIRE_PERMISSIONS_REQUIRED,
+  gestionnairePermissionsAreUsable,
+  zCreateBailleurUser,
+  zUpdateBailleurUser,
+} from '~/schemas/bailleur-users/bailleur-user-form'
 import {
   assertAdministratorSlotAvailable,
   assertNotLastAdministrator,
@@ -1092,7 +1097,11 @@ export const bailleurRouter = createTRPCRouter({
       }),
 
     create: bailleurAdministratorProcedure
-      .input(zCreateBailleurUser.extend({ ownerId: z.number().optional() }))
+      .input(
+        zCreateBailleurUser
+          .extend({ ownerId: z.number().optional() })
+          .refine(gestionnairePermissionsAreUsable, GESTIONNAIRE_PERMISSIONS_REQUIRED),
+      )
       .mutation(async ({ ctx, input }) => {
         const owner = await getOwnerForUser(ctx.session.user.id, input.ownerId)
         if (!owner) throw new TRPCError({ code: 'FORBIDDEN', message: 'Bailleur introuvable' })
@@ -1135,7 +1144,11 @@ export const bailleurRouter = createTRPCRouter({
       }),
 
     update: bailleurAdministratorProcedure
-      .input(zUpdateBailleurUser.extend({ ownerId: z.number().optional() }))
+      .input(
+        zUpdateBailleurUser
+          .extend({ ownerId: z.number().optional() })
+          .refine(gestionnairePermissionsAreUsable, GESTIONNAIRE_PERMISSIONS_REQUIRED),
+      )
       .mutation(async ({ ctx, input }) => {
         const owner = await getOwnerForUser(ctx.session.user.id, input.ownerId)
         if (!owner) throw new TRPCError({ code: 'FORBIDDEN', message: 'Bailleur introuvable' })

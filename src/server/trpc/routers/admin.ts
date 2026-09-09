@@ -4,9 +4,17 @@ import { getTranslations } from 'next-intl/server'
 import { z } from 'zod'
 import { EOwnerContactMode, OWNER_CONTACT_MODES, ZOwnerContactMode } from '~/enums/owner-contact-mode'
 import { FEATURES } from '~/lib/features'
+import { GESTIONNAIRE_PERMISSIONS_REQUIRED, gestionnairePermissionsAreUsable } from '~/schemas/bailleur-users/bailleur-user-form'
 import { IMPORT_JOB_TYPES, ZImportJobType } from '~/schemas/import-jobs'
 import { assertAdministratorSlotAvailable } from '~/server/bailleur/administrator-limit'
-import { BAILLEUR_PERMISSIONS, BAILLEUR_ROLES, sanitizeGestionnairePermissions } from '~/server/bailleur/permissions'
+import {
+  BAILLEUR_PERMISSIONS,
+  BAILLEUR_ROLES,
+  type BailleurPermission,
+  type BailleurRole,
+  hasUsableGestionnairePermissions,
+  sanitizeGestionnairePermissions,
+} from '~/server/bailleur/permissions'
 import { db } from '~/server/db'
 import { accommodationAddresses } from '~/server/db/schema/accommodation-addresses'
 import { accommodationTypologies } from '~/server/db/schema/accommodation-typologies'
@@ -116,14 +124,17 @@ const usersRouter = createTRPCRouter({
 
   create: adminProcedure
     .input(
-      z.object({
-        email: z.string().email(),
-        firstname: z.string().min(1),
-        lastname: z.string().min(1),
-        role: z.enum(['admin', 'owner', 'user']).default('user'),
-        bailleurRole: z.enum(BAILLEUR_ROLES).nullable().optional(),
-        bailleurPermissions: z.array(z.enum(BAILLEUR_PERMISSIONS)).optional(),
-      }),
+      z
+        .object({
+          email: z.string().email(),
+          firstname: z.string().min(1),
+          lastname: z.string().min(1),
+          role: z.enum(['admin', 'owner', 'user']).default('user'),
+          bailleurRole: z.enum(BAILLEUR_ROLES).nullable().optional(),
+          bailleurPermissions: z.array(z.enum(BAILLEUR_PERMISSIONS)).optional(),
+        })
+        // Un gestionnaire sans autorisation n'ouvre aucun ecran : on refuse de creer un compte inerte.
+        .refine((values) => values.role !== 'owner' || gestionnairePermissionsAreUsable(values), GESTIONNAIRE_PERMISSIONS_REQUIRED),
     )
     .mutation(async ({ input }) => {
       const existing = await db.query.user.findFirst({ where: eq(user.email, input.email) })
@@ -209,9 +220,23 @@ const usersRouter = createTRPCRouter({
         }
       }
 
+      const nextRole = fields.role ?? current.role
+      const nextBailleurRole =
+        ('bailleurRole' in updateData ? (updateData.bailleurRole as BailleurRole | null) : current.bailleurRole) ?? null
+
+      // Meme regle qu'a la creation : un gestionnaire sans autorisation est un compte inerte.
+      // Verifie apres `sanitizeGestionnairePermissions`, qui peut vider la selection (parcours absent).
+      if (
+        nextRole === 'owner' &&
+        nextBailleurRole === 'gestionnaire' &&
+        updateData.bailleurPermissions !== undefined &&
+        !hasUsableGestionnairePermissions(updateData.bailleurPermissions as BailleurPermission[])
+      ) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: GESTIONNAIRE_PERMISSIONS_REQUIRED.message })
+      }
+
       // Plafond d'administrateurs : uniquement sur une promotion, et seulement si le compte est deja
       // rattache a un bailleur (sinon le rattachement passera par `linkToOwner`, qui controle aussi).
-      const nextRole = fields.role ?? current.role
       if (
         nextRole === 'owner' &&
         updateData.bailleurRole === 'administrator' &&
