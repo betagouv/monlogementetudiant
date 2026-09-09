@@ -15,9 +15,11 @@ interface DashboardResidencesProps {
   accommodations: TGetAccomodationsResponse
   page: number
   ownerId?: string
+  /** Sans `manage_residences`, la fiche residence renvoie au tableau de bord : on n'affiche pas de lien. */
+  canManageResidences: boolean
 }
 
-export function DashboardResidences({ accommodations, page, ownerId }: DashboardResidencesProps) {
+export function DashboardResidences({ accommodations, page, ownerId, canManageResidences }: DashboardResidencesProps) {
   const t = useTranslations('bailleur')
 
   return (
@@ -32,9 +34,13 @@ export function DashboardResidences({ accommodations, page, ownerId }: Dashboard
             <div key={index} className={clsx('fr-px-3w fr-py-2w', styles.statisticsCard)}>
               <div>
                 <div className="fr-flex fr-justify-content-space-between fr-align-items-center">
-                  <Link className="fr-link fr-link--no-underline" href={buildHref(`/bailleur/residences/${res.slug}`, { ownerId })}>
-                    <span className="fr-text--bold fr-text-title--blue-france fr-text--lg">{res.name}</span>
-                  </Link>
+                  {canManageResidences ? (
+                    <Link className="fr-link fr-link--no-underline" href={buildHref(`/bailleur/residences/${res.slug}`, { ownerId })}>
+                      <span className="fr-text--bold fr-text-title--blue-france fr-text--lg">{res.name}</span>
+                    </Link>
+                  ) : (
+                    <span className="fr-text--bold fr-text--lg">{res.name}</span>
+                  )}
                   {!res.published && (
                     <Badge severity="warning" noIcon>
                       Dépubliée
@@ -46,11 +52,13 @@ export function DashboardResidences({ accommodations, page, ownerId }: Dashboard
                 </p>
               </div>
               <ResidenceChart available={available} total={total} />
-              <div className="fr-flex fr-justify-content-end">
-                <Link className="fr-link fr-link--no-underline" href={buildHref(`/bailleur/residences/${res.slug}`, { ownerId })}>
-                  <span className="ri-arrow-right-line fr-text-title--blue-france ri-xl" />
-                </Link>
-              </div>
+              {canManageResidences && (
+                <div className="fr-flex fr-justify-content-end">
+                  <Link className="fr-link fr-link--no-underline" href={buildHref(`/bailleur/residences/${res.slug}`, { ownerId })}>
+                    <span className="ri-arrow-right-line fr-text-title--blue-france ri-xl" />
+                  </Link>
+                </div>
+              )}
             </div>
           )
         })}

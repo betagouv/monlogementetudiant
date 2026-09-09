@@ -5,9 +5,11 @@ import {
   canEditOwnAccount,
   canGrantApplicationsPermission,
   DEFAULT_GESTIONNAIRE_PERMISSIONS,
+  defaultGestionnairePermissions,
   grantablePermissions,
   hasPermission,
   hasRole,
+  hasUsableGestionnairePermissions,
   isBailleurAdministrator,
   MAX_BAILLEUR_ADMINISTRATORS,
   type PermissionCheckUser,
@@ -103,6 +105,21 @@ describe('constantes de retrogradation', () => {
 
   it('les permissions par defaut du gestionnaire couvrent candidats et residences', () => {
     expect([...DEFAULT_GESTIONNAIRE_PERMISSIONS].sort()).toEqual(['manage_applications', 'manage_residences'])
+  })
+})
+
+describe('autorisations par defaut a la creation', () => {
+  it('couvre residences et candidats quand le bailleur a un parcours', () => {
+    expect([...defaultGestionnairePermissions(EOwnerContactMode.CONTACTS)].sort()).toEqual(['manage_applications', 'manage_residences'])
+  })
+
+  it("se limite aux residences tant qu'aucun parcours n'est choisi", () => {
+    expect(defaultGestionnairePermissions(EOwnerContactMode.NONE)).toEqual(['manage_residences'])
+  })
+
+  it('un gestionnaire sans autorisation est un compte inerte', () => {
+    expect(hasUsableGestionnairePermissions([])).toBe(false)
+    expect(hasUsableGestionnairePermissions(['manage_residences'])).toBe(true)
   })
 })
 

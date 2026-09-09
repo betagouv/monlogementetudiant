@@ -1421,7 +1421,8 @@
         "errors": {
           "emailInvalid": "Invalid email",
           "firstnameRequired": "First name is required",
-          "lastnameRequired": "Last name is required"
+          "lastnameRequired": "Last name is required",
+          "permissionsRequired": "Select at least one permission"
         }
       },
       "role": {

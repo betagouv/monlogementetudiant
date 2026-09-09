@@ -55,3 +55,14 @@ export function sanitizeGestionnairePermissions(permissions: BailleurPermission[
 }
 
 export const DEFAULT_GESTIONNAIRE_PERMISSIONS: BailleurPermission[] = ['manage_applications', 'manage_residences']
+
+// Autorisations pre-cochees a la creation d'un gestionnaire : un compte sans autorisation
+// n'ouvre aucun ecran, il est renvoye au tableau de bord depuis chaque section.
+export function defaultGestionnairePermissions(contactMode: EOwnerContactMode): BailleurPermission[] {
+  return sanitizeGestionnairePermissions(DEFAULT_GESTIONNAIRE_PERMISSIONS, contactMode)
+}
+
+// Un gestionnaire doit conserver au moins une autorisation, sinon son compte est inerte.
+export function hasUsableGestionnairePermissions(permissions: BailleurPermission[]): boolean {
+  return permissions.length > 0
+}

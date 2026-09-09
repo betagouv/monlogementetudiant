@@ -8,11 +8,13 @@ import type { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { buildHref } from '~/utils/preserve-query-params'
 import styles from './navigation.module.css'
 
-export const WorkspaceHeaderNavigation: FC<{ contactMode: EOwnerContactMode; canManageUsers?: boolean; isAdmin?: boolean }> = ({
-  contactMode,
-  canManageUsers = false,
-  isAdmin = false,
-}) => {
+export const WorkspaceHeaderNavigation: FC<{
+  contactMode: EOwnerContactMode
+  canManageUsers?: boolean
+  canManageResidences?: boolean
+  canManageApplications?: boolean
+  isAdmin?: boolean
+}> = ({ contactMode, canManageUsers = false, canManageResidences = false, canManageApplications = false, isAdmin = false }) => {
   const t = useTranslations('navigation.workspace')
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -26,16 +28,21 @@ export const WorkspaceHeaderNavigation: FC<{ contactMode: EOwnerContactMode; can
       },
       text: t('dashboard'),
     },
-    {
-      isActive: pathname === '/bailleur/residences',
-      linkProps: {
-        href: buildHref('/bailleur/residences', searchParams),
-        target: '_self',
-      },
-      text: t('residences'),
-    },
+    // Sans l'autorisation, chaque section renvoie au tableau de bord : on n'affiche pas le lien.
+    ...(canManageResidences
+      ? [
+          {
+            isActive: pathname === '/bailleur/residences',
+            linkProps: {
+              href: buildHref('/bailleur/residences', searchParams),
+              target: '_self' as const,
+            },
+            text: t('residences'),
+          },
+        ]
+      : []),
     // Les admins plateforme accèdent toujours aux Contacts (même si l'owner n'a pas encore choisi de mode).
-    ...(contactMode !== 'none' || isAdmin
+    ...((contactMode !== 'none' || isAdmin) && canManageApplications
       ? [
           {
             isActive: pathname.startsWith('/bailleur/contacts'),

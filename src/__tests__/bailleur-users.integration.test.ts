@@ -164,7 +164,7 @@ describe('bailleur.users.create', () => {
         firstname: 'Dup',
         lastname: 'Licate',
         bailleurRole: 'gestionnaire',
-        bailleurPermissions: [],
+        bailleurPermissions: ['manage_residences'],
       }),
     ).rejects.toThrow(/existe deja/)
   })
@@ -177,7 +177,7 @@ describe('bailleur.users.create', () => {
         firstname: 'X',
         lastname: 'Y',
         bailleurRole: 'gestionnaire',
-        bailleurPermissions: [],
+        bailleurPermissions: ['manage_residences'],
       }),
     ).rejects.toThrow(/Administrateur du bailleur requis|FORBIDDEN/)
   })
@@ -204,6 +204,19 @@ describe('bailleur.users.create', () => {
       bailleurPermissions: ['manage_residences'],
     })
     expect(created?.bailleurPermissions).toEqual(['manage_residences'])
+  })
+
+  it('refuses a gestionnaire without any permission', async () => {
+    // Un compte sans autorisation est renvoye au tableau de bord depuis chaque section.
+    await expect(
+      ownerCaller.bailleur.users.create({
+        email: 'inerte@bailleur-a.com',
+        firstname: 'Sans',
+        lastname: 'Autorisation',
+        bailleurRole: 'gestionnaire',
+        bailleurPermissions: [],
+      }),
+    ).rejects.toThrow(/au moins une autorisation/)
   })
 
   it('allows creating a second administrator', async () => {
@@ -271,6 +284,16 @@ describe('bailleur.users.update', () => {
     })
 
     expect(updated?.bailleurPermissions).toEqual(['manage_residences', 'manage_applications'])
+  })
+
+  it('refuses to strip every permission of a gestionnaire', async () => {
+    await expect(
+      ownerCaller.bailleur.users.update({
+        id: 'target-user',
+        bailleurRole: 'gestionnaire',
+        bailleurPermissions: [],
+      }),
+    ).rejects.toThrow(/au moins une autorisation/)
   })
 
   it('updates the email of a gestionnaire', async () => {

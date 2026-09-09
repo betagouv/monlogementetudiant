@@ -132,29 +132,37 @@ export default async function TableauDeBordPage({ searchParams }: TableauDeBordP
                   </div>
                 </div>
               )}
-              <div className={styles.actionCard}>
-                <div className={styles.actionHeader}>
-                  <Link className="fr-link fr-link--no-underline" href={buildHref('/bailleur/residences', awaitedSearchParams)}>
-                    <span className="fr-h6 fr-text-title--blue-france fr-mb-0">
-                      {t('dashboard.priorityActions.actions.availability.title')}
-                    </span>
-                  </Link>
-                  <Badge severity="success" className="fr-hidden fr-unhidden-md" noIcon>
-                    {t('dashboard.priorityActions.actions.availability.badge')}
-                  </Badge>
+              {/* Sans manage_residences, la section renvoie ici : la carte serait un lien mort. */}
+              {ctx.hasPermission('manage_residences') && (
+                <div className={styles.actionCard}>
+                  <div className={styles.actionHeader}>
+                    <Link className="fr-link fr-link--no-underline" href={buildHref('/bailleur/residences', awaitedSearchParams)}>
+                      <span className="fr-h6 fr-text-title--blue-france fr-mb-0">
+                        {t('dashboard.priorityActions.actions.availability.title')}
+                      </span>
+                    </Link>
+                    <Badge severity="success" className="fr-hidden fr-unhidden-md" noIcon>
+                      {t('dashboard.priorityActions.actions.availability.badge')}
+                    </Badge>
+                  </div>
+                  <div className={styles.actionFooter}>
+                    <Link className="fr-link fr-link--no-underline" href={buildHref('/bailleur/residences', awaitedSearchParams)}>
+                      <span className="ri-arrow-right-line" />
+                    </Link>
+                  </div>
                 </div>
-                <div className={styles.actionFooter}>
-                  <Link className="fr-link fr-link--no-underline" href={buildHref('/bailleur/residences', awaitedSearchParams)}>
-                    <span className="ri-arrow-right-line" />
-                  </Link>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
       </div>
       <div className={styles.tabsWrapper}>
-        <DashboardTabs accommodations={accommodations} page={Number(awaitedSearchParams.page) || 1} ownerId={awaitedSearchParams.ownerId} />
+        <DashboardTabs
+          accommodations={accommodations}
+          page={Number(awaitedSearchParams.page) || 1}
+          ownerId={awaitedSearchParams.ownerId}
+          canManageResidences={ctx.hasPermission('manage_residences')}
+        />
       </div>
     </div>
   )
