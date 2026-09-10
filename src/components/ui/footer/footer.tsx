@@ -89,6 +89,7 @@ export const CommonFooter = async () => {
       }}
       brandTop={<BrandTop />}
       accessibility="non compliant"
+      accessibilityLinkProps={{ href: '/accessibilite' }}
       linkListTitle={linkListTitle}
       linkList={linkList as NonNullable<FooterProps['linkList']>}
       homeLinkProps={{
