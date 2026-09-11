@@ -102,6 +102,9 @@ export const contactsRouter = createTRPCRouter({
       await assertContactRequestRateLimit(ipHash)
 
       const userId = ctx.session?.user.id ?? null
+      // Une session ne prouve que l'adresse du compte. Ne jamais considérer une adresse fournie
+      // dans le corps comme vérifiée : un étudiant connecté pourrait sinon usurper celle d'un tiers.
+      const verifiedEmail = userId ? ctx.session!.user.email.trim().toLowerCase() : input.email
 
       const [request] = await db
         .insert(contactRequests)
@@ -110,7 +113,7 @@ export const contactsRouter = createTRPCRouter({
           accommodationId: accommodation.id,
           firstname: input.firstname,
           lastname: input.lastname,
-          email: input.email,
+          email: verifiedEmail,
           phone: input.phone || null,
           birthdate: input.birthdate,
           scholarshipStatus: input.scholarshipStatus,

@@ -83,7 +83,8 @@ export async function cleanTables() {
       "user",
       "session",
       "account",
-      "verification"
+      "verification",
+      "public_rate_limit"
     RESTART IDENTITY CASCADE
   `)
 }

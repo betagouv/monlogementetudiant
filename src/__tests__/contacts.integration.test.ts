@@ -81,6 +81,20 @@ describe('contacts.create', () => {
     // Aucun jeton de rattachement : la demande est déjà liée au compte.
     expect(result!.claimToken).toBeNull()
   })
+
+  it('uses the verified account email instead of a client-supplied address', async () => {
+    const owner = await createOwner({ name: 'Owner Verified Email', slug: 'owner-verified-email', contactMode: EOwnerContactMode.CONTACTS })
+    await createAccommodation({ slug: 'res-verified-email', ownerId: owner!.id }, [typologyDraft('t1', { nbAvailable: 1 })])
+
+    const result = await authenticatedCaller.contacts.create({
+      accommodationSlug: 'res-verified-email',
+      ...contactInput,
+      email: 'victim@example.com',
+    })
+
+    expect(result!.email).toBe('test@test.com')
+    expect(result!.confirmedAt).not.toBeNull()
+  })
 })
 
 describe('contacts.create — rate limit', () => {
