@@ -1,30 +1,36 @@
 const WP_ORIGIN = 'https://info.monlogementetudiant.beta.gouv.fr'
 
-// En-têtes de réponse à ne pas relayer tels quels : fetch a déjà décodé et ré-encadré
-// le corps, donc content-encoding/length/transfer-encoding seraient incohérents côté client.
-// On laisse aussi Next poser sa propre politique HSTS.
-const STRIPPED_RESPONSE_HEADERS = new Set([
-  'content-encoding',
-  'content-length',
-  'transfer-encoding',
-  'connection',
-  'strict-transport-security',
-])
+const FORWARDED_REQUEST_HEADERS = ['accept', 'accept-language', 'content-type', 'user-agent'] as const
+const RELAYED_RESPONSE_HEADERS = ['cache-control', 'content-language', 'content-type', 'etag', 'last-modified', 'location'] as const
+const HTML_SECURITY_POLICY = [
+  "script-src 'none'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "frame-ancestors 'self'",
+  "form-action 'self'",
+].join('; ')
 
 function relayResponseHeaders(source: Headers): Headers {
   const headers = new Headers()
-  source.forEach((value, key) => {
-    if (!STRIPPED_RESPONSE_HEADERS.has(key.toLowerCase())) headers.set(key, value)
-  })
+  for (const key of RELAYED_RESPONSE_HEADERS) {
+    const value = source.get(key)
+    if (value !== null) headers.set(key, value)
+  }
+  // Le HTML WordPress est rendu sous l'origine de l'application. Interdire tout script empêche
+  // qu'une compromission du CMS ne devienne une prise de contrôle des sessions applicatives.
+  if (headers.get('content-type')?.toLowerCase().includes('text/html')) {
+    headers.set('content-security-policy', HTML_SECURITY_POLICY)
+  }
+  headers.set('x-content-type-options', 'nosniff')
   return headers
 }
 
 function forwardRequestHeaders(source: Headers): Headers {
-  const headers = new Headers(source)
-  // fetch repositionne Host/Content-Length depuis l'URL et le corps ; on évite les incohérences.
-  headers.delete('host')
-  headers.delete('connection')
-  headers.delete('content-length')
+  const headers = new Headers()
+  for (const key of FORWARDED_REQUEST_HEADERS) {
+    const value = source.get(key)
+    if (value !== null) headers.set(key, value)
+  }
   return headers
 }
 

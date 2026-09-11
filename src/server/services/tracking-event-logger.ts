@@ -52,6 +52,7 @@ export async function logTrackingEvent({ dedupeSeconds, ...values }: LogTracking
 export const TRACKING_DEDUPE = {
   SEARCH_SECONDS: 60,
   VIEW_SECONDS: 60 * 60 * 24,
+  CONSULT_OFFER_SECONDS: 60,
 } as const
 
 /**
