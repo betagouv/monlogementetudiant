@@ -1,5 +1,6 @@
 import { and, eq, inArray, sql } from 'drizzle-orm'
 import { NextRequest } from 'next/server'
+import { OWNER_CONTACT_MODE_LABELS } from '~/enums/owner-contact-mode'
 import { TYPOLOGIES } from '~/schemas/accommodations/typology'
 import { db } from '~/server/db'
 import { accommodationAddresses } from '~/server/db/schema/accommodation-addresses'
@@ -44,7 +45,9 @@ export async function GET(request: NextRequest) {
       departmentCode: departments.code,
       departmentName: departments.name,
       ownerName: owners.name,
+      ownerSlug: owners.slug,
       ownerLandingUrl: owners.landingUrl,
+      ownerContactMode: owners.contactMode,
       nbTotalApartments: accommodations.nbTotalApartments,
       nbAccessibleApartments: accommodations.nbAccessibleApartments,
       nbColivingApartments: accommodations.nbColivingApartments,
@@ -134,6 +137,9 @@ export async function GET(request: NextRequest) {
     const lastAvailabilityUpdate = availabilityByAccommodation.get(rawRow.id)
     return {
       ...rawRow,
+      // Le parcours de candidature est un choix du bailleur : le CSV porte son libellé métier,
+      // pas la valeur d'enum stockée. `leftJoin` oblige : pas de bailleur => pas de parcours.
+      ownerContactMode: rawRow.ownerContactMode ? OWNER_CONTACT_MODE_LABELS[rawRow.ownerContactMode] : null,
       ...flat,
       region,
       disponibiliteRenseignee: nbLogementsDisponibles != null,
@@ -153,10 +159,14 @@ export async function GET(request: NextRequest) {
   if (updatedIndex !== -1) keys.splice(updatedIndex + 1, 0, 'availabilityUpdatedAt', 'availabilityUpdatedBy')
 
   // L'en-tête reprend généralement le nom de la clé : le fichier est relu par des admins qui
-  // connaissent le schéma. L'URL de présentation du bailleur garde toutefois son libellé métier.
+  // connaissent le schéma. Les colonnes dont la clé ne parle pas d'elle-même gardent un libellé métier.
+  const CUSTOM_HEADERS: Record<string, string> = {
+    ownerLandingUrl: 'Page de présentation du bailleur',
+    ownerContactMode: 'Parcours de candidature',
+  }
   const columns: TCsvColumn<Record<string, unknown>>[] = keys.map((key) => ({
     key,
-    header: key === 'ownerLandingUrl' ? 'Page de présentation du bailleur' : key,
+    header: CUSTOM_HEADERS[key] ?? key,
   }))
   const csv = toCsv(columns, enriched)
   const date = new Date().toISOString().slice(0, 10)
