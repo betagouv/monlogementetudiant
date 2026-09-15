@@ -5,8 +5,9 @@ import { cookies } from 'next/headers'
 import { z } from 'zod'
 import { APARTMENT_TYPES } from '~/enums/apartment-type'
 import { DF_TENANT_STATUSES_BLOCKING_APPLICATION, type DFTenantStatus } from '~/enums/dossier-facile-tenant-status'
+import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { db } from '~/server/db'
-import { accommodations, accommodationTypologies, dossierFacileApplications, dossierFacileTenants } from '~/server/db/schema'
+import { accommodations, accommodationTypologies, dossierFacileApplications, dossierFacileTenants, owners } from '~/server/db/schema'
 import { ensureFavorite } from '~/server/favorites/ensure-favorite'
 import { buildDossierFacileAuthorizationUrl, validateDossierFacileConfig } from '~/server/services/dossier-facile/sync'
 import { getJwtSecret } from '~/server/utils/jwt-secret'
@@ -111,6 +112,17 @@ export const dossierFacileRouter = createTRPCRouter({
       })
       if (!accommodation) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Accommodation not found' })
+      }
+
+      const owner = accommodation.ownerId
+        ? await db.query.owners.findFirst({ where: eq(owners.id, accommodation.ownerId), columns: { contactMode: true } })
+        : null
+      if (owner?.contactMode !== EOwnerContactMode.DOSSIER_FACILE) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: "Ce gestionnaire n'accepte pas les candidatures DossierFacile" })
+      }
+
+      if (!accommodation.acceptsApplications) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: "Cette résidence n'accepte pas les candidatures" })
       }
 
       const [typology] = await db

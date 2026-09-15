@@ -11,6 +11,7 @@ import dialogStyles from '~/components/administration/link-dialog.module.css'
 import { LinkUserOwnerDialog } from '~/components/administration/link-user-owner-dialog'
 import { RoleBadge } from '~/components/administration/role-badge'
 import { UserForm, UserFormData } from '~/components/administration/user-form'
+import { ImpersonateUserButton } from '~/components/impersonation/impersonate-user-button'
 import { createToast } from '~/components/ui/createToast'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { useAdminDeleteUser } from '~/hooks/use-admin-delete-user'
@@ -31,7 +32,7 @@ const resetPasswordModal = createModal({
   isOpenedByDefault: false,
 })
 
-export function UserDetail({ id }: { id: string }) {
+export function UserDetail({ id, currentUserId }: { id: string; currentUserId: string | null }) {
   const { data: userData, isLoading } = useAdminUser(id)
   const updateUser = useAdminUpdateUser()
   const deleteUser = useAdminDeleteUser()
@@ -58,6 +59,7 @@ export function UserDetail({ id }: { id: string }) {
           </h1>
           <RoleBadge role={userData.role} />
         </div>
+        <ImpersonateUserButton userId={id} isSelf={id === currentUserId} />
       </div>
 
       <div className="fr-grid-row fr-grid-row--gutters">

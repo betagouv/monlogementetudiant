@@ -66,3 +66,13 @@ export function defaultGestionnairePermissions(contactMode: EOwnerContactMode): 
 export function hasUsableGestionnairePermissions(permissions: BailleurPermission[]): boolean {
   return permissions.length > 0
 }
+
+/**
+ * Bascule `manage_applications` sans toucher au reste des autorisations : c'est ce que fait l'ecran
+ * « Parametres de moderation », qui n'edite qu'une autorisation a la fois pour toute une equipe.
+ * Le resultat peut etre vide — a l'appelant de le refuser via `hasUsableGestionnairePermissions`.
+ */
+export function nextApplicationsPermissions(current: BailleurPermission[], enabled: boolean): BailleurPermission[] {
+  if (!enabled) return current.filter((p) => p !== 'manage_applications')
+  return current.includes('manage_applications') ? [...current] : [...current, 'manage_applications']
+}

@@ -1,6 +1,7 @@
 'use client'
 
 import { SearchBar } from '@codegouvfr/react-dsfr/SearchBar'
+import clsx from 'clsx'
 import { useRouter } from 'next/navigation'
 import { FC, useMemo } from 'react'
 import { FindStudentAccomodationAutocompleteResults } from '~/components/find-student-accomodation/autocomplete/find-student-accomodation-autocomplete-results'
@@ -37,7 +38,7 @@ export const HeroSearchBar: FC = () => {
           label="Rechercher"
           renderInput={({ className, id, type }) => (
             <input
-              className={`${className} ${styles.nativeInput}`}
+              className={clsx(className, styles.nativeInput)}
               id={id}
               type={type}
               placeholder="Ville, académie ou département"

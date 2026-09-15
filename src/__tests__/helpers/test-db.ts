@@ -66,6 +66,7 @@ export async function cleanTables() {
       city,
       accommodation,
       admin_owner_link,
+      bailleur_accommodation_scope,
       owner,
       external_source,
       import_blocklist,

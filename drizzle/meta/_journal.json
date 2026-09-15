@@ -435,6 +435,27 @@
       "when": 1789375449813,
       "tag": "0061_budget_simulation",
       "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1789457445190,
+      "tag": "0062_impersonation",
+      "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1789461754365,
+      "tag": "0063_bailleur_accommodation_scope",
+      "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1789464707467,
+      "tag": "0064_accommodation_accepts_applications",
+      "breakpoints": true
     }
   ]
 }

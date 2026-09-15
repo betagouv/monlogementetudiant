@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import {
   BAILLEUR_PERMISSIONS,
+  type BailleurPermission,
   canEditOwnAccount,
   canGrantApplicationsPermission,
   DEFAULT_GESTIONNAIRE_PERMISSIONS,
@@ -12,6 +13,7 @@ import {
   hasUsableGestionnairePermissions,
   isBailleurAdministrator,
   MAX_BAILLEUR_ADMINISTRATORS,
+  nextApplicationsPermissions,
   type PermissionCheckUser,
   sanitizeGestionnairePermissions,
 } from '~/server/bailleur/permissions'
@@ -153,5 +155,32 @@ describe('parcours de candidature', () => {
       'manage_residences',
       'manage_applications',
     ])
+  })
+})
+
+describe('bascule de la gestion des candidatures', () => {
+  it('accorde manage_applications sans dupliquer ni toucher au reste', () => {
+    expect(nextApplicationsPermissions(['manage_residences'], true)).toEqual(['manage_residences', 'manage_applications'])
+    expect(nextApplicationsPermissions(['manage_residences', 'manage_applications'], true)).toEqual([
+      'manage_residences',
+      'manage_applications',
+    ])
+  })
+
+  it('retire manage_applications en conservant le reste', () => {
+    expect(nextApplicationsPermissions(['manage_residences', 'manage_applications'], false)).toEqual(['manage_residences'])
+    expect(nextApplicationsPermissions(['manage_residences'], false)).toEqual(['manage_residences'])
+  })
+
+  it("laisse un compte inerte quand c'etait la seule autorisation : a l'appelant de refuser", () => {
+    const next = nextApplicationsPermissions(['manage_applications'], false)
+    expect(next).toEqual([])
+    expect(hasUsableGestionnairePermissions(next)).toBe(false)
+  })
+
+  it("ne mute pas le tableau d'origine", () => {
+    const current: BailleurPermission[] = ['manage_residences']
+    nextApplicationsPermissions(current, true)
+    expect(current).toEqual(['manage_residences'])
   })
 })

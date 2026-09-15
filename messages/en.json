@@ -1421,6 +1421,7 @@
       "submitCreate": "Create user",
       "submitUpdate": "Update",
       "saving": "Saving...",
+      "submit": "Save",
       "form": {
         "email": "Email",
         "firstname": "First name",
@@ -1463,6 +1464,22 @@
         "permissionsHeader": "Permissions",
         "actionsHeader": "Actions",
         "emptyRole": "-"
+      },
+      "scope": {
+        "allLabel": "All residences",
+        "allHint": "This manager sees applications for every residence, including those you create later.",
+        "restrictedHint": "This manager only sees applications for the checked residences. A residence created later will stay hidden until you add it.",
+        "legend": "Residences whose applications this manager can see",
+        "searchLabel": "Search for a residence",
+        "searchPlaceholder": "Residence name",
+        "selectedCount": "{count} selected",
+        "selectAll": "Select all",
+        "selectNone": "Clear selection",
+        "refineSearch": "Refine your search to see the {count} remaining residences.",
+        "emptyWarning": "This manager will not have access to any application. The Contacts tab will be hidden for them.",
+        "summaryAll": "Scope: all residences",
+        "summaryNone": "Scope: no residence",
+        "summaryCount": "Scope: {count} residence(s)"
       }
     },
     "header": {
@@ -1642,6 +1659,7 @@
       "defaultCandidateName": "Applicant",
       "searchResidenceLabel": "Search for a residence",
       "settingsButtonTitle": "Contact mode settings",
+      "moderationButtonTitle": "Manage moderation rights",
       "noResidence": "No residence.",
       "toBeCalledBack": "{count} to call back",
       "residenceTitle": "Residence {name}",
@@ -1733,13 +1751,41 @@
         "dossierFacileHint": "Receive a complete applicant file: identity document, tax notice, proof of income, etc.",
         "noneLabel": "Disable applications",
         "noneHint": "Visitors are redirected to your website",
-        "lockedHint": "{hint} — coming soon"
+        "lockedHint": "{hint} — coming soon",
+        "residences": {
+          "allLabel": "All residences",
+          "allHint": "Every residence accepts applications, including those you create later.",
+          "restrictedHint": "Only the checked residences accept applications. A residence created later will be open by default.",
+          "legend": "Residences accepting applications",
+          "searchLabel": "Search for a residence",
+          "searchPlaceholder": "Residence name",
+          "selectedCount": "{count} residence(s) open",
+          "selectAll": "Select all",
+          "selectNone": "Clear selection",
+          "refineSearch": "Refine your search to see the {count} remaining residences.",
+          "emptyWarning": "No residence will accept applications: visitors will be redirected to your website."
+        }
       },
       "promoBanner": {
         "title": "Easily receive applications",
         "text": "from students in your area",
         "link": "Receive applications",
         "dismiss": "Hide this message"
+      },
+      "moderation": {
+        "pageTitle": "Moderation settings",
+        "subtitle": "Select the managers allowed to moderate applicant files",
+        "hint": "Managers able to view and moderate applicant files. This selection can be edited later.",
+        "legend": "Managers allowed to moderate applicant files",
+        "toggleLabel": "Application management",
+        "toggleDescription": "Allows {name} to view and moderate applicant files",
+        "onlyPermissionHint": "This is the manager's only permission: change it from User management.",
+        "empty": "No manager yet.",
+        "addUser": "Add a manager",
+        "save": "Save",
+        "saving": "Saving...",
+        "toastSuccess": "Moderation rights updated",
+        "toastError": "Moderation rights could not be updated"
       }
     },
     "ownerForm": {
@@ -1760,5 +1806,14 @@
     "resultsLabel": "Map of the residences matching your search. The results list, shown next to the map, provides its text equivalent.",
     "accommodationLabel": "Map showing the location of the residence. The full address appears as text above the map.",
     "markerLabel": "Location of the residence on the map"
+  },
+  "impersonation": {
+    "title": "Impersonation mode active",
+    "browsingAs": "you are browsing as",
+    "stop": "Back to my account",
+    "stopping": "Switching back...",
+    "impersonate": "Impersonate this account",
+    "impersonateHint": "Opens a one-hour QA session under this identity.",
+    "cannotImpersonateSelf": "You cannot impersonate your own account."
   }
 }

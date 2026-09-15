@@ -75,9 +75,16 @@ export const findVisibleApplication = async (id: string) => {
  * C'est ce qui autorise l'accès au dossier : plus aucune candidature dans la fenêtre, plus de motif
  * pour un gestionnaire de consulter les pièces.
  */
-export const findVisibleApplicationForTenant = async (tenantId: string) => {
+export const findVisibleApplicationForTenant = async (tenantId: string, readerFilter?: SQL) => {
   const application = await db.query.dossierFacileApplications.findFirst({
-    where: and(eq(dossierFacileApplications.tenantId, tenantId), gte(dossierFacileApplications.createdAt, dossierFacileRetentionCutoff())),
+    where: and(
+      eq(dossierFacileApplications.tenantId, tenantId),
+      gte(dossierFacileApplications.createdAt, dossierFacileRetentionCutoff()),
+      // Restriction propre au lecteur, que ce module ne connaît pas. Elle doit être dans le `where` :
+      // ce `findFirst` n'est pas ordonné, et un locataire ayant candidaté sur deux résidences du même
+      // bailleur ferait sinon passer ou échouer la garde de l'appelant selon la ligne tirée.
+      readerFilter,
+    ),
     columns: { accommodationSlug: true },
     with: { tenant: { columns: { status: true } } },
   })

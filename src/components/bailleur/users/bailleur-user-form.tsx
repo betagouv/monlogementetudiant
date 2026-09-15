@@ -1,14 +1,15 @@
 'use client'
 
-import Button from '@codegouvfr/react-dsfr/Button'
 import Input from '@codegouvfr/react-dsfr/Input'
-import RadioButtons from '@codegouvfr/react-dsfr/RadioButtons'
+import Select from '@codegouvfr/react-dsfr/SelectNext'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslations } from 'next-intl'
 import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
+import { AccommodationSelector } from '~/components/bailleur/accommodation-selector'
 import { BailleurPermissionsFields } from '~/components/bailleur/users/bailleur-permissions-fields'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
+import { ZBailleurAccommodationScope } from '~/schemas/bailleur-users/accommodation-scope'
 import {
   BAILLEUR_PERMISSIONS,
   BAILLEUR_ROLES,
@@ -25,6 +26,7 @@ const formSchema = z
     lastname: z.string().min(1, 'bailleur.users.form.errors.lastnameRequired'),
     bailleurRole: z.enum(BAILLEUR_ROLES),
     bailleurPermissions: z.array(z.enum(BAILLEUR_PERMISSIONS)),
+    applicationScope: ZBailleurAccommodationScope,
   })
   // Un gestionnaire sans autorisation ne peut ouvrir aucun ecran : on refuse la selection vide.
   .refine((values) => values.bailleurRole !== 'gestionnaire' || hasUsableGestionnairePermissions(values.bailleurPermissions), {
@@ -35,32 +37,25 @@ const formSchema = z
 export type BailleurUserFormData = z.infer<typeof formSchema>
 
 type Props = {
+  ownerId: number
+  formId: string
   defaultValues?: Partial<BailleurUserFormData>
   onSubmit: (data: BailleurUserFormData) => void
-  isPending?: boolean
-  submitLabel?: string
-  /** Quand `false`, le choix `administrator` n'est pas propose. */
   canGrantAdministratorRights?: boolean
-  /**
-   * Parcours de candidature du bailleur. `none` rend « Gestion des candidats » non cochable :
-   * l'autorisation n'ouvre aucun ecran tant qu'aucun parcours n'est choisi.
-   */
   ownerContactMode: EOwnerContactMode
-  /**
-   * Quand `true`, le bailleur a deja son quota d'administrateurs : le choix reste selectionnable
-   * (l'utilisateur doit pouvoir declencher l'explication) mais un texte d'aide l'annonce.
-   */
   administratorLimitReached?: boolean
+  initialScopeSelection?: Array<{ id: number; name: string }>
 }
 
 export const BailleurUserForm = ({
+  ownerId,
+  formId,
   defaultValues,
   onSubmit,
-  isPending,
-  submitLabel,
   canGrantAdministratorRights = true,
   administratorLimitReached = false,
   ownerContactMode,
+  initialScopeSelection,
 }: Props) => {
   const t = useTranslations('bailleur.users')
 
@@ -78,20 +73,19 @@ export const BailleurUserForm = ({
       firstname: '',
       lastname: '',
       bailleurRole: 'gestionnaire',
-      // Un gestionnaire sans autorisation n'ouvre aucun ecran : on part des autorisations par defaut.
-      // L'edition d'un compte existant repasse ses propres valeurs juste apres.
       bailleurPermissions: defaultGestionnairePermissions(ownerContactMode),
+      applicationScope: { mode: 'all' },
       ...defaultValues,
     },
   })
 
   const bailleurRole = watch('bailleurRole')
   const selectedPermissions = watch('bailleurPermissions')
+  const applicationScope = watch('applicationScope')
 
-  // Un administrateur a toutes les autorisations : en repassant gestionnaire, la selection
-  // affichee redeviendrait vide. On repropose les autorisations par defaut.
   const selectRole = (role: BailleurRole, onRoleChange: (role: BailleurRole) => void) => {
     onRoleChange(role)
+    if (role === 'administrator') setValue('applicationScope', { mode: 'all' })
     if (role === 'gestionnaire' && (selectedPermissions ?? []).length === 0) {
       setValue('bailleurPermissions', defaultGestionnairePermissions(ownerContactMode), { shouldValidate: true })
     }
@@ -100,47 +94,56 @@ export const BailleurUserForm = ({
   const translateError = (key?: string) => (key ? t(key.replace('bailleur.users.', '') as Parameters<typeof t>[0]) : undefined)
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <Input
-        label={t('form.email')}
-        nativeInputProps={{ type: 'email', ...register('email') }}
-        state={errors.email ? 'error' : 'default'}
-        stateRelatedMessage={translateError(errors.email?.message)}
-      />
-      <Input
-        label={t('form.firstname')}
-        nativeInputProps={register('firstname')}
-        state={errors.firstname ? 'error' : 'default'}
-        stateRelatedMessage={translateError(errors.firstname?.message)}
-      />
-      <Input
-        label={t('form.lastname')}
-        nativeInputProps={register('lastname')}
-        state={errors.lastname ? 'error' : 'default'}
-        stateRelatedMessage={translateError(errors.lastname?.message)}
-      />
-
-      <Controller
-        control={control}
-        name="bailleurRole"
-        render={({ field }) => (
-          <RadioButtons
-            legend={t('form.bailleurRole')}
-            hintText={administratorLimitReached ? t('adminLimit.hint', { max: MAX_BAILLEUR_ADMINISTRATORS }) : undefined}
-            orientation="horizontal"
-            options={BAILLEUR_ROLES.filter((role) => canGrantAdministratorRights || role !== 'administrator').map((role) => ({
-              label: t(`role.${role}`),
-              nativeInputProps: {
-                value: role,
-                checked: field.value === role,
-                onChange: () => selectRole(role, field.onChange),
-              },
-            }))}
+    <form id={formId} onSubmit={handleSubmit(onSubmit)}>
+      <div className="fr-grid-row fr-grid-row--gutters">
+        <div className="fr-col-12 fr-col-md-6">
+          <Input
+            label={t('form.firstname')}
+            nativeInputProps={register('firstname')}
+            state={errors.firstname ? 'error' : 'default'}
+            stateRelatedMessage={translateError(errors.firstname?.message)}
           />
-        )}
-      />
+        </div>
+        <div className="fr-col-12 fr-col-md-6">
+          <Input
+            label={t('form.lastname')}
+            nativeInputProps={register('lastname')}
+            state={errors.lastname ? 'error' : 'default'}
+            stateRelatedMessage={translateError(errors.lastname?.message)}
+          />
+        </div>
+        <div className="fr-col-12 fr-col-md-6">
+          <Input
+            label={t('form.email')}
+            nativeInputProps={{ type: 'email', ...register('email') }}
+            state={errors.email ? 'error' : 'default'}
+            stateRelatedMessage={translateError(errors.email?.message)}
+          />
+        </div>
+        <div className="fr-col-12 fr-col-md-6">
+          <Controller
+            control={control}
+            name="bailleurRole"
+            render={({ field }) => (
+              <Select
+                label={t('form.bailleurRole')}
+                hint={administratorLimitReached ? t('adminLimit.hint', { max: MAX_BAILLEUR_ADMINISTRATORS }) : undefined}
+                options={BAILLEUR_ROLES.filter((role) => canGrantAdministratorRights || role !== 'administrator').map((role) => ({
+                  value: role,
+                  label: t(`role.${role}`),
+                }))}
+                nativeSelectProps={{
+                  value: field.value,
+                  onChange: (e) => selectRole(e.target.value as BailleurRole, field.onChange),
+                }}
+              />
+            )}
+          />
+        </div>
+      </div>
 
       <BailleurPermissionsFields
+        variant="chips"
         bailleurRole={bailleurRole}
         ownerContactMode={ownerContactMode}
         selectedPermissions={selectedPermissions ?? []}
@@ -148,11 +151,15 @@ export const BailleurUserForm = ({
         errorMessage={translateError(errors.bailleurPermissions?.message)}
       />
 
-      <div className="fr-mt-2w">
-        <Button type="submit" disabled={isPending}>
-          {isPending ? t('saving') : (submitLabel ?? t('submitUpdate'))}
-        </Button>
-      </div>
+      {bailleurRole === 'gestionnaire' && (selectedPermissions ?? []).includes('manage_applications') && (
+        <AccommodationSelector
+          ownerId={ownerId}
+          namespace="bailleur.users.scope"
+          value={applicationScope ?? { mode: 'all' }}
+          onChange={(scope) => setValue('applicationScope', scope, { shouldValidate: true })}
+          initialSelection={initialScopeSelection}
+        />
+      )}
     </form>
   )
 }

@@ -4,7 +4,7 @@ import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { hashPassword, verifyPassword as verifyScryptPassword } from 'better-auth/crypto'
 import { nextCookies } from 'better-auth/next-js'
-import { magicLink } from 'better-auth/plugins'
+import { admin, magicLink } from 'better-auth/plugins'
 import { and, eq } from 'drizzle-orm'
 import { headers } from 'next/headers'
 import { cache } from 'react'
@@ -121,6 +121,9 @@ export const auth = betterAuth({
         timeWindow: env.API_V1_RATE_LIMIT_WINDOW_MS,
         maxRequests: env.API_V1_RATE_LIMIT_MAX,
       },
+    }),
+    admin({
+      impersonationSessionDuration: 60 * 60,
     }),
     nextCookies(),
   ],

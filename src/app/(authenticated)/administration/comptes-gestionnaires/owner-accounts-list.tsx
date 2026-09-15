@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
 import { useDebounce } from 'use-debounce'
 import { AdminDataTable } from '~/components/administration/admin-data-table'
+import { ImpersonateUserButton } from '~/components/impersonation/impersonate-user-button'
 import { useAdminUsers } from '~/hooks/use-admin-users'
 import { formatDateTime } from '~/utils/formatDate'
 import { sPluriel } from '~/utils/sPluriel'
@@ -62,9 +63,12 @@ const columns: ColumnDef<OwnerAccountRow, unknown>[] = [
     header: '',
     enableSorting: false,
     cell: ({ row }) => (
-      <Button priority="tertiary no outline" size="small" linkProps={{ href: `/administration/utilisateurs/${row.original.id}` }}>
-        Voir
-      </Button>
+      <div className="fr-flex fr-flex-gap-1v fr-justify-content-end">
+        <ImpersonateUserButton userId={row.original.id} compact />
+        <Button priority="tertiary no outline" size="small" linkProps={{ href: `/administration/utilisateurs/${row.original.id}` }}>
+          Voir
+        </Button>
+      </div>
     ),
   },
 ]

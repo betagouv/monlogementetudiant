@@ -97,6 +97,9 @@ const ACCOMMODATION_FIELD_LABELS: Record<string, string> = {
 /** Champs de la fiche gestionnaire (table `owner`). */
 const OWNER_FIELD_LABELS: Record<string, string> = {
   contactMode: 'Mode de réception des candidatures',
+  moderationManagers: 'Gestionnaires pouvant modérer les candidatures',
+  applicationScope: 'Périmètre des candidatures',
+  applicationResidences: 'Résidences ouvertes aux candidatures',
 }
 
 export type ParsedDiffField = { typology: TypologyType; field: TypologyField } | null
