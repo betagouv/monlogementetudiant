@@ -1,0 +1,16 @@
+.list {
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid var(--border-default-grey);
+  border-radius: 0.25rem;
+  padding: 0.5rem 1rem;
+  margin: 0;
+  list-style: none;
+}
+
+.fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}

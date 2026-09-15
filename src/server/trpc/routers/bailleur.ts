@@ -7,16 +7,27 @@ import { z } from 'zod'
 import { EContactSource, ZContactSource } from '~/enums/contact-source'
 import { A_RAPPELER_STATUS, ZContactStatus } from '~/enums/contact-status'
 import { EOwnerContactMode, ZOwnerContactMode } from '~/enums/owner-contact-mode'
+import { type TAccommodationSelection, ZAccommodationSelection } from '~/schemas/accommodations/accommodation-selection'
 import { ZCreateResidence } from '~/schemas/accommodations/create-residence'
 import { getTypologyLabel } from '~/schemas/accommodations/typology'
 import { ZUpdateResidence } from '~/schemas/accommodations/update-residence'
 import { ZUpdateResidenceList } from '~/schemas/accommodations/update-residence-list'
+import type { TBailleurAccommodationScope } from '~/schemas/bailleur-users/accommodation-scope'
 import {
   GESTIONNAIRE_PERMISSIONS_REQUIRED,
   gestionnairePermissionsAreUsable,
   zCreateBailleurUser,
   zUpdateBailleurUser,
 } from '~/schemas/bailleur-users/bailleur-user-form'
+import { ZSetApplicationsPermission } from '~/schemas/bailleur-users/moderation-settings-form'
+import { checkAccommodationAccess } from '~/server/bailleur/accommodation-access'
+import {
+  type AccommodationScope,
+  findScopedApplicationForTenant,
+  getAccommodationScope,
+  scopeAccommodationIdCondition,
+  scopeHasAnyAccommodation,
+} from '~/server/bailleur/accommodation-scope'
 import {
   assertAdministratorSlotAvailable,
   assertNotLastAdministrator,
@@ -25,8 +36,11 @@ import {
 import { getOwnerForUser } from '~/server/bailleur/get-owner-for-user'
 import {
   type BailleurPermission,
+  type BailleurRole,
   canEditOwnAccount,
   canGrantApplicationsPermission,
+  hasUsableGestionnairePermissions,
+  nextApplicationsPermissions,
   sanitizeGestionnairePermissions,
 } from '~/server/bailleur/permissions'
 import {
@@ -38,16 +52,19 @@ import {
 } from '~/server/candidatures/student-identity'
 import {
   findVisibleApplication,
-  findVisibleApplicationForTenant,
   findVisibleContactRequest,
   visibleContactRequest,
   visibleDossierFacileApplication,
 } from '~/server/candidatures/visibility'
 import { db } from '~/server/db'
+
+type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
+
 import { accommodationAddresses } from '~/server/db/schema/accommodation-addresses'
 import { accommodationTypologies } from '~/server/db/schema/accommodation-typologies'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { user } from '~/server/db/schema/auth'
+import { bailleurAccommodationScopes } from '~/server/db/schema/bailleur-accommodation-scopes'
 import { cities } from '~/server/db/schema/cities'
 import { contactRequests } from '~/server/db/schema/contacts'
 import { departments } from '~/server/db/schema/departments'
@@ -85,19 +102,128 @@ function assertPermissionsMatchContactMode(permissions: BailleurPermission[], co
   }
 }
 
-async function assertOwnsAccommodation(userId: string, accommodationWhere: SQL) {
-  const usr = await db.query.user.findFirst({
-    where: eq(user.id, userId),
-    with: { owner: true },
-  })
-  const isAdmin = usr?.role === 'admin'
+type ModerationTarget = { name: string; firstname: string; lastname: string }
 
-  const [accommodation] = await db.select({ ownerId: accommodations.ownerId }).from(accommodations).where(accommodationWhere).limit(1)
+const moderationTargetName = (target: ModerationTarget) => `${target.firstname} ${target.lastname}`.trim() || target.name
 
-  if (!accommodation) throw new TRPCError({ code: 'NOT_FOUND', message: 'Accommodation not found' })
-  if (!isAdmin && (!usr?.owner || accommodation.ownerId !== usr.owner.id)) {
-    throw new TRPCError({ code: 'FORBIDDEN', message: 'You do not own this accommodation' })
+/** Liste lisible, pour le journal d'activité, des gestionnaires qui peuvent modérer les candidatures. */
+function moderationManagerNames<T extends ModerationTarget>(targets: T[], permissionsOf: (target: T) => BailleurPermission[]): string {
+  return targets
+    .filter((t) => permissionsOf(t).includes('manage_applications'))
+    .map(moderationTargetName)
+    .join(', ')
+}
+
+/** Résidences du bailleur ouvertes aux candidatures, bornées au périmètre du lecteur. */
+async function readEligibleResidences(ownerId: number, scope: AccommodationScope) {
+  return db
+    .select({ id: accommodations.id, name: accommodations.name })
+    .from(accommodations)
+    .where(and(eq(accommodations.ownerId, ownerId), eq(accommodations.acceptsApplications, true), scopeAccommodationIdCondition(scope)))
+    .orderBy(asc(accommodations.name))
+}
+
+async function writeEligibleResidences(tx: DbTransaction, ownerId: number, scope: AccommodationScope, selection: TAccommodationSelection) {
+  const inScope = and(eq(accommodations.ownerId, ownerId), scopeAccommodationIdCondition(scope))
+
+  if (selection.mode === 'all') {
+    await tx.update(accommodations).set({ acceptsApplications: true }).where(inScope)
+    return
   }
+
+  const ids = selection.accommodationIds
+  if (new Set(ids).size !== ids.length) {
+    throw new TRPCError({ code: 'BAD_REQUEST', message: 'Une résidence apparait plusieurs fois dans la selection' })
+  }
+
+  if (ids.length > 0) {
+    const reachable = await tx
+      .select({ id: accommodations.id })
+      .from(accommodations)
+      .where(and(inScope, inArray(accommodations.id, ids)))
+    if (reachable.length !== ids.length) {
+      throw new TRPCError({ code: 'BAD_REQUEST', message: "Une residence selectionnee n'est pas accessible" })
+    }
+  }
+
+  await tx.update(accommodations).set({ acceptsApplications: false }).where(inScope)
+  if (ids.length > 0) {
+    await tx
+      .update(accommodations)
+      .set({ acceptsApplications: true })
+      .where(and(inScope, inArray(accommodations.id, ids)))
+  }
+}
+
+const describeEligibleResidences = (rows: Array<{ name: string }>) => rows.map((r) => r.name).join(', ') || 'Aucune résidence'
+
+type ApplicationScopeWrite = {
+  userId: string
+  ownerId: number
+  bailleurRole: BailleurRole
+  scope: TBailleurAccommodationScope
+}
+
+async function writeApplicationScope(tx: DbTransaction, { userId, ownerId, bailleurRole, scope }: ApplicationScopeWrite) {
+  if (bailleurRole === 'administrator') {
+    if (scope.mode === 'restricted') {
+      throw new TRPCError({ code: 'BAD_REQUEST', message: 'Un administrateur accède à toutes les résidences' })
+    }
+    await tx.update(user).set({ applicationScopeRestricted: false }).where(eq(user.id, userId))
+    await tx.delete(bailleurAccommodationScopes).where(eq(bailleurAccommodationScopes.userId, userId))
+    return
+  }
+
+  if (scope.mode === 'all') {
+    await tx.update(user).set({ applicationScopeRestricted: false }).where(eq(user.id, userId))
+    await tx.delete(bailleurAccommodationScopes).where(eq(bailleurAccommodationScopes.userId, userId))
+    return
+  }
+
+  const ids = scope.accommodationIds
+  if (new Set(ids).size !== ids.length) {
+    throw new TRPCError({ code: 'BAD_REQUEST', message: 'Une résidence apparait plusieurs fois dans la selection' })
+  }
+
+  if (ids.length > 0) {
+    const owned = await tx
+      .select({ id: accommodations.id })
+      .from(accommodations)
+      .where(and(eq(accommodations.ownerId, ownerId), inArray(accommodations.id, ids)))
+    if (owned.length !== ids.length) {
+      throw new TRPCError({ code: 'BAD_REQUEST', message: "Une residence selectionnee n'appartient pas a ce bailleur" })
+    }
+  }
+
+  await tx.update(user).set({ applicationScopeRestricted: true }).where(eq(user.id, userId))
+  await tx.delete(bailleurAccommodationScopes).where(eq(bailleurAccommodationScopes.userId, userId))
+  if (ids.length > 0) {
+    await tx.insert(bailleurAccommodationScopes).values(ids.map((accommodationId) => ({ userId, accommodationId })))
+  }
+}
+
+/** Lit le périmètre tel qu'il est stocké, pour le diff du journal et pour `users.getById`. */
+async function readApplicationScope(userId: string) {
+  const [usr] = await db.select({ restricted: user.applicationScopeRestricted }).from(user).where(eq(user.id, userId))
+  if (!usr?.restricted) return { mode: 'all' as const, accommodations: [] as Array<{ id: number; name: string }> }
+
+  const rows = await db
+    .select({ id: accommodations.id, name: accommodations.name })
+    .from(bailleurAccommodationScopes)
+    .innerJoin(accommodations, eq(accommodations.id, bailleurAccommodationScopes.accommodationId))
+    .where(eq(bailleurAccommodationScopes.userId, userId))
+    .orderBy(asc(accommodations.name))
+
+  return { mode: 'restricted' as const, accommodations: rows }
+}
+
+const describeApplicationScope = (scope: { mode: 'all' | 'restricted'; accommodations: Array<{ name: string }> }) =>
+  scope.mode === 'all' ? 'Toutes les résidences' : scope.accommodations.map((a) => a.name).join(', ') || 'Aucune résidence'
+
+async function assertOwnsAccommodation(userId: string, accommodationWhere: SQL) {
+  const access = await checkAccommodationAccess(userId, accommodationWhere)
+  if (access === 'not_found') throw new TRPCError({ code: 'NOT_FOUND', message: 'Accommodation not found' })
+  if (access === 'forbidden') throw new TRPCError({ code: 'FORBIDDEN', message: 'You do not own this accommodation' })
 }
 
 const verifyOwnerAccess = (userId: string, accommodationSlug: string) =>
@@ -152,6 +278,9 @@ async function verifyOwnership(slug: string, userId: string) {
 
 const PAGE_SIZE = 20
 
+/** Plafond du sélecteur de périmètre ; au-delà, l'UI invite à affiner la recherche. */
+const SCOPE_RESIDENCES_LIMIT = 2000
+
 const accommodationSelectFields = {
   id: accommodations.id,
   name: accommodations.name,
@@ -170,6 +299,7 @@ const accommodationSelectFields = {
   priceMin: accommodations.priceMin,
   priceMaxComputed,
   acceptWaitingList: accommodations.acceptWaitingList,
+  acceptsApplications: accommodations.acceptsApplications,
   scholarshipHoldersPriority: accommodations.scholarshipHoldersPriority,
   socialHousingRequired: accommodations.socialHousingRequired,
   wifi: accommodations.wifi,
@@ -602,10 +732,11 @@ export const bailleurRouter = createTRPCRouter({
         return { items: [], total: 0, page: input.page, pageSize: PAGE_SIZE }
       }
 
+      const scope = await getAccommodationScope(ctx.session.user.id)
       const ownerAccommodations = await db
         .select({ slug: accommodations.slug })
         .from(accommodations)
-        .where(eq(accommodations.ownerId, owner.id))
+        .where(and(eq(accommodations.ownerId, owner.id), scopeAccommodationIdCondition(scope)))
 
       const slugs = ownerAccommodations.map((a) => a.slug)
 
@@ -675,15 +806,10 @@ export const bailleurRouter = createTRPCRouter({
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Candidature not found' })
       }
 
-      const usr = await db.query.user.findFirst({
-        where: eq(user.id, ctx.session.user.id),
-        with: { owner: true },
-      })
-
-      const isAdmin = usr?.role === 'admin'
+      await verifyOwnerAccess(ctx.session.user.id, application.accommodationSlug)
 
       const [accommodation] = await db
-        .select({ ...accommodationSelectFields, ownerId: accommodations.ownerId })
+        .select(accommodationSelectFields)
         .from(accommodations)
         .innerJoin(
           accommodationAddresses,
@@ -696,10 +822,6 @@ export const bailleurRouter = createTRPCRouter({
 
       if (!accommodation) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Accommodation not found' })
-      }
-
-      if (!isAdmin && (!usr?.owner || accommodation.ownerId !== usr.owner.id)) {
-        throw new TRPCError({ code: 'FORBIDDEN', message: 'You do not own this accommodation' })
       }
 
       const tenantUser = await db.query.user.findFirst({
@@ -763,7 +885,7 @@ export const bailleurRouter = createTRPCRouter({
         })
         if (!tenant) throw new TRPCError({ code: 'NOT_FOUND' })
 
-        const application = await findVisibleApplicationForTenant(tenant.id)
+        const application = await findScopedApplicationForTenant(ctx.session.user.id, tenant.id)
         if (!application) throw new TRPCError({ code: 'NOT_FOUND' })
 
         await verifyOwnerAccess(ctx.session.user.id, application.accommodationSlug)
@@ -771,7 +893,7 @@ export const bailleurRouter = createTRPCRouter({
       } else {
         if (!input.tenantId) throw new TRPCError({ code: 'BAD_REQUEST', message: 'tenantId is required' })
 
-        const application = await findVisibleApplicationForTenant(input.tenantId)
+        const application = await findScopedApplicationForTenant(ctx.session.user.id, input.tenantId)
         if (!application) throw new TRPCError({ code: 'NOT_FOUND' })
 
         await verifyOwnerAccess(ctx.session.user.id, application.accommodationSlug)
@@ -788,11 +910,38 @@ export const bailleurRouter = createTRPCRouter({
       return { redirectUrl: `/api/df-redirect?token=${token}` }
     }),
 
+  listOwnerResidences: bailleurProcedure('manage_applications')
+    .input(z.object({ ownerId: z.number().optional() }))
+    .query(async ({ ctx, input }) => {
+      const owner = await getOwnerForUser(ctx.session.user.id, input.ownerId)
+      if (!owner) return { items: [], truncated: false }
+
+      const scope = await getAccommodationScope(ctx.session.user.id)
+      const rows = await db
+        .select({
+          id: accommodations.id,
+          name: accommodations.name,
+          cityName: cities.name,
+          acceptsApplications: accommodations.acceptsApplications,
+        })
+        .from(accommodations)
+        .leftJoin(
+          accommodationAddresses,
+          and(eq(accommodationAddresses.accommodationId, accommodations.id), eq(accommodationAddresses.isMain, true)),
+        )
+        .leftJoin(cities, eq(accommodationAddresses.cityId, cities.id))
+        .where(and(eq(accommodations.ownerId, owner.id), scopeAccommodationIdCondition(scope)))
+        .orderBy(asc(accommodations.name))
+        .limit(SCOPE_RESIDENCES_LIMIT + 1)
+
+      return { items: rows.slice(0, SCOPE_RESIDENCES_LIMIT), truncated: rows.length > SCOPE_RESIDENCES_LIMIT }
+    }),
+
   // ─── Espace Contacts ─────────────────────────────────────────────────────
 
   // Active/change le mode de réception des candidatures (self-service).
   setContactMode: bailleurProcedure('manage_applications')
-    .input(z.object({ mode: ZOwnerContactMode, ownerId: z.number().optional() }))
+    .input(z.object({ mode: ZOwnerContactMode, ownerId: z.number().optional(), residences: ZAccommodationSelection.optional() }))
     .mutation(async ({ ctx, input }) => {
       if (input.mode === EOwnerContactMode.DOSSIER_FACILE && !isDossierFacileSelectable()) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: 'DossierFacile is not available yet' })
@@ -801,8 +950,18 @@ export const bailleurRouter = createTRPCRouter({
       const owner = await getOwnerForUser(ctx.session.user.id, input.ownerId)
       if (!owner) throw new TRPCError({ code: 'NOT_FOUND', message: 'Owner not found' })
 
+      const scope = await getAccommodationScope(ctx.session.user.id)
+      if (!scopeHasAnyAccommodation(scope)) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Aucune résidence dans votre périmètre' })
+      }
+
       const previousMode = owner.contactMode
-      await db.update(owners).set({ contactMode: input.mode, updatedBy: ctx.session.user.id }).where(eq(owners.id, owner.id))
+      const previousResidences = input.residences ? await readEligibleResidences(owner.id, scope) : null
+
+      await db.transaction(async (tx) => {
+        await tx.update(owners).set({ contactMode: input.mode, updatedBy: ctx.session.user.id }).where(eq(owners.id, owner.id))
+        if (input.residences) await writeEligibleResidences(tx, owner.id, scope, input.residences)
+      })
 
       // Le choix du mode (DossierFacile / coordonnées / aucun) est tracé dans le journal : c'est
       // l'indicateur d'adoption suivi côté administration. On n'enregistre que les vrais changements.
@@ -820,6 +979,25 @@ export const bailleurRouter = createTRPCRouter({
         })
       }
 
+      if (previousResidences) {
+        const nextResidences = await readEligibleResidences(owner.id, scope)
+        const before = describeEligibleResidences(previousResidences)
+        const after = describeEligibleResidences(nextResidences)
+        if (before !== after) {
+          await logActivity({
+            userId: ctx.session.user.id,
+            userName: ctx.session.user.name,
+            action: 'owner.application_residences_updated',
+            entityType: 'owner',
+            entityId: String(owner.id),
+            entityName: owner.name,
+            ownerId: owner.id,
+            ownerName: owner.name,
+            metadata: { diff: { applicationResidences: { old: before, new: after } } },
+          })
+        }
+      }
+
       return { contactMode: input.mode }
     }),
 
@@ -830,7 +1008,13 @@ export const bailleurRouter = createTRPCRouter({
       const owner = await getOwnerForUser(ctx.session.user.id, input.ownerId)
       if (!owner) return { mode: EOwnerContactMode.NONE, residences: [] }
 
-      const conditions = [eq(accommodations.ownerId, owner.id)]
+      const scope = await getAccommodationScope(ctx.session.user.id)
+      // Une résidence fermée aux candidatures n'a aucun contact à présenter.
+      const conditions = [
+        eq(accommodations.ownerId, owner.id),
+        eq(accommodations.acceptsApplications, true),
+        scopeAccommodationIdCondition(scope),
+      ].filter(Boolean) as SQL[]
       if (input.search && input.search.length >= 2) {
         conditions.push(ilike(accommodations.name, `%${input.search}%`))
       }
@@ -1044,7 +1228,7 @@ export const bailleurRouter = createTRPCRouter({
       .input(z.object({ ownerId: z.number().optional(), search: z.string().optional() }))
       .query(async ({ ctx, input }) => {
         const owner = await getOwnerForUser(ctx.session.user.id, input.ownerId)
-        if (!owner) return { items: [] }
+        if (!owner) throw new TRPCError({ code: 'FORBIDDEN', message: 'Bailleur introuvable' })
 
         const conditions = [eq(user.ownerId, owner.id), eq(user.role, 'owner')]
         if (input.search && input.search.length >= 2) {
@@ -1064,13 +1248,31 @@ export const bailleurRouter = createTRPCRouter({
             lastname: user.lastname,
             bailleurRole: user.bailleurRole,
             bailleurPermissions: user.bailleurPermissions,
+            applicationScopeRestricted: user.applicationScopeRestricted,
             createdAt: user.createdAt,
           })
           .from(user)
           .where(and(...conditions))
           .orderBy(user.firstname, user.lastname)
 
-        return { items, ownerId: owner.id }
+        const restrictedIds = items.filter((i) => i.applicationScopeRestricted).map((i) => i.id)
+        const counts = new Map<string, number>()
+        if (restrictedIds.length > 0) {
+          const rows = await db
+            .select({ userId: bailleurAccommodationScopes.userId, n: sql<number>`count(*)::int` })
+            .from(bailleurAccommodationScopes)
+            .where(inArray(bailleurAccommodationScopes.userId, restrictedIds))
+            .groupBy(bailleurAccommodationScopes.userId)
+          for (const r of rows) counts.set(r.userId, r.n)
+        }
+
+        return {
+          items: items.map(({ applicationScopeRestricted, ...rest }) => ({
+            ...rest,
+            applicationScopeCount: applicationScopeRestricted ? (counts.get(rest.id) ?? 0) : null,
+          })),
+          ownerId: owner.id,
+        }
       }),
 
     // Reserve aux administrateurs, comme le reste de `users.*` : le seul consommateur est le
@@ -1093,6 +1295,7 @@ export const bailleurRouter = createTRPCRouter({
           lastname: target.lastname,
           bailleurRole: target.bailleurRole,
           bailleurPermissions: target.bailleurPermissions,
+          applicationScope: await readApplicationScope(target.id),
         }
       }),
 
@@ -1118,21 +1321,34 @@ export const bailleurRouter = createTRPCRouter({
         }
 
         const id = crypto.randomUUID()
-        const [created] = await db
-          .insert(user)
-          .values({
-            id,
-            email: input.email,
-            name: `${input.firstname} ${input.lastname}`,
-            firstname: input.firstname,
-            lastname: input.lastname,
-            role: 'owner',
-            ownerId: owner.id,
-            bailleurRole: input.bailleurRole,
-            bailleurPermissions:
-              input.bailleurRole === 'administrator' ? [] : sanitizeGestionnairePermissions(input.bailleurPermissions, owner.contactMode),
-          })
-          .returning()
+        const created = await db.transaction(async (tx) => {
+          const [row] = await tx
+            .insert(user)
+            .values({
+              id,
+              email: input.email,
+              name: `${input.firstname} ${input.lastname}`,
+              firstname: input.firstname,
+              lastname: input.lastname,
+              role: 'owner',
+              ownerId: owner.id,
+              bailleurRole: input.bailleurRole,
+              bailleurPermissions:
+                input.bailleurRole === 'administrator' ? [] : sanitizeGestionnairePermissions(input.bailleurPermissions, owner.contactMode),
+            })
+            .returning()
+
+          if (input.applicationScope) {
+            await writeApplicationScope(tx, {
+              userId: id,
+              ownerId: owner.id,
+              bailleurRole: input.bailleurRole,
+              scope: input.applicationScope,
+            })
+          }
+
+          return row
+        })
 
         try {
           await sendOwnerWelcomeEmail(created.email, { firstname: input.firstname, lastname: input.lastname })
@@ -1215,9 +1431,129 @@ export const bailleurRouter = createTRPCRouter({
           await assertNotLastAdministrator(owner.id, target.id, LAST_ADMINISTRATOR_MESSAGE)
         }
 
-        const [updated] = await db.update(user).set(updateData).where(eq(user.id, input.id)).returning()
+        const nextRole = (input.bailleurRole ?? target.bailleurRole ?? 'gestionnaire') as BailleurRole
+        if (nextRole === 'administrator' && input.applicationScope?.mode === 'restricted') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Un administrateur accède à toutes les résidences' })
+        }
+        // Une promotion en administrateur efface le périmètre, comme elle vide déjà les autorisations.
+        const scopeToWrite: TBailleurAccommodationScope | undefined =
+          nextRole === 'administrator' ? { mode: 'all' } : input.applicationScope
+
+        const previousScope = scopeToWrite ? await readApplicationScope(target.id) : null
+
+        const updated = await db.transaction(async (tx) => {
+          const [row] = await tx.update(user).set(updateData).where(eq(user.id, input.id)).returning()
+          if (scopeToWrite) {
+            await writeApplicationScope(tx, { userId: target.id, ownerId: owner.id, bailleurRole: nextRole, scope: scopeToWrite })
+          }
+          return row
+        })
+
+        if (previousScope) {
+          const nextScope = await readApplicationScope(target.id)
+          const before = describeApplicationScope(previousScope)
+          const after = describeApplicationScope(nextScope)
+          // Hors transaction : `logActivity` écrit via l'instance `db` globale, pas via `tx`.
+          if (before !== after) {
+            await logActivity({
+              userId: ctx.session.user.id,
+              userName: ctx.session.user.name,
+              action: 'owner.user_application_scope_updated',
+              entityType: 'user',
+              entityId: target.id,
+              entityName: moderationTargetName(target),
+              ownerId: owner.id,
+              ownerName: owner.name,
+              metadata: { diff: { applicationScope: { old: before, new: after } } },
+            })
+          }
+        }
+
         return updated
       }),
+
+    // Enregistrement groupe de la seule autorisation « Gestion des candidats », depuis l'ecran
+    // « Parametres de moderation » (onglet Contacts). Volontairement distincte de `update` : celle-ci
+    // exige le tableau complet des autorisations (le client ecraserait un `manage_residences` accorde
+    // entre-temps) et porte des gardes sans objet ici. Surtout, une revocation a moitie appliquee
+    // laisserait des gestionnaires devant des dossiers de candidats que l'administrateur croit avoir
+    // coupes : l'enregistrement est donc tout-ou-rien.
+    setApplicationsPermission: bailleurAdministratorProcedure.input(ZSetApplicationsPermission).mutation(async ({ ctx, input }) => {
+      const owner = await getOwnerForUser(ctx.session.user.id, input.ownerId)
+      if (!owner) throw new TRPCError({ code: 'FORBIDDEN', message: 'Bailleur introuvable' })
+
+      const ids = input.managers.map((m) => m.userId)
+      if (new Set(ids).size !== ids.length) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Un gestionnaire apparait plusieurs fois dans la selection' })
+      }
+
+      // Sans parcours de candidature, l'autorisation n'ouvre aucun ecran et n'est pas accordable.
+      assertPermissionsMatchContactMode(['manage_applications'], owner.contactMode)
+
+      const targets = await db.query.user.findMany({
+        where: and(inArray(user.id, ids), eq(user.ownerId, owner.id), eq(user.role, 'owner')),
+        columns: { id: true, name: true, firstname: true, lastname: true, bailleurRole: true, bailleurPermissions: true },
+      })
+      // Un id inconnu, supprime, ou rattache a un autre bailleur : on refuse le lot entier.
+      if (targets.length !== ids.length) throw new TRPCError({ code: 'NOT_FOUND', message: 'Utilisateur non trouve' })
+
+      // L'ecran ne liste jamais d'administrateur (ils ont toutes les autorisations d'office) : un tel
+      // id est un bug client ou un contournement, l'ignorer en silence masquerait les deux.
+      if (targets.some((t) => t.bailleurRole !== 'gestionnaire')) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: "Seuls les gestionnaires disposent d'autorisations a accorder" })
+      }
+
+      const nextPermissions = new Map<string, BailleurPermission[]>()
+      for (const target of targets) {
+        const enabled = input.managers.find((m) => m.userId === target.id)?.enabled ?? false
+        const next = sanitizeGestionnairePermissions(nextApplicationsPermissions(target.bailleurPermissions, enabled), owner.contactMode)
+
+        // Filet de securite : l'interrupteur est deja verrouille cote client dans ce cas. On le
+        // rencontre en contournement, ou en course avec une autorisation retiree depuis un autre ecran.
+        if (!hasUsableGestionnairePermissions(next)) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: `${moderationTargetName(target)} : Gestion des candidats est sa seule autorisation. Modifiez son compte depuis Gestion des utilisateurs.`,
+          })
+        }
+        nextPermissions.set(target.id, next)
+      }
+
+      const permissionsKey = (permissions: BailleurPermission[]) => [...permissions].sort().join(',')
+      const changed = targets.filter((t) => permissionsKey(t.bailleurPermissions) !== permissionsKey(nextPermissions.get(t.id) ?? []))
+
+      if (changed.length > 0) {
+        await db.transaction(async (tx) => {
+          for (const target of changed) {
+            await tx
+              .update(user)
+              .set({ bailleurPermissions: nextPermissions.get(target.id) ?? [], updatedAt: new Date() })
+              .where(eq(user.id, target.id))
+          }
+        })
+
+        await logActivity({
+          userId: ctx.session.user.id,
+          userName: ctx.session.user.name,
+          action: 'owner.moderation_managers_updated',
+          entityType: 'owner',
+          entityId: String(owner.id),
+          entityName: owner.name,
+          ownerId: owner.id,
+          ownerName: owner.name,
+          metadata: {
+            diff: {
+              moderationManagers: {
+                old: moderationManagerNames(targets, (t) => t.bailleurPermissions),
+                new: moderationManagerNames(targets, (t) => nextPermissions.get(t.id) ?? []),
+              },
+            },
+          },
+        })
+      }
+
+      return { updated: changed.length }
+    }),
 
     delete: bailleurAdministratorProcedure
       .input(z.object({ id: z.string(), ownerId: z.number().optional() }))

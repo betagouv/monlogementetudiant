@@ -27,6 +27,7 @@ const findAccommodationBySlug = async (slug: string) => {
       name: accommodations.name,
       ownerId: accommodations.ownerId,
       nbAvailableApartments: accommodations.nbAvailableApartments,
+      acceptsApplications: accommodations.acceptsApplications,
     })
     .from(accommodations)
     .where(eq(accommodations.slug, slug))
@@ -87,6 +88,10 @@ export const contactsRouter = createTRPCRouter({
 
       if (owner?.contactMode !== EOwnerContactMode.CONTACTS) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: "Ce gestionnaire n'accepte pas les demandes de contact" })
+      }
+
+      if (!accommodation.acceptsApplications) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: "Cette résidence n'accepte pas les demandes de contact" })
       }
 
       if (!accommodation.nbAvailableApartments || accommodation.nbAvailableApartments <= 0) {

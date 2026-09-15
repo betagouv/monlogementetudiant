@@ -98,6 +98,7 @@ export const getAccommodationMyById = async (slug: string): Promise<TAccomodatio
     targetAudience: toTargetAudience(row.targetAudience),
     published: row.published,
     acceptWaitingList: row.acceptWaitingList ?? false,
+    acceptsApplications: row.acceptsApplications ?? true,
     imagesUrls: row.imagesUrls ?? null,
     externalUrl: row.externalUrl ?? undefined,
     virtualTourUrl: row.virtualTourUrl ?? null,

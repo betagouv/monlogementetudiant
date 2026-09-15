@@ -73,6 +73,12 @@ const envSchema = z.object({
   // rester documenté et validé au démarrage, pas pour y être importé.
   IMAGE_CACHE_MEMORY_MB: z.coerce.number().int().positive().default(128),
 
+  // Coupe l'étage S3 du cache d'images : seul le cache mémoire du process reste actif.
+  // Destiné au développement local, où les identifiants S3 pointent sur un bucket partagé
+  // dont l'écriture du préfixe `image-cache/` n'est pas accordée. Lu directement par
+  // cache-handler.mjs, comme IMAGE_CACHE_MEMORY_MB.
+  IMAGE_CACHE_S3_DISABLED: z.enum(['0', '1', 'true', 'false']).default('0'),
+
   // Geocoding
   GEOCODING_API_URL: z.url().default('https://data.geopf.fr/geocodage/search'),
 

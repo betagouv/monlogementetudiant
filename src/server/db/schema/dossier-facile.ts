@@ -54,5 +54,8 @@ export const dossierFacileApplications = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [unique().on(table.tenantId, table.accommodationSlug)],
+  (table) => [
+    unique().on(table.tenantId, table.accommodationSlug),
+    index('dossier_facile_application_accommodation_slug_idx').on(table.accommodationSlug),
+  ],
 )

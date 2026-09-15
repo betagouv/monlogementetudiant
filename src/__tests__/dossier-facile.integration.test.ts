@@ -358,7 +358,13 @@ describe('DossierFacile tRPC', () => {
 
     it('allows applying while the dossier is still being reviewed', async () => {
       await createDossierFacileTenant({ userId: 'test-user-id', tenantId: 'df-app-1', status: 'to_process' })
-      await createAccommodation({ slug: 'res-unverified' }, [typologyDraft('t1', { nbAvailable: 5 })])
+      const unverifiedOwner = await createOwner({
+        name: 'Owner Unverified',
+        slug: 'owner-unverified',
+        userId: 'test-owner-id',
+        contactMode: EOwnerContactMode.DOSSIER_FACILE,
+      })
+      await createAccommodation({ slug: 'res-unverified', ownerId: unverifiedOwner.id }, [typologyDraft('t1', { nbAvailable: 5 })])
 
       const result = await authenticatedCaller.dossierFacile.application({ accommodationSlug: 'res-unverified', apartmentType: 't1' })
       expect(result?.accommodationSlug).toBe('res-unverified')
@@ -383,7 +389,13 @@ describe('DossierFacile tRPC', () => {
 
     it('rejects when apartment type is not available', async () => {
       await createDossierFacileTenant({ userId: 'test-user-id', tenantId: 'df-app-3', status: 'verified' })
-      await createAccommodation({ slug: 'res-no-avail' }, [typologyDraft('t1', { nbAvailable: 0 })])
+      const noAvailOwner = await createOwner({
+        name: 'Owner No Avail',
+        slug: 'owner-no-avail',
+        userId: 'test-owner-id',
+        contactMode: EOwnerContactMode.DOSSIER_FACILE,
+      })
+      await createAccommodation({ slug: 'res-no-avail', ownerId: noAvailOwner.id }, [typologyDraft('t1', { nbAvailable: 0 })])
 
       await expect(
         authenticatedCaller.dossierFacile.application({ accommodationSlug: 'res-no-avail', apartmentType: 't1' }),
@@ -392,7 +404,13 @@ describe('DossierFacile tRPC', () => {
 
     it('creates an application successfully', async () => {
       await createDossierFacileTenant({ userId: 'test-user-id', tenantId: 'df-app-4', status: 'verified' })
-      await createAccommodation({ slug: 'res-apply' }, [typologyDraft('t2', { nbAvailable: 3 })])
+      const applyOwner = await createOwner({
+        name: 'Owner Apply',
+        slug: 'owner-apply',
+        userId: 'test-owner-id',
+        contactMode: EOwnerContactMode.DOSSIER_FACILE,
+      })
+      await createAccommodation({ slug: 'res-apply', ownerId: applyOwner.id }, [typologyDraft('t2', { nbAvailable: 3 })])
 
       const result = await authenticatedCaller.dossierFacile.application({
         accommodationSlug: 'res-apply',
@@ -405,7 +423,13 @@ describe('DossierFacile tRPC', () => {
 
     it('returns null on duplicate application (conflict do nothing)', async () => {
       await createDossierFacileTenant({ userId: 'test-user-id', tenantId: 'df-app-5', status: 'verified' })
-      await createAccommodation({ slug: 'res-dup' }, [typologyDraft('t1', { nbAvailable: 5 })])
+      const dupOwner = await createOwner({
+        name: 'Owner Dup',
+        slug: 'owner-dup',
+        userId: 'test-owner-id',
+        contactMode: EOwnerContactMode.DOSSIER_FACILE,
+      })
+      await createAccommodation({ slug: 'res-dup', ownerId: dupOwner.id }, [typologyDraft('t1', { nbAvailable: 5 })])
 
       await authenticatedCaller.dossierFacile.application({ accommodationSlug: 'res-dup', apartmentType: 't1' })
       const second = await authenticatedCaller.dossierFacile.application({

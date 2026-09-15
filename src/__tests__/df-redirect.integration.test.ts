@@ -1,6 +1,7 @@
 import { eq, sql } from 'drizzle-orm'
 import { SignJWT } from 'jose'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { BailleurPermission } from '~/server/bailleur/permissions'
 import { dossierFacileApplications, dossierFacileTenants } from '../server/db/schema'
 import { getJwtSecret } from '../server/utils/jwt-secret'
 import {
@@ -16,15 +17,25 @@ import { adminCaller, authenticatedCaller, caller, ownerCaller } from './helpers
 import { getTestDb } from './helpers/test-db'
 
 // La route lit la session : hors contexte de requête Next, `headers()` n'existe pas. On simule donc
-// le compte connecté, que chaque test peut basculer via `signedInAs`.
+// le compte connecté, que chaque test peut basculer via `signedInAs`. La forme reproduit celle de
+// `getServerSession`, qui enrichit la session du rôle et des autorisations bailleur : la route s'en
+// sert pour vérifier `manage_applications`, qu'aucune garde tRPC ne tient ici.
 let signedInAs: string | null = 'test-owner-id'
+let signedInPermissions: BailleurPermission[] = ['manage_applications']
+let signedInRole = 'owner'
 vi.mock('~/services/better-auth', async () => {
   const actual = await vi.importActual<typeof import('~/services/better-auth')>('~/services/better-auth')
-  return { ...actual, getServerSession: async () => (signedInAs ? { user: { id: signedInAs } } : null) }
+  return {
+    ...actual,
+    getServerSession: async () =>
+      signedInAs ? { user: { id: signedInAs, role: signedInRole, bailleurRole: null, bailleurPermissions: signedInPermissions } } : null,
+  }
 })
 
 beforeEach(async () => {
   signedInAs = 'test-owner-id'
+  signedInPermissions = ['manage_applications']
+  signedInRole = 'owner'
   await createUser({ id: 'test-user-id', name: 'Test User', email: 'test@test.com', role: 'user' })
   await createUser({ id: 'test-owner-id', name: 'Test Owner', email: 'owner@test.com', role: 'owner' })
   await createUser({ id: 'test-admin-id', name: 'Test Admin', email: 'admin@test.com', role: 'admin' })
@@ -293,6 +304,19 @@ describe('/api/df-redirect is not a bearer token', () => {
     // Jeton intercepté : le `sub` ne correspond plus au compte qui le présente.
     signedInAs = 'test-owner-id-2'
     await createUser({ id: 'test-owner-id-2', name: 'Autre', email: 'autre@test.com', role: 'owner' })
+    const res = await callRedirect(token)
+
+    expect(res.headers.get('location')).toContain('error_type=doc_forbidden')
+  })
+
+  it('refuses a bailleur account that lacks manage_applications', async () => {
+    const { tenant } = await createTestData()
+    const { redirectUrl } = await ownerCaller.bailleur.getDocumentSignedUrl({ type: 'tenantPdf', tenantId: tenant.id })
+    const token = new URL(redirectUrl, 'http://localhost').searchParams.get('token')!
+
+    // La route n'a aucune garde d'autorisation en amont : c'est elle qui doit la tenir.
+    signedInPermissions = []
+
     const res = await callRedirect(token)
 
     expect(res.headers.get('location')).toContain('error_type=doc_forbidden')

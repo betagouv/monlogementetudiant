@@ -10,15 +10,18 @@ import { parseAsString, useQueryState } from 'nuqs'
 import { useDebounce } from 'use-debounce'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { useTRPC } from '~/server/trpc/client'
+import { buildHref } from '~/utils/preserve-query-params'
 import { ContactModeSettingsModal, contactModeSettingsModal } from './contact-mode-settings-modal'
 import { ResidenceContactCard } from './residence-contact-card'
 import styles from './residences-grid.module.css'
 
 interface Props {
   mode: Exclude<EOwnerContactMode, EOwnerContactMode.NONE>
+  canManageModeration: boolean
+  resolvedOwnerId: number
 }
 
-export const ResidencesGrid = ({ mode }: Props) => {
+export const ResidencesGrid = ({ mode, canManageModeration, resolvedOwnerId }: Props) => {
   const t = useTranslations('bailleur.contacts')
   const trpc = useTRPC()
   const searchParams = useSearchParams()
@@ -59,6 +62,14 @@ export const ResidencesGrid = ({ mode }: Props) => {
               />
             )}
           />
+          {canManageModeration && (
+            <Button
+              linkProps={{ href: buildHref('/bailleur/contacts/moderation', searchParams) }}
+              priority="secondary"
+              iconId="ri-team-line"
+              title={t('moderationButtonTitle')}
+            />
+          )}
           <Button
             {...contactModeSettingsModal.buttonProps}
             priority="secondary"
@@ -86,7 +97,7 @@ export const ResidencesGrid = ({ mode }: Props) => {
         </div>
       )}
 
-      <ContactModeSettingsModal currentMode={mode} ownerId={ownerId} />
+      <ContactModeSettingsModal currentMode={mode} ownerId={ownerId} resolvedOwnerId={resolvedOwnerId} />
     </>
   )
 }
