@@ -1,8 +1,10 @@
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
+import { activityLog } from '../server/db/schema/activity-log'
 import { user } from '../server/db/schema/auth'
-import { createOwner, createUser } from './fixtures/factories'
+import { owners } from '../server/db/schema/owners'
+import { createAdminOwnerLink, createOwner, createUser } from './fixtures/factories'
 import { getTestDb } from './helpers/test-db'
 import './helpers/setup-integration'
 import { adminCaller, authenticatedCaller, caller, gestionnaireCallerFactory, ownerCaller, ownerCaller2 } from './helpers/test-caller'
@@ -638,5 +640,276 @@ describe('bailleurProcedure permission gating on residences/candidatures', () =>
 
   it('administrator has implicit access to every permission-gated endpoint', async () => {
     await expect(ownerCaller.bailleur.listCandidatures({ page: 1 })).resolves.toBeDefined()
+  })
+})
+
+describe('bailleur.users.setApplicationsPermission', () => {
+  // `activity_log` n'est pas tronquee par `cleanTables` alors que les ids d'`owner` repartent de 1 :
+  // sans purge, les entrees d'un test precedent seraient relues sous le meme `ownerId`.
+  beforeEach(async () => {
+    await getTestDb().delete(activityLog)
+  })
+
+  /** Deux gestionnaires du bailleur A : l'un modere deja, l'autre non. */
+  const seedGestionnaires = async () => {
+    const db = getTestDb()
+    await createUser({
+      id: 'gest-moderateur',
+      name: 'Marine Bleue',
+      firstname: 'Marine',
+      lastname: 'Bleue',
+      email: 'marine@a.com',
+      role: 'owner',
+    })
+    await db
+      .update(user)
+      .set({ ownerId: 1, bailleurRole: 'gestionnaire', bailleurPermissions: ['manage_residences', 'manage_applications'] })
+      .where(eq(user.id, 'gest-moderateur'))
+
+    await createUser({
+      id: 'gest-simple',
+      name: 'Alexis Delens',
+      firstname: 'Alexis',
+      lastname: 'Delens',
+      email: 'alexis@a.com',
+      role: 'owner',
+    })
+    await db
+      .update(user)
+      .set({ ownerId: 1, bailleurRole: 'gestionnaire', bailleurPermissions: ['manage_residences'] })
+      .where(eq(user.id, 'gest-simple'))
+  }
+
+  const permissionsOf = async (id: string) => {
+    const row = await getTestDb().query.user.findFirst({ where: eq(user.id, id) })
+    return [...(row?.bailleurPermissions ?? [])].sort()
+  }
+
+  const readModerationLogs = async (ownerId: number) =>
+    getTestDb()
+      .select()
+      .from(activityLog)
+      .where(and(eq(activityLog.ownerId, ownerId), eq(activityLog.action, 'owner.moderation_managers_updated')))
+      .orderBy(activityLog.id)
+
+  it('rejects unauthenticated users', async () => {
+    await expect(caller.bailleur.users.setApplicationsPermission({ managers: [{ userId: 'x', enabled: true }] })).rejects.toThrow(
+      'UNAUTHORIZED',
+    )
+  })
+
+  it('rejects students (role=user)', async () => {
+    await expect(
+      authenticatedCaller.bailleur.users.setApplicationsPermission({ managers: [{ userId: 'x', enabled: true }] }),
+    ).rejects.toThrow('Owner or admin role required')
+  })
+
+  it('rejects a gestionnaire, even one who can already manage applications', async () => {
+    await seedGestionnaires()
+    const gestCaller = gestionnaireCallerFactory({
+      id: 'gest-moderateur',
+      email: 'marine@a.com',
+      permissions: ['manage_residences', 'manage_applications'],
+    })
+
+    await expect(
+      gestCaller.bailleur.users.setApplicationsPermission({ managers: [{ userId: 'gest-simple', enabled: true }] }),
+    ).rejects.toThrow(/Administrateur du bailleur requis|FORBIDDEN/)
+  })
+
+  it('grants manage_applications while keeping the other permissions', async () => {
+    await seedGestionnaires()
+
+    const result = await ownerCaller.bailleur.users.setApplicationsPermission({ managers: [{ userId: 'gest-simple', enabled: true }] })
+
+    expect(result.updated).toBe(1)
+    expect(await permissionsOf('gest-simple')).toEqual(['manage_applications', 'manage_residences'])
+  })
+
+  it('revokes manage_applications while keeping the other permissions', async () => {
+    await seedGestionnaires()
+
+    await ownerCaller.bailleur.users.setApplicationsPermission({ managers: [{ userId: 'gest-moderateur', enabled: false }] })
+
+    expect(await permissionsOf('gest-moderateur')).toEqual(['manage_residences'])
+  })
+
+  it('applies a mixed batch in a single call', async () => {
+    await seedGestionnaires()
+
+    const result = await ownerCaller.bailleur.users.setApplicationsPermission({
+      managers: [
+        { userId: 'gest-moderateur', enabled: false },
+        { userId: 'gest-simple', enabled: true },
+      ],
+    })
+
+    expect(result.updated).toBe(2)
+    expect(await permissionsOf('gest-moderateur')).toEqual(['manage_residences'])
+    expect(await permissionsOf('gest-simple')).toEqual(['manage_applications', 'manage_residences'])
+  })
+
+  it('refuses to strip a gestionnaire of his only permission', async () => {
+    const db = getTestDb()
+    await createUser({
+      id: 'gest-only',
+      name: 'Clara Demassy',
+      firstname: 'Clara',
+      lastname: 'Demassy',
+      email: 'clara@a.com',
+      role: 'owner',
+    })
+    await db
+      .update(user)
+      .set({ ownerId: 1, bailleurRole: 'gestionnaire', bailleurPermissions: ['manage_applications'] })
+      .where(eq(user.id, 'gest-only'))
+
+    await expect(
+      ownerCaller.bailleur.users.setApplicationsPermission({ managers: [{ userId: 'gest-only', enabled: false }] }),
+    ).rejects.toThrow(/seule autorisation/)
+
+    expect(await permissionsOf('gest-only')).toEqual(['manage_applications'])
+  })
+
+  it('writes nothing at all when one entry of the batch is invalid', async () => {
+    const db = getTestDb()
+    await seedGestionnaires()
+    await createUser({
+      id: 'gest-only',
+      name: 'Clara Demassy',
+      firstname: 'Clara',
+      lastname: 'Demassy',
+      email: 'clara@a.com',
+      role: 'owner',
+    })
+    await db
+      .update(user)
+      .set({ ownerId: 1, bailleurRole: 'gestionnaire', bailleurPermissions: ['manage_applications'] })
+      .where(eq(user.id, 'gest-only'))
+
+    await expect(
+      ownerCaller.bailleur.users.setApplicationsPermission({
+        managers: [
+          { userId: 'gest-simple', enabled: true },
+          { userId: 'gest-only', enabled: false },
+        ],
+      }),
+    ).rejects.toThrow(/seule autorisation/)
+
+    // La ligne valide du lot ne doit pas avoir ete ecrite non plus.
+    expect(await permissionsOf('gest-simple')).toEqual(['manage_residences'])
+  })
+
+  it('rejects a user belonging to another bailleur, and writes nothing', async () => {
+    const db = getTestDb()
+    await seedGestionnaires()
+    await createUser({ id: 'gest-b', name: 'Bob B', email: 'bob@b.com', role: 'owner' })
+    await db
+      .update(user)
+      .set({ ownerId: 2, bailleurRole: 'gestionnaire', bailleurPermissions: ['manage_residences'] })
+      .where(eq(user.id, 'gest-b'))
+
+    await expect(
+      ownerCaller.bailleur.users.setApplicationsPermission({
+        managers: [
+          { userId: 'gest-simple', enabled: true },
+          { userId: 'gest-b', enabled: true },
+        ],
+      }),
+    ).rejects.toThrow(/Utilisateur non trouve/)
+
+    expect(await permissionsOf('gest-b')).toEqual(['manage_residences'])
+    expect(await permissionsOf('gest-simple')).toEqual(['manage_residences'])
+  })
+
+  it('rejects an unknown user id', async () => {
+    await expect(ownerCaller.bailleur.users.setApplicationsPermission({ managers: [{ userId: 'nope', enabled: true }] })).rejects.toThrow(
+      /Utilisateur non trouve/,
+    )
+  })
+
+  it('rejects an administrator id: administrators hold every permission implicitly', async () => {
+    await expect(
+      ownerCaller.bailleur.users.setApplicationsPermission({ managers: [{ userId: 'test-owner-id', enabled: false }] }),
+    ).rejects.toThrow(/Seuls les gestionnaires/)
+  })
+
+  it('rejects a platform admin id linked to the bailleur (filtered out by role=owner)', async () => {
+    const db = getTestDb()
+    await db.update(user).set({ ownerId: 1 }).where(eq(user.id, 'test-admin-id'))
+
+    await expect(
+      ownerCaller.bailleur.users.setApplicationsPermission({ managers: [{ userId: 'test-admin-id', enabled: true }] }),
+    ).rejects.toThrow(/Utilisateur non trouve/)
+  })
+
+  it('rejects duplicate user ids', async () => {
+    await seedGestionnaires()
+
+    await expect(
+      ownerCaller.bailleur.users.setApplicationsPermission({
+        managers: [
+          { userId: 'gest-simple', enabled: true },
+          { userId: 'gest-simple', enabled: false },
+        ],
+      }),
+    ).rejects.toThrow(/plusieurs fois/)
+  })
+
+  it('rejects the whole call when the bailleur has no application journey', async () => {
+    const db = getTestDb()
+    await seedGestionnaires()
+    await db.update(owners).set({ contactMode: EOwnerContactMode.NONE }).where(eq(owners.id, 1))
+
+    await expect(
+      ownerCaller.bailleur.users.setApplicationsPermission({ managers: [{ userId: 'gest-simple', enabled: true }] }),
+    ).rejects.toThrow(/parcours de candidature/)
+
+    expect(await permissionsOf('gest-simple')).toEqual(['manage_residences'])
+  })
+
+  it('lets a platform admin act on a bailleur he is linked to', async () => {
+    await seedGestionnaires()
+    await createAdminOwnerLink({ userId: 'test-admin-id', ownerId: 1 })
+
+    const result = await adminCaller.bailleur.users.setApplicationsPermission({
+      ownerId: 1,
+      managers: [{ userId: 'gest-simple', enabled: true }],
+    })
+
+    expect(result.updated).toBe(1)
+    expect(await permissionsOf('gest-simple')).toEqual(['manage_applications', 'manage_residences'])
+  })
+
+  it('falls back to the account name when firstname/lastname are empty', async () => {
+    const db = getTestDb()
+    await createUser({ id: 'gest-sans-nom', name: 'Compte Importe', email: 'import@a.com', role: 'owner' })
+    await db
+      .update(user)
+      .set({ ownerId: 1, bailleurRole: 'gestionnaire', bailleurPermissions: ['manage_residences'] })
+      .where(eq(user.id, 'gest-sans-nom'))
+
+    await ownerCaller.bailleur.users.setApplicationsPermission({ managers: [{ userId: 'gest-sans-nom', enabled: true }] })
+
+    const [entry] = await readModerationLogs(1)
+    expect((entry.metadata as { diff: { moderationManagers: { new: string } } }).diff.moderationManagers.new).toBe('Compte Importe')
+  })
+
+  it('logs who can moderate, and logs nothing when the call changes nothing', async () => {
+    await seedGestionnaires()
+
+    await ownerCaller.bailleur.users.setApplicationsPermission({ managers: [{ userId: 'gest-simple', enabled: true }] })
+
+    const [entry, ...rest] = await readModerationLogs(1)
+    expect(rest).toHaveLength(0)
+    expect((entry.metadata as { diff: { moderationManagers: { old: string; new: string } } }).diff.moderationManagers).toEqual({
+      old: '',
+      new: 'Alexis Delens',
+    })
+
+    // Rejouer le meme lot ne change rien : pas de seconde entree.
+    const replay = await ownerCaller.bailleur.users.setApplicationsPermission({ managers: [{ userId: 'gest-simple', enabled: true }] })
+    expect(replay.updated).toBe(0)
+    expect(await readModerationLogs(1)).toHaveLength(1)
   })
 })

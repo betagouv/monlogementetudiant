@@ -1421,6 +1421,7 @@
       "submitCreate": "Créer l'utilisateur",
       "submitUpdate": "Mettre à jour",
       "saving": "Enregistrement...",
+      "submit": "Enregistrer",
       "form": {
         "email": "Email",
         "firstname": "Prénom",
@@ -1463,6 +1464,22 @@
         "permissionsHeader": "Permissions",
         "actionsHeader": "Actions",
         "emptyRole": "-"
+      },
+      "scope": {
+        "allLabel": "Toutes les résidences",
+        "allHint": "Ce gestionnaire voit les candidatures de toutes vos résidences, y compris celles que vous créerez plus tard.",
+        "restrictedHint": "Ce gestionnaire ne voit que les candidatures des résidences cochées. Une résidence créée plus tard ne lui sera pas visible tant que vous ne l'aurez pas ajoutée.",
+        "legend": "Résidences dont ce gestionnaire voit les candidatures",
+        "searchLabel": "Rechercher une résidence",
+        "searchPlaceholder": "Nom de la résidence",
+        "selectedCount": "{count} sélectionnée(s)",
+        "selectAll": "Tout sélectionner",
+        "selectNone": "Tout désélectionner",
+        "refineSearch": "Affinez votre recherche pour voir les {count} autres résidences.",
+        "emptyWarning": "Ce gestionnaire n'aura accès à aucune candidature. L'onglet Contacts lui sera masqué.",
+        "summaryAll": "Périmètre : toutes les résidences",
+        "summaryNone": "Périmètre : aucune résidence",
+        "summaryCount": "Périmètre : {count} résidence(s)"
       }
     },
     "header": {
@@ -1642,6 +1659,7 @@
       "defaultCandidateName": "Candidat",
       "searchResidenceLabel": "Rechercher une résidence",
       "settingsButtonTitle": "Réglages du mode de contact",
+      "moderationButtonTitle": "Gérer les droits de modération",
       "noResidence": "Aucune résidence.",
       "toBeCalledBack": "{count} à rappeler",
       "residenceTitle": "Résidence {name}",
@@ -1733,13 +1751,41 @@
         "dossierFacileHint": "Recevez un dossier complet des candidats : pièce d'identité, avis d'imposition, justificatifs de ressources, etc.",
         "noneLabel": "Désactiver les candidatures",
         "noneHint": "Les visiteurs sont redirigés vers votre site Internet",
-        "lockedHint": "{hint} — bientôt disponible"
+        "lockedHint": "{hint} — bientôt disponible",
+        "residences": {
+          "allLabel": "Toutes les résidences",
+          "allHint": "Toutes vos résidences acceptent les candidatures, y compris celles que vous créerez plus tard.",
+          "restrictedHint": "Seules les résidences cochées acceptent les candidatures. Une résidence créée plus tard sera ouverte par défaut.",
+          "legend": "Résidences acceptant les candidatures",
+          "searchLabel": "Rechercher une résidence",
+          "searchPlaceholder": "Nom de la résidence",
+          "selectedCount": "{count} résidence(s) ouverte(s)",
+          "selectAll": "Tout sélectionner",
+          "selectNone": "Tout désélectionner",
+          "refineSearch": "Affinez votre recherche pour voir les {count} autres résidences.",
+          "emptyWarning": "Aucune résidence n'acceptera de candidature : les visiteurs seront redirigés vers votre site."
+        }
       },
       "promoBanner": {
         "title": "Recevez facilement des candidatures",
         "text": "d'étudiants sur votre espace",
         "link": "Recevoir des candidatures",
         "dismiss": "Masquer ce message"
+      },
+      "moderation": {
+        "pageTitle": "Paramètres de modération",
+        "subtitle": "Sélectionnez les gestionnaires pouvant modérer les dossiers des candidats",
+        "hint": "Gestionnaires pouvant voir et modérer les dossiers des candidats. Sélection éditable ultérieurement.",
+        "legend": "Gestionnaires autorisés à modérer les dossiers des candidats",
+        "toggleLabel": "Gestion des candidatures",
+        "toggleDescription": "Autorise {name} à voir et modérer les dossiers des candidats",
+        "onlyPermissionHint": "Seule autorisation de ce gestionnaire : modifiez-la depuis Gestion des utilisateurs.",
+        "empty": "Aucun gestionnaire pour le moment.",
+        "addUser": "Ajouter un gestionnaire",
+        "save": "Enregistrer",
+        "saving": "Enregistrement...",
+        "toastSuccess": "Droits de modération mis à jour",
+        "toastError": "Erreur lors de la mise à jour des droits de modération"
       }
     },
     "ownerForm": {
@@ -1760,5 +1806,14 @@
     "resultsLabel": "Carte des résidences correspondant à votre recherche. La liste des résultats, affichée à côté de la carte, en donne l'équivalent textuel.",
     "accommodationLabel": "Carte de localisation de la résidence. L'adresse complète figure en texte au-dessus de la carte.",
     "markerLabel": "Emplacement de la résidence sur la carte"
+  },
+  "impersonation": {
+    "title": "Mode usurpation actif",
+    "browsingAs": "vous naviguez en tant que",
+    "stop": "Revenir à mon compte",
+    "stopping": "Retour en cours...",
+    "impersonate": "Usurper ce compte",
+    "impersonateHint": "Ouvre une session de recette sous cette identité, pendant 1 heure.",
+    "cannotImpersonateSelf": "Vous ne pouvez pas usurper votre propre compte."
   }
 }

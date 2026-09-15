@@ -207,6 +207,7 @@ export const accommodationsRouter = createTRPCRouter({
         ownerLandingUrl: owners.landingUrl,
         ownerImage: owners.image,
         ownerContactMode: owners.contactMode,
+        acceptsApplications: accommodations.acceptsApplications,
         citySlug: cities.slug,
         cityBbox: bboxSelect(cities),
         departmentCode: departments.code,
@@ -301,7 +302,9 @@ export const accommodationsRouter = createTRPCRouter({
             url: row.ownerUrl ?? '',
             landingUrl: row.ownerLandingUrl ?? null,
             imageBase64: row.ownerImage ? `data:image/jpeg;base64,${Buffer.from(row.ownerImage).toString('base64')}` : null,
-            contactMode: row.ownerContactMode ?? EOwnerContactMode.NONE,
+            // Une résidence fermée aux candidatures se présente comme un parc sans parcours :
+            // tous les boutons de candidature en dépendent déjà, rien d'autre n'est à filtrer.
+            contactMode: row.acceptsApplications ? (row.ownerContactMode ?? EOwnerContactMode.NONE) : EOwnerContactMode.NONE,
           }
         : null,
       citySlug: row.citySlug,

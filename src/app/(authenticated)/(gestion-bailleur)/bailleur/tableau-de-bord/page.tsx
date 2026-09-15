@@ -90,7 +90,7 @@ export default async function TableauDeBordPage({ searchParams }: TableauDeBordP
                 <span className="fr-hidden fr-unhidden-md ri-question-line" />
                 <div className="fr-flex fr-direction-column fr-flex-gap-2v">
                   <span className="fr-text--bold">{t('dashboard.helpSection.faq.title')}</span>
-                  <Link className="fr-link" href={buildHref('/bailleur/centre-d-aide', awaitedSearchParams)}>
+                  <Link className="fr-link fr-align-self-start" href={buildHref('/bailleur/centre-d-aide', awaitedSearchParams)}>
                     {t('dashboard.helpSection.faq.link')}
                   </Link>
                 </div>

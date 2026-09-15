@@ -114,5 +114,8 @@ export const ZPrepareStudentLifeAccommodationResidence = z.object({
 })
 export type TPrepareStudentLifeAccommodationResidence = z.infer<typeof ZPrepareStudentLifeAccommodationResidence>
 
-export const ZAccomodationMy = ZAccomodation.extend(ZAmenities.shape).extend({ isImported: z.boolean() })
+export const ZAccomodationMy = ZAccomodation.extend(ZAmenities.shape).extend({
+  isImported: z.boolean(),
+  acceptsApplications: z.boolean(),
+})
 export type TAccomodationMy = z.infer<typeof ZAccomodationMy>

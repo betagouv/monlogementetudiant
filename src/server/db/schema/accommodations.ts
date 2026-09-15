@@ -47,6 +47,7 @@ export const accommodations = pgTable(
     wifi: boolean('wifi'),
     bathroom: varchar('bathroom', { length: 50 }),
     acceptWaitingList: boolean('accept_waiting_list'),
+    acceptsApplications: boolean('accepts_applications').notNull().default(true),
     scholarshipHoldersPriority: boolean('scholarship_holders_priority'),
     socialHousingRequired: boolean('social_housing_required'),
 

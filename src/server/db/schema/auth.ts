@@ -38,6 +38,10 @@ export const user = pgTable(
     birthdate: date('birthdate', { mode: 'string' }), // 'YYYY-MM-DD'
     scholarshipStatus: scholarshipStatusEnum('scholarship_status'),
     scholarshipType: scholarshipTypeEnum('scholarship_type'),
+    applicationScopeRestricted: boolean('application_scope_restricted').notNull().default(false),
+    banned: boolean('banned').notNull().default(false),
+    banReason: text('ban_reason'),
+    banExpires: timestamp('ban_expires', { withTimezone: true }),
   },
   (t) => [index('user_owner_id_idx').on(t.ownerId)],
 )
@@ -53,6 +57,7 @@ export const session = pgTable('session', {
   userAgent: text('user_agent'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  impersonatedBy: text('impersonated_by'),
 })
 
 export const account = pgTable('account', {

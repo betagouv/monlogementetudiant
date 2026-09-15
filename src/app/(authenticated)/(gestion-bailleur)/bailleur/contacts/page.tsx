@@ -46,7 +46,7 @@ export default async function ContactsPage({ searchParams }: ContactsPageProps) 
             <ContactsLanding />
           </>
         ) : (
-          <ResidencesGrid mode={mode} />
+          <ResidencesGrid mode={mode} canManageModeration={ctx.isAdministrator} resolvedOwnerId={ctx.owner.id} />
         )}
       </div>
     </HydrationBoundary>

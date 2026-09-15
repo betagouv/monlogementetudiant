@@ -2,7 +2,16 @@ import { notFound, redirect } from 'next/navigation'
 import { cache } from 'react'
 import { getServerSession } from '~/services/better-auth'
 import { getOwnerForUser } from './get-owner-for-user'
-import { type BailleurPermission, type BailleurRole, hasPermission, hasRole, type PermissionCheckUser } from './permissions'
+import {
+  type BailleurPermission,
+  type BailleurRole,
+  canEditOwnAccount,
+  canGrantAdministratorRights,
+  hasPermission,
+  hasRole,
+  isBailleurAdministrator,
+  type PermissionCheckUser,
+} from './permissions'
 
 export const getBailleurContext = cache(async (ownerIdParam?: string) => {
   const session = await getServerSession()
@@ -24,5 +33,8 @@ export const getBailleurContext = cache(async (ownerIdParam?: string) => {
     user: checkUser,
     hasRole: (r: BailleurRole) => hasRole(checkUser, r),
     hasPermission: (p: BailleurPermission) => hasPermission(checkUser, p),
+    isAdministrator: isBailleurAdministrator(checkUser),
+    canGrantAdministratorRights: canGrantAdministratorRights(checkUser),
+    canEditOwnAccount: canEditOwnAccount(checkUser),
   }
 })

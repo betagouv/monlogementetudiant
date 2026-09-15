@@ -18,6 +18,7 @@ import { LinkUserToOwnerDialog } from '~/components/administration/link-user-to-
 import { OwnerForm } from '~/components/administration/owner-form'
 import { OwnerLogoForm } from '~/components/administration/owner-logo-form'
 import { RoleBadge } from '~/components/administration/role-badge'
+import { ImpersonateUserButton } from '~/components/impersonation/impersonate-user-button'
 import { createToast } from '~/components/ui/createToast'
 import { useAdminDeleteOwner } from '~/hooks/use-admin-delete-owner'
 import { useAdminOwner } from '~/hooks/use-admin-owner'
@@ -440,6 +441,7 @@ function UsersTab({
                   </td>
                   <td>
                     <div className="fr-flex fr-flex-gap-1v">
+                      <ImpersonateUserButton userId={u.id} compact />
                       <Button priority="tertiary no outline" size="small" linkProps={{ href: `/administration/utilisateurs/${u.id}` }}>
                         Voir
                       </Button>
