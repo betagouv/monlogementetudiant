@@ -29,8 +29,7 @@ export const trackingRouter = createTRPCRouter({
 
   logAccommodationView: baseProcedure
     .input(
-      // Pas de `referer` : jamais relu, potentiellement porteur de données personnelles (requête de
-      // recherche, e-mail en paramètre) et, en texte libre sur une route publique, de quoi remplir la base.
+      // Pas de `referer` : non exploité, et susceptible de contenir des données personnelles.
       z.object({
         accommodationId: z.number().int().positive(),
       }),

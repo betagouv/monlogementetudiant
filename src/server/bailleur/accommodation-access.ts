@@ -19,8 +19,7 @@ export async function checkAccommodationAccess(userId: string, accommodationWher
   if (!accommodation) return 'not_found'
   if (!usr?.owner || accommodation.ownerId !== usr.owner.id) return 'forbidden'
 
-  // `not_found` et non `forbidden` : un 403 confirmerait l'existence de la résidence, ce qui
-  // laisserait énumérer le parc du bailleur depuis un compte restreint.
+  // Hors périmètre : même réponse qu'une résidence inexistante.
   const scope = await getAccommodationScope(userId)
   return scopeAllowsAccommodationId(scope, accommodation.id) ? 'ok' : 'not_found'
 }

@@ -470,7 +470,7 @@ describe('linkGuestContactRequests', () => {
       contactMode: EOwnerContactMode.CONTACTS,
     })
     await createAccommodation({ slug: 'res-unconfirmed', ownerId: owner!.id }, [typologyDraft('t1', { nbAvailable: 1 })])
-    // Un tiers dépose une demande avec l'adresse de l'étudiant, qui ne clique jamais le lien.
+    // Demande visiteur à l'adresse de l'étudiant, jamais confirmée.
     const forged = await caller.contacts.create({ accommodationSlug: 'res-unconfirmed', ...contactInput, phone: '0699999999' })
 
     const linked = await linkGuestContactRequests('test-user-id', contactInput.email)

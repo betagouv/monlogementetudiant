@@ -98,7 +98,6 @@ describe('recordMagicLinkVerification', () => {
   })
 
   it("n'enregistre rien pour un jeton rattaché à aucun envoi", async () => {
-    // Sinon, n'importe quel GET anonyme sur /magic-link/verify ajouterait une ligne.
     await recordMagicLinkVerification({ token: 'token-inconnu', success: false, userAgent: 'Scanner/1.0' })
     await recordMagicLinkVerification({ token: 'token-inconnu', success: false, userAgent: 'Scanner/1.0' })
 
