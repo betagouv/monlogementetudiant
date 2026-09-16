@@ -3,6 +3,7 @@ import { createLocalAccountIssuer } from 'better-auth/db'
 import { eq } from 'drizzle-orm'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { account, session, user, verification } from '~/server/db/schema/auth'
+import { env } from '~/server/env'
 import { createUser } from './fixtures/factories'
 import './helpers/setup-integration'
 import { getTestDb } from './helpers/test-db'
@@ -107,5 +108,42 @@ describe('réinitialisation du mot de passe', () => {
     await auth.api.resetPassword({ body: { token, newPassword: 'nouveauMotDePasse123!' }, headers: new Headers() })
 
     expect(await getTestDb().select().from(session).where(eq(session.userId, 'etudiant-reset'))).toHaveLength(0)
+  })
+})
+
+describe('routes HTTP Better Auth inutilisées', () => {
+  const call = (path: string, method = 'POST') =>
+    auth.handler(
+      new Request(`${env.BASE_URL}/api/auth${path}`, {
+        method,
+        headers: { 'content-type': 'application/json', origin: env.BASE_URL },
+        body: method === 'POST' ? '{}' : undefined,
+      }),
+    )
+
+  it.each([
+    '/admin/set-user-password',
+    '/admin/update-user',
+    '/admin/set-role',
+    '/admin/create-user',
+    '/admin/remove-user',
+    '/admin/ban-user',
+    '/admin/unban-user',
+    '/admin/revoke-user-session',
+    '/admin/revoke-user-sessions',
+    '/admin/has-permission',
+    '/verify-password',
+  ])('%s répond 404', async (path) => {
+    expect((await call(path)).status).toBe(404)
+  })
+
+  it.each(['/admin/list-users', '/admin/get-user', '/admin/list-user-sessions'])('%s (GET/POST) répond 404', async (path) => {
+    expect((await call(path, 'GET')).status).toBe(404)
+    expect((await call(path)).status).toBe(404)
+  })
+
+  it("garde l'impersonation, utilisée par le back-office", async () => {
+    expect((await call('/admin/impersonate-user')).status).not.toBe(404)
+    expect((await call('/admin/stop-impersonating')).status).not.toBe(404)
   })
 })

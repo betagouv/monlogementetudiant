@@ -34,7 +34,33 @@ export const auth = betterAuth({
   // Les clés d'API v1 ne se créent et ne se gèrent que depuis le back-office (`admin-consumers`, via
   // `auth.api.*`, que ce filtre n'affecte pas). Exposées en HTTP, ces routes laisseraient n'importe quel
   // compte connecté se créer autant de clés qu'il veut et contourner le quota par consommateur.
-  disabledPaths: ['/api-key/create', '/api-key/get', '/api-key/list', '/api-key/update', '/api-key/delete'],
+  //
+  // Même logique pour le plugin admin : le back-office ne s'en sert que pour l'impersonation, tout le reste
+  // passe par tRPC (règles métier, plafond d'administrateurs, journal d'activité). Exposées, ces routes
+  // laisseraient un admin (ou une XSS en contexte admin) changer le mot de passe ou le rôle d'un autre
+  // admin sans trace. `/verify-password` n'a pas d'usage et permettrait de deviner un mot de passe hors
+  // de la limite de débit de `/sign-in`.
+  disabledPaths: [
+    '/api-key/create',
+    '/api-key/get',
+    '/api-key/list',
+    '/api-key/update',
+    '/api-key/delete',
+    '/admin/ban-user',
+    '/admin/create-user',
+    '/admin/get-user',
+    '/admin/has-permission',
+    '/admin/list-user-sessions',
+    '/admin/list-users',
+    '/admin/remove-user',
+    '/admin/revoke-user-session',
+    '/admin/revoke-user-sessions',
+    '/admin/set-role',
+    '/admin/set-user-password',
+    '/admin/unban-user',
+    '/admin/update-user',
+    '/verify-password',
+  ],
   database: drizzleAdapter(db, { provider: 'pg', schema }),
   session: {
     expiresIn: oneDay,
