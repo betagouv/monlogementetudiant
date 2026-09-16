@@ -166,15 +166,36 @@ describe('getDocumentSignedUrl', () => {
     expect(result.redirectUrl).toMatch(/^\/api\/df-redirect\?token=/)
   })
 
+  it('grants access to a tenant who also applied to another owner, whatever the row order', async () => {
+    // Candidature chez un autre bailleur insérée en premier : un `findFirst` non filtré par bailleur la
+    // renverrait, et l'accès serait refusé à tort.
+    await createUser({ id: 'other-owner-user', name: 'Other', email: 'other-owner@test.com', role: 'owner' })
+    const otherOwner = await createOwner({ name: 'Other Owner Shared', slug: 'other-owner-shared', userId: 'other-owner-user' })
+    const otherAccommodation = await createAccommodation({ slug: 'res-other-shared', ownerId: otherOwner.id })
+    const tenant = await createDossierFacileTenant({ userId: 'test-user-id', tenantId: 'df-shared-1', status: 'verified' })
+    await createDossierFacileApplication({ tenantId: tenant.id, accommodationSlug: otherAccommodation.slug, apartmentType: 't1' })
+    const owner = await createOwner({ name: 'Owner Shared', slug: 'owner-shared', userId: 'test-owner-id' })
+    const accommodation = await createAccommodation({ slug: 'res-owner-shared', ownerId: owner.id })
+    await createDossierFacileApplication({ tenantId: tenant.id, accommodationSlug: accommodation.slug, apartmentType: 't1' })
+
+    for (let attempt = 0; attempt < 5; attempt++) {
+      await expect(ownerCaller.bailleur.getDocumentSignedUrl({ type: 'tenantPdf', tenantId: tenant.id })).resolves.toMatchObject({
+        redirectUrl: expect.stringMatching(/^\/api\/df-redirect\?token=/),
+      })
+    }
+  })
+
   it('rejects when owner does not own the accommodation', async () => {
     const otherOwner = await createOwner({ name: 'Other Owner', slug: 'other-owner-df', userId: 'test-admin-id' })
     const accommodation = await createAccommodation({ slug: 'res-other-df', ownerId: otherOwner.id })
     const tenant = await createDossierFacileTenant({ userId: 'test-user-id', tenantId: 'df-other-1', status: 'verified' })
     await createDossierFacileApplication({ tenantId: tenant.id, accommodationSlug: accommodation.slug, apartmentType: 't1' })
 
-    await expect(ownerCaller.bailleur.getDocumentSignedUrl({ type: 'tenantPdf', tenantId: tenant.id })).rejects.toThrow(
-      'You do not own this accommodation',
-    )
+    // NOT_FOUND et non FORBIDDEN : la candidature d'un autre bailleur n'est même pas trouvée, ce qui ne
+    // révèle pas que ce locataire a candidaté ailleurs.
+    await expect(ownerCaller.bailleur.getDocumentSignedUrl({ type: 'tenantPdf', tenantId: tenant.id })).rejects.toMatchObject({
+      code: 'NOT_FOUND',
+    })
   })
 
   it('admin can access any document', async () => {
