@@ -61,7 +61,8 @@ export const StudentProfileForm = ({ initialValues }: StudentProfileFormProps) =
       const result = await authClient.changePassword({
         currentPassword: data.currentPassword,
         newPassword: data.newPassword,
-        revokeOtherSessions: false,
+        // Un changement de mot de passe ferme les autres sessions, dont celle d'un éventuel intrus.
+        revokeOtherSessions: true,
       })
       if (result.error) {
         createToast({ priority: 'error', message: t('passwordError') })

@@ -30,7 +30,7 @@ function logLocalAuthLink(kind: 'activation' | 'connexion' | 'reset-password', e
 export const auth = betterAuth({
   secret: env.AUTH_SECRET,
   baseURL: env.BASE_URL,
-  trustedOrigins: [env.BASE_URL, 'http://localhost:3000'],
+  trustedOrigins: [env.BASE_URL, ...(env.NEXT_PUBLIC_APP_ENV === 'development' ? ['http://localhost:3000'] : [])],
   // Les clés d'API v1 ne se créent et ne se gèrent que depuis le back-office (`admin-consumers`, via
   // `auth.api.*`, que ce filtre n'affecte pas). Exposées en HTTP, ces routes laisseraient n'importe quel
   // compte connecté se créer autant de clés qu'il veut et contourner le quota par consommateur.
@@ -49,6 +49,8 @@ export const auth = betterAuth({
     enabled: true,
     minPasswordLength: 12,
     requireEmailVerification: true,
+    // Un mot de passe réinitialisé ferme toutes les sessions ouvertes, y compris celle d'un éventuel intrus.
+    revokeSessionsOnPasswordReset: true,
     sendResetPassword: async ({ user, url }) => {
       logLocalAuthLink('reset-password', user.email, url)
       await sendResetPasswordEmail(user.email, url)
@@ -95,6 +97,11 @@ export const auth = betterAuth({
   plugins: [
     magicLink({
       expiresIn: MAGIC_LINK_EXPIRES_IN_SECONDS,
+      // Jeton haché en base : une lecture de la table `verification` (dump, backup) ne suffit pas à
+      // ouvrir une session gestionnaire ou admin avec un lien encore valide.
+      storeToken: 'hashed',
+      // Les liens ne partent qu'aux comptes existants : un lien ne doit jamais créer de compte.
+      disableSignUp: true,
       sendMagicLink: async ({ email, url, token }) => {
         const usr = await db.query.user.findFirst({
           where: eq(schema.user.email, email),
