@@ -14,6 +14,7 @@ import { ZBbox, ZTerritories } from '~/schemas/territories'
 const csvParam = (config: { description: string; example: string }) =>
   z
     .string()
+    .max(2000)
     .optional()
     .transform((value) =>
       value
@@ -61,39 +62,57 @@ export const ZAccommodationsListQuery = z.object({
   }),
   bbox: z
     .string()
+    .max(200)
     .optional()
     .openapi({ description: 'Rectangle englobant "xmin,ymin,xmax,ymax" (WGS84).', example: '2.25,48.81,2.42,48.90' }),
-  center: z.string().optional().openapi({ description: 'Centre "lng,lat" pour une recherche par rayon.', example: '2.3522,48.8566' }),
-  radius: z.coerce.number().positive().default(10).openapi({ description: 'Rayon en km (utilisé avec center).', example: 10 }),
-  price_max: intParam({ description: 'Loyer minimum maximal (€/mois).', example: 600, min: 0 }).optional(),
+  center: z
+    .string()
+    .max(200)
+    .optional()
+    .openapi({ description: 'Centre "lng,lat" pour une recherche par rayon.', example: '2.3522,48.8566' }),
+  radius: z.coerce
+    .number()
+    .positive()
+    .max(100)
+    .default(10)
+    .openapi({ description: 'Rayon en km, 100 max (utilisé avec center).', example: 10 }),
+  price_max: intParam({ description: 'Loyer minimum maximal (€/mois).', example: 600, min: 0, max: 100_000 }).optional(),
   crous: boolParam('Ne renvoyer que les résidences CROUS (true) ou exclure le CROUS (false, défaut).'),
   accessible: boolParam('Ne renvoyer que les résidences avec logements PMR.'),
   coliving: boolParam('Ne renvoyer que les résidences proposant de la colocation.'),
   available: boolParam('Ne renvoyer que les résidences avec des disponibilités.'),
-  owner_slug: z.string().optional().openapi({ description: "Slug d'un gestionnaire/bailleur.", example: 'crous-paris' }),
-  page: intParam({ description: 'Numéro de page (à partir de 1).', example: 1, min: 1 }).default(1),
+  owner_slug: z.string().max(200).optional().openapi({ description: "Slug d'un gestionnaire/bailleur.", example: 'crous-paris' }),
+  page: intParam({ description: 'Numéro de page (à partir de 1, 1000 max).', example: 1, min: 1, max: 1000 }).default(1),
   page_size: intParam({ description: 'Taille de page (max 100).', example: 12, min: 1, max: 100 }).default(12),
 })
 
 export const ZNearbyQuery = z
   .object({
-    center: z.string().optional().openapi({ description: 'Centre "lng,lat".', example: '2.3522,48.8566' }),
-    city: z.string().optional().openapi({ description: "Slug (ou nom) d'une ville : renvoie les résidences alentour.", example: 'paris' }),
-    radius: z.coerce.number().positive().default(10).openapi({ description: 'Rayon en km.', example: 10 }),
+    center: z.string().max(200).optional().openapi({ description: 'Centre "lng,lat".', example: '2.3522,48.8566' }),
+    city: z
+      .string()
+      .max(200)
+      .optional()
+      .openapi({ description: "Slug (ou nom) d'une ville : renvoie les résidences alentour.", example: 'paris' }),
+    radius: z.coerce.number().positive().max(100).default(10).openapi({ description: 'Rayon en km (100 max).', example: 10 }),
     crous: boolParam('CROUS uniquement (true) ou exclure le CROUS (false, défaut).'),
     accessible: boolParam('Logements PMR uniquement.'),
     coliving: boolParam('Colocation uniquement.'),
     available: boolParam('Disponibilités uniquement.'),
-    price_max: intParam({ description: 'Loyer minimum maximal (€/mois).', example: 600, min: 0 }).optional(),
-    page: intParam({ description: 'Numéro de page.', example: 1, min: 1 }).default(1),
+    price_max: intParam({ description: 'Loyer minimum maximal (€/mois).', example: 600, min: 0, max: 100_000 }).optional(),
+    page: intParam({ description: 'Numéro de page (1000 max).', example: 1, min: 1, max: 1000 }).default(1),
     page_size: intParam({ description: 'Taille de page (max 100).', example: 6, min: 1, max: 100 }).default(12),
   })
   .openapi('NearbyQuery')
 
-const searchParam = z.string().optional().openapi({ description: 'Recherche textuelle par nom (insensible à la casse).', example: 'gren' })
+const searchParam = z
+  .string()
+  .max(100)
+  .optional()
+  .openapi({ description: 'Recherche textuelle par nom (insensible à la casse).', example: 'gren' })
 
 export const ZCitiesQuery = z.object({
-  department: z.string().optional().openapi({ description: 'Filtrer par code de département.', example: '75' }),
+  department: z.string().max(10).optional().openapi({ description: 'Filtrer par code de département.', example: '75' }),
   popular: boolParam('Ne renvoyer que les villes marquées « populaires ».'),
   search: searchParam,
 })

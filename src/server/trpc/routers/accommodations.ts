@@ -29,24 +29,33 @@ import { bboxSelect } from '../utils/spatial-helpers'
 // d'autres routers (favorites, bailleur) et par `get-my-accommodations`.
 export { priceMaxComputed, rowsToAccommodationDTOs, toAccommodationDTO } from '~/server/accommodations/list-query'
 
+// Procédures publiques : sans borne, `pageSize: 100000` extrait tout le parc en une requête et un rayon
+// démesuré fait parcourir toute la table à PostGIS. L'API v1 (`publicCaller`) monte jusqu'à 100 par page.
+const MAX_PAGE_SIZE = 100
+const MAX_PARAM_LENGTH = 200
+const ZPage = z.number().int().min(1).max(1000).default(1)
+const ZPageSize = z.number().int().min(1).max(MAX_PAGE_SIZE)
+const ZRadius = z.number().min(0).max(100)
+const ZPriceMax = z.number().nonnegative().max(100_000)
+
 export const accommodationsRouter = createTRPCRouter({
   list: baseProcedure
     .input(
       z.object({
-        bbox: z.string().optional(),
-        center: z.string().optional(), // "lng,lat"
-        radius: z.number().default(10), // km
-        page: z.number().default(1),
-        pageSize: z.number().default(12),
+        bbox: z.string().max(MAX_PARAM_LENGTH).optional(),
+        center: z.string().max(MAX_PARAM_LENGTH).optional(), // "lng,lat"
+        radius: ZRadius.default(10), // km
+        page: ZPage,
+        pageSize: ZPageSize.default(12),
         isAccessible: z.boolean().optional(),
         hasColiving: z.boolean().optional(),
         onlyWithAvailability: z.boolean().optional(),
-        priceMax: z.number().optional(),
+        priceMax: ZPriceMax.optional(),
         viewCrous: z.boolean().default(false),
-        academyId: z.number().optional(),
-        ownerSlug: z.string().optional(),
-        cityId: z.number().optional(),
-        departmentId: z.number().optional(),
+        academyId: z.number().int().optional(),
+        ownerSlug: z.string().max(MAX_PARAM_LENGTH).optional(),
+        cityId: z.number().int().optional(),
+        departmentId: z.number().int().optional(),
       }),
     )
     .query(async ({ input }) => {
@@ -90,17 +99,17 @@ export const accommodationsRouter = createTRPCRouter({
   listExpandedByCity: baseProcedure
     .input(
       z.object({
-        city: z.string().min(1),
-        radius: z.number().default(EXPANDED_SEARCH_RADIUS_KM),
-        page: z.number().default(1),
-        pageSize: z.number().default(EXPANDED_SEARCH_PAGE_SIZE),
+        city: z.string().min(1).max(MAX_PARAM_LENGTH),
+        radius: ZRadius.default(EXPANDED_SEARCH_RADIUS_KM),
+        page: ZPage,
+        pageSize: ZPageSize.default(EXPANDED_SEARCH_PAGE_SIZE),
         isAccessible: z.boolean().optional(),
         hasColiving: z.boolean().optional(),
         onlyWithAvailability: z.boolean().optional(),
-        priceMax: z.number().optional(),
+        priceMax: ZPriceMax.optional(),
         viewCrous: z.boolean().default(false),
-        ownerSlug: z.string().optional(),
-        excludeIds: z.array(z.number()).optional(),
+        ownerSlug: z.string().max(MAX_PARAM_LENGTH).optional(),
+        excludeIds: z.array(z.number().int()).max(MAX_PAGE_SIZE).optional(),
       }),
     )
     .query(async ({ input }) => {

@@ -4,6 +4,33 @@ import './helpers/setup-integration'
 import { typologyDraft } from '../server/lib/typologies'
 import { caller } from './helpers/test-caller'
 
+describe('accommodations — bornes des entrées publiques', () => {
+  it('refuse une taille de page démesurée', async () => {
+    await expect(caller.accommodations.list({ pageSize: 100_000 })).rejects.toMatchObject({ code: 'BAD_REQUEST' })
+  })
+
+  it('refuse une page nulle ou négative', async () => {
+    await expect(caller.accommodations.list({ page: -1 })).rejects.toMatchObject({ code: 'BAD_REQUEST' })
+  })
+
+  it('refuse un rayon démesuré et une liste d’exclusion trop longue', async () => {
+    await expect(caller.accommodations.listExpandedByCity({ city: 'paris', radius: 1e9 })).rejects.toMatchObject({ code: 'BAD_REQUEST' })
+    const excludeIds = Array.from({ length: 101 }, (_, i) => i + 1)
+    await expect(caller.accommodations.listExpandedByCity({ city: 'paris', excludeIds })).rejects.toMatchObject({ code: 'BAD_REQUEST' })
+  })
+
+  it('refuse un batch HTTP au-delà de la taille maximale', async () => {
+    const { GET } = await import('~/app/api/trpc/[trpc]/route')
+    const paths = Array.from({ length: 21 }, () => 'territories.search').join(',')
+    const input = Object.fromEntries(Array.from({ length: 21 }, (_, i) => [i, { json: { q: 'par' } }]))
+    const url = `http://localhost/api/trpc/${paths}?batch=1&input=${encodeURIComponent(JSON.stringify(input))}`
+
+    const res = await GET(new Request(url))
+
+    expect(res.status).toBe(400)
+  })
+})
+
 describe('accommodations.list', () => {
   it('returns only published accommodations with geom', async () => {
     await createAccommodation({
