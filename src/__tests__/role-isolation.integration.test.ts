@@ -169,13 +169,14 @@ describe('admin can access student routes', () => {
 // ─── Rôle inconnu : ni espace étudiant, ni espace bailleur ──────────────────
 
 describe('unknown role is denied everywhere', () => {
-  const unknownRoleCaller = createCallerFactory(appRouter)({
+  const createCaller = createCallerFactory(appRouter)
+  const unknownRoleCaller = createCaller({
     session: {
       user: { id: 'test-unknown-id', email: 'unknown@test.com', name: 'Unknown', role: 'moderator', emailVerified: true },
       session: { id: 'unknown-session', userId: 'test-unknown-id', token: 'unknown-token', expiresAt: new Date(Date.now() + 3600000) },
     },
     clientIp: null,
-  } as unknown as Parameters<ReturnType<typeof createCallerFactory<typeof appRouter>>>[0])
+  } as unknown as Parameters<typeof createCaller>[0])
 
   it('rejects an unknown role from owner routes', async () => {
     await expect(unknownRoleCaller.bailleur.list({ page: 1 })).rejects.toThrow('Owner or admin role required')
