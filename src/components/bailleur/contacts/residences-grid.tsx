@@ -17,11 +17,12 @@ import styles from './residences-grid.module.css'
 
 interface Props {
   mode: Exclude<EOwnerContactMode, EOwnerContactMode.NONE>
-  canManageModeration: boolean
+  /** Modération et changement du mode de contact (qui vaut pour tout le bailleur) : administrateurs seulement. */
+  isAdministrator: boolean
   resolvedOwnerId: number
 }
 
-export const ResidencesGrid = ({ mode, canManageModeration, resolvedOwnerId }: Props) => {
+export const ResidencesGrid = ({ mode, isAdministrator, resolvedOwnerId }: Props) => {
   const t = useTranslations('bailleur.contacts')
   const trpc = useTRPC()
   const searchParams = useSearchParams()
@@ -62,20 +63,22 @@ export const ResidencesGrid = ({ mode, canManageModeration, resolvedOwnerId }: P
               />
             )}
           />
-          {canManageModeration && (
-            <Button
-              linkProps={{ href: buildHref('/bailleur/contacts/moderation', searchParams) }}
-              priority="secondary"
-              iconId="ri-team-line"
-              title={t('moderationButtonTitle')}
-            />
+          {isAdministrator && (
+            <>
+              <Button
+                linkProps={{ href: buildHref('/bailleur/contacts/moderation', searchParams) }}
+                priority="secondary"
+                iconId="ri-team-line"
+                title={t('moderationButtonTitle')}
+              />
+              <Button
+                {...contactModeSettingsModal.buttonProps}
+                priority="secondary"
+                iconId="ri-settings-3-line"
+                title={t('settingsButtonTitle')}
+              />
+            </>
           )}
-          <Button
-            {...contactModeSettingsModal.buttonProps}
-            priority="secondary"
-            iconId="ri-settings-3-line"
-            title={t('settingsButtonTitle')}
-          />
         </div>
       </div>
 
@@ -97,7 +100,7 @@ export const ResidencesGrid = ({ mode, canManageModeration, resolvedOwnerId }: P
         </div>
       )}
 
-      <ContactModeSettingsModal currentMode={mode} ownerId={ownerId} resolvedOwnerId={resolvedOwnerId} />
+      {isAdministrator && <ContactModeSettingsModal currentMode={mode} ownerId={ownerId} resolvedOwnerId={resolvedOwnerId} />}
     </>
   )
 }

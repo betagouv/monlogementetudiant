@@ -13,7 +13,12 @@ import dossierFacile from '~/images/dossier-facile.svg'
 import { useTRPC } from '~/server/trpc/client'
 import { isDossierFacileSelectable } from '~/utils/feature-flags'
 
-export const ContactsLanding = () => {
+interface Props {
+  /** Le mode de contact vaut pour tout le bailleur : seul un administrateur peut l'activer. */
+  isAdministrator: boolean
+}
+
+export const ContactsLanding = ({ isAdministrator }: Props) => {
   const t = useTranslations('bailleur.contacts.landing')
   const trpc = useTRPC()
   const router = useRouter()
@@ -43,6 +48,7 @@ export const ContactsLanding = () => {
           <Binders color="blue-ecume" width={80} height={80} />
           <h2 className="fr-h3 fr-text--center fr-mb-0">{t('title')}</h2>
           <p className="fr-text--center fr-text--lg">{t('subtitle')}</p>
+          {!isAdministrator && <p className="fr-text--center fr-text-mention--grey">{t('administratorOnly')}</p>}
         </div>
 
         <div className="fr-flex fr-direction-column fr-direction-md-row">
@@ -51,9 +57,11 @@ export const ContactsLanding = () => {
 
             <h3 className="fr-h5 fr-text-title--blue-france fr-mb-0">{t('contactsTitle')}</h3>
             <p className="fr-text--sm fr-mb-0">{t('contactsDescription')}</p>
-            <Button priority="secondary" disabled={isPending} onClick={() => activate(EOwnerContactMode.CONTACTS)} size="small">
-              {t('contactsCta')}
-            </Button>
+            {isAdministrator && (
+              <Button priority="secondary" disabled={isPending} onClick={() => activate(EOwnerContactMode.CONTACTS)} size="small">
+                {t('contactsCta')}
+              </Button>
+            )}
           </div>
 
           <div className="fr-flex fr-align-items-center fr-justify-content-center fr-px-4w" aria-hidden="true">
@@ -65,17 +73,19 @@ export const ContactsLanding = () => {
 
             <h3 className="fr-h5 fr-text-title--blue-france fr-mb-0">{t('dossierFacileTitle')}</h3>
             <p className="fr-text--sm fr-mb-0">{t('dossierFacileDescription')}</p>
-            <div className="fr-flex fr-direction-column fr-flex-gap-1v">
-              <Button
-                priority="primary"
-                disabled={isPending || !dossierFacileSelectable}
-                onClick={() => activate(EOwnerContactMode.DOSSIER_FACILE)}
-                size="small"
-              >
-                {t('dossierFacileCta')}
-              </Button>
-              {!dossierFacileSelectable && <span className="fr-text--xs fr-text-mention--grey fr-mb-0">{t('comingSoon')}</span>}
-            </div>
+            {isAdministrator && (
+              <div className="fr-flex fr-direction-column fr-flex-gap-1v">
+                <Button
+                  priority="primary"
+                  disabled={isPending || !dossierFacileSelectable}
+                  onClick={() => activate(EOwnerContactMode.DOSSIER_FACILE)}
+                  size="small"
+                >
+                  {t('dossierFacileCta')}
+                </Button>
+                {!dossierFacileSelectable && <span className="fr-text--xs fr-text-mention--grey fr-mb-0">{t('comingSoon')}</span>}
+              </div>
+            )}
           </div>
         </div>
       </div>
