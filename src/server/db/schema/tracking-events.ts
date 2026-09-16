@@ -49,5 +49,8 @@ export const trackingEvents = pgTable(
     // Sert la fenêtre de déduplication (24 h) de `tracking-event-logger.ts`. `session_id` est
     // toujours renseigné : rien à gagner en partiel ici.
     index('tracking_event_session_created_idx').on(t.sessionId, t.createdAt),
+    // Sert la clé étrangère `ON DELETE SET NULL` : sans lui, chaque suppression de compte parcourt toute
+    // la table. `user_id` n'est renseigné que pour les visiteurs connectés, d'où l'index partiel.
+    index('tracking_event_user_id_idx').on(t.userId).where(sql`${t.userId} is not null`),
   ],
 )
