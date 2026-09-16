@@ -25,7 +25,6 @@ export { loginAttemptStatusEnum, loginAttempts } from './login-attempts'
 export { newsletterSubscriptions } from './newsletter-subscriptions'
 export { ownerFeedback, ownerFeedbackStatusEnum } from './owner-feedback'
 export { ownerContactModeEnum, owners } from './owners'
-export { publicRateLimits } from './public-rate-limits'
 export { questionsAnswers } from './questions-answers'
 export {
   academiesRelations,

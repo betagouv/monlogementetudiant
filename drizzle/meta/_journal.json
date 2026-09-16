@@ -484,6 +484,13 @@
       "when": 1789567069994,
       "tag": "0068_merge_case_duplicate_accounts",
       "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1789573431178,
+      "tag": "0069_drop_public_rate_limit",
+      "breakpoints": true
     }
   ]
 }
