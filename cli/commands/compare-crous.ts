@@ -1,6 +1,5 @@
 import fs from 'node:fs/promises'
 import { eq, or, sql } from 'drizzle-orm'
-import * as XLSX from 'xlsx'
 import { closeDb, db } from '~/server/db'
 import { accommodations, accommodationTypologies, externalSources, owners } from '~/server/db/schema'
 import { generateSlug } from '~/server/trpc/utils/accommodation-helpers'
@@ -10,11 +9,12 @@ import {
   CATEGORIES,
   cleanNumber,
   getDuplicatedUairnes,
-  getSheet,
+  getSheetRows,
   mapTypologie,
   maxValue,
   minValue,
   normalizeText,
+  readWorkbook,
   type TypoCategory,
 } from '../lib/crous-helpers'
 
@@ -148,13 +148,11 @@ function mergeBounds(current: Bounds | undefined, next: Bounds): Bounds {
   }
 }
 
-function loadExpectedResidences(filePath: string, limit?: number): ExpectedResidence[] {
-  const workbook = XLSX.readFile(filePath)
-  const residencesSheet = getSheet(workbook, 'Liste residences', 0)
-  const typologiesSheet = getSheet(workbook, 'Liste types de lgt', 1)
+async function loadExpectedResidences(filePath: string, limit?: number): Promise<ExpectedResidence[]> {
+  const workbook = await readWorkbook(filePath)
 
-  const residences = XLSX.utils.sheet_to_json<CrousResidenceRow>(residencesSheet)
-  const typologies = XLSX.utils.sheet_to_json<CrousTypologyRow>(typologiesSheet)
+  const residences = getSheetRows<CrousResidenceRow>(workbook, 'Liste residences', 0)
+  const typologies = getSheetRows<CrousTypologyRow>(workbook, 'Liste types de lgt', 1)
   const duplicatedUairnes = getDuplicatedUairnes(residences)
   const typologiesByResidence = new Map<string, Map<TypoCategory, Bounds>>()
 
@@ -359,7 +357,7 @@ async function loadDbResidences(ownerNameOrSlug: string): Promise<DbResidence[]>
 export async function compareCrous(filePath: string, options: Options) {
   try {
     const owner = options.owner ?? 'crous'
-    const expectedResidences = loadExpectedResidences(filePath, options.limit)
+    const expectedResidences = await loadExpectedResidences(filePath, options.limit)
     const dbResidences = await loadDbResidences(owner)
 
     const bySourceId = new Map<string, DbResidence>()

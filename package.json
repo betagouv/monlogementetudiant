@@ -67,6 +67,7 @@
     "react-hook-form": "^7.85.0",
     "react-hot-toast": "^2.6.0",
     "react-leaflet": "^5.0.0",
+    "read-excel-file": "^9.3.10",
     "recharts": "^3.10.1",
     "sharp": "^0.35.4",
     "slugify": "^1.6.9",
@@ -76,7 +77,6 @@
     "tsx": "^4.23.12",
     "use-debounce": "^10.1.1",
     "usehooks-ts": "^3.1.1",
-    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "zod": "^4.4.3"
   },
   "devDependencies": {

@@ -1,5 +1,4 @@
 import { eq } from 'drizzle-orm'
-import * as XLSX from 'xlsx'
 import { closeDb, db } from '~/server/db'
 import { accommodations } from '~/server/db/schema'
 import { mergeTypologies, type TypologyPatch } from '~/server/lib/typologies'
@@ -13,12 +12,13 @@ import {
   type CrousResidenceRow,
   cleanNumber,
   getDuplicatedUairnes,
-  getSheet,
+  getSheetRows,
   loadDbResidences,
   type MinMaxBounds,
   mapTypologie,
   mergeMinMaxBounds,
   normalizeText,
+  readWorkbook,
   summarizeBounds,
   type TypoCategory,
 } from '../lib/crous-helpers'
@@ -47,10 +47,10 @@ type Options = {
   limit?: number
 }
 
-function loadExpectedSurfaces(filePath: string, limit?: number): ExpectedResidenceSurfaces[] {
-  const workbook = XLSX.readFile(filePath)
-  const residences = XLSX.utils.sheet_to_json<CrousResidenceRow>(getSheet(workbook, 'Liste residences', 0))
-  const typologies = XLSX.utils.sheet_to_json<CrousTypologyRow>(getSheet(workbook, 'Liste types de lgt', 1))
+async function loadExpectedSurfaces(filePath: string, limit?: number): Promise<ExpectedResidenceSurfaces[]> {
+  const workbook = await readWorkbook(filePath)
+  const residences = getSheetRows<CrousResidenceRow>(workbook, 'Liste residences', 0)
+  const typologies = getSheetRows<CrousTypologyRow>(workbook, 'Liste types de lgt', 1)
   const duplicatedUairnes = getDuplicatedUairnes(residences)
 
   const surfacesByResidence = new Map<string, Map<TypoCategory, MinMaxBounds>>()
@@ -96,7 +96,7 @@ export async function importCrousSurfaces(filePath: string, options: Options) {
 
   try {
     const owner = options.owner ?? 'crous'
-    const expectedResidences = loadExpectedSurfaces(filePath, options.limit)
+    const expectedResidences = await loadExpectedSurfaces(filePath, options.limit)
     const dbResidences = await loadDbResidences(owner)
     const { bySourceId, byName, bySlug } = buildResidenceLookup(dbResidences)
 

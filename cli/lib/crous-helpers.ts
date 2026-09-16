@@ -1,5 +1,5 @@
 import { and, eq, or, sql } from 'drizzle-orm'
-import * as XLSX from 'xlsx'
+import readXlsxFile, { type Sheet } from 'read-excel-file/node'
 import type { TypologyType } from '~/schemas/accommodations/typology'
 import { db } from '~/server/db'
 import { accommodations, externalSources, owners } from '~/server/db/schema'
@@ -84,13 +84,24 @@ export function mapTypologie(typologie: string | undefined): TypoCategory {
   return 't1'
 }
 
-export function getSheet(workbook: XLSX.WorkBook, name: string, fallbackIndex: number): XLSX.WorkSheet {
+export function readWorkbook(filePath: string): Promise<Sheet[]> {
+  return readXlsxFile(filePath, { trim: false })
+}
+
+export function getSheetRows<T>(workbook: Sheet[], name: string, fallbackIndex: number): T[] {
   const normalizedName = normalizeText(name)
-  const sheetName =
-    workbook.SheetNames.find((candidate) => normalizeText(candidate) === normalizedName) ?? workbook.SheetNames[fallbackIndex]
-  const sheet = workbook.Sheets[sheetName]
+  const sheet = workbook.find((candidate) => normalizeText(candidate.sheet) === normalizedName) ?? workbook[fallbackIndex]
   if (!sheet) throw new Error(`Onglet XLSX introuvable: ${name}`)
-  return sheet
+
+  const [header = [], ...rows] = sheet.data
+  return rows.flatMap((row) => {
+    const entry: Record<string, unknown> = {}
+    header.forEach((column, index) => {
+      const value = row[index]
+      if (column != null && value != null) entry[String(column)] = value
+    })
+    return Object.keys(entry).length > 0 ? [entry as T] : []
+  })
 }
 
 export function buildDisplaySourceId(row: CrousResidenceRow): string {
