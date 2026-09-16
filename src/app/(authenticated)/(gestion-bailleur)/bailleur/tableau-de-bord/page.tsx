@@ -113,7 +113,7 @@ export default async function TableauDeBordPage({ searchParams }: TableauDeBordP
           <div>
             <span className="fr-h3 fr-text--bold">{t('dashboard.priorityActions.title')}</span>
             <div className={styles.actionsGrid}>
-              {ctx.owner.contactMode === EOwnerContactMode.NONE && ctx.hasPermission('manage_applications') && (
+              {ctx.owner.contactMode === EOwnerContactMode.NONE && ctx.isAdministrator && (
                 <div className={styles.actionCard}>
                   <div className={styles.actionHeader}>
                     <Link className="fr-link fr-link--no-underline" href={buildHref('/bailleur/contacts', awaitedSearchParams)}>
