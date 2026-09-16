@@ -1,0 +1,83 @@
+{
+  "sheetNames": ["Lisez-moi", "Liste résidences", "Liste types de lgt"],
+  "residences": [
+    {
+      "code_crous": 21,
+      "nom_crous": "Crous Paris",
+      "secteur": "Paris Centre",
+      "code_residence": 1001,
+      "nom_residence": "Résidence Jean Zay",
+      "uairne": "0751234A",
+      "description_residence": "<p>Proche métro</p>",
+      "adresse_residence": "12 rue de l'Université - 75007 Paris",
+      "longitude": 2.3212,
+      "latitude": 48.8581
+    },
+    {
+      "code_crous": 21,
+      "nom_crous": "Crous Paris",
+      "code_residence": 1002,
+      "nom_residence": "Cité U Montsouris",
+      "adresse_residence": "17 bd Jourdan - 75014 PARIS CEDEX 14",
+      "longitude": 2.338,
+      "latitude": 48.822
+    },
+    {
+      "code_crous": 35,
+      "nom_crous": "Crous Rennes",
+      "secteur": "Villejean",
+      "code_residence": "1003",
+      "nom_residence": "Résidence  Beaulieu ",
+      "uairne": "0351111B",
+      "adresse_residence": "  Campus de Beaulieu - 35042 Rennes  ",
+      "longitude": -1.6389,
+      "latitude": 48.1173
+    }
+  ],
+  "typologies": [
+    {
+      "code_crous": 21,
+      "code_residence": 1001,
+      "code_lgt": 1,
+      "nom_lgt": "T1",
+      "typologie": "APT1",
+      "surface_min": 18.5,
+      "surface_max": 22,
+      "loyer_min": 420.5,
+      "loyer_max": 480
+    },
+    {
+      "code_crous": 21,
+      "code_residence": 1001,
+      "code_lgt": 2,
+      "nom_lgt": "Chambre",
+      "typologie": "CHAMBRE",
+      "surface_min": "9,5",
+      "surface_max": 12,
+      "loyer_min": 250
+    },
+    {
+      "code_crous": 21,
+      "code_residence": 1002,
+      "code_lgt": 3,
+      "nom_lgt": "T2",
+      "description_lgt": "Colocation possible",
+      "typologie": "APT2+",
+      "surface_min": 35,
+      "surface_max": 40.25,
+      "loyer_min": 610,
+      "loyer_max": 650
+    },
+    {
+      "code_crous": 35,
+      "code_residence": 1003,
+      "code_lgt": 4,
+      "nom_lgt": "T1 bis",
+      "typologie": "apt1bis",
+      "surface_min": 25,
+      "surface_max": 25,
+      "loyer_min": 0,
+      "loyer_max": 500
+    }
+  ]
+}
