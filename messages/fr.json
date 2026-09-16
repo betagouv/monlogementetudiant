@@ -2103,7 +2103,7 @@
         "virtualTour": {
           "title": "Visite virtuelle",
           "label": "Code d'intégration de la visite virtuelle",
-          "hint": "Collez un code d'intégration iframe, un lien vers une vidéo (.mp4, .webm, .ogg, .mov), ou un lien vers une visite 3D (ex: Giraffe360)"
+          "hint": "Collez un lien ou un code d'intégration Klapty, Matterport, Ricoh360, Giraffe360, YouTube, Vimeo ou Google Drive, ou un lien vers une vidéo (.mp4, .webm, .ogg, .mov)"
         },
         "redirection": {
           "label": "URL de redirection",

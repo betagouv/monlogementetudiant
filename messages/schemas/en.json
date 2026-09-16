@@ -29,6 +29,7 @@
     "postalCodeRequired": "The postal code is required",
     "addressesRequired": "At least one address is required",
     "urlInvalid": "Please enter a valid URL",
+    "virtualTourNotAllowed": "Paste an https link or an embed code from an allowed platform: Klapty, Matterport, Ricoh360, Giraffe360, YouTube, Vimeo or Google Drive, or a link to a video (.mp4, .webm, .ogg, .mov).",
     "externalUrlRequired": "The redirect URL is required",
     "alertNameRequired": "The alert name is required",
     "alertMaxPricePositive": "The maximum price must be greater than 0",
