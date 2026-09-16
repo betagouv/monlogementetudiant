@@ -71,7 +71,6 @@ export const useStopImpersonation = () => {
       return
     }
 
-    // On revient là où l'usurpation a été déclenchée, pas sur un écran arbitraire.
     window.location.href = takeOrigin() ?? DEFAULT_RETURN_URL
   }
 

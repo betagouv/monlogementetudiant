@@ -56,8 +56,8 @@ const buildCsp = (frameAncestors) =>
       .join(' '),
     // Vidéos de visite virtuelle hébergées ailleurs.
     "media-src 'self' https:",
-    // Visites virtuelles : le code d'intégration est saisi par les bailleurs (YouTube, Matterport,
-    // etc.). Les hôtes ne sont pas énumérables ; on impose au moins HTTPS.
+    // Visites virtuelles : les plateformes autorisées sont filtrées au rendu (`~/utils/virtual-tour`),
+    // la CSP se contente d'imposer HTTPS.
     'frame-src https:',
     "worker-src 'self' blob:",
     "object-src 'none'",

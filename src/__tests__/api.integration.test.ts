@@ -393,7 +393,6 @@ describe('API v1 — admin consumers update', () => {
 })
 
 describe('API v1 — création de clés réservée au back-office', () => {
-  /** Connecte un étudiant par la route HTTP et renvoie son cookie de session. */
   async function signInStudentOverHttp() {
     const email = 'student-api-key@test.com'
     const password = 'correctPassword123!'

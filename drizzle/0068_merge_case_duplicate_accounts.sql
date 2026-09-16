@@ -11,7 +11,6 @@
 -- Tout est idempotent : un second passage ne trouve plus rien à fusionner ni à convertir.
 CREATE TEMP TABLE account_case_merge ON COMMIT DROP AS
 WITH pairs AS (
-  -- Une seule passe sur la table : une sous-requête corrélée par compte prenait une minute en production.
   SELECT lower(email) AS normalized FROM "user" GROUP BY 1 HAVING count(*) = 2
 )
 SELECT source.id AS source_id, target.id AS target_id
