@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { EResidenceType } from '~/enums/residence-type'
 import { ETargetAudience } from '~/enums/target-audience'
 import { frSchemaTranslator, type TSchemaTranslator } from '~/schemas/schema-translator'
+import { isValidVirtualTourInput } from '~/utils/virtual-tour'
 import { createZTypologies } from './typology'
 
 export const createZUpdateResidence = (t: TSchemaTranslator = frSchemaTranslator) =>
@@ -22,7 +23,7 @@ export const createZUpdateResidence = (t: TSchemaTranslator = frSchemaTranslator
     description: z.string().optional(),
     rentalChargesDetails: z.string().optional(),
     externalUrl: z.url(t('errors.urlInvalid')).optional().or(z.literal('')),
-    virtualTourUrl: z.string().optional(),
+    virtualTourUrl: z.string().max(2000).refine(isValidVirtualTourInput, t('errors.virtualTourNotAllowed')).optional(),
 
     acceptWaitingList: z.boolean().optional(),
 

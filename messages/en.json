@@ -2103,7 +2103,7 @@
         "virtualTour": {
           "title": "Virtual tour",
           "label": "Virtual tour embed code",
-          "hint": "Paste an iframe embed code, a link to a video (.mp4, .webm, .ogg, .mov), or a link to a 3D tour (e.g. Giraffe360)"
+          "hint": "Paste a link or an embed code from Klapty, Matterport, Ricoh360, Giraffe360, YouTube, Vimeo or Google Drive, or a link to a video (.mp4, .webm, .ogg, .mov)"
         },
         "redirection": {
           "label": "Redirect URL",

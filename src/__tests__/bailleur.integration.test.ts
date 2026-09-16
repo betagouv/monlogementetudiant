@@ -462,7 +462,7 @@ describe('activity_log diff accuracy', () => {
     await db.delete(activityLog)
     await ownerCaller.bailleur.update({
       slug: 'diff-test',
-      virtualTourUrl: 'https://tour.example.com',
+      virtualTourUrl: 'https://tour.klapty.com/5m20OJ5Iae/',
     })
 
     const logs = await db.select().from(activityLog)
@@ -471,6 +471,21 @@ describe('activity_log diff accuracy', () => {
 
     const meta = logs[0].metadata as { diff: Record<string, unknown> }
     expect(Object.keys(meta.diff)).toEqual(['virtualTourUrl'])
+  })
+
+  it('rejects a virtual tour hosted outside the allowed platforms', async () => {
+    const owner = await createOwner({ name: 'Owner Tour', slug: 'owner-tour', userId: 'test-owner-id' })
+    await createAccommodation({ name: 'Tour Test', slug: 'tour-test', ownerId: owner.id, virtualTourUrl: null, geom: parisPoint })
+
+    await expect(
+      ownerCaller.bailleur.update({ slug: 'tour-test', virtualTourUrl: '<iframe src="https://evil.example/login"></iframe>' }),
+    ).rejects.toMatchObject({ code: 'BAD_REQUEST' })
+
+    const [row] = await getTestDb()
+      .select({ virtualTourUrl: accommodations.virtualTourUrl })
+      .from(accommodations)
+      .where(eq(accommodations.slug, 'tour-test'))
+    expect(row!.virtualTourUrl).toBeNull()
   })
 
   it('logs multiple changed fields in a single update', async () => {
