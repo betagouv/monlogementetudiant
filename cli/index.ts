@@ -100,7 +100,10 @@ program
     parseInt,
   )
   .option('--max-rows <n>', 'Plafond de lignes par table et par run (défaut : 2000000)', parseInt)
-  .option('--table <name>', 'Ne purger qu’une table (tracking_event, activity_log, alert_job, import_job)')
+  .option(
+    '--table <name>',
+    'Ne purger qu’une table (tracking_event, activity_log, alert_job, import_job, login_attempt, session, verification)',
+  )
   .option('--no-archive', 'Supprimer sans déposer d’archive dans S3')
   // Commander expose `--no-archive` sous la forme `archive: false` : on le retraduit en
   // `noArchive` pour que la commande garde une option positive côté API.

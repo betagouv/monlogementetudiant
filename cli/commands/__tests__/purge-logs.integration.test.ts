@@ -1,9 +1,12 @@
 import { gunzipSync } from 'node:zlib'
-import { subMonths } from 'date-fns'
+import { subDays, subMonths } from 'date-fns'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { createTrackingEvent } from '../../../src/__tests__/fixtures/factories'
+import { createTrackingEvent, createUser } from '../../../src/__tests__/fixtures/factories'
 import { getTestDb } from '../../../src/__tests__/helpers/test-db'
+import { ELoginAttemptStatus } from '../../../src/enums/login-attempt-status'
 import { trackingEvents } from '../../../src/server/db/schema'
+import { session, verification } from '../../../src/server/db/schema/auth'
+import { loginAttempts } from '../../../src/server/db/schema/login-attempts'
 
 interface CapturedUpload {
   key: string
@@ -147,5 +150,65 @@ describe('purge-logs — tracking_event', () => {
 
   it('rejette une table inconnue', async () => {
     await expect(purgeLogs({ table: 'accommodation' })).rejects.toThrow(/Table inconnue/)
+  })
+})
+
+describe('purge-logs — login_attempt', () => {
+  beforeEach(() => {
+    uploads.length = 0
+    vi.spyOn(console, 'log').mockImplementation(vi.fn())
+  })
+
+  const insertAttempt = (tokenHash: string, values: Partial<typeof loginAttempts.$inferInsert> = {}) =>
+    db.insert(loginAttempts).values({ tokenHash, expiresAt: new Date(), ...values })
+
+  it('supprime les tentatives au-delà de la rétention et les jetons inconnus orphelins', async () => {
+    await insertAttempt('ancienne', { email: 'gest@bailleur.fr', createdAt: subMonths(new Date(), 13) })
+    await insertAttempt('recente', { email: 'gest@bailleur.fr', createdAt: RECENT })
+    await insertAttempt('orpheline', { status: ELoginAttemptStatus.INVALID, createdAt: RECENT })
+    await insertAttempt('invalide-rattachee', { email: 'gest@bailleur.fr', status: ELoginAttemptStatus.INVALID, createdAt: RECENT })
+
+    await purgeLogs({ table: 'login_attempt', noArchive: true })
+
+    const rows = await db.select({ tokenHash: loginAttempts.tokenHash }).from(loginAttempts).orderBy(loginAttempts.tokenHash)
+    expect(rows.map((row) => row.tokenHash)).toEqual(['invalide-rattachee', 'recente'])
+  })
+})
+
+describe('purge-logs — sessions et jetons expirés', () => {
+  beforeEach(async () => {
+    uploads.length = 0
+    vi.spyOn(console, 'log').mockImplementation(vi.fn())
+    await createUser({ id: 'purge-user', email: 'purge-user@test.com' })
+  })
+
+  const insertSession = (id: string, expiresAt: Date) =>
+    db.insert(session).values({ id, token: `token-${id}`, userId: 'purge-user', expiresAt, createdAt: new Date(), updatedAt: new Date() })
+
+  it('supprime les sessions expirées depuis plus de 7 jours et les jetons de vérification expirés', async () => {
+    await insertSession('expiree-ancienne', subDays(new Date(), 8))
+    await insertSession('expiree-recente', subDays(new Date(), 2))
+    await insertSession('active', new Date(Date.now() + 3_600_000))
+    await db.insert(verification).values([
+      { id: 'v-expiree', identifier: 'a', value: '{}', expiresAt: subDays(new Date(), 1) },
+      { id: 'v-valide', identifier: 'b', value: '{}', expiresAt: new Date(Date.now() + 600_000) },
+    ])
+
+    await purgeLogs({ table: 'session' })
+    await purgeLogs({ table: 'verification' })
+
+    const sessions = await db.select({ id: session.id }).from(session).orderBy(session.id)
+    expect(sessions.map((row) => row.id)).toEqual(['active', 'expiree-recente'])
+    const verifications = await db.select({ id: verification.id }).from(verification)
+    expect(verifications.map((row) => row.id)).toEqual(['v-valide'])
+    expect(uploads).toHaveLength(0)
+  })
+
+  it('ne supprime rien en dry-run', async () => {
+    await insertSession('expiree-ancienne', subDays(new Date(), 8))
+
+    await purgeLogs({ table: 'session', dryRun: true })
+
+    expect(await db.select().from(session)).toHaveLength(1)
   })
 })
