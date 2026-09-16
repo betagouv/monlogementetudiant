@@ -1,3 +1,4 @@
+import { headers } from 'next/headers'
 import { Suspense } from 'react'
 import { WidgetCampaignProvider } from '~/components/widget/widget-campaign-context'
 import { WidgetLoadTracker } from '~/components/widget/widget-load-tracker'
@@ -11,15 +12,16 @@ export const metadata = {
   },
 }
 
-export default function WidgetLayout({
+export default async function WidgetLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const nonce = (await headers()).get('x-nonce') ?? undefined
   return (
     <main className={styles.container}>
       <Suspense>
-        <WidgetMatomo />
+        <WidgetMatomo nonce={nonce} />
       </Suspense>
       <Suspense>
         <WidgetCampaignProvider>

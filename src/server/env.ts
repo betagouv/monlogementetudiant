@@ -98,6 +98,11 @@ const envSchema = z.object({
   DOSSIERFACILE_SCOPE: requiredInProd,
   DOSSIERFACILE_WEBHOOK_API_KEY: requiredInProd,
 
+  // Sentry : endpoint « security » qui reçoit les violations de la CSP Report-Only (src/proxy.ts).
+  // URL complète, telle que donnée par Sentry (Project Settings > Security Headers). Optionnelle même en
+  // production : sans elle la CSP Report-Only ne remonte rien, mais son absence ne doit pas bloquer le boot.
+  SENTRY_CSP_REPORT_URI: optionalUrl,
+
   // Public vars (validated server-side for CI)
   NEXT_PUBLIC_APP_ENV: z.enum(['development', 'staging', 'production']).default('development'),
   NEXT_PUBLIC_MATOMO_URL: requiredInProdUrl,
