@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { zNormalizedEmail } from '~/schemas/email'
 import {
   BAILLEUR_PERMISSIONS,
   BAILLEUR_ROLES,
@@ -9,7 +10,7 @@ import {
 import { ZBailleurAccommodationScope } from './accommodation-scope'
 
 export const zCreateBailleurUser = z.object({
-  email: z.string().email('Email invalide'),
+  email: zNormalizedEmail('Email invalide'),
   firstname: z.string().min(1, 'Le prenom est requis'),
   lastname: z.string().min(1, 'Le nom est requis'),
   bailleurRole: z.enum(BAILLEUR_ROLES),
@@ -19,7 +20,7 @@ export const zCreateBailleurUser = z.object({
 
 export const zUpdateBailleurUser = z.object({
   id: z.string(),
-  email: z.string().email('Email invalide').optional(),
+  email: zNormalizedEmail('Email invalide').optional(),
   firstname: z.string().min(1, 'Le prenom est requis').optional(),
   lastname: z.string().min(1, 'Le nom est requis').optional(),
   bailleurRole: z.enum(BAILLEUR_ROLES).optional(),

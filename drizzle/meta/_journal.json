@@ -470,6 +470,13 @@
       "when": 1789546383298,
       "tag": "0066_public_rate_limit",
       "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1789565534123,
+      "tag": "0067_lowercase_user_emails",
+      "breakpoints": true
     }
   ]
 }
