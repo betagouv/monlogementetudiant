@@ -426,7 +426,7 @@ describe('API v1 — création de clés réservée au back-office', () => {
       new Request(`${env.BASE_URL}/api/auth/api-key/${action}`, {
         method: action === 'list' || action === 'get' ? 'GET' : 'POST',
         headers: { 'content-type': 'application/json', origin: env.BASE_URL, cookie },
-        body: action === 'list' || action === 'get' ? undefined : JSON.stringify({ name: 'pirate', keyId: 'x' }),
+        body: action === 'list' || action === 'get' ? undefined : JSON.stringify({ name: 'test', keyId: 'x' }),
       }),
     )
 

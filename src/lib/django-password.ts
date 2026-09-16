@@ -3,17 +3,12 @@ import { promisify } from 'node:util'
 
 const pbkdf2Async = promisify(pbkdf2)
 
-/**
- * Plafond d'itérations accepté. Les hashes hérités de Django sont à 600 000 ; au-delà, un hash corrompu ou forgé en base immobiliserait un thread du pool libuv
- * pendant des secondes à chaque tentative de connexion.
- */
+/** Plafond d'itérations accepté (les hashes hérités de Django sont à 600 000). */
 const MAX_ITERATIONS = 1_000_000
 
 /**
  * Vérifie un mot de passe contre un hash Django PBKDF2-SHA256 (`pbkdf2_sha256$<itérations>$<sel>$<hash_base64>`).
- *
- * Asynchrone : à 600 000 itérations, un calcul synchrone bloquerait la boucle d'événements plusieurs
- * centaines de millisecondes par tentative.
+ * Asynchrone pour ne pas bloquer la boucle d'événements pendant le calcul.
  */
 export async function verifyDjangoPassword(password: string, encoded: string): Promise<boolean> {
   const parts = encoded.split('$')

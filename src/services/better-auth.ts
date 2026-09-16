@@ -32,10 +32,8 @@ export const auth = betterAuth({
   secret: env.AUTH_SECRET,
   baseURL: env.BASE_URL,
   trustedOrigins: [env.BASE_URL, ...(env.NEXT_PUBLIC_APP_ENV === 'development' ? ['http://localhost:3000'] : [])],
-  // Routes HTTP sans usage côté client, fermées (les appels serveur `auth.api.*` ne sont pas concernés) :
-  // - `/api-key/*` : tout compte connecté pourrait se créer des clés d'API v1 ;
-  // - `/admin/*` sauf l'impersonation : gestion des comptes contournant les règles et le journal tRPC ;
-  // - `/verify-password` : devinette de mot de passe hors de la limite de débit de `/sign-in`.
+  // Routes HTTP sans usage côté client : les clés d'API et les comptes se gèrent depuis le back-office
+  // (tRPC ou `auth.api.*`, non concernés par ce filtre).
   disabledPaths: [
     '/api-key/create',
     '/api-key/get',
@@ -63,8 +61,7 @@ export const auth = betterAuth({
     updateAge: oneDay,
     deferSessionRefresh: true,
   },
-  // Tous les jetons de la table `verification` (réinitialisation de mot de passe comprise) sont hachés :
-  // une lecture de la base (dump, backup, staging restaurée) ne suffit pas à prendre un compte.
+  // Jetons de `verification` stockés hachés.
   verification: { storeIdentifier: 'hashed' },
   advanced: {
     // force la suppression des cookies (django)
@@ -76,9 +73,8 @@ export const auth = betterAuth({
     requireEmailVerification: true,
     revokeSessionsOnPasswordReset: true,
     sendResetPassword: async ({ user, url }) => {
-      // Bailleurs et admins se connectent par lien : leurs mots de passe hérités de Django ne servent
-      // plus. Un lien de réinitialisation leur rouvrirait une connexion par mot de passe (et un chemin
-      // de prise de compte). La réponse HTTP reste la même, pour ne rien révéler de l'existence du compte.
+      // Bailleurs et admins se connectent uniquement par lien : pas de réinitialisation de mot de passe.
+      // La réponse HTTP est identique dans tous les cas.
       const account = await db.query.user.findFirst({ where: eq(schema.user.id, user.id), columns: { role: true } })
       if (account?.role !== 'user') return
       logLocalAuthLink('reset-password', user.email, url)

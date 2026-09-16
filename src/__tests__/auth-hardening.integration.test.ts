@@ -100,7 +100,7 @@ describe('réinitialisation du mot de passe', () => {
 
     const result = await auth.api.requestPasswordReset({ body: { email, redirectTo: '/se-connecter' }, headers: new Headers() })
 
-    // Réponse identique à celle d'un compte inconnu : pas d'énumération des comptes bailleur/admin.
+    // Réponse identique à celle d'un compte inconnu.
     expect(result.status).toBe(true)
     expect(sentEmails).toHaveLength(0)
   })

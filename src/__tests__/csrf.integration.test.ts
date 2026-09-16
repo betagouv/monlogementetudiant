@@ -4,7 +4,7 @@ import './helpers/setup-integration'
 const TRPC_URL = 'http://localhost:3000/api/trpc/dossierFacile.disconnect'
 
 describe('CSRF — /api/trpc', () => {
-  it('refuse une mutation postée en multipart/form-data, possible sans preflight depuis une autre page', async () => {
+  it('refuse une mutation postée en multipart/form-data', async () => {
     const { POST } = await import('~/app/api/trpc/[trpc]/route')
 
     const res = await POST(new Request(TRPC_URL, { method: 'POST', body: new FormData(), headers: { 'sec-fetch-site': 'same-site' } }))
@@ -12,7 +12,7 @@ describe('CSRF — /api/trpc', () => {
     expect(res.status).toBe(415)
   })
 
-  it('refuse une mutation JSON venant d’un sous-domaine voisin', async () => {
+  it('refuse une mutation JSON venant d’une autre origine', async () => {
     const { POST } = await import('~/app/api/trpc/[trpc]/route')
 
     const res = await POST(

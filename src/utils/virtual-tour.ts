@@ -1,9 +1,6 @@
 /**
  * Visites virtuelles saisies par les bailleurs : lien vers une visite 3D ou une vidéo hébergée, code
- * d'intégration iframe, ou fichier vidéo.
- *
- * Seules les plateformes de la liste peuvent être intégrées dans la fiche publique : une iframe
- * arbitraire permettrait d'afficher, sous le domaine gouv, une fausse page de connexion.
+ * d'intégration iframe, ou fichier vidéo. Seules les plateformes de la liste sont intégrées.
  */
 export const VIRTUAL_TOUR_ALLOWED_DOMAINS = [
   'klapty.com',
@@ -14,7 +11,6 @@ export const VIRTUAL_TOUR_ALLOWED_DOMAINS = [
   'youtube-nocookie.com',
   'youtu.be',
   'vimeo.com',
-  // Uniquement Drive : un `*.google.com` ouvrirait Google Sites, où n'importe qui publie une page.
   'drive.google.com',
 ] as const
 
