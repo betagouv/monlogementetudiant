@@ -210,7 +210,7 @@ describe('cache-handler', () => {
       await handler.set('second', IMAGE_VALUE, { cacheControl: { revalidate: 60 } })
       await handler.set('third', IMAGE_VALUE, { cacheControl: { revalidate: 60 } })
 
-      // Une seule tentative, un seul avertissement : plus de spam de logs.
+      // Une seule tentative, un seul avertissement.
       expect(sendMock).toHaveBeenCalledOnce()
       expect(warn).toHaveBeenCalledOnce()
       expect(error).not.toHaveBeenCalled()

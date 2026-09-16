@@ -88,7 +88,7 @@ const TRACKING_RETENTION_MONTHS = 7
 const LOGIN_ATTEMPT_RETENTION_MONTHS = 12
 
 /**
- * Sessions Better Auth expirées (IP et user-agent en clair) : Better Auth ne les supprime qu'à leur
+ * Sessions Better Auth expirées : Better Auth ne les supprime qu'à leur
  * prochaine lecture, qui n'arrive jamais pour un appareil abandonné. Une semaine de grâce garde de
  * quoi diagnostiquer une déconnexion récente.
  */
@@ -150,8 +150,8 @@ export const TARGETS: PurgeTarget[] = [
     label: 'login_attempt',
     table: loginAttempts,
     retentionMonths: LOGIN_ATTEMPT_RETENTION_MONTHS,
-    // Les jetons inconnus orphelins (ni e-mail ni compte) n'ont jamais eu de valeur de suivi : on les
-    // retire quel que soit leur âge. Le service n'en crée plus, cela solde l'historique.
+    // Les jetons inconnus orphelins (ni e-mail ni compte) n'ont aucune valeur de suivi : on les retire
+    // quel que soit leur âge.
     where: (cutoff) =>
       or(
         lt(loginAttempts.createdAt, cutoff),

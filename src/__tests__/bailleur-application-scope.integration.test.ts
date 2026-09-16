@@ -565,7 +565,6 @@ describe('éligibilité par résidence', () => {
   })
 
   it("refuse une candidature DossierFacile quand le bailleur n'est pas dans ce parcours", async () => {
-    // Le parcours du bailleur n'était pas vérifié côté étudiant.
     await createDossierFacileTenant({ userId: 'test-user-id', tenantId: 'df-mode', status: 'verified' })
 
     await expect(authenticatedCaller.dossierFacile.application({ accommodationSlug: 'res-in', apartmentType: 't1' })).rejects.toThrow(
