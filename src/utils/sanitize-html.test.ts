@@ -17,9 +17,22 @@ describe('sanitizeHTML', () => {
   })
 
   it('conserve les balises et attributs autorisés', () => {
-    expect(sanitizeHTML('<a href="https://example.org" target="_blank">Lien</a>')).toBe(
-      '<a href="https://example.org" target="_blank">Lien</a>',
+    expect(sanitizeHTML('<a href="https://example.org" target="_blank" rel="noopener noreferrer">Lien</a>')).toBe(
+      '<a href="https://example.org" target="_blank" rel="noopener noreferrer">Lien</a>',
     )
     expect(sanitizeHTML('<ul><li>Un</li><li>Deux</li></ul>')).toBe('<ul><li>Un</li><li>Deux</li></ul>')
+  })
+
+  it('force rel="noopener noreferrer" sur un lien ouvert dans un nouvel onglet', () => {
+    expect(sanitizeHTML('<a href="https://example.org" target="_blank">Lien</a>')).toBe(
+      '<a href="https://example.org" target="_blank" rel="noopener noreferrer">Lien</a>',
+    )
+    expect(sanitizeHTML('<a href="https://example.org" target="_blank" rel="opener">Lien</a>')).toBe(
+      '<a href="https://example.org" target="_blank" rel="noopener noreferrer">Lien</a>',
+    )
+  })
+
+  it('ne touche pas un lien sans target', () => {
+    expect(sanitizeHTML('<a href="https://example.org">Lien</a>')).toBe('<a href="https://example.org">Lien</a>')
   })
 })

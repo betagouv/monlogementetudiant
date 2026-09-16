@@ -1,6 +1,5 @@
 import { TRPCError } from '@trpc/server'
 import { and, asc, desc, eq, gt, ilike, inArray, ne, or, type SQL, sql } from 'drizzle-orm'
-import { sanitize } from 'isomorphic-dompurify'
 import { SignJWT } from 'jose'
 
 import { z } from 'zod'
@@ -82,7 +81,7 @@ import { getJwtSecret } from '~/server/utils/jwt-secret'
 import { findAvailableSlug } from '~/server/utils/slug'
 import { isDossierFacileSelectable } from '~/utils/feature-flags'
 import { normalizeAccommodationName } from '~/utils/normalize-accommodation-name'
-import { RICH_TEXT_ALLOWED_ATTR, RICH_TEXT_ALLOWED_TAGS } from '~/utils/sanitize-config'
+import { sanitizeHTML } from '~/utils/sanitize-html'
 import { bailleurAdministratorProcedure, bailleurProcedure, createTRPCRouter, ownerProcedure } from '../init'
 import { priceMaxComputed, rowsToAccommodationDTOs } from './accommodations'
 
@@ -429,9 +428,7 @@ export const bailleurRouter = createTRPCRouter({
         slug,
         residenceType: fields.residenceType ?? null,
         targetAudience: fields.targetAudience ?? null,
-        description: fields.description
-          ? sanitize(fields.description, { ALLOWED_TAGS: RICH_TEXT_ALLOWED_TAGS, ALLOWED_ATTR: RICH_TEXT_ALLOWED_ATTR })
-          : null,
+        description: fields.description ? sanitizeHTML(fields.description) : null,
         rentalChargesDetails: fields.rentalChargesDetails ?? null,
         externalUrl: fields.externalUrl || null,
         acceptWaitingList: fields.acceptWaitingList ?? false,
@@ -526,10 +523,7 @@ export const bailleurRouter = createTRPCRouter({
         camelFields.name = normalizeAccommodationName(camelFields.name)
       }
       if (typeof camelFields.description === 'string') {
-        camelFields.description = sanitize(camelFields.description, {
-          ALLOWED_TAGS: RICH_TEXT_ALLOWED_TAGS,
-          ALLOWED_ATTR: RICH_TEXT_ALLOWED_ATTR,
-        })
+        camelFields.description = sanitizeHTML(camelFields.description)
       }
       const userProvidedKeys = new Set(Object.keys(camelFields))
       const parentSet: Record<string, unknown> = { ...camelFields }
