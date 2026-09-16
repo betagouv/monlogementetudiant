@@ -62,6 +62,29 @@ describe('lien de connexion', () => {
 })
 
 describe('réinitialisation du mot de passe', () => {
+  it('ne stocke pas le jeton de réinitialisation en clair', async () => {
+    const email = 'etudiant-jeton@test.com'
+    await createUser({ id: 'etudiant-jeton', email, emailVerified: true, role: 'user' })
+
+    await auth.api.requestPasswordReset({ body: { email, redirectTo: '/se-connecter' }, headers: new Headers() })
+    const token = new URL(sentEmails[0]!.url).pathname.split('/').pop()!
+
+    const rows = await getTestDb().select({ identifier: verification.identifier }).from(verification)
+    expect(rows).toHaveLength(1)
+    expect(rows[0]!.identifier).not.toContain(token)
+  })
+
+  it.each(['owner', 'admin'] as const)("n'envoie aucun lien de réinitialisation au rôle %s, qui se connecte par lien", async (role) => {
+    const email = `${role}-reset@test.com`
+    await createUser({ id: `${role}-reset`, email, emailVerified: true, role })
+
+    const result = await auth.api.requestPasswordReset({ body: { email, redirectTo: '/se-connecter' }, headers: new Headers() })
+
+    // Réponse identique à celle d'un compte inconnu : pas d'énumération des comptes bailleur/admin.
+    expect(result.status).toBe(true)
+    expect(sentEmails).toHaveLength(0)
+  })
+
   it('révoque les sessions ouvertes', async () => {
     const email = 'etudiant-reset@test.com'
     const password = 'ancienMotDePasse123!'
