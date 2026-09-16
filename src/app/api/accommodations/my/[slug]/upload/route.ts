@@ -5,6 +5,7 @@ import { hasPermission } from '~/server/bailleur/permissions'
 import { db } from '~/server/db'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { deleteFile, generateAccommodationKey, uploadFile } from '~/server/services/s3'
+import { crossOriginForbidden, isSameOriginRequest } from '~/server/utils/same-origin'
 import { getServerSession } from '~/services/better-auth'
 import { detectMimeType } from '~/utils/detect-mime-type'
 
@@ -21,6 +22,8 @@ const MIME_TO_EXT: Record<string, string> = {
 }
 
 export async function POST(request: Request, { params }: { params: Promise<{ slug: string }> }) {
+  if (!isSameOriginRequest(request)) return crossOriginForbidden()
+
   const auth = await getServerSession()
   if (!auth || !auth.session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
