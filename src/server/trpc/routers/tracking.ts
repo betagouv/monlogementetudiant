@@ -29,9 +29,10 @@ export const trackingRouter = createTRPCRouter({
 
   logAccommodationView: baseProcedure
     .input(
+      // Pas de `referer` : jamais relu, potentiellement porteur de données personnelles (requête de
+      // recherche, e-mail en paramètre) et, en texte libre sur une route publique, de quoi remplir la base.
       z.object({
         accommodationId: z.number().int().positive(),
-        referer: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -40,7 +41,6 @@ export const trackingRouter = createTRPCRouter({
         accommodationId: input.accommodationId,
         userId: ctx.session?.user.id,
         sessionId,
-        metadata: input.referer ? { referer: input.referer } : undefined,
       })
     }),
 
