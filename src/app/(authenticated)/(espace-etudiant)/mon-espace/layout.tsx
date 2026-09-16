@@ -8,6 +8,7 @@ import { StudentBreadcrumb } from '~/components/student-space/student-breadcrumb
 import { CommonSkipLinks, MAIN_CONTENT_ID } from '~/components/ui/common-skip-links'
 import { CommonFooter } from '~/components/ui/footer/footer'
 import { CommonHeader } from '~/components/ui/header/common-header'
+import { canAccessStudentSpace } from '~/lib/roles'
 import { getServerSession } from '~/services/better-auth'
 
 export const generateMetadata = async () => {
@@ -32,7 +33,7 @@ export default async function WorkspaceLayout({
 }>) {
   const auth = await getServerSession()
 
-  if (!auth || auth.user.role === 'owner') {
+  if (!auth || !canAccessStudentSpace(auth.user.role)) {
     return notFound()
   }
 
