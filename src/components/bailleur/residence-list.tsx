@@ -11,7 +11,6 @@ import { Pagination } from '~/components/ui/pagination'
 import { useMyAccommodations } from '~/hooks/use-my-accommodations'
 import { calculateAvailability } from '~/utils/calculateAvailability'
 import { buildHref } from '~/utils/preserve-query-params'
-import { sPluriel } from '~/utils/sPluriel'
 
 const ResidenceListSkeleton = () => (
   <div className="fr-flex fr-direction-column fr-flex-gap-6v">
@@ -53,6 +52,7 @@ const ResidenceListSkeleton = () => (
 
 export const ResidenceList: FC = () => {
   const t = useTranslations('findAccomodation.card')
+  const tList = useTranslations('bailleur.residences.list')
   const { data: accommodations, isLoading } = useMyAccommodations()
   const [queryStates] = useQueryStates({
     page: parseAsInteger.withDefault(1),
@@ -70,8 +70,8 @@ export const ResidenceList: FC = () => {
   if (accommodationsList.length === 0) {
     return (
       <div className="fr-flex fr-direction-column fr-align-items-center fr-py-8w">
-        <h3>Aucune résidence trouvée</h3>
-        <p>Aucune résidence ne correspond à vos critères de recherche.</p>
+        <h3>{tList('emptyTitle')}</h3>
+        <p>{tList('emptyDescription')}</p>
       </div>
     )
   }
@@ -87,7 +87,7 @@ export const ResidenceList: FC = () => {
               <AvailabilityBadge
                 nbAvailable={nbAvailable}
                 noAvailabilityText={t('noAvailability')}
-                availabilityText={t('availability')}
+                availabilityText={(count) => t('availabilityCount', { count })}
                 unknownAvailabilityText={t('unknownAvailability')}
                 context="owner"
               />
@@ -109,7 +109,7 @@ export const ResidenceList: FC = () => {
                   <div className="fr-flex fr-justify-content-space-between">
                     {!!accommodation.nbTotalApartments && (
                       <span className="fr-text-mention--grey fr-text--xl fr-mb-0">
-                        {accommodation.nbTotalApartments} logement{sPluriel(accommodation.nbTotalApartments ?? 0)}
+                        {tList('housingCount', { count: accommodation.nbTotalApartments })}
                       </span>
                     )}
                     {badgeAvailability}

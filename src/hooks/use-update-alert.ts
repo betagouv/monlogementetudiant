@@ -1,9 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { createToast } from '~/components/ui/createToast'
 import { useTRPC } from '~/server/trpc/client'
 
 export const useUpdateAlert = () => {
+  const t = useTranslations('student.alerts.toast')
   const queryClient = useQueryClient()
   const router = useRouter()
   const trpc = useTRPC()
@@ -17,14 +19,14 @@ export const useUpdateAlert = () => {
         })
         createToast({
           priority: 'success',
-          message: 'Alerte mise à jour avec succès !',
+          message: t('updated'),
         })
         router.refresh()
       },
       onError: (error) => {
         createToast({
           priority: 'error',
-          message: error.message || "Une erreur est survenue lors de la mise à jour de l'alerte.",
+          message: error.message || t('updateError'),
         })
       },
     }),

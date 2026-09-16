@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { createToast } from '~/components/ui/createToast'
 import { authClient, getRedirectUrlByRole } from '~/services/better-auth-client'
@@ -35,6 +36,7 @@ const takeOrigin = () => {
 }
 
 export const useStartImpersonation = () => {
+  const t = useTranslations('impersonation')
   const [isPending, setIsPending] = useState(false)
 
   const startImpersonation = async (userId: string) => {
@@ -44,7 +46,7 @@ export const useStartImpersonation = () => {
     const { data, error } = await authClient.admin.impersonateUser({ userId })
 
     if (error) {
-      createToast({ priority: 'error', message: error.message || "L'usurpation a échoué" })
+      createToast({ priority: 'error', message: error.message || t('startError') })
       setIsPending(false)
       return
     }
@@ -56,6 +58,7 @@ export const useStartImpersonation = () => {
 }
 
 export const useStopImpersonation = () => {
+  const t = useTranslations('impersonation')
   const [isPending, setIsPending] = useState(false)
 
   const stopImpersonation = async () => {
@@ -63,7 +66,7 @@ export const useStopImpersonation = () => {
     const { error } = await authClient.admin.stopImpersonating()
 
     if (error) {
-      createToast({ priority: 'error', message: error.message || "L'arrêt de l'usurpation a échoué" })
+      createToast({ priority: 'error', message: error.message || t('stopError') })
       setIsPending(false)
       return
     }

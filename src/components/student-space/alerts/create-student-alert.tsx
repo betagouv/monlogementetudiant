@@ -7,12 +7,13 @@ import Range from '@codegouvfr/react-dsfr/Range'
 import { zodResolver } from '@hookform/resolvers/zod'
 import clsx from 'clsx'
 import { useTranslations } from 'next-intl'
+import { useMemo } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { StudentAlertLocation } from '~/components/student-space/alerts/student-alert-location'
 import { ToggleSwitch } from '~/components/ui/toggle-switch'
 import { useCreateAlert } from '~/hooks/use-create-alert'
 import { trackEvent } from '~/lib/tracking'
-import { type TCreateAlertRequest, ZCreateAlertRequest } from '~/schemas/alerts/create-alert'
+import { createZCreateAlertRequest, type TCreateAlertRequest } from '~/schemas/alerts/create-alert'
 import styles from './student-alerts.module.css'
 
 export const createStudentAlertModal = createModal({
@@ -22,10 +23,12 @@ export const createStudentAlertModal = createModal({
 
 export const CreateStudentAlert = () => {
   const t = useTranslations('student.alerts')
+  const tSchemas = useTranslations('schemas')
+  const schema = useMemo(() => createZCreateAlertRequest(tSchemas), [tSchemas])
   const { mutateAsync: createAlert, isLoading } = useCreateAlert()
 
   const form = useForm<TCreateAlertRequest>({
-    resolver: zodResolver(ZCreateAlertRequest),
+    resolver: zodResolver(schema),
     defaultValues: {
       name: '',
       maxPrice: 1000,
@@ -53,22 +56,20 @@ export const CreateStudentAlert = () => {
   return (
     <>
       <Button priority="secondary" {...createStudentAlertModal.buttonProps}>
-        Créer une nouvelle alerte
+        {t('create')}
       </Button>
 
       <createStudentAlertModal.Component
         title={
           <>
             <span className={clsx(styles.icon, 'ri-mail-unread-line')} />
-            <span className="fr-text--bold"> Nouvelle alerte logements</span>
+            <span className="fr-text--bold"> {t('createModalTitle')}</span>
           </>
         }
       >
         <FormProvider {...form}>
           <form onSubmit={handleSubmit} className="fr-flex fr-direction-column fr-flex-gap-4v">
-            <span>
-              Configurez votre alerte personnalisée et soyez notifié dès qu'un logement correspondant à vos critères est disponible.
-            </span>
+            <span>{t('modalDescription')}</span>
             <Input
               label={t('nameLabel')}
               iconId="ri-notification-line"

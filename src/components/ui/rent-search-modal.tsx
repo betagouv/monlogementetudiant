@@ -6,6 +6,7 @@ import Input from '@codegouvfr/react-dsfr/Input'
 import { createModal } from '@codegouvfr/react-dsfr/Modal'
 import clsx from 'clsx'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { tss } from 'tss-react'
 import { useDebounce } from 'use-debounce'
@@ -25,6 +26,7 @@ interface RentSearchModalProps {
 }
 
 export const RentSearchModal = ({ onApply, onCancel }: RentSearchModalProps) => {
+  const t = useTranslations('rentSearchModal')
   const { classes } = useStyles()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCity, setSelectedCity] = useState<TRentSearchResult | null>(null)
@@ -61,14 +63,14 @@ export const RentSearchModal = ({ onApply, onCancel }: RentSearchModalProps) => 
   return (
     <>
       <Button priority="tertiary no outline" className="fr-link fr-text--underline fr-text--sm" {...rentSearchModal.buttonProps}>
-        Besoin d'aide ?
+        {t('trigger')}
       </Button>
 
       <rentSearchModal.Component
         title={
           <>
             <span className={clsx(classes.icon, 'ri-building-line')} />
-            <span className="fr-text--bold"> Moyenne des loyers par ville</span>
+            <span className="fr-text--bold"> {t('title')}</span>
           </>
         }
         size="large"
@@ -76,16 +78,20 @@ export const RentSearchModal = ({ onApply, onCancel }: RentSearchModalProps) => 
         <div className={classes.container}>
           <div className="fr-mb-4w">
             <Input
-              label="Rechercher une ville"
-              hintText="Commencez la saisie, puis choisissez la ville recherchée"
+              label={t('searchLabel')}
+              hintText={t('searchHint')}
               iconId="ri-search-line"
-              nativeInputProps={{ value: searchQuery, onChange: (e) => setSearchQuery(e.target.value), placeholder: 'Nom de la ville...' }}
+              nativeInputProps={{
+                value: searchQuery,
+                onChange: (e) => setSearchQuery(e.target.value),
+                placeholder: t('searchPlaceholder'),
+              }}
             />
           </div>
 
           {error && (
             <div className="fr-alert fr-alert--error fr-mb-2w">
-              <p>Erreur lors de la recherche des données de loyer</p>
+              <p>{t('error')}</p>
             </div>
           )}
 
@@ -93,11 +99,11 @@ export const RentSearchModal = ({ onApply, onCancel }: RentSearchModalProps) => 
             <div className={classes.resultsContainer}>
               {isLoading ? (
                 <div className="fr-p-2w">
-                  <p>Recherche en cours...</p>
+                  <p>{t('loading')}</p>
                 </div>
               ) : data?.cities.length === 0 ? (
                 <div className="fr-p-2w">
-                  <p>Aucune ville trouvée pour "{debouncedQuery}"</p>
+                  <p>{t('noResults', { query: debouncedQuery })}</p>
                 </div>
               ) : (
                 <ul className={classes.cityList}>
@@ -123,17 +129,19 @@ export const RentSearchModal = ({ onApply, onCancel }: RentSearchModalProps) => 
           {selectedCity && (
             <div className="fr-flex fr-justify-content-space-between fr-align-items-center fr-py-4w fr-px-2w fr-border">
               <div className="fr-flex fr-direction-column fr-col-md-8">
-                <span className="fr-text--md fr-mb-0">Loyer moyen pour 20m²</span>
+                <span className="fr-text--md fr-mb-0">{t('averageRent')}</span>
                 <span className="fr-text--xs fr-mb-0 fr-text-mention--grey">
-                  D'après les&nbsp;
-                  <Link
-                    href="https://www.data.gouv.fr/datasets/carte-des-loyers-indicateurs-de-loyers-dannonce-par-commune-en-2024/"
-                    target="_blank"
-                  >
-                    Estimations de l’Agence Nationale pour l’Information sur le Logement (ANIL), à partir des données de SeLoger et de
-                    Leboncoin
-                    <NewWindowHint />
-                  </Link>
+                  {t.rich('source', {
+                    link: (chunks) => (
+                      <Link
+                        href="https://www.data.gouv.fr/datasets/carte-des-loyers-indicateurs-de-loyers-dannonce-par-commune-en-2024/"
+                        target="_blank"
+                      >
+                        {chunks}
+                        <NewWindowHint />
+                      </Link>
+                    ),
+                  })}
                 </span>
               </div>
               <span className="fr-text--bold">{selectedCity.rentFor20M2.toFixed(2)} €</span>
@@ -143,10 +151,10 @@ export const RentSearchModal = ({ onApply, onCancel }: RentSearchModalProps) => 
 
         <div className="fr-flex fr-justify-content-end fr-flex-gap-2v fr-mt-2w">
           <Button priority="secondary" onClick={handleCancel}>
-            Annuler
+            {t('cancel')}
           </Button>
           <Button priority="primary" onClick={handleApply} disabled={!selectedCity}>
-            Appliquer
+            {t('apply')}
           </Button>
         </div>
       </rentSearchModal.Component>

@@ -1,9 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { createToast } from '~/components/ui/createToast'
 import { useTRPC } from '~/server/trpc/client'
 
 export const useDeleteFavorite = () => {
+  const t = useTranslations('student.favorites.toast')
   const queryClient = useQueryClient()
   const router = useRouter()
   const trpc = useTRPC()
@@ -17,14 +19,14 @@ export const useDeleteFavorite = () => {
         })
         createToast({
           priority: 'success',
-          message: 'Logement supprimé des favoris !',
+          message: t('removed'),
         })
         router.refresh()
       },
       onError: (error) => {
         createToast({
           priority: 'error',
-          message: error.message || 'Une erreur est survenue lors de la suppression des favoris.',
+          message: error.message || t('removeError'),
         })
       },
     }),

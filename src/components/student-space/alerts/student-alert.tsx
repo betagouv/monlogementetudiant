@@ -32,9 +32,9 @@ export const StudentAlert = ({ alert }: StudentAlertProps) => {
         </div>
         <div className="fr-flex fr-flex-gap-2v">
           {alert.city && <Tag small>{`${alert.city?.name} ${alert.department?.code ? `(${alert.department.code})` : ''}`}</Tag>}
-          <Tag small>{`${alert.maxPrice}€ max.`}</Tag>
-          {alert.hasColiving && <Tag small>Colocation</Tag>}
-          {alert.isAccessible && <Tag small>Accessible</Tag>}
+          <Tag small>{t('maxPriceTag', { price: alert.maxPrice })}</Tag>
+          {alert.hasColiving && <Tag small>{t('colivingTag')}</Tag>}
+          {alert.isAccessible && <Tag small>{t('accessibleTag')}</Tag>}
         </div>
       </div>
       <div className="fr-mt-4w fr-flex fr-justify-content-space-between">

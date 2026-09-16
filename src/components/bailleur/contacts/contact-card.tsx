@@ -7,7 +7,7 @@ import { useSearchParams } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { forwardRef, type HTMLAttributes } from 'react'
 import { EContactSource } from '~/enums/contact-source'
-import { CONTACT_STATUS_CONFIG, EContactStatus } from '~/enums/contact-status'
+import { CONTACT_STATUS_CONFIG, CONTACT_STATUSES, EContactStatus } from '~/enums/contact-status'
 import { formatDayjs } from '~/utils/dayjs'
 import { buildHref } from '~/utils/preserve-query-params'
 import styles from './contact-card.module.css'
@@ -33,7 +33,8 @@ export const ContactCard = forwardRef<HTMLDivElement, Props>(({ contact, slug, o
   const t = useTranslations('bailleur.contacts')
   const locale = useLocale()
   const searchParams = useSearchParams()
-  const config = CONTACT_STATUS_CONFIG[contact.status as EContactStatus] ?? CONTACT_STATUS_CONFIG[EContactStatus.A_MODERER]
+  const status = CONTACT_STATUSES.includes(contact.status as EContactStatus) ? (contact.status as EContactStatus) : EContactStatus.A_MODERER
+  const config = CONTACT_STATUS_CONFIG[status]
   const studentName = contact.studentName ?? t('defaultCandidateName')
   const href = buildHref(`/bailleur/contacts/${slug}/${contact.id}`, searchParams)
 
@@ -50,7 +51,7 @@ export const ContactCard = forwardRef<HTMLDivElement, Props>(({ contact, slug, o
       {...rest}
     >
       <Badge severity={config.severity ?? undefined} noIcon>
-        {config.label}
+        {t(`status.${status}`)}
       </Badge>
 
       <span className="fr-text-mention--grey fr-text--xs fr-mt-1v fr-mb-2v">

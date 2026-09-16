@@ -9,18 +9,20 @@ import * as Sentry from '@sentry/nextjs'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { FC, useState } from 'react'
+import { FC, useMemo, useState } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { tss } from 'tss-react'
 import { resendVerificationEmail } from '~/components/credentials-sign-in/actions'
 import { createToast } from '~/components/ui/createToast'
 import { RequiredLabel } from '~/components/ui/required-mark'
 import { trackEvent } from '~/lib/tracking'
-import { ZCredentialsSignInForm } from '~/schemas/credentials-sign-in/credentials-sign-in'
+import { createZCredentialsSignInForm } from '~/schemas/credentials-sign-in/credentials-sign-in'
 import { signInCredentials } from '~/services/better-auth-client'
 
 export const CredentialsSignInForm: FC = () => {
   const t = useTranslations('login')
+  const tSchemas = useTranslations('schemas')
+  const schema = useMemo(() => createZCredentialsSignInForm(tSchemas), [tSchemas])
   const router = useRouter()
   const { classes } = useStyles()
   const [isLoading, setIsLoading] = useState(false)
@@ -33,7 +35,7 @@ export const CredentialsSignInForm: FC = () => {
       email: '',
       password: '',
     },
-    resolver: zodResolver(ZCredentialsSignInForm),
+    resolver: zodResolver(schema),
   })
   const { formState, getValues, handleSubmit, register } = loginForm
 
@@ -54,14 +56,14 @@ export const CredentialsSignInForm: FC = () => {
           trackEvent({ category: 'Authentification', action: 'connexion etudiant', name: 'erreur' })
           createToast({
             priority: 'error',
-            message: 'Email ou mot de passe incorrect.',
+            message: t('invalidCredentials'),
           })
         }
       } else if (result.success) {
         trackEvent({ category: 'Authentification', action: 'connexion etudiant', name: 'succes' })
         createToast({
           priority: 'success',
-          message: 'Vous êtes connecté avec succès !',
+          message: t('successToast'),
         })
         router.push(result.redirectUrl)
         router.refresh()
@@ -69,7 +71,7 @@ export const CredentialsSignInForm: FC = () => {
         trackEvent({ category: 'Authentification', action: 'connexion etudiant', name: 'erreur' })
         createToast({
           priority: 'error',
-          message: 'Une erreur est survenue lors de la connexion.',
+          message: t('errorToast'),
         })
       }
     } catch (error) {
@@ -77,7 +79,7 @@ export const CredentialsSignInForm: FC = () => {
       trackEvent({ category: 'Authentification', action: 'connexion etudiant', name: 'erreur' })
       createToast({
         priority: 'error',
-        message: 'Une erreur est survenue lors de la connexion.',
+        message: t('errorToast'),
       })
     } finally {
       setIsLoading(false)
@@ -149,7 +151,7 @@ export const CredentialsSignInForm: FC = () => {
             </Link>
           </div>
           <Button type="submit" iconPosition="right" iconId={isLoading ? 'ri-loader-4-line' : 'ri-arrow-right-line'} disabled={isLoading}>
-            {isLoading ? 'Connexion en cours...' : t('labels.cta')}
+            {isLoading ? t('labels.loading') : t('labels.cta')}
           </Button>
         </div>
       </form>

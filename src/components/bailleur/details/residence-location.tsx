@@ -2,6 +2,7 @@
 
 import Button from '@codegouvfr/react-dsfr/Button'
 import Input from '@codegouvfr/react-dsfr/Input'
+import { useTranslations } from 'next-intl'
 import { useRef, useState } from 'react'
 import { useFieldArray, useFormContext } from 'react-hook-form'
 import AccommodationMap from '~/app/(public)/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-map'
@@ -21,6 +22,7 @@ const AddressAutocompleteRow = ({
   isMain: boolean
   initialValue?: string
 }) => {
+  const t = useTranslations('bailleur.residences.details.location')
   const {
     setValue,
     formState: { errors },
@@ -55,7 +57,7 @@ const AddressAutocompleteRow = ({
   const addressErrors = errors.addresses?.[index]
   const hasAddressError = addressErrors?.address || addressErrors?.city || addressErrors?.postalCode
 
-  const label = isMain ? 'Adresse' : `Adresse n\u00B0${index + 1}`
+  const label = isMain ? t('mainAddressLabel') : t('additionalAddressLabel', { index: index + 1 })
 
   return (
     <div className="fr-mb-2w">
@@ -65,13 +67,13 @@ const AddressAutocompleteRow = ({
             <Input
               label={label}
               state={hasAddressError ? 'error' : 'default'}
-              stateRelatedMessage={hasAddressError ? 'Veuillez sélectionner une adresse valide' : undefined}
+              stateRelatedMessage={hasAddressError ? t('invalidAddress') : undefined}
               nativeInputProps={{
                 value: inputValue,
                 onChange: handleInputChange,
                 onFocus: () => setShowSuggestions(true),
                 onBlur: () => setTimeout(() => setShowSuggestions(false), 200),
-                placeholder: 'Rechercher une adresse...',
+                placeholder: t('searchPlaceholder'),
                 autoComplete: 'off',
               }}
             />
@@ -81,7 +83,7 @@ const AddressAutocompleteRow = ({
               type="button"
               priority="secondary"
               iconId="ri-delete-bin-line"
-              title="Supprimer cette adresse"
+              title={t('removeAddress')}
               onClick={onRemove}
               style={{ marginBottom: hasAddressError ? '2rem' : '0rem' }}
             />
@@ -90,7 +92,7 @@ const AddressAutocompleteRow = ({
         {showSuggestions && (suggestions.length > 0 || isLoading) && (
           <ul className={styles.suggestionList}>
             {isLoading ? (
-              <li className={styles.suggestionLoading}>Recherche en cours...</li>
+              <li className={styles.suggestionLoading}>{t('searching')}</li>
             ) : (
               suggestions.map((suggestion, i) => (
                 <li key={i} onClick={() => handleSelectSuggestion(suggestion)} className={styles.suggestionItem}>
@@ -114,6 +116,7 @@ const AddressAutocompleteRow = ({
 }
 
 export const ResidenceLocation = ({ accommodation }: { accommodation: TAccomodationMy }) => {
+  const t = useTranslations('bailleur.residences.details.location')
   const latitude = accommodation.latitude ?? 0
   const longitude = accommodation.longitude ?? 0
 
@@ -125,10 +128,8 @@ export const ResidenceLocation = ({ accommodation }: { accommodation: TAccomodat
 
   return (
     <div className="fr-p-2w fr-p-md-6w">
-      <h3>Adresse de la résidence</h3>
-      <p className="fr-text--sm fr-text-mention--grey">
-        Vous pouvez ajouter une ou plusieurs adresses postales si vous disposez de plusieurs résidences dans la même ville.
-      </p>
+      <h3>{t('sectionTitle')}</h3>
+      <p className="fr-text--sm fr-text-mention--grey">{t('updateSectionHint')}</p>
 
       {fields.map((field, index) => (
         <AddressAutocompleteRow
@@ -147,7 +148,7 @@ export const ResidenceLocation = ({ accommodation }: { accommodation: TAccomodat
         className="fr-mb-2w"
         onClick={() => append({ address: '', city: '', postalCode: '' })}
       >
-        Ajouter une adresse
+        {t('addAddress')}
       </Button>
 
       <div className="fr-mt-2w" style={{ height: '300px', width: '100%' }}>

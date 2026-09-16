@@ -5,16 +5,18 @@ import Button from '@codegouvfr/react-dsfr/Button'
 import { Input } from '@codegouvfr/react-dsfr/Input'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslations } from 'next-intl'
-import { FC, ReactNode } from 'react'
+import { FC, ReactNode, useMemo } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { tss } from 'tss-react'
 import { RequiredLabel } from '~/components/ui/required-mark'
 import { useForgotPassword } from '~/hooks/use-forgot-password'
 import { trackEvent } from '~/lib/tracking'
-import { ZForgotPasswordForm } from '~/schemas/forgot-password/forgot-password'
+import { createZForgotPasswordForm } from '~/schemas/forgot-password/forgot-password'
 
 export const ForgotPasswordForm: FC = () => {
   const t = useTranslations('forgotPassword')
+  const tSchemas = useTranslations('schemas')
+  const schema = useMemo(() => createZForgotPasswordForm(tSchemas), [tSchemas])
   const { classes } = useStyles()
   const { mutateAsync, isLoading, isSuccess } = useForgotPassword()
 
@@ -22,7 +24,7 @@ export const ForgotPasswordForm: FC = () => {
     defaultValues: {
       email: '',
     },
-    resolver: zodResolver(ZForgotPasswordForm),
+    resolver: zodResolver(schema),
   })
   const { getValues, handleSubmit, register } = forgotPasswordForm
 
