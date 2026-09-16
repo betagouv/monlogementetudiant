@@ -29,8 +29,7 @@ import { bboxSelect } from '../utils/spatial-helpers'
 // d'autres routers (favorites, bailleur) et par `get-my-accommodations`.
 export { priceMaxComputed, rowsToAccommodationDTOs, toAccommodationDTO } from '~/server/accommodations/list-query'
 
-// Procédures publiques : sans borne, `pageSize: 100000` extrait tout le parc en une requête et un rayon
-// démesuré fait parcourir toute la table à PostGIS. L'API v1 (`publicCaller`) monte jusqu'à 100 par page.
+// Bornes des procédures publiques. L'API v1 (`publicCaller`) monte jusqu'à 100 par page.
 const MAX_PAGE_SIZE = 100
 const MAX_PARAM_LENGTH = 200
 const ZPage = z.number().int().min(1).max(1000).default(1)

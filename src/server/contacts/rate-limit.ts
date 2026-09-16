@@ -26,8 +26,7 @@ export const getClientIp = (req: Request | undefined): string | null => {
 }
 
 /**
- * `contacts.create` est publique : sans garde-fou, n'importe qui peut inonder le tableau de bord
- * d'un gestionnaire de faux prospects. On plafonne le nombre de demandes par IP et par heure.
+ * Plafonne le nombre de demandes de contact par IP et par heure (`contacts.create` est publique).
  *
  * Quand l'IP est inconnue (appel serveur à serveur, tests), on n'applique pas de limite : le
  * plafond n'a de sens que pour le trafic entrant.

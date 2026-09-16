@@ -22,11 +22,7 @@ const handleTRPC = (req: Request) =>
     },
   })
 
-/**
- * Le client tRPC n'envoie que du JSON. tRPC accepte aussi `multipart/form-data` et `octet-stream`, que
- * n'importe quelle page peut poster sans requête préalable (CORS « simple ») : une mutation sans
- * `.input()` (ex. `dossierFacile.disconnect`) s'exécuterait alors avec les cookies de la victime.
- */
+/** Les mutations n'acceptent que du JSON envoyé depuis l'origine de l'application (client tRPC). */
 const handler = (req: Request) => {
   if (req.method === 'POST') {
     if (!req.headers.get('content-type')?.startsWith('application/json')) {

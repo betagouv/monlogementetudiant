@@ -102,8 +102,7 @@ export const contactsRouter = createTRPCRouter({
       await assertContactRequestRateLimit(ipHash)
 
       const userId = ctx.session?.user.id ?? null
-      // Une session ne prouve que l'adresse du compte. Ne jamais considérer une adresse fournie
-      // dans le corps comme vérifiée : un étudiant connecté pourrait sinon usurper celle d'un tiers.
+      // Connecté : seule l'adresse du compte fait foi, celle du formulaire est ignorée.
       const verifiedEmail = userId ? ctx.session!.user.email.trim().toLowerCase() : input.email
 
       const [request] = await db

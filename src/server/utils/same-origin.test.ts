@@ -8,7 +8,7 @@ describe('isSameOriginRequest', () => {
     expect(isSameOriginRequest(post({ origin: 'http://localhost:3000', 'sec-fetch-site': 'same-origin' }))).toBe(true)
   })
 
-  it('refuse un sous-domaine voisin, pourtant « same-site » pour SameSite=Lax', () => {
+  it('refuse un autre sous-domaine', () => {
     expect(isSameOriginRequest(post({ origin: 'https://info.beta.gouv.fr', 'sec-fetch-site': 'same-site' }))).toBe(false)
   })
 

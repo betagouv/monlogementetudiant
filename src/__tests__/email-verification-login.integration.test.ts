@@ -58,8 +58,8 @@ describe('email verification gate on credentials sign-in', () => {
   })
 
   it('returns INVALID_EMAIL_OR_PASSWORD (not EMAIL_NOT_VERIFIED) for an unverified user with a wrong password', async () => {
-    // Important : la vérif d'email se fait *après* le check du mot de passe.
-    // Sinon, on leakerait l'existence d'un compte non vérifié à un attaquant.
+    // La vérification d'e-mail intervient après celle du mot de passe : un mauvais mot de passe renvoie
+    // la même erreur, que le compte soit vérifié ou non.
     const email = 'unverified-wrong-pwd@test.com'
     await createCredentialUser({ id: 'unverified-wrong-pwd', email, emailVerified: false, password: 'rightPassword123!' })
 

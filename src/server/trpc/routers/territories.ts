@@ -170,7 +170,7 @@ const resolveLooseSlug = async (table: typeof cities | typeof academies | typeof
   return byUnaccent?.slug ?? null
 }
 
-/** Recherches publiques en ILIKE : une chaîne sans borne coûte du CPU Postgres pour rien. */
+/** Longueur maximale des recherches textuelles publiques. */
 const MAX_SEARCH_LENGTH = 100
 
 export const territoriesRouter = createTRPCRouter({

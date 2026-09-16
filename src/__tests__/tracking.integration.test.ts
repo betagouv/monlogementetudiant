@@ -16,7 +16,7 @@ describe('tracking.logAccommodationView', () => {
 
     await caller.tracking.logAccommodationView({
       accommodationId: accommodation.id,
-      // Ancien client ou appel forgé : le champ n'existe plus et doit être ignoré.
+      // Champ supprimé : ignoré s'il est encore envoyé.
       ...({ referer: 'A'.repeat(100_000) } as object),
     })
 

@@ -15,8 +15,7 @@ function relayResponseHeaders(source: Headers): Headers {
     const value = source.get(key)
     if (value !== null) headers.set(key, value)
   }
-  // Le HTML WordPress est rendu sous l'origine de l'application. Interdire tout script empêche
-  // qu'une compromission du CMS ne devienne une prise de contrôle des sessions applicatives.
+  // Le HTML WordPress est servi sous l'origine de l'application, sans script autorisé.
   headers.set('content-security-policy', HTML_SECURITY_POLICY)
   headers.set('x-content-type-options', 'nosniff')
   return headers
@@ -25,19 +24,13 @@ function relayResponseHeaders(source: Headers): Headers {
 /** Un segment d'URL WordPress : un slug, rien d'autre (ni `..`, ni `?`, ni `.php`). */
 const SLUG_SEGMENT = /^[a-z0-9-]+$/
 
-/**
- * Paramètres de requête relayés. Tout le reste est retiré : `rest_route` et `_jsonp` exposeraient l'API
- * REST de WordPress (et du JSONP exécutable) sous notre origine, et chaque paramètre inconnu créerait
- * une entrée de plus dans le Data Cache.
- */
+/** Seuls paramètres de requête relayés (les autres créeraient autant d'entrées dans le Data Cache). */
 const RELAYED_QUERY_PARAMS = ['media_link', 'paged'] as const
 
 /**
  * Construit le chemin WordPress d'une page relayée, ou `null` si un segment n'est pas un slug.
- *
- * Les segments arrivent décodés par Next : sans validation, `..%2Fwp-json` remonterait l'arborescence
- * (`fetch` normalise `..`). Les liens de l'app envoient parfois un nom de ville brut (« Nîmes »,
- * « Le Mans ») : on le ramène à la forme de slug WordPress avant de valider.
+ * Les liens de l'app envoient parfois un nom de ville brut (« Nîmes », « Le Mans ») : il est ramené à
+ * la forme de slug WordPress avant validation.
  */
 export function buildWpPath(prefix: string, segments: string[]): string | null {
   const slugs = segments.map((segment) =>
@@ -73,15 +66,11 @@ type ProxyWpOptions = {
 }
 
 /**
- * Proxy cachant les pages du WordPress `info.` au niveau de l'app.
+ * Proxy cachant les pages du WordPress `info.` au niveau de l'app : GET de pages HTML uniquement.
  *
- * GET uniquement, mis en cache par le Data Cache de Next (clé = URL amont, query filtrée comprise) :
- * WordPress n'est retapé qu'une fois par page et par `revalidate`, quel que soit le trafic. Les pages
- * publiques ne posent pas de cookie → le cache partagé est sûr. Aucune page relayée n'a de formulaire :
- * pas de POST, qui ouvrirait `wp-login.php` / `xmlrpc.php` depuis l'IP du conteneur.
- *
- * Seul le HTML est relayé : un autre type (JSON, JSONP, XML) servi sous notre origine contournerait les
- * politiques fondées sur `'self'`.
+ * Mis en cache par le Data Cache de Next (clé = URL amont, query filtrée comprise) : WordPress n'est
+ * retapé qu'une fois par page et par `revalidate`, quel que soit le trafic. Les pages publiques ne posent
+ * pas de cookie → le cache partagé est sûr.
  */
 export async function proxyWp(request: Request, { path, revalidate = 21600 }: ProxyWpOptions) {
   const upstream = `${WP_ORIGIN}${path}${relayedSearch(request.url)}`
