@@ -4,7 +4,7 @@ import clsx from 'clsx'
 import { useTranslations } from 'next-intl'
 import { FC } from 'react'
 import { type CalculationResult } from '~/components/helps-simulator/results/aid-calculator'
-import { ZONE_LABELS } from '~/components/helps-simulator/results/zone-utils'
+import { ZONE_LABEL_KEYS } from '~/components/helps-simulator/results/zone-utils'
 import styles from './help-simulator-header-results.module.css'
 
 interface AidsLocalisationInfoProps {
@@ -13,13 +13,16 @@ interface AidsLocalisationInfoProps {
 
 export const AidsLocalisationInfo: FC<AidsLocalisationInfoProps> = ({ results }) => {
   const t = useTranslations('simulator.results.localisation')
+  const tResults = useTranslations('simulator.results')
 
   return (
     <>
       <div className="fr-flex fr-align-items-center fr-mb-3w">
         <div className="fr-flex fr-flex-gap-2v">
           <span className="fr-text--bold fr-text--sm fr-mb-0">{t('label')}</span>
-          <span className={clsx('fr-text--sm fr-mb-0', styles.localisationContainer)}>{ZONE_LABELS[results.zone]}</span>
+          <span className={clsx('fr-text--sm fr-mb-0', styles.localisationContainer)}>
+            {tResults(`zones.${ZONE_LABEL_KEYS[results.zone]}`)}
+          </span>
         </div>
       </div>
 
@@ -28,7 +31,7 @@ export const AidsLocalisationInfo: FC<AidsLocalisationInfoProps> = ({ results })
           <span className="ri-information-line" aria-hidden="true" />
           <span>
             {t.rich('localAidsInfo', {
-              name: results.localAids[0],
+              name: tResults(`localAids.${results.localAids[0]}`),
               strong: (chunks) => <strong className={styles.localAidName}>{chunks}</strong>,
             })}
           </span>

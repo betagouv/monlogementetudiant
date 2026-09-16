@@ -17,13 +17,13 @@ export default async function StudentAlertsPage() {
   const auth = await getServerSession()
   if (!auth || !auth.user) return notFound()
 
-  const notifPrefs = await getNotificationPreferences()
+  const [t, notifPrefs] = await Promise.all([getTranslations('student.alerts'), getNotificationPreferences()])
 
   return (
     <>
       <div className="fr-border-right fr-border-top fr-border-bottom fr-px-6w fr-py-5w">
-        <h1>Mes alertes logements</h1>
-        <span className="fr-text--xl fr-text-mention--grey">Les nouvelles offres de logements disponibles en temps réel</span>
+        <h1>{t('pageTitle')}</h1>
+        <span className="fr-text--xl fr-text-mention--grey">{t('pageDescription')}</span>
       </div>
       <div
         className={clsx(

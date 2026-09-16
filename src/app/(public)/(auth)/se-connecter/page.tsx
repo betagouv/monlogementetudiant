@@ -23,7 +23,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   return (
     <>
       <div className={authStyles.imageContainer}>
-        <Image className={authStyles.image} src={background} alt="Se connecter" priority quality={100} />
+        <Image className={authStyles.image} src={background} alt={t('labels.cta')} priority quality={100} />
       </div>
       <div className={clsx(authStyles.container, 'fr-container')}>
         <h1>{t('studentTitle')}</h1>

@@ -3,11 +3,13 @@
 import Button from '@codegouvfr/react-dsfr/Button'
 import clsx from 'clsx'
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { tss } from 'tss-react'
 import { accommodationPicturesModal, photoAlt } from './accommodation-images'
 
 export const AccommodationImagesModal = ({ children, images, title }: { children: React.ReactNode; images: string[]; title: string }) => {
+  const t = useTranslations('accomodation.images')
   const { classes } = useStyles()
   const [currentImage, setCurrentImage] = useState(0)
   return (
@@ -18,13 +20,13 @@ export const AccommodationImagesModal = ({ children, images, title }: { children
           <div style={{ position: 'relative', width: '100%', height: '50vh' }}>
             <Image
               src={images[currentImage]}
-              alt={photoAlt(currentImage + 1, images.length, title)}
+              alt={photoAlt(t, currentImage + 1, images.length, title)}
               fill
               style={{ objectFit: 'contain' }}
             />
           </div>
           <p role="status" aria-live="polite" className="fr-sr-only">
-            Photo {currentImage + 1} sur {images.length}
+            {t('photoStatus', { index: currentImage + 1, total: images.length })}
           </p>
         </div>
         {images.length > 1 && (
@@ -33,14 +35,14 @@ export const AccommodationImagesModal = ({ children, images, title }: { children
               <Button
                 iconId="ri-arrow-left-line"
                 priority="secondary"
-                title="Image précédente"
+                title={t('previousImage')}
                 onClick={() => setCurrentImage(currentImage - 1)}
                 disabled={currentImage === 0}
               />
               <Button
                 iconId="ri-arrow-right-line"
                 priority="secondary"
-                title="Image suivante"
+                title={t('nextImage')}
                 onClick={() => setCurrentImage(currentImage + 1)}
                 disabled={currentImage === images.length - 1}
               />

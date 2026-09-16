@@ -7,7 +7,7 @@ import { Tag, TagProps } from '@codegouvfr/react-dsfr/Tag'
 import { HydrationBoundary } from '@tanstack/react-query'
 import clsx from 'clsx'
 import { Metadata } from 'next'
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { AccommodationAvailability } from '~/app/(public)/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-availability'
 import AccommodationDescription from '~/app/(public)/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-description'
 import { AccommodationEquipments } from '~/app/(public)/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-equipments'
@@ -24,9 +24,9 @@ import { JsonLd } from '~/components/seo/json-ld'
 import { NewWindowHint } from '~/components/ui/new-window'
 import { getAvailableApartmentTypes } from '~/enums/apartment-type'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
-import { EResidenceType, RESIDENCE_TYPE_LABELS } from '~/enums/residence-type'
+import { EResidenceType, RESIDENCE_TYPE_MESSAGE_KEYS } from '~/enums/residence-type'
 import { getCanonicalUrl } from '~/utils/canonical'
-import { formatCityWithA } from '~/utils/french-contraction'
+import { formatCityWithPreposition } from '~/utils/french-contraction'
 import { buildBreadcrumbSchema, buildLodgingSchema } from '~/utils/schema'
 import { AccommodationViewTracker } from './accommodation-view-tracker'
 import { getAccommodationBreadcrumbItems, getAccommodationLodgingData } from './get-accommodation-json-ld'
@@ -36,8 +36,8 @@ import styles from './logement.module.css'
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const { accommodation } = await getAccommodationPageContext(slug)
-  const t = await getTranslations('metadata')
-  const cityFormatted = formatCityWithA(accommodation.city)
+  const [t, locale] = await Promise.all([getTranslations('metadata'), getLocale()])
+  const cityFormatted = formatCityWithPreposition(locale, 'à', accommodation.city)
 
   return {
     title: t('accommodation.title', { name: accommodation.name, cityFormatted }),
@@ -51,6 +51,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function AccommodationPage({ params }: { params: Promise<{ slug: string; location: string }> }) {
   const t = await getTranslations('accomodation')
   const commonT = await getTranslations()
+  const breadcrumbT = await getTranslations('breadcrumbs')
+  const locale = await getLocale()
   const { slug } = await params
   const { accommodation, cityBbox, dehydratedState, latitude, longitude, nbAvailable, nearbyAccommodations, nearbyEtablissements, user } =
     await getAccommodationPageContext(slug)
@@ -88,7 +90,7 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
   ]
 
   const ownerLandingUrl = owner?.landingUrl ?? null
-  const cityFormatted = formatCityWithA(city)
+  const cityFormatted = formatCityWithPreposition(locale, 'à', city)
   const breadCrumbTitle = commonT('breadcrumbs.accommodationTitle', { name, cityFormatted })
   const isRSJAorFJT =
     accommodation.residenceType === EResidenceType.SOCIALE_JEUNES_ACTIFS ||
@@ -106,7 +108,7 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
     return fromAddresses.length > 0 ? fromAddresses : [[latitude, longitude]]
   })()
 
-  const breadcrumbItems = getAccommodationBreadcrumbItems(name, city, slug)
+  const breadcrumbItems = getAccommodationBreadcrumbItems(breadcrumbT, locale, name, city, slug)
   const lodgingData = getAccommodationLodgingData({
     name,
     address,
@@ -132,7 +134,7 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
             homeLinkProps={{ href: '/' }}
             segments={[
               {
-                label: commonT('breadcrumbs.findAccomodationWithLocation', { locationFormatted: formatCityWithA(city) }),
+                label: commonT('breadcrumbs.findAccomodationWithLocation', { locationFormatted: cityFormatted }),
                 linkProps: {
                   href: citySearchUrl,
                 },
@@ -153,7 +155,7 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
             <div className={styles.section}>
               {accommodation.residenceType && isRSJAorFJT && (
                 <span className={clsx(styles.accommodationType, 'fr-text--bold fr-text--uppercase')}>
-                  {RESIDENCE_TYPE_LABELS[accommodation.residenceType]}
+                  {t(`residenceTypes.${RESIDENCE_TYPE_MESSAGE_KEYS[accommodation.residenceType]}`)}
                 </span>
               )}
 

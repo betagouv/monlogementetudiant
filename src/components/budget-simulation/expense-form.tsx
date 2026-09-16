@@ -168,17 +168,18 @@ export function ExpenseForm() {
         <div>
           <hr className="fr-pt-2w fr-pb-0 fr-mt-2w" />
           <span className="fr-text--xs fr-mb-0 fr-text-mention--grey">
-            * Ces informations sont issues des données déclarées par les étudiants dans le cadre de l’enquête{' '}
-            <Link
-              className="fr-link fr-text--xs"
-              href="https://www.ove-national.education.fr/wp-content/uploads/2024/03/OVE-BROCHURE-REPERES-CDV2023-1-1.pdf"
-              target="_blank"
-            >
-              Repère 2023 de OVE
-              <NewWindowHint />
-            </Link>{' '}
-            et retravaillées en fonction des profils “décohabitants” (n’habitant pas chez leurs parents) et “indépendants” (n'étant pas ou
-            peu aidés par leurs parents) des étudiants afin de donner des estimations de budget.
+            {t.rich('rangesSource', {
+              link: (chunks) => (
+                <Link
+                  className="fr-link fr-text--xs"
+                  href="https://www.ove-national.education.fr/wp-content/uploads/2024/03/OVE-BROCHURE-REPERES-CDV2023-1-1.pdf"
+                  target="_blank"
+                >
+                  {chunks}
+                  <NewWindowHint />
+                </Link>
+              ),
+            })}
           </span>
         </div>
       )}

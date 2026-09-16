@@ -3,9 +3,10 @@
 import { createModal } from '@codegouvfr/react-dsfr/Modal'
 import Select from '@codegouvfr/react-dsfr/Select'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslations } from 'next-intl'
 import { useMemo, useState } from 'react'
 import { ModalPortal } from '~/components/ui/modal-portal'
-import { APARTMENT_TYPE_LABELS, type ApartmentType } from '~/enums/apartment-type'
+import type { ApartmentType } from '~/enums/apartment-type'
 import { useTRPC, useTRPCClient } from '~/server/trpc/client'
 
 interface CandidatureModalProps {
@@ -18,6 +19,8 @@ export const useCandidatureModal = (accommodationSlug: string) => {
 }
 
 export const CandidatureModal = ({ accommodationSlug, availableApartmentTypes }: CandidatureModalProps) => {
+  const t = useTranslations('accomodation.candidatureModal')
+  const tApartmentTypes = useTranslations('shared.apartmentTypes')
   const [step, setStep] = useState<'form' | 'success'>('form')
   const [selectedApartmentType, setSelectedApartmentType] = useState<ApartmentType | ''>('')
   const modal = useCandidatureModal(accommodationSlug)
@@ -49,18 +52,18 @@ export const CandidatureModal = ({ accommodationSlug, availableApartmentTypes }:
   return (
     <ModalPortal>
       <modal.Component
-        title={step === 'form' ? 'Candidater pour ce logement' : 'Candidature envoyée'}
+        title={step === 'form' ? t('title') : t('successTitle')}
         buttons={
           step === 'form'
             ? [
                 {
-                  children: 'Annuler',
+                  children: t('cancel'),
                   priority: 'secondary',
                   doClosesModal: true,
                   onClick: handleClose,
                 },
                 {
-                  children: 'Candidater',
+                  children: t('submit'),
                   doClosesModal: false,
                   onClick: handleSubmit,
                   disabled: !selectedApartmentType || applyMutation.isPending,
@@ -68,7 +71,7 @@ export const CandidatureModal = ({ accommodationSlug, availableApartmentTypes }:
               ]
             : [
                 {
-                  children: 'Fermer',
+                  children: t('close'),
                   doClosesModal: true,
                   onClick: handleClose,
                 },
@@ -77,23 +80,23 @@ export const CandidatureModal = ({ accommodationSlug, availableApartmentTypes }:
       >
         {step === 'form' ? (
           <Select
-            label="Type de logement"
+            label={t('apartmentTypeLabel')}
             nativeSelectProps={{
               value: selectedApartmentType,
               onChange: (e) => setSelectedApartmentType(e.target.value as ApartmentType),
             }}
           >
             <option value="" disabled hidden>
-              Sélectionnez un type de logement
+              {t('apartmentTypePlaceholder')}
             </option>
             {availableApartmentTypes.map((type) => (
               <option key={type} value={type}>
-                {APARTMENT_TYPE_LABELS[type]}
+                {tApartmentTypes(type)}
               </option>
             ))}
           </Select>
         ) : (
-          <p>Votre candidature a bien été envoyée. Le bailleur reviendra vers vous dans les meilleurs délais.</p>
+          <p>{t('successDescription')}</p>
         )}
       </modal.Component>
     </ModalPortal>

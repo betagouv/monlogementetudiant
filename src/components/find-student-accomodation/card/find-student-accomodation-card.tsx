@@ -60,7 +60,7 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
     <AvailabilityBadge
       nbAvailable={nbAvailable}
       noAvailabilityText={t('noAvailability')}
-      availabilityText={t('availability')}
+      availabilityText={(count) => t('availabilityCount', { count })}
       unknownAvailabilityText={t('unknownAvailability')}
       as="span"
     />
@@ -103,7 +103,9 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
             <span className={clsx('ri-group-line', styles.description)}>{accommodationsTypes.join(' • ')}</span>
           )}
           <br />
-          {!!nbTotalApartments && <span className={clsx('ri-community-line', styles.description)}>{`${nbTotalApartments} logements`}</span>}
+          {!!nbTotalApartments && (
+            <span className={clsx('ri-community-line', styles.description)}>{t('accommodationsCount', { count: nbTotalApartments })}</span>
+          )}
           {badgeAvailability && <span className={clsx('fr-mt-1v', styles.badgeLine)}>{badgeAvailability}</span>}
           {showWaitingListBadge && (
             <span className={clsx('ri-folder-2-line fr-mt-1v', styles.badgeLine, styles.description)}>{t('waitingList')}</span>

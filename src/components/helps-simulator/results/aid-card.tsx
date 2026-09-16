@@ -27,8 +27,8 @@ const AID_LINKS: Record<string, string> = {
   'crous-mobilite-master': 'https://www.service-public.gouv.fr/particuliers/vosdroits/F34343',
 }
 
-const AID_LINK_LABELS: Record<string, string> = {
-  'crous-mobilite-parcoursup': "L'aide à la mobilité Parcoursup",
+const AID_LINK_LABEL_KEYS: Record<string, string> = {
+  'crous-mobilite-parcoursup': 'parcoursupLink',
 }
 
 const POTENTIALLY_ELIGIBLE_AIDS = ['caf-aides-logement', 'mobili-jeune']
@@ -39,25 +39,29 @@ interface AidCardProps {
 
 export const AidCard: FC<AidCardProps> = ({ aid }) => {
   const tA11y = useTranslations('accessibility')
+  const t = useTranslations('simulator.results.card')
+  const tAids = useTranslations('simulator.aids')
   const logo = AID_LOGOS[aid.id]
   const link = AID_LINKS[aid.id]
-  const linkLabel = AID_LINK_LABELS[aid.id]
+  const linkLabelKey = AID_LINK_LABEL_KEYS[aid.id]
+  const linkLabel = linkLabelKey ? t(linkLabelKey) : aid.isEligible ? t('requestAid') : t('learnMore')
   const isPotentiallyEligible = POTENTIALLY_ELIGIBLE_AIDS.includes(aid.id)
+  const name = tAids(aid.nameKey)
 
   return (
     <div className={clsx('fr-p-3w fr-flex fr-direction-column fr-border', styles.card)}>
       <div className="fr-flex fr-justify-content-space-between fr-align-items-start">
         <div className={styles.content}>
-          <h3 className={clsx('fr-text--lg fr-mb-1v', styles.title)}>{aid.name}</h3>
+          <h3 className={clsx('fr-text--lg fr-mb-1v', styles.title)}>{name}</h3>
           {aid.isEligible ? (
             <p className={clsx('fr-flex fr-align-items-center fr-mb-0', styles.eligibleText)}>
               <span className="ri-thumb-up-line" aria-hidden="true" />
-              {isPotentiallyEligible ? 'Vous êtes potentiellement éligible' : 'Vous êtes éligible'}
+              {isPotentiallyEligible ? t('potentiallyEligible') : t('eligible')}
             </p>
           ) : (
             <p className={clsx('fr-flex fr-align-items-center fr-mb-0', styles.ineligibleText)}>
               <span className="ri-thumb-down-line" aria-hidden="true" />
-              {aid.ineligibilityReason}
+              {aid.ineligibilityReason && tAids(aid.ineligibilityReason.key, aid.ineligibilityReason.values)}
             </p>
           )}
         </div>
@@ -71,16 +75,16 @@ export const AidCard: FC<AidCardProps> = ({ aid }) => {
       {aid.isEligible && aid.warningMessage && (
         <div className={clsx('fr-flex fr-align-items-start fr-flex-gap-2v fr-p-2v', styles.warningBox)}>
           <span className="ri-alert-line" aria-hidden="true" />
-          <span className="fr-text--sm fr-mb-0">{aid.warningMessage}</span>
+          <span className="fr-text--sm fr-mb-0">{tAids(aid.warningMessage.key, aid.warningMessage.values)}</span>
         </div>
       )}
 
-      <p className={clsx('fr-text--sm fr-mb-0', styles.description)}>{aid.description}</p>
+      <p className={clsx('fr-text--sm fr-mb-0', styles.description)}>{tAids(aid.descriptionKey)}</p>
 
       <div className="fr-flex fr-justify-content-space-between fr-align-items-center fr-mt-1w">
         {aid.isEligible && aid.amountLabel ? (
           <div className={clsx('fr-px-2v fr-py-1v', styles.amountBadge)}>
-            <span className={styles.amountLabel}>{aid.amountLabel}</span>
+            <span className={styles.amountLabel}>{tAids(aid.amountLabel.key, aid.amountLabel.values)}</span>
           </div>
         ) : (
           <div />
@@ -96,11 +100,11 @@ export const AidCard: FC<AidCardProps> = ({ aid }) => {
               target: '_blank',
               rel: 'noopener noreferrer',
               'aria-label': tA11y('linkNewWindow', {
-                label: `${linkLabel ?? (aid.isEligible ? "Demander l'aide" : 'En savoir plus')} : ${aid.name}`,
+                label: t('linkLabel', { label: linkLabel, name }),
               }),
             }}
           >
-            {linkLabel ?? (aid.isEligible ? "Demander l'aide" : 'En savoir plus')}
+            {linkLabel}
           </Button>
         )}
       </div>
