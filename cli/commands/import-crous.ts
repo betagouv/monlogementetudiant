@@ -1,5 +1,4 @@
 import { and, eq, sql } from 'drizzle-orm'
-import * as XLSX from 'xlsx'
 import { db } from '~/server/db'
 import { env } from '~/server/env'
 import { ensureCity, reverseGeocode } from '~/server/lib/import/geocoder'
@@ -15,11 +14,12 @@ import {
   CATEGORY_TO_TYPE,
   cleanNumber,
   getDuplicatedUairnes,
-  getSheet,
+  getSheetRows,
   mapTypologie,
   maxValue,
   minValue,
   normalizeText,
+  readWorkbook,
   type TypoCategory,
 } from '../lib/crous-helpers'
 import type { ImportCommand, ImportOptions, ImportResult } from '../types'
@@ -117,14 +117,12 @@ function buildResidenceKey(row: { code_crous?: number; code_residence: number })
   return `${row.code_crous ?? ''}:${row.code_residence}`
 }
 
-function loadXlsx(filePath: string): { residences: CrousResidence[]; typologiesByResidence: Map<string, CrousTypology[]> } {
-  const wb = XLSX.readFile(filePath)
+async function loadXlsx(filePath: string): Promise<{ residences: CrousResidence[]; typologiesByResidence: Map<string, CrousTypology[]> }> {
+  const wb = await readWorkbook(filePath)
 
-  const wsResidences = getSheet(wb, 'Liste residences', 0)
-  const rawResidences = XLSX.utils.sheet_to_json<CrousResidence>(wsResidences)
+  const rawResidences = getSheetRows<CrousResidence>(wb, 'Liste residences', 0)
 
-  const wsTypologies = getSheet(wb, 'Liste types de lgt', 1)
-  const rawTypologies = XLSX.utils.sheet_to_json<CrousTypology>(wsTypologies)
+  const rawTypologies = getSheetRows<CrousTypology>(wb, 'Liste types de lgt', 1)
 
   const typologiesByResidence = new Map<string, CrousTypology[]>()
   for (const t of rawTypologies) {
@@ -229,7 +227,7 @@ const command: ImportCommand = {
       throw new Error("Option --file requise pour l'import CROUS")
     }
 
-    const { residences, typologiesByResidence } = loadXlsx(options.file)
+    const { residences, typologiesByResidence } = await loadXlsx(options.file)
     const duplicatedUairnes = getDuplicatedUairnes(residences)
     const items = options.limit ? residences.slice(0, options.limit) : residences
     console.log(`  ${items.length} résidences chargées (${typologiesByResidence.size} résidences avec typologies)`)
