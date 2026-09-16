@@ -170,8 +170,11 @@ const resolveLooseSlug = async (table: typeof cities | typeof academies | typeof
   return byUnaccent?.slug ?? null
 }
 
+/** Recherches publiques en ILIKE : une chaîne sans borne coûte du CPU Postgres pour rien. */
+const MAX_SEARCH_LENGTH = 100
+
 export const territoriesRouter = createTRPCRouter({
-  search: baseProcedure.input(z.object({ q: z.string() })).query(async ({ input }) => {
+  search: baseProcedure.input(z.object({ q: z.string().max(MAX_SEARCH_LENGTH) })).query(async ({ input }) => {
     const { q } = input
     const empty = { academies: [], departments: [], cities: [] }
     const normalized = normalizeCitySearch(q)
@@ -247,55 +250,59 @@ export const territoriesRouter = createTRPCRouter({
     }
   }),
 
-  listAcademies: baseProcedure.input(z.object({ search: z.string().optional() }).optional()).query(async ({ input }) => {
-    const results = await db
-      .select({
-        id: academies.id,
-        name: academies.name,
-        slug: academies.slug,
-        bbox: bboxSelect(academies),
-      })
-      .from(academies)
-      .where(input?.search ? ilike(academies.name, `%${input.search}%`) : undefined)
-      .orderBy(asc(academies.name))
+  listAcademies: baseProcedure
+    .input(z.object({ search: z.string().max(MAX_SEARCH_LENGTH).optional() }).optional())
+    .query(async ({ input }) => {
+      const results = await db
+        .select({
+          id: academies.id,
+          name: academies.name,
+          slug: academies.slug,
+          bbox: bboxSelect(academies),
+        })
+        .from(academies)
+        .where(input?.search ? ilike(academies.name, `%${input.search}%`) : undefined)
+        .orderBy(asc(academies.name))
 
-    return results.map((a) => ({
-      id: a.id,
-      name: a.name,
-      slug: a.slug,
-      bbox: a.bbox,
-    }))
-  }),
-  listDepartments: baseProcedure.input(z.object({ search: z.string().optional() }).optional()).query(async ({ input }) => {
-    const conditions: SQL[] = [ne(departments.name, '')]
-    if (input?.search) conditions.push(ilike(departments.name, `%${input.search}%`))
-    const results = await db
-      .select({
-        id: departments.id,
-        name: departments.name,
-        slug: departments.slug,
-        code: departments.code,
-        bbox: bboxSelect(departments),
-      })
-      .from(departments)
-      .where(and(...conditions))
-      .orderBy(asc(departments.name))
+      return results.map((a) => ({
+        id: a.id,
+        name: a.name,
+        slug: a.slug,
+        bbox: a.bbox,
+      }))
+    }),
+  listDepartments: baseProcedure
+    .input(z.object({ search: z.string().max(MAX_SEARCH_LENGTH).optional() }).optional())
+    .query(async ({ input }) => {
+      const conditions: SQL[] = [ne(departments.name, '')]
+      if (input?.search) conditions.push(ilike(departments.name, `%${input.search}%`))
+      const results = await db
+        .select({
+          id: departments.id,
+          name: departments.name,
+          slug: departments.slug,
+          code: departments.code,
+          bbox: bboxSelect(departments),
+        })
+        .from(departments)
+        .where(and(...conditions))
+        .orderBy(asc(departments.name))
 
-    return results.map((d) => ({
-      id: d.id,
-      name: d.name,
-      slug: d.slug,
-      code: d.code,
-      bbox: d.bbox,
-    }))
-  }),
+      return results.map((d) => ({
+        id: d.id,
+        name: d.name,
+        slug: d.slug,
+        code: d.code,
+        bbox: d.bbox,
+      }))
+    }),
   listCities: baseProcedure
     .input(
       z
         .object({
-          departmentCode: z.string().optional(),
+          departmentCode: z.string().max(10).optional(),
           popular: z.boolean().optional(),
-          search: z.string().optional(),
+          search: z.string().max(MAX_SEARCH_LENGTH).optional(),
         })
         .optional(),
     )
@@ -349,7 +356,7 @@ export const territoriesRouter = createTRPCRouter({
       return results.map((c) => mapCityRow(c))
     }),
 
-  getCityDetails: baseProcedure.input(z.object({ slug: z.string() })).query(async ({ input }) => {
+  getCityDetails: baseProcedure.input(z.object({ slug: z.string().max(200) })).query(async ({ input }) => {
     const { slug } = input
     const slugLower = slug.toLowerCase()
 
@@ -493,7 +500,7 @@ export const territoriesRouter = createTRPCRouter({
       return department
     }),
 
-  rentSearch: baseProcedure.input(z.object({ q: z.string().min(1) })).query(({ input }) => {
+  rentSearch: baseProcedure.input(z.object({ q: z.string().min(1).max(MAX_SEARCH_LENGTH) })).query(({ input }) => {
     const rentData = getRentData()
     const searchTerm = input.q.toLowerCase()
 
