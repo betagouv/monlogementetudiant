@@ -29,6 +29,10 @@ const contactInput = {
   scholarshipStatus: 'yes',
 } as const
 
+/** Simule le clic sur le lien de double opt-in. */
+const confirmContactRequest = (id: string) =>
+  getTestDb().update(contactRequests).set({ confirmedAt: new Date() }).where(eq(contactRequests.id, id))
+
 /** Fait vieillir une demande pour franchir une fenêtre de rétention sans attendre. */
 const ageContactRequest = (id: string, days: number) =>
   getTestDb()
@@ -185,7 +189,8 @@ describe('candidature et favoris', () => {
   it('favorites the accommodation when a guest request is linked to the account', async () => {
     const owner = await createOwner({ name: 'Owner Late', slug: 'owner-late', contactMode: EOwnerContactMode.CONTACTS })
     await createAccommodation({ slug: 'res-late', ownerId: owner!.id }, [typologyDraft('t1', { nbAvailable: 1 })])
-    await caller.contacts.create({ accommodationSlug: 'res-late', ...contactInput })
+    const guest = await caller.contacts.create({ accommodationSlug: 'res-late', ...contactInput })
+    await confirmContactRequest(guest!.id)
 
     await linkGuestContactRequests('test-user-id', contactInput.email)
 
@@ -428,6 +433,7 @@ describe('linkGuestContactRequests', () => {
     const owner = await createOwner({ name: 'Owner Link', slug: 'owner-link', contactMode: EOwnerContactMode.CONTACTS })
     await createAccommodation({ slug: 'res-link', ownerId: owner!.id }, [typologyDraft('t1', { nbAvailable: 1 })])
     const guest = await caller.contacts.create({ accommodationSlug: 'res-link', ...contactInput })
+    await confirmContactRequest(guest!.id)
 
     const linked = await linkGuestContactRequests('test-user-id', contactInput.email.toUpperCase())
 
@@ -440,12 +446,34 @@ describe('linkGuestContactRequests', () => {
     const owner = await createOwner({ name: 'Owner Other', slug: 'owner-other', contactMode: EOwnerContactMode.CONTACTS })
     await createAccommodation({ slug: 'res-other', ownerId: owner!.id }, [typologyDraft('t1', { nbAvailable: 1 })])
     const guest = await caller.contacts.create({ accommodationSlug: 'res-other', ...contactInput })
+    await confirmContactRequest(guest!.id)
 
     const linked = await linkGuestContactRequests('test-user-id', 'quelquun-dautre@test.com')
 
     expect(linked).toBe(0)
     const [row] = await getTestDb().select().from(contactRequests).where(eq(contactRequests.id, guest!.id))
     expect(row!.userId).toBeNull()
+  })
+
+  it('does not link an unconfirmed guest request', async () => {
+    const owner = await createOwner({
+      name: 'Owner Unconfirmed',
+      slug: 'owner-unconfirmed',
+      userId: 'test-owner-id',
+      contactMode: EOwnerContactMode.CONTACTS,
+    })
+    await createAccommodation({ slug: 'res-unconfirmed', ownerId: owner!.id }, [typologyDraft('t1', { nbAvailable: 1 })])
+    // Un tiers dépose une demande avec l'adresse de l'étudiant, qui ne clique jamais le lien.
+    const forged = await caller.contacts.create({ accommodationSlug: 'res-unconfirmed', ...contactInput, phone: '0699999999' })
+
+    const linked = await linkGuestContactRequests('test-user-id', contactInput.email)
+
+    expect(linked).toBe(0)
+    const [row] = await getTestDb().select().from(contactRequests).where(eq(contactRequests.id, forged!.id))
+    expect(row!.userId).toBeNull()
+    const board = await ownerCaller.bailleur.listContactsByResidence({ slug: 'res-unconfirmed' })
+    expect(board.items).toHaveLength(0)
+    await expect(ownerCaller.bailleur.getContact({ id: forged!.id })).rejects.toThrow(/not found/i)
   })
 
   it('drops the guest duplicate when the account already applied on the same accommodation', async () => {
