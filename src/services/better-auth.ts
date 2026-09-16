@@ -10,6 +10,7 @@ import { headers } from 'next/headers'
 import { cache } from 'react'
 import type { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { verifyDjangoPassword } from '~/lib/django-password'
+import { canAccessOwnerSpace } from '~/lib/roles'
 import { linkGuestContactRequestsSafely } from '~/server/contacts/link-guest-requests'
 import { db } from '~/server/db'
 import * as schema from '~/server/db/schema'
@@ -141,8 +142,8 @@ export const auth = betterAuth({
           where: eq(schema.user.email, email),
           columns: { role: true },
         })
-        // Only send magic links to owners and admins, never to students (role 'user')
-        if (!usr || usr.role === 'user') return
+        // Liens de connexion réservés aux bailleurs et admins : jamais aux étudiants ni à un rôle inattendu.
+        if (!canAccessOwnerSpace(usr?.role)) return
         // On n'envoie pas le lien de vérification Better Auth directement : les scanners
         // de mail d'entreprise (Safe Links, Proofpoint…) pré-ouvrent les liens en GET et
         // brûleraient le token à usage unique. On passe par une page tampon qui ne

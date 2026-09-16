@@ -49,6 +49,17 @@ describe('lien de connexion', () => {
     expect(location.searchParams.get('error')).toBeNull()
   })
 
+  it("n'envoie aucun lien à un rôle inattendu", async () => {
+    await createUser({ id: 'role-inconnu', name: 'Inconnu', email: 'inconnu@bailleur.fr', role: 'moderator' })
+
+    await auth.api.signInMagicLink({
+      body: { email: 'inconnu@bailleur.fr', callbackURL: '/bailleur/tableau-de-bord' },
+      headers: new Headers(),
+    })
+
+    expect(sentEmails).toHaveLength(0)
+  })
+
   it("ne crée pas de compte quand l'adresse du lien ne correspond plus à aucun utilisateur", async () => {
     await createUser({ id: 'gest-gone', name: 'Gestionnaire', email: 'gest-gone@bailleur.fr', role: 'owner' })
     await sendMagicLink('gest-gone@bailleur.fr', 'owner', '/bailleur/tableau-de-bord')
