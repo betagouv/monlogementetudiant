@@ -41,6 +41,9 @@ export const auth = betterAuth({
     updateAge: oneDay,
     deferSessionRefresh: true,
   },
+  // Tous les jetons de la table `verification` (réinitialisation de mot de passe comprise) sont hachés :
+  // une lecture de la base (dump, backup, staging restaurée) ne suffit pas à prendre un compte.
+  verification: { storeIdentifier: 'hashed' },
   advanced: {
     // force la suppression des cookies (django)
     cookiePrefix: 'monlogementetudiant',
@@ -52,6 +55,11 @@ export const auth = betterAuth({
     // Un mot de passe réinitialisé ferme toutes les sessions ouvertes, y compris celle d'un éventuel intrus.
     revokeSessionsOnPasswordReset: true,
     sendResetPassword: async ({ user, url }) => {
+      // Bailleurs et admins se connectent par lien : leurs mots de passe hérités de Django ne servent
+      // plus. Un lien de réinitialisation leur rouvrirait une connexion par mot de passe (et un chemin
+      // de prise de compte). La réponse HTTP reste la même, pour ne rien révéler de l'existence du compte.
+      const account = await db.query.user.findFirst({ where: eq(schema.user.id, user.id), columns: { role: true } })
+      if (account?.role !== 'user') return
       logLocalAuthLink('reset-password', user.email, url)
       await sendResetPasswordEmail(user.email, url)
     },
