@@ -42,7 +42,7 @@ async function verifyAndRehash(hash: string, password: string): Promise<boolean>
   if (scryptMatch) return true
 
   if (hash.startsWith('pbkdf2_sha256$')) {
-    const djangoMatch = verifyDjangoPassword(password, hash)
+    const djangoMatch = await verifyDjangoPassword(password, hash)
     if (djangoMatch) {
       const newHash = await hashPassword(password)
       await db
