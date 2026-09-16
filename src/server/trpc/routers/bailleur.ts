@@ -1482,12 +1482,9 @@ export const bailleurRouter = createTRPCRouter({
         return updated
       }),
 
-    // Enregistrement groupe de la seule autorisation « Gestion des candidats », depuis l'ecran
-    // « Parametres de moderation » (onglet Contacts). Volontairement distincte de `update` : celle-ci
-    // exige le tableau complet des autorisations (le client ecraserait un `manage_residences` accorde
-    // entre-temps) et porte des gardes sans objet ici. Surtout, une revocation a moitie appliquee
-    // laisserait des gestionnaires devant des dossiers de candidats que l'administrateur croit avoir
-    // coupes : l'enregistrement est donc tout-ou-rien.
+    // Bascule groupee de `manage_applications` (ecran « Parametres de moderation »). Distincte de `update`,
+    // qui exige le tableau complet des autorisations et ecraserait un droit accorde entre-temps.
+    // Tout-ou-rien : une revocation partielle laisserait des gestionnaires devant des dossiers coupes.
     setApplicationsPermission: bailleurAdministratorProcedure.input(ZSetApplicationsPermission).mutation(async ({ ctx, input }) => {
       const owner = await getOwnerForUser(ctx.session.user.id, input.ownerId)
       if (!owner) throw new TRPCError({ code: 'FORBIDDEN', message: 'Bailleur introuvable' })

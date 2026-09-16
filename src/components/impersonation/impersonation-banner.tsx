@@ -1,9 +1,7 @@
 import { getServerSession } from '~/services/better-auth'
 import { ImpersonationBannerClient } from './impersonation-banner-client'
 
-/**
- * Needs to be mounted in each layout with auth below the header since an impersonation can land any where
- */
+/** À monter sous l'en-tête de chaque layout authentifié : une usurpation peut arriver sur n'importe quel espace. */
 export const ImpersonationBanner = async () => {
   const session = await getServerSession()
   if (!session?.session.impersonatedBy) return null

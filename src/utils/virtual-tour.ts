@@ -3,8 +3,7 @@
  * d'intégration iframe, ou fichier vidéo.
  *
  * Seules les plateformes de la liste peuvent être intégrées dans la fiche publique : une iframe
- * arbitraire permettrait d'afficher, sous le domaine gouv, une fausse page de connexion. La liste
- * reprend les plateformes présentes en base (restauration prod de septembre 2026).
+ * arbitraire permettrait d'afficher, sous le domaine gouv, une fausse page de connexion.
  */
 export const VIRTUAL_TOUR_ALLOWED_DOMAINS = [
   'klapty.com',

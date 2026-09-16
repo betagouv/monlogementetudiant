@@ -46,7 +46,7 @@ export const scopeHasAnyAccommodation = (scope: AccommodationScope): boolean => 
 
 /**
  * Candidatures du bailleur de l'appelant. Un locataire peut candidater chez plusieurs bailleurs : sans ce
- * filtre, la recherche (non ordonnée) pouvait tomber sur la candidature d'un autre bailleur et refuser
+ * filtre, la recherche (non ordonnée) peut tomber sur la candidature d'un autre bailleur et refuser
  * l'accès au dossier de façon aléatoire. L'admin plateforme n'est pas restreint (cf. `checkAccommodationAccess`).
  */
 const ownerApplicationCondition = async (userId: string): Promise<SQL | undefined> => {
