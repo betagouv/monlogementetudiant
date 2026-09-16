@@ -46,13 +46,11 @@ export async function importBackup(opts: ImportBackupOpts) {
   const archiveStats = statSync(archivePath)
   console.log(`✓ Backup prêt : ${archivePath} (${(archiveStats.size / 1024 / 1024).toFixed(2)} MB)`)
 
-  // Extract the archive
   const extractDir = path.join(BACKUP_DIR, 'extracted')
   await mkdir(extractDir, { recursive: true })
   console.log('→ Extraction du backup...')
   execSync(`tar xzf "${archivePath}" -C "${extractDir}"`)
 
-  // Find the .pgsql or .dump file
   const dumpFile = findDumpFile(extractDir)
   if (!dumpFile) {
     console.error('✗ Aucun fichier .pgsql ou .dump trouvé dans le backup')
@@ -62,16 +60,13 @@ export async function importBackup(opts: ImportBackupOpts) {
   const dumpStats = statSync(dumpFile)
   console.log(`✓ Backup extrait : ${dumpFile} (${(dumpStats.size / 1024 / 1024).toFixed(2)} MB)`)
 
-  // Clean the local database
   console.log('→ Nettoyage de la base de données locale...')
   await cleanDatabase(databaseUrl)
   console.log('✓ Tables, enums et fonctions supprimés')
 
-  // Ensure required extensions are installed before restore
   console.log('→ Installation des extensions PostgreSQL...')
   await ensureExtensions(databaseUrl)
 
-  // Restore the backup
   console.log('→ Restauration du backup...')
   restoreBackup(databaseUrl, dumpFile)
   console.log('✓ Backup restauré avec succès')
@@ -81,8 +76,8 @@ export async function importBackup(opts: ImportBackupOpts) {
   console.log('→ Réparation des index de recherche sur les noms de communes...')
   await repairUnaccentIndexes(databaseUrl)
 
-  // Note: Drizzle migrations are NOT applied here.
-  // Workflow: import-backup → migrate-users (applies 0000 schema) → drizzle-kit migrate (applies 0001 cleanup)
+  // Les migrations Drizzle ne sont pas appliquées ici : le dump apporte son propre suivi
+  // (`drizzle.__drizzle_migrations`), `drizzle-kit migrate` applique ensuite les plus récentes.
 
   // Clean up extracted files (keep the archive for --skip-download)
   rmSync(extractDir, { recursive: true, force: true })

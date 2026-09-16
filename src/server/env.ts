@@ -5,7 +5,6 @@ const isProdOnly = process.env.NEXT_PUBLIC_APP_ENV === 'production'
 
 const optionalUrl = z.preprocess((v) => (v === '' ? undefined : v), z.url().optional())
 const requiredInProdUrl = isProd ? z.url() : optionalUrl
-// const requiredInProdOnlyUrl = isProdOnly ? z.url() : optionalUrl
 const requiredInProd = isProd ? z.string().min(1) : z.string().optional()
 /** Requis en production seulement — staging n'a pas l'équivalent (backups, par exemple). */
 const requiredInProdOnly = isProdOnly ? z.string().min(1) : z.string().optional()

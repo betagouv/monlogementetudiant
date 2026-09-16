@@ -27,7 +27,7 @@ export interface PurgeLogsOptions {
 
 /**
  * Les rétentions sont dimensionnées table par table, sur deux critères : ce que la table coûte,
- * et ce qui la relit. Mesures d'août 2026 sur une restauration de la prod :
+ * et ce qui la relit. Ordres de grandeur en production :
  *
  * | table            | taille  | octets/ligne | croissance   |
  * |------------------|---------|--------------|--------------|
@@ -50,9 +50,8 @@ const ALERT_JOB_RETENTION_MONTHS = 12
 /**
  * L'écran « Statistiques gestionnaires » laisse choisir **une plage de dates libre** (deux champs
  * `type="date"`, au-delà des présélections 7/30/90 jours) : purger court ferait silencieusement
- * retourner zéro sur les plages anciennes. La table coûte 5 Mo et **décroît** (2 431 lignes en
- * avril 2026, 115 en août) : la rétention n'est qu'un garde-fou, elle ne mordra jamais en
- * pratique.
+ * retourner zéro sur les plages anciennes. La table coûte 5 Mo et **décroît** : la rétention n'est
+ * qu'un garde-fou.
  */
 const ACTIVITY_LOG_RETENTION_MONTHS = 36
 
@@ -65,18 +64,11 @@ const ACTIVITY_LOG_RETENTION_MONTHS = 36
 const IMPORT_JOB_RETENTION_MONTHS = 24
 
 /**
- * `tracking_event` alimente le tableau de bord bailleur (`owner-statistics.ts`). Le sélecteur
- * n'expose que `7d` / `30d` / `90d` : **90 jours sont affichés**, mais une requête remonte à
- * 180 — `countConsultOffer` sur la période précédente, qui alimente le badge d'évolution des
- * consultations d'offre en période `90d`.
- *
- * Sept mois couvrent donc ces 180 jours avec ~33 jours de marge. Comme la purge est mensuelle,
- * une ligne vit en pratique entre 7 et 8 mois : le plateau visé est d'environ 8 mois de données.
- *
- * Descendre à 3 mois ferait disparaître ce badge (`computeDelta` renvoie `null` sur une période
- * précédente vide) — l'écran ne casse pas, il ment. Monter au-delà n'achèterait qu'une
- * comparaison à N-1 qui n'existe dans aucun écran : si le besoin apparaît, c'est un rollup
- * journalier qu'il faut, pas de la rétention brute.
+ * `tracking_event` alimente le tableau de bord bailleur (`owner-statistics.ts`) : en période `90d`,
+ * `countConsultOffer` relit aussi la période précédente (badge d'évolution), soit 180 jours. Sept
+ * mois les couvrent avec ~1 mois de marge (purge mensuelle : 7 à 8 mois de données en pratique).
+ * En deçà, le badge disparaît (`computeDelta` renvoie `null`) ; une comparaison à N-1 relèverait
+ * d'un rollup journalier, pas d'une rétention brute plus longue.
  */
 const TRACKING_RETENTION_MONTHS = 7
 

@@ -46,7 +46,7 @@ async function remainingTypes(): Promise<string[]> {
   return rows.map((row) => row.type)
 }
 
-/** Au-delà de la rétention de 13 mois de `tracking_event`. */
+/** Au-delà de la rétention de 7 mois de `tracking_event`. */
 const ANCIEN = subMonths(new Date(), 14)
 const RECENT = subMonths(new Date(), 2)
 

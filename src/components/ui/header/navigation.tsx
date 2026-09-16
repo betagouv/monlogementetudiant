@@ -93,10 +93,9 @@ export const HeaderNavigation: FC = () => {
             categoryMainText: <span className="fr-text--bold"> {t('prepareBudget.studentCities')}</span>,
             links: cityColumns[0],
           },
-          // Les deux colonnes suivantes prolongent la pr\u00E9c\u00E9dente : elles n'ouvrent pas de
-          // nouvelle section et ne re\u00E7oivent donc pas de titre. Leur alignement vertical est
-          // r\u00E9tabli en CSS \u2014 il passait auparavant par une espace ins\u00E9cable, que le DSFR
-          // rendait en titre de niveau 5 vide (RGAA 9.1).
+          // Les deux colonnes suivantes prolongent la précédente : elles n'ouvrent pas de nouvelle
+          // section et ne reçoivent donc pas de titre. Leur alignement vertical est assuré en CSS
+          // (voir navigation.module.css).
           { categoryMainText: undefined, links: cityColumns[1] },
           { categoryMainText: undefined, links: cityColumns[2] },
         ],
@@ -121,8 +120,8 @@ export const HeaderNavigation: FC = () => {
       classes={{ megaMenuCategory: styles.megaMenuCategory, megaMenu: styles.megaMenu }}
       items={items}
       // Les intitulés de colonnes sortent du plan de titres : ce sont des groupes de liens dans
-      // un <nav> déjà nommé, pas des sections. Ils ne peuvent donc plus ni créer de saut de
-      // niveau, ni précéder le <h1> de la page (RGAA 9.1).
+      // un <nav> déjà nommé, pas des sections. Ils ne créent donc ni saut de niveau, ni titre
+      // précédant le <h1> de la page (RGAA 9.1).
       megaMenuCategoryAs="p"
       ariaLabel={t('mainMenuLabel')}
       megaMenuCloseLabel={t('close')}

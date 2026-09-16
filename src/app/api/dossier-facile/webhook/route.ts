@@ -130,7 +130,6 @@ export async function POST(request: Request) {
       tags: { route: 'dossierfacile-webhook', callbackType: partnerCallBackType },
       extra: { tenantId: tenantIdStr },
     })
-    // Fallback: just update status from callback type
     console.error(`[DossierFacile Webhook] Error extracting data for ${tenantIdStr}, falling back to status-only update:`, error)
 
     const fallbackStatus = normalizeStatus(partnerCallBackType)

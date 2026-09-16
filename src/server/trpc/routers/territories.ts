@@ -19,7 +19,7 @@ import { baseProcedure, createTRPCRouter } from '../init'
 
 // Per-territory total of a typology, summed from the accommodation_typology child rows.
 // Mirrors the SUM(accommodations.nbTotalApartments) semantics (a per-accommodation scalar
-// summed over the address-joined rows), so multi-address behaviour is unchanged.
+// summed over the address-joined rows).
 const cityTypeTotal = (type: string): SQL<number | null> =>
   sql<
     number | null

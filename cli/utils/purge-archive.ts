@@ -10,23 +10,13 @@ import { PURGE_ARCHIVE_PREFIX, uploadPrivateFile } from '~/server/services/s3'
 /**
  * Format d'archive : **NDJSON gzippé** (une ligne = un objet JSON = une ligne supprimée).
  *
- * Pourquoi ce format plutôt qu'un dump SQL, un CSV ou du Parquet :
- *
- * - Il s'écrit **en flux** : les lignes sont poussées dans le gzip au fil de leur lecture, sans
- *   jamais matérialiser le JSON complet en mémoire. Indispensable pour `tracking_event`, dont
- *   la première purge porte sur plus d'un million de lignes dans un conteneur one-off.
- * - Il **survit à une troncature** : un fichier coupé reste exploitable jusqu'à sa dernière
- *   ligne complète, là où un tableau JSON unique serait irrécupérable.
- * - Il **préserve les types** : le `to_jsonb` de PostgreSQL rend les `jsonb` (`metadata`) tels
- *   quels et les NULL comme `null`, là où un CSV les aplatirait en chaînes ambiguës.
- * - Il se **relit sans outillage** : `zcat fichier.ndjson.gz | jq` suffit, et une restauration
- *   se fait avec `jsonb_populate_record` sans dépendance externe (voir README).
- * - Il **compresse très bien** : ces lignes sont massivement répétitives, on observe un ratio
- *   d'environ 10:1.
- *
- * Parquet compresserait mieux et se requêterait plus vite, mais imposerait une dépendance et
- * un outillage de lecture pour un fichier qu'on espère ne jamais rouvrir. NDJSON est le bon
- * compromis pour une archive de secours.
+ * Plutôt qu'un dump SQL, un CSV ou du Parquet, parce qu'il :
+ * - s'écrit **en flux**, sans matérialiser l'ensemble en mémoire (un run sur `tracking_event`
+ *   dépasse le million de lignes dans un conteneur one-off) ;
+ * - **survit à une troncature** : un fichier coupé reste lisible jusqu'à sa dernière ligne complète ;
+ * - **préserve les types** (`jsonb`, `null`) là où un CSV les aplatirait en chaînes ;
+ * - se **relit sans outillage** (`zcat … | jq`, restauration via `jsonb_populate_record`, voir README) ;
+ * - compresse d'environ 10:1, sans la dépendance ni l'outillage de lecture qu'imposerait Parquet.
  */
 const NDJSON_GZIP_CONTENT_TYPE = 'application/gzip'
 

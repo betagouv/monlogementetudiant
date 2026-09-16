@@ -5,7 +5,7 @@ import { ZBbox, ZTerritories } from '~/schemas/territories'
 /**
  * Schémas Zod publics de l'API REST v1 (requêtes + réponses), enrichis de métadonnées OpenAPI
  * (`.openapi()`) en français pour la doc Scalar. Les schémas de réponse réutilisent les schémas
- * internes existants, en surchargeant `updated_at` (Date → string ISO) pour rester JSON/OpenAPI-safe.
+ * internes existants, en surchargeant `updatedAt` (Date → string ISO) pour rester JSON/OpenAPI-safe.
  */
 
 // --- Helpers de paramètres de query (les valeurs d'URL sont toujours des strings) ---

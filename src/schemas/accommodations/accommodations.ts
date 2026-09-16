@@ -51,7 +51,7 @@ const ZBaseAccommodationInfo = z.object({
   socialHousingRequired: z.boolean(),
   wifi: z.boolean(),
   isImported: z.boolean().optional(),
-  // Inline coordinates (replaces the GeoJSON geometry wrapper).
+  // Inline coordinates.
   latitude: z.number().nullable(),
   longitude: z.number().nullable(),
 })
@@ -85,7 +85,7 @@ const ZAmenities = z.object({
   cookingPlates: z.boolean().nullable(),
 })
 
-// Flat accommodation object (no more { geometry, properties } GeoJSON wrapper).
+// Flat accommodation object.
 export const ZAccomodation = ZBaseAccommodationInfo.extend(ZAggregates.shape)
   .extend(ZOwnerInfo.shape)
   .extend({ typologies: ZTypologiesRecord })

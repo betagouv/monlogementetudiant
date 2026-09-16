@@ -24,7 +24,7 @@ import { typologiesByType } from '~/server/lib/typologies'
 import { baseProcedure, createTRPCRouter } from '../init'
 import { bboxSelect } from '../utils/spatial-helpers'
 
-// Les query builders vivent désormais dans `~/server/accommodations/list-query` (partagés avec l'API
+// Les query builders vivent dans `~/server/accommodations/list-query` (partagés avec l'API
 // publique REST v1). On ré-exporte les symboles encore importés directement depuis ce module par
 // d'autres routers (favorites, bailleur) et par `get-my-accommodations`.
 export { priceMaxComputed, rowsToAccommodationDTOs, toAccommodationDTO } from '~/server/accommodations/list-query'

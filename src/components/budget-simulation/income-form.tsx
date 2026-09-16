@@ -28,7 +28,6 @@ export function IncomeForm() {
   }
 
   const handleAddIncomeType = () => {
-    // Find first unused income type
     const unusedType = incomeTypes.find((type) => !state.activeIncomeTypes.includes(type))
     if (unusedType) {
       addIncomeType(unusedType)

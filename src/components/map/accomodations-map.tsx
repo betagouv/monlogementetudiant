@@ -162,7 +162,7 @@ export const AccomodationsMap: FC = () => {
     enabled: !!effectiveCitySlug,
   })
 
-  // Les pages département ne posent plus de bbox dans l'URL (le filtre se fait sur la frontière) :
+  // Les pages département ne posent pas de bbox dans l'URL (le filtre se fait sur la frontière) :
   // on cadre quand même la carte sur le département quand aucun marqueur n'est disponible.
   const { data: departmentTerritory } = useQuery({
     ...trpc.territories.getBySlug.queryOptions({ type: 'departement', slug: effectiveDepartmentSlug! }),

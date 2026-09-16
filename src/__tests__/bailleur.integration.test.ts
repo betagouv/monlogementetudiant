@@ -30,7 +30,6 @@ async function createCityWithName(name: string, slug: string, postalCodes: strin
   return createCity({ departmentId: department.id, name, slug, postalCodes })
 }
 
-// Create user records before each test
 beforeEach(async () => {
   await createUser({ id: 'test-owner-id', name: 'Test Owner', email: 'owner@test.com', role: 'owner' })
   await createUser({ id: 'test-owner-id-2', name: 'Test Owner 2', email: 'owner2@test.com', role: 'owner' })
@@ -756,7 +755,6 @@ describe('bailleur.list owner isolation', () => {
     await createAccommodation({ name: 'Résidence Hack 1', slug: 'hack-res-1', ownerId: owner1.id })
     await createAccommodation({ name: 'Résidence Hack 2', slug: 'hack-res-2', ownerId: owner2.id })
 
-    // Owner 1 tries to access Owner 2's residences via bailleur param
     const result = await ownerCaller.bailleur.list({ page: 1, ownerId: owner2.id })
     expect(result.count).toBe(1)
     expect(result.results[0].name).toBe('Résidence Hack 1')
@@ -769,7 +767,6 @@ describe('bailleur.list owner isolation', () => {
     await createAccommodation({ name: 'Résidence Cross 1', slug: 'cross-res-1', ownerId: owner1.id })
     await createAccommodation({ name: 'Résidence Cross 2', slug: 'cross-res-2', ownerId: owner2.id })
 
-    // Owner 2 tries to access Owner 1's residences via bailleur param
     const result = await ownerCaller2.bailleur.list({ page: 1, ownerId: owner1.id })
     expect(result.count).toBe(1)
     expect(result.results[0].name).toBe('Résidence Cross 2')
@@ -815,7 +812,7 @@ describe('bailleur.list owner isolation', () => {
     await createAccommodation({ name: 'Résidence Linked', slug: 'linked-res', ownerId: linkedOwner.id })
     await createAccommodation({ name: 'Résidence Unlinked', slug: 'unlinked-res', ownerId: unlinkedOwner.id })
 
-    // Admin tries to access unlinked owner via bailleur param — should fallback to linked owner
+    // An unlinked ownerId falls back to the linked owner
     const result = await adminCaller.bailleur.list({ page: 1, ownerId: unlinkedOwner.id })
     expect(result.count).toBe(1)
     expect(result.results[0].name).toBe('Résidence Linked')

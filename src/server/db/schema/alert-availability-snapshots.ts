@@ -6,7 +6,7 @@ import { accommodations } from './accommodations'
  * Permet de comparer l'état courant à l'état précédent pour détecter une hausse de dispo.
  *
  * `availableCount` :
- *   - `null`  → disponibilité non-renseignée (tous les champs `nb_t*_available` sont null)
+ *   - `null`  → disponibilité non-renseignée (aucune typologie n'a de disponibilité renseignée)
  *   - entier  → somme des logements disponibles tous types confondus
  */
 export const alertAvailabilitySnapshots = pgTable('alert_availability_snapshot', {

@@ -149,7 +149,7 @@ export const HelpSimulatorForm: FC<HelpSimulatorFormProps> = ({ onScrollToTop })
           const fieldName = error.path[0] as keyof HelpSimulatorFormData
           form.setError(fieldName, { message: error.message })
         }
-        // Sans ce résumé, un lecteur d'écran ne restituait rien après un clic sur « Continuer » :
+        // Sans ce résumé, un lecteur d'écran ne restitue rien après un clic sur « Continuer » :
         // les messages posés par setError ne sont ni annoncés ni atteints par le focus (RGAA 7.5, 11.10).
         setErrorSummary(issues.map((issue) => issue.message))
         return

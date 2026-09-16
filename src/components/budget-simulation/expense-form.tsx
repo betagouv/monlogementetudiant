@@ -47,7 +47,6 @@ export function ExpenseForm() {
   ] as ExpenseType[]
 
   const handleAddExpenseType = () => {
-    // Find first unused expense type
     const unusedType = expenseTypes.find((type) => !state.activeExpenseTypes.includes(type))
     if (unusedType) {
       addExpenseType(unusedType)

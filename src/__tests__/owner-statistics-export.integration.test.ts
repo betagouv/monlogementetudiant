@@ -166,7 +166,7 @@ describe('GET /api/bailleur/statistiques/export', () => {
     expect(rows.map((row) => row.Résidence)).toEqual(['Résidence A'])
   })
 
-  it('ignore un ownerId forgé par un gestionnaire visant le parc d’un autre', async () => {
+  it('ignore le paramètre ownerId pour un gestionnaire', async () => {
     await setupOwnerWithStats()
     await createUser({ id: 'autre-id', role: 'owner', email: 'autre@bailleur.fr', name: 'Autre' })
     const autreOwner = await createOwner({ name: 'Autre Bailleur', slug: 'autre-bailleur', userId: 'autre-id' })

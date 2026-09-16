@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { sanitizeHTML } from './sanitize-html'
 
-// Ces tests tournent dans l'environnement node de Vitest (pas de `window`), soit exactement les
-// conditions du rendu serveur de Next : c'est là que `dompurify` nu échouait avec
-// « DOMPurify.sanitize is not a function » et faisait tomber la page en 500.
+// Ces tests tournent dans l'environnement node de Vitest (pas de `window`), soit les conditions du
+// rendu serveur de Next, où `dompurify` nu n'expose pas `sanitize`.
 describe('sanitizeHTML', () => {
   it('sanitise sans window (conditions du SSR)', () => {
     expect(typeof window).toBe('undefined')

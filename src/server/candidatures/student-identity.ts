@@ -7,9 +7,6 @@ import { contactRequests, dossierFacileTenants, user } from '~/server/db/schema'
  * Les coordonnées portées par `contact_request` sont une copie dénormalisée de celles du compte :
  * elles priment tant qu'elles existent, et le compte prend le relais une fois la ligne anonymisée
  * par la purge. Côté DossierFacile, c'est le dernier payload persisté qui prime sur le compte.
- *
- * Cette règle était auparavant écrite quatre fois — deux en SQL, deux en TypeScript, avec trois
- * politiques de repli différentes.
  */
 
 /** Version SQL, pour les projections de liste (mode `contacts`). */

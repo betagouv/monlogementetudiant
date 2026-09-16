@@ -146,11 +146,9 @@ export type PersistTypologiesOptions = { updatedBy?: string | null }
  * Aligne les typologies d'une résidence sur `typologies` : les types fournis sont créés ou mis à
  * jour en place, les types absents sont supprimés.
  *
- * Historiquement un delete-then-insert, ce qui réattribuait un identifiant neuf à chaque
- * enregistrement — y compris quand rien ne changeait — et faisait perdre toute colonne portée par
- * la ligne. L'upsert conserve l'identité de la ligne, ce dont dépend l'horodatage des
- * disponibilités : sans lui, chaque enregistrement du formulaire, même sans toucher aux dispos,
- * remettrait le compteur à zéro.
+ * Upsert plutôt que delete-then-insert : la ligne garde son identité et ses colonnes, dont dépend
+ * l'horodatage des disponibilités — sinon chaque enregistrement du formulaire, même sans toucher
+ * aux dispos, remettrait le compteur à zéro.
  */
 export async function persistTypologies(
   tx: DbOrTx,

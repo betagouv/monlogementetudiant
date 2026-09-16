@@ -5,8 +5,8 @@ import { IMAGE_CACHE_PREFIX, IMMUTABLE_CACHE_CONTROL, PURGE_ARCHIVE_PREFIX, s3 }
 /**
  * Rattrape le `Cache-Control` des médias déjà en place.
  *
- * `uploadFile` pose désormais `IMMUTABLE_CACHE_CONTROL` à l'upload, mais les objets
- * déposés avant ce changement n'ont aucun en-tête de cache : les navigateurs revalident,
+ * `uploadFile` pose `IMMUTABLE_CACHE_CONTROL` à l'upload, mais les objets plus anciens
+ * n'ont aucun en-tête de cache : les navigateurs revalident,
  * et `next/image` plafonne le TTL de ses dérivées à `minimumCacheTTL` (4 h) au lieu de
  * reprendre le `max-age` amont.
  *
@@ -77,8 +77,7 @@ async function listKeysForPrefixes(prefixes: string[], limit?: number): Promise<
 
   for (const prefix of prefixes) {
     for (const key of await listKeys(prefix, limit)) {
-      // L'exclusion n'est pas contournable par `--prefix` : elle protège des objets que
-      // rendre publics serait une fuite, pas un simple faux positif.
+      // L'exclusion s'applique aussi aux préfixes passés par `--prefix` : ces objets restent privés.
       if (EXCLUDED_PREFIXES.some((excluded) => key.startsWith(excluded))) continue
       keys.add(key)
       if (limit && keys.size >= limit) return [...keys]

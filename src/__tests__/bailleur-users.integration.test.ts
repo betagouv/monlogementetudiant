@@ -475,7 +475,7 @@ describe('bailleur.users.update', () => {
       .where(eq(user.id, 'gest-self'))
     const gestCaller = gestionnaireCallerFactory({ id: 'gest-self', email: 'gs@a.com', permissions: ['manage_residences'] })
 
-    // Le refus tombe desormais au niveau du role : `canEditOwnAccount` reste une garde defensive.
+    // Le refus tombe au niveau du role : `canEditOwnAccount` reste une garde defensive.
     await expect(gestCaller.bailleur.users.update({ id: 'gest-self', firstname: 'Autoproclame' })).rejects.toThrow(
       /Administrateur du bailleur requis|FORBIDDEN/,
     )

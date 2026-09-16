@@ -5,7 +5,7 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
   const { id } = await params
   const session = await getServerSession()
 
-  // Sert uniquement à masquer l'usurpation de son propre compte : la vraie garde est le
-  // plugin `admin` de Better Auth, qui exige le rôle `admin` sur l'endpoint.
+  // Masque l'usurpation de son propre compte à l'affichage ; l'autorisation est vérifiée côté
+  // serveur par le plugin `admin` de Better Auth.
   return <UserDetail id={id} currentUserId={session?.user.id ?? null} />
 }

@@ -11,17 +11,11 @@
  */
 export function normalizeCitySearch(q: string): string {
   let s = q
-  // 1. Ligatures
   s = s.replace(/œ/gi, 'oe').replace(/æ/gi, 'ae')
-  // 2. NFD + strip accents
   s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-  // 3. Lowercase
   s = s.toLowerCase()
-  // 4. Expand st/ste abbreviations (word boundary)
   s = s.replace(/\bste\b/g, 'saint').replace(/\bst\b/g, 'saint')
-  // 5. Hyphens/underscores → spaces
   s = s.replace(/[-_]/g, ' ')
-  // 6. Collapse whitespace + trim
   s = s.replace(/\s+/g, ' ').trim()
   return s
 }

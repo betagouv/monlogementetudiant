@@ -17,9 +17,8 @@ type LiveRegionProps = {
 }
 
 /**
- * Région live partagée (RGAA 7.5). Le site n'exposait aucun message de statut : zéro occurrence
- * d'aria-live dans src/. La région doit exister dans le DOM **avant** que le message n'arrive,
- * sinon les lecteurs d'écran ne l'annoncent pas — d'où le rendu inconditionnel du conteneur.
+ * Région live partagée (RGAA 7.5). La région doit exister dans le DOM **avant** que le message
+ * n'arrive, sinon les lecteurs d'écran ne l'annoncent pas — d'où le rendu inconditionnel du conteneur.
  */
 export const LiveRegion: FC<LiveRegionProps> = ({ message, severity = 'status', visible = false, debounceMs = 0 }) => {
   const [announced, setAnnounced] = useState(debounceMs > 0 ? '' : message)

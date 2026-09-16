@@ -16,7 +16,7 @@ describe('tracking.logAccommodationView', () => {
 
     await caller.tracking.logAccommodationView({
       accommodationId: accommodation.id,
-      // Champ supprimé : ignoré s'il est encore envoyé.
+      // Champ absent du schéma d'entrée : ignoré.
       ...({ referer: 'A'.repeat(100_000) } as object),
     })
 

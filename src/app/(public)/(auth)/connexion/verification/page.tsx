@@ -14,7 +14,7 @@ const MAGIC_LINK_VERIFY_PATH = '/api/auth/magic-link/verify'
 
 /**
  * Vérifie que l'URL cible est bien l'endpoint de vérification Better Auth de notre
- * propre origine. Empêche d'utiliser la page tampon comme open redirect.
+ * propre origine : aucune autre destination de redirection n'est acceptée.
  */
 function getSafeVerifyUrl(url: string | undefined): string | null {
   if (!url) return null

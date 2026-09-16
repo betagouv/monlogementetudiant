@@ -13,9 +13,8 @@ import { loadTypologies } from './helpers/typologies'
 // -> validation Zod -> mutation bailleur.update -> colonnes en base.
 //
 // Les colonnes numériques de `accommodation_typology` sont toutes nullables (imports partiels,
-// saisie en plusieurs fois). Régression déjà rencontrée : une résidence dont ces colonnes étaient
-// NULL voyait ses champs préremplis à 0, ce qui déclenchait les bornes de ZTypology et rendait le
-// formulaire insoumettable — sans message compréhensible pour le bailleur.
+// saisie en plusieurs fois) : un NULL ne doit pas être prérempli à 0, ce qui déclencherait les
+// bornes de ZTypology et rendrait le formulaire insoumettable.
 
 const FULL = {
   priceMin: 400,
@@ -137,7 +136,6 @@ describe('formulaire résidence — typologies NULL en base', () => {
     const slug = await createResidence([{ type: 't1', ...FULL }])
     await forceTypologyColumns(slug, 't1', ALL_NULL_COLUMNS)
 
-    // Le cas de la régression : le bailleur ouvrait sa fiche et ne pouvait plus enregistrer.
     const result = ZUpdateResidence.safeParse({ typologies: await formDefaults(slug) })
     expect(result.success).toBe(true)
   })

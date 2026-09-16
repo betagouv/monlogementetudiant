@@ -189,8 +189,7 @@ export async function sendStudentAlertEmail(
   email: string,
   params: { firstName: string; alertName?: string; accommodations: { nom: string; url: string }[] },
 ): Promise<void> {
-  // Anti-spam : on n'envoie réellement les alertes qu'en production.
-  // Jamais en dev, jamais en staging. Eviter les spam intempestifs.
+  // On n'envoie réellement les alertes qu'en production, jamais en dev ni en staging.
   if (env.NEXT_PUBLIC_APP_ENV !== 'production') {
     console.info(`[${env.NEXT_PUBLIC_APP_ENV}] email d'alerte non envoyé à ${maskEmail(email)}`)
     return
