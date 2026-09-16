@@ -1,5 +1,5 @@
 import * as Sentry from '@sentry/nextjs'
-import { and, eq, exists, isNull, sql } from 'drizzle-orm'
+import { and, eq, exists, isNotNull, isNull, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import { db } from '~/server/db'
 import { contactRequests, favoriteAccommodations } from '~/server/db/schema'
@@ -14,6 +14,12 @@ import { contactRequests, favoriteAccommodations } from '~/server/db/schema'
  * `contact_request` porte une contrainte d'unicité `(user_id, accommodation_id)` : si le compte a
  * déjà une demande sur la même résidence, la ligne visiteur est un doublon et on la supprime au lieu
  * de la rattacher (sinon l'UPDATE violerait la contrainte et ferait échouer la connexion).
+ *
+ * Seules les demandes **confirmées** sont rattachées : prouver son adresse ne prouve pas être l'auteur
+ * d'une demande déposée avec elle. Sans ce filtre, un tiers pourrait déposer une demande au nom d'un
+ * étudiant (avec son propre téléphone) et la rendre visible du gestionnaire sans double opt-in, puisque
+ * toute demande liée à un compte est visible. Les non confirmées restent visiteur jusqu'à confirmation
+ * ou purge.
  */
 export const linkGuestContactRequests = async (userId: string, email: string): Promise<number> => {
   const normalized = email.trim().toLowerCase()
@@ -38,7 +44,7 @@ export const linkGuestContactRequests = async (userId: string, email: string): P
     const linked = await tx
       .update(contactRequests)
       .set({ userId, updatedAt: new Date() })
-      .where(isGuestWithSameEmail)
+      .where(and(isGuestWithSameEmail, isNotNull(contactRequests.confirmedAt)))
       .returning({ accommodationId: contactRequests.accommodationId })
 
     // Mêmes règles que pour une candidature faite en étant connecté : la résidence rejoint les
