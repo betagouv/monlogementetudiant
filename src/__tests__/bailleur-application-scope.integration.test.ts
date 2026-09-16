@@ -291,14 +291,16 @@ describe('périmètre vide', () => {
   })
 
   it('interdit de changer le parcours de candidature du bailleur', async () => {
-    await expect(scopedCaller().bailleur.setContactMode({ mode: EOwnerContactMode.DOSSIER_FACILE })).rejects.toThrow(/périmètre/)
+    await expect(scopedCaller().bailleur.setContactMode({ mode: EOwnerContactMode.DOSSIER_FACILE })).rejects.toThrow(
+      /Administrateur du bailleur requis/,
+    )
   })
 
-  it('un gestionnaire au périmètre non vide peut toujours changer le parcours', async () => {
+  it('un gestionnaire au périmètre non vide ne peut pas non plus changer le parcours de tout le bailleur', async () => {
     await restrictTo(SCOPED.id, [resIn.id])
-    await expect(scopedCaller().bailleur.setContactMode({ mode: EOwnerContactMode.DOSSIER_FACILE })).resolves.toMatchObject({
-      contactMode: EOwnerContactMode.DOSSIER_FACILE,
-    })
+    await expect(scopedCaller().bailleur.setContactMode({ mode: EOwnerContactMode.DOSSIER_FACILE })).rejects.toThrow(
+      /Administrateur du bailleur requis/,
+    )
   })
 })
 
@@ -500,27 +502,18 @@ describe('setContactMode — résidences éligibles', () => {
     expect(await openIds()).toEqual([resIn.id])
   })
 
-  it('un gestionnaire restreint ne ferme pas les résidences hors de son périmètre', async () => {
+  it('un gestionnaire restreint ne peut fermer aucune résidence', async () => {
     await restrictTo(SCOPED.id, [resIn.id])
-
-    await scopedCaller().bailleur.setContactMode({
-      mode: EOwnerContactMode.CONTACTS,
-      residences: { mode: 'restricted', accommodationIds: [] },
-    })
-
-    // `res-in` fermée (dans son périmètre), `res-out` intacte (hors périmètre).
-    expect(await openIds()).toEqual([resOut.id])
-  })
-
-  it('refuse une résidence hors du périmètre de l appelant', async () => {
-    await restrictTo(SCOPED.id, [resIn.id])
+    const before = await openIds()
 
     await expect(
       scopedCaller().bailleur.setContactMode({
         mode: EOwnerContactMode.CONTACTS,
-        residences: { mode: 'restricted', accommodationIds: [resOut.id] },
+        residences: { mode: 'restricted', accommodationIds: [] },
       }),
-    ).rejects.toThrow(/pas accessible/)
+    ).rejects.toThrow(/Administrateur du bailleur requis/)
+
+    expect(await openIds()).toEqual(before)
   })
 
   it('journalise le changement de résidences éligibles', async () => {

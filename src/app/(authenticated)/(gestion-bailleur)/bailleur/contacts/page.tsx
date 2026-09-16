@@ -43,10 +43,10 @@ export default async function ContactsPage({ searchParams }: ContactsPageProps) 
               <Avatar width={72} height={72} color="blue-ecume" />
               <h1 className="fr-mb-0">{t('title')}</h1>
             </div>
-            <ContactsLanding />
+            <ContactsLanding isAdministrator={ctx.isAdministrator} />
           </>
         ) : (
-          <ResidencesGrid mode={mode} canManageModeration={ctx.isAdministrator} resolvedOwnerId={ctx.owner.id} />
+          <ResidencesGrid mode={mode} isAdministrator={ctx.isAdministrator} resolvedOwnerId={ctx.owner.id} />
         )}
       </div>
     </HydrationBoundary>

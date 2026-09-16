@@ -2235,6 +2235,7 @@
         "dossierFacileDescription": "Recevez un dossier complet des candidats : pièce d'identité, avis d'imposition, justificatifs de ressources, etc.",
         "dossierFacileCta": "Recevoir les dossiers avec DossierFacile",
         "comingSoon": "Bientôt disponible",
+        "administratorOnly": "Seul un administrateur de votre organisme peut activer la réception des candidatures.",
         "activationSuccess": "Mode de réception des candidatures activé.",
         "activationError": "Une erreur est survenue lors de l'activation."
       },

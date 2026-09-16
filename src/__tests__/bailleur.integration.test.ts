@@ -818,21 +818,22 @@ describe('bailleur.setContactMode', () => {
 
     const noPermCaller = gestionnaireCallerFactory()
     await expect(noPermCaller.bailleur.setContactMode({ mode: EOwnerContactMode.CONTACTS })).rejects.toThrow(
-      'Permission denied: manage_applications',
+      'Administrateur du bailleur requis',
     )
   })
 
-  it('accepts a gestionnaire holding manage_applications', async () => {
+  it('rejects a gestionnaire even holding manage_applications: the mode applies to the whole owner', async () => {
     await createUser({ id: 'test-gestionnaire-id', name: 'Gestionnaire', email: 'gestionnaire@test.com', role: 'owner' })
     const owner = await createOwner({ name: 'Owner Perm', slug: 'owner-perm', userId: 'test-gestionnaire-id' })
 
     const permCaller = gestionnaireCallerFactory({ permissions: ['manage_applications'] })
-    const result = await permCaller.bailleur.setContactMode({ mode: EOwnerContactMode.CONTACTS })
-    expect(result.contactMode).toBe('contacts')
+    await expect(permCaller.bailleur.setContactMode({ mode: EOwnerContactMode.CONTACTS })).rejects.toThrow(
+      'Administrateur du bailleur requis',
+    )
 
     const db = getTestDb()
-    const updated = await db.query.owners.findFirst({ where: eq(owners.id, owner.id) })
-    expect(updated!.contactMode).toBe('contacts')
+    const unchanged = await db.query.owners.findFirst({ where: eq(owners.id, owner.id) })
+    expect(unchanged!.contactMode).toBe(owner.contactMode)
   })
 
   it('accepts an owner administrator', async () => {
