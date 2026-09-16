@@ -1,4 +1,4 @@
-import { proxyWp } from '~/utils/wp-proxy'
+import { buildWpPath, proxyWp, wpNotFound } from '~/utils/wp-proxy'
 
 type RouteContext = { params: Promise<{ slug?: string[] }> }
 
@@ -6,9 +6,10 @@ type RouteContext = { params: Promise<{ slug?: string[] }> }
 // Le chemin nu renvoyait vers la racine WordPress → on conserve ce comportement.
 async function handler(request: Request, { params }: RouteContext) {
   const segments = (await params).slug ?? []
-  const path = segments.length === 0 ? '' : `/preparer-sa-vie-etudiante/${segments.join('/')}/`
+  const path = segments.length === 0 ? '' : buildWpPath('/preparer-sa-vie-etudiante', segments)
+  if (path === null) return wpNotFound()
 
   return proxyWp(request, { path })
 }
 
-export { handler as GET, handler as POST }
+export { handler as GET }
