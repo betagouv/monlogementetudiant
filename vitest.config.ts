@@ -24,6 +24,7 @@ export default defineConfig({
           exclude: ['src/**/*.integration.test.ts', 'cli/**/*.integration.test.ts', 'cli/commands/audit-rgaa/**/*.test.ts'],
           env: {
             BASE_URL: 'http://localhost:3000',
+            SENTRY_CSP_REPORT_URI: 'https://sentry.example.com/api/1/security/?sentry_key=test',
             AUTH_SECRET: 'test-secret',
             DATABASE_URL: 'postgres://test:test@localhost:5432/test',
             BREVO_API_KEY: 'test-brevo-key',
@@ -75,6 +76,7 @@ export default defineConfig({
           fileParallelism: false,
           env: {
             BASE_URL: 'http://localhost:3000',
+            SENTRY_CSP_REPORT_URI: 'https://sentry.example.com/api/1/security/?sentry_key=test',
             AUTH_SECRET: 'test-secret-for-integration-tests',
             DATABASE_URL: 'postgres://test:test@localhost:5491/mle_test',
             BREVO_API_KEY: 'test-brevo-api-key',
