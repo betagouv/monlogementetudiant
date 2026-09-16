@@ -3,14 +3,9 @@ import { z } from 'zod'
 import { db } from '~/server/db'
 import { accommodationAddresses } from '~/server/db/schema/accommodation-addresses'
 import { accommodations } from '~/server/db/schema/accommodations'
-import { assertPublicRateLimit } from '~/server/rate-limit/public-rate-limit'
 import { logAccommodationView, logTrackingEvent, TRACKING_DEDUPE } from '~/server/services/tracking-event-logger'
 import { getOrCreateTrackingSessionId } from '~/server/services/tracking-session'
 import { baseProcedure, createTRPCRouter } from '../init'
-
-const TRACKING_RATE_LIMIT = { maxRequests: 120, windowMs: 60_000 } as const
-
-const assertTrackingRateLimit = (clientIp: string | null) => assertPublicRateLimit({ clientIp, scope: 'tracking', ...TRACKING_RATE_LIMIT })
 
 export const trackingRouter = createTRPCRouter({
   logSearch: baseProcedure
@@ -21,7 +16,6 @@ export const trackingRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await assertTrackingRateLimit(ctx.clientIp)
       const sessionId = await getOrCreateTrackingSessionId()
       await logTrackingEvent({
         type: input.type === 'city' ? 'search.city' : 'search.department',
@@ -41,7 +35,6 @@ export const trackingRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await assertTrackingRateLimit(ctx.clientIp)
       const sessionId = await getOrCreateTrackingSessionId()
       await logAccommodationView({
         accommodationId: input.accommodationId,
@@ -52,7 +45,6 @@ export const trackingRouter = createTRPCRouter({
     }),
 
   logConsultOffer: baseProcedure.input(z.object({ accommodationSlug: z.string().min(1) })).mutation(async ({ ctx, input }) => {
-    await assertTrackingRateLimit(ctx.clientIp)
     const [accom] = await db
       .select({
         id: accommodations.id,
