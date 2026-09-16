@@ -49,6 +49,14 @@ describe('lien de connexion', () => {
     expect(location.searchParams.get('error')).toBeNull()
   })
 
+  it('retrouve le compte quelle que soit la casse saisie', async () => {
+    await createUser({ id: 'gest-casse', name: 'Gestionnaire', email: 'gest-casse@bailleur.fr', role: 'owner' })
+
+    await sendMagicLink('  Gest-Casse@Bailleur.FR ', 'owner', '/bailleur/tableau-de-bord')
+
+    expect(sentEmails.map((sent) => sent.email)).toEqual(['gest-casse@bailleur.fr'])
+  })
+
   it("n'envoie aucun lien à un rôle inattendu", async () => {
     await createUser({ id: 'role-inconnu', name: 'Inconnu', email: 'inconnu@bailleur.fr', role: 'moderator' })
 

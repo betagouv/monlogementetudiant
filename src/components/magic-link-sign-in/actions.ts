@@ -16,7 +16,9 @@ const ERROR_CALLBACK_URL_BY_ROLE = {
   admin: '/verification/erreur?role=admin',
 } as const
 
-export async function sendMagicLink(email: string, role: 'owner' | 'admin', callbackURL?: string) {
+export async function sendMagicLink(rawEmail: string, role: 'owner' | 'admin', callbackURL?: string) {
+  // Les comptes sont enregistrés en minuscules : une saisie « Jean@Bailleur.fr » doit les retrouver.
+  const email = rawEmail.trim().toLowerCase()
   const result = await db
     .select({ id: user.id })
     .from(user)
