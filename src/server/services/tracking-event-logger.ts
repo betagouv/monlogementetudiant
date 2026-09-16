@@ -86,7 +86,7 @@ export async function logAccommodationView(params: {
         accommodationAddresses,
         and(eq(accommodationAddresses.accommodationId, accommodations.id), eq(accommodationAddresses.isMain, true)),
       )
-      .where(where)
+      .where(and(where, eq(accommodations.published, true)))
       .limit(1)
     if (!accom) return
 

@@ -143,7 +143,7 @@ export const favoritesRouter = createTRPCRouter({
     const userId = ctx.session.user.id
 
     const accom = await db.query.accommodations.findFirst({
-      where: eq(accommodations.slug, input.accommodationSlug),
+      where: and(eq(accommodations.slug, input.accommodationSlug), eq(accommodations.published, true)),
       columns: { id: true },
     })
 

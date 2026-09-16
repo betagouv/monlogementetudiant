@@ -387,6 +387,23 @@ describe('DossierFacile tRPC', () => {
       ).rejects.toThrow('Accommodation not found')
     })
 
+    it('rejects an unpublished accommodation as if it did not exist', async () => {
+      await createDossierFacileTenant({ userId: 'test-user-id', tenantId: 'df-app-unpublished', status: 'verified' })
+      const hiddenOwner = await createOwner({
+        name: 'Owner Hidden',
+        slug: 'owner-hidden',
+        userId: 'test-owner-id',
+        contactMode: EOwnerContactMode.DOSSIER_FACILE,
+      })
+      await createAccommodation({ slug: 'res-hidden', ownerId: hiddenOwner.id, published: false }, [
+        typologyDraft('t1', { nbAvailable: 5 }),
+      ])
+
+      await expect(authenticatedCaller.dossierFacile.application({ accommodationSlug: 'res-hidden', apartmentType: 't1' })).rejects.toThrow(
+        'Accommodation not found',
+      )
+    })
+
     it('rejects when apartment type is not available', async () => {
       await createDossierFacileTenant({ userId: 'test-user-id', tenantId: 'df-app-3', status: 'verified' })
       const noAvailOwner = await createOwner({

@@ -108,7 +108,7 @@ export const dossierFacileRouter = createTRPCRouter({
       }
 
       const accommodation = await db.query.accommodations.findFirst({
-        where: eq(accommodations.slug, input.accommodationSlug),
+        where: and(eq(accommodations.slug, input.accommodationSlug), eq(accommodations.published, true)),
       })
       if (!accommodation) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Accommodation not found' })
