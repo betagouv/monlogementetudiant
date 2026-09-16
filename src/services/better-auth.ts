@@ -31,6 +31,10 @@ export const auth = betterAuth({
   secret: env.AUTH_SECRET,
   baseURL: env.BASE_URL,
   trustedOrigins: [env.BASE_URL, 'http://localhost:3000'],
+  // Les clés d'API v1 ne se créent et ne se gèrent que depuis le back-office (`admin-consumers`, via
+  // `auth.api.*`, que ce filtre n'affecte pas). Exposées en HTTP, ces routes laisseraient n'importe quel
+  // compte connecté se créer autant de clés qu'il veut et contourner le quota par consommateur.
+  disabledPaths: ['/api-key/create', '/api-key/get', '/api-key/list', '/api-key/update', '/api-key/delete'],
   database: drizzleAdapter(db, { provider: 'pg', schema }),
   session: {
     expiresIn: oneDay,
