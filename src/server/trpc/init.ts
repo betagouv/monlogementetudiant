@@ -1,5 +1,6 @@
 import { initTRPC, TRPCError } from '@trpc/server'
 import superjson from 'superjson'
+import { canAccessOwnerSpace, canAccessStudentSpace } from '~/lib/roles'
 import { type BailleurPermission, hasPermission, isBailleurAdministrator } from '~/server/bailleur/permissions'
 import { getClientIp } from '~/server/contacts/rate-limit'
 import { getServerSession } from '~/services/better-auth'
@@ -29,20 +30,15 @@ export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
   return next({ ctx: { ...ctx, session: ctx.session } })
 })
 
-// Gardes en liste blanche : `user.role` est un texte libre en base, un rôle inattendu ne doit ouvrir
-// ni l'espace bailleur ni l'espace étudiant.
-const OWNER_SPACE_ROLES: readonly string[] = ['owner', 'admin']
-const STUDENT_SPACE_ROLES: readonly string[] = ['user', 'admin']
-
 export const ownerProcedure = protectedProcedure.use(async ({ ctx, next }) => {
-  if (!OWNER_SPACE_ROLES.includes(ctx.session.user.role)) {
+  if (!canAccessOwnerSpace(ctx.session.user.role)) {
     throw new TRPCError({ code: 'FORBIDDEN', message: 'Owner or admin role required' })
   }
   return next({ ctx })
 })
 
 export const userProcedure = protectedProcedure.use(async ({ ctx, next }) => {
-  if (!STUDENT_SPACE_ROLES.includes(ctx.session.user.role)) {
+  if (!canAccessStudentSpace(ctx.session.user.role)) {
     throw new TRPCError({ code: 'FORBIDDEN', message: 'Student or admin role required' })
   }
   return next({ ctx })

@@ -1,5 +1,6 @@
 import { notFound, redirect } from 'next/navigation'
 import { cache } from 'react'
+import { canAccessOwnerSpace } from '~/lib/roles'
 import { getServerSession } from '~/services/better-auth'
 import { getOwnerForUser } from './get-owner-for-user'
 import {
@@ -17,6 +18,7 @@ export const getBailleurContext = cache(async (ownerIdParam?: string) => {
   const session = await getServerSession()
   if (!session) notFound()
   if (session.user.role === 'user') redirect('/mon-espace/tableau-de-bord')
+  if (!canAccessOwnerSpace(session.user.role)) notFound()
 
   const owner = await getOwnerForUser(session.user.id, ownerIdParam ? Number(ownerIdParam) : undefined)
   if (!owner) notFound()
