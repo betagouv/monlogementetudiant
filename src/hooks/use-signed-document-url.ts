@@ -1,4 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
+import { useTranslations } from 'next-intl'
 import { useCallback } from 'react'
 import { createToast } from '~/components/ui/createToast'
 import { useTRPC } from '~/server/trpc/client'
@@ -6,6 +7,7 @@ import { useTRPC } from '~/server/trpc/client'
 type UrlType = 'tenantPdf' | 'tenantUrl' | 'document'
 
 export function useSignedDocumentUrl() {
+  const t = useTranslations('toast')
   const trpc = useTRPC()
   const { mutateAsync, isPending } = useMutation(trpc.bailleur.getDocumentSignedUrl.mutationOptions())
 
@@ -18,10 +20,10 @@ export function useSignedDocumentUrl() {
         })
         window.open(redirectUrl, '_blank', 'noopener,noreferrer')
       } catch {
-        createToast({ priority: 'error', message: 'Impossible d\u2019ouvrir le document. Veuillez réessayer.' })
+        createToast({ priority: 'error', message: t('documentOpenError') })
       }
     },
-    [mutateAsync],
+    [mutateAsync, t],
   )
 
   return { openDocument, isLoading: isPending }

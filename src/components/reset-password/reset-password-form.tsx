@@ -6,20 +6,22 @@ import { PasswordInput } from '@codegouvfr/react-dsfr/blocks/PasswordInput'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { tss } from 'tss-react'
 import { RequiredLabel } from '~/components/ui/required-mark'
 import { usePasswordRuleMessages } from '~/hooks/use-password-rule-messages'
 import { useResetPassword } from '~/hooks/use-reset-password'
 import { trackEvent } from '~/lib/tracking'
-import { ZResetPasswordForm } from '~/schemas/reset-password/reset-password'
+import { createZResetPasswordForm } from '~/schemas/reset-password/reset-password'
 
 export const ResetPasswordForm: FC = () => {
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
 
   const t = useTranslations('resetPassword')
+  const tSchemas = useTranslations('schemas')
+  const schema = useMemo(() => createZResetPasswordForm(tSchemas), [tSchemas])
   const { classes } = useStyles()
   const { mutateAsync, isLoading, isSuccess } = useResetPassword()
 
@@ -28,7 +30,7 @@ export const ResetPasswordForm: FC = () => {
       password: '',
       confirmPassword: '',
     },
-    resolver: zodResolver(ZResetPasswordForm),
+    resolver: zodResolver(schema),
   })
   const { getValues, handleSubmit, register } = resetPasswordForm
 
@@ -81,7 +83,7 @@ export const ResetPasswordForm: FC = () => {
             {isLoading ? t('labels.resetting') : t('labels.cta')}
           </Button>
           {isSuccess && <Alert description={t('success.description')} severity="success" small />}
-          {!token && <Alert description="Paramètres manquants pour réinitialiser le mot de passe" severity="error" small />}
+          {!token && <Alert description={t('missingToken')} severity="error" small />}
         </div>
       </form>
     </FormProvider>

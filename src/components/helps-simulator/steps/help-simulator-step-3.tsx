@@ -4,6 +4,7 @@ import { fr } from '@codegouvfr/react-dsfr'
 import { Input } from '@codegouvfr/react-dsfr/Input'
 import { RadioButtons } from '@codegouvfr/react-dsfr/RadioButtons'
 import clsx from 'clsx'
+import { useTranslations } from 'next-intl'
 import { FC, useEffect, useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { tss } from 'tss-react'
@@ -15,6 +16,8 @@ import { useSearchCities } from '~/hooks/use-search-cities'
 import { TCity } from '~/schemas/territories'
 
 export const HelpSimulatorStep3: FC = () => {
+  const t = useTranslations('simulator.form.housing')
+  const tAnswers = useTranslations('simulator.form.answers')
   const {
     register,
     setValue,
@@ -58,7 +61,7 @@ export const HelpSimulatorStep3: FC = () => {
     <>
       <div className={classes.autocompleteContainer}>
         <Input
-          label={<RequiredLabel>Dans quelle ville cherchez-vous un logement ?</RequiredLabel>}
+          label={<RequiredLabel>{t('cityLabel')}</RequiredLabel>}
           state={errors.city ? 'error' : isError ? 'error' : undefined}
           stateRelatedMessage={errors.city?.message}
           nativeInputProps={{
@@ -88,14 +91,14 @@ export const HelpSimulatorStep3: FC = () => {
         )}
       </div>
       <RadioButtons
-        legend={<RequiredLabel>Avez-vous un garant ?</RequiredLabel>}
-        hintText="Un garant, c'est une personne qui s'engage à payer à votre place si vous ne pouvez plus le faire."
+        legend={<RequiredLabel>{t('guarantorLegend')}</RequiredLabel>}
+        hintText={t('guarantorHint')}
         name="hasGuarantor"
         state={errors.hasGuarantor ? 'error' : undefined}
         stateRelatedMessage={errors.hasGuarantor?.message}
         options={[
           {
-            label: 'Oui',
+            label: tAnswers('yes'),
             nativeInputProps: {
               ...register('hasGuarantor'),
               value: 'yes',
@@ -103,7 +106,7 @@ export const HelpSimulatorStep3: FC = () => {
             },
           },
           {
-            label: 'Non',
+            label: tAnswers('no'),
             nativeInputProps: {
               ...register('hasGuarantor'),
               value: 'no',
@@ -111,7 +114,7 @@ export const HelpSimulatorStep3: FC = () => {
             },
           },
           {
-            label: 'Je ne sais pas',
+            label: tAnswers('unknown'),
             nativeInputProps: {
               ...register('hasGuarantor'),
               value: 'unknown',

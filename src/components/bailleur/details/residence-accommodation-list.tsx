@@ -7,7 +7,7 @@ import { useFieldArray, useFormContext } from 'react-hook-form'
 import { AvailabilityBadge } from '~/components/shared/availability-badge'
 import { useIsAdmin } from '~/hooks/use-is-admin'
 import { TAccomodationMy } from '~/schemas/accommodations/accommodations'
-import { getTypologyLabel, TYPOLOGIES, TYPOLOGY_TYPES } from '~/schemas/accommodations/typology'
+import { TYPOLOGIES, TYPOLOGY_TYPES } from '~/schemas/accommodations/typology'
 import { TUpdateResidence } from '~/schemas/accommodations/update-residence'
 import { calculateAvailability } from '~/utils/calculateAvailability'
 import { TypologyTabContent } from './typology-tab-content'
@@ -17,6 +17,7 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
   const isImported = accommodation.isImported
   const t = useTranslations('findAccomodation.card')
   const tTypology = useTranslations('bailleur.residences.details.typologyTab')
+  const tTypologies = useTranslations('schemas.typologies')
   const {
     control,
     watch,
@@ -81,9 +82,9 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
   const tabs = [
     ...sortedFieldsWithIndex.map(({ originalIndex, type }) => ({
       tabId: `tab-${originalIndex}`,
-      label: tabLabel(type ? getTypologyLabel(type) : 'Nouveau', originalIndex),
+      label: tabLabel(type ? tTypologies(type) : tTypology('newTab'), originalIndex),
     })),
-    ...(canAddMore ? [{ tabId: 'tab-add', label: 'Ajouter' }] : []),
+    ...(canAddMore ? [{ tabId: 'tab-add', label: tTypology('addTab') }] : []),
   ]
 
   const handleTabChange = (tabId: string) => {
@@ -95,11 +96,11 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
     <div className="fr-border-bottom">
       <div className="fr-p-2w fr-p-md-6w">
         <div className="fr-flex fr-justify-content-space-between fr-align-items-center fr-mb-2w">
-          <h3 className="fr-mb-0">{accommodation.nbTotalApartments} logements</h3>
+          <h3 className="fr-mb-0">{tTypology('housingCount', { count: accommodation.nbTotalApartments ?? 0 })}</h3>
           <AvailabilityBadge
             nbAvailable={nbAvailable}
             noAvailabilityText={t('noAvailability')}
-            availabilityText={t('availability')}
+            availabilityText={(count) => t('availabilityCount', { count })}
             unknownAvailabilityText={t('unknownAvailability')}
             as="span"
             context="owner"

@@ -6,14 +6,14 @@ import { Input } from '@codegouvfr/react-dsfr/Input'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { tss } from 'tss-react'
 import { StudentProfileFields } from '~/components/student-space/profile/student-profile-fields'
 import { RequiredLabel } from '~/components/ui/required-mark'
 import { usePasswordRuleMessages } from '~/hooks/use-password-rule-messages'
 import { useStudentRegistration } from '~/hooks/use-student-registration'
-import { type TSignUpForm, ZSignUpForm } from '~/schemas/sign-up/sign-up'
+import { createZSignUpForm, type TSignUpForm } from '~/schemas/sign-up/sign-up'
 import type { TClaimedContactRequest } from '~/server/contacts/claimed-request'
 
 interface Props {
@@ -23,6 +23,8 @@ interface Props {
 
 export const SignUpForm: FC<Props> = ({ prefill }) => {
   const t = useTranslations('signUp')
+  const tSchemas = useTranslations('schemas')
+  const schema = useMemo(() => createZSignUpForm(tSchemas), [tSchemas])
   const { mutateAsync, isLoading } = useStudentRegistration()
 
   const { classes } = useStyles()
@@ -38,7 +40,7 @@ export const SignUpForm: FC<Props> = ({ prefill }) => {
       // Repris de la demande de contact quand elle en portait un, laissé indéfini jusqu'à sélection sinon.
       scholarshipStatus: (prefill?.scholarshipStatus as TSignUpForm['scholarshipStatus']) ?? undefined,
     },
-    resolver: zodResolver(ZSignUpForm),
+    resolver: zodResolver(schema),
   })
   const { formState, handleSubmit, register } = loginForm
 
@@ -87,7 +89,7 @@ export const SignUpForm: FC<Props> = ({ prefill }) => {
         />
         <div className={classes.ctasContainer}>
           <Button type="submit" iconPosition="right" iconId="ri-arrow-right-line" disabled={isLoading}>
-            {isLoading ? 'Inscription en cours...' : t('labels.cta')}
+            {isLoading ? t('labels.loading') : t('labels.cta')}
           </Button>
           <div>
             <Link className="fr-link" href="/politique-de-confidentialite">

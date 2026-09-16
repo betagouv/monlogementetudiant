@@ -1,9 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { createToast } from '~/components/ui/createToast'
 import { useTRPC } from '~/server/trpc/client'
 
 export const useDisconnectDossierFacile = () => {
+  const t = useTranslations('student.personalInformations.dossierFacile')
   const queryClient = useQueryClient()
   const router = useRouter()
   const trpc = useTRPC()
@@ -16,13 +18,13 @@ export const useDisconnectDossierFacile = () => {
           queryClient.invalidateQueries({ queryKey: trpc.dossierFacile.tenant.queryKey() }),
           queryClient.invalidateQueries({ queryKey: trpc.favorites.list.queryKey() }),
         ])
-        createToast({ priority: 'success', message: 'Votre compte DossierFacile a été déconnecté.' })
+        createToast({ priority: 'success', message: t('disconnectedToast') })
         router.refresh()
       },
       onError: (error) => {
         createToast({
           priority: 'error',
-          message: error.message || 'Une erreur est survenue lors de la déconnexion de votre compte DossierFacile.',
+          message: error.message || t('disconnectErrorToast'),
         })
       },
     }),

@@ -1,9 +1,9 @@
 import Button from '@codegouvfr/react-dsfr/Button'
 import { createModal } from '@codegouvfr/react-dsfr/Modal'
 import clsx from 'clsx'
+import { useTranslations } from 'next-intl'
 import { AccommodationImage } from '~/components/accommodation/accommodation-image'
 import { AccommodationImagesModal } from '~/components/accommodation/accommodation-images-modal'
-import { sPluriel } from '~/utils/sPluriel'
 import styles from './accommodation-images.module.css'
 
 interface AccommodationImagesProps {
@@ -28,11 +28,14 @@ interface ImageGridProps {
   offset: number
 }
 
-export function photoAlt(index: number, total: number, title?: string): string {
-  return title ? `Photo ${index} sur ${total} de la résidence ${title}` : `Photo ${index} sur ${total} du logement`
+type TAccommodationImagesTranslator = ReturnType<typeof useTranslations<'accomodation.images'>>
+
+export function photoAlt(t: TAccommodationImagesTranslator, index: number, total: number, title?: string): string {
+  return title ? t('photoAltResidence', { index, total, title }) : t('photoAlt', { index, total })
 }
 
 function ImageGrid({ images, imageWidth, imageHeight, totalImages, withModal, title, offset }: ImageGridProps) {
+  const t = useTranslations('accomodation.images')
   return (
     <div className={clsx('fr-hidden fr-unhidden-sm', withModal && styles.cursor, styles.gridContainer)} data-images={totalImages}>
       <div className={styles.imageGrid}>
@@ -40,8 +43,8 @@ function ImageGrid({ images, imageWidth, imageHeight, totalImages, withModal, ti
           <AccommodationImage
             key={index}
             src={image}
-            alt={photoAlt(offset + index, totalImages, title)}
-            openModalLabel={`Agrandir la photo ${offset + index} sur ${totalImages}`}
+            alt={photoAlt(t, offset + index, totalImages, title)}
+            openModalLabel={t('enlargePhoto', { index: offset + index, total: totalImages })}
             width={imageWidth}
             height={imageHeight}
             withModal={withModal}
@@ -53,6 +56,7 @@ function ImageGrid({ images, imageWidth, imageHeight, totalImages, withModal, ti
 }
 
 export const AccommodationImages = ({ images, title, withModal = true }: AccommodationImagesProps) => {
+  const t = useTranslations('accomodation.images')
   const [mainImage, ...otherImages] = images
   const displayedImages = otherImages.slice(0, 4)
 
@@ -70,8 +74,8 @@ export const AccommodationImages = ({ images, title, withModal = true }: Accommo
       <div className={clsx(withModal && styles.cursor, styles.mainImageContainer)} style={{ width: widthStyle }}>
         <AccommodationImage
           src={mainImage}
-          alt={photoAlt(1, images.length, title)}
-          openModalLabel={`Agrandir la photo 1 sur ${images.length}`}
+          alt={photoAlt(t, 1, images.length, title)}
+          openModalLabel={t('enlargePhoto', { index: 1, total: images.length })}
           className={styles.mainImage}
           width={400}
           height={300}
@@ -81,9 +85,7 @@ export const AccommodationImages = ({ images, title, withModal = true }: Accommo
           <div className={styles.photoCountButton}>
             <AccommodationImagesModal images={images} title={title}>
               <Button priority="tertiary no outline" nativeButtonProps={accommodationPicturesModal.buttonProps}>
-                <span className={`ri-image-line ${styles.photoCount}`}>
-                  {images.length} photo{sPluriel(images.length)}
-                </span>
+                <span className={`ri-image-line ${styles.photoCount}`}>{t('photoCount', { count: images.length })}</span>
               </Button>
             </AccommodationImagesModal>
           </div>

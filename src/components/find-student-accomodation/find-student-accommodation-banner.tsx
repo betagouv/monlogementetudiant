@@ -1,20 +1,20 @@
 import { Notice } from '@codegouvfr/react-dsfr/Notice'
 import Link from 'next/link'
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { AlertsLoginRequiredInlineLink } from '~/components/auth/login-required-inline-link'
 import { TTerritory } from '~/schemas/territories'
 import { getServerSession } from '~/services/better-auth'
-import { formatCityWithA } from '~/utils/french-contraction'
+import { formatCityWithPreposition } from '~/utils/french-contraction'
 
 export const FindStudentAccommodationBanner = async ({ territory, categoryKey }: { territory: TTerritory; categoryKey?: string }) => {
-  const t = await getTranslations('findAccomodation.banner')
+  const [t, locale] = await Promise.all([getTranslations('findAccomodation.banner'), getLocale()])
   const auth = await getServerSession()
   const isAuthenticated = !!auth?.user
 
   const territoryType = categoryKey === 'ville' ? 'city' : categoryKey === 'academie' ? 'academy' : 'department'
   let title = t('title.department', { location: territory.name })
   if (territoryType === 'city') {
-    title = t('title.city', { locationFormatted: formatCityWithA(territory.name) })
+    title = t('title.city', { locationFormatted: formatCityWithPreposition(locale, 'à', territory.name) })
   }
   if (territoryType === 'academy') {
     title = t('title.academy', { location: territory.name })

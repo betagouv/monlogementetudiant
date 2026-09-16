@@ -52,7 +52,7 @@ export const OwnerDetails = async ({
     <AvailabilityBadge
       nbAvailable={nbAvailable}
       noAvailabilityText={t('card.noAvailability')}
-      availabilityText={t('card.availability')}
+      availabilityText={(count) => t('card.availabilityCount', { count })}
       unknownAvailabilityText={t('unknownAvailability')}
     />
   )

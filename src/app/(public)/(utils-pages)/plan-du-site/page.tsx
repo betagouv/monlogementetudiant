@@ -23,7 +23,7 @@ export default async function SiteMap() {
       <div className={styles.borderBottom}>
         <h1>{t('title')}</h1>
         <p>
-          Mis à jour le <span className="fr-text--bold">01/01/25</span>
+          {t('lastUpdate')} <span className="fr-text--bold">01/01/25</span>
         </p>
       </div>
       <div className="fr-py-3w">

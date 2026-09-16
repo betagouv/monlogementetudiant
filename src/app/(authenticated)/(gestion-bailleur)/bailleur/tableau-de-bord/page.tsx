@@ -62,7 +62,7 @@ export default async function TableauDeBordPage({ searchParams }: TableauDeBordP
               <Image
                 className={styles.avatarYasmine}
                 src={avatarYasmine.src}
-                alt="Logo Yasmine"
+                alt={t('dashboard.testimonial.yasmineAltText')}
                 priority
                 quality={100}
                 width={56}

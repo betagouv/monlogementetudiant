@@ -55,7 +55,7 @@ export default async function BudgetPage() {
             />
             <p>
               {t('total')}&nbsp;
-              <span className="fr-text--bold">874 705€ TTC.</span>
+              <span className="fr-text--bold">{t('totalAmount')}</span>
             </p>
           </div>
         </div>

@@ -2,15 +2,10 @@
 
 import Button from '@codegouvfr/react-dsfr/Button'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { FC, useEffect, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
+import { FC, useEffect, useMemo, useRef, useState } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
-import {
-  type HelpSimulatorFormData,
-  helpSimulatorSchema,
-  step1Schema,
-  step2Schema,
-  step3Schema,
-} from '~/components/helps-simulator/help-simulator-schema'
+import { createHelpSimulatorSchemas, type HelpSimulatorFormData } from '~/components/helps-simulator/help-simulator-schema'
 import { HelpSimulatorResults } from '~/components/helps-simulator/results/help-simulator-results'
 import { HelpSimulatorStep1 } from '~/components/helps-simulator/steps/help-simulator-step-1'
 import { HelpSimulatorStep2 } from '~/components/helps-simulator/steps/help-simulator-step-2'
@@ -23,17 +18,11 @@ import { trackEvent } from '~/lib/tracking'
 
 const TOTAL_FORM_STEPS = 3
 
-const STEP_TITLES: Record<number, string> = {
-  1: 'Votre situation',
-  2: 'Votre recherche de logement',
-  3: 'Vos ressources et votre loyer',
+const STEP_TITLE_KEYS: Record<number, 'situation' | 'housing' | 'resources'> = {
+  1: 'situation',
+  2: 'housing',
+  3: 'resources',
 }
-
-const stepSchemas = {
-  1: step1Schema,
-  2: step3Schema,
-  3: step2Schema,
-} as const
 
 const STEP_FIELDS: Record<number, (keyof HelpSimulatorFormData)[]> = {
   1: ['age', 'status', 'isInternationalStudent', 'currentYear', 'isProfessionalLicence', 'scholarship', 'changingRegion'],
@@ -46,6 +35,12 @@ interface HelpSimulatorFormProps {
 }
 
 export const HelpSimulatorForm: FC<HelpSimulatorFormProps> = ({ onScrollToTop }) => {
+  const t = useTranslations('simulator.form')
+  const tErrors = useTranslations('simulator.form.errors')
+  const { helpSimulatorSchema, step1Schema, step2Schema, step3Schema } = useMemo(
+    () => createHelpSimulatorSchemas((key) => tErrors(key)),
+    [tErrors],
+  )
   const [currentStep, setCurrentStep] = useHelpSimulatorStep()
   const { urlState, setUrlState, clearUrlState } = useHelpSimulatorData()
   const [errorSummary, setErrorSummary] = useState<string[]>([])
@@ -133,6 +128,7 @@ export const HelpSimulatorForm: FC<HelpSimulatorFormProps> = ({ onScrollToTop })
   }
 
   const handleNext = async () => {
+    const stepSchemas = { 1: step1Schema, 2: step3Schema, 3: step2Schema } as const
     const stepSchema = stepSchemas[currentStep as keyof typeof stepSchemas]
     const values = form.getValues()
 
@@ -235,18 +231,18 @@ export const HelpSimulatorForm: FC<HelpSimulatorFormProps> = ({ onScrollToTop })
     }
   }
 
+  const stepTitleKey = STEP_TITLE_KEYS[currentStep]
+  const stepTitle = stepTitleKey ? t(`stepTitles.${stepTitleKey}`) : ''
+
   return (
     <div>
       <FormProvider {...form}>
         <form>
           <h2 className="fr-h5" ref={stepHeadingRef} tabIndex={-1}>
-            {STEP_TITLES[currentStep] ?? ''}
-            <span className="fr-sr-only">
-              {' '}
-              — étape {currentStep} sur {TOTAL_FORM_STEPS}
-            </span>
+            {stepTitle}
+            <span className="fr-sr-only"> {t('stepProgress', { current: currentStep, total: TOTAL_FORM_STEPS })}</span>
           </h2>
-          <LiveRegion message={`Étape ${currentStep} sur ${TOTAL_FORM_STEPS} : ${STEP_TITLES[currentStep] ?? ''}`} />
+          <LiveRegion message={t('stepAnnouncement', { current: currentStep, total: TOTAL_FORM_STEPS, title: stepTitle })} />
           <RequiredFieldsNotice />
           {errorSummary.length > 0 && (
             <div
@@ -257,9 +253,7 @@ export const HelpSimulatorForm: FC<HelpSimulatorFormProps> = ({ onScrollToTop })
               aria-labelledby="simulateur-erreurs-titre"
             >
               <h3 className="fr-alert__title" id="simulateur-erreurs-titre">
-                {errorSummary.length === 1
-                  ? 'Une information est manquante ou invalide'
-                  : `${errorSummary.length} informations sont manquantes ou invalides`}
+                {t('errorSummaryTitle', { count: errorSummary.length })}
               </h3>
               <ul>
                 {errorSummary.map((message) => (
@@ -272,12 +266,12 @@ export const HelpSimulatorForm: FC<HelpSimulatorFormProps> = ({ onScrollToTop })
           <div className="fr-flex fr-align-items-center fr-pt-3w fr-mt-3w" style={{ borderTop: '1px solid var(--border-default-grey)' }}>
             {currentStep > 1 && (
               <Button type="button" priority="secondary" iconId="ri-arrow-left-line" onClick={handlePrevious}>
-                Retour
+                {t('previous')}
               </Button>
             )}
             <div style={{ flex: 1 }} />
             <Button type="button" iconId="ri-arrow-right-line" iconPosition="right" onClick={handleNext}>
-              {currentStep < TOTAL_FORM_STEPS ? 'Continuer' : 'Voir les résultats'}
+              {currentStep < TOTAL_FORM_STEPS ? t('next') : t('seeResults')}
             </Button>
           </div>
         </form>

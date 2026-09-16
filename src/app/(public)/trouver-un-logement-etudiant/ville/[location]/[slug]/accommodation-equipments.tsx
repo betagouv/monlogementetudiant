@@ -5,7 +5,7 @@ import clsx from 'clsx'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import toggleStyles from '~/components/shared/equipments-toggle.module.css'
-import { EQUIPMENTS } from '~/helpers/equipments'
+import { EQUIPMENTS, getEquipmentLabelKey } from '~/helpers/equipments'
 import { TAccomodationDetails } from '~/schemas/accommodations/accommodations'
 import styles from './logement.module.css'
 
@@ -31,8 +31,8 @@ export const AccommodationEquipments = ({ accommodation }: AccommodationEquipmen
   const activeEquipments = activeCategory === 'collective' ? collectiveEquipments : individualEquipments
 
   const categories: { key: Category; label: string; visible: boolean }[] = [
-    { key: 'collective', label: 'Résidence', visible: hasCollective },
-    { key: 'individual', label: 'Logement', visible: hasIndividual },
+    { key: 'collective', label: t('equipments.categories.collective'), visible: hasCollective },
+    { key: 'individual', label: t('equipments.categories.individual'), visible: hasIndividual },
   ]
 
   return (
@@ -68,7 +68,7 @@ export const AccommodationEquipments = ({ accommodation }: AccommodationEquipmen
           const value = accommodation[equipment.key as keyof TAccomodationDetails]
           if (!value) return null
 
-          const label = typeof equipment.label === 'function' ? equipment.label(value as string) : equipment.label
+          const label = t(`equipments.items.${getEquipmentLabelKey(equipment, value)}`)
 
           return (
             <div key={equipment.key}>

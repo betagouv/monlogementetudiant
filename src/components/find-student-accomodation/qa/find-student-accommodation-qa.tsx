@@ -1,12 +1,12 @@
 import Button from '@codegouvfr/react-dsfr/Button'
 import clsx from 'clsx'
 import { getTranslations } from 'next-intl/server'
-import { FAQ_CONTENTS } from '~/components/faq/faq-content'
+import { getFaqContents } from '~/components/faq/faq-content'
 import { FaqQuestionsAnswers } from '~/components/faq/faq-questions-answers'
 import styles from './find-student-accommodation-qa.module.css'
 
 export default async function FindStudentAccommodationQA() {
-  const t = await getTranslations('findAccomodation')
+  const [t, tFaqContents] = await Promise.all([getTranslations('findAccomodation'), getTranslations('faq.contents')])
 
   return (
     <div className={clsx(styles.mainQaFaqContainer, 'primaryBackgroundColor')}>
@@ -24,7 +24,7 @@ export default async function FindStudentAccommodationQA() {
             </Button>
           </div>
           <div className={styles.qaContainer}>
-            <FaqQuestionsAnswers contents={FAQ_CONTENTS.slice(0, 3)} />
+            <FaqQuestionsAnswers contents={getFaqContents(tFaqContents).slice(0, 3)} />
           </div>
         </div>
       </div>

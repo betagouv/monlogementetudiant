@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { parseAsBoolean, parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
 import { FC } from 'react'
 import { AccomodationCard } from '~/components/find-student-accomodation/card/find-student-accomodation-card'
@@ -10,7 +10,7 @@ import { computeExpandedPriceMax, EXPANDED_SEARCH_PAGE_SIZE, EXPANDED_SEARCH_RAD
 import { TUser } from '~/lib/types'
 import { TTerritory } from '~/schemas/territories'
 import { useTRPC } from '~/server/trpc/client'
-import { formatCityWithDe } from '~/utils/french-contraction'
+import { formatCityWithPreposition } from '~/utils/french-contraction'
 import styles from './find-student-accomodation-neighbors-results.module.css'
 
 type FindStudentAccomodationNeighborsResultsProps = {
@@ -29,6 +29,7 @@ export const FindStudentAccomodationNeighborsResults: FC<FindStudentAccomodation
   targetBlank = false,
 }) => {
   const t = useTranslations('findAccomodation.results')
+  const locale = useLocale()
   const trpc = useTRPC()
   const [queryStates] = useQueryStates({
     prix: parseAsInteger,
@@ -68,7 +69,7 @@ export const FindStudentAccomodationNeighborsResults: FC<FindStudentAccomodation
 
   return (
     <section className={styles.section}>
-      <h2 className="fr-h4 fr-mb-1w">{t('expandedTitle', { city: formatCityWithDe(cityName) })}</h2>
+      <h2 className="fr-h4 fr-mb-1w">{t('expandedTitle', { city: formatCityWithPreposition(locale, 'de', cityName) })}</h2>
       <p className="fr-text--sm fr-mb-3w">{t('expandedDescription')}</p>
 
       <div className={styles.grid}>

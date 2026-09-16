@@ -1,4 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
+import { useTranslations } from 'next-intl'
 import { createToast } from '~/components/ui/createToast'
 import { TResetPasswordForm } from '~/schemas/reset-password/reset-password'
 import { authClient } from '~/services/better-auth-client'
@@ -19,18 +20,19 @@ export const postResetPassword = async ({ token, password }: ResetPasswordPayloa
 }
 
 export const useResetPassword = () => {
+  const t = useTranslations('resetPassword')
   const { mutateAsync, isPending, isSuccess } = useMutation({
     mutationFn: async (data: ResetPasswordPayload) => postResetPassword(data),
     onSuccess: () => {
       createToast({
         priority: 'success',
-        message: 'Votre mot de passe a été réinitialisé avec succès.',
+        message: t('successToast'),
       })
     },
     onError: (error: Error) => {
       createToast({
         priority: 'error',
-        message: error.message || 'Une erreur est survenue lors de la réinitialisation du mot de passe.',
+        message: error.message || t('errorToast'),
       })
     },
   })

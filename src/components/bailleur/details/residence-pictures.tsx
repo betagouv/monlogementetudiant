@@ -18,6 +18,7 @@ export const ResidencePictures = ({ accommodation }: { accommodation: TAccomodat
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [fileError, setFileError] = useState<string | null>(null)
   const t = useTranslations('toast')
+  const tPictures = useTranslations('bailleur.residences.details.pictures')
 
   const uploadMutation = useUploadResidenceImages(accommodation.slug, accommodation.name)
   const deleteMutation = useDeleteResidenceImage(accommodation.slug, accommodation.name)
@@ -83,23 +84,23 @@ export const ResidencePictures = ({ accommodation }: { accommodation: TAccomodat
 
   const getStatusText = () => {
     if (uploadMutation.isPending) {
-      return 'Upload en cours...'
+      return tPictures('uploading')
     }
     if (fileError) {
       return fileError
     }
     if (selectedFiles.length > 0) {
-      return `${selectedFiles.length} fichier${selectedFiles.length > 1 ? 's' : ''} sélectionné${selectedFiles.length > 1 ? 's' : ''}`
+      return tPictures('selectedFiles', { count: selectedFiles.length })
     }
-    return 'Aucun fichier sélectionné'
+    return tPictures('noFileSelected')
   }
   return (
     <div className="fr-border-bottom">
       <div className="fr-p-2w fr-p-md-6w">
-        <h3>Photos de la résidence</h3>
+        <h3>{tPictures('title')}</h3>
         <div className="fr-flex fr-direction-column fr-flex-gap-4v">
-          Ajouter une photo
-          <span className="fr-text-mention--grey fr-text--sm fr-mb-0">Taille maximale: 10 Mo. Format supporté: jpeg, png, webp</span>
+          {tPictures('addPhoto')}
+          <span className="fr-text-mention--grey fr-text--sm fr-mb-0">{tPictures('hint')}</span>
           <div className="fr-flex fr-align-items-center fr-flex-gap-4v">
             <input
               ref={fileInputRef}
@@ -115,7 +116,7 @@ export const ResidencePictures = ({ accommodation }: { accommodation: TAccomodat
               disabled={uploadMutation.isPending}
               nativeButtonProps={{ type: 'button' }}
             >
-              Parcourir...
+              {tPictures('browse')}
             </Button>
             <span className={`fr-text--sm fr-mb-0 ${fileError ? 'fr-text--error' : 'fr-text-mention--grey'}`}>{getStatusText()}</span>
           </div>
@@ -132,7 +133,7 @@ export const ResidencePictures = ({ accommodation }: { accommodation: TAccomodat
                       <div key={index} className="fr-flex fr-direction-column fr-align-items-center">
                         <AccommodationImage
                           src={imageUrl}
-                          alt={`Photo ${index + 1} sur ${field.value?.length ?? 0} de la résidence`}
+                          alt={tPictures('imageAlt', { index: index + 1, total: field.value?.length ?? 0 })}
                           width={100}
                           height={100}
                           withModal={false}
@@ -142,7 +143,7 @@ export const ResidencePictures = ({ accommodation }: { accommodation: TAccomodat
                             priority="tertiary no outline"
                             iconId="ri-arrow-left-s-line"
                             size="small"
-                            title="Déplacer vers la gauche"
+                            title={tPictures('moveLeft')}
                             disabled={index === 0 || updateMutation.isPending}
                             onClick={() => {
                               if (field.value) {
@@ -154,7 +155,7 @@ export const ResidencePictures = ({ accommodation }: { accommodation: TAccomodat
                             priority="tertiary no outline"
                             iconId="ri-delete-bin-line"
                             size="small"
-                            title="Supprimer cette image"
+                            title={tPictures('deleteImage')}
                             disabled={deleteMutation.isPending}
                             onClick={() => {
                               if (field.value) {
@@ -166,7 +167,7 @@ export const ResidencePictures = ({ accommodation }: { accommodation: TAccomodat
                             priority="tertiary no outline"
                             iconId="ri-arrow-right-s-line"
                             size="small"
-                            title="Déplacer vers la droite"
+                            title={tPictures('moveRight')}
                             disabled={index === (field.value?.length ?? 0) - 1 || updateMutation.isPending}
                             onClick={() => {
                               if (field.value) {
@@ -186,7 +187,7 @@ export const ResidencePictures = ({ accommodation }: { accommodation: TAccomodat
         {watchedImages && watchedImages.length > 0 && (
           <>
             <hr className="fr-mt-2w fr-mb-0" />
-            <span>Aperçu</span>
+            <span>{tPictures('preview')}</span>
             <div className="fr-mt-2w">
               <AccommodationImages images={watchedImages ?? []} withModal={false} />
             </div>

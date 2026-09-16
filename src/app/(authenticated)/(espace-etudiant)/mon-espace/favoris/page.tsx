@@ -17,13 +17,13 @@ export default async function StudentFavoritesPage() {
   const auth = await getServerSession()
   if (!auth || !auth.user) return notFound()
 
-  const notifPrefs = await getNotificationPreferences()
+  const [t, notifPrefs] = await Promise.all([getTranslations('student.favorites'), getNotificationPreferences()])
 
   return (
     <>
       <div className="fr-border-right fr-border-top fr-border-bottom fr-px-6w fr-py-5w">
-        <h1>Favoris et candidatures</h1>
-        <span className="fr-text--xl fr-text-mention--grey">Suivez vos résidences coup de coeur et tenez à jour vos candidatures</span>
+        <h1>{t('pageTitle')}</h1>
+        <span className="fr-text--xl fr-text-mention--grey">{t('pageDescription')}</span>
       </div>
       <div
         className={clsx(styles.summaryContainer, 'fr-flex fr-direction-column fr-justify-content-center fr-align-items-center fr-py-3w')}
@@ -40,7 +40,7 @@ export default async function StudentFavoritesPage() {
         <StudentFavorites />
         <div>
           <Button priority="secondary" linkProps={{ href: '/trouver-un-logement-etudiant' }}>
-            Explorer les résidences
+            {t('explore')}
           </Button>
         </div>
       </div>

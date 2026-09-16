@@ -7,10 +7,13 @@ import ToggleSwitch from '@codegouvfr/react-dsfr/ToggleSwitch'
 import { useTranslations } from 'next-intl'
 import { Controller, useFormContext } from 'react-hook-form'
 import { RequiredLabel } from '~/components/ui/required-mark'
-import { EResidenceType, RESIDENCE_TYPE_LABELS } from '~/enums/residence-type'
+import { EResidenceType, RESIDENCE_TYPE_MESSAGE_KEYS } from '~/enums/residence-type'
 import { ETargetAudience } from '~/enums/target-audience'
 import { TUpdateResidence } from '~/schemas/accommodations/update-residence'
 import styles from './residence-details.module.css'
+
+// Un champ vidé vaut null (non renseigné) : `valueAsNumber` produirait NaN, rejeté par Zod sans message affiché.
+const toOptionalNumber = (value: string | number | null | undefined) => (value === '' || value == null ? null : Number(value))
 
 export const ResidenceDetails = () => {
   const {
@@ -19,6 +22,7 @@ export const ResidenceDetails = () => {
     control,
   } = useFormContext<TUpdateResidence>()
   const t = useTranslations('bailleur.residences.details')
+  const tResidenceTypes = useTranslations('accomodation.residenceTypes')
   return (
     <div className="fr-border-bottom">
       <div className="fr-p-2w fr-p-md-6w">
@@ -48,7 +52,7 @@ export const ResidenceDetails = () => {
                 </option>
                 {Object.values(EResidenceType).map((value) => (
                   <option key={value} value={value}>
-                    {RESIDENCE_TYPE_LABELS[value]}
+                    {tResidenceTypes(RESIDENCE_TYPE_MESSAGE_KEYS[value])}
                   </option>
                 ))}
               </Select>
@@ -110,7 +114,7 @@ export const ResidenceDetails = () => {
                 control={control}
                 render={({ field }) => (
                   <ToggleSwitch
-                    inputTitle="acceptWaitingList"
+                    inputTitle={t('waitingList')}
                     label=""
                     showCheckedHint={false}
                     checked={field.value}
@@ -125,7 +129,13 @@ export const ResidenceDetails = () => {
                 name="scholarshipHoldersPriority"
                 control={control}
                 render={({ field }) => (
-                  <ToggleSwitch inputTitle="" label="" showCheckedHint={false} checked={field.value} onChange={field.onChange} />
+                  <ToggleSwitch
+                    inputTitle={t('scholarship')}
+                    label=""
+                    showCheckedHint={false}
+                    checked={field.value}
+                    onChange={field.onChange}
+                  />
                 )}
               />
             </div>
@@ -135,7 +145,13 @@ export const ResidenceDetails = () => {
                 name="socialHousingRequired"
                 control={control}
                 render={({ field }) => (
-                  <ToggleSwitch inputTitle="" label="" showCheckedHint={false} checked={field.value} onChange={field.onChange} />
+                  <ToggleSwitch
+                    inputTitle={t('socialHousing')}
+                    label=""
+                    showCheckedHint={false}
+                    checked={field.value}
+                    onChange={field.onChange}
+                  />
                 )}
               />
             </div>
@@ -144,13 +160,15 @@ export const ResidenceDetails = () => {
               <Input
                 hideLabel
                 label={t('accessible')}
-                style={{ width: '74px' }}
                 className="fr-mr-4w"
                 nativeInputProps={{
-                  ...register('nbAccessibleApartments', { valueAsNumber: true }),
+                  ...register('nbAccessibleApartments', { setValueAs: toOptionalNumber }),
+                  style: { width: '74px' },
                   type: 'number',
                   min: 0,
                 }}
+                state={errors.nbAccessibleApartments ? 'error' : 'default'}
+                stateRelatedMessage={errors.nbAccessibleApartments?.message}
               />
             </div>
             <div className="fr-py-1w fr-flex fr-justify-content-space-between fr-align-items-center">
@@ -158,13 +176,15 @@ export const ResidenceDetails = () => {
               <Input
                 hideLabel
                 label={t('coliving')}
-                style={{ width: '74px' }}
                 className="fr-mr-4w"
                 nativeInputProps={{
-                  ...register('nbColivingApartments', { valueAsNumber: true }),
+                  ...register('nbColivingApartments', { setValueAs: toOptionalNumber }),
+                  style: { width: '74px' },
                   type: 'number',
                   min: 0,
                 }}
+                state={errors.nbColivingApartments ? 'error' : 'default'}
+                stateRelatedMessage={errors.nbColivingApartments?.message}
               />
             </div>
           </div>

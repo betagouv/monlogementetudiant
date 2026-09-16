@@ -1,14 +1,14 @@
 'use client'
 
 import { SegmentedControl } from '@codegouvfr/react-dsfr/SegmentedControl'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { parseAsBoolean, parseAsString, useQueryStates } from 'nuqs'
 import { FC } from 'react'
 import { tss } from 'tss-react'
 import { useAccomodations } from '~/hooks/use-accomodations'
 import { trackEvent } from '~/lib/tracking'
 import { TTerritory } from '~/schemas/territories'
-import { formatCityWithA } from '~/utils/french-contraction'
+import { formatCityWithPreposition } from '~/utils/french-contraction'
 import { sPluriel } from '~/utils/sPluriel'
 
 type FindStudentAccomodationSortViewProps = {
@@ -21,6 +21,7 @@ export const FindStudentAccomodationSortView: FC<FindStudentAccomodationSortView
     vue: parseAsString.withDefault('grille'),
   })
   const t = useTranslations('findAccomodation.filters')
+  const locale = useLocale()
   const { data: accommodations } = useAccomodations()
 
   const { classes } = useStyles({ hasResults: accommodations && accommodations.count > 0 })
@@ -29,7 +30,7 @@ export const FindStudentAccomodationSortView: FC<FindStudentAccomodationSortView
     territory?.name && !queryStates['recherche-par-carte']
       ? t('accommodationsWithLocation', {
           pluralize: sPluriel(accommodations?.count ?? 0),
-          locationFormatted: formatCityWithA(territory.name),
+          locationFormatted: formatCityWithPreposition(locale, 'à', territory.name),
         })
       : `${t('accommodations')}${sPluriel(accommodations?.count ?? 0)}`
   return (

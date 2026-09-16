@@ -1,36 +1,38 @@
 import Alert from '@codegouvfr/react-dsfr/Alert'
 import Button from '@codegouvfr/react-dsfr/Button'
 import { Metadata } from 'next'
+import { getTranslations } from 'next-intl/server'
 
-export const metadata: Metadata = {
-  title: 'Erreur DossierFacile',
+export const generateMetadata = async (): Promise<Metadata> => {
+  const t = await getTranslations('dossierFacileError')
+  return { title: t('title') }
 }
 
-const errorMessages: Record<string, string> = {
-  missing_params: 'Les paramètres de la requête sont manquants ou invalides.',
-  missing_state: 'La session de connexion a expiré ou est introuvable. Veuillez réessayer.',
-  invalid_state: 'La session de connexion est invalide. Veuillez réessayer.',
-  expired_state: 'La session de connexion a expiré. Veuillez réessayer.',
-  user_not_found: 'Votre compte utilisateur est introuvable.',
-  sync_failed: 'La synchronisation avec DossierFacile a échoué. Veuillez réessayer ultérieurement.',
-  doc_invalid_link: 'Le lien utilisé est incomplet ou malformé.',
-  doc_not_found: 'Ce document n\u2019existe plus ou a été supprimé.',
-  doc_unavailable: 'Le service DossierFacile n\u2019a pas pu fournir le document. Veuillez réessayer dans quelques instants.',
-  doc_expired: 'Ce lien n\u2019est plus valide. Retournez sur la page de candidature et cliquez à nouveau sur le document.',
-}
-
-const DEFAULT_ERROR_MESSAGE = 'Une erreur est survenue lors de la connexion à DossierFacile. Veuillez réessayer.'
+/** Types d'erreur transmis par la route de callback, chacun doté d'un message dans `dossierFacileError.messages`. */
+const KNOWN_ERROR_TYPES = new Set([
+  'missing_params',
+  'missing_state',
+  'invalid_state',
+  'expired_state',
+  'user_not_found',
+  'sync_failed',
+  'doc_invalid_link',
+  'doc_not_found',
+  'doc_unavailable',
+  'doc_expired',
+])
 
 export default async function DossierFacileErrorPage({ searchParams }: { searchParams: Promise<{ error_type?: string }> }) {
+  const t = await getTranslations('dossierFacileError')
   const { error_type } = await searchParams
-  const description = (error_type && errorMessages[error_type]) || DEFAULT_ERROR_MESSAGE
+  const description = error_type && KNOWN_ERROR_TYPES.has(error_type) ? t(`messages.${error_type}`) : t('default')
 
   return (
     <div className="fr-container">
       <div className="fr-grid-row fr-grid-row--center fr-height-full fr-align-items-center">
         <div className="fr-col-12 fr-col-md-8 fr-col-lg-6">
           <div className="fr-mt-6w fr-mb-6w">
-            <Alert severity="error" title="Erreur DossierFacile" description={description} />
+            <Alert severity="error" title={t('title')} description={description} />
 
             <div className="fr-mt-4w fr-btns-group">
               <Button
@@ -39,7 +41,7 @@ export default async function DossierFacileErrorPage({ searchParams }: { searchP
                 }}
                 priority="secondary"
               >
-                Retour à l&#39;accueil
+                {t('backHome')}
               </Button>
             </div>
           </div>

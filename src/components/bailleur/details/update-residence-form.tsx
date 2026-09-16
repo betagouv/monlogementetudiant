@@ -4,6 +4,8 @@ import Button from '@codegouvfr/react-dsfr/Button'
 import Tag from '@codegouvfr/react-dsfr/Tag'
 import { zodResolver } from '@hookform/resolvers/zod'
 import clsx from 'clsx'
+import { useFormatter, useTranslations } from 'next-intl'
+import { useMemo } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { ResidenceAccommodationList } from '~/components/bailleur/details/residence-accommodation-list'
 import { ResidenceDetails } from '~/components/bailleur/details/residence-details'
@@ -19,13 +21,16 @@ import { ETargetAudience } from '~/enums/target-audience'
 import { useUpdateResidenceDetails } from '~/hooks/use-update-residence-details'
 import { trackEvent } from '~/lib/tracking'
 import { TAccomodationMy } from '~/schemas/accommodations/accommodations'
-import { TUpdateResidence, ZUpdateResidence } from '~/schemas/accommodations/update-residence'
-import { formatRelativeTime } from '~/utils/formatRelativeTime'
+import { createZUpdateResidence, TUpdateResidence } from '~/schemas/accommodations/update-residence'
 import { sanitizeHTML } from '~/utils/sanitize-html'
 import { typologyFormDefaults } from '~/utils/typology-form-defaults'
 import styles from './update-residence-form.module.css'
 
 export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomodationMy }) => {
+  const t = useTranslations('bailleur.residences.details.form')
+  const tSchemas = useTranslations('schemas')
+  const schema = useMemo(() => createZUpdateResidence(tSchemas), [tSchemas])
+  const format = useFormatter()
   const { city } = accommodation
   const redirectUri = `/trouver-un-logement-etudiant/ville/${encodeURIComponent(city)}/${accommodation.slug}`
 
@@ -34,7 +39,7 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
   const typologyDefaults = typologyFormDefaults(accommodation.typologies)
 
   const form = useForm<TUpdateResidence>({
-    resolver: zodResolver(ZUpdateResidence),
+    resolver: zodResolver(schema),
     defaultValues: {
       name: accommodation.name || '',
       residenceType: (accommodation.residenceType as EResidenceType) || '',
@@ -107,12 +112,14 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
           </div>
           <div className={clsx(styles.container, styles.stickyColumn, 'fr-width-full boxShadow')}>
             <div className="fr-flex fr-justify-content-center fr-p-6w">
-              <span className="fr-mb-0 fr-text--xs">Dernière modification {formatRelativeTime(accommodation.updatedAt)}</span>
+              <span className="fr-mb-0 fr-text--xs">
+                {t('lastModified', { time: format.relativeTime(new Date(accommodation.updatedAt), new Date()) })}
+              </span>
             </div>
             <ResidenceRedirection className="fr-border-top" />
             <div className="fr-flex fr-flex-gap-4v fr-justify-content-center fr-p-2w fr-p-md-4w">
               <Button type="submit" iconId="ri-save-line" disabled={updateMutation.isPending}>
-                Enregistrer
+                {t('save')}
               </Button>
               <Button
                 priority="secondary"
@@ -122,7 +129,7 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
                   onClick: () => trackEvent({ category: 'Espace Gestionnaire', action: 'decouvrir-offre', name: accommodation.slug }),
                 }}
               >
-                Voir la fiche
+                {t('viewListing')}
               </Button>
             </div>
           </div>

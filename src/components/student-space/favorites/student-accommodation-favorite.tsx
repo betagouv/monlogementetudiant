@@ -28,11 +28,17 @@ type StudentAccommodationFavoriteProps = {
 }
 export const StudentAccommodationFavorite: FC<StudentAccommodationFavoriteProps> = ({ accomodation, user, application }) => {
   const t = useTranslations('findAccomodation.card')
+  const tFavorites = useTranslations('student.favorites')
   const { classes } = useStyles()
   const { city, imagesUrls, name, nbTotalApartments, postalCode, priceMin } = accomodation
   const nbAvailable = calculateAvailability(accomodation.typologies)
   const badgeAvailability = (
-    <AvailabilityBadge nbAvailable={nbAvailable} noAvailabilityText={t('noAvailability')} availabilityText={t('availability')} as="span" />
+    <AvailabilityBadge
+      nbAvailable={nbAvailable}
+      noAvailabilityText={t('noAvailability')}
+      availabilityText={(count) => t('availabilityCount', { count })}
+      as="span"
+    />
   )
 
   const accommodationsTypes = accomodation.nbColivingApartments ? [t('individual'), t('colocation')] : [t('individual')]
@@ -69,7 +75,11 @@ export const StudentAccommodationFavorite: FC<StudentAccommodationFavoriteProps>
         <>
           <span className={clsx('ri-group-line', classes.description)}>{accommodationsTypes.join(' • ')}</span>
           <br />
-          {nbTotalApartments && <span className={clsx('ri-community-line', classes.description)}>{`${nbTotalApartments} logements`}</span>}
+          {nbTotalApartments && (
+            <span className={clsx('ri-community-line', classes.description)}>
+              {tFavorites('accommodationsCount', { count: nbTotalApartments })}
+            </span>
+          )}
           {!!badgeAvailability && (
             <>
               <br />

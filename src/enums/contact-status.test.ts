@@ -26,7 +26,7 @@ describe('contact statuses', () => {
   it('a une config pour chaque statut', () => {
     for (const status of CONTACT_STATUSES) {
       expect(CONTACT_STATUS_CONFIG[status]).toBeDefined()
-      expect(CONTACT_STATUS_CONFIG[status].label.length).toBeGreaterThan(0)
+      expect(CONTACT_STATUS_CONFIG[status].barColor).toMatch(/^#[0-9a-f]{6}$/i)
     }
   })
 

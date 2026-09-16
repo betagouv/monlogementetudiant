@@ -7,11 +7,12 @@ import { RadioButtons } from '@codegouvfr/react-dsfr/RadioButtons'
 import Select from '@codegouvfr/react-dsfr/Select'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslations } from 'next-intl'
+import { useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { createToast } from '~/components/ui/createToast'
 import { RequiredFieldsNotice, RequiredLabel } from '~/components/ui/required-mark'
 import { useUpdateStudentProfile } from '~/hooks/use-update-student-profile'
-import { SCHOLARSHIP_TYPES, type TUpdateStudentProfileForm, ZUpdateStudentProfileForm } from '~/schemas/student/update-profile'
+import { createZUpdateStudentProfileForm, SCHOLARSHIP_TYPES, type TUpdateStudentProfileForm } from '~/schemas/student/update-profile'
 import { authClient } from '~/services/better-auth-client'
 
 type StudentProfileFormProps = {
@@ -28,6 +29,8 @@ type StudentProfileFormProps = {
 
 export const StudentProfileForm = ({ initialValues }: StudentProfileFormProps) => {
   const t = useTranslations('student.personalInformations.form')
+  const tSchemas = useTranslations('schemas')
+  const schema = useMemo(() => createZUpdateStudentProfileForm(tSchemas), [tSchemas])
   const { mutate: updateProfile, isPending } = useUpdateStudentProfile()
 
   const {
@@ -37,7 +40,7 @@ export const StudentProfileForm = ({ initialValues }: StudentProfileFormProps) =
     setValue,
     formState: { errors },
   } = useForm<TUpdateStudentProfileForm>({
-    resolver: zodResolver(ZUpdateStudentProfileForm),
+    resolver: zodResolver(schema),
     defaultValues: {
       firstname: initialValues.firstname,
       lastname: initialValues.lastname,

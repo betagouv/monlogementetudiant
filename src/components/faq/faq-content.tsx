@@ -1,90 +1,78 @@
 import Link from 'next/link'
+import type { getTranslations } from 'next-intl/server'
+import type { ReactNode } from 'react'
 import { NewWindowHint } from '~/components/ui/new-window'
 import { TFaqQuestionsAnswers } from '~/schemas/faq/faq-questions-answers'
 
-export const FAQ_CONTENTS: TFaqQuestionsAnswers[] = [
+type TFaqContentsTranslator = Awaited<ReturnType<typeof getTranslations<'faq.contents'>>>
+
+const bold = (chunks: ReactNode) => <span className="fr-text--bold">{chunks}</span>
+
+const externalLink = (href: string) => () => (
+  <Link target="_blank" href={href} className="fr-link">
+    {href}
+    <NewWindowHint />
+  </Link>
+)
+
+export const getFaqContents = (t: TFaqContentsTranslator): TFaqQuestionsAnswers[] => [
   {
-    question: 'Quels types de logements sont accessibles aux étudiants ?',
+    question: t('housingTypes.question'),
     answer: (
       <>
-        <p>Plusieurs options s'offrent à vous :</p>
+        <p>{t('housingTypes.intro')}</p>
         <ul>
           <li>
-            <p className="fr-m-0">
-              <span className="fr-text--bold">Résidences universitaires conventionnées ou à vocation sociale</span>&nbsp;: réservées aux
-              étudiants, elles proposent des loyers encadrés, souvent inférieurs aux prix du marché. L’accès est priorisé pour les étudiants
-              aux revenus modestes (ex. : boursiers du Crous).
-            </p>
-            <p className={'fr-text--italic'}>
-              Inclut : résidences Crous, logements sociaux gérés directement par les organismes HLM ou bien par des associations.
-            </p>
+            <p className="fr-m-0">{t.rich('housingTypes.conventionne', { b: bold })}</p>
+            <p className={'fr-text--italic'}>{t('housingTypes.conventionneIncludes')}</p>
           </li>
           <li>
-            <p>
-              <span className="fr-text--bold">Résidences services étudiantes</span> également réservées aux étudiants, mais avec des loyers
-              non encadrés aujourd’hui. À l’avenir, une offre de résidences-services à loyers intermédiaires (entre les loyers du parc
-              locatif social et les loyers du marché locatif libre) se développera.
-            </p>
+            <p>{t.rich('housingTypes.services', { b: bold })}</p>
           </li>
           <li>
-            <p>
-              <span className="fr-text--bold">Location classique</span>&nbsp;: logement indépendant loué auprès d’un particulier ou via une
-              agence.
-            </p>
+            <p>{t.rich('housingTypes.classic', { b: bold })}</p>
           </li>
           <li>
-            <p className="fr-m-0">
-              <span className="fr-text--bold">Logement chez l’habitant ou intergénérationnel</span>&nbsp;: chambre louée dans un logement
-              occupé, souvent avec des loyers réduits.
-            </p>
+            <p className="fr-m-0">{t.rich('housingTypes.homestay', { b: bold })}</p>
           </li>
         </ul>
       </>
     ),
   },
   {
-    question: 'Comment comprendre les typologies de logement (T1, T2, studio, etc.) ?',
+    question: t('typologies.question'),
     answer: (
       <>
         <ul>
           <li>
-            <p>
-              <span className="fr-text--bold">Studio</span>&nbsp;: une seule pièce à vivre avec une pièce d’eau (salle de bain/WC).
-            </p>
+            <p>{t.rich('typologies.studio', { b: bold })}</p>
           </li>
           <li>
-            <p>
-              <span className="fr-text--bold">T1</span>&nbsp;: une pièce à vivre + une cuisine séparée + salle de bain/WC.
-            </p>
+            <p>{t.rich('typologies.t1', { b: bold })}</p>
           </li>
           <li>
-            <p className="fr-m-0">
-              <span className="fr-text--bold">T2, T3...</span>&nbsp;: chaque chiffre supplémentaire correspond à une pièce en plus (ex. : un
-              T2 comprend un salon et une chambre).
-            </p>
+            <p className="fr-m-0">{t.rich('typologies.t2t3', { b: bold })}</p>
           </li>
         </ul>
       </>
     ),
   },
   {
-    question: 'Que signifie “loyer charges comprises” ?',
+    question: t('chargesIncluded.question'),
     answer: (
       <>
-        <p>Si une annonce indique "cc" (charges comprises), cela signifie que certaines charges sont incluses dans le loyer, comme :</p>
+        <p>{t('chargesIncluded.intro')}</p>
         <ul>
           <li>
-            <p>L'entretien des parties communes </p>
+            <p>{t('chargesIncluded.commonAreas')}</p>
           </li>
           <li>
-            <p>L'eau froide/chaude, voir l'électricité</p>
+            <p>{t('chargesIncluded.water')}</p>
           </li>
         </ul>
-        <p className="fr-text--italic fr-m-0">⚠️ Vérifiez toujours précisément ce que couvrent les charges avant de signer.</p>
+        <p className="fr-text--italic fr-m-0">{t('chargesIncluded.warning')}</p>
         <p className={'fr-text--italic'}>
-          Attention ! Le contrat de location et les quittances doivent toujours bien distinguer le montant du loyer (qui peut être encadré
-          s’il s’agit de logements locatifs sociaux ou intermédiaires) et le montant des charges locatives récupérables dont la liste
-          limitative est définie par décret. Vous pouvez trouver ces informations sur
+          {t('chargesIncluded.legal')}
           <Link target="_blank" href="https://www.service-public.fr/particuliers/vosdroits/F947" className="fr-link">
             &nbsp;https://www.service-public.fr/particuliers/vosdroits/F947
             <NewWindowHint />
@@ -94,169 +82,138 @@ export const FAQ_CONTENTS: TFaqQuestionsAnswers[] = [
     ),
   },
   {
-    question: 'Quelle est la différence entre un logement meublé et non meublé ?',
+    question: t('furnished.question'),
     answer: (
       <>
         <ul>
           <li>
-            <p>
-              <span className="fr-text--bold">Meublé</span>&nbsp;: contient un équipement minimum (lit, plaques de cuisson, frigo, etc.).
-              Les loyers sont généralement plus élevés.
-            </p>
+            <p>{t.rich('furnished.furnished', { b: bold })}</p>
           </li>
           <li>
-            <p className="fr-m-0">
-              <span className="fr-text--bold">Non meublé</span>&nbsp;: vide ou partiellement équipé, avec un bail souvent plus long (3 ans
-              contre 1 an pour un meublé).
-            </p>
+            <p className="fr-m-0">{t.rich('furnished.unfurnished', { b: bold })}</p>
           </li>
         </ul>
       </>
     ),
   },
   {
-    question: 'Qu’est-ce que le DPE et le GES ? Pourquoi est-ce important ?',
+    question: t('energyPerformance.question'),
     answer: (
       <>
         <ul>
           <li>
-            <p>
-              <span className="fr-text--bold">DPE (Diagnostic de performance énergétique)</span>&nbsp;: indique la consommation énergétique
-              du logement (note de A à G).
-            </p>
+            <p>{t.rich('energyPerformance.dpe', { b: bold })}</p>
           </li>
           <li>
-            <p>
-              <span className="fr-text--bold">GES (Gaz à effet de serre) </span>&nbsp;: mesure les émissions liées à l’énergie utilisée.
-            </p>
+            <p>{t.rich('energyPerformance.ges', { b: bold })}</p>
           </li>
         </ul>
-        <p className="fr-text--italic fr-m-0">
-          👉 Un logement mal noté (E ou F : les logements en G sont interdits à la location depuis janvier 2025, sauf dérogations
-          particulières) peut être mal isolé, coûteux à chauffer et inconfortable en été.
-        </p>
+        <p className="fr-text--italic fr-m-0">{t('energyPerformance.note')}</p>
       </>
     ),
   },
   {
-    question: 'Où puis-je trouver ce type de logement étudiant ?',
+    question: t('whereToFind.question'),
     answer: (
       <p className="fr-m-0">
-        Les résidences universitaires conventionnées et autres logements sociaux sont listés dans la section{' '}
-        <span className={'fr-text--italic'}>"Trouver un logement étudiant"</span>
-        &nbsp;sur&nbsp;
-        <Link href="https://monlogementetudiant.beta.gouv.fr" className="fr-link">
-          monlogementetudiant.beta.gouv.fr
-        </Link>
+        {t.rich('whereToFind.answer', {
+          i: (chunks) => <span className={'fr-text--italic'}>{chunks}</span>,
+          link: (chunks) => (
+            <Link href="https://monlogementetudiant.beta.gouv.fr" className="fr-link">
+              {chunks}
+            </Link>
+          ),
+        })}
       </p>
     ),
   },
   {
-    question: 'Quelles aides financières puis-je obtenir pour payer mon loyer ?',
+    question: t('financialAid.question'),
     answer: (
       <>
-        <p>Les aides personnelles au logement de la CAF peuvent vous aider à payer votre loyer.</p>
+        <p>{t('financialAid.cafAids')}</p>
         <p>
-          Pour trouver plus d’informations vous pouvez aller sur&nbsp;
-          <Link
-            target="_blank"
-            href="https://www.caf.fr/allocataires/aides-et-demarches/droits-et-prestations/logement/les-aides-personnelles-au-logement"
-            className="fr-link"
-          >
-            https://www.caf.fr/allocataires/aides-et-demarches/droits-et-prestations/logement/les-aides-personnelles-au-logement
-            <NewWindowHint />
-          </Link>
-          &nbsp;et&nbsp;
-          <Link target="_blank" href="https://www.service-public.fr/particuliers/vosdroits/N20360" className="fr-link">
-            https://www.service-public.fr/particuliers/vosdroits/N20360
-            <NewWindowHint />
-          </Link>
+          {t.rich('financialAid.moreInfo', {
+            cafLink: externalLink(
+              'https://www.caf.fr/allocataires/aides-et-demarches/droits-et-prestations/logement/les-aides-personnelles-au-logement',
+            ),
+            servicePublicLink: externalLink('https://www.service-public.fr/particuliers/vosdroits/N20360'),
+          })}
         </p>
-        <p>D'autres aides peuvent exister (aides locales).</p>
+        <p>{t('financialAid.localAids')}</p>
         <p>
-          Vous pouvez les tester sur notre simulateur:{' '}
-          <Link href="/simuler-mes-aides-au-logement" className="fr-link">
-            Simuler mes aides au logement
-          </Link>
-        </p>
-      </>
-    ),
-  },
-  {
-    question: 'Ai-je besoin d’un garant pour louer un logement ?',
-    answer: (
-      <>
-        <p>
-          Oui, la majorité des bailleurs exigent un garant : une personne (souvent un parent) qui s’engage à payer le loyer si vous ne le
-          pouvez pas. Si vous n'en avez pas, vous pouvez faire appel à :
-        </p>
-        <ul>
-          <li>
-            <p>
-              <span className="fr-text--bold">La grantie Visale</span>&nbsp;(gratuite et publique)&nbsp;
-              <Link target="_blank" href="https://www.visale.fr/" className="fr-link">
-                https://www.visale.fr/
-                <NewWindowHint />
+          {t.rich('financialAid.simulator', {
+            link: (chunks) => (
+              <Link href="/simuler-mes-aides-au-logement" className="fr-link">
+                {chunks}
               </Link>
-            </p>
+            ),
+          })}
+        </p>
+      </>
+    ),
+  },
+  {
+    question: t('guarantor.question'),
+    answer: (
+      <>
+        <p>{t('guarantor.intro')}</p>
+        <ul>
+          <li>
+            <p>{t.rich('guarantor.visale', { b: bold, link: externalLink('https://www.visale.fr/') })}</p>
           </li>
           <li>
-            <p className="fr-m-0">
-              <span className="fr-text--bold">Des garanties privées payantes</span>&nbsp;: proposées par certaines plateformes de location.
-            </p>
+            <p className="fr-m-0">{t.rich('guarantor.private', { b: bold })}</p>
           </li>
         </ul>
       </>
     ),
   },
   {
-    question: 'Quels documents dois-je fournir pour constituer un dossier de location ?',
+    question: t('documents.question'),
     answer: (
       <>
-        <p>Un dossier type comprend généralement :</p>
+        <p>{t('documents.intro')}</p>
         <ul>
           <li>
-            <p>Une pièce d'identité</p>
+            <p>{t('documents.identity')}</p>
           </li>
           <li>
-            <p>
-              Un justificatif de situation étudiante (certificat de scolarité) uniquement pour les logements étudiants (résidences
-              universitaires, résidences-services dédiées, pas dans le parc locatif libre)
-            </p>
+            <p>{t('documents.studentStatus')}</p>
           </li>
           <li>
-            <p>Les trois dernières quittances de loyer ou une attestation d’hébergement</p>
+            <p>{t('documents.rentReceipts')}</p>
           </li>
           <li>
-            <p>Un justificatif de ressources (ou ceux du garant)</p>
+            <p>{t('documents.income')}</p>
           </li>
           <li>
-            <p className="fr-m-0">Le contrat de travail ou une attestation de bourse, si applicable</p>
+            <p className="fr-m-0">{t('documents.contract')}</p>
           </li>
         </ul>
       </>
     ),
   },
   {
-    question: 'Que dois-je vérifier avant de signer un bail ?',
+    question: t('beforeSigning.question'),
     answer: (
       <>
-        <p>Avant de vous engager, pensez à vérifier :</p>
+        <p>{t('beforeSigning.intro')}</p>
         <ul>
           <li>
-            <p>L'état des lieux d'entrée</p>
+            <p>{t('beforeSigning.inventory')}</p>
           </li>
           <li>
-            <p>Ce que couvrent exactement les charges</p>
+            <p>{t('beforeSigning.charges')}</p>
           </li>
           <li>
-            <p>La durée du bail et les modalités de résiliation</p>
+            <p>{t('beforeSigning.leaseDuration')}</p>
           </li>
           <li>
-            <p>La conformité du logement (surface minimale, équipements obligatoires pour un meublé, etc.)</p>
+            <p>{t('beforeSigning.compliance')}</p>
           </li>
           <li>
-            <p className="fr-m-0">L’existence d’une clause de solidarité si vous êtes en colocation</p>
+            <p className="fr-m-0">{t('beforeSigning.solidarityClause')}</p>
           </li>
         </ul>
       </>

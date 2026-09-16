@@ -22,7 +22,8 @@ import { RequiredFieldsNotice, RequiredLabel } from '~/components/ui/required-ma
 import type { ApartmentType } from '~/enums/apartment-type'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { trackEvent } from '~/lib/tracking'
-import { ZBirthDate, ZScholarshipStatus } from '~/schemas/student-profile/student-profile'
+import type { TSchemaTranslator } from '~/schemas/schema-translator'
+import { createZBirthDate, createZScholarshipStatus } from '~/schemas/student-profile/student-profile'
 import { useTRPC, useTRPCClient } from '~/server/trpc/client'
 import { authClient } from '~/services/better-auth-client'
 import { isStudentProfileComplete } from '~/utils/student-profile'
@@ -88,17 +89,20 @@ const useContactRequestModal = (accommodationSlug: string) => {
   return useMemo(() => createModal({ id: `contact-request-modal-${accommodationSlug}`, isOpenedByDefault: false }), [accommodationSlug])
 }
 
-const ZContactRequestForm = z.object({
-  firstname: z.string().trim().min(1, 'Le prénom est requis'),
-  lastname: z.string().trim().min(1, 'Le nom est requis'),
-  email: z.string().trim().email("L'e-mail est invalide"),
-  phone: z.string().trim(),
-  birthdate: ZBirthDate,
-  scholarshipStatus: ZScholarshipStatus,
-  consent: z.boolean().refine((value) => value, 'Vous devez accepter le partage de vos informations'),
-})
+type TContactRequestErrorsTranslator = ReturnType<typeof useTranslations<'accomodation.sidebar.contactRequestModal.errors'>>
 
-type TContactRequestForm = z.infer<typeof ZContactRequestForm>
+const buildZContactRequestForm = (t: TContactRequestErrorsTranslator, tSchemas: TSchemaTranslator) =>
+  z.object({
+    firstname: z.string().trim().min(1, t('firstnameRequired')),
+    lastname: z.string().trim().min(1, t('lastnameRequired')),
+    email: z.string().trim().email(t('emailInvalid')),
+    phone: z.string().trim(),
+    birthdate: createZBirthDate(tSchemas),
+    scholarshipStatus: createZScholarshipStatus(tSchemas),
+    consent: z.boolean().refine((value) => value, t('consentRequired')),
+  })
+
+type TContactRequestForm = z.infer<ReturnType<typeof buildZContactRequestForm>>
 
 type TContactRequestField = 'firstname' | 'lastname' | 'email' | 'phone' | 'birthdate'
 
@@ -182,6 +186,9 @@ const LockableScholarshipStatus = ({
 const ContactRequestModal = ({ accommodationSlug }: { accommodationSlug: string }) => {
   const t = useTranslations('accomodation.sidebar.contactRequestModal')
   const buttonT = useTranslations('accomodation.sidebar.buttons')
+  const errorsT = useTranslations('accomodation.sidebar.contactRequestModal.errors')
+  const tSchemas = useTranslations('schemas')
+  const ZContactRequestForm = useMemo(() => buildZContactRequestForm(errorsT, tSchemas), [errorsT, tSchemas])
   const trpc = useTRPC()
   const queryClient = useQueryClient()
   const modal = useContactRequestModal(accommodationSlug)

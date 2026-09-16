@@ -5,7 +5,7 @@ import type { accommodations } from '~/server/db/schema/accommodations'
 // (ZUpdateResidence / ZCreateResidence) all derive from these same field names.
 type AccommodationField = keyof typeof accommodations.$inferSelect
 
-type Equipment = {
+export type Equipment = {
   icon: string
   key: AccommodationField
   label: string | ((value: string) => string)
@@ -92,3 +92,11 @@ export const EQUIPMENTS: Equipment[] = [
     category: 'collective',
   },
 ]
+
+/**
+ * Clé de traduction du libellé d'un équipement, relative au namespace `accomodation.equipments.items`.
+ * Les équipements à libellé variable (salle de bain, cuisine) ont une sous-clé `shared` / `private`,
+ * sur la même convention que `label`.
+ */
+export const getEquipmentLabelKey = (equipment: Equipment, value: unknown): string =>
+  typeof equipment.label === 'function' ? `${equipment.key}.${value === 'shared' ? 'shared' : 'private'}` : equipment.key

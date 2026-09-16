@@ -3,12 +3,14 @@
 import Checkbox from '@codegouvfr/react-dsfr/Checkbox'
 import { Input } from '@codegouvfr/react-dsfr/Input'
 import { Range } from '@codegouvfr/react-dsfr/Range'
+import { useTranslations } from 'next-intl'
 import { FC } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { type HelpSimulatorFormData } from '~/components/helps-simulator/help-simulator-schema'
 import { RequiredLabel } from '~/components/ui/required-mark'
 
 export const HelpSimulatorStep2: FC = () => {
+  const t = useTranslations('simulator.form.resources')
   const {
     register,
     formState: { errors },
@@ -22,8 +24,8 @@ export const HelpSimulatorStep2: FC = () => {
   return (
     <>
       <Input
-        label={<RequiredLabel>Vos revenus mensuels</RequiredLabel>}
-        hintText="Salaire en euros"
+        label={<RequiredLabel>{t('incomeLabel')}</RequiredLabel>}
+        hintText={t('incomeHint')}
         state={errors.monthlyIncome ? 'error' : undefined}
         stateRelatedMessage={errors.monthlyIncome?.message}
         nativeInputProps={{
@@ -35,8 +37,8 @@ export const HelpSimulatorStep2: FC = () => {
       />
       <div>
         <Range
-          label={rentUnknown ? 'Montant de votre loyer mensuel' : <RequiredLabel>Montant de votre loyer mensuel</RequiredLabel>}
-          hintText="Hors charges, en euros"
+          label={rentUnknown ? t('rentLabel') : <RequiredLabel>{t('rentLabel')}</RequiredLabel>}
+          hintText={t('rentHint')}
           min={100}
           max={1000}
           step={20}
@@ -56,7 +58,7 @@ export const HelpSimulatorStep2: FC = () => {
           className="fr-mt-0"
           options={[
             {
-              label: "Je suis à la recherche d'un logement mais je n'ai pas encore trouvé donc je ne connais pas le montant de mon loyer",
+              label: t('rentUnknown'),
               nativeInputProps: {
                 ...register('rentUnknown'),
                 onChange: (e) => {
