@@ -61,6 +61,13 @@ describe('contacts.create', () => {
     expect(result!.scholarshipStatus).toBe(contactInput.scholarshipStatus)
   })
 
+  it('rejects an unpublished accommodation as if it did not exist', async () => {
+    const owner = await createOwner({ name: 'Owner Hidden', slug: 'owner-hidden', contactMode: EOwnerContactMode.CONTACTS })
+    await createAccommodation({ slug: 'res-hidden', ownerId: owner!.id, published: false }, [typologyDraft('t1', { nbAvailable: 1 })])
+
+    await expect(caller.contacts.create({ accommodationSlug: 'res-hidden', ...contactInput })).rejects.toMatchObject({ code: 'NOT_FOUND' })
+  })
+
   it('rejects when the accommodation has no availability', async () => {
     const owner = await createOwner({ name: 'Owner Contacts', slug: 'owner-contacts', contactMode: EOwnerContactMode.CONTACTS })
     await createAccommodation({ slug: 'res-no-contact-availability', ownerId: owner!.id }, [typologyDraft('t1', { nbAvailable: 0 })])

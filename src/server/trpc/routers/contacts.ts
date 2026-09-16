@@ -19,7 +19,7 @@ import { baseProcedure, createTRPCRouter, userProcedure } from '../init'
 const buildConfirmationUrl = (contactRequestId: string) =>
   `${env.BASE_URL}/api/contacts/confirmer?token=${encodeURIComponent(createClaimToken(contactRequestId, 'confirm'))}`
 
-/** Résout une résidence par son slug (le slug reste l'identifiant public des URLs). */
+/** Résout une résidence **publiée** par son slug (le slug reste l'identifiant public des URLs). */
 const findAccommodationBySlug = async (slug: string) => {
   const [accommodation] = await db
     .select({
@@ -30,7 +30,7 @@ const findAccommodationBySlug = async (slug: string) => {
       acceptsApplications: accommodations.acceptsApplications,
     })
     .from(accommodations)
-    .where(eq(accommodations.slug, slug))
+    .where(and(eq(accommodations.slug, slug), eq(accommodations.published, true)))
     .limit(1)
 
   if (!accommodation) {

@@ -64,7 +64,7 @@ export const trackingRouter = createTRPCRouter({
         accommodationAddresses,
         and(eq(accommodationAddresses.accommodationId, accommodations.id), eq(accommodationAddresses.isMain, true)),
       )
-      .where(eq(accommodations.slug, input.accommodationSlug))
+      .where(and(eq(accommodations.slug, input.accommodationSlug), eq(accommodations.published, true)))
       .limit(1)
     if (!accom) return
 
