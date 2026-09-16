@@ -1,4 +1,4 @@
-import { and, eq, inArray, type SQL } from 'drizzle-orm'
+import { and, eq, inArray, type SQL, sql } from 'drizzle-orm'
 import { cache } from 'react'
 import { findVisibleApplicationForTenant } from '~/server/candidatures/visibility'
 import { db } from '~/server/db'
@@ -44,5 +44,23 @@ export const scopeAllowsAccommodationId = (scope: AccommodationScope, accommodat
 
 export const scopeHasAnyAccommodation = (scope: AccommodationScope): boolean => scope.kind === 'all' || scope.accommodationIds.length > 0
 
+/**
+ * Candidatures du bailleur de l'appelant. Un locataire peut candidater chez plusieurs bailleurs : sans ce
+ * filtre, la recherche (non ordonnée) pouvait tomber sur la candidature d'un autre bailleur et refuser
+ * l'accès au dossier de façon aléatoire. L'admin plateforme n'est pas restreint (cf. `checkAccommodationAccess`).
+ */
+const ownerApplicationCondition = async (userId: string): Promise<SQL | undefined> => {
+  const usr = await db.query.user.findFirst({ where: eq(user.id, userId), columns: { role: true, ownerId: true } })
+  if (usr?.role === 'admin') return undefined
+  if (!usr?.ownerId) return sql`false`
+  return inArray(
+    dossierFacileApplications.accommodationSlug,
+    db.select({ slug: accommodations.slug }).from(accommodations).where(eq(accommodations.ownerId, usr.ownerId)),
+  )
+}
+
 export const findScopedApplicationForTenant = async (userId: string, tenantId: string) =>
-  findVisibleApplicationForTenant(tenantId, scopeApplicationSlugCondition(await getAccommodationScope(userId)))
+  findVisibleApplicationForTenant(
+    tenantId,
+    and(scopeApplicationSlugCondition(await getAccommodationScope(userId)), await ownerApplicationCondition(userId)),
+  )
