@@ -226,6 +226,9 @@ sont jamais mises à jour et grossissent donc indéfiniment (ex. aout 2026):
 | `alert_job` | 12 mois | 11 Mo | ~8,8 Mo/mois | **jobs terminés uniquement** (`sent`, `failed`) ; les `pending` restent actionnables par le sender |
 | `activity_log` | 36 mois | 5 Mo | ~0,5 Mo/mois, en décroissance | journal d'actions admin/bailleurs |
 | `import_job` | 24 mois | 1,9 Mo | ~0,2 Mo/mois | audit trail des imports et des crons |
+| `login_attempt` | 12 mois | — | — | suivi des liens de connexion (écran « Connexions ») ; les jetons inconnus orphelins sont retirés quel que soit leur âge |
+| `session` | expirées depuis 7 jours | — | — | sessions Better Auth (IP, user-agent) ; **sans archive** |
+| `verification` | dès expiration | — | — | jetons de connexion, d'activation et de réinitialisation ; **sans archive** |
 
 Les rétentions sont volontairement dissymétriques. `tracking_event` pèse 98 % du total et croît
 40 fois plus vite que la somme des trois autres : c'est la seule dont la rétention se paie en

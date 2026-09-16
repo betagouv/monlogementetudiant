@@ -47,15 +47,10 @@ export async function recordMagicLinkVerification(params: { token: string; succe
 
     const [attempt] = await db.select().from(loginAttempts).where(eq(loginAttempts.tokenHash, tokenHash)).limit(1)
 
-    if (!attempt) {
-      // Jeton qu'on ne sait rattacher à aucun envoi : lien forgé, tronqué par un client mail, ou
-      // émis avant la mise en place du suivi. `onConflictDoNothing` couvre le rejeu du même lien.
-      await db
-        .insert(loginAttempts)
-        .values({ tokenHash, expiresAt: now, status: ELoginAttemptStatus.INVALID, verifiedAt: now, verifiedUserAgent: params.userAgent })
-        .onConflictDoNothing()
-      return
-    }
+    // Jeton qu'on ne sait rattacher à aucun envoi (lien forgé, tronqué par un client mail) : rien à
+    // suivre. L'enregistrer laisserait n'importe quel GET anonyme sur `/magic-link/verify` remplir la
+    // table de lignes sans compte ni e-mail, qui polluent l'écran « Connexions ».
+    if (!attempt) return
 
     // Une issue déjà enregistrée ne se réécrit pas : un lien rouvert après une connexion réussie
     // (retour arrière, second clic) ne doit pas transformer un succès en échec.

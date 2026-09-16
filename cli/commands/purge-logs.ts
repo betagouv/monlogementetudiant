@@ -1,10 +1,13 @@
-import { subMonths } from 'date-fns'
-import { and, eq, inArray, lt, type SQL, sql } from 'drizzle-orm'
+import { subDays, subMonths } from 'date-fns'
+import { and, eq, inArray, isNull, lt, or, type SQL, sql } from 'drizzle-orm'
 import type { PgColumn, PgTable } from 'drizzle-orm/pg-core'
+import { ELoginAttemptStatus } from '~/enums/login-attempt-status'
 import { closeDb, db } from '~/server/db'
 import { activityLog } from '~/server/db/schema/activity-log'
 import { alertJobs } from '~/server/db/schema/alert-jobs'
+import { session, verification } from '~/server/db/schema/auth'
 import { importJobs } from '~/server/db/schema/import-jobs'
+import { loginAttempts } from '~/server/db/schema/login-attempts'
 import { trackingEvents } from '~/server/db/schema/tracking-events'
 import { captureCliException } from '../sentry'
 import { archivePurgedRows } from '../utils/purge-archive'
@@ -77,6 +80,20 @@ const IMPORT_JOB_RETENTION_MONTHS = 24
  */
 const TRACKING_RETENTION_MONTHS = 7
 
+/**
+ * `login_attempt` alimente l'écran admin « Connexions », qui suit l'activation des gestionnaires :
+ * une année couvre largement une campagne d'onboarding. La table contient l'e-mail saisi et le
+ * user-agent, elle ne doit pas vivre indéfiniment.
+ */
+const LOGIN_ATTEMPT_RETENTION_MONTHS = 12
+
+/**
+ * Sessions Better Auth expirées (IP et user-agent en clair) : Better Auth ne les supprime qu'à leur
+ * prochaine lecture, qui n'arrive jamais pour un appareil abandonné. Une semaine de grâce garde de
+ * quoi diagnostiquer une déconnexion récente.
+ */
+const EXPIRED_SESSION_GRACE_DAYS = 7
+
 const DELETE_BATCH_SIZE = 10_000
 
 /**
@@ -128,6 +145,46 @@ export const TARGETS: PurgeTarget[] = [
     retentionMonths: IMPORT_JOB_RETENTION_MONTHS,
     where: (cutoff) => lt(importJobs.createdAt, cutoff),
     detail: 'l’admin affiche le dernier run de chaque cron, y compris les trimestriels',
+  },
+  {
+    label: 'login_attempt',
+    table: loginAttempts,
+    retentionMonths: LOGIN_ATTEMPT_RETENTION_MONTHS,
+    // Les jetons inconnus orphelins (ni e-mail ni compte) n'ont jamais eu de valeur de suivi : on les
+    // retire quel que soit leur âge. Le service n'en crée plus, cela solde l'historique.
+    where: (cutoff) =>
+      or(
+        lt(loginAttempts.createdAt, cutoff),
+        and(eq(loginAttempts.status, ELoginAttemptStatus.INVALID), isNull(loginAttempts.email), isNull(loginAttempts.userId)),
+      ) as SQL,
+    detail: 'tentatives de connexion par lien, et jetons inconnus orphelins quel que soit leur âge',
+  },
+]
+
+interface ExpiredTarget {
+  label: string
+  table: PgTable
+  /** Condition des lignes expirées, évaluée au moment du run. */
+  where: () => SQL
+  detail: string
+}
+
+/**
+ * Tables Better Auth à id texte, incompatibles avec la suppression par plafond d'id des `TARGETS`.
+ * Rien à archiver : ce sont des jetons et des sessions expirés, sans valeur une fois périmés.
+ */
+export const EXPIRED_TARGETS: ExpiredTarget[] = [
+  {
+    label: 'session',
+    table: session,
+    where: () => lt(session.expiresAt, subDays(new Date(), EXPIRED_SESSION_GRACE_DAYS)),
+    detail: `sessions expirées depuis plus de ${EXPIRED_SESSION_GRACE_DAYS} jours`,
+  },
+  {
+    label: 'verification',
+    table: verification,
+    where: () => lt(verification.expiresAt, new Date()),
+    detail: 'jetons de vérification (liens de connexion, activation, réinitialisation) expirés',
   },
 ]
 
@@ -259,12 +316,29 @@ async function purgeTarget(
  * être relu ou réinjecté en cas de besoin. Pilotée par un cron mensuel (voir `cron.json`).
  * Idempotente : ré-exécutable sans risque.
  */
+async function purgeExpiredTarget(target: ExpiredTarget, options: PurgeLogsOptions): Promise<TargetOutcome> {
+  const where = target.where()
+  if (options.verbose) console.log(`  • ${target.label} — ${target.detail}`)
+
+  if (options.dryRun) {
+    const candidates = await db.$count(target.table, where)
+    console.log(`  [dry-run] ${target.label} : ${candidates} ligne(s) seraient supprimées`)
+    return { table: target.label, deleted: 0, capped: false }
+  }
+
+  const { count } = await db.delete(target.table).where(where)
+  console.log(`  ✓ ${target.label} : ${count} ligne(s) supprimées`)
+  return { table: target.label, deleted: count, capped: false }
+}
+
 export async function purgeLogs(options: PurgeLogsOptions = {}): Promise<void> {
   const { dryRun = false, retentionMonths, maxRows = DEFAULT_MAX_ROWS, noArchive = false, table } = options
 
   const targets = table ? TARGETS.filter((target) => target.label === table) : TARGETS
-  if (targets.length === 0) {
-    throw new Error(`Table inconnue : "${table}". Tables purgeables : ${TARGETS.map((target) => target.label).join(', ')}`)
+  const expiredTargets = table ? EXPIRED_TARGETS.filter((target) => target.label === table) : EXPIRED_TARGETS
+  if (targets.length === 0 && expiredTargets.length === 0) {
+    const labels = [...TARGETS, ...EXPIRED_TARGETS].map((target) => target.label).join(', ')
+    throw new Error(`Table inconnue : "${table}". Tables purgeables : ${labels}`)
   }
 
   console.log(`🧹 Purge des logs (rétention ${retentionMonths ? `${retentionMonths} mois, forcée` : 'propre à chaque table'})...`)
@@ -288,6 +362,10 @@ export async function purgeLogs(options: PurgeLogsOptions = {}): Promise<void> {
       const retention = retentionMonths ?? target.retentionMonths
       const cutoff = subMonths(new Date(), retention)
       outcomes.push(await purgeTarget(target, cutoff, retention, { ...options, maxRows }))
+    }
+
+    for (const target of expiredTargets) {
+      outcomes.push(await purgeExpiredTarget(target, options))
     }
 
     const total = outcomes.reduce((sum, outcome) => sum + outcome.deleted, 0)
