@@ -3,6 +3,7 @@ import superjson from 'superjson'
 import { type BailleurPermission, hasPermission, isBailleurAdministrator } from '~/server/bailleur/permissions'
 import { getClientIp } from '~/server/contacts/rate-limit'
 import { getServerSession } from '~/services/better-auth'
+import { maskUnexpectedErrorMessage } from './error-formatter'
 
 /**
  * `opts` est fourni par `fetchRequestHandler` (route HTTP) mais pas par les appels serveur
@@ -15,6 +16,7 @@ export const createTRPCContext = async (opts?: { req?: Request }) => {
 
 const t = initTRPC.context<Awaited<ReturnType<typeof createTRPCContext>>>().create({
   transformer: superjson,
+  errorFormatter: ({ shape, error }) => maskUnexpectedErrorMessage(shape, error, process.env.NODE_ENV === 'production'),
 })
 
 export const createTRPCRouter = t.router
