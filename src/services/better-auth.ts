@@ -63,7 +63,7 @@ export const auth = betterAuth({
 
         // 2. If scrypt fails, try PBKDF2-SHA256 (Django format)
         if (hash.startsWith('pbkdf2_sha256$')) {
-          const djangoMatch = verifyDjangoPassword(password, hash)
+          const djangoMatch = await verifyDjangoPassword(password, hash)
           if (djangoMatch) {
             // Rehash to scrypt — better-auth does NOT do this automatically
             const newHash = await hashPassword(password)
