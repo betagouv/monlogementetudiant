@@ -933,8 +933,9 @@ export const bailleurRouter = createTRPCRouter({
 
   // ─── Espace Contacts ─────────────────────────────────────────────────────
 
-  // Active/change le mode de réception des candidatures (self-service).
-  setContactMode: bailleurProcedure('manage_applications')
+  // Active/change le mode de réception des candidatures (self-service). Le mode s'applique à tout le
+  // bailleur : seul un administrateur peut le changer, pas un gestionnaire, même restreint à une résidence.
+  setContactMode: bailleurAdministratorProcedure
     .input(z.object({ mode: ZOwnerContactMode, ownerId: z.number().optional(), residences: ZAccommodationSelection.optional() }))
     .mutation(async ({ ctx, input }) => {
       if (input.mode === EOwnerContactMode.DOSSIER_FACILE && !isDossierFacileSelectable()) {

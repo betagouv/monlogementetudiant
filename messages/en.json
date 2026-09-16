@@ -2235,6 +2235,7 @@
         "dossierFacileDescription": "Receive a complete applicant file: identity document, tax notice, proof of income, etc.",
         "dossierFacileCta": "Receive files with DossierFacile",
         "comingSoon": "Coming soon",
+        "administratorOnly": "Only an administrator of your organisation can enable receiving applications.",
         "activationSuccess": "Application reception mode enabled.",
         "activationError": "An error occurred during activation."
       },
