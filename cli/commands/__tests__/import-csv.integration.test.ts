@@ -18,7 +18,7 @@ async function loadTypologies(accommodationId: number) {
 }
 
 // Le géocodage vérifié interroge geo.api.gouv.fr puis la BAN : le stub répond
-// par URL, `mockFetch` ne sert plus que les téléchargements d'images.
+// par URL, `mockFetch` ne sert qu'aux téléchargements d'images.
 const geocoding = createGeocodingStub([
   { postalCode: '75001', city: 'Paris', inseeCode: '75101', address: '10 Rue du Soleil', lat: 48.8566, lng: 2.3522 },
 ])
@@ -455,8 +455,7 @@ describe('import-csv integration', () => {
       sourceId: existing.externalReference ?? undefined,
     })
 
-    // We need to generate the same sourceId, which is hash of name+address+postal_code
-    // Simpler: just import two new rows under test-mix source
+    // sourceId is a hash of name+address+postal_code, so only new rows are imported here
     const filePath = writeTmpCsv([makeRow({ name: 'Résidence Nouvelle 1' }), makeRow({ name: 'Résidence Nouvelle 2' })])
 
     const result = await command.execute({ file: filePath, source: 'test-mix', verbose: true })

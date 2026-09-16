@@ -26,13 +26,11 @@ export function applyFrenchContraction(preposition: Preposition, cityName: strin
   if (!cityName) return ''
   const trimmedCity = cityName.trim()
 
-  // Vérifie si la ville commence par "Le " (article masculin singulier)
   if (/^Le\s/i.test(trimmedCity)) {
     const cityWithoutArticle = trimmedCity.replace(/^Le\s/i, '')
     return preposition === 'à' ? `au ${cityWithoutArticle}` : `du ${cityWithoutArticle}`
   }
 
-  // Vérifie si la ville commence par "Les " (article pluriel)
   if (/^Les\s/i.test(trimmedCity)) {
     const cityWithoutArticle = trimmedCity.replace(/^Les\s/i, '')
     return preposition === 'à' ? `aux ${cityWithoutArticle}` : `des ${cityWithoutArticle}`

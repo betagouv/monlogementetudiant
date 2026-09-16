@@ -310,7 +310,7 @@ describe('rétention côté gestionnaire', () => {
     const request = await authenticatedCaller.contacts.create({ accommodationSlug: 'res-ret-mutate', ...contactInput })
     await ageContactRequest(request!.id, 31)
 
-    // Lecture et écriture doivent franchir la même porte : un id encore en main ne suffit pas.
+    // Lecture et écriture appliquent la même fenêtre de rétention.
     await expect(
       ownerCaller.bailleur.updateContactStatus({ id: request!.id, status: EContactStatus.CONTACTE, source: EContactSource.CONTACT }),
     ).rejects.toThrow(/not found/i)

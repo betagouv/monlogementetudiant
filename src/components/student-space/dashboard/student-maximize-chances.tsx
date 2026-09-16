@@ -27,7 +27,6 @@ export const StudentMaximizeChances = () => {
       href: 'to-do',
       isComplete: isTodoListComplete,
     },
-    // { id: 2, label: t('estimateAid.title'), button: t('estimateAid.cta'), href: 'to-do' },
     { id: 3, label: t('createAlerts.title'), button: t('createAlerts.cta'), href: 'alertes' },
   ]
 

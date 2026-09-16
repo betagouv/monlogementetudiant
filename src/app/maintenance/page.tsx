@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 
 export default function MaintenancePage() {
-  // Cette page n'est accessible que via le middleware de maintenance
+  // Mode maintenance désactivé : pour le réactiver, retirer `notFound()` et décommenter le rendu ci-dessous.
   notFound()
 
   // return (

@@ -128,13 +128,11 @@ describe('deleting an owner cleans up admin links', () => {
     const owner = await createOwner({ name: 'Bailleur ToDelete', slug: 'bailleur-to-delete' })
     await createAdminOwnerLink({ userId: 'test-admin-id', ownerId: owner.id })
 
-    // Verify link exists
     const before = await adminCaller.admin.users.myLinkedOwners()
     expect(before).toHaveLength(1)
 
     await adminCaller.admin.owners.delete({ id: owner.id })
 
-    // Verify link is cleaned up
     const after = await adminCaller.admin.users.myLinkedOwners()
     expect(after).toHaveLength(0)
   })

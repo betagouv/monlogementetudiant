@@ -6,11 +6,9 @@
 /* `aspect-ratio` doit rester aligné sur les `width`/`height` passés à AccommodationImage
    (400×300 pour la principale, 200×150 pour les vignettes, soit 4/3 dans les deux cas).
 
-   Sans lui, `height: auto` fait suivre à l'image son ratio *naturel* : `aspect-ratio: auto 4/3`,
-   déduit des attributs HTML, laisse la priorité au bitmap dès qu'il est chargé. Une photo
-   portrait s'étirait donc en hauteur, décalait toute sa rangée et désalignait la grille de la
-   photo principale. Ratio imposé + `object-fit: cover` : chaque case garde la même forme et
-   c'est le recadrage qui absorbe l'écart. */
+   Sans lui, `height: auto` suit le ratio *naturel* du bitmap, et une photo portrait désaligne la
+   grille. Ratio imposé + `object-fit: cover` : chaque case garde la même forme et c'est le
+   recadrage qui absorbe l'écart. */
 .imageGrid img,
 .mainImage {
   aspect-ratio: 4 / 3;
@@ -23,9 +21,8 @@
   display: flex;
   position: relative;
 
-  /* Complément exact de `fr-unhidden-sm` (min-width: 36em), qui fait réapparaître la grille.
-     Le seuil était à 768px : entre 576 et 768px la principale réclamait 100% pendant que la
-     grille en prenait 50%, et l'ensemble débordait. */
+  /* Complément exact de `fr-unhidden-sm` (min-width: 36em), qui fait réapparaître la grille :
+     un seuil différent ferait coexister la principale à 100% et la grille à 50%, et déborder. */
   @media (max-width: 35.99em) {
     width: 100% !important;
   }

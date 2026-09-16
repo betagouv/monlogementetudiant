@@ -89,7 +89,6 @@ describe('password verify flow', () => {
     expect(storedHash).not.toBe(djangoHash)
     expect(storedHash).not.toContain('pbkdf2_sha256$')
 
-    // New scrypt hash should verify correctly
     const scryptResult = await verifyScryptPassword({ hash: storedHash!, password })
     expect(scryptResult).toBe(true)
   })
@@ -105,7 +104,6 @@ describe('password verify flow', () => {
     // First login: Django hash → rehash to scrypt
     await verifyAndRehash(djangoHash, password)
 
-    // Get the new scrypt hash
     const newHash = await getAccountPassword(userId)
     expect(newHash).toBeTruthy()
     expect(newHash).not.toContain('pbkdf2_sha256$')

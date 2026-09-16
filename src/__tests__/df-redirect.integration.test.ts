@@ -64,7 +64,7 @@ async function createTestData(overrides?: { pdfUrl?: string | null; tenantUrl?: 
   return { owner, accommodation, tenant, application }
 }
 
-// ─── getCandidature ne doit plus exposer d'URL directe ──────────────────────
+// ─── getCandidature n'expose pas d'URL directe ──────────────────────────────
 
 describe('getCandidature does not expose raw URLs', () => {
   it('returns dfTenantId, hasPdfUrl and hasTenantUrl instead of raw URLs', async () => {
@@ -74,11 +74,9 @@ describe('getCandidature does not expose raw URLs', () => {
       id: (await ownerCaller.bailleur.listCandidatures({ page: 1 })).items[0].id,
     })
 
-    // Must NOT contain raw URLs
     expect(candidature).not.toHaveProperty('tenantUrl')
     expect(candidature).not.toHaveProperty('pdfUrl')
 
-    // Must contain opaque identifiers
     expect(candidature.dfTenantId).toBe(tenant.id)
     expect(candidature.hasPdfUrl).toBe(true)
     expect(candidature.hasTenantUrl).toBe(true)
@@ -113,7 +111,7 @@ describe('getCandidature does not expose raw URLs', () => {
   })
 })
 
-// ─── listCandidatures ne doit plus exposer pdfUrl ───────────────────────────
+// ─── listCandidatures n'expose pas pdfUrl ───────────────────────────────────
 
 describe('listCandidatures does not expose pdfUrl', () => {
   it('does not include pdfUrl in list items', async () => {
@@ -322,7 +320,7 @@ describe('/api/df-redirect is not a bearer token', () => {
     const { redirectUrl } = await ownerCaller.bailleur.getDocumentSignedUrl({ type: 'tenantPdf', tenantId: tenant.id })
     const token = new URL(redirectUrl, 'http://localhost').searchParams.get('token')!
 
-    // Jeton intercepté : le `sub` ne correspond plus au compte qui le présente.
+    // Le `sub` du jeton ne correspond pas au compte qui le présente.
     signedInAs = 'test-owner-id-2'
     await createUser({ id: 'test-owner-id-2', name: 'Autre', email: 'autre@test.com', role: 'owner' })
     const res = await callRedirect(token)

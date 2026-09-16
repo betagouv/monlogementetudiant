@@ -4,10 +4,10 @@ import type { Diff } from './accommodation-diff'
 /**
  * Diff des typologies pour les journaux d'activité.
  *
- * Les typologies vivent dans `accommodation_typology` depuis le 21/07/2026 et sortent donc du
- * périmètre de computeDiff, qui ne compare que les colonnes de `accommodation`. Sans ce calcul,
- * les modifications de disponibilités, de surfaces, de loyers et de nombre de logements
- * n'apparaissent plus du tout dans le journal.
+ * Les typologies vivent dans `accommodation_typology` et sortent donc du périmètre de
+ * computeDiff, qui ne compare que les colonnes de `accommodation`. Sans ce calcul, les
+ * modifications de disponibilités, de surfaces, de loyers et de nombre de logements
+ * n'apparaîtraient pas dans le journal.
  *
  * Les clés émises sont `typologies.<type>.<champ>`. Les entrées antérieures portent les anciens
  * noms de colonnes plates (`nbT1Available`…) ; les deux conventions se résolvent vers le même

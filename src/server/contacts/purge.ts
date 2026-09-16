@@ -23,8 +23,6 @@ export interface PurgeContactRequestsResult {
  * 2. **ceux qui ont seulement lié leur compte** — jamais aucune candidature, donc jamais rien
  *    exposé à personne, mais la ligne porte quand même le nom et le statut renvoyés par
  *    DossierFacile. Rien ne justifie de les garder au-delà de la même durée.
- *
- * La seconde population était exclue par construction tant que la requête partait des candidatures.
  */
 const findTenantsOutOfRetention = async (): Promise<string[]> => {
   const cutoff = dossierFacileRetentionCutoff().toISOString()
@@ -62,9 +60,9 @@ const findTenantsOutOfRetention = async (): Promise<string[]> => {
  *    compte) suffit à l'historique et aux compteurs.
  *
  * **DossierFacile** — la ligne `dossier_facile_tenant` est supprimée, et sa cascade emporte les
- * documents mis en cache comme les candidatures. Couper les seuls liens ne suffisait pas : la ligne
- * conservait indéfiniment le nom, l'identifiant et le statut renvoyés par DossierFacile, hors de
- * toute durée de conservation. C'est le même effacement que sur le callback `DELETED_ACCOUNT` et
+ * documents mis en cache comme les candidatures. Couper les seuls liens ne suffirait pas : la ligne
+ * porte le nom, l'identifiant et le statut renvoyés par DossierFacile, soumis à la même durée de
+ * conservation. C'est le même effacement que sur le callback `DELETED_ACCOUNT` et
  * que sur la déconnexion depuis l'espace étudiant. L'étudiant qui recandidate reconnecte son
  * dossier, et une nouvelle ligne est créée.
  *

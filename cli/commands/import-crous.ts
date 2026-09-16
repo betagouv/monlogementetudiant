@@ -252,7 +252,6 @@ const command: ImportCommand = {
         const sourceId = buildMatchSourceId(item, duplicatedUairnes)
         if (options.verbose) console.log(`  [${i + 1}/${items.length}] ${name} (${sourceId})`)
 
-        // Parse address
         const rawAddress = item.adresse_residence?.trim() ?? ''
         const parsed = parseAddress(rawAddress)
 
@@ -403,7 +402,6 @@ const command: ImportCommand = {
       }
     }
 
-    // Healthcheck
     const baseUrl = env.BASE_URL
     if (baseUrl && processedEntries.length > 0 && !options.dryRun) {
       const failed = await healthCheck(processedEntries, baseUrl, options.verbose ?? false)
