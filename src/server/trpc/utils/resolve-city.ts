@@ -20,7 +20,7 @@ export async function resolveCityId(postalCode: string, cityName: string): Promi
 
   // 2. Fallback: match by postal code only.
   // Un code postal couvre souvent plusieurs communes (91400 = Gometz-la-Ville,
-  // Orsay, Saclay) : sans tri, Postgres en rendait une au hasard. On retient la
+  // Orsay, Saclay) : sans tri, Postgres en renverrait une arbitraire. On retient la
   // plus peuplée, qui est la commune principale du code postal.
   const byPostal = await db
     .select({ id: cities.id })

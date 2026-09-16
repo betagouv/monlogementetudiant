@@ -20,10 +20,8 @@ function errorRedirect(errorType: string) {
 /**
  * Redirige vers une pièce du dossier DossierFacile d'un candidat.
  *
- * Le jeton signé (60 s) est une commodité, **pas** une autorisation : il a été émis à un instant où
- * la candidature était visible, ce qui ne dit rien de l'instant où il est consommé. Session,
- * propriété de la résidence et fenêtre de rétention sont donc revérifiées ici — sans quoi le jeton
- * serait un porteur pur, exploitable par quiconque l'intercepte, sans même être connecté.
+ * Le jeton signé (60 s) ne vaut pas autorisation : session, propriété de la résidence et fenêtre
+ * de rétention sont vérifiées à chaque consommation.
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -61,7 +59,7 @@ export async function GET(request: Request) {
     const application = await findScopedApplicationForTenant(session.user.id, tenantId)
     if (!application) return errorRedirect('doc_forbidden')
 
-    // Contrairement aux procédures tRPC, cette route n'a pas de garde d'autorisation en amont.
+    // Route hors tRPC : les autorisations sont vérifiées ici.
     const caller = {
       role: session.user.role,
       bailleurRole: session.user.bailleurRole ?? null,

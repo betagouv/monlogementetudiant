@@ -281,8 +281,7 @@ describe('accommodations.list', () => {
 
   it('departmentId filters on the department boundary, not on its bounding box', async () => {
     const academy = await createAcademy({ name: 'Académie de Strasbourg' })
-    // Frontière en L : sa bbox (6.8→7.6 / 47.4→48.3) déborde à l'ouest sur le département voisin,
-    // exactement la configuration qui faisait remonter Belfort et Montbéliard dans le Haut-Rhin.
+    // Frontière en L : sa bbox (6.8→7.6 / 47.4→48.3) déborde à l'ouest sur le département voisin (Belfort).
     const department = await createDepartment({
       academyId: academy.id,
       code: '68',

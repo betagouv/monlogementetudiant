@@ -38,9 +38,8 @@ export const visibleContactRequest = (): SQL | undefined =>
 /**
  * Candidature DossierFacile visible : même fenêtre de rétention, **et** dossier validé.
  *
- * Les deux moitiés sont volontairement inséparables — le statut du locataire était auparavant un
- * prédicat distinct que chaque lecteur devait penser à combiner, et deux d'entre eux l'oubliaient.
- * Suppose que `dossier_facile_tenant` est joint à la requête.
+ * Les deux moitiés sont volontairement inséparables, pour qu'aucun lecteur n'ait à penser à
+ * combiner le statut du locataire. Suppose que `dossier_facile_tenant` est joint à la requête.
  */
 export const visibleDossierFacileApplication = (): SQL | undefined =>
   and(gte(dossierFacileApplications.createdAt, dossierFacileRetentionCutoff()), eq(dossierFacileTenants.status, DF_TENANT_STATUS_VERIFIED))

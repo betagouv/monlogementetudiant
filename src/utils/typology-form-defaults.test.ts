@@ -126,7 +126,7 @@ describe('typologyFormDefaults — le formulaire reste soumettable', () => {
   })
 
   it('accepte une résidence dont les typologies sont entièrement NULL en base', () => {
-    // Le cas qui cassait le formulaire : aucune donnée saisie, aucune erreur de bornes.
+    // Aucune donnée saisie : aucune erreur de bornes.
     expect(submit({ t1: allNull(), t3: allNull() }).success).toBe(true)
   })
 

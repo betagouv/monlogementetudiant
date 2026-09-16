@@ -44,7 +44,7 @@ const buildCsp = (frameAncestors) =>
     ['script-src', "'self'", "'unsafe-inline'", isDev && "'unsafe-eval'", matomoOrigin].filter(Boolean).join(' '),
     // DSFR et emotion (tss-react) injectent des styles inline.
     `style-src 'self' 'unsafe-inline' ${wpOrigin}`,
-    // `https:` faute de mieux : les favicons des sites bailleurs viennent d'origines arbitraires
+    // `https:` : les favicons des sites bailleurs viennent d'origines non énumérables
     // (src/utils/get-favicon-url.ts). Couvre aussi les tuiles OSM, les marqueurs Leaflet (cdnjs,
     // raw.githubusercontent) et les photos S3 ; `blob:` sert aux aperçus avant upload.
     "img-src 'self' data: blob: https:",

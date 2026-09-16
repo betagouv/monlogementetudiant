@@ -53,14 +53,6 @@ export const ResidenceFilters = () => {
           iconId="ri-search-line"
           className="fr-mb-0"
         />
-        {/* <Select label="" nativeSelectProps={{ name: 'Filtre' }} className="fr-mb-0">
-          <option value="" selected disabled hidden>
-            Triés par disponibilités
-          </option>
-
-          <option value="1">Disponible</option>
-          <option value="2">Occupé</option>
-        </Select> */}
       </div>
     </div>
   )

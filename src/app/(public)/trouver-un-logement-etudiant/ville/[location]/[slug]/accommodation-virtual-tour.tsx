@@ -77,7 +77,7 @@ const TourEmbed = ({ src }: { src: string }) => {
 export const AccommodationVirtualTour = ({ url }: { url: string | null }) => {
   const t = useTranslations('accomodation')
 
-  // Une saisie hors liste blanche (y compris enregistrée avant sa mise en place) n'est pas affichée.
+  // Une URL hors liste blanche, y compris déjà enregistrée en base, n'est pas affichée.
   const tour = parseVirtualTour(url)
   if (!tour) return null
 

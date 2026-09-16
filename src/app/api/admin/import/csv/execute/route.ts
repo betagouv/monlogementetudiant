@@ -32,7 +32,6 @@ export async function POST(request: Request) {
 
   const content = await file.text()
 
-  // Create job record
   const [job] = await db
     .insert(importJobs)
     .values({ type: 'csv', status: 'running', source: source.trim(), createdBy: session.user.id })

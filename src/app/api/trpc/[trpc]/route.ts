@@ -8,8 +8,8 @@ const handleTRPC = (req: Request) =>
   fetchRequestHandler({
     endpoint: '/api/trpc',
     req,
-    // Un batch non borné multiplie en une seule requête HTTP le coût des procédures publiques.
-    // Le client découpe ses batchs à `maxItems` (trpc-client.tsx), qui doit rester inférieur.
+    // Taille de batch bornée. Le client découpe ses batchs à `maxItems` (trpc-client.tsx), qui
+    // doit rester inférieur.
     maxBatchSize: 20,
     router: appRouter,
     createContext: createTRPCContext,

@@ -251,9 +251,8 @@ export async function ensureCity(postalCode: string, cityName: string): Promise<
   if (existingByName[0]) return existingByName[0]
 
   // Un code postal couvre souvent plusieurs communes (91400 = Gometz-la-Ville,
-  // Orsay, Saclay). Sans tri, Postgres en rendait une au hasard : c'est ce qui
-  // a rattaché des résidences d'Orsay à Gometz-la-Ville. La plus peuplée est la
-  // commune principale du code postal dans la quasi-totalité des cas.
+  // Orsay, Saclay). Sans tri, Postgres en renverrait une arbitraire. La plus
+  // peuplée est la commune principale du code postal dans la quasi-totalité des cas.
   const existing = await db
     .select({ name: cities.name, id: cities.id })
     .from(cities)

@@ -89,8 +89,8 @@ import { priceMaxComputed, rowsToAccommodationDTOs } from './accommodations'
 // Agrégat dénormalisé maintenu sur l'accommodation (détail par typologie dans `accommodation_typology`).
 const DISPONIBILITES_SQL = sql<number>`coalesce(${accommodations.nbAvailableApartments}, 0)::int`
 
-// La règle « dossier validé » est désormais inséparable de la fenêtre de rétention : les deux
-// vivent dans `visibleDossierFacileApplication` (src/server/candidatures/visibility.ts).
+// La règle « dossier validé » et la fenêtre de rétention sont réunies dans
+// `visibleDossierFacileApplication` (src/server/candidatures/visibility.ts).
 
 function assertPermissionsMatchContactMode(permissions: BailleurPermission[], contactMode: EOwnerContactMode) {
   if (permissions.includes('manage_applications') && !canGrantApplicationsPermission(contactMode)) {
@@ -532,7 +532,6 @@ export const bailleurRouter = createTRPCRouter({
           ? []
           : await db.select().from(accommodationTypologies).where(eq(accommodationTypologies.accommodationId, accommodationId))
 
-      // Input fields are already camelCase = DB column names, so no snake→camel mapping is needed.
       const camelFields: Record<string, unknown> = { ...fields }
       if (typeof camelFields.name === 'string') {
         camelFields.name = normalizeAccommodationName(camelFields.name)
@@ -552,7 +551,6 @@ export const bailleurRouter = createTRPCRouter({
         parentSet.nbAvailableApartments = aggregates.nbAvailableApartments
       }
 
-      // Handle addresses update
       if (inputAddresses !== undefined) {
         // Geocode in parallel, then delete old + batch insert
         const resolved = await Promise.all(
@@ -620,7 +618,7 @@ export const bailleurRouter = createTRPCRouter({
         }
       }
 
-      // Les disponibilités passent désormais par les typologies : on redéclenche la détection d'alertes
+      // Les disponibilités sont portées par les typologies : on redéclenche la détection d'alertes
       // dès qu'un lot de typologies est fourni (superset sûr — la détection recompute de toute façon).
       if (typologies !== undefined) {
         await triggerAlertDetection([accommodationId])
@@ -727,8 +725,7 @@ export const bailleurRouter = createTRPCRouter({
     .input(
       z.object({
         page: z.number().default(1),
-        // Anciennement `pending | accepted | rejected` : un vocabulaire mort, qui ne pouvait matcher
-        // aucune ligne — `dossier_facile_application.status` porte les valeurs de `EContactStatus`.
+        // `dossier_facile_application.status` porte les valeurs de `EContactStatus`.
         status: ZContactStatus.optional(),
         search: z.string().optional(),
         sort: z.enum(['date_desc', 'date_asc']).default('date_desc'),
@@ -1505,7 +1502,7 @@ export const bailleurRouter = createTRPCRouter({
       if (targets.length !== ids.length) throw new TRPCError({ code: 'NOT_FOUND', message: 'Utilisateur non trouve' })
 
       // L'ecran ne liste jamais d'administrateur (ils ont toutes les autorisations d'office) : un tel
-      // id est un bug client ou un contournement, l'ignorer en silence masquerait les deux.
+      // id fait echouer le lot plutot que d'etre ignore en silence.
       if (targets.some((t) => t.bailleurRole !== 'gestionnaire')) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: "Seuls les gestionnaires disposent d'autorisations a accorder" })
       }
@@ -1515,8 +1512,8 @@ export const bailleurRouter = createTRPCRouter({
         const enabled = input.managers.find((m) => m.userId === target.id)?.enabled ?? false
         const next = sanitizeGestionnairePermissions(nextApplicationsPermissions(target.bailleurPermissions, enabled), owner.contactMode)
 
-        // Filet de securite : l'interrupteur est deja verrouille cote client dans ce cas. On le
-        // rencontre en contournement, ou en course avec une autorisation retiree depuis un autre ecran.
+        // Verifie aussi cote serveur : l'interrupteur est verrouille cote client dans ce cas, mais une
+        // autorisation a pu etre retiree entre-temps depuis un autre ecran.
         if (!hasUsableGestionnairePermissions(next)) {
           throw new TRPCError({
             code: 'BAD_REQUEST',

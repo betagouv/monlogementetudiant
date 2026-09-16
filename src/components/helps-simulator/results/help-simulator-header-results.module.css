@@ -7,8 +7,7 @@
 
 /**
  * Le nom de l'aide locale vient de la base et peut être long d'un seul tenant. Sans coupure, il
- * débordait de 21 px à 320 px de large et provoquait un défilement horizontal, contraire au test
- * RGAA 10.11.1.
+ * déborde à 320 px de large et provoque un défilement horizontal, contraire au test RGAA 10.11.1.
  */
 .localAidName {
   overflow-wrap: anywhere;

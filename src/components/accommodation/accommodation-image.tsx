@@ -27,8 +27,8 @@ export const AccommodationImage = ({
 
   if (!withModal) return image
 
-  // La vignette ouvrait la visionneuse via un onClick posé sur l'image : inatteignable au clavier
-  // (RGAA 7.3). Le <button> rétablit le focus, l'activation par Entrée/Espace et un nom accessible.
+  // Un <button> plutôt qu'un onClick sur l'image : la vignette reste atteignable au clavier (RGAA 7.3),
+  // activable par Entrée/Espace et dotée d'un nom accessible.
   return (
     <button type="button" className={styles.trigger} onClick={() => accommodationPicturesModal.open()} aria-label={openModalLabel}>
       {image}

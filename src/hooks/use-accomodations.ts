@@ -28,7 +28,7 @@ export const useAccomodations = ({ cityId: cityIdOverride, citySlug, pageSize }:
   const isMapSearch = !!rechercheParCarte
   const effectiveCitySlug = citySlug ?? city ?? (citySlugFromPath && !isMapSearch ? citySlugFromPath : undefined)
   // Sur une page département, on filtre par l'id du département (frontière réelle) plutôt que par la
-  // bbox, qui remontait les résidences des départements limitrophes.
+  // bbox, qui remonterait les résidences des départements limitrophes.
   const effectiveDepartmentSlug =
     !effectiveCitySlug && !cityIdOverride && departmentSlugFromPath && !isMapSearch ? departmentSlugFromPath : undefined
 

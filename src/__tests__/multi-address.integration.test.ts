@@ -266,7 +266,6 @@ describe('multi-address: bailleur.create with multiple addresses', () => {
 
     expect(result.slug).toBeDefined()
 
-    // Verify addresses in DB
     const [accommodation] = await db.select({ id: accommodations.id }).from(accommodations).where(eq(accommodations.slug, result.slug))
     const addresses = await db.select().from(accommodationAddresses).where(eq(accommodationAddresses.accommodationId, accommodation.id))
 
@@ -315,11 +314,9 @@ describe('multi-address: bailleur.update addresses', () => {
       geom: { type: 'Point', coordinates: [2.35, 48.85] },
     })
 
-    // Verify initial state
     let addresses = await db.select().from(accommodationAddresses).where(eq(accommodationAddresses.accommodationId, acc.id))
     expect(addresses).toHaveLength(1)
 
-    // Update with 2 new addresses
     await ownerCaller.bailleur.update({
       slug: 'update-addresses',
       addresses: [
@@ -357,7 +354,6 @@ describe('multi-address: bailleur.update addresses', () => {
       geom: { type: 'Point', coordinates: [4.83, 45.76] },
     })
 
-    // Update with only 1 address
     await ownerCaller.bailleur.update({
       slug: 'reduce-addresses',
       addresses: [{ address: '99 only address', city: 'Paris', postalCode: '75001' }],
