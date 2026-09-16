@@ -29,15 +29,20 @@ export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
   return next({ ctx: { ...ctx, session: ctx.session } })
 })
 
+// Gardes en liste blanche : `user.role` est un texte libre en base, un rôle inattendu ne doit ouvrir
+// ni l'espace bailleur ni l'espace étudiant.
+const OWNER_SPACE_ROLES: readonly string[] = ['owner', 'admin']
+const STUDENT_SPACE_ROLES: readonly string[] = ['user', 'admin']
+
 export const ownerProcedure = protectedProcedure.use(async ({ ctx, next }) => {
-  if (ctx.session.user.role === 'user') {
+  if (!OWNER_SPACE_ROLES.includes(ctx.session.user.role)) {
     throw new TRPCError({ code: 'FORBIDDEN', message: 'Owner or admin role required' })
   }
   return next({ ctx })
 })
 
 export const userProcedure = protectedProcedure.use(async ({ ctx, next }) => {
-  if (ctx.session.user.role === 'owner') {
+  if (!STUDENT_SPACE_ROLES.includes(ctx.session.user.role)) {
     throw new TRPCError({ code: 'FORBIDDEN', message: 'Student or admin role required' })
   }
   return next({ ctx })
