@@ -8,7 +8,6 @@ export const VIRTUAL_TOUR_ALLOWED_DOMAINS = [
   'ricoh360.com',
   'giraffe360.com',
   'youtube.com',
-  'youtube-nocookie.com',
   'youtu.be',
   'vimeo.com',
   'drive.google.com',
