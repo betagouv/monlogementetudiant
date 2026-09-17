@@ -1,7 +1,8 @@
 import { TRPCError } from '@trpc/server'
-import { and, between, count, desc, eq, ilike, inArray, isNull, or, sql } from 'drizzle-orm'
+import { and, between, count, desc, eq, ilike, inArray, isNull, ne, or, sql } from 'drizzle-orm'
 import { getTranslations } from 'next-intl/server'
 import { z } from 'zod'
+import { ELoginAttemptStatus } from '~/enums/login-attempt-status'
 import { EOwnerContactMode, OWNER_CONTACT_MODES, ZOwnerContactMode } from '~/enums/owner-contact-mode'
 import { FEATURES } from '~/lib/features'
 import { GESTIONNAIRE_PERMISSIONS_REQUIRED, gestionnairePermissionsAreUsable } from '~/schemas/bailleur-users/bailleur-user-form'
@@ -25,6 +26,7 @@ import { account, session, user } from '~/server/db/schema/auth'
 import { cities } from '~/server/db/schema/cities'
 import { eventStats } from '~/server/db/schema/event-stats'
 import { importJobs } from '~/server/db/schema/import-jobs'
+import { loginAttempts } from '~/server/db/schema/login-attempts'
 import { ownerFeedback } from '~/server/db/schema/owner-feedback'
 import { owners } from '~/server/db/schema/owners'
 import { stats } from '~/server/db/schema/stats'
@@ -983,17 +985,19 @@ const ownerUsageRouter = createTRPCRouter({
         slug: owners.slug,
         url: owners.url,
         image: owners.image,
+        // Les sessions disparaissent à la déconnexion. Les traces de succès conservent
+        // le bailleur et le rôle à l'envoi du lien, indépendamment de l'état actuel du compte.
         nbLogins: sql<number>`(
-          SELECT count(*)::int FROM "session" s
-          INNER JOIN "user" u ON s.user_id = u.id
-          WHERE u.owner_id = "owner"."id" AND u.role != 'admin'
-          AND s.created_at >= ${input.from}::date
-          AND s.created_at < (${input.to}::date + 1)
+          SELECT count(*)::int FROM login_attempt la
+          WHERE la.owner_id = "owner"."id" AND la.role != 'admin'
+          AND la.status = ${ELoginAttemptStatus.COMPLETED}
+          AND la.verified_at >= ${input.from}::date
+          AND la.verified_at < (${input.to}::date + 1)
         )`,
         lastLogin: sql<string | null>`(
-          SELECT max(s.created_at)::text FROM "session" s
-          INNER JOIN "user" u ON s.user_id = u.id
-          WHERE u.owner_id = "owner"."id" AND u.role != 'admin'
+          SELECT max(la.verified_at)::text FROM login_attempt la
+          WHERE la.owner_id = "owner"."id" AND la.role != 'admin'
+          AND la.status = ${ELoginAttemptStatus.COMPLETED}
         )`,
         nbActions: sql<number>`(
           SELECT count(*)::int FROM activity_log
@@ -1039,16 +1043,20 @@ const ownerUsageRouter = createTRPCRouter({
   detail: adminProcedure.input(dateRangeInput.extend({ ownerId: z.number() })).query(async ({ input }) => {
     const loginsByDay = await db
       .select({
-        date: sql<string>`date(s.created_at)`.as('date'),
+        date: sql<string>`date(${loginAttempts.verifiedAt})`.as('date'),
         count: sql<number>`count(*)::int`.as('count'),
       })
-      .from(sql`"session" s`)
-      .innerJoin(sql`"user" u`, sql`s.user_id = u.id`)
+      .from(loginAttempts)
       .where(
-        sql`u.owner_id = ${input.ownerId} AND u.role != 'admin' AND s.created_at >= ${input.from}::date AND s.created_at < (${input.to}::date + 1)`,
+        and(
+          eq(loginAttempts.ownerId, input.ownerId),
+          ne(loginAttempts.role, 'admin'),
+          eq(loginAttempts.status, ELoginAttemptStatus.COMPLETED),
+          sql`${loginAttempts.verifiedAt} >= ${input.from}::date AND ${loginAttempts.verifiedAt} < (${input.to}::date + 1)`,
+        ),
       )
-      .groupBy(sql`date(s.created_at)`)
-      .orderBy(sql`date(s.created_at)`)
+      .groupBy(sql`date(${loginAttempts.verifiedAt})`)
+      .orderBy(sql`date(${loginAttempts.verifiedAt})`)
 
     const actionsByDay = await db
       .select({
