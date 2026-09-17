@@ -2,14 +2,12 @@ import { apiKey } from '@better-auth/api-key'
 import * as Sentry from '@sentry/nextjs'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
-import { hashPassword, verifyPassword as verifyScryptPassword } from 'better-auth/crypto'
 import { nextCookies } from 'better-auth/next-js'
 import { admin, magicLink } from 'better-auth/plugins'
-import { and, eq } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { headers } from 'next/headers'
 import { cache } from 'react'
 import type { EOwnerContactMode } from '~/enums/owner-contact-mode'
-import { verifyDjangoPassword } from '~/lib/django-password'
 import { canAccessOwnerSpace } from '~/lib/roles'
 import { linkGuestContactRequestsSafely } from '~/server/contacts/link-guest-requests'
 import { db } from '~/server/db'
@@ -64,7 +62,6 @@ export const auth = betterAuth({
   // Jetons de `verification` stockés hachés.
   verification: { storeIdentifier: 'hashed' },
   advanced: {
-    // force la suppression des cookies (django)
     cookiePrefix: 'monlogementetudiant',
   },
   emailAndPassword: {
@@ -79,29 +76,6 @@ export const auth = betterAuth({
       if (account?.role !== 'user') return
       logLocalAuthLink('reset-password', user.email, url)
       await sendResetPasswordEmail(user.email, url)
-    },
-    password: {
-      verify: async ({ hash, password }) => {
-        // 1. Try scrypt (better-auth default) first
-        const scryptMatch = await verifyScryptPassword({ hash, password }).catch(() => false)
-        if (scryptMatch) return true
-
-        // 2. If scrypt fails, try PBKDF2-SHA256 (Django format)
-        if (hash.startsWith('pbkdf2_sha256$')) {
-          const djangoMatch = await verifyDjangoPassword(password, hash)
-          if (djangoMatch) {
-            // Rehash to scrypt — better-auth does NOT do this automatically
-            const newHash = await hashPassword(password)
-            await db
-              .update(schema.account)
-              .set({ password: newHash })
-              .where(and(eq(schema.account.password, hash), eq(schema.account.providerId, 'credential')))
-            return true
-          }
-        }
-
-        return false
-      },
     },
   },
   emailVerification: {
