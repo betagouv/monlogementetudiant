@@ -81,6 +81,51 @@ describe('lien de connexion', () => {
   })
 })
 
+describe('connexion par lien des rôles qui n’utilisent pas le mot de passe', () => {
+  const DASHBOARD_BY_ROLE = { owner: '/bailleur/tableau-de-bord', admin: '/administration/tableau-de-bord' } as const
+
+  const openSessionWithMagicLink = async (email: string, role: 'owner' | 'admin') => {
+    await sendMagicLink(email, role, DASHBOARD_BY_ROLE[role])
+    const response = await GET(new Request(verifyUrlFromEmail(sentEmails.at(-1)!.url).toString()))
+    return new URL(response.headers.get('location')!, env.BASE_URL)
+  }
+
+  const sessionsOf = (userId: string) => getTestDb().select().from(session).where(eq(session.userId, userId))
+
+  it.each(['owner', 'admin'] as const)('ouvre une session pour un %s qui a gardé un mot de passe', async (role) => {
+    const id = `${role}-avec-mdp`
+    await createUser({ id, name: 'Compte', email: `${id}@test.com`, role })
+    await getTestDb()
+      .insert(account)
+      .values({
+        id: `account-${id}`,
+        userId: id,
+        accountId: id,
+        issuer: createLocalAccountIssuer('credential'),
+        providerId: 'credential',
+        password: await hashPassword('motDePasseHerite123!'),
+      })
+
+    const location = await openSessionWithMagicLink(`${id}@test.com`, role)
+
+    expect(location.searchParams.get('error')).toBeNull()
+    expect(location.pathname).toBe(DASHBOARD_BY_ROLE[role])
+    expect(await sessionsOf(id)).toHaveLength(1)
+  })
+
+  it.each(['owner', 'admin'] as const)('ouvre une session pour un %s sans aucune ligne credential', async (role) => {
+    const id = `${role}-sans-mdp`
+    await createUser({ id, name: 'Compte', email: `${id}@test.com`, role })
+    expect(await getTestDb().select().from(account).where(eq(account.userId, id))).toHaveLength(0)
+
+    const location = await openSessionWithMagicLink(`${id}@test.com`, role)
+
+    expect(location.searchParams.get('error')).toBeNull()
+    expect(location.pathname).toBe(DASHBOARD_BY_ROLE[role])
+    expect(await sessionsOf(id)).toHaveLength(1)
+  })
+})
+
 describe('réinitialisation du mot de passe', () => {
   it('ne stocke pas le jeton de réinitialisation en clair', async () => {
     const email = 'etudiant-jeton@test.com'
