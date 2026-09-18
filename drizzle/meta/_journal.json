@@ -498,6 +498,13 @@
       "when": 1789635485543,
       "tag": "0070_remove_django_credentials",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1789635545543,
+      "tag": "0071_drop_non_student_passwords",
+      "breakpoints": true
     }
   ]
 }
