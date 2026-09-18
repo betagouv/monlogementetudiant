@@ -6,6 +6,7 @@ import { ELoginAttemptStatus } from '~/enums/login-attempt-status'
 import { EOwnerContactMode, OWNER_CONTACT_MODES, ZOwnerContactMode } from '~/enums/owner-contact-mode'
 import { FEATURES } from '~/lib/features'
 import { GESTIONNAIRE_PERMISSIONS_REQUIRED, gestionnairePermissionsAreUsable } from '~/schemas/bailleur-users/bailleur-user-form'
+import { zNormalizedEmail } from '~/schemas/email'
 import { IMPORT_JOB_TYPES, ZImportJobType } from '~/schemas/import-jobs'
 import { assertAdministratorSlotAvailable } from '~/server/bailleur/administrator-limit'
 import {
@@ -128,7 +129,7 @@ const usersRouter = createTRPCRouter({
     .input(
       z
         .object({
-          email: z.string().email(),
+          email: zNormalizedEmail(),
           firstname: z.string().min(1),
           lastname: z.string().min(1),
           role: z.enum(['admin', 'owner', 'user']).default('user'),
@@ -179,7 +180,7 @@ const usersRouter = createTRPCRouter({
     .input(
       z.object({
         id: z.string(),
-        email: z.string().email().optional(),
+        email: zNormalizedEmail().optional(),
         firstname: z.string().min(1).optional(),
         lastname: z.string().min(1).optional(),
         role: z.enum(['admin', 'owner', 'user']).optional(),

@@ -5,7 +5,6 @@ const isProdOnly = process.env.NEXT_PUBLIC_APP_ENV === 'production'
 
 const optionalUrl = z.preprocess((v) => (v === '' ? undefined : v), z.url().optional())
 const requiredInProdUrl = isProd ? z.url() : optionalUrl
-// const requiredInProdOnlyUrl = isProdOnly ? z.url() : optionalUrl
 const requiredInProd = isProd ? z.string().min(1) : z.string().optional()
 /** Requis en production seulement — staging n'a pas l'équivalent (backups, par exemple). */
 const requiredInProdOnly = isProdOnly ? z.string().min(1) : z.string().optional()
@@ -73,6 +72,12 @@ const envSchema = z.object({
   // rester documenté et validé au démarrage, pas pour y être importé.
   IMAGE_CACHE_MEMORY_MB: z.coerce.number().int().positive().default(128),
 
+  // Coupe l'étage S3 du cache d'images : seul le cache mémoire du process reste actif.
+  // Destiné au développement local, où les identifiants S3 pointent sur un bucket partagé
+  // dont l'écriture du préfixe `image-cache/` n'est pas accordée. Lu directement par
+  // cache-handler.mjs, comme IMAGE_CACHE_MEMORY_MB.
+  IMAGE_CACHE_S3_DISABLED: z.enum(['0', '1', 'true', 'false']).default('0'),
+
   // Geocoding
   GEOCODING_API_URL: z.url().default('https://data.geopf.fr/geocodage/search'),
 
@@ -91,6 +96,11 @@ const envSchema = z.object({
   DOSSIERFACILE_REDIRECT_URI: requiredInProdUrl,
   DOSSIERFACILE_SCOPE: requiredInProd,
   DOSSIERFACILE_WEBHOOK_API_KEY: requiredInProd,
+
+  // Sentry : endpoint « security » qui reçoit les violations de la CSP Report-Only (src/proxy.ts).
+  // URL complète, telle que donnée par Sentry (Project Settings > Security Headers). Optionnelle même en
+  // production : sans elle la CSP Report-Only ne remonte rien, mais son absence ne doit pas bloquer le boot.
+  SENTRY_CSP_REPORT_URI: optionalUrl,
 
   // Public vars (validated server-side for CI)
   NEXT_PUBLIC_APP_ENV: z.enum(['development', 'staging', 'production']).default('development'),

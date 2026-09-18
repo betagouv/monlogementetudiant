@@ -38,7 +38,7 @@ function formatBytes(bytes: number): string {
  *
  * On ne produit pas le dump nous-mêmes : `pg_dump` n'existe pas dans un conteneur Node Scalingo,
  * et l'addon PostgreSQL fabrique déjà un backup cohérent chaque nuit. On se contente de
- * l'externaliser — c'était déjà la stratégie du script Django historique.
+ * l'externaliser.
  *
  * Rétention (voir `cli/lib/backup-storage.ts`) : le 1er et le 15 du mois partent sous `monthly/`
  * et sont conservés indéfiniment, les autres jours sous `daily/` avec une fenêtre glissante de
@@ -115,8 +115,8 @@ export async function backupDb(options: BackupDbOptions = {}): Promise<void> {
         },
       })
 
-      // Le script historique ne vérifiait rien et pouvait pousser une archive vide par-dessus la
-      // dernière valide. On confirme la taille avant de purger quoi que ce soit.
+      // On confirme la taille avant de purger quoi que ce soit : une archive vide ou tronquée ne
+      // doit pas prendre la place de la dernière valide.
       const uploaded = await backupSize(key)
       if (uploaded === null) throw new Error(`Objet ${key} introuvable après upload.`)
       if (uploaded !== backup.size) {

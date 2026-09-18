@@ -60,3 +60,27 @@ span[class^="fr-"]::before {
 .breadcrumbInverted .fr-breadcrumb__list li:not(:first-child):before {
   color: white;
 }
+
+@media print {
+  body.budgetPrintMode * {
+    visibility: hidden;
+  }
+
+  body.budgetPrintMode .budgetPrintArea,
+  body.budgetPrintMode .budgetPrintArea * {
+    visibility: visible;
+  }
+
+  body.budgetPrintMode .budgetPrintArea {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    background-color: #272747;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  body.budgetPrintMode .budgetPrintHidden {
+    display: none !important;
+  }
+}

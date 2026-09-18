@@ -97,13 +97,11 @@ describe('recordMagicLinkVerification', () => {
     expect((await readAttempt('token-rejoue'))!.status).toBe(ELoginAttemptStatus.INVALID)
   })
 
-  it('enregistre un jeton inconnu, sans jamais échouer sur un second passage', async () => {
+  it("n'enregistre rien pour un jeton rattaché à aucun envoi", async () => {
     await recordMagicLinkVerification({ token: 'token-inconnu', success: false, userAgent: 'Scanner/1.0' })
     await recordMagicLinkVerification({ token: 'token-inconnu', success: false, userAgent: 'Scanner/1.0' })
 
-    const attempt = await readAttempt('token-inconnu')
-    expect(attempt!.status).toBe(ELoginAttemptStatus.INVALID)
-    expect(attempt!.email).toBeNull()
+    expect(await readAttempt('token-inconnu')).toBeNull()
   })
 
   it('ne rétrograde pas une connexion déjà aboutie si le lien est rouvert', async () => {

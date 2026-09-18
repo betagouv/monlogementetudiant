@@ -12,6 +12,7 @@ export const CreateResidencePictures = () => {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [fileError, setFileError] = useState<string | null>(null)
   const t = useTranslations('toast')
+  const tPictures = useTranslations('bailleur.residences.details.pictures')
   const selectedFiles = watch('imagesFiles') || []
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,10 +41,10 @@ export const CreateResidencePictures = () => {
   return (
     <div className="fr-border-bottom">
       <div className="fr-p-2w fr-p-md-6w">
-        <h3>Photos de la résidence</h3>
+        <h3>{tPictures('title')}</h3>
         <div className="fr-flex fr-direction-column fr-flex-gap-4v">
-          Ajouter des photos
-          <span className="fr-text-mention--grey fr-text--sm fr-mb-0">Taille maximale: 10 Mo. Format support&eacute;: jpeg, png, webp</span>
+          {tPictures('addPhotos')}
+          <span className="fr-text-mention--grey fr-text--sm fr-mb-0">{tPictures('hint')}</span>
           <div className="fr-flex fr-align-items-center fr-flex-gap-4v">
             <input
               ref={fileInputRef}
@@ -54,14 +55,14 @@ export const CreateResidencePictures = () => {
               style={{ display: 'none' }}
             />
             <Button type="button" priority="tertiary" onClick={() => fileInputRef.current?.click()}>
-              Parcourir...
+              {tPictures('browse')}
             </Button>
             <span className={`fr-text--sm fr-mb-0 ${fileError ? 'fr-text--error' : 'fr-text-mention--grey'}`}>
               {fileError
                 ? fileError
                 : selectedFiles.length > 0
-                  ? `${selectedFiles.length} fichier${selectedFiles.length > 1 ? 's' : ''} s\u00e9lectionn\u00e9${selectedFiles.length > 1 ? 's' : ''}`
-                  : 'Aucun fichier s\u00e9lectionn\u00e9'}
+                  ? tPictures('selectedFiles', { count: selectedFiles.length })
+                  : tPictures('noFileSelected')}
             </span>
           </div>
         </div>
@@ -83,7 +84,7 @@ export const CreateResidencePictures = () => {
                     priority="tertiary no outline"
                     iconId="ri-delete-bin-line"
                     size="small"
-                    title="Supprimer cette image"
+                    title={tPictures('deleteImage')}
                     onClick={() => handleRemoveFile(index)}
                   />
                 </div>

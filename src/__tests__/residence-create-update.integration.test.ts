@@ -44,6 +44,48 @@ describe('residence create/update form write path', () => {
     await createUser({ id: 'test-owner-id', name: 'Test Owner', email: 'owner@test.com', role: 'owner' })
   })
 
+  it('create persists the virtual tour, equipments and independent apartment counts', async () => {
+    await createOwner({ name: 'Owner Fields', slug: 'owner-fields', userId: 'test-owner-id' })
+
+    const { slug } = await ownerCaller.bailleur.create({
+      name: 'Résidence Champs',
+      addresses: [{ address: '1 rue de la Paix', city: 'Paris', postalCode: '75001' }],
+      externalUrl: 'https://example.com',
+      virtualTourUrl: 'https://my.matterport.com/show/?m=bwtYCMgopaH',
+      typologies: [fullTypology('t1')],
+      wifi: true,
+      laundryRoom: true,
+      bathroom: 'private',
+      kitchenType: 'shared',
+      nbAccessibleApartments: 2,
+      nbColivingApartments: 3,
+    })
+
+    const row = await accommodationBySlug(slug)
+    expect(row.virtualTourUrl).toBe('https://my.matterport.com/show/?m=bwtYCMgopaH')
+    expect(row.wifi).toBe(true)
+    expect(row.laundryRoom).toBe(true)
+    expect(row.refrigerator).toBeNull()
+    expect(row.bathroom).toBe('private')
+    expect(row.kitchenType).toBe('shared')
+    expect(row.nbAccessibleApartments).toBe(2)
+    expect(row.nbColivingApartments).toBe(3)
+  })
+
+  it('create stores no virtual tour when the field is left empty', async () => {
+    await createOwner({ name: 'Owner Empty', slug: 'owner-empty', userId: 'test-owner-id' })
+
+    const { slug } = await ownerCaller.bailleur.create({
+      name: 'Résidence Vide',
+      addresses: [{ address: '1 rue de la Paix', city: 'Paris', postalCode: '75001' }],
+      externalUrl: 'https://example.com',
+      virtualTourUrl: '',
+      typologies: [fullTypology('t1')],
+    })
+
+    expect((await accommodationBySlug(slug)).virtualTourUrl).toBeNull()
+  })
+
   it('create persists typology child rows and the derived parent aggregates', async () => {
     await createOwner({ name: 'Owner Flow', slug: 'owner-flow', userId: 'test-owner-id' })
 

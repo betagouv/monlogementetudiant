@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl'
 const SEGMENT_LABELS: Record<string, string> = {
   'tableau-de-bord': 'breadcrumbs.student.dashboard.title',
   'to-do': 'breadcrumbs.student.todo.title',
+  'mon-budget': 'breadcrumbs.student.budget.title',
   'aides-au-logement': 'breadcrumbs.student.housingAid.title',
   favoris: 'breadcrumbs.student.favorites.title',
   alertes: 'breadcrumbs.student.alerts.title',

@@ -2,6 +2,7 @@
 
 import { Input } from '@codegouvfr/react-dsfr/Input'
 import ToggleSwitch from '@codegouvfr/react-dsfr/ToggleSwitch'
+import { useTranslations } from 'next-intl'
 import { parseAsBoolean, parseAsString, useQueryStates } from 'nuqs'
 import { useMyAccommodations } from '~/hooks/use-my-accommodations'
 
@@ -18,6 +19,7 @@ const ResidenceFiltersSkeleton = () => {
 }
 
 export const ResidenceFilters = () => {
+  const t = useTranslations('bailleur.residences.list')
   const { data: accommodations, isLoading } = useMyAccommodations()
   const [queryStates, setQueryStates] = useQueryStates({
     disponible: parseAsBoolean.withDefault(false),
@@ -29,12 +31,12 @@ export const ResidenceFilters = () => {
 
   return (
     <div className="fr-flex fr-direction-column fr-direction-md-row fr-justify-content-space-between fr-align-items-md-center fr-mb-4w fr-flex-gap-4v">
-      <span className="fr-h4 fr-mb-0 fr-hidden fr-unhidden-sm">{accommodations?.count ?? 0} résidences</span>
+      <span className="fr-h4 fr-mb-0 fr-hidden fr-unhidden-sm">{t('residenceCount', { count: accommodations?.count ?? 0 })}</span>
       <div className="fr-flex fr-direction-column fr-direction-md-row fr-flex-gap-4v fr-align-items-md-center">
         <div className="fr-flex fr-justify-content-space-between">
-          <span className="fr-h4 fr-mb-0 fr-hidden-sm">{accommodations?.count ?? 0} résidences</span>
+          <span className="fr-h4 fr-mb-0 fr-hidden-sm">{t('residenceCount', { count: accommodations?.count ?? 0 })}</span>
           <ToggleSwitch
-            label="Logements disponibles"
+            label={t('availableFilter')}
             checked={queryStates.disponible}
             onChange={(checked) => setQueryStates({ disponible: checked })}
             showCheckedHint={false}
@@ -44,21 +46,13 @@ export const ResidenceFilters = () => {
         <Input
           label=""
           nativeInputProps={{
-            placeholder: 'Nom résidence, ville...',
+            placeholder: t('searchPlaceholder'),
             value: queryStates.recherche,
             onChange: (e) => setQueryStates({ recherche: e.target.value }),
           }}
           iconId="ri-search-line"
           className="fr-mb-0"
         />
-        {/* <Select label="" nativeSelectProps={{ name: 'Filtre' }} className="fr-mb-0">
-          <option value="" selected disabled hidden>
-            Triés par disponibilités
-          </option>
-
-          <option value="1">Disponible</option>
-          <option value="2">Occupé</option>
-        </Select> */}
       </div>
     </div>
   )

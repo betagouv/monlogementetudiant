@@ -5,8 +5,11 @@ import { getTranslations } from 'next-intl/server'
 import styles from './prepare-budget-simulate-aids-card.module.css'
 
 export default async function PrepareBudgetSimulateAidsCard() {
-  const t = await getTranslations('prepareBudget.content.item1.simulationCard')
-  const locationAids = ['Aides nationales', 'Aides régionales', 'Aides départementales', 'Aides de la ville']
+  const [t, tAids] = await Promise.all([
+    getTranslations('prepareBudget.content.item1.simulationCard'),
+    getTranslations('prepareStudentLife.stats.aids'),
+  ])
+  const locationAids = [tAids('national'), tAids('regional'), tAids('departmental'), tAids('city')]
 
   return (
     <div className={clsx('fr-col-md-5', 'fr-ml-md-2w', 'fr-px-2w', 'fr-py-4w', styles.container)}>

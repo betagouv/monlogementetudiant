@@ -44,6 +44,9 @@
       "todo": {
         "title": "Mes priorités"
       },
+      "budget": {
+        "title": "Mon budget"
+      },
       "housingAid": {
         "title": "Mes aides au logement"
       },
@@ -56,7 +59,8 @@
       "personalInformations": {
         "title": "Informations personnelles"
       }
-    }
+    },
+    "homeLabel": "Accueil"
   },
   "loading": {
     "card": "Chargement de la carte..."
@@ -72,7 +76,7 @@
     },
     "searchDetails": {
       "title": "Trouver votre prochain logement étudiant {locationFormatted}",
-      "description": "Trouvez facilement votre logement étudiant à {locationFormatted} : studio, colocation, résidence. Comparez les offres de logements près de votre campus"
+      "description": "Trouvez facilement votre logement étudiant {locationFormatted} : studio, colocation, résidence. Comparez les offres de logements près de votre campus"
     },
     "accommodation": {
       "title": "Logement étudiant {name} {cityFormatted}",
@@ -169,7 +173,18 @@
       "description": "site en phase d'expérimentation, n'hésitez pas à <link>donner votre avis</link> pour nous aider à améliorer le service.",
       "close": "Fermer"
     },
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "userMenu": {
+      "ownerSpace": "Espace gestionnaire",
+      "adminSpace": "Espace admin",
+      "mySpace": "Mon espace",
+      "signOut": "Déconnexion",
+      "goToOwnerSpace": "Aller à l’espace gestionnaire",
+      "goToAdminSpace": "Aller à l’espace admin",
+      "backToMySpace": "Revenir à mon espace",
+      "signOutLong": "Se déconnecter",
+      "signedOutToast": "Vous êtes maintenant déconnecté"
+    }
   },
   "footer": {
     "linkList": {
@@ -224,7 +239,32 @@
       "maximiseChancesDescription": "Cette résidence n’a pas communiqué de disponibilités pour le moment. Nous vous invitons à consulter l'offre et à déposer votre dossier sur le site du gestionnaire, afin qu’il soit examiné dès qu’un logement se libère."
     },
     "equipments": {
-      "title": "Équipements"
+      "title": "Équipements",
+      "categories": {
+        "collective": "Résidence",
+        "individual": "Logement"
+      },
+      "items": {
+        "refrigerator": "Frigo",
+        "laundryRoom": "Laverie",
+        "bathroom": {
+          "shared": "Salle de bain partagée",
+          "private": "Salle de bain privée"
+        },
+        "kitchenType": {
+          "shared": "Cuisine partagée",
+          "private": "Cuisine privée"
+        },
+        "microwave": "Micro-onde",
+        "secureAccess": "Accès sécurisé",
+        "parking": "Parking",
+        "commonAreas": "Espaces communs",
+        "bikeStorage": "Garage à vélos",
+        "desk": "Bureau",
+        "residenceManager": "Conciergerie",
+        "cookingPlates": "Plaques de cuisson",
+        "wifi": "Wifi"
+      }
     },
     "socialHousingRequired": "Une <bold>demande de logement social</bold> est nécessaire pour intégrer la résidence.",
     "socialHousingRequiredLink": "Faire une demande de logement social.",
@@ -264,7 +304,7 @@
         "dossierFacileApply": "Candidater avec DossierFacile",
         "dossierFacileApplied": "Candidature envoyée",
         "dossierFacileSelectType": "Type de logement",
-        "consultDescription": "Vous serez redirigé vers le site du gestionnaire",
+        "consultDescription": "Vous serez redirigé vers le site de la résidence",
         "dossierFacileDescription": "Dossier de location numérique certifié",
         "link": "Copier le lien",
         "email": "Envoyer par email",
@@ -300,13 +340,21 @@
         "successTitle": "Coordonnées transmises",
         "successDescriptionAuthenticated": "Vos coordonnées ont été mises à disposition du gestionnaire pour être éventuellement recontacté selon les disponibilités de la résidence.",
         "successDescriptionGuest": "Vérifiez votre boîte mail : vous allez recevoir un e-mail pour confirmer votre demande. Vos coordonnées ne seront transmises au gestionnaire qu'après cette confirmation. Vous pouvez aussi créer un compte pour faciliter vos recherches de logements.",
-        "createAccount": "Créer un compte"
+        "createAccount": "Créer un compte",
+        "errors": {
+          "firstnameRequired": "Le prénom est requis",
+          "lastnameRequired": "Le nom est requis",
+          "emailInvalid": "L'e-mail est invalide",
+          "consentRequired": "Vous devez accepter le partage de vos informations"
+        }
       },
       "alert": {
         "title": "Restez alerté des disponibilités",
         "description": "Créez une alerte personnalisée pour être notifié dès qu'un logement se libère.",
         "cta": "Configurer une alerte"
-      }
+      },
+      "copySuccess": "Copié dans le presse-papiers",
+      "copyError": "Erreur lors de la copie dans le presse-papiers"
     },
     "nearby": {
       "title": "Autres logements à proximité",
@@ -314,7 +362,8 @@
         "previous": "Précédent",
         "next": "Suivant"
       },
-      "count": "{count} logements"
+      "count": "{count} logements",
+      "imageAlt": "Image de la résidence {name}"
     },
     "nearbyEtablissements": {
       "title": "Établissements à proximité de la résidence",
@@ -339,9 +388,9 @@
     "diffusMixteNoticeDescription": "Il ne s'agit pas de résidences étudiantes dédiées : seuls certains logements peuvent être attribués à des étudiants.",
     "diffusEtudiantsNoticeTitle": "Ces logements étudiants sont situés dans une ou plusieurs résidences de logement social dédiées uniquement aux étudiants.",
     "card": {
-      "availability": "Disponibilité",
       "noAvailability": "Aucune disponibilité",
-      "unknownAvailability": "Disponibilité non renseignée"
+      "unknownAvailability": "Disponibilité non renseignée",
+      "availabilityCount": "{count, plural, one {Disponibilité} other {Disponibilités}}"
     },
     "waitingList": "Dépôt de dossier possible",
     "unknownAvailability": "Disponibilités non renseignées",
@@ -360,6 +409,48 @@
       "title": "Visite virtuelle",
       "frameTitle": "Visite virtuelle de la résidence",
       "openLink": "Accéder à la visite virtuelle"
+    },
+    "upcomingInfoTitle": "Informations à venir",
+    "upcomingInfoDescription": "Le gestionnaire n'a pas encore partagé les informations au sujet des logements de la résidence.",
+    "surfaceRange": "Entre {min} et {max} m²",
+    "priceRange": "De {min} à {max} €",
+    "residenceTypes": {
+      "universitaireConventionnee": "Résidence universitaire conventionnée",
+      "residenceEtudiante": "Résidence étudiante",
+      "socialeJeunesActifs": "Résidence Sociale Jeunes Actifs (RSJA, Habitat Jeunes)",
+      "jeunesTravailleurs": "Foyer de jeunes travailleurs (FJT)",
+      "socialClassique": "Logement social classique commercialisé aux étudiants",
+      "socialFlecheJeune": "Logement social fléché vers les jeunes (loi ELAN – article 109)",
+      "ecole": "Résidence d'école ou d'établissement d'enseignement",
+      "sousLocation": "Logements sociaux sous-loués aux étudiants par une association",
+      "intergenerationnelle": "Cohabitation intergénérationnelle"
+    },
+    "candidatureModal": {
+      "title": "Candidater pour ce logement",
+      "successTitle": "Candidature envoyée",
+      "cancel": "Annuler",
+      "submit": "Candidater",
+      "close": "Fermer",
+      "apartmentTypeLabel": "Type de logement",
+      "apartmentTypePlaceholder": "Sélectionnez un type de logement",
+      "successDescription": "Votre candidature a bien été envoyée. Le bailleur reviendra vers vous dans les meilleurs délais."
+    },
+    "images": {
+      "photoAltResidence": "Photo {index} sur {total} de la résidence {title}",
+      "photoAlt": "Photo {index} sur {total} du logement",
+      "enlargePhoto": "Agrandir la photo {index} sur {total}",
+      "photoCount": "{count, plural, one {# photo} other {# photos}}",
+      "photoStatus": "Photo {index} sur {total}",
+      "previousImage": "Image précédente",
+      "nextImage": "Image suivante"
+    },
+    "favoriteButton": {
+      "addTitle": "Enregistrer en favoris",
+      "removeTitle": "Supprimer des favoris",
+      "addLabel": "Ajouter en favoris",
+      "removeLabel": "Retirer des favoris",
+      "addedAnnouncement": "Résidence ajoutée à vos favoris",
+      "removedAnnouncement": "Résidence retirée de vos favoris"
     }
   },
   "findAccomodation": {
@@ -422,11 +513,12 @@
       "priceFrom": "À partir de",
       "individual": "Individuel",
       "colocation": "Colocation",
-      "availability": "Disponibilité",
       "unknownAvailability": "Disponibilités non renseignées",
       "unknownAvailabilityTooltip": "Le gestionnaire ne nous a pas transmis les disponibilités de cette résidence.",
       "noAvailability": "Aucune disponibilité",
-      "waitingList": "Dépôt de dossier possible"
+      "waitingList": "Dépôt de dossier possible",
+      "accommodationsCount": "{count} logements",
+      "availabilityCount": "{count, plural, one {Disponibilité} other {Disponibilités}}"
     },
     "results": {
       "noResult": "Aucun résultat pour votre recherche",
@@ -435,6 +527,20 @@
       "expandedTitle": "Plus de résultats autour {city}",
       "expandedDescription": "Nous élargissons automatiquement la recherche autour de la ville (+10 km) et du budget (+25 %).",
       "expandedNoResult": "Aucun résultat supplémentaire avec cette recherche élargie."
+    },
+    "faqJsonLd": {
+      "housingTypes": {
+        "question": "Quels types de logements sont accessibles aux étudiants ?",
+        "answer": "Plusieurs options s'offrent à vous : Résidences universitaires conventionnées ou à vocation sociale : réservées aux étudiants, elles proposent des loyers encadrés, souvent inférieurs aux prix du marché. L'accès est priorisé pour les étudiants aux revenus modestes (ex. : boursiers du Crous). Résidences services étudiantes : également réservées aux étudiants, mais avec des loyers non encadrés. Location classique : logement indépendant loué auprès d'un particulier ou via une agence. Logement chez l'habitant ou intergénérationnel : chambre louée dans un logement occupé, souvent avec des loyers réduits."
+      },
+      "typologies": {
+        "question": "Comment comprendre les typologies de logement (T1, T2, studio, etc.) ?",
+        "answer": "Studio : une seule pièce à vivre avec une pièce d'eau (salle de bain/WC). T1 : une pièce à vivre + une cuisine séparée + salle de bain/WC. T2, T3... : chaque chiffre supplémentaire correspond à une pièce en plus (ex. : un T2 comprend un salon et une chambre)."
+      },
+      "chargesIncluded": {
+        "question": "Que signifie \"loyer charges comprises\" ?",
+        "answer": "Si une annonce indique \"cc\" (charges comprises), cela signifie que certaines charges sont incluses dans le loyer, comme l'entretien des parties communes, l'eau froide/chaude ou l'électricité. Vérifiez toujours précisément ce que couvrent les charges avant de signer."
+      }
     }
   },
   "prepareStudentLife": {
@@ -508,7 +614,11 @@
         "otherSupplies": "<b>Fournitures scolaires</b> : 20-30 € par mois.",
         "otherInsurance": "<b>Assurance habitation</b> : 10-20 € par mois."
       }
-    }
+    },
+    "cityAccommodationsCount": "{count, plural, one {# logement étudiant} other {# logements étudiants}}",
+    "minimumBudget": "Budget minimum {price}€",
+    "nearbyAccommodationsTitle": "Parmi les logements étudiants à {name}",
+    "moreAccommodations": "Plus de logements"
   },
   "prepareBudget": {
     "title": "Préparer mon budget étudiant",
@@ -648,7 +758,78 @@
   "faq": {
     "title": "Foire aux questions",
     "subTitle": "Vous avez des questions ? Nous avons des réponses ! Cette section est dédiée à vous fournir les informations les plus complètes et précises pour vous aider à bien préparer votre vie étudiante. Nous avons regroupé les questions les plus fréquemment posées pour faciliter votre recherche.",
-    "popularQuestions": "Questions populaires"
+    "popularQuestions": "Questions populaires",
+    "contents": {
+      "housingTypes": {
+        "question": "Quels types de logements sont accessibles aux étudiants ?",
+        "intro": "Plusieurs options s'offrent à vous :",
+        "conventionne": "<b>Résidences universitaires conventionnées ou à vocation sociale</b> : réservées aux étudiants, elles proposent des loyers encadrés, souvent inférieurs aux prix du marché. L’accès est priorisé pour les étudiants aux revenus modestes (ex. : boursiers du Crous).",
+        "conventionneIncludes": "Inclut : résidences Crous, logements sociaux gérés directement par les organismes HLM ou bien par des associations.",
+        "services": "<b>Résidences services étudiantes</b> également réservées aux étudiants, mais avec des loyers non encadrés aujourd’hui. À l’avenir, une offre de résidences-services à loyers intermédiaires (entre les loyers du parc locatif social et les loyers du marché locatif libre) se développera.",
+        "classic": "<b>Location classique</b> : logement indépendant loué auprès d’un particulier ou via une agence.",
+        "homestay": "<b>Logement chez l’habitant ou intergénérationnel</b> : chambre louée dans un logement occupé, souvent avec des loyers réduits."
+      },
+      "typologies": {
+        "question": "Comment comprendre les typologies de logement (T1, T2, studio, etc.) ?",
+        "studio": "<b>Studio</b> : une seule pièce à vivre avec une pièce d’eau (salle de bain/WC).",
+        "t1": "<b>T1</b> : une pièce à vivre + une cuisine séparée + salle de bain/WC.",
+        "t2t3": "<b>T2, T3...</b> : chaque chiffre supplémentaire correspond à une pièce en plus (ex. : un T2 comprend un salon et une chambre)."
+      },
+      "chargesIncluded": {
+        "question": "Que signifie “loyer charges comprises” ?",
+        "intro": "Si une annonce indique \"cc\" (charges comprises), cela signifie que certaines charges sont incluses dans le loyer, comme :",
+        "commonAreas": "L'entretien des parties communes",
+        "water": "L'eau froide/chaude, voir l'électricité",
+        "warning": "⚠️ Vérifiez toujours précisément ce que couvrent les charges avant de signer.",
+        "legal": "Attention ! Le contrat de location et les quittances doivent toujours bien distinguer le montant du loyer (qui peut être encadré s’il s’agit de logements locatifs sociaux ou intermédiaires) et le montant des charges locatives récupérables dont la liste limitative est définie par décret. Vous pouvez trouver ces informations sur"
+      },
+      "furnished": {
+        "question": "Quelle est la différence entre un logement meublé et non meublé ?",
+        "furnished": "<b>Meublé</b> : contient un équipement minimum (lit, plaques de cuisson, frigo, etc.). Les loyers sont généralement plus élevés.",
+        "unfurnished": "<b>Non meublé</b> : vide ou partiellement équipé, avec un bail souvent plus long (3 ans contre 1 an pour un meublé)."
+      },
+      "energyPerformance": {
+        "question": "Qu’est-ce que le DPE et le GES ? Pourquoi est-ce important ?",
+        "dpe": "<b>DPE (Diagnostic de performance énergétique)</b> : indique la consommation énergétique du logement (note de A à G).",
+        "ges": "<b>GES (Gaz à effet de serre) </b> : mesure les émissions liées à l’énergie utilisée.",
+        "note": "👉 Un logement mal noté (E ou F : les logements en G sont interdits à la location depuis janvier 2025, sauf dérogations particulières) peut être mal isolé, coûteux à chauffer et inconfortable en été."
+      },
+      "whereToFind": {
+        "question": "Où puis-je trouver ce type de logement étudiant ?",
+        "answer": "Les résidences universitaires conventionnées et autres logements sociaux sont listés dans la section <i>\"Trouver un logement étudiant\"</i> sur <link>monlogementetudiant.beta.gouv.fr</link>"
+      },
+      "financialAid": {
+        "question": "Quelles aides financières puis-je obtenir pour payer mon loyer ?",
+        "cafAids": "Les aides personnelles au logement de la CAF peuvent vous aider à payer votre loyer.",
+        "moreInfo": "Pour trouver plus d’informations vous pouvez aller sur <cafLink></cafLink> et <servicePublicLink></servicePublicLink>",
+        "localAids": "D'autres aides peuvent exister (aides locales).",
+        "simulator": "Vous pouvez les tester sur notre simulateur: <link>Simuler mes aides au logement</link>"
+      },
+      "guarantor": {
+        "question": "Ai-je besoin d’un garant pour louer un logement ?",
+        "intro": "Oui, la majorité des bailleurs exigent un garant : une personne (souvent un parent) qui s’engage à payer le loyer si vous ne le pouvez pas. Si vous n'en avez pas, vous pouvez faire appel à :",
+        "visale": "<b>La garantie Visale</b> (gratuite et publique) <link></link>",
+        "private": "<b>Des garanties privées payantes</b> : proposées par certaines plateformes de location."
+      },
+      "documents": {
+        "question": "Quels documents dois-je fournir pour constituer un dossier de location ?",
+        "intro": "Un dossier type comprend généralement :",
+        "identity": "Une pièce d'identité",
+        "studentStatus": "Un justificatif de situation étudiante (certificat de scolarité) uniquement pour les logements étudiants (résidences universitaires, résidences-services dédiées, pas dans le parc locatif libre)",
+        "rentReceipts": "Les trois dernières quittances de loyer ou une attestation d’hébergement",
+        "income": "Un justificatif de ressources (ou ceux du garant)",
+        "contract": "Le contrat de travail ou une attestation de bourse, si applicable"
+      },
+      "beforeSigning": {
+        "question": "Que dois-je vérifier avant de signer un bail ?",
+        "intro": "Avant de vous engager, pensez à vérifier :",
+        "inventory": "L'état des lieux d'entrée",
+        "charges": "Ce que couvrent exactement les charges",
+        "leaseDuration": "La durée du bail et les modalités de résiliation",
+        "compliance": "La conformité du logement (surface minimale, équipements obligatoires pour un meublé, etc.)",
+        "solidarityClause": "L’existence d’une clause de solidarité si vous êtes en colocation"
+      }
+    }
   },
   "siteMap": {
     "title": "Plan du site",
@@ -663,7 +844,8 @@
       "personalData": "Données personnelles",
       "cookies": "Gestion des cookies",
       "landing": "Landing - Mon Logement Étudiant"
-    }
+    },
+    "lastUpdate": "Mis à jour le"
   },
   "accessibilite": {
     "title": "Accessibilité"
@@ -872,7 +1054,8 @@
         "tab2": "Onglet 2"
       },
       "button": "Foire aux questions"
-    }
+    },
+    "logoAlt": "Logo {name}"
   },
   "notFound": {
     "title": "Page introuvable",
@@ -881,7 +1064,8 @@
     "description2": "Si vous avez tapé l'adresse web dans le navigateur, vérifiez qu'elle est correcte.",
     "description3": "La page n'est peut-être plus disponible.",
     "description4": "Dans ce cas, pour continuer votre visite vous pouvez consulter la page d'accueil.",
-    "button": "Page d'accueil"
+    "button": "Page d'accueil",
+    "imageAlt": "Page non trouvée"
   },
   "login": {
     "studentTitle": "Se connecter à mon espace étudiant",
@@ -893,7 +1077,8 @@
       "cta": "Se connecter",
       "magicLinkCta": "Recevoir un lien de connexion",
       "forgotPassword": "Mot de passe oublié",
-      "or": "OU"
+      "or": "OU",
+      "loading": "Connexion en cours..."
     },
     "firstVisit": {
       "title": "Première visite ?",
@@ -912,7 +1097,11 @@
       "resending": "Envoi en cours...",
       "resendSuccess": "Email de confirmation envoyé. Vérifiez votre boîte mail.",
       "resendError": "Une erreur est survenue lors de l'envoi de l'email."
-    }
+    },
+    "invalidCredentials": "Email ou mot de passe incorrect.",
+    "successToast": "Vous êtes connecté avec succès !",
+    "errorToast": "Une erreur est survenue lors de la connexion.",
+    "magicLinkErrorToast": "Une erreur est survenue lors de la connexion, veuillez réessayer ultérieurement"
   },
   "forgotPassword": {
     "title": "Réinitialiser votre mot de passe",
@@ -925,7 +1114,9 @@
     "backToLogin": "Retour à la page de connexion",
     "success": {
       "description": "Si cet identifiant correspond bien à votre compte, un e-mail vous a été envoyé pour vous permettre de réinitialiser votre mot de passe. En cas de difficulté veuillez contacter <mailto>contact@monlogementetudiant.beta.gouv.fr</mailto>"
-    }
+    },
+    "successToast": "Un email de réinitialisation de mot de passe a été envoyé à votre adresse email.",
+    "errorToast": "Une erreur est survenue lors de la demande de réinitialisation."
   },
   "resetPassword": {
     "title": "Définition du mot de passe",
@@ -938,7 +1129,10 @@
     "success": {
       "description": "Votre nouveau mot de passe a bien été enregistré. Vous pouvez retourner à la page de connexion."
     },
-    "backToLogin": "Retour à la page de connexion"
+    "backToLogin": "Retour à la page de connexion",
+    "missingToken": "Paramètres manquants pour réinitialiser le mot de passe",
+    "successToast": "Votre mot de passe a été réinitialisé avec succès.",
+    "errorToast": "Une erreur est survenue lors de la réinitialisation du mot de passe."
   },
   "signUp": {
     "title": "Création de compte",
@@ -949,9 +1143,13 @@
       "email": "Email",
       "password": "Mot de passe",
       "cta": "Créer un compte",
-      "privacyPolicy": "Politique de confidentialité"
+      "privacyPolicy": "Politique de confidentialité",
+      "loading": "Inscription en cours..."
     },
-    "backToLogin": "Retour à la page de connexion"
+    "backToLogin": "Retour à la page de connexion",
+    "imageAlt": "S'inscrire",
+    "successToast": "Votre demande d'inscription a bien été prise en compte. Si cette adresse email peut être utilisée, vous recevrez un email pour activer votre compte. Pensez à vérifier vos courriers indésirables.",
+    "errorToast": "Une erreur est survenue lors de l'inscription."
   },
   "budget": {
     "title": "Budget Mon Logement Étudiant",
@@ -972,7 +1170,8 @@
       "deployment": "Déploiement",
       "communication": "Communication",
       "total": "Total TTC"
-    }
+    },
+    "totalAmount": "874 705€ TTC."
   },
   "simulator": {
     "titlePart1": "Simulez le montant de vos",
@@ -1007,6 +1206,174 @@
         "createAccountButton": "Créer un compte",
         "successToast": "Simulation conservée dans votre espace personnel.",
         "errorToast": "Une erreur est survenue lors de la sauvegarde de la simulation."
+      },
+      "title": "Résultats de votre simulation",
+      "restart": "Recommencer",
+      "internationalStudentWarning": "Le décret n° 2026-552 du 27 juin 2026 entraine une modification d'attribution des APL pour les étudiants internationaux extra-communautaires, nous vous invitons à vous rapprocher de votre CAF pour vérifier vos droits.",
+      "zones": {
+        "zone1": "Zone 1 (Île-de-France)",
+        "zone2": "Zone 2 (Grandes agglomérations, Corse, DROM)",
+        "zone3": "Zone 3 (Autres communes)"
+      },
+      "localAids": {
+        "parisLogement": "Paris Logement",
+        "parisGuarantees": "Garanties Ville de Paris",
+        "lyonMetropolis": "Aides de la Métropole de Lyon",
+        "municipal": "Aides municipales/métropolitaines possibles"
+      },
+      "card": {
+        "eligible": "Vous êtes éligible",
+        "potentiallyEligible": "Vous êtes potentiellement éligible",
+        "requestAid": "Demander l'aide",
+        "learnMore": "En savoir plus",
+        "parcoursupLink": "L'aide à la mobilité Parcoursup",
+        "linkLabel": "{label} : {name}"
+      }
+    },
+    "faq": {
+      "title": "Parmi les questions fréquentes sur les <br></br>aides aux logements étudiants"
+    },
+    "stepper": {
+      "profile": "Votre profil",
+      "housingSearch": "Votre recherche de logement",
+      "financialSituation": "Votre situation financière",
+      "results": "Résultats"
+    },
+    "form": {
+      "stepTitles": {
+        "situation": "Votre situation",
+        "housing": "Votre recherche de logement",
+        "resources": "Vos ressources et votre loyer"
+      },
+      "stepProgress": "— étape {current} sur {total}",
+      "stepAnnouncement": "Étape {current} sur {total} : {title}",
+      "errorSummaryTitle": "{count, plural, =1 {Une information est manquante ou invalide} other {# informations sont manquantes ou invalides}}",
+      "previous": "Retour",
+      "next": "Continuer",
+      "seeResults": "Voir les résultats",
+      "answers": {
+        "yes": "Oui",
+        "no": "Non",
+        "unknown": "Je ne sais pas"
+      },
+      "errors": {
+        "ageRequired": "Veuillez renseigner votre âge",
+        "ageMin": "Vous devez avoir au moins 16 ans",
+        "ageInvalid": "Âge invalide",
+        "statusRequired": "Veuillez sélectionner votre statut",
+        "monthlyIncomeRequired": "Veuillez renseigner vos revenus mensuels",
+        "monthlyRentRequired": "Veuillez renseigner le montant de votre loyer",
+        "amountPositive": "Le montant doit être positif",
+        "cityRequired": "Veuillez renseigner une ville",
+        "guarantorRequired": "Veuillez sélectionner votre situation",
+        "scholarshipRequired": "Veuillez indiquer votre situation de bourse",
+        "changingRegionRequired": "Veuillez indiquer si vous allez étudier dans une autre zone",
+        "professionalLicenceRequired": "Veuillez indiquer si votre licence est professionnelle"
+      },
+      "situation": {
+        "ageLabel": "Quel âge avez-vous ?",
+        "statusLegend": "Quel est votre statut ? (plusieurs choix possibles)",
+        "statuses": {
+          "lyceen": "Lycéen",
+          "student": "Étudiant",
+          "employedStudent": "Étudiant salarié",
+          "apprentice": "Apprenti / Alternant",
+          "boursierCrous": "Étudiant boursier du Crous"
+        },
+        "terminale": "Je suis actuellement en terminale",
+        "licence3": "Je suis actuellement en 3ème année de licence",
+        "internationalStudent": "Je suis étudiant international extra-communautaire",
+        "professionalLicenceLegend": "Votre licence est-elle une licence professionnelle ?",
+        "changingRegionLegendTerminale": "L'année prochaine, allez-vous étudier dans une zone différente de votre lieu de résidence actuel ?",
+        "changingRegionLegendLicence3": "L'année prochaine, allez-vous entrer en Master 1 dans une région différente de votre lieu de résidence actuel ?",
+        "changingRegionYesTerminale": "Oui, je change de région ou d'académie",
+        "changingRegionYesLicence3": "Oui, je change de région",
+        "scholarshipLegend": "Êtes-vous boursier ?",
+        "scholarships": {
+          "bourseLycee": "Oui, bourse de lycée",
+          "bourseCrous": "Oui, bourse du CROUS",
+          "allocationSpeciale": "Oui, allocation spécifique annuelle pour étudiant en difficulté"
+        }
+      },
+      "housing": {
+        "cityLabel": "Dans quelle ville cherchez-vous un logement ?",
+        "guarantorLegend": "Avez-vous un garant ?",
+        "guarantorHint": "Un garant, c'est une personne qui s'engage à payer à votre place si vous ne pouvez plus le faire."
+      },
+      "resources": {
+        "incomeLabel": "Vos revenus mensuels",
+        "incomeHint": "Salaire en euros",
+        "rentLabel": "Montant de votre loyer mensuel",
+        "rentHint": "Hors charges, en euros",
+        "rentUnknown": "Je suis à la recherche d'un logement mais je n'ai pas encore trouvé donc je ne connais pas le montant de mon loyer"
+      }
+    },
+    "aids": {
+      "reasons": {
+        "rentRequired": "Vous devez avoir un loyer à charge",
+        "under30": "Réservé aux moins de 30 ans"
+      },
+      "cafAidesLogement": {
+        "name": "Aides au logement de la Caf (APL, ALS)",
+        "description": "Les aides au logement de la CAF permettent de réduire votre loyer. Elles sont calculées en fonction de vos revenus, du montant de votre loyer et de votre situation.",
+        "reasons": {
+          "internationalStudent": "En tant qu'étudiant international extra-communautaire, vous n'êtes plus éligible aux APL (décret n° 2026-552 du 27 juin 2026), sauf si vous êtes salarié, boursier du CROUS ou apprenti/alternant.",
+          "incomeCap": "Vos revenus dépassent le plafond de 15 800€/an pour une personne seule"
+        },
+        "amountUpTo": "Jusqu'à {amount}€/mois",
+        "amountUpToDefault": "Jusqu'à 300€/mois",
+        "warningIncomeNearCap": "Vos revenus sont proches du plafond accepté par la Caf pour une personne seule. Nous vous invitons à vérifier votre éligibilité directement sur le simulateur de la Caf."
+      },
+      "visale": {
+        "name": "Garantie Visale",
+        "description": "Action Logement se porte garant gratuitement pour vous. Idéal si vous n'avez pas de garant personnel.",
+        "reasons": {
+          "age": "Réservé aux personnes âgées de 18 à 30 ans",
+          "hasGuarantor": "La Garantie Visale s'adresse aux personnes n'ayant pas de garant",
+          "rentCap": "Votre loyer dépasse le plafond Visale de {rentCap}€ pour votre zone"
+        },
+        "amount": "Garantie gratuite jusqu'à 36 mois"
+      },
+      "mobiliJeune": {
+        "name": "Mobili-Jeune",
+        "description": "Subvention d'Action Logement pour les alternants de moins de 30 ans, entre 10€ et 100€/mois.",
+        "reasons": {
+          "apprenticeOnly": "Réservé aux apprentis et alternants"
+        },
+        "amountRange": "Entre 10€ et {amount}€/mois",
+        "amountDefault": "Entre 10€ et 100€/mois",
+        "warning": "Le montant de l'aide Mobili-Jeune dépend de votre entreprise de rattachement. Nous vous invitons à faire la simulation directement sur le site d'Action Logement."
+      },
+      "locaPass": {
+        "name": "Avance Loca-Pass",
+        "description": "Prêt à 0% d'Action Logement pour financer votre dépôt de garantie (jusqu'à 1 200€).",
+        "reasons": {
+          "employedOrApprentice": "Réservé aux étudiants salariés et aux apprentis"
+        },
+        "amount": "Prêt 0% jusqu'à 1 200€, remboursable en 25 mois",
+        "warning": "Il s'agit d'un prêt et non pas d'une aide, cela implique des remboursements réguliers à prendre en compte dans son budget."
+      },
+      "crousMobiliteParcoursup": {
+        "name": "Aide à la mobilité Parcoursup",
+        "description": "Vous êtes en Terminale, vous avez une bourse de lycée et vous voulez partir étudier dans une autre académie l'année prochaine ? Alors vous pouvez demander l'aide à la mobilité Parcoursup, d'un montant de 500 €. Vous pourrez en faire la demande à partir du mois de juin 2026 via le portail messervices.etudiant.gouv.fr. L'aide sera versée début septembre, une fois que vous serez bien inscrit dans l'enseignement supérieur.",
+        "reasons": {
+          "terminaleOnly": "Réservé aux lycéens en Terminale",
+          "lyceeScholarshipOnly": "Réservé aux boursiers de lycée",
+          "changingRegion": "Vous devez changer de région ou d'académie l'année prochaine"
+        },
+        "amount": "500 € (aide ponctuelle)"
+      },
+      "crousMobiliteMaster": {
+        "name": "Aide à la mobilité en Master du CROUS",
+        "description": "Vous allez obtenir votre licence cette année et vous voulez vous inscrire en Master 1 dans une autre région académique l'année prochaine ? Si vous êtes boursier du CROUS, vous pouvez bénéficier d'une aide à la mobilité de 1 000 €. Vous n'avez pas de démarche particulière à faire pour demander l'aide à la mobilité. Vous devrez fournir une copie des documents suivants : attestation de réussite de licence et certificat d'inscription en 1re année de Master 1. Attention, l'obtention d'une licence professionnelle ne vous permet pas de bénéficier de l'aide.",
+        "reasons": {
+          "licence3Only": "Réservé aux étudiants en 3ème année de licence",
+          "professionalLicence": "L'obtention d'une licence professionnelle ne permet pas de bénéficier de cette aide",
+          "crousScholarshipOnly": "Réservé aux boursiers du CROUS",
+          "changingRegion": "Vous devez vous inscrire dans une autre région académique l'année prochaine"
+        },
+        "amount": "1 000 € (aide ponctuelle)",
+        "warningProfessionalLicenceUnknown": "Si votre licence est professionnelle, vous ne pourrez pas bénéficier de cette aide."
       }
     }
   },
@@ -1079,7 +1446,8 @@
         "securityDeposit": "Dépôt de garantie appartement (1 mois de loyer)",
         "agencyFees": "Frais d'agence immobilière",
         "apartmentEquipment": "Équipement de base de l'appartement (draps, vaisselle, lampe, etc.)"
-      }
+      },
+      "rangesSource": "* Ces informations sont issues des données déclarées par les étudiants dans le cadre de l’enquête <link>Repère 2023 de OVE</link> et retravaillées en fonction des profils “décohabitants” (n’habitant pas chez leurs parents) et “indépendants” (n'étant pas ou peu aidés par leurs parents) des étudiants afin de donner des estimations de budget."
     },
     "summary": {
       "chartShareHeader": "Part du budget",
@@ -1092,6 +1460,10 @@
       "savingsRate": "Taux d'épargne : {rate} %",
       "expensesBreakdown": "Répartition des dépenses",
       "chartTooltipAmount": "Montant mensuel",
+      "saveCta": "Enregistrer le résultat de ma simulation",
+      "downloadPdfCta": "Télécharger en PDF",
+      "saveSuccessToast": "Simulation enregistrée dans votre espace personnel.",
+      "saveErrorToast": "Une erreur est survenue lors de la sauvegarde de la simulation.",
       "hintsCta": "Conseils pratiques pour son budget",
       "hintsTitle": "Pour aller plus loin",
       "annualTotal": "Soit {amount} par an",
@@ -1118,7 +1490,8 @@
       "description": "Vous allez être redirigé dans quelques instants.",
       "fallbackText": "Si rien ne se passe, cliquez sur le lien suivant :",
       "fallbackLink": "Se connecter"
-    }
+    },
+    "genericError": "Erreur de vérification"
   },
   "shared": {
     "welcome": {
@@ -1129,6 +1502,33 @@
       "author": "Cécilia et Yasmine",
       "organization": "de Mon Logement Etudiant",
       "altText": "Image de profil de Cécilia et Yasmine Chargées de déploiement"
+    },
+    "richTextEditor": {
+      "bold": "Gras",
+      "italic": "Italique",
+      "underline": "Souligné",
+      "heading1": "Titre 1",
+      "heading2": "Titre 2",
+      "heading3": "Titre 3",
+      "bulletList": "Liste à puces",
+      "orderedList": "Liste numérotée",
+      "blockquote": "Citation",
+      "link": "Lien",
+      "linkModalTitle": "Insérer le lien",
+      "linkUrlLabel": "URL du lien",
+      "invalidUrl": "Veuillez entrer une URL valide",
+      "cancel": "Annuler",
+      "save": "Enregistrer"
+    },
+    "apartmentTypes": {
+      "t1": "T1 (Studio)",
+      "t1_bis": "T1 bis",
+      "t2": "T2",
+      "t3": "T3",
+      "t4": "T4",
+      "t5": "T5",
+      "t6": "T6",
+      "t7_more": "T7+"
     }
   },
   "student": {
@@ -1136,6 +1536,7 @@
       "backToHome": "Retour à la recherche",
       "dashboard": "Tableau de bord",
       "todoList": "Mes priorités ({done}/{total})",
+      "budget": "Mon budget",
       "housingAid": "Aides au logement",
       "favorites": "Favoris et candidatures",
       "alerts": "Alertes logements",
@@ -1224,6 +1625,10 @@
       "emptyCta": "Simuler mes aides",
       "restartCta": "Recommencer la simulation d'aides"
     },
+    "budget": {
+      "title": "Mon budget",
+      "description": "Retrouvez le résultat de votre simulation et tenez votre budget à jour"
+    },
     "personalInformations": {
       "title": "Informations personnelles",
       "subtitle": "Suivez vos résidences coup de cœur et tenez à jour vos candidatures",
@@ -1256,14 +1661,18 @@
           "french_government": "Bourse du gouvernement Français",
           "health_social_training": "Bourse Formation Sanitaire et Sociale",
           "other": "Autre"
-        }
+        },
+        "updatedToast": "Vos informations ont été mises à jour.",
+        "updateErrorToast": "Une erreur est survenue lors de la mise à jour de votre profil."
       },
       "notifications": {
         "title": "Paramètres des notifications",
         "similarAlert": "Je souhaite augmenter la distance (+10 km) et le budget (+25 %) autour de mes villes de recherche.",
         "favoriteAlert": "Je souhaite des alertes de disponibilité dans mes résidences favorites",
         "similarAlertDescription": "Recevoir un courriel lorsque des logements similaires à vos favoris sont disponibles",
-        "favoriteAlertDescription": "Recevoir un courriel lorsqu’un de vos favoris redevient disponible"
+        "favoriteAlertDescription": "Recevoir un courriel lorsqu’un de vos favoris redevient disponible",
+        "updatedToast": "Préférences de notifications mises à jour.",
+        "updateErrorToast": "Une erreur est survenue lors de la mise à jour des préférences."
       },
       "dossierFacile": {
         "title": "Mon compte DossierFacile",
@@ -1282,7 +1691,10 @@
         "confirmBody": "Votre dossier ne sera plus lié à votre compte Mon Logement Étudiant. Vos pièces justificatives restent hébergées par DossierFacile.",
         "confirmWarning": "Vos candidatures en cours seront retirées et les gestionnaires perdront immédiatement l'accès à votre dossier. Cette action est irréversible.",
         "cancel": "Annuler",
-        "confirm": "Déconnecter"
+        "confirm": "Déconnecter",
+        "linkedToast": "Votre compte DossierFacile a été lié avec succès",
+        "disconnectedToast": "Votre compte DossierFacile a été déconnecté.",
+        "disconnectErrorToast": "Une erreur est survenue lors de la déconnexion de votre compte DossierFacile."
       }
     },
     "alerts": {
@@ -1303,7 +1715,27 @@
       "edit": "Éditer",
       "save": "Enregistrer",
       "saving": "Enregistrement...",
-      "cancel": "Annuler"
+      "cancel": "Annuler",
+      "pageTitle": "Mes alertes logements",
+      "pageDescription": "Les nouvelles offres de logements disponibles en temps réel",
+      "create": "Créer une nouvelle alerte",
+      "createModalTitle": "Nouvelle alerte logements",
+      "editModalTitle": "Édition de l'alerte logements",
+      "modalDescription": "Configurez votre alerte personnalisée et soyez notifié dès qu'un logement correspondant à vos critères est disponible.",
+      "delete": "Supprimer l'alerte",
+      "deleteModalTitle": "Suppression de l'alerte logements",
+      "deleteConfirm": "Confirmez la suppression de cette alerte",
+      "maxPriceTag": "{price}€ max.",
+      "colivingTag": "Colocation",
+      "accessibleTag": "Accessible",
+      "toast": {
+        "created": "Alerte créée avec succès !",
+        "createError": "Une erreur est survenue lors de la création de l'alerte.",
+        "updated": "Alerte mise à jour avec succès !",
+        "updateError": "Une erreur est survenue lors de la mise à jour de l'alerte.",
+        "deleted": "Alerte supprimée avec succès !",
+        "deleteError": "Une erreur est survenue lors de la suppression de l'alerte."
+      }
     },
     "favorites": {
       "notificationToggle": "Je souhaite des alertes de disponibilité dans mes résidences favorites",
@@ -1312,6 +1744,16 @@
         "sent": "Candidature envoyée",
         "withDossierFacile": "Avec <b>DossierFacile</b>",
         "contactShared": "Coordonnées partagées aux gestionnaires"
+      },
+      "pageTitle": "Favoris et candidatures",
+      "pageDescription": "Suivez vos résidences coup de coeur et tenez à jour vos candidatures",
+      "explore": "Explorer les résidences",
+      "accommodationsCount": "{count} logements",
+      "toast": {
+        "added": "Logement ajouté aux favoris !",
+        "addError": "Une erreur est survenue lors de l'ajout aux favoris.",
+        "removed": "Logement supprimé des favoris !",
+        "removeError": "Une erreur est survenue lors de la suppression des favoris."
       }
     },
     "profile": {
@@ -1369,7 +1811,8 @@
     "userDeactivated": "Compte désactivé",
     "userDeactivateError": "Erreur lors de la désactivation du compte",
     "userPasswordReset": "Mot de passe réinitialisé",
-    "userPasswordResetError": "Erreur lors de la réinitialisation du mot de passe"
+    "userPasswordResetError": "Erreur lors de la réinitialisation du mot de passe",
+    "documentOpenError": "Impossible d’ouvrir le document. Veuillez réessayer."
   },
   "trpc": {
     "admin": {
@@ -1409,6 +1852,7 @@
       "submitCreate": "Créer l'utilisateur",
       "submitUpdate": "Mettre à jour",
       "saving": "Enregistrement...",
+      "submit": "Enregistrer",
       "form": {
         "email": "Email",
         "firstname": "Prénom",
@@ -1451,6 +1895,22 @@
         "permissionsHeader": "Permissions",
         "actionsHeader": "Actions",
         "emptyRole": "-"
+      },
+      "scope": {
+        "allLabel": "Toutes les résidences",
+        "allHint": "Ce gestionnaire voit les candidatures de toutes vos résidences, y compris celles que vous créerez plus tard.",
+        "restrictedHint": "Ce gestionnaire ne voit que les candidatures des résidences cochées. Une résidence créée plus tard ne lui sera pas visible tant que vous ne l'aurez pas ajoutée.",
+        "legend": "Résidences dont ce gestionnaire voit les candidatures",
+        "searchLabel": "Rechercher une résidence",
+        "searchPlaceholder": "Nom de la résidence",
+        "selectedCount": "{count} sélectionnée(s)",
+        "selectAll": "Tout sélectionner",
+        "selectNone": "Tout désélectionner",
+        "refineSearch": "Affinez votre recherche pour voir les {count} autres résidences.",
+        "emptyWarning": "Ce gestionnaire n'aura accès à aucune candidature. L'onglet Contacts lui sera masqué.",
+        "summaryAll": "Périmètre : toutes les résidences",
+        "summaryNone": "Périmètre : aucune résidence",
+        "summaryCount": "Périmètre : {count} résidence(s)"
       }
     },
     "header": {
@@ -1467,7 +1927,8 @@
         "quote": "« Bienvenue sur votre Espace Gestionnaire. Ensemble, nous rendons la recherche de logement étudiant plus simple. 🙂 »",
         "author": "Cécilia et Yasmine",
         "organization": "de Mon Logement Etudiant",
-        "altText": "Image de profil de Cécilia et Yasmine - Chargé de déploiement"
+        "altText": "Image de profil de Cécilia et Yasmine - Chargé de déploiement",
+        "yasmineAltText": "Logo Yasmine"
       },
       "helpSection": {
         "faq": {
@@ -1528,11 +1989,11 @@
           "searchLabel": "Rechercher une ville",
           "searchPlaceholder": "Rechercher",
           "empty": "Aucune ville",
-          "search": "recherche",
-          "alert": "alerte",
           "sortLabel": "Trier les villes",
           "sortSearchesDesc": "Plus recherchées",
-          "sortSearchesAsc": "Moins recherchées"
+          "sortSearchesAsc": "Moins recherchées",
+          "searchCount": "{count, plural, one {# recherche} other {# recherches}}",
+          "alertCount": "{count, plural, one {# alerte} other {# alertes}}"
         },
         "residences": {
           "title": "Détail par résidence",
@@ -1540,12 +2001,12 @@
           "searchPlaceholder": "Rechercher",
           "empty": "Aucune résidence",
           "unpublished": "(dépubliée)",
-          "view": "visite",
-          "favorite": "favori",
-          "redirection": "redirection",
           "sortLabel": "Trier les résidences",
           "sortViewsDesc": "Plus vues",
-          "sortViewsAsc": "Moins vues"
+          "sortViewsAsc": "Moins vues",
+          "viewCount": "{count, plural, one {# visite} other {# visites}}",
+          "favoriteCount": "{count, plural, one {# favori} other {# favoris}}",
+          "redirectionCount": "{count, plural, one {# redirection} other {# redirections}}"
         },
         "loading": "Chargement…",
         "export": {
@@ -1556,6 +2017,15 @@
           "cancel": "Annuler",
           "submit": "Télécharger le CSV"
         }
+      },
+      "tabs": {
+        "residences": "Résidences",
+        "statistics": "Statistiques des visiteurs"
+      },
+      "chart": {
+        "unknownAvailability": "Disponibilité<br></br>non-renseignée",
+        "occupied": "{count} occupés",
+        "available": "{count} disponibles"
       }
     },
     "residences": {
@@ -1593,7 +2063,11 @@
           "totalHousing": "Nombre total de logements",
           "availableHousing": "Logements disponibles",
           "deleteType": "Supprimer ce type de logement",
-          "tabsHaveErrors": "Certains onglets contiennent des erreurs, veuillez les compléter."
+          "tabsHaveErrors": "Certains onglets contiennent des erreurs, veuillez les compléter.",
+          "title": "Logements",
+          "housingCount": "{count, plural, one {# logement} other {# logements}}",
+          "newTab": "Nouveau",
+          "addTab": "Ajouter"
         },
         "location": {
           "sectionTitle": "Adresse de la résidence",
@@ -1604,8 +2078,66 @@
           "removeAddress": "Supprimer cette adresse",
           "searchPlaceholder": "Rechercher une adresse...",
           "searching": "Recherche en cours...",
-          "addAddress": "Ajouter une adresse"
+          "addAddress": "Ajouter une adresse",
+          "updateSectionHint": "Vous pouvez ajouter une ou plusieurs adresses postales si vous disposez de plusieurs résidences dans la même ville."
+        },
+        "form": {
+          "newTitle": "Nouvelle résidence",
+          "create": "Créer la résidence",
+          "cancel": "Annuler",
+          "save": "Enregistrer",
+          "viewListing": "Voir la fiche",
+          "lastModified": "Dernière modification {time}"
+        },
+        "equipments": {
+          "title": "Équipements"
+        },
+        "summary": {
+          "title": "En quelques mots",
+          "description": "Description",
+          "descriptionPlaceholder": "Décrivez votre résidence...",
+          "rentalChargesLabel": "Détails de la redevance locative",
+          "rentalChargesHint": "Indiquez ce que comprennent les charges locatives.",
+          "rentalChargesExample": "Exemple : chauffage collectif, wifi, entretien des parties communes, salle de sport, etc."
+        },
+        "virtualTour": {
+          "title": "Visite virtuelle",
+          "label": "Code d'intégration de la visite virtuelle",
+          "hint": "Collez un lien ou un code d'intégration Klapty, Matterport, Ricoh360, Giraffe360, YouTube, Vimeo ou Google Drive, ou un lien vers une vidéo (.mp4, .webm, .ogg, .mov)"
+        },
+        "redirection": {
+          "label": "URL de redirection",
+          "hint": "URL de la page de résidence"
+        },
+        "pictures": {
+          "title": "Photos de la résidence",
+          "addPhoto": "Ajouter une photo",
+          "addPhotos": "Ajouter des photos",
+          "hint": "Taille maximale: 10 Mo. Format supporté: jpeg, png, webp",
+          "browse": "Parcourir...",
+          "uploading": "Upload en cours...",
+          "selectedFiles": "{count, plural, one {# fichier sélectionné} other {# fichiers sélectionnés}}",
+          "noFileSelected": "Aucun fichier sélectionné",
+          "imageAlt": "Photo {index} sur {total} de la résidence",
+          "moveLeft": "Déplacer vers la gauche",
+          "moveRight": "Déplacer vers la droite",
+          "deleteImage": "Supprimer cette image",
+          "preview": "Aperçu"
         }
+      },
+      "pageTitle": "Gestion des résidences",
+      "breadcrumbDashboard": "Tableau de bord",
+      "newResidence": "Nouvelle résidence",
+      "list": {
+        "residenceCount": "{count, plural, one {# résidence} other {# résidences}}",
+        "availableFilter": "Logements disponibles",
+        "searchPlaceholder": "Nom résidence, ville...",
+        "housingCount": "{count, plural, one {# logement} other {# logements}}",
+        "availableLabel": "Disponibles",
+        "save": "Enregistrer",
+        "editResidence": "Éditer la résidence",
+        "emptyTitle": "Aucune résidence trouvée",
+        "emptyDescription": "Aucune résidence ne correspond à vos critères de recherche."
       }
     },
     "feedback": {
@@ -1630,10 +2162,10 @@
       "defaultCandidateName": "Candidat",
       "searchResidenceLabel": "Rechercher une résidence",
       "settingsButtonTitle": "Réglages du mode de contact",
+      "moderationButtonTitle": "Gérer les droits de modération",
       "noResidence": "Aucune résidence.",
       "toBeCalledBack": "{count} à rappeler",
       "residenceTitle": "Résidence {name}",
-      "availability": "{count} disponibilité{s}",
       "editResidence": "Éditer la résidence",
       "retentionNotice": "Chaque contact d'étudiant reste disponible pendant {days} jours.",
       "statusChangeError": "Le changement de statut a échoué.",
@@ -1703,6 +2235,7 @@
         "dossierFacileDescription": "Recevez un dossier complet des candidats : pièce d'identité, avis d'imposition, justificatifs de ressources, etc.",
         "dossierFacileCta": "Recevoir les dossiers avec DossierFacile",
         "comingSoon": "Bientôt disponible",
+        "administratorOnly": "Seul un administrateur de votre organisme peut activer la réception des candidatures.",
         "activationSuccess": "Mode de réception des candidatures activé.",
         "activationError": "Une erreur est survenue lors de l'activation."
       },
@@ -1721,13 +2254,48 @@
         "dossierFacileHint": "Recevez un dossier complet des candidats : pièce d'identité, avis d'imposition, justificatifs de ressources, etc.",
         "noneLabel": "Désactiver les candidatures",
         "noneHint": "Les visiteurs sont redirigés vers votre site Internet",
-        "lockedHint": "{hint} — bientôt disponible"
+        "lockedHint": "{hint} — bientôt disponible",
+        "residences": {
+          "allLabel": "Toutes les résidences",
+          "allHint": "Toutes vos résidences acceptent les candidatures, y compris celles que vous créerez plus tard.",
+          "restrictedHint": "Seules les résidences cochées acceptent les candidatures. Une résidence créée plus tard sera ouverte par défaut.",
+          "legend": "Résidences acceptant les candidatures",
+          "searchLabel": "Rechercher une résidence",
+          "searchPlaceholder": "Nom de la résidence",
+          "selectedCount": "{count} résidence(s) ouverte(s)",
+          "selectAll": "Tout sélectionner",
+          "selectNone": "Tout désélectionner",
+          "refineSearch": "Affinez votre recherche pour voir les {count} autres résidences.",
+          "emptyWarning": "Aucune résidence n'acceptera de candidature : les visiteurs seront redirigés vers votre site."
+        }
       },
       "promoBanner": {
         "title": "Recevez facilement des candidatures",
         "text": "d'étudiants sur votre espace",
         "link": "Recevoir des candidatures",
         "dismiss": "Masquer ce message"
+      },
+      "moderation": {
+        "pageTitle": "Paramètres de modération",
+        "subtitle": "Sélectionnez les gestionnaires pouvant modérer les dossiers des candidats",
+        "hint": "Gestionnaires pouvant voir et modérer les dossiers des candidats. Sélection éditable ultérieurement.",
+        "legend": "Gestionnaires autorisés à modérer les dossiers des candidats",
+        "toggleLabel": "Gestion des candidatures",
+        "toggleDescription": "Autorise {name} à voir et modérer les dossiers des candidats",
+        "onlyPermissionHint": "Seule autorisation de ce gestionnaire : modifiez-la depuis Gestion des utilisateurs.",
+        "empty": "Aucun gestionnaire pour le moment.",
+        "addUser": "Ajouter un gestionnaire",
+        "save": "Enregistrer",
+        "saving": "Enregistrement...",
+        "toastSuccess": "Droits de modération mis à jour",
+        "toastError": "Erreur lors de la mise à jour des droits de modération"
+      },
+      "availabilityCount": "{count, plural, one {# disponibilité} other {# disponibilités}}",
+      "status": {
+        "a_moderer": "À modérer",
+        "non_retenu": "Non retenu",
+        "a_contacter": "À contacter",
+        "contacte": "Contacté"
       }
     },
     "ownerForm": {
@@ -1738,6 +2306,11 @@
       "contactMode": "Mode de réception des candidatures",
       "submit": "Enregistrer",
       "submitting": "Enregistrement..."
+    },
+    "helpCenter": {
+      "title": "Centre d'aide",
+      "breadcrumbDashboard": "Tableau de bord",
+      "contactTeam": "Contacter l'équipe"
     }
   },
   "map": {
@@ -1748,5 +2321,60 @@
     "resultsLabel": "Carte des résidences correspondant à votre recherche. La liste des résultats, affichée à côté de la carte, en donne l'équivalent textuel.",
     "accommodationLabel": "Carte de localisation de la résidence. L'adresse complète figure en texte au-dessus de la carte.",
     "markerLabel": "Emplacement de la résidence sur la carte"
+  },
+  "impersonation": {
+    "title": "Mode usurpation actif",
+    "browsingAs": "vous naviguez en tant que",
+    "stop": "Revenir à mon compte",
+    "stopping": "Retour en cours...",
+    "impersonate": "Usurper ce compte",
+    "impersonateHint": "Ouvre une session de recette sous cette identité, pendant 1 heure.",
+    "cannotImpersonateSelf": "Vous ne pouvez pas usurper votre propre compte.",
+    "startError": "L'usurpation a échoué",
+    "stopError": "L'arrêt de l'usurpation a échoué"
+  },
+  "dossierFacileError": {
+    "title": "Erreur DossierFacile",
+    "backHome": "Retour à l'accueil",
+    "default": "Une erreur est survenue lors de la connexion à DossierFacile. Veuillez réessayer.",
+    "messages": {
+      "missing_params": "Les paramètres de la requête sont manquants ou invalides.",
+      "missing_state": "La session de connexion a expiré ou est introuvable. Veuillez réessayer.",
+      "invalid_state": "La session de connexion est invalide. Veuillez réessayer.",
+      "expired_state": "La session de connexion a expiré. Veuillez réessayer.",
+      "user_not_found": "Votre compte utilisateur est introuvable.",
+      "sync_failed": "La synchronisation avec DossierFacile a échoué. Veuillez réessayer ultérieurement.",
+      "doc_invalid_link": "Le lien utilisé est incomplet ou malformé.",
+      "doc_not_found": "Ce document n’existe plus ou a été supprimé.",
+      "doc_unavailable": "Le service DossierFacile n’a pas pu fournir le document. Veuillez réessayer dans quelques instants.",
+      "doc_expired": "Ce lien n’est plus valide. Retournez sur la page de candidature et cliquez à nouveau sur le document."
+    }
+  },
+  "pagination": {
+    "label": "Pagination",
+    "first": "Première page",
+    "previous": "Page précédente",
+    "next": "Page suivante",
+    "last": "Dernière page",
+    "page": "Page {number}",
+    "jumpTo": "Aller à une page entre {from} et {to}"
+  },
+  "rentSearchModal": {
+    "trigger": "Besoin d'aide ?",
+    "title": "Moyenne des loyers par ville",
+    "searchLabel": "Rechercher une ville",
+    "searchHint": "Commencez la saisie, puis choisissez la ville recherchée",
+    "searchPlaceholder": "Nom de la ville...",
+    "error": "Erreur lors de la recherche des données de loyer",
+    "loading": "Recherche en cours...",
+    "noResults": "Aucune ville trouvée pour \"{query}\"",
+    "averageRent": "Loyer moyen pour 20m²",
+    "source": "D'après les <link>Estimations de l’Agence Nationale pour l’Information sur le Logement (ANIL), à partir des données de SeLoger et de Leboncoin</link>",
+    "cancel": "Annuler",
+    "apply": "Appliquer"
+  },
+  "widget": {
+    "residencesCount": "{count, plural, one {# résidence} other {# résidences}}",
+    "poweredBy": "Proposé par"
   }
 }

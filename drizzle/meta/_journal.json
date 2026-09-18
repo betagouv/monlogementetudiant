@@ -428,6 +428,83 @@
       "when": 1788876669563,
       "tag": "0060_bailleur_permissions_cleanup",
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1789375449813,
+      "tag": "0061_budget_simulation",
+      "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1789457445190,
+      "tag": "0062_impersonation",
+      "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1789461754365,
+      "tag": "0063_bailleur_accommodation_scope",
+      "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1789464707467,
+      "tag": "0064_accommodation_accepts_applications",
+      "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1789546269730,
+      "tag": "0065_account_issuer",
+      "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1789546383298,
+      "tag": "0066_public_rate_limit",
+      "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1789567060077,
+      "tag": "0067_tracking_event_user_id_index",
+      "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1789567069994,
+      "tag": "0068_merge_case_duplicate_accounts",
+      "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1789573431178,
+      "tag": "0069_drop_public_rate_limit",
+      "breakpoints": true
+    },
+    {
+      "idx": 70,
+      "version": "7",
+      "when": 1789635485543,
+      "tag": "0070_remove_django_credentials",
+      "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1789635545543,
+      "tag": "0071_drop_non_student_passwords",
+      "breakpoints": true
     }
   ]
 }

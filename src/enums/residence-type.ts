@@ -21,3 +21,16 @@ export const RESIDENCE_TYPE_LABELS: Record<EResidenceType, string> = {
   [EResidenceType.SOUS_LOCATION]: 'Logements sociaux sous-loués aux étudiants par une association',
   [EResidenceType.INTERGENERATIONNELLE]: 'Cohabitation intergénérationnelle',
 }
+
+/** Clés de traduction des libellés publics (namespace `accomodation.residenceTypes`). */
+export const RESIDENCE_TYPE_MESSAGE_KEYS: Record<EResidenceType, string> = {
+  [EResidenceType.UNIVERSITAIRE_CONVENTIONNEE]: 'universitaireConventionnee',
+  [EResidenceType.RESIDENCE_ETUDIANTE]: 'residenceEtudiante',
+  [EResidenceType.SOCIALE_JEUNES_ACTIFS]: 'socialeJeunesActifs',
+  [EResidenceType.JEUNES_TRAVAILLEURS]: 'jeunesTravailleurs',
+  [EResidenceType.SOCIAL_CLASSIQUE]: 'socialClassique',
+  [EResidenceType.SOCIAL_FLECHE_JEUNE]: 'socialFlecheJeune',
+  [EResidenceType.ECOLE]: 'ecole',
+  [EResidenceType.SOUS_LOCATION]: 'sousLocation',
+  [EResidenceType.INTERGENERATIONNELLE]: 'intergenerationnelle',
+}

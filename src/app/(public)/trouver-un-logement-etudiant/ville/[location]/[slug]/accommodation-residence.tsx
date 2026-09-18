@@ -56,11 +56,7 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
         ) : (
           <h3 className="fr-h4">{t('availableAccommodations')}</h3>
         )}{' '}
-        <Alert
-          severity="warning"
-          title="Informations à venir"
-          description="Le gestionnaire n'a pas encore partagé les informations au sujet des logements de la résidence."
-        />
+        <Alert severity="warning" title={t('upcomingInfoTitle')} description={t('upcomingInfoDescription')} />
       </div>
     )
   }
@@ -95,13 +91,13 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
                     <span className="fr-text--sm fr-mb-0">
                       {accommodation.superficieMin === accommodation.superficieMax
                         ? `${accommodation.superficieMin} m²`
-                        : `Entre ${accommodation.superficieMin} et ${accommodation.superficieMax} m²`}
+                        : t('surfaceRange', { min: accommodation.superficieMin, max: accommodation.superficieMax })}
                     </span>
                   )}
 
                   <p className="fr-mb-0">
                     {accommodation.min && accommodation.max && accommodation.min !== accommodation.max
-                      ? `De ${accommodation.min} à ${accommodation.max} €`
+                      ? t('priceRange', { min: accommodation.min, max: accommodation.max })
                       : `${accommodation.min} €`}{' '}
                     {isPerPersonTypology(accommodation.type) && `${t('perPerson')} `}
                     {t('charges')}

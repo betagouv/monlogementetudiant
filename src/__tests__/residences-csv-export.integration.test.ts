@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { typologyDraft } from '~/server/lib/typologies'
 import { createAccommodation, createOwner, createUser } from './fixtures/factories'
 import './helpers/setup-integration'
@@ -80,8 +81,27 @@ describe('GET /api/admin/residences/export', () => {
     const { headers, rows } = await readCsv(await GET(request()))
 
     const column = 'Page de présentation du bailleur'
-    expect(headers.indexOf(column)).toBe(headers.indexOf('ownerName') + 1)
+    expect(headers.indexOf(column)).toBe(headers.indexOf('ownerSlug') + 1)
     expect(rows.find((row) => row.slug === 'residence-presentation')?.[column]).toBe(landingUrl)
+  })
+
+  it('expose le slug du bailleur et son parcours de candidature', async () => {
+    const owner = await createOwner({
+      name: 'Bailleur Parcours',
+      slug: 'bailleur-parcours',
+      contactMode: EOwnerContactMode.DOSSIER_FACILE,
+    })
+    await createAccommodation({ name: 'Résidence Parcours', slug: 'residence-parcours', ownerId: owner.id })
+
+    const { headers, rows } = await readCsv(await GET(request()))
+
+    expect(headers.indexOf('ownerSlug')).toBe(headers.indexOf('ownerName') + 1)
+    expect(headers).toContain('Parcours de candidature')
+
+    const row = rows.find((r) => r.slug === 'residence-parcours')
+    expect(row?.ownerSlug).toBe('bailleur-parcours')
+    // Le libellé métier, pas la valeur d'enum stockée.
+    expect(row?.['Parcours de candidature']).toBe('DossierFacile')
   })
 
   it('laisse les colonnes vides pour une résidence dont aucune dispo n’a jamais été renseignée', async () => {

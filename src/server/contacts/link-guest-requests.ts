@@ -1,19 +1,15 @@
 import * as Sentry from '@sentry/nextjs'
-import { and, eq, exists, isNull, sql } from 'drizzle-orm'
+import { and, eq, exists, isNotNull, isNull, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import { db } from '~/server/db'
 import { contactRequests, favoriteAccommodations } from '~/server/db/schema'
 
 /**
- * Rattache au compte les demandes de contact laissées en visiteur avec la même adresse e-mail.
+ * Rattache au compte les demandes de contact confirmées laissées en visiteur avec la même adresse e-mail.
+ * À appeler uniquement une fois l'adresse du compte vérifiée. Les demandes non confirmées restent visiteur.
  *
- * Appelé uniquement quand l'adresse est prouvée (vérification d'e-mail à l'inscription, ou ouverture
- * de session sur un compte déjà vérifié) : sans cette garantie, n'importe qui pourrait s'approprier
- * les demandes d'autrui en s'inscrivant avec leur adresse.
- *
- * `contact_request` porte une contrainte d'unicité `(user_id, accommodation_id)` : si le compte a
- * déjà une demande sur la même résidence, la ligne visiteur est un doublon et on la supprime au lieu
- * de la rattacher (sinon l'UPDATE violerait la contrainte et ferait échouer la connexion).
+ * `contact_request` est unique sur `(user_id, accommodation_id)` : une demande visiteur en doublon d'une
+ * demande existante du compte est supprimée plutôt que rattachée.
  */
 export const linkGuestContactRequests = async (userId: string, email: string): Promise<number> => {
   const normalized = email.trim().toLowerCase()
@@ -38,7 +34,7 @@ export const linkGuestContactRequests = async (userId: string, email: string): P
     const linked = await tx
       .update(contactRequests)
       .set({ userId, updatedAt: new Date() })
-      .where(isGuestWithSameEmail)
+      .where(and(isGuestWithSameEmail, isNotNull(contactRequests.confirmedAt)))
       .returning({ accommodationId: contactRequests.accommodationId })
 
     // Mêmes règles que pour une candidature faite en étant connecté : la résidence rejoint les

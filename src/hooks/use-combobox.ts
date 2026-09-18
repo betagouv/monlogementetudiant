@@ -16,10 +16,9 @@ type UseComboboxOptions<T> = {
 /**
  * Motif ARIA « combobox avec liste » (RGAA 7.1 et 7.3).
  *
- * Les autocomplétions du site étaient des <li onClick> : ni rôle, ni focus, ni clavier. Ce hook
- * centralise le contrat attendu par les technologies d'assistance — rôles combobox/listbox/option,
+ * Centralise le contrat attendu par les technologies d'assistance — rôles combobox/listbox/option,
  * option active désignée par aria-activedescendant, navigation aux flèches, validation par Entrée,
- * fermeture par Échap — pour que les quatre autocomplétions se comportent de la même façon.
+ * fermeture par Échap — pour que toutes les autocomplétions se comportent de la même façon.
  *
  * Le focus ne quitte jamais le champ de saisie : c'est aria-activedescendant qui désigne l'option
  * courante, conformément au motif. `announcement` alimente la région live qui annonce le nombre

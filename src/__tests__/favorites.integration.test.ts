@@ -118,3 +118,12 @@ describe('favorites.remove', () => {
     expect(otherFavorites).toHaveLength(1)
   })
 })
+
+describe('favorites.add', () => {
+  it('rejects an unpublished accommodation as if it did not exist', async () => {
+    await createUser({ id: 'test-user-id', email: 'test@test.com', role: 'user' })
+    await createAccommodation({ slug: 'fav-hidden', published: false, geom: { type: 'Point', coordinates: [2.35, 48.85] } })
+
+    await expect(authenticatedCaller.favorites.add({ accommodationSlug: 'fav-hidden' })).rejects.toMatchObject({ code: 'NOT_FOUND' })
+  })
+})

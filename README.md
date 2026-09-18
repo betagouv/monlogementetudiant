@@ -80,7 +80,6 @@ cli/
     geocoder.ts          # Géocodage BAN + geo.api.gouv.fr
     matomo.ts            # Service API Matomo
   commands/
-    migrate-users.ts     # Migration users Django
     demote-bailleur-admins.ts # Aligne les rôles bailleurs sur un CSV (rétrogradations + promotions)
     backfill-brevo-contacts.ts # Rattrapage des contacts Brevo (étudiants + gestionnaires)
     backfill-geocoding.ts # Recalage des geom aberrantes et des city_id mal résolus
@@ -154,16 +153,6 @@ scalingo --app mle-prod --region osc-secnum-fr1 run --file ~/comptes.csv \
   pnpm cli demote-bailleur-admins --file /tmp/uploads/comptes.csv --apply
 ```
 
-#### `migrate-users` — Migrer les users Django vers better-auth
-
-```bash
-pnpm cli migrate-users
-```
-
-Lit les tables Django existantes dans la BDD locale (typiquement après un `import-backup`) et traduit les utilisateurs vers le schéma better-auth : insertion dans les tables `user` et `account`, puis liaison des owners existants par correspondance de nom, et liaisons des utilisateurs students.
-
-À utiliser une seule fois après la migration Django → tRPC/Drizzle.
-
 #### `backfill-cache-control` — Rattraper le Cache-Control des médias S3
 
 ```bash
@@ -226,6 +215,9 @@ sont jamais mises à jour et grossissent donc indéfiniment (ex. aout 2026):
 | `alert_job` | 12 mois | 11 Mo | ~8,8 Mo/mois | **jobs terminés uniquement** (`sent`, `failed`) ; les `pending` restent actionnables par le sender |
 | `activity_log` | 36 mois | 5 Mo | ~0,5 Mo/mois, en décroissance | journal d'actions admin/bailleurs |
 | `import_job` | 24 mois | 1,9 Mo | ~0,2 Mo/mois | audit trail des imports et des crons |
+| `login_attempt` | 12 mois | — | — | suivi des liens de connexion (écran « Connexions ») ; les jetons inconnus orphelins sont retirés quel que soit leur âge |
+| `session` | expirées depuis 7 jours | — | — | sessions Better Auth (IP, user-agent) ; **sans archive** |
+| `verification` | dès expiration | — | — | jetons de connexion, d'activation et de réinitialisation ; **sans archive** |
 
 Les rétentions sont volontairement dissymétriques. `tracking_event` pèse 98 % du total et croît
 40 fois plus vite que la somme des trois autres : c'est la seule dont la rétention se paie en
@@ -961,14 +953,14 @@ src/
       utils/                    # Helpers tRPC (accommodation-helpers)
     services/                   # Services partagés (S3)
     utils/                      # Utilitaires serveur (normalize-city-search)
-  lib/                          # Libs partagées (email, django-password, types)
+  lib/                          # Libs partagées (email, types)
   schemas/                      # Schémas Zod (accommodations, territories)
   providers/                    # Providers React (TanStack Query)
   dsfr/                         # Config DSFR (provider, head, color scheme)
   utils/                        # Utilitaires client
 cli/
   index.ts                      # Point d'entrée CLI (commander)
-  commands/                     # Commandes CLI (migrate-users, import-backup, imports, syncs)
+  commands/                     # Commandes CLI (import-backup, imports, syncs)
   lib/                          # Libs CLI (scalingo-backup, db-utils, geocoder, matomo)
 drizzle/                        # Migrations SQL Drizzle
 public/

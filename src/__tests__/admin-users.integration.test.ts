@@ -1,10 +1,15 @@
 import { eq } from 'drizzle-orm'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { user } from '../server/db/schema/auth'
 import { createOwner, createUser } from './fixtures/factories'
 import { adminCaller } from './helpers/test-caller'
 import { getTestDb } from './helpers/test-db'
 import './helpers/setup-integration'
+
+vi.mock('~/server/services/brevo', async () => {
+  const actual = await vi.importActual<typeof import('~/server/services/brevo')>('~/server/services/brevo')
+  return { ...actual, sendOwnerWelcomeEmail: vi.fn().mockResolvedValue(undefined) }
+})
 
 describe('admin.users.list', () => {
   describe('unlinked filter', () => {
@@ -118,5 +123,23 @@ describe("plafond d'administrateurs cote administration plateforme", () => {
 
     const linked = await adminCaller.admin.users.linkToOwner({ userId: 'ceil-d3', ownerId: owner.id })
     expect(linked?.ownerId).toBe(owner.id)
+  })
+})
+
+describe('admin.users — e-mails normalisés', () => {
+  it('crée et modifie les comptes avec un e-mail en minuscules', async () => {
+    await createUser({ id: 'test-admin-id', name: 'Test Admin', email: 'admin@test.com', role: 'admin' })
+
+    const created = await adminCaller.admin.users.create({
+      email: ' Marie.Curie@Univ.FR ',
+      firstname: 'Marie',
+      lastname: 'Curie',
+      role: 'user',
+    })
+    expect(created?.email).toBe('marie.curie@univ.fr')
+
+    await adminCaller.admin.users.update({ id: created!.id, email: 'MARIE@Univ.fr' })
+    const stored = await getTestDb().query.user.findFirst({ where: eq(user.id, created!.id) })
+    expect(stored?.email).toBe('marie@univ.fr')
   })
 })

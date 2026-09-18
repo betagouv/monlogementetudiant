@@ -22,7 +22,7 @@ export default async function SignUpPage({ searchParams }: { searchParams: Promi
   return (
     <>
       <div className={styles.imageContainer}>
-        <Image className={styles.image} src={background} alt="S'inscrire" priority quality={100} />
+        <Image className={styles.image} src={background} alt={t('imageAlt')} priority quality={100} />
       </div>
       <div className={clsx(styles.container, 'fr-container')}>
         <Button

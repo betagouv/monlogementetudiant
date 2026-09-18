@@ -62,8 +62,8 @@ export const Dropdown = ({
 
   /**
    * Le panneau ne contient que des liens et des boutons : leur activation au clavier est
-   * native. L'ancienne implémentation simulait un `.click()` sur Entrée/Espace, ce qui
-   * doublait l'activation. Il ne reste qu'à refermer le panneau après une navigation.
+   * native (simuler un `.click()` sur Entrée/Espace la doublerait). Il ne reste qu'à refermer
+   * le panneau après une navigation.
    */
   const closeAfterActivation = (event: ReactMouseEvent<HTMLDivElement>) => {
     if (event.target instanceof HTMLElement && event.target.closest('a, button')) {

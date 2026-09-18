@@ -67,7 +67,7 @@ export const getStudentAccommodationPageContext = cache(
     const serverAcademie = isAcademy && territory ? territory.id.toString() : undefined
     const serverCityId = isCity && territory && !isMapSearch ? territory.id : undefined
     // Département : on filtre sur la frontière (ST_Within côté serveur) et non sur la bbox, qui
-    // faisait remonter les résidences des départements voisins tombant dans le rectangle englobant.
+    // ferait remonter les résidences des départements voisins tombant dans le rectangle englobant.
     const serverDepartmentId = isDepartment && territory && !isMapSearch ? territory.id : undefined
 
     const queryClient = getQueryClient()

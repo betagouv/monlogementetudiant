@@ -5,6 +5,7 @@ import { accommodationTypologies } from './accommodation-typologies'
 import { accommodations } from './accommodations'
 import { adminOwnerLinks } from './admin-owner-links'
 import { user } from './auth'
+import { budgetSimulations } from './budget-simulations'
 import { cities } from './cities'
 import { contactRequests } from './contacts'
 import { departments } from './departments'
@@ -36,11 +37,16 @@ export const userRelations = relations(user, ({ one, many }) => ({
   adminOwnerLinks: many(adminOwnerLinks),
   favoriteAccommodations: many(favoriteAccommodations),
   housingAidSimulation: one(housingAidSimulations, { fields: [user.id], references: [housingAidSimulations.userId] }),
+  budgetSimulation: one(budgetSimulations, { fields: [user.id], references: [budgetSimulations.userId] }),
   contactRequests: many(contactRequests),
 }))
 
 export const housingAidSimulationsRelations = relations(housingAidSimulations, ({ one }) => ({
   user: one(user, { fields: [housingAidSimulations.userId], references: [user.id] }),
+}))
+
+export const budgetSimulationsRelations = relations(budgetSimulations, ({ one }) => ({
+  user: one(user, { fields: [budgetSimulations.userId], references: [user.id] }),
 }))
 
 export const contactRequestsRelations = relations(contactRequests, ({ one }) => ({

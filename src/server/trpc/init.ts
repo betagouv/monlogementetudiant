@@ -1,8 +1,10 @@
 import { initTRPC, TRPCError } from '@trpc/server'
 import superjson from 'superjson'
+import { canAccessOwnerSpace, canAccessStudentSpace } from '~/lib/roles'
 import { type BailleurPermission, hasPermission, isBailleurAdministrator } from '~/server/bailleur/permissions'
 import { getClientIp } from '~/server/contacts/rate-limit'
 import { getServerSession } from '~/services/better-auth'
+import { maskUnexpectedErrorMessage } from './error-formatter'
 
 /**
  * `opts` est fourni par `fetchRequestHandler` (route HTTP) mais pas par les appels serveur
@@ -15,6 +17,7 @@ export const createTRPCContext = async (opts?: { req?: Request }) => {
 
 const t = initTRPC.context<Awaited<ReturnType<typeof createTRPCContext>>>().create({
   transformer: superjson,
+  errorFormatter: ({ shape, error }) => maskUnexpectedErrorMessage(shape, error, process.env.NODE_ENV === 'production'),
 })
 
 export const createTRPCRouter = t.router
@@ -28,14 +31,14 @@ export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
 })
 
 export const ownerProcedure = protectedProcedure.use(async ({ ctx, next }) => {
-  if (ctx.session.user.role === 'user') {
+  if (!canAccessOwnerSpace(ctx.session.user.role)) {
     throw new TRPCError({ code: 'FORBIDDEN', message: 'Owner or admin role required' })
   }
   return next({ ctx })
 })
 
 export const userProcedure = protectedProcedure.use(async ({ ctx, next }) => {
-  if (ctx.session.user.role === 'owner') {
+  if (!canAccessStudentSpace(ctx.session.user.role)) {
     throw new TRPCError({ code: 'FORBIDDEN', message: 'Student or admin role required' })
   }
   return next({ ctx })

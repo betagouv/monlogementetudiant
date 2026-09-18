@@ -18,7 +18,6 @@ import { importCrousRents } from './commands/import-crous-rents'
 import { importCrousSurfaces } from './commands/import-crous-surfaces'
 import { importCrousTypologies } from './commands/import-crous-typologies'
 import { migrate } from './commands/migrate'
-import { migrateUsers } from './commands/migrate-users'
 import { purgeContactRequests } from './commands/purge-contact-requests'
 import { purgeLogs } from './commands/purge-logs'
 import { seedAlertSnapshotCommand } from './commands/seed-alert-snapshot'
@@ -31,8 +30,6 @@ import { runImport, runSync } from './factory'
 import { captureCliException } from './sentry'
 
 program.name('mle').description('MLE CLI tools')
-
-program.command('migrate-users').description('Migrate Django users to better-auth').action(migrateUsers)
 
 program
   .command('backfill-brevo-contacts')
@@ -100,7 +97,10 @@ program
     parseInt,
   )
   .option('--max-rows <n>', 'Plafond de lignes par table et par run (défaut : 2000000)', parseInt)
-  .option('--table <name>', 'Ne purger qu’une table (tracking_event, activity_log, alert_job, import_job)')
+  .option(
+    '--table <name>',
+    'Ne purger qu’une table (tracking_event, activity_log, alert_job, import_job, login_attempt, session, verification)',
+  )
   .option('--no-archive', 'Supprimer sans déposer d’archive dans S3')
   // Commander expose `--no-archive` sous la forme `archive: false` : on le retraduit en
   // `noArchive` pour que la commande garde une option positive côté API.

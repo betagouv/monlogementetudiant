@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { sanitizeHTML } from './sanitize-html'
 
-// Ces tests tournent dans l'environnement node de Vitest (pas de `window`), soit exactement les
-// conditions du rendu serveur de Next : c'est là que `dompurify` nu échouait avec
-// « DOMPurify.sanitize is not a function » et faisait tomber la page en 500.
+// Ces tests tournent dans l'environnement node de Vitest (pas de `window`), soit les conditions du
+// rendu serveur de Next, où `dompurify` nu n'expose pas `sanitize`.
 describe('sanitizeHTML', () => {
   it('sanitise sans window (conditions du SSR)', () => {
     expect(typeof window).toBe('undefined')
@@ -17,9 +16,22 @@ describe('sanitizeHTML', () => {
   })
 
   it('conserve les balises et attributs autorisés', () => {
-    expect(sanitizeHTML('<a href="https://example.org" target="_blank">Lien</a>')).toBe(
-      '<a href="https://example.org" target="_blank">Lien</a>',
+    expect(sanitizeHTML('<a href="https://example.org" target="_blank" rel="noopener noreferrer">Lien</a>')).toBe(
+      '<a href="https://example.org" target="_blank" rel="noopener noreferrer">Lien</a>',
     )
     expect(sanitizeHTML('<ul><li>Un</li><li>Deux</li></ul>')).toBe('<ul><li>Un</li><li>Deux</li></ul>')
+  })
+
+  it('force rel="noopener noreferrer" sur un lien ouvert dans un nouvel onglet', () => {
+    expect(sanitizeHTML('<a href="https://example.org" target="_blank">Lien</a>')).toBe(
+      '<a href="https://example.org" target="_blank" rel="noopener noreferrer">Lien</a>',
+    )
+    expect(sanitizeHTML('<a href="https://example.org" target="_blank" rel="opener">Lien</a>')).toBe(
+      '<a href="https://example.org" target="_blank" rel="noopener noreferrer">Lien</a>',
+    )
+  })
+
+  it('ne touche pas un lien sans target', () => {
+    expect(sanitizeHTML('<a href="https://example.org">Lien</a>')).toBe('<a href="https://example.org">Lien</a>')
   })
 })

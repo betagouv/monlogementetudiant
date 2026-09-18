@@ -49,7 +49,7 @@ export const useUploadResidenceImages = (slug: string, name: string) => {
 
       if (!uploadResponse.ok) {
         const errorData = await uploadResponse.json()
-        throw new Error(errorData.error || 'Failed to upload images')
+        throw new Error(errorData.error || t('uploadFailed'))
       }
 
       const uploadData = await uploadResponse.json()

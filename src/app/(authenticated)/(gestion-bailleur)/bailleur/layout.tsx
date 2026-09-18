@@ -2,8 +2,10 @@ import { notFound, redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { ContactModePromoBanner } from '~/components/bailleur/contact-mode-promo-banner'
 import { OwnerFeedbackBanner } from '~/components/bailleur/owner-feedback-banner'
+import { ImpersonationBanner } from '~/components/impersonation/impersonation-banner'
 import { CommonFooter } from '~/components/ui/footer/footer'
 import { WorkspaceHeaderComponent } from '~/components/ui/header/workspace-header'
+import { canAccessOwnerSpace } from '~/lib/roles'
 import { getServerSession } from '~/services/better-auth'
 import styles from './layout.module.css'
 
@@ -32,8 +34,9 @@ export default async function WorkspaceLayout({
     redirect('/gestionnaire/se-connecter')
   }
 
-  // Un étudiant authentifié, en revanche, n'a pas à découvrir l'existence de l'espace gestionnaire.
-  if (session.user.role === 'user') {
+  // Un étudiant authentifié (ou un rôle inattendu), en revanche, n'a pas à découvrir l'existence de
+  // l'espace gestionnaire.
+  if (!canAccessOwnerSpace(session.user.role)) {
     return notFound()
   }
 
@@ -42,6 +45,7 @@ export default async function WorkspaceLayout({
   return (
     <>
       <WorkspaceHeaderComponent />
+      <ImpersonationBanner />
       <ContactModePromoBanner />
       <main className={styles.container}>{children}</main>
       {showFeedbackBanner && <OwnerFeedbackBanner />}

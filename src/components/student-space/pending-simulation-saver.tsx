@@ -1,31 +1,34 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { useSaveBudgetSimulation } from '~/hooks/use-budget-simulation'
 import { useSaveHousingAidSimulation } from '~/hooks/use-housing-aid-simulation'
 import { clearPendingAidSimulation, readPendingAidSimulation } from '~/utils/pending-aid-simulation'
+import { clearPendingBudgetSimulation, readPendingBudgetSimulation } from '~/utils/pending-budget-simulation'
 
-/**
- * Sauvegarde automatiquement, à la première arrivée dans l'espace connecté, la simulation
- * qu'un utilisateur non connecté avait mémorisée avant de créer son compte, puis nettoie
- * le localStorage. Ne rend rien.
- */
 export const PendingSimulationSaver = () => {
-  const { mutateAsync: saveSimulation } = useSaveHousingAidSimulation({ silent: true })
+  const { mutateAsync: saveAidSimulation } = useSaveHousingAidSimulation({ silent: true })
+  const { mutateAsync: saveBudgetSimulation } = useSaveBudgetSimulation({ silent: true })
   const hasRun = useRef(false)
 
   useEffect(() => {
     if (hasRun.current) return
     hasRun.current = true
 
-    const pending = readPendingAidSimulation()
-    if (!pending) return
+    const pendingAid = readPendingAidSimulation()
+    if (pendingAid) {
+      saveAidSimulation(pendingAid)
+        .then(() => clearPendingAidSimulation())
+        .catch(() => undefined)
+    }
 
-    saveSimulation(pending)
-      .then(() => clearPendingAidSimulation())
-      .catch(() => {
-        // Échec de sauvegarde : on conserve la simulation en localStorage pour un prochain essai.
-      })
-  }, [saveSimulation])
+    const pendingBudget = readPendingBudgetSimulation()
+    if (pendingBudget) {
+      saveBudgetSimulation(pendingBudget)
+        .then(() => clearPendingBudgetSimulation())
+        .catch(() => undefined)
+    }
+  }, [saveAidSimulation, saveBudgetSimulation])
 
   return null
 }

@@ -37,7 +37,7 @@ export default async function NotFound() {
             </Button>
           </div>
           <div>
-            <Image src={notFoundImage.src} alt="Not found" width={282} height={320} />
+            <Image src={notFoundImage.src} alt={t('imageAlt')} width={282} height={320} />
           </div>
         </div>
       </div>

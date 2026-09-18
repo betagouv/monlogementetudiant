@@ -4,7 +4,7 @@ import { trackAppRouter } from '@socialgouv/matomo-next'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { useEffect } from 'react'
 
-export default function Matomo() {
+export default function Matomo({ nonce }: { nonce?: string }) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   useEffect(() => {
@@ -14,9 +14,10 @@ export default function Matomo() {
         siteId: process.env.NEXT_PUBLIC_MATOMO_SITE_ID || '',
         disableCookies: true,
         enableHeartBeatTimer: true,
+        nonce,
       })
     }
-  }, [pathname, searchParams])
+  }, [pathname, searchParams, nonce])
 
   return null
 }

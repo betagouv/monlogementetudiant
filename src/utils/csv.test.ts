@@ -36,6 +36,24 @@ describe('toCsv', () => {
     expect(csv.split('\n')[1]).toBe('"Résidence ""Le Parc""; annexe";1;oui;"Lyon')
   })
 
+  it.each([
+    '=1+1',
+    '+cmd',
+    '-2+3',
+    '@SUM(A1:A2)',
+    '  =HYPERLINK("https://evil.test")',
+  ])('neutralise les formules de tableur : %s', (value) => {
+    const csv = body(toCsv(columns, [{ name: value, count: 1, published: true, city: 'Lyon' }]))
+
+    expect(csv.split('\n')[1]).toMatch(/^"?'/)
+  })
+
+  it('laisse les nombres négatifs intacts', () => {
+    const csv = body(toCsv(columns, [{ name: 'B', count: -3, published: false, city: null }]))
+
+    expect(csv.split('\n')[1]).toBe('B;-3;non;')
+  })
+
   it('produit le seul en-tête quand il n’y a aucune ligne', () => {
     expect(body(toCsv(columns, []))).toBe('Résidence;Vues;Publiée;Ville')
   })

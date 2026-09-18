@@ -1,4 +1,5 @@
 import { env } from '~/server/env'
+import { maskEmail } from '~/utils/mask-email'
 
 const SENDER_EMAIL = 'no-reply@monlogementetudiant.beta.gouv.fr'
 
@@ -160,7 +161,7 @@ export async function sendAlertCreationConfirmationEmail(
 
 export async function sendAlertExpiryReminderEmail(email: string, params: { alertName: string; alertsUrl: string }): Promise<void> {
   if (env.NEXT_PUBLIC_APP_ENV !== 'production') {
-    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] relance de péremption non envoyée à ${email}`)
+    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] relance de péremption non envoyée à ${maskEmail(email)}`)
     return
   }
 
@@ -173,7 +174,7 @@ export async function sendAlertExpiryReminderEmail(email: string, params: { aler
 
 export async function sendAlertDeactivationEmail(email: string, params: { alertName: string; alertsUrl: string }): Promise<void> {
   if (env.NEXT_PUBLIC_APP_ENV !== 'production') {
-    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] désactivation d'alerte non envoyée à ${email}`)
+    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] désactivation d'alerte non envoyée à ${maskEmail(email)}`)
     return
   }
 
@@ -188,10 +189,9 @@ export async function sendStudentAlertEmail(
   email: string,
   params: { firstName: string; alertName?: string; accommodations: { nom: string; url: string }[] },
 ): Promise<void> {
-  // Anti-spam : on n'envoie réellement les alertes qu'en production.
-  // Jamais en dev, jamais en staging. Eviter les spam intempestifs.
+  // On n'envoie réellement les alertes qu'en production, jamais en dev ni en staging.
   if (env.NEXT_PUBLIC_APP_ENV !== 'production') {
-    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] email d'alerte non envoyé à ${email}`)
+    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] email d'alerte non envoyé à ${maskEmail(email)}`)
     return
   }
 

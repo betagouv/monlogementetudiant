@@ -1,15 +1,9 @@
 /**
  * Marquage des liens qui sortent d'un widget intégré chez un partenaire.
  *
- * Un widget est une iframe hébergée sur le site du partenaire : lorsqu'un visiteur clique sur un
- * de ses liens, il atterrit sur le site principal et Matomo n'enregistre qu'un référent — le même
- * que pour un lien classique posé sur ce site. Rien ne distingue donc les deux origines.
- *
- * On ajoute donc aux liens sortants les paramètres de campagne de Matomo. `mtm_campaign` et
- * `mtm_kwd` sont reconnus par le cœur de Matomo, sans extension : ils portent à eux seuls les deux
- * informations attendues, « la visite vient d'un widget » et « de quel partenaire ». Les trois
- * autres ne sont exploités que si l'extension Marketing Campaigns Reporting est installée ; ils
- * sont sans effet sinon, et affinent le rapport là où elle l'est.
+ * Depuis l'iframe, Matomo n'enregistre qu'un référent, indiscernable d'un lien classique : on ajoute
+ * donc les paramètres de campagne Matomo. `mtm_campaign` et `mtm_kwd` (widget, partenaire) sont lus
+ * par le cœur de Matomo ; les trois autres ne servent qu'avec l'extension Marketing Campaigns Reporting.
  */
 
 /** Valeur de `mtm_campaign` commune à tous les widgets : isole les visites d'origine widget. */

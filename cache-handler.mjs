@@ -84,13 +84,45 @@ function memorySet(key, entry) {
 let s3Client = null
 
 /**
+ * Coupe-circuit : une fois vrai, plus aucun appel S3 n'est tenté pour le reste du process.
+ *
+ * L'étage S3 n'est qu'une optimisation — sans lui le L1 mémoire suffit et l'optimiseur
+ * réencode. Un bucket qui refuse l'écriture (clé en lecture seule, droits changés) ne doit
+ * donc pas produire une ligne de log par vignette : on l'abandonne au premier refus.
+ */
+let s3Disabled = false
+
+/** Un refus de droits ne se répare pas en réessayant : inutile de garder le S3 branché. */
+function isPermissionError(error) {
+  const status = error?.$metadata?.httpStatusCode
+  return status === 401 || status === 403 || error?.name === 'AccessDenied' || error?.Code === 'AccessDenied'
+}
+
+function disableS3(reason) {
+  if (s3Disabled) return
+  s3Disabled = true
+  s3Client = null
+  console.warn(`[cache-handler] cache S3 des images desactive pour ce process : ${reason}. Le cache memoire prend le relais.`)
+}
+
+/**
  * Retourne `null` quand les identifiants S3 sont absents — cas du dev local et des tests,
  * où le cache se contente alors du L1 mémoire.
+ *
+ * `IMAGE_CACHE_S3_DISABLED=1` force le même comportement même avec des identifiants valides :
+ * en local, les clés S3 pointent sur un bucket partagé où l'écriture du préfixe `image-cache/`
+ * n'est pas forcément accordée, et le cache partagé n'a de toute façon aucun intérêt sur un
+ * poste de développement.
  */
 function getS3Client() {
+  if (s3Disabled) return null
   if (s3Client) return s3Client
 
-  const { S3_ENDPOINT, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_BUCKET } = process.env
+  const { S3_ENDPOINT, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_BUCKET, IMAGE_CACHE_S3_DISABLED } = process.env
+  if (IMAGE_CACHE_S3_DISABLED === '1' || IMAGE_CACHE_S3_DISABLED === 'true') {
+    disableS3('IMAGE_CACHE_S3_DISABLED')
+    return null
+  }
   if (!S3_ENDPOINT || !S3_ACCESS_KEY_ID || !S3_SECRET_ACCESS_KEY || !S3_BUCKET) return null
 
   s3Client = new S3Client({
@@ -167,7 +199,9 @@ export default class MleCacheHandler extends FileSystemCache {
     } catch (error) {
       // Miss normal (clé absente) comme incident S3 : dans les deux cas l'optimiseur
       // réencode, donc on ne fait pas remonter l'erreur.
-      if (error?.name !== 'NoSuchKey' && error?.$metadata?.httpStatusCode !== 404) {
+      if (isPermissionError(error)) {
+        disableS3(`lecture refusee par S3 (${error?.Code ?? error?.name ?? 'AccessDenied'})`)
+      } else if (error?.name !== 'NoSuchKey' && error?.$metadata?.httpStatusCode !== 404) {
         console.error(`[cache-handler] lecture S3 échouée pour ${cacheKey}`, error)
       }
       return null
@@ -203,7 +237,11 @@ export default class MleCacheHandler extends FileSystemCache {
     } catch (error) {
       // Le L1 a déjà l'entrée : l'échec d'écriture coûte un réencodage sur les autres
       // containers, pas une erreur visible par l'utilisateur.
-      console.error(`[cache-handler] écriture S3 échouée pour ${cacheKey}`, error)
+      if (isPermissionError(error)) {
+        disableS3(`ecriture refusee par S3 (${error?.Code ?? error?.name ?? 'AccessDenied'})`)
+      } else {
+        console.error(`[cache-handler] écriture S3 échouée pour ${cacheKey}`, error)
+      }
     }
   }
 }
@@ -213,7 +251,10 @@ export const __testing = {
   clearMemory() {
     memory.clear()
     memoryBytes = 0
+    s3Disabled = false
+    s3Client = null
   },
+  isS3Disabled: () => s3Disabled,
   memorySize: () => memory.size,
   memoryBytes: () => memoryBytes,
   PREFIX,

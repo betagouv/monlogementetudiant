@@ -36,12 +36,12 @@ export const NearbyAccommodations = ({
     background: true,
     border: true,
     badge: currentFeature.priceMin ? <Badge severity="new" noIcon>{`${currentFeature.priceMin}€`}</Badge> : undefined,
-    desc: <>{nbTotalApartments && <span className="ri-community-line">{`${nbTotalApartments} logements`}</span>}</>,
+    desc: <>{nbTotalApartments && <span className="ri-community-line">{t('nearby.count', { count: nbTotalApartments })}</span>}</>,
     enlargeLink: true,
     horizontal: true,
     ...(hasImage
       ? {
-          imageAlt: `Image de la résidence ${currentFeature?.name}`,
+          imageAlt: t('nearby.imageAlt', { name: currentFeature?.name }),
           imageUrl: currentFeature?.imagesUrls?.[0] ?? '',
         }
       : {}),

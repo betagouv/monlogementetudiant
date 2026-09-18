@@ -135,7 +135,6 @@ export async function createOwner(overrides: Partial<OwnerInsert> & { userId?: s
     })
     .returning()
 
-  // Link user to owner if userId provided
   if (userId && row) {
     await db.update(user).set({ ownerId: row.id }).where(eq(user.id, userId))
   }
@@ -214,7 +213,6 @@ export async function createAccommodation(
     await db.update(accommodations).set(explicitAggregates).where(eq(accommodations.id, row.id))
   }
 
-  // Insert main address into accommodation_address table
   await db.insert(accommodationAddresses).values({
     accommodationId: row.id,
     isMain: true,

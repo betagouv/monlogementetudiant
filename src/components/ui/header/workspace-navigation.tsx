@@ -13,8 +13,16 @@ export const WorkspaceHeaderNavigation: FC<{
   canManageUsers?: boolean
   canManageResidences?: boolean
   canManageApplications?: boolean
+  hasApplicationScope?: boolean
   isAdmin?: boolean
-}> = ({ contactMode, canManageUsers = false, canManageResidences = false, canManageApplications = false, isAdmin = false }) => {
+}> = ({
+  contactMode,
+  canManageUsers = false,
+  canManageResidences = false,
+  canManageApplications = false,
+  hasApplicationScope = true,
+  isAdmin = false,
+}) => {
   const t = useTranslations('navigation.workspace')
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -42,7 +50,7 @@ export const WorkspaceHeaderNavigation: FC<{
         ]
       : []),
     // Les admins plateforme accèdent toujours aux Contacts (même si l'owner n'a pas encore choisi de mode).
-    ...((contactMode !== 'none' || isAdmin) && canManageApplications
+    ...((contactMode !== 'none' || isAdmin) && canManageApplications && hasApplicationScope
       ? [
           {
             isActive: pathname.startsWith('/bailleur/contacts'),

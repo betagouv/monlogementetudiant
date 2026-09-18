@@ -3,10 +3,11 @@
 import Button from '@codegouvfr/react-dsfr/Button'
 import { Tag } from '@codegouvfr/react-dsfr/Tag'
 import clsx from 'clsx'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { Controller, useFormContext } from 'react-hook-form'
 import toggleStyles from '~/components/shared/equipments-toggle.module.css'
-import { EQUIPMENTS } from '~/helpers/equipments'
+import { EQUIPMENTS, getEquipmentLabelKey } from '~/helpers/equipments'
 import { TCreateResidence } from '~/schemas/accommodations/create-residence'
 
 type Category = 'collective' | 'individual'
@@ -14,12 +15,11 @@ type Category = 'collective' | 'individual'
 const ENUM_FIELDS = ['bathroom', 'kitchenType'] as const
 const ENUM_OPTIONS = ['private', 'shared'] as const
 
-const categories: { key: Category; label: string }[] = [
-  { key: 'collective', label: 'Résidence' },
-  { key: 'individual', label: 'Logement' },
-]
+const CATEGORIES: Category[] = ['collective', 'individual']
 
 export const CreateResidenceEquipments = () => {
+  const t = useTranslations('bailleur.residences.details.equipments')
+  const tEquipments = useTranslations('accomodation.equipments')
   const { control } = useFormContext<TCreateResidence>()
   const [activeCategory, setActiveCategory] = useState<Category>('collective')
 
@@ -29,24 +29,24 @@ export const CreateResidenceEquipments = () => {
     <div className="fr-border-bottom">
       <div className="fr-p-2w fr-p-md-6w">
         <div className={toggleStyles.equipmentsHeader}>
-          <h3>Équipements</h3>
+          <h3>{t('title')}</h3>
           <div className={toggleStyles.equipmentsToggle}>
-            {categories.map((category) => (
+            {CATEGORIES.map((category) => (
               <Button
-                key={category.key}
+                key={category}
                 size="small"
                 className={clsx(
                   toggleStyles.equipmentsToggleButton,
-                  activeCategory === category.key && toggleStyles.equipmentsToggleButtonActive,
+                  activeCategory === category && toggleStyles.equipmentsToggleButtonActive,
                 )}
-                priority={activeCategory === category.key ? 'secondary' : 'tertiary'}
+                priority={activeCategory === category ? 'secondary' : 'tertiary'}
                 type="button"
                 onClick={(event) => {
                   event.preventDefault()
-                  setActiveCategory(category.key)
+                  setActiveCategory(category)
                 }}
               >
-                {category.label}
+                {tEquipments(`categories.${category}`)}
               </Button>
             ))}
           </div>
@@ -64,7 +64,7 @@ export const CreateResidenceEquipments = () => {
                 render={({ field }) => (
                   <>
                     {ENUM_OPTIONS.map((option) => {
-                      const label = typeof equipment.label === 'function' ? equipment.label(option) : equipment.label
+                      const label = tEquipments(`items.${getEquipmentLabelKey(equipment, option)}`)
                       const isSelected = field.value === option
 
                       return (
@@ -101,7 +101,7 @@ export const CreateResidenceEquipments = () => {
                     onClick: () => field.onChange(!field.value),
                   }}
                 >
-                  {typeof equipment.label === 'function' ? equipment.label(field.value as string) : equipment.label}
+                  {tEquipments(`items.${getEquipmentLabelKey(equipment, field.value)}`)}
                 </Tag>
               )}
             />

@@ -6,10 +6,10 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import clsx from 'clsx'
 import { useTranslations } from 'next-intl'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { createToast } from '~/components/ui/createToast'
-import { type TOwnerFeedbackSubmit, ZOwnerFeedbackSubmit } from '~/schemas/owner-feedback'
+import { createZOwnerFeedbackSubmit, OWNER_FEEDBACK_COMMENT_MAX_LENGTH, type TOwnerFeedbackSubmit } from '~/schemas/owner-feedback'
 import { useTRPC, useTRPCClient } from '~/server/trpc/client'
 import styles from './owner-feedback-banner.module.css'
 
@@ -18,6 +18,8 @@ const RATINGS = [1, 2, 3, 4, 5] as const
 
 export function OwnerFeedbackBanner() {
   const t = useTranslations('bailleur.feedback')
+  const tSchemas = useTranslations('schemas')
+  const feedbackSchema = useMemo(() => createZOwnerFeedbackSubmit(tSchemas), [tSchemas])
   const trpc = useTRPC()
   const trpcClient = useTRPCClient()
   const queryClient = useQueryClient()
@@ -37,7 +39,7 @@ export function OwnerFeedbackBanner() {
     watch,
     formState: { errors },
   } = useForm<TOwnerFeedbackSubmit>({
-    resolver: zodResolver(ZOwnerFeedbackSubmit),
+    resolver: zodResolver(feedbackSchema),
   })
 
   const selectedRating = watch('rating')
@@ -117,6 +119,7 @@ export function OwnerFeedbackBanner() {
             textArea
             nativeTextAreaProps={{
               rows: 2,
+              maxLength: OWNER_FEEDBACK_COMMENT_MAX_LENGTH,
               disabled: isBusy,
               ...register('comment'),
             }}

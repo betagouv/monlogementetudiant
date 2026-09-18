@@ -9,6 +9,7 @@ import Ecosystem from '@codegouvfr/react-dsfr/picto/Ecosystem'
 import School from '@codegouvfr/react-dsfr/picto/School'
 import { RadioButtons } from '@codegouvfr/react-dsfr/RadioButtons'
 import clsx from 'clsx'
+import { useTranslations } from 'next-intl'
 import { FC, ReactNode, useEffect } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { type HelpSimulatorFormData } from '~/components/helps-simulator/help-simulator-schema'
@@ -17,15 +18,17 @@ import styles from './help-simulator-step-1.module.css'
 
 type Status = HelpSimulatorFormData['status'][number]
 
-const STATUS_OPTIONS: { value: Status; label: string; illustration: ReactNode }[] = [
-  { value: 'lyceen', label: 'Lycéen', illustration: <Avatar width={56} height={56} /> },
-  { value: 'student', label: 'Étudiant', illustration: <Backpack width={56} height={56} /> },
-  { value: 'employed-student', label: 'Étudiant salarié', illustration: <Money width={56} height={56} /> },
-  { value: 'apprentice', label: 'Apprenti / Alternant', illustration: <Ecosystem width={56} height={56} /> },
-  { value: 'boursier-crous', label: 'Étudiant boursier du Crous', illustration: <School width={56} height={56} /> },
+const STATUS_OPTIONS: { value: Status; labelKey: string; illustration: ReactNode }[] = [
+  { value: 'lyceen', labelKey: 'lyceen', illustration: <Avatar width={56} height={56} /> },
+  { value: 'student', labelKey: 'student', illustration: <Backpack width={56} height={56} /> },
+  { value: 'employed-student', labelKey: 'employedStudent', illustration: <Money width={56} height={56} /> },
+  { value: 'apprentice', labelKey: 'apprentice', illustration: <Ecosystem width={56} height={56} /> },
+  { value: 'boursier-crous', labelKey: 'boursierCrous', illustration: <School width={56} height={56} /> },
 ]
 
 export const HelpSimulatorStep1: FC = () => {
+  const t = useTranslations('simulator.form.situation')
+  const tAnswers = useTranslations('simulator.form.answers')
   const {
     register,
     watch,
@@ -51,13 +54,13 @@ export const HelpSimulatorStep1: FC = () => {
 
   const scholarshipOptions = isLyceen
     ? [
-        { label: 'Oui, bourse de lycée', value: 'bourse-lycee' as const },
-        { label: 'Non', value: 'non' as const },
+        { label: t('scholarships.bourseLycee'), value: 'bourse-lycee' as const },
+        { label: tAnswers('no'), value: 'non' as const },
       ]
     : [
-        { label: 'Oui, bourse du CROUS', value: 'bourse-crous' as const },
-        { label: 'Oui, allocation spécifique annuelle pour étudiant en difficulté', value: 'allocation-speciale' as const },
-        { label: 'Non', value: 'non' as const },
+        { label: t('scholarships.bourseCrous'), value: 'bourse-crous' as const },
+        { label: t('scholarships.allocationSpeciale'), value: 'allocation-speciale' as const },
+        { label: tAnswers('no'), value: 'non' as const },
       ]
   const showLicence3Checkbox = status.length > 0 && !isLyceen
   const isMobilityCandidate = currentYear === 'terminale' || currentYear === 'licence3'
@@ -90,7 +93,7 @@ export const HelpSimulatorStep1: FC = () => {
   return (
     <>
       <Input
-        label={<RequiredLabel>Quel âge avez-vous ?</RequiredLabel>}
+        label={<RequiredLabel>{t('ageLabel')}</RequiredLabel>}
         state={errors.age ? 'error' : undefined}
         stateRelatedMessage={errors.age?.message}
         nativeInputProps={{
@@ -109,10 +112,10 @@ export const HelpSimulatorStep1: FC = () => {
         aria-invalid={errors.status ? true : undefined}
       >
         <legend className={styles.legend}>
-          <RequiredLabel>Quel est votre statut ? (plusieurs choix possibles)</RequiredLabel>
+          <RequiredLabel>{t('statusLegend')}</RequiredLabel>
         </legend>
         <div className={clsx(styles.grid, errors.status && styles.gridError)}>
-          {STATUS_OPTIONS.map(({ value, label, illustration }) => {
+          {STATUS_OPTIONS.map(({ value, labelKey, illustration }) => {
             const checked = status.includes(value)
             return (
               <label key={value} className={clsx(styles.option, checked && styles.optionChecked)}>
@@ -125,7 +128,7 @@ export const HelpSimulatorStep1: FC = () => {
                   className={styles.input}
                 />
                 <span className={styles.indicator} aria-hidden="true" />
-                <span className={styles.body}>{label}</span>
+                <span className={styles.body}>{t(`statuses.${labelKey}`)}</span>
                 <span className={styles.pictogram} aria-hidden="true">
                   {illustration}
                 </span>
@@ -145,7 +148,7 @@ export const HelpSimulatorStep1: FC = () => {
           className="fr-mt-2w fr-mb-2w"
           options={[
             {
-              label: 'Je suis actuellement en terminale',
+              label: t('terminale'),
               nativeInputProps: {
                 checked: currentYear === 'terminale',
                 onChange: (e) => handleCurrentYearChange('terminale', e.target.checked),
@@ -160,14 +163,14 @@ export const HelpSimulatorStep1: FC = () => {
           className="fr-mt-2w fr-mb-2w"
           options={[
             {
-              label: 'Je suis actuellement en 3ème année de licence',
+              label: t('licence3'),
               nativeInputProps: {
                 checked: currentYear === 'licence3',
                 onChange: (e) => handleCurrentYearChange('licence3', e.target.checked),
               },
             },
             {
-              label: 'Je suis étudiant international extra-communautaire',
+              label: t('internationalStudent'),
               nativeInputProps: {
                 checked: isInternationalStudent,
                 onChange: (e) => setValue('isInternationalStudent', e.target.checked),
@@ -179,7 +182,7 @@ export const HelpSimulatorStep1: FC = () => {
 
       {isMobilityCandidate && currentYear === 'licence3' && (
         <RadioButtons
-          legend={<RequiredLabel>Votre licence est-elle une licence professionnelle ?</RequiredLabel>}
+          legend={<RequiredLabel>{t('professionalLicenceLegend')}</RequiredLabel>}
           name="isProfessionalLicence"
           state={errors.isProfessionalLicence ? 'error' : undefined}
           stateRelatedMessage={errors.isProfessionalLicence?.message}
@@ -190,15 +193,15 @@ export const HelpSimulatorStep1: FC = () => {
           }}
           options={[
             {
-              label: 'Oui',
+              label: tAnswers('yes'),
               nativeInputProps: { ...register('isProfessionalLicence'), value: 'yes', 'aria-required': true },
             },
             {
-              label: 'Non',
+              label: tAnswers('no'),
               nativeInputProps: { ...register('isProfessionalLicence'), value: 'no', 'aria-required': true },
             },
             {
-              label: 'Je ne sais pas',
+              label: tAnswers('unknown'),
               nativeInputProps: { ...register('isProfessionalLicence'), value: 'unknown', 'aria-required': true },
             },
           ]}
@@ -209,9 +212,7 @@ export const HelpSimulatorStep1: FC = () => {
         <RadioButtons
           legend={
             <RequiredLabel>
-              {currentYear === 'terminale'
-                ? "L'année prochaine, allez-vous étudier dans une zone différente de votre lieu de résidence actuel ?"
-                : "L'année prochaine, allez-vous entrer en Master 1 dans une région différente de votre lieu de résidence actuel ?"}
+              {currentYear === 'terminale' ? t('changingRegionLegendTerminale') : t('changingRegionLegendLicence3')}
             </RequiredLabel>
           }
           name="changingRegion"
@@ -224,15 +225,15 @@ export const HelpSimulatorStep1: FC = () => {
           }}
           options={[
             {
-              label: currentYear === 'terminale' ? "Oui, je change de région ou d'académie" : 'Oui, je change de région',
+              label: currentYear === 'terminale' ? t('changingRegionYesTerminale') : t('changingRegionYesLicence3'),
               nativeInputProps: { ...register('changingRegion'), value: 'yes', 'aria-required': true },
             },
             {
-              label: 'Non',
+              label: tAnswers('no'),
               nativeInputProps: { ...register('changingRegion'), value: 'no', 'aria-required': true },
             },
             {
-              label: 'Je ne sais pas',
+              label: tAnswers('unknown'),
               nativeInputProps: { ...register('changingRegion'), value: 'unknown', 'aria-required': true },
             },
           ]}
@@ -241,7 +242,7 @@ export const HelpSimulatorStep1: FC = () => {
 
       {isMobilityCandidate && (
         <RadioButtons
-          legend={<RequiredLabel>Êtes-vous boursier ?</RequiredLabel>}
+          legend={<RequiredLabel>{t('scholarshipLegend')}</RequiredLabel>}
           name="scholarship"
           state={errors.scholarship ? 'error' : undefined}
           stateRelatedMessage={errors.scholarship?.message}

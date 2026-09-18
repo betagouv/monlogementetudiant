@@ -1,5 +1,4 @@
 import { eq } from 'drizzle-orm'
-import * as XLSX from 'xlsx'
 import { closeDb, db } from '~/server/db'
 import { accommodations } from '~/server/db/schema'
 import { mergeTypologies, type TypologyPatch } from '~/server/lib/typologies'
@@ -12,10 +11,11 @@ import {
   CATEGORY_TO_TYPE,
   type CrousResidenceRow,
   getDuplicatedUairnes,
-  getSheet,
+  getSheetRows,
   loadDbResidences,
   mapTypologie,
   normalizeText,
+  readWorkbook,
   type TypoCategory,
 } from '../lib/crous-helpers'
 
@@ -50,10 +50,10 @@ function isColivingTypology(row: CrousTypologyRow): boolean {
   return typologie.endsWith('+') || name.includes('COLOCATION')
 }
 
-function loadExpectedTypologies(filePath: string, limit?: number): ExpectedResidenceTypologies[] {
-  const workbook = XLSX.readFile(filePath)
-  const residences = XLSX.utils.sheet_to_json<CrousResidenceRow>(getSheet(workbook, 'Liste residences', 0))
-  const typologies = XLSX.utils.sheet_to_json<CrousTypologyRow>(getSheet(workbook, 'Liste types de lgt', 1))
+async function loadExpectedTypologies(filePath: string, limit?: number): Promise<ExpectedResidenceTypologies[]> {
+  const workbook = await readWorkbook(filePath)
+  const residences = getSheetRows<CrousResidenceRow>(workbook, 'Liste residences', 0)
+  const typologies = getSheetRows<CrousTypologyRow>(workbook, 'Liste types de lgt', 1)
   const duplicatedUairnes = getDuplicatedUairnes(residences)
 
   const countsByResidence = new Map<string, Map<TypoCategory, number>>()
@@ -127,7 +127,7 @@ export async function importCrousTypologies(filePath: string, options: Options) 
 
   try {
     const owner = options.owner ?? 'crous'
-    const expectedResidences = loadExpectedTypologies(filePath, options.limit)
+    const expectedResidences = await loadExpectedTypologies(filePath, options.limit)
     const dbResidences = await loadDbResidences(owner)
     const { bySourceId, byName, bySlug } = buildResidenceLookup(dbResidences)
 

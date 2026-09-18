@@ -52,6 +52,7 @@ export async function logTrackingEvent({ dedupeSeconds, ...values }: LogTracking
 export const TRACKING_DEDUPE = {
   SEARCH_SECONDS: 60,
   VIEW_SECONDS: 60 * 60 * 24,
+  CONSULT_OFFER_SECONDS: 60,
 } as const
 
 /**
@@ -85,7 +86,7 @@ export async function logAccommodationView(params: {
         accommodationAddresses,
         and(eq(accommodationAddresses.accommodationId, accommodations.id), eq(accommodationAddresses.isMain, true)),
       )
-      .where(where)
+      .where(and(where, eq(accommodations.published, true)))
       .limit(1)
     if (!accom) return
 
