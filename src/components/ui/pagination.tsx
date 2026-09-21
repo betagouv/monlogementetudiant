@@ -3,6 +3,7 @@
 import { type RegisteredLinkProps } from '@codegouvfr/react-dsfr/link'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { type CSSProperties, memo } from 'react'
 import styles from './pagination.module.css'
 
@@ -53,6 +54,7 @@ const getPaginationParts = ({ count, defaultPage }: { count: number; defaultPage
 export const Pagination = memo(function Pagination(props: PaginationProps) {
   const { id, className, count, defaultPage = 1, showFirstLast = true, getPageLinkProps, classes = {}, style } = props
 
+  const t = useTranslations('pagination')
   const router = useRouter()
 
   const parts = getPaginationParts({ count, defaultPage })
@@ -77,7 +79,7 @@ export const Pagination = memo(function Pagination(props: PaginationProps) {
       id={id}
       role="navigation"
       className={'fr-pagination' + (classes.root ? ` ${classes.root}` : '') + (className ? ` ${className}` : '')}
-      aria-label="Pagination"
+      aria-label={t('label')}
       style={style}
     >
       <ul className={'fr-pagination__list' + (classes.list ? ` ${classes.list}` : '')}>
@@ -85,11 +87,11 @@ export const Pagination = memo(function Pagination(props: PaginationProps) {
           <li>
             {isFirstPage ? (
               <a className="fr-pagination__link fr-pagination__link--first" aria-disabled role="link">
-                Première page
+                {t('first')}
               </a>
             ) : (
               <Link className="fr-pagination__link fr-pagination__link--first" {...getPageLinkProps(1)}>
-                Première page
+                {t('first')}
               </Link>
             )}
           </li>
@@ -97,14 +99,14 @@ export const Pagination = memo(function Pagination(props: PaginationProps) {
         <li>
           {isFirstPage ? (
             <a className="fr-pagination__link fr-pagination__link--prev fr-pagination__link--lg-label" aria-disabled role="link">
-              Page précédente
+              {t('previous')}
             </a>
           ) : (
             <Link
               className="fr-pagination__link fr-pagination__link--prev fr-pagination__link--lg-label"
               {...getPageLinkProps(defaultPage - 1)}
             >
-              Page précédente
+              {t('previous')}
             </Link>
           )}
         </li>
@@ -120,7 +122,7 @@ export const Pagination = memo(function Pagination(props: PaginationProps) {
               <Link
                 className={'fr-pagination__link' + (classes.link ? ` ${classes.link}` : '')}
                 aria-current={part.active ? true : undefined}
-                title={`Page ${part.number}`}
+                title={t('page', { number: part.number })}
                 {...getPageLinkProps(part.number)}
               >
                 {part.number}
@@ -131,14 +133,14 @@ export const Pagination = memo(function Pagination(props: PaginationProps) {
         <li>
           {isLastPage ? (
             <a className="fr-pagination__link fr-pagination__link--next fr-pagination__link--lg-label" aria-disabled role="link">
-              Page suivante
+              {t('next')}
             </a>
           ) : (
             <Link
               className="fr-pagination__link fr-pagination__link--next fr-pagination__link--lg-label"
               {...getPageLinkProps(defaultPage + 1)}
             >
-              Page suivante
+              {t('next')}
             </Link>
           )}
         </li>
@@ -146,11 +148,11 @@ export const Pagination = memo(function Pagination(props: PaginationProps) {
           <li>
             {isLastPage ? (
               <a className="fr-pagination__link fr-pagination__link--last" aria-disabled>
-                Dernière page
+                {t('last')}
               </a>
             ) : (
               <Link className="fr-pagination__link fr-pagination__link--last" {...getPageLinkProps(count)}>
-                Dernière page
+                {t('last')}
               </Link>
             )}
           </li>
@@ -161,6 +163,7 @@ export const Pagination = memo(function Pagination(props: PaginationProps) {
 })
 
 function EllipsisSelect({ from, to, onSelect }: { from: number; to: number; onSelect: (page: number) => void }) {
+  const t = useTranslations('pagination')
   const pages: number[] = []
   for (let page = from; page <= to; page++) {
     pages.push(page)
@@ -173,7 +176,7 @@ function EllipsisSelect({ from, to, onSelect }: { from: number; to: number; onSe
       </span>
       <select
         className={styles.select}
-        aria-label={`Aller à une page entre ${from} et ${to}`}
+        aria-label={t('jumpTo', { from, to })}
         value=""
         onChange={(event) => {
           const value = Number(event.target.value)

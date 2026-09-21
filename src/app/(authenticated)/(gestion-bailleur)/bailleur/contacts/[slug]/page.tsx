@@ -10,7 +10,6 @@ import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { getBailleurContext } from '~/server/bailleur/get-bailleur-context'
 import { getQueryClient, trpc } from '~/server/trpc/server'
 import { buildHref } from '~/utils/preserve-query-params'
-import { sPluriel } from '~/utils/sPluriel'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -51,7 +50,7 @@ export default async function ResidenceContactsPage({ params, searchParams }: Pr
           <h1 className="fr-mb-0 fr-flex fr-align-items-center fr-flex-gap-2v">
             {t('residenceTitle', { name: residence.name })}
             <Badge severity="success" noIcon as="span">
-              {t('availability', { count: residence.disponibilites, s: sPluriel(residence.disponibilites) })}
+              {t('availabilityCount', { count: residence.disponibilites })}
             </Badge>
           </h1>
           <Button

@@ -1,4 +1,5 @@
 import { notFound, redirect } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
 
 interface VerificationPageProps {
   searchParams: Promise<{ sesame?: string; validation_token?: string; error?: string }>
@@ -8,9 +9,10 @@ export default async function VerificationPage({ searchParams }: VerificationPag
   const { sesame, validation_token, error } = await searchParams
 
   if (error) {
+    const t = await getTranslations('verification')
     return (
       <div>
-        <p>Erreur de vérification</p>
+        <p>{t('genericError')}</p>
       </div>
     )
   }

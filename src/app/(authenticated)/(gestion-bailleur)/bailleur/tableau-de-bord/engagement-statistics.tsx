@@ -4,21 +4,16 @@ import { Input } from '@codegouvfr/react-dsfr/Input'
 import Select from '@codegouvfr/react-dsfr/Select'
 import clsx from 'clsx'
 import Link from 'next/link'
-import { useTranslations } from 'next-intl'
+import { useFormatter, useTranslations } from 'next-intl'
 import { parseAsInteger, parseAsString, parseAsStringLiteral, useQueryStates } from 'nuqs'
 import type { ReactNode } from 'react'
 import { ExportStatisticsModal } from '~/components/bailleur/statistics/export-statistics-modal'
 import { Pagination } from '~/components/ui/pagination'
 import { type CitySort, type ResidenceSort, useOwnerStatistics } from '~/hooks/use-owner-statistics'
 import { buildHref } from '~/utils/preserve-query-params'
-import { sPluriel } from '~/utils/sPluriel'
 import styles from './engagement-statistics.module.css'
 
 const PERIODS = ['7d', '30d', '90d'] as const
-
-function formatNumber(n: number): string {
-  return new Intl.NumberFormat('fr-FR').format(n)
-}
 
 function formatDelta(delta: number | null | undefined): { label: string; positive: boolean } | null {
   if (delta == null) return null
@@ -166,14 +161,12 @@ export function EngagementStatistics({ ownerId }: EngagementStatisticsProps) {
                     <span className="fr-text--bold">{c.name}</span>
                     <div className="fr-flex fr-flex-wrap fr-flex-gap-3v fr-text--xs fr-text-mention--grey fr-mb-0">
                       <span>
-                        <span className={clsx(styles.metadataIcon, 'ri-search-line')} aria-hidden /> {formatNumber(c.nbSearches)}{' '}
-                        {t('cities.search')}
-                        {sPluriel(c.nbSearches)}
+                        <span className={clsx(styles.metadataIcon, 'ri-search-line')} aria-hidden />{' '}
+                        {t('cities.searchCount', { count: c.nbSearches })}
                       </span>
                       <span>
-                        <span className={clsx(styles.metadataIcon, 'ri-notification-3-line')} aria-hidden /> {formatNumber(c.nbAlerts)}{' '}
-                        {t('cities.alert')}
-                        {sPluriel(c.nbAlerts)}
+                        <span className={clsx(styles.metadataIcon, 'ri-notification-3-line')} aria-hidden />{' '}
+                        {t('cities.alertCount', { count: c.nbAlerts })}
                       </span>
                     </div>
                   </li>
@@ -251,19 +244,16 @@ export function EngagementStatistics({ ownerId }: EngagementStatisticsProps) {
                     )}
                     <div className="fr-flex fr-flex-wrap fr-flex-gap-3v fr-text--xs fr-text-mention--grey fr-mt-1w fr-mb-0">
                       <span>
-                        <span className={clsx(styles.metadataIcon, 'ri-eye-line')} aria-hidden /> {formatNumber(row.nbViews)}{' '}
-                        {t('residences.view')}
-                        {sPluriel(row.nbViews)}
+                        <span className={clsx(styles.metadataIcon, 'ri-eye-line')} aria-hidden />{' '}
+                        {t('residences.viewCount', { count: row.nbViews })}
                       </span>
                       <span>
-                        <span className={clsx(styles.metadataIcon, 'ri-heart-line')} aria-hidden /> {formatNumber(row.nbFavorites)}{' '}
-                        {t('residences.favorite')}
-                        {sPluriel(row.nbFavorites)}
+                        <span className={clsx(styles.metadataIcon, 'ri-heart-line')} aria-hidden />{' '}
+                        {t('residences.favoriteCount', { count: row.nbFavorites })}
                       </span>
                       <span>
                         <span className={clsx(styles.metadataIcon, 'ri-external-link-line')} aria-hidden />{' '}
-                        {formatNumber(row.nbConsultOffer)} {t('residences.redirection')}
-                        {sPluriel(row.nbConsultOffer)}
+                        {t('residences.redirectionCount', { count: row.nbConsultOffer })}
                       </span>
                     </div>
                   </li>
@@ -305,6 +295,7 @@ function KpiCard({
   description: ReactNode
   className?: string
 }) {
+  const format = useFormatter()
   return (
     <div className={clsx('fr-flex fr-direction-column fr-flex-gap-4v fr-border fr-p-4w', className)}>
       <div className="fr-flex fr-justify-content-space-between fr-align-items-center">
@@ -316,7 +307,7 @@ function KpiCard({
         )}
       </div>
       <div>
-        <span className={styles.kpiValue}>{value === null ? '—' : formatNumber(value)}</span>
+        <span className={styles.kpiValue}>{value === null ? '—' : format.number(value)}</span>
         <p className="fr-text--xs fr-mb-0">{description}</p>
       </div>
     </div>

@@ -1,3 +1,4 @@
+import { headers } from 'next/headers'
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages, getTranslations } from 'next-intl/server'
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
@@ -44,13 +45,15 @@ export default async function RootLayout({
 }>) {
   const locale = await getLocale()
   const messages = await getMessages()
+  // Nonce posé par `src/proxy.ts`, repris par les scripts injectés hors de Next.
+  const nonce = (await headers()).get('x-nonce') ?? undefined
 
   return (
     <html {...getHtmlAttributes({ lang: locale })} style={{ overflowX: 'hidden' }}>
       <head>
-        <DsfrHead preloadFonts={['Marianne-Regular', 'Marianne-Medium', 'Marianne-Bold']} />
+        <DsfrHead preloadFonts={['Marianne-Regular', 'Marianne-Medium', 'Marianne-Bold']} nonce={nonce} />
         <Suspense fallback={null}>
-          <Matomo />
+          <Matomo nonce={nonce} />
         </Suspense>
         <JsonLd data={[buildOrganizationSchema(), buildWebSiteSchema()]} />
       </head>

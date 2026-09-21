@@ -19,7 +19,7 @@ import { baseProcedure, createTRPCRouter, userProcedure } from '../init'
 const buildConfirmationUrl = (contactRequestId: string) =>
   `${env.BASE_URL}/api/contacts/confirmer?token=${encodeURIComponent(createClaimToken(contactRequestId, 'confirm'))}`
 
-/** Résout une résidence par son slug (le slug reste l'identifiant public des URLs). */
+/** Résout une résidence **publiée** par son slug (le slug reste l'identifiant public des URLs). */
 const findAccommodationBySlug = async (slug: string) => {
   const [accommodation] = await db
     .select({
@@ -27,9 +27,10 @@ const findAccommodationBySlug = async (slug: string) => {
       name: accommodations.name,
       ownerId: accommodations.ownerId,
       nbAvailableApartments: accommodations.nbAvailableApartments,
+      acceptsApplications: accommodations.acceptsApplications,
     })
     .from(accommodations)
-    .where(eq(accommodations.slug, slug))
+    .where(and(eq(accommodations.slug, slug), eq(accommodations.published, true)))
     .limit(1)
 
   if (!accommodation) {
@@ -89,6 +90,10 @@ export const contactsRouter = createTRPCRouter({
         throw new TRPCError({ code: 'BAD_REQUEST', message: "Ce gestionnaire n'accepte pas les demandes de contact" })
       }
 
+      if (!accommodation.acceptsApplications) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: "Cette résidence n'accepte pas les demandes de contact" })
+      }
+
       if (!accommodation.nbAvailableApartments || accommodation.nbAvailableApartments <= 0) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: "Ce logement n'a pas de disponibilités" })
       }
@@ -97,6 +102,8 @@ export const contactsRouter = createTRPCRouter({
       await assertContactRequestRateLimit(ipHash)
 
       const userId = ctx.session?.user.id ?? null
+      // Connecté : seule l'adresse du compte fait foi, celle du formulaire est ignorée.
+      const verifiedEmail = userId ? ctx.session!.user.email.trim().toLowerCase() : input.email
 
       const [request] = await db
         .insert(contactRequests)
@@ -105,7 +112,7 @@ export const contactsRouter = createTRPCRouter({
           accommodationId: accommodation.id,
           firstname: input.firstname,
           lastname: input.lastname,
-          email: input.email,
+          email: verifiedEmail,
           phone: input.phone || null,
           birthdate: input.birthdate,
           scholarshipStatus: input.scholarshipStatus,

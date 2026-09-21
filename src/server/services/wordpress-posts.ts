@@ -1,5 +1,5 @@
-import { sanitize } from 'isomorphic-dompurify'
 import { z } from 'zod'
+import DOMPurify from '~/utils/dompurify'
 
 const WP_POSTS_API_URL = 'https://info.monlogementetudiant.beta.gouv.fr/wp-json/wp/v2/posts'
 const DEFAULT_POST_LIMIT = 3
@@ -36,7 +36,7 @@ export type WordpressPost = {
 
 function sanitizeText(html: string): string {
   const cleaned = html.replace(/\[.*?\]/g, '')
-  return sanitize(cleaned, { ALLOWED_TAGS: [] })
+  return DOMPurify.sanitize(cleaned, { ALLOWED_TAGS: [] })
     .replace(/&nbsp;/g, '\u00a0')
     .replace(/&#160;/g, '\u00a0')
     .trim()

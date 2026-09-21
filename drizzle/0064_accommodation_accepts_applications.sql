@@ -1,0 +1,1 @@
+ALTER TABLE "accommodation" ADD COLUMN "accepts_applications" boolean DEFAULT true NOT NULL;

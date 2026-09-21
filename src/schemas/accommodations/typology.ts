@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { frSchemaTranslator, type TSchemaTranslator } from '~/schemas/schema-translator'
 
 // Typologies — le `type` EST le suffixe (t1, t1_bis, …), aligné sur l'enum DB
 // `accommodation_typology_type`, sur les clés de l'objet `typologies` exposé en réponse,
@@ -23,59 +24,81 @@ export const getTypologyLabel = (type: string): string => TYPOLOGIES.find((t) =>
 // Les colonnes numériques de `accommodation_typology` sont toutes nullables : une typologie
 // peut être incomplète (import CSV partiel, saisie en plusieurs fois). Les bornes ne
 // s'appliquent donc qu'aux valeurs effectivement renseignées, jamais à null/undefined.
-export const ZTypology = z
-  .object({
-    type: z.enum(TYPOLOGY_TYPES, { error: 'Veuillez sélectionner un type de logement' }),
-    priceMin: z.number({ error: 'Le loyer minimum doit être un nombre' }).min(0, 'Le loyer minimum doit être positif').nullish(),
-    priceMax: z.number({ error: 'Le loyer maximum doit être un nombre' }).min(0, 'Le loyer maximum doit être positif').nullish(),
-    superficieMin: z
-      .number({ error: 'La superficie minimum doit être un nombre' })
-      .min(1, 'La superficie minimum doit être au moins 1 m²')
-      .nullish(),
-    superficieMax: z
-      .number({ error: 'La superficie maximum doit être un nombre' })
-      .min(1, 'La superficie maximum doit être au moins 1 m²')
-      .nullish(),
-    colocation: z.boolean(),
-    nbTotal: z.number({ error: 'Le nombre total doit être un nombre' }).min(1, 'Le nombre total doit être au moins 1').nullish(),
-    nbAvailable: z.number({ error: 'Le nombre disponible doit être un nombre' }).min(0, 'Le nombre disponible doit être positif').nullish(),
-  })
-  .superRefine((data, ctx) => {
-    if (data.priceMin != null && data.priceMax != null && data.priceMin > data.priceMax) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Le loyer minimum ne peut pas être supérieur au loyer maximum',
-        path: ['priceMin'],
-      })
-    }
-    if (data.superficieMin != null && data.superficieMax != null && data.superficieMin > data.superficieMax) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'La superficie minimum ne peut pas être supérieure à la superficie maximum',
-        path: ['superficieMin'],
-      })
-    }
-    if (data.nbAvailable != null && data.nbTotal != null && data.nbAvailable > data.nbTotal) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: `Le nombre de logements disponibles ne peut pas être supérieur au nombre total (${data.nbTotal})`,
-        path: ['nbAvailable'],
-      })
-    }
-  })
+export const createZTypology = (t: TSchemaTranslator = frSchemaTranslator) =>
+  z
+    .object({
+      type: z.enum(TYPOLOGY_TYPES, { error: t('errors.typologyTypeRequired') }),
+      priceMin: z
+        .number({ error: t('errors.priceMinNumber') })
+        .min(0, t('errors.priceMinPositive'))
+        .nullish(),
+      priceMax: z
+        .number({ error: t('errors.priceMaxNumber') })
+        .min(0, t('errors.priceMaxPositive'))
+        .nullish(),
+      superficieMin: z
+        .number({ error: t('errors.superficieMinNumber') })
+        .min(1, t('errors.superficieMinAtLeastOne'))
+        .nullish(),
+      superficieMax: z
+        .number({ error: t('errors.superficieMaxNumber') })
+        .min(1, t('errors.superficieMaxAtLeastOne'))
+        .nullish(),
+      colocation: z.boolean(),
+      nbTotal: z
+        .number({ error: t('errors.nbTotalNumber') })
+        .min(1, t('errors.nbTotalAtLeastOne'))
+        .nullish(),
+      nbAvailable: z
+        .number({ error: t('errors.nbAvailableNumber') })
+        .min(0, t('errors.nbAvailablePositive'))
+        .nullish(),
+    })
+    .superRefine((data, ctx) => {
+      if (data.priceMin != null && data.priceMax != null && data.priceMin > data.priceMax) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: t('errors.priceMinGreaterThanMax'),
+          path: ['priceMin'],
+        })
+      }
+      if (data.superficieMin != null && data.superficieMax != null && data.superficieMin > data.superficieMax) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: t('errors.superficieMinGreaterThanMax'),
+          path: ['superficieMin'],
+        })
+      }
+      if (data.nbAvailable != null && data.nbTotal != null && data.nbAvailable > data.nbTotal) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: t('errors.nbAvailableGreaterThanTotal', { total: data.nbTotal }),
+          path: ['nbAvailable'],
+        })
+      }
+    })
+
+export const ZTypology = createZTypology()
 
 export type TTypology = z.infer<typeof ZTypology>
 
 /** Validate a typologies array: at least one, and no duplicate type. */
-export const ZTypologies = z
-  .array(ZTypology)
-  .min(1, 'Au moins un type de logement est requis')
-  .superRefine((typologies, ctx) => {
-    const seen = new Set<string>()
-    typologies.forEach((t, i) => {
-      if (seen.has(t.type)) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, message: `Le type "${getTypologyLabel(t.type)}" est déjà utilisé`, path: [i, 'type'] })
-      }
-      seen.add(t.type)
+export const createZTypologies = (t: TSchemaTranslator = frSchemaTranslator) =>
+  z
+    .array(createZTypology(t))
+    .min(1, t('errors.typologiesRequired'))
+    .superRefine((typologies, ctx) => {
+      const seen = new Set<string>()
+      typologies.forEach((typology, i) => {
+        if (seen.has(typology.type)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: t('errors.typologyDuplicate', { typology: t(`typologies.${typology.type}`) }),
+            path: [i, 'type'],
+          })
+        }
+        seen.add(typology.type)
+      })
     })
-  })
+
+export const ZTypologies = createZTypologies()

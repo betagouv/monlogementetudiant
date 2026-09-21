@@ -30,9 +30,8 @@ const DOSSIER_FACILE_COUNT = sql<number>`(
 /**
  * Candidatures réellement visibles du gestionnaire, tous canaux confondus.
  *
- * Les prédicats viennent du module de visibilité plutôt que d'être réécrits ici : la première
- * version de ce compteur ne testait que la fenêtre de rétention et comptait donc des demandes
- * visiteur non confirmées, qu'aucun gestionnaire ne voit.
+ * Les prédicats viennent du module de visibilité plutôt que d'être réécrits ici : la fenêtre de
+ * rétention seule compterait des demandes visiteur non confirmées, qu'aucun gestionnaire ne voit.
  */
 const activeCountSql = () => sql<number>`(
   (select count(*) from ${contactRequests}

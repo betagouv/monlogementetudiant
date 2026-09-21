@@ -62,7 +62,7 @@ export default async function TableauDeBordPage({ searchParams }: TableauDeBordP
               <Image
                 className={styles.avatarYasmine}
                 src={avatarYasmine.src}
-                alt="Logo Yasmine"
+                alt={t('dashboard.testimonial.yasmineAltText')}
                 priority
                 quality={100}
                 width={56}
@@ -90,7 +90,7 @@ export default async function TableauDeBordPage({ searchParams }: TableauDeBordP
                 <span className="fr-hidden fr-unhidden-md ri-question-line" />
                 <div className="fr-flex fr-direction-column fr-flex-gap-2v">
                   <span className="fr-text--bold">{t('dashboard.helpSection.faq.title')}</span>
-                  <Link className="fr-link" href={buildHref('/bailleur/centre-d-aide', awaitedSearchParams)}>
+                  <Link className="fr-link fr-align-self-start" href={buildHref('/bailleur/centre-d-aide', awaitedSearchParams)}>
                     {t('dashboard.helpSection.faq.link')}
                   </Link>
                 </div>
@@ -113,7 +113,7 @@ export default async function TableauDeBordPage({ searchParams }: TableauDeBordP
           <div>
             <span className="fr-h3 fr-text--bold">{t('dashboard.priorityActions.title')}</span>
             <div className={styles.actionsGrid}>
-              {ctx.owner.contactMode === EOwnerContactMode.NONE && ctx.hasPermission('manage_applications') && (
+              {ctx.owner.contactMode === EOwnerContactMode.NONE && ctx.isAdministrator && (
                 <div className={styles.actionCard}>
                   <div className={styles.actionHeader}>
                     <Link className="fr-link fr-link--no-underline" href={buildHref('/bailleur/contacts', awaitedSearchParams)}>

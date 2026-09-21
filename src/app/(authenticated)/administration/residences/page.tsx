@@ -10,6 +10,7 @@ import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
 import { useDebounce } from 'use-debounce'
 import { Pagination } from '~/components/ui/pagination'
 import { useTRPC } from '~/server/trpc/client'
+import { buildHref } from '~/utils/preserve-query-params'
 import styles from '../administration.module.css'
 
 type ResidenceRow = {
@@ -21,6 +22,7 @@ type ResidenceRow = {
   published: boolean
   nbTotalApartments: number | null
   nbAvailableApartments: number
+  ownerId: number | null
   ownerName: string
 }
 
@@ -65,7 +67,11 @@ const columns: ColumnDef<ResidenceRow, unknown>[] = [
         >
           Voir
         </Button>
-        <Button priority="tertiary" size="small" linkProps={{ href: `/bailleur/residences/${row.original.slug}` }}>
+        <Button
+          priority="tertiary"
+          size="small"
+          linkProps={{ href: buildHref(`/bailleur/residences/${row.original.slug}`, null, { ownerId: row.original.ownerId }) }}
+        >
           Modifier
         </Button>
       </div>

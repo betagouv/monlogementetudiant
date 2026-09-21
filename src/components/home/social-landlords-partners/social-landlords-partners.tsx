@@ -18,22 +18,22 @@ export const SocialLandlordsPartnersSection = async () => {
   const t = await getTranslations()
   const tHome = await getTranslations('home')
   const logos = [
-    { src: arpej, alt: 'Logo Arpej' },
-    { src: afev, alt: 'Logo Afev' },
-    { src: espacil, alt: 'Logo Espacil' },
-    { src: fachabitat, alt: 'Logo Fac Habitat' },
-    { src: alteal, alt: 'Logo Alteal' },
-    { src: opal, alt: 'Logo Opal' },
-    { src: studefi, alt: 'Logo Studefi' },
-    { src: mgel, alt: 'Logo Mgel' },
+    { src: arpej, name: 'Arpej' },
+    { src: afev, name: 'Afev' },
+    { src: espacil, name: 'Espacil' },
+    { src: fachabitat, name: 'Fac Habitat' },
+    { src: alteal, name: 'Alteal' },
+    { src: opal, name: 'Opal' },
+    { src: studefi, name: 'Studefi' },
+    { src: mgel, name: 'Mgel' },
   ]
 
   return (
     <section className={styles.partnersSection}>
       <div className={styles.partnersLogos}>
         {logos.map((logo) => (
-          <div key={logo.alt} className={styles.partnerLogoItem}>
-            <Image src={logo.src} width={200} height={90} alt={logo.alt} className={styles.partnerLogoImage} />
+          <div key={logo.name} className={styles.partnerLogoItem}>
+            <Image src={logo.src} width={200} height={90} alt={tHome('logoAlt', { name: logo.name })} className={styles.partnerLogoImage} />
           </div>
         ))}
       </div>

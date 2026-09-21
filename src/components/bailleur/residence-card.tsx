@@ -22,6 +22,7 @@ type ResidenceCardProps = {
 
 export const ResidenceCard: FC<ResidenceCardProps> = ({ accomodation, href }) => {
   const t = useTranslations('findAccomodation.card')
+  const tList = useTranslations('bailleur.residences')
   const { classes } = useStyles()
   const { city, imagesUrls, name, nbTotalApartments, postalCode, published } = accomodation
   const accommodationsTypes = accomodation.nbColivingApartments ? [t('individual'), t('colocation')] : [t('individual')]
@@ -36,14 +37,14 @@ export const ResidenceCard: FC<ResidenceCardProps> = ({ accomodation, href }) =>
     ? {
         badge: (
           <Badge severity="success" noIcon as="span">
-            Publiée
+            {tList('details.published')}
           </Badge>
         ),
       }
     : {
         badge: (
           <Badge severity="error" noIcon as="span">
-            Dépubliée
+            {tList('details.unpublished')}
           </Badge>
         ),
       }
@@ -65,12 +66,16 @@ export const ResidenceCard: FC<ResidenceCardProps> = ({ accomodation, href }) =>
         <>
           <span className={clsx('ri-group-line', classes.description)}>{accommodationsTypes.join(' • ')}</span>
           <br />
-          {nbTotalApartments && <span className={clsx('ri-community-line', classes.description)}>{`${nbTotalApartments} logements`}</span>}
+          {nbTotalApartments && (
+            <span className={clsx('ri-community-line', classes.description)}>
+              {tList('list.housingCount', { count: nbTotalApartments })}
+            </span>
+          )}
         </>
       }
       footer={
         <Button size="small" priority="secondary" iconId="ri-pencil-line" linkProps={{ href: redirectUri }}>
-          Éditer la résidence
+          {tList('list.editResidence')}
         </Button>
       }
       start={

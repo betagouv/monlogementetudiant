@@ -6,6 +6,9 @@ export const ACTION_LABELS: Record<string, string> = {
   'accommodation.unpublished': 'Résidence dépubliée',
   'owner.created': 'Gestionnaire créé',
   'owner.contact_mode_updated': 'Mode de candidatures modifié',
+  'owner.moderation_managers_updated': 'Droits de modération modifiés',
+  'owner.user_application_scope_updated': 'Périmètre des candidatures modifié',
+  'owner.application_residences_updated': 'Résidences ouvertes aux candidatures modifiées',
 }
 
 export const ACTION_ICONS: Record<string, string> = {
@@ -16,6 +19,9 @@ export const ACTION_ICONS: Record<string, string> = {
   'accommodation.unpublished': 'fr-icon-close-circle-line',
   'owner.created': 'fr-icon-building-line',
   'owner.contact_mode_updated': 'fr-icon-mail-line',
+  'owner.moderation_managers_updated': 'fr-icon-team-line',
+  'owner.user_application_scope_updated': 'fr-icon-building-line',
+  'owner.application_residences_updated': 'fr-icon-building-line',
 }
 
 export const ACTION_COLORS: Record<string, string> = {
@@ -26,6 +32,9 @@ export const ACTION_COLORS: Record<string, string> = {
   'accommodation.unpublished': 'var(--background-flat-error)',
   'owner.created': 'var(--background-flat-warning)',
   'owner.contact_mode_updated': 'var(--background-flat-purple-glycine)',
+  'owner.moderation_managers_updated': 'var(--background-flat-purple-glycine)',
+  'owner.user_application_scope_updated': 'var(--background-flat-blue-ecume)',
+  'owner.application_residences_updated': 'var(--background-flat-blue-ecume)',
 }
 
 export const ALL_ACTIONS = Object.keys(ACTION_LABELS)

@@ -2,6 +2,7 @@
 
 import { useDraggable, useDroppable } from '@dnd-kit/core'
 import clsx from 'clsx'
+import { useTranslations } from 'next-intl'
 import type { CSSProperties } from 'react'
 import { CONTACT_STATUS_CONFIG, EContactStatus } from '~/enums/contact-status'
 import { ContactCard, type ContactItem } from './contact-card'
@@ -42,6 +43,7 @@ interface Props {
 }
 
 export const ContactColumn = ({ status, items, slug, isEntry = false }: Props) => {
+  const t = useTranslations('bailleur.contacts.status')
   const { setNodeRef, isOver } = useDroppable({ id: status })
   const config = CONTACT_STATUS_CONFIG[status]
 
@@ -54,7 +56,7 @@ export const ContactColumn = ({ status, items, slug, isEntry = false }: Props) =
           aria-hidden="true"
         />
         <div className="fr-flex fr-flex-gap-2v">
-          <span className="fr-text--lg fr-text--bold fr-mb-0">{config.label}</span>({items.length})
+          <span className="fr-text--lg fr-text--bold fr-mb-0">{t(status)}</span>({items.length})
         </div>
       </div>
       <div

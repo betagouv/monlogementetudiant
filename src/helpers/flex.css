@@ -22,6 +22,10 @@
   align-self: stretch;
 }
 
+.fr-align-self-start {
+  align-self: start;
+}
+
 .fr-align-items-center {
   align-items: center;
 }

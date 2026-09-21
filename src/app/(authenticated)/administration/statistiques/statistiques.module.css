@@ -18,6 +18,8 @@
   font-size: 0.8125rem;
   cursor: pointer;
   transition: all 0.15s;
+  --hover: var(--background-default-grey-hover);
+  --active: var(--background-default-grey-active);
 }
 
 .dateRangePreset:hover {
@@ -27,8 +29,10 @@
 .dateRangePresetActive {
   composes: dateRangePreset;
   background: var(--background-action-high-blue-france);
-  color: white;
+  color: var(--text-inverted-blue-france);
   border-color: var(--background-action-high-blue-france);
+  --hover: var(--background-action-high-blue-france-hover);
+  --active: var(--background-action-high-blue-france-active);
 }
 
 .dateInputs {

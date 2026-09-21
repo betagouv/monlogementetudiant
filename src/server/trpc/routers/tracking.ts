@@ -29,9 +29,9 @@ export const trackingRouter = createTRPCRouter({
 
   logAccommodationView: baseProcedure
     .input(
+      // Pas de `referer` : non exploité, et susceptible de contenir des données personnelles.
       z.object({
         accommodationId: z.number().int().positive(),
-        referer: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -40,7 +40,6 @@ export const trackingRouter = createTRPCRouter({
         accommodationId: input.accommodationId,
         userId: ctx.session?.user.id,
         sessionId,
-        metadata: input.referer ? { referer: input.referer } : undefined,
       })
     }),
 
@@ -56,7 +55,7 @@ export const trackingRouter = createTRPCRouter({
         accommodationAddresses,
         and(eq(accommodationAddresses.accommodationId, accommodations.id), eq(accommodationAddresses.isMain, true)),
       )
-      .where(eq(accommodations.slug, input.accommodationSlug))
+      .where(and(eq(accommodations.slug, input.accommodationSlug), eq(accommodations.published, true)))
       .limit(1)
     if (!accom) return
 
@@ -68,6 +67,7 @@ export const trackingRouter = createTRPCRouter({
       cityId: accom.cityId ?? undefined,
       userId: ctx.session?.user.id,
       sessionId,
+      dedupeSeconds: TRACKING_DEDUPE.CONSULT_OFFER_SECONDS,
     })
   }),
 })

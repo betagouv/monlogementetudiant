@@ -2,11 +2,11 @@
 
 import { fr } from '@codegouvfr/react-dsfr'
 import { Breadcrumb } from '@codegouvfr/react-dsfr/Breadcrumb'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { parseAsBoolean, useQueryState } from 'nuqs'
 import { FC } from 'react'
 import { tss } from 'tss-react'
-import { formatCityWithA } from '~/utils/french-contraction'
+import { formatCityWithPreposition } from '~/utils/french-contraction'
 
 interface FindStudentAccommodationTitleProps {
   location: string | undefined
@@ -15,9 +15,11 @@ interface FindStudentAccommodationTitleProps {
 export const FindStudentAccommodationTitle: FC<FindStudentAccommodationTitleProps> = ({ location }) => {
   const { classes } = useStyles()
   const t = useTranslations('findAccomodation')
+  const locale = useLocale()
 
   const [mapSearch] = useQueryState('recherche-par-carte', parseAsBoolean.withDefault(false))
-  const title = location && !mapSearch ? t('titleWithLocation', { locationFormatted: formatCityWithA(location) }) : t('title')
+  const title =
+    location && !mapSearch ? t('titleWithLocation', { locationFormatted: formatCityWithPreposition(locale, 'à', location) }) : t('title')
 
   return (
     <>

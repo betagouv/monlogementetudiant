@@ -2,14 +2,13 @@ import { apiKey } from '@better-auth/api-key'
 import * as Sentry from '@sentry/nextjs'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
-import { hashPassword, verifyPassword as verifyScryptPassword } from 'better-auth/crypto'
 import { nextCookies } from 'better-auth/next-js'
-import { magicLink } from 'better-auth/plugins'
-import { and, eq } from 'drizzle-orm'
+import { admin, magicLink } from 'better-auth/plugins'
+import { eq } from 'drizzle-orm'
 import { headers } from 'next/headers'
 import { cache } from 'react'
 import type { EOwnerContactMode } from '~/enums/owner-contact-mode'
-import { verifyDjangoPassword } from '~/lib/django-password'
+import { canAccessOwnerSpace } from '~/lib/roles'
 import { linkGuestContactRequestsSafely } from '~/server/contacts/link-guest-requests'
 import { db } from '~/server/db'
 import * as schema from '~/server/db/schema'
@@ -30,47 +29,53 @@ function logLocalAuthLink(kind: 'activation' | 'connexion' | 'reset-password', e
 export const auth = betterAuth({
   secret: env.AUTH_SECRET,
   baseURL: env.BASE_URL,
-  trustedOrigins: [env.BASE_URL, 'http://localhost:3000'],
+  trustedOrigins: [env.BASE_URL, ...(env.NEXT_PUBLIC_APP_ENV === 'development' ? ['http://localhost:3000'] : [])],
+  // Routes HTTP sans usage côté client : les clés d'API et les comptes se gèrent depuis le back-office
+  // (tRPC ou `auth.api.*`, non concernés par ce filtre).
+  disabledPaths: [
+    '/api-key/create',
+    '/api-key/get',
+    '/api-key/list',
+    '/api-key/update',
+    '/api-key/delete',
+    '/admin/ban-user',
+    '/admin/create-user',
+    '/admin/get-user',
+    '/admin/has-permission',
+    '/admin/list-user-sessions',
+    '/admin/list-users',
+    '/admin/remove-user',
+    '/admin/revoke-user-session',
+    '/admin/revoke-user-sessions',
+    '/admin/set-role',
+    '/admin/set-user-password',
+    '/admin/unban-user',
+    '/admin/update-user',
+    '/verify-password',
+  ],
   database: drizzleAdapter(db, { provider: 'pg', schema }),
   session: {
     expiresIn: oneDay,
     updateAge: oneDay,
     deferSessionRefresh: true,
   },
+  // Jetons de `verification` stockés hachés.
+  verification: { storeIdentifier: 'hashed' },
   advanced: {
-    // force la suppression des cookies (django)
     cookiePrefix: 'monlogementetudiant',
   },
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 12,
     requireEmailVerification: true,
+    revokeSessionsOnPasswordReset: true,
     sendResetPassword: async ({ user, url }) => {
+      // Bailleurs et admins se connectent uniquement par lien : pas de réinitialisation de mot de passe.
+      // La réponse HTTP est identique dans tous les cas.
+      const account = await db.query.user.findFirst({ where: eq(schema.user.id, user.id), columns: { role: true } })
+      if (account?.role !== 'user') return
       logLocalAuthLink('reset-password', user.email, url)
       await sendResetPasswordEmail(user.email, url)
-    },
-    password: {
-      verify: async ({ hash, password }) => {
-        // 1. Try scrypt (better-auth default) first
-        const scryptMatch = await verifyScryptPassword({ hash, password }).catch(() => false)
-        if (scryptMatch) return true
-
-        // 2. If scrypt fails, try PBKDF2-SHA256 (Django format)
-        if (hash.startsWith('pbkdf2_sha256$')) {
-          const djangoMatch = verifyDjangoPassword(password, hash)
-          if (djangoMatch) {
-            // Rehash to scrypt — better-auth does NOT do this automatically
-            const newHash = await hashPassword(password)
-            await db
-              .update(schema.account)
-              .set({ password: newHash })
-              .where(and(eq(schema.account.password, hash), eq(schema.account.providerId, 'credential')))
-            return true
-          }
-        }
-
-        return false
-      },
     },
   },
   emailVerification: {
@@ -91,13 +96,15 @@ export const auth = betterAuth({
   plugins: [
     magicLink({
       expiresIn: MAGIC_LINK_EXPIRES_IN_SECONDS,
+      storeToken: 'hashed',
+      disableSignUp: true,
       sendMagicLink: async ({ email, url, token }) => {
         const usr = await db.query.user.findFirst({
           where: eq(schema.user.email, email),
           columns: { role: true },
         })
-        // Only send magic links to owners and admins, never to students (role 'user')
-        if (!usr || usr.role === 'user') return
+        // Liens de connexion réservés aux bailleurs et admins : jamais aux étudiants ni à un rôle inattendu.
+        if (!canAccessOwnerSpace(usr?.role)) return
         // On n'envoie pas le lien de vérification Better Auth directement : les scanners
         // de mail d'entreprise (Safe Links, Proofpoint…) pré-ouvrent les liens en GET et
         // brûleraient le token à usage unique. On passe par une page tampon qui ne
@@ -121,6 +128,9 @@ export const auth = betterAuth({
         timeWindow: env.API_V1_RATE_LIMIT_WINDOW_MS,
         maxRequests: env.API_V1_RATE_LIMIT_MAX,
       },
+    }),
+    admin({
+      impersonationSessionDuration: 60 * 60,
     }),
     nextCookies(),
   ],

@@ -22,6 +22,7 @@ type WorkspaceHeaderClientProps = {
   canManageUsers: boolean
   canManageResidences: boolean
   canManageApplications: boolean
+  hasApplicationScope: boolean
   isAdmin: boolean
 }
 
@@ -34,6 +35,7 @@ export function WorkspaceHeaderClient({
   canManageUsers,
   canManageResidences,
   canManageApplications,
+  hasApplicationScope,
   isAdmin,
 }: WorkspaceHeaderClientProps) {
   const t = useTranslations()
@@ -68,6 +70,7 @@ export function WorkspaceHeaderClient({
             canManageUsers={canManageUsers}
             canManageResidences={canManageResidences}
             canManageApplications={canManageApplications}
+            hasApplicationScope={hasApplicationScope}
             isAdmin={isAdmin}
           />
         }

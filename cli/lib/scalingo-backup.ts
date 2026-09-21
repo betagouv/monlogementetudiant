@@ -116,11 +116,8 @@ export class ScalingoBackupService {
   /**
    * Identifiant de l'addon PostgreSQL de l'application.
    *
-   * Déduit de `SCALINGO_APP` plutôt que configuré : c'est une propriété de l'app, pas un réglage,
-   * et une variable d'env de plus est une variable de plus à tenir à jour au prochain changement
-   * d'addon. Le script bash historique le déduisait déjà — mais en parsant le tableau ASCII de la
-   * CLI (`awk -F'│'`), ce qui avait fini par casser silencieusement. On lit ici le JSON de l'API et
-   * on filtre sur `addon_provider.id`.
+   * Déduit de `SCALINGO_APP` plutôt que configuré : c'est une propriété de l'app, pas un réglage à
+   * tenir à jour au prochain changement d'addon. On filtre le JSON de l'API sur `addon_provider.id`.
    */
   private async resolveAddonId(): Promise<string> {
     const res = await fetch(`https://api.${this.region}.scalingo.com/v1/apps/${this.appName}/addons`, {
@@ -194,7 +191,6 @@ export class ScalingoBackupService {
   async downloadLatestBackup(destDir: string): Promise<string> {
     const { backup, downloadUrl } = await this.getLatestBackupDownload()
 
-    // Download the archive
     console.log(`→ Téléchargement du backup (${(backup.size / 1024 / 1024).toFixed(1)} MB)...`)
     const downloadRes = await fetch(downloadUrl)
     if (!downloadRes.ok || !downloadRes.body) {

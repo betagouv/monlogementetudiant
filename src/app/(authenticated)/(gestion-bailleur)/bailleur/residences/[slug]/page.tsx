@@ -1,4 +1,5 @@
 import Breadcrumb from '@codegouvfr/react-dsfr/Breadcrumb'
+import { getTranslations } from 'next-intl/server'
 import { UpdateResidenceForm } from '~/components/bailleur/details/update-residence-form'
 import { getAccommodationMyById } from '~/server/bailleur/get-accommodation-my-by-id'
 import { buildHref } from '~/utils/preserve-query-params'
@@ -16,14 +17,14 @@ export default async function ResidenceDetailsPage({
   searchParams: Promise<SearchParams>
 }) {
   const [{ slug }, awaitedSearchParams] = await Promise.all([params, searchParams])
-  const accommodation = await getAccommodationMyById(slug)
+  const [t, accommodation] = await Promise.all([getTranslations('bailleur.residences'), getAccommodationMyById(slug)])
   return (
     <div className="fr-container fr-pb-12w">
       <Breadcrumb
         currentPageLabel={<>{accommodation.name}</>}
         segments={[
-          { label: 'Tableau de bord', linkProps: { href: buildHref('/bailleur/tableau-de-bord', awaitedSearchParams) } },
-          { label: 'Gestion des résidences', linkProps: { href: buildHref('/bailleur/residences', awaitedSearchParams) } },
+          { label: t('breadcrumbDashboard'), linkProps: { href: buildHref('/bailleur/tableau-de-bord', awaitedSearchParams) } },
+          { label: t('pageTitle'), linkProps: { href: buildHref('/bailleur/residences', awaitedSearchParams) } },
         ]}
         classes={{ root: 'fr-mt-0 fr-mb-2w fr-pt-4w' }}
       />

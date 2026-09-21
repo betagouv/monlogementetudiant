@@ -25,7 +25,7 @@ export type AlertMatchInput = {
  *   - NULL  si la dispo n'est pas renseignée (aucune typologie n'a de `nbAvailable`)
  *   - sinon la somme des logements disponibles tous types confondus.
  *
- * Depuis le passage aux typologies, cette valeur est dénormalisée sur `accommodation`
+ * Cette valeur est dénormalisée sur `accommodation`
  * (`nbAvailableApartments`, maintenue à l'écriture, NULL = non-renseignée) : le détecteur
  * (delta vs snapshot) et le flux d'amorçage à la création d'alerte (`dispo > 0`) s'appuient
  * sur exactement la même définition.

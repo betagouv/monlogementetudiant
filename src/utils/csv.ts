@@ -4,13 +4,22 @@ export type TCsvColumn<T> = {
   header: string
 }
 
+/**
+ * Une cellule qui commence par l'un de ces caractères est lue comme une formule par Excel et
+ * LibreOffice. On la préfixe alors d'une apostrophe : la valeur reste affichée telle quelle, mais
+ * elle n'est plus évaluée.
+ */
+const FORMULA_PREFIX = /^[\t\r\n ]*[=+\-@]/
+
 /** Échappe une valeur pour un CSV à séparateur `;` (le séparateur attendu par Excel en français). */
 function formatCsvValue(value: unknown): string {
   if (value === null || value === undefined) return ''
   if (typeof value === 'boolean') return value ? 'oui' : 'non'
   if (value instanceof Date) return value.toISOString()
 
-  const str = String(value)
+  // Seules les chaînes sont concernées : un nombre négatif n'est pas une injection de formule.
+  const str = typeof value === 'string' && FORMULA_PREFIX.test(value) ? `'${value}` : String(value)
+
   return /[;"\n\r]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str
 }
 

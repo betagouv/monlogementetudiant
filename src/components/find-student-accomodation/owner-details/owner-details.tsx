@@ -52,7 +52,7 @@ export const OwnerDetails = async ({
     <AvailabilityBadge
       nbAvailable={nbAvailable}
       noAvailabilityText={t('card.noAvailability')}
-      availabilityText={t('card.availability')}
+      availabilityText={(count) => t('card.availabilityCount', { count })}
       unknownAvailabilityText={t('unknownAvailability')}
     />
   )
@@ -85,7 +85,9 @@ export const OwnerDetails = async ({
         )}
       </div>
       <div className="fr-flex fr-align-items-center fr-justify-content-center">{badgeAvailability}</div>
-      <span className="fr-text--xs fr-mb-0">{t('sidebar.updatedAt', { date: formatDayjs(updatedAt, 'DD MMMM YYYY', locale) })}</span>
+      {nbAvailable !== null && (
+        <span className="fr-text--xs fr-mb-0">{t('sidebar.updatedAt', { date: formatDayjs(updatedAt, 'DD MMMM YYYY', locale) })}</span>
+      )}
 
       <DossierFacileLinkButton
         accommodationSlug={accommodationSlug}

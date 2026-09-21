@@ -1,5 +1,5 @@
 import { and, eq, sql } from 'drizzle-orm'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { EResidenceType } from '~/enums/residence-type'
 import { ETargetAudience } from '~/enums/target-audience'
 import { TAccomodationMy } from '~/schemas/accommodations/accommodations'
@@ -11,6 +11,7 @@ import { cities } from '~/server/db/schema/cities'
 import { externalSources } from '~/server/db/schema/external-sources'
 import { typologiesByType } from '~/server/lib/typologies'
 import { getServerSession } from '~/services/better-auth'
+import { type BailleurPermission, type BailleurRole, hasPermission } from './permissions'
 
 const residenceTypeValues = new Set<string>(Object.values(EResidenceType))
 const targetAudienceValues = new Set<string>(Object.values(ETargetAudience))
@@ -27,6 +28,20 @@ export const getAccommodationMyById = async (slug: string): Promise<TAccomodatio
   const auth = await getServerSession()
   if (!auth) {
     return notFound()
+  }
+
+  // Même garde que la liste des résidences : la fiche complète n'est visible que des comptes
+  // autorisés à gérer les résidences (les mutations, elles, sont gardées par tRPC).
+  const canManageResidences = hasPermission(
+    {
+      role: auth.user.role,
+      bailleurRole: (auth.user.bailleurRole as BailleurRole | null) ?? null,
+      bailleurPermissions: (auth.user.bailleurPermissions as BailleurPermission[]) ?? [],
+    },
+    'manage_residences',
+  )
+  if (!canManageResidences) {
+    return redirect('/bailleur/tableau-de-bord')
   }
 
   let ownerId: number | null = null
@@ -98,6 +113,7 @@ export const getAccommodationMyById = async (slug: string): Promise<TAccomodatio
     targetAudience: toTargetAudience(row.targetAudience),
     published: row.published,
     acceptWaitingList: row.acceptWaitingList ?? false,
+    acceptsApplications: row.acceptsApplications ?? true,
     imagesUrls: row.imagesUrls ?? null,
     externalUrl: row.externalUrl ?? undefined,
     virtualTourUrl: row.virtualTourUrl ?? null,

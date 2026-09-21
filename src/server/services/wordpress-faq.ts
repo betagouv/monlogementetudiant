@@ -1,6 +1,6 @@
-import { sanitize } from 'isomorphic-dompurify'
 import { z } from 'zod'
 import { env } from '~/server/env'
+import DOMPurify from '~/utils/dompurify'
 
 const ZWPPage = z.object({ content: z.object({ rendered: z.string() }) })
 
@@ -19,8 +19,8 @@ export async function getWordpressFaqArticles() {
 
     const content = parsed.data.content.rendered
     return Array.from(content.matchAll(ACCORDION_RE), ([, rawQuestion, rawAnswer]) => ({
-      question: sanitize(rawQuestion, { ALLOWED_TAGS: [] }),
-      answer: sanitize(rawAnswer.replace(/\[[^\]]+\]/g, '')),
+      question: DOMPurify.sanitize(rawQuestion, { ALLOWED_TAGS: [] }),
+      answer: DOMPurify.sanitize(rawAnswer.replace(/\[[^\]]+\]/g, '')),
     }))
   } catch {
     return []

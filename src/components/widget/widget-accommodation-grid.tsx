@@ -15,7 +15,6 @@ import { useAccomodations } from '~/hooks/use-accomodations'
 import { trackEvent } from '~/lib/tracking'
 import { TTerritory } from '~/schemas/territories'
 import { useTRPC } from '~/server/trpc/client'
-import { sPluriel } from '~/utils/sPluriel'
 import { appendWidgetCampaign } from '~/utils/widget-campaign'
 import styles from './widget-accommodation-grid.module.css'
 
@@ -25,6 +24,7 @@ type WidgetAccommodationGridProps = {
 
 export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = ({ territory }) => {
   const t = useTranslations('findAccomodation.results')
+  const tWidget = useTranslations('widget')
   const trpc = useTRPC()
   const [queryStates] = useQueryStates({
     bbox: parseAsString,
@@ -68,9 +68,7 @@ export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = ({ terr
   return (
     <div>
       {accommodations?.count && (
-        <h2 className={clsx('fr-mb-2w', styles.title)}>
-          {accommodations.count} résidence{sPluriel(accommodations.count)}
-        </h2>
+        <h2 className={clsx('fr-mb-2w', styles.title)}>{tWidget('residencesCount', { count: accommodations.count })}</h2>
       )}
       <div className={styles.grid}>
         {(accommodations?.results || []).map((accommodation) => (
@@ -125,7 +123,7 @@ export const WidgetAccommodationGrid: FC<WidgetAccommodationGridProps> = ({ terr
         </div>
       )}
       <footer className={styles.footer}>
-        Proposé par{' '}
+        {tWidget('poweredBy')}{' '}
         <a
           href={appendWidgetCampaign('https://monlogementetudiant.beta.gouv.fr', widgetCampaign)}
           target="_blank"

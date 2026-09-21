@@ -7,18 +7,20 @@ import Range from '@codegouvfr/react-dsfr/Range'
 import { zodResolver } from '@hookform/resolvers/zod'
 import clsx from 'clsx'
 import { useTranslations } from 'next-intl'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { Controller, FormProvider, useForm } from 'react-hook-form'
 import { StudentAlertLocation } from '~/components/student-space/alerts/student-alert-location'
 import { ToggleSwitch } from '~/components/ui/toggle-switch'
 import { useUpdateAlert } from '~/hooks/use-update-alert'
 import { trackEvent } from '~/lib/tracking'
 import { TAlert } from '~/schemas/alerts/get-alerts'
-import { TUpdateAlertRequest, ZUpdateAlertRequest } from '~/schemas/alerts/update-alert'
+import { createZUpdateAlertRequest, TUpdateAlertRequest } from '~/schemas/alerts/update-alert'
 import styles from './student-alerts.module.css'
 
 export const UpdateStudentAlert = ({ alert }: { alert: TAlert }) => {
   const t = useTranslations('student.alerts')
+  const tSchemas = useTranslations('schemas')
+  const schema = useMemo(() => createZUpdateAlertRequest(tSchemas), [tSchemas])
   const updateStudentAlertModal = createModal({
     id: `update-alert-modal-${alert.id}`,
     isOpenedByDefault: false,
@@ -27,7 +29,7 @@ export const UpdateStudentAlert = ({ alert }: { alert: TAlert }) => {
   const { mutateAsync: updateAlert, isLoading } = useUpdateAlert()
 
   const form = useForm<TUpdateAlertRequest>({
-    resolver: zodResolver(ZUpdateAlertRequest),
+    resolver: zodResolver(schema),
     defaultValues: {
       name: alert.name,
       maxPrice: alert.maxPrice,
@@ -89,15 +91,13 @@ export const UpdateStudentAlert = ({ alert }: { alert: TAlert }) => {
         title={
           <>
             <span className={clsx(styles.icon, 'ri-mail-unread-line')} />
-            <span className="fr-text--bold"> Édition de l'alerte logements</span>
+            <span className="fr-text--bold"> {t('editModalTitle')}</span>
           </>
         }
       >
         <FormProvider {...form}>
           <form onSubmit={handleSubmit} className="fr-flex fr-direction-column fr-flex-gap-4v">
-            <span>
-              Configurez votre alerte personnalisée et soyez notifié dès qu'un logement correspondant à vos critères est disponible.
-            </span>
+            <span>{t('modalDescription')}</span>
             <Input
               label={t('nameLabel')}
               iconId="ri-notification-line"

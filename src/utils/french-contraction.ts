@@ -1,3 +1,5 @@
+import { AvailableLocales } from '~/i18n/locales'
+
 /**
  * Gère les contractions françaises avec les noms de villes contenant des articles.
  *
@@ -24,13 +26,11 @@ export function applyFrenchContraction(preposition: Preposition, cityName: strin
   if (!cityName) return ''
   const trimmedCity = cityName.trim()
 
-  // Vérifie si la ville commence par "Le " (article masculin singulier)
   if (/^Le\s/i.test(trimmedCity)) {
     const cityWithoutArticle = trimmedCity.replace(/^Le\s/i, '')
     return preposition === 'à' ? `au ${cityWithoutArticle}` : `du ${cityWithoutArticle}`
   }
 
-  // Vérifie si la ville commence par "Les " (article pluriel)
   if (/^Les\s/i.test(trimmedCity)) {
     const cityWithoutArticle = trimmedCity.replace(/^Les\s/i, '')
     return preposition === 'à' ? `aux ${cityWithoutArticle}` : `des ${cityWithoutArticle}`
@@ -41,21 +41,18 @@ export function applyFrenchContraction(preposition: Preposition, cityName: strin
 }
 
 /**
- * Formate un nom de ville avec la préposition "à" en appliquant les contractions
- * @param cityName - Le nom de la ville
- * @returns "au X", "aux X", ou "à X" selon le cas
+ * Formate un nom de ville précédé d'une préposition, selon la langue d'affichage. Le résultat est
+ * destiné à être injecté dans un message (`{locationFormatted}`, `{cityFormatted}`, …) qui ne porte
+ * donc pas lui-même la préposition de lieu.
+ *
+ * - fr : contraction française (« à Paris », « au Havre », « du Havre », « des Sables-d'Olonne »).
+ * - en : « à » devient « in X » ; « de » renvoie le nom seul, la préposition anglaise dépendant de la
+ *   phrase (« near », « around », « of ») et étant donc portée par le message en.json.
  */
-export function formatCityWithA(cityName: string): string {
+export function formatCityWithPreposition(locale: string, preposition: Preposition, cityName: string): string {
   if (!cityName) return ''
-  return applyFrenchContraction('à', cityName)
-}
+  if (locale !== AvailableLocales.EN) return applyFrenchContraction(preposition, cityName)
 
-/**
- * Formate un nom de ville avec la préposition "de" en appliquant les contractions
- * @param cityName - Le nom de la ville
- * @returns "du X", "des X", ou "de X" selon le cas
- */
-export function formatCityWithDe(cityName: string): string {
-  if (!cityName) return ''
-  return applyFrenchContraction('de', cityName)
+  const trimmedCity = cityName.trim()
+  return preposition === 'à' ? `in ${trimmedCity}` : trimmedCity
 }
