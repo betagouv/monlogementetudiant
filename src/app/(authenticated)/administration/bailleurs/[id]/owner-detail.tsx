@@ -28,6 +28,7 @@ import { useTRPC, useTRPCClient } from '~/server/trpc/client'
 import { getInitials } from '~/utils/avatar'
 import { formatDateTime } from '~/utils/formatDate'
 import { getFaviconUrl } from '~/utils/get-favicon-url'
+import { buildHref } from '~/utils/preserve-query-params'
 import { sPluriel } from '~/utils/sPluriel'
 import styles from '../../administration.module.css'
 
@@ -523,7 +524,11 @@ function ResidencesTab({
                     >
                       Voir
                     </Button>
-                    <Button priority="tertiary" size="small" linkProps={{ href: `/bailleur/residences/${acc.slug}` }}>
+                    <Button
+                      priority="tertiary"
+                      size="small"
+                      linkProps={{ href: buildHref(`/bailleur/residences/${acc.slug}`, null, { ownerId }) }}
+                    >
                       Modifier
                     </Button>
                   </div>
