@@ -147,6 +147,62 @@ describe('brevo service', () => {
     })
   })
 
+  describe('sendApplicationsManagementGrantedEmail', () => {
+    it('envoie le template dédié avec les résidences attribuées', async () => {
+      vi.stubEnv('BREVO_TEMPLATE_APPLICATIONS_MANAGEMENT_GRANTED', '59')
+      const { sendApplicationsManagementGrantedEmail } = await import('./brevo')
+
+      await sendApplicationsManagementGrantedEmail('gest@test.com', {
+        firstname: 'Jean',
+        ownerName: 'Crous Paris',
+        residences: ['Res A', 'Res B'],
+        residencesCount: 2,
+        url: 'https://example.com/bailleur/contacts',
+      })
+
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body)
+      expect(body).toEqual({
+        to: [{ email: 'gest@test.com' }],
+        templateId: 59,
+        replyTo: { email: 'no-reply@monlogementetudiant.beta.gouv.fr' },
+        params: {
+          FIRSTNAME: 'Jean',
+          OWNER_NAME: 'Crous Paris',
+          RESIDENCES: ['Res A', 'Res B'],
+          RESIDENCES_COUNT: '2',
+          LINK: 'https://example.com/bailleur/contacts',
+        },
+      })
+    })
+  })
+
+  describe('sendApplicationsSuspendedEmail', () => {
+    it('envoie le template dédié avec la résidence et son auteur', async () => {
+      vi.stubEnv('BREVO_TEMPLATE_APPLICATIONS_SUSPENDED', '60')
+      const { sendApplicationsSuspendedEmail } = await import('./brevo')
+
+      await sendApplicationsSuspendedEmail('admin@test.com', {
+        firstname: 'Alice',
+        residenceName: 'Res A',
+        suspendedBy: 'Jean Dupont',
+        ownerName: 'Crous Paris',
+        suspendedAt: '21 septembre 2026 à 10:00',
+        url: 'https://example.com/bailleur/contacts/res-a',
+      })
+
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body)
+      expect(body.templateId).toBe(60)
+      expect(body.params).toEqual({
+        FIRSTNAME: 'Alice',
+        RESIDENCE_NAME: 'Res A',
+        SUSPENDED_BY: 'Jean Dupont',
+        OWNER_NAME: 'Crous Paris',
+        SUSPENDED_AT: '21 septembre 2026 à 10:00',
+        LINK: 'https://example.com/bailleur/contacts/res-a',
+      })
+    })
+  })
+
   describe('sendAlertCreationConfirmationEmail', () => {
     it('uses template ID 43 avec alertName, maxBudget et les valeurs par défaut pour city et academy', async () => {
       const { sendAlertCreationConfirmationEmail } = await import('./brevo')

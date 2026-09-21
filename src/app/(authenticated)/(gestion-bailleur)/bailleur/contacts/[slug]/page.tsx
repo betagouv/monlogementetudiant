@@ -5,6 +5,7 @@ import { dehydrate, HydrationBoundary } from '@tanstack/react-query'
 import { notFound, redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { ContactsBoard } from '~/components/bailleur/contacts/contacts-board'
+import { ResidenceApplicationsToggle } from '~/components/bailleur/contacts/residence-applications-toggle'
 import { CONTACT_RETENTION_DAYS } from '~/enums/contact-status'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { getBailleurContext } from '~/server/bailleur/get-bailleur-context'
@@ -61,7 +62,10 @@ export default async function ResidenceContactsPage({ params, searchParams }: Pr
             {t('editResidence')}
           </Button>
         </div>
-        <p className="fr-text-mention--grey fr-mb-4w">{t('retentionNotice', { days: CONTACT_RETENTION_DAYS })}</p>
+        <p className="fr-text-mention--grey fr-mb-2w">{t('retentionNotice', { days: CONTACT_RETENTION_DAYS })}</p>
+        <div className="fr-mb-4w">
+          <ResidenceApplicationsToggle slug={slug} />
+        </div>
 
         <ContactsBoard slug={slug} />
       </div>

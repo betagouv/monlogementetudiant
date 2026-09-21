@@ -32,6 +32,11 @@ import {
   assertNotLastAdministrator,
   LAST_ADMINISTRATOR_MESSAGE,
 } from '~/server/bailleur/administrator-limit'
+import {
+  notifyApplicationsManagementGranted,
+  notifyApplicationsSuspended,
+  readManagedResidences,
+} from '~/server/bailleur/application-notifications'
 import { getOwnerForUser } from '~/server/bailleur/get-owner-for-user'
 import {
   type BailleurPermission,
@@ -1023,7 +1028,10 @@ export const bailleurRouter = createTRPCRouter({
         scopeAccommodationIdCondition(scope),
       ].filter(Boolean) as SQL[]
       if (input.search && input.search.length >= 2) {
-        conditions.push(ilike(accommodations.name, `%${input.search}%`))
+        const pattern = `%${input.search}%`
+        conditions.push(
+          sql`(immutable_unaccent(${accommodations.name}) ILIKE immutable_unaccent(${pattern}) OR immutable_unaccent(${cities.name}) ILIKE immutable_unaccent(${pattern}))`,
+        )
       }
 
       const residencesRows = await db
@@ -1034,6 +1042,7 @@ export const bailleurRouter = createTRPCRouter({
           cityName: cities.name,
           departmentCode: departments.code,
           disponibilites: DISPONIBILITES_SQL,
+          applicationsSuspendedAt: accommodations.applicationsSuspendedAt,
         })
         .from(accommodations)
         .leftJoin(
@@ -1083,7 +1092,11 @@ export const bailleurRouter = createTRPCRouter({
 
       return {
         mode: owner.contactMode,
-        residences: residencesRows.map((r) => ({ ...r, aRappelerCount: countMap.get(r.slug) ?? 0 })),
+        residences: residencesRows.map(({ applicationsSuspendedAt, ...r }) => ({
+          ...r,
+          applicationsSuspended: applicationsSuspendedAt !== null,
+          aRappelerCount: countMap.get(r.slug) ?? 0,
+        })),
       }
     }),
 
@@ -1101,6 +1114,7 @@ export const bailleurRouter = createTRPCRouter({
           departmentCode: departments.code,
           disponibilites: DISPONIBILITES_SQL,
           mode: owners.contactMode,
+          applicationsSuspendedAt: accommodations.applicationsSuspendedAt,
         })
         .from(accommodations)
         .leftJoin(
@@ -1166,6 +1180,7 @@ export const bailleurRouter = createTRPCRouter({
           cityName: residence.cityName,
           departmentCode: residence.departmentCode,
           disponibilites: residence.disponibilites,
+          applicationsSuspended: residence.applicationsSuspendedAt !== null,
         },
         mode,
         items,
@@ -1195,6 +1210,70 @@ export const bailleurRouter = createTRPCRouter({
         studentBirthdate: request.birthdate ?? request.user?.birthdate ?? null,
         scholarshipStatus: request.scholarshipStatus ?? request.user?.scholarshipStatus ?? null,
       }
+    }),
+
+  setApplicationsSuspended: bailleurProcedure('manage_applications')
+    .input(z.object({ slug: z.string(), suspended: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      await verifyOwnerAccess(ctx.session.user.id, input.slug)
+
+      const [residence] = await db
+        .select({
+          id: accommodations.id,
+          name: accommodations.name,
+          slug: accommodations.slug,
+          acceptsApplications: accommodations.acceptsApplications,
+          applicationsSuspendedAt: accommodations.applicationsSuspendedAt,
+          ownerId: owners.id,
+          ownerName: owners.name,
+        })
+        .from(accommodations)
+        .innerJoin(owners, eq(accommodations.ownerId, owners.id))
+        .where(eq(accommodations.slug, input.slug))
+        .limit(1)
+      if (!residence) throw new TRPCError({ code: 'NOT_FOUND', message: 'Accommodation not found' })
+
+      if (!residence.acceptsApplications) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: "Cette résidence n'est pas ouverte aux candidatures" })
+      }
+
+      if ((residence.applicationsSuspendedAt !== null) === input.suspended) {
+        return { suspended: input.suspended }
+      }
+
+      const suspendedAt = input.suspended ? new Date() : null
+      await db
+        .update(accommodations)
+        .set({
+          applicationsSuspendedAt: suspendedAt,
+          applicationsSuspendedById: input.suspended ? ctx.session.user.id : null,
+          updatedAt: new Date(),
+        })
+        .where(eq(accommodations.id, residence.id))
+
+      const owner = { id: residence.ownerId, name: residence.ownerName }
+      await logActivity({
+        userId: ctx.session.user.id,
+        userName: ctx.session.user.name,
+        action: input.suspended ? 'accommodation.applications_suspended' : 'accommodation.applications_resumed',
+        entityType: 'accommodation',
+        entityId: String(residence.id),
+        entityName: residence.name,
+        ownerId: owner.id,
+        ownerName: owner.name,
+        metadata: { slug: residence.slug },
+      })
+
+      if (suspendedAt) {
+        await notifyApplicationsSuspended({
+          accommodation: residence,
+          actor: { id: ctx.session.user.id, name: ctx.session.user.name },
+          owner,
+          suspendedAt,
+        })
+      }
+
+      return { suspended: input.suspended }
     }),
 
   // Changement de statut (drag & drop du board) — DossierFacile ou contact.
@@ -1362,6 +1441,7 @@ export const bailleurRouter = createTRPCRouter({
         } catch (err) {
           console.error('Erreur envoi email bienvenue gestionnaire', err)
         }
+        await notifyApplicationsManagementGranted({ userId: created.id, before: null, owner })
 
         return created
       }),
@@ -1447,6 +1527,7 @@ export const bailleurRouter = createTRPCRouter({
           nextRole === 'administrator' ? { mode: 'all' } : input.applicationScope
 
         const previousScope = scopeToWrite ? await readApplicationScope(target.id) : null
+        const managedBefore = await readManagedResidences(target.id)
 
         const updated = await db.transaction(async (tx) => {
           const [row] = await tx.update(user).set(updateData).where(eq(user.id, input.id)).returning()
@@ -1475,6 +1556,8 @@ export const bailleurRouter = createTRPCRouter({
             })
           }
         }
+
+        await notifyApplicationsManagementGranted({ userId: target.id, before: managedBefore, owner })
 
         return updated
       }),
@@ -1527,6 +1610,8 @@ export const bailleurRouter = createTRPCRouter({
       const changed = targets.filter((t) => permissionsKey(t.bailleurPermissions) !== permissionsKey(nextPermissions.get(t.id) ?? []))
 
       if (changed.length > 0) {
+        const managedBefore = new Map(await Promise.all(changed.map(async (t) => [t.id, await readManagedResidences(t.id)] as const)))
+
         await db.transaction(async (tx) => {
           for (const target of changed) {
             await tx
@@ -1554,6 +1639,10 @@ export const bailleurRouter = createTRPCRouter({
             },
           },
         })
+
+        for (const target of changed) {
+          await notifyApplicationsManagementGranted({ userId: target.id, before: managedBefore.get(target.id) ?? null, owner })
+        }
       }
 
       return { updated: changed.length }

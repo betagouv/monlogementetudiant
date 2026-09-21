@@ -13,9 +13,10 @@ interface Props {
   cityName: string | null
   departmentCode: string | null
   aRappelerCount: number
+  applicationsSuspended: boolean
 }
 
-export const ResidenceContactCard = ({ slug, name, cityName, departmentCode, aRappelerCount }: Props) => {
+export const ResidenceContactCard = ({ slug, name, cityName, departmentCode, aRappelerCount, applicationsSuspended }: Props) => {
   const t = useTranslations('bailleur.contacts')
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -39,6 +40,11 @@ export const ResidenceContactCard = ({ slug, name, cityName, departmentCode, aRa
           {t('toBeCalledBack', { count: aRappelerCount })}
         </Badge>
       </span>
+      {applicationsSuspended && (
+        <Badge severity="warning" small>
+          {t('applicationsSuspendedBadge')}
+        </Badge>
+      )}
     </button>
   )
 }

@@ -512,6 +512,13 @@
       "when": 1789984532037,
       "tag": "0072_session_user_id_index",
       "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1789993289635,
+      "tag": "0073_accommodation_applications_suspended",
+      "breakpoints": true
     }
   ]
 }

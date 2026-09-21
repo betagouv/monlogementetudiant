@@ -1,9 +1,9 @@
 'use client'
 
-import { Input } from '@codegouvfr/react-dsfr/Input'
 import ToggleSwitch from '@codegouvfr/react-dsfr/ToggleSwitch'
 import { useTranslations } from 'next-intl'
 import { parseAsBoolean, parseAsString, useQueryStates } from 'nuqs'
+import { SearchInput } from '~/components/ui/search-input'
 import { useMyAccommodations } from '~/hooks/use-my-accommodations'
 
 const ResidenceFiltersSkeleton = () => {
@@ -43,15 +43,10 @@ export const ResidenceFilters = () => {
             style={{ width: '300px' }}
           />
         </div>
-        <Input
-          label=""
-          nativeInputProps={{
-            placeholder: t('searchPlaceholder'),
-            value: queryStates.recherche,
-            onChange: (e) => setQueryStates({ recherche: e.target.value }),
-          }}
-          iconId="ri-search-line"
-          className="fr-mb-0"
+        <SearchInput
+          label={t('searchPlaceholder')}
+          value={queryStates.recherche}
+          onChange={(value) => setQueryStates({ recherche: value || null })}
         />
       </div>
     </div>
