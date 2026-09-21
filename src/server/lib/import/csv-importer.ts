@@ -13,7 +13,7 @@ import { syncTypologies, typologyAggregates, typologyDraft } from '~/server/lib/
 import { generateAccommodationKey, uploadFile } from '~/server/services/s3'
 import { generateSlug } from '~/server/trpc/utils/accommodation-helpers'
 import { findAvailableSlug } from '~/server/utils/slug'
-import { type CsvRow, generateSourceId, normalizeEnum, parseCsvContent, toBool, toDigit } from './csv-parser'
+import { type CsvRow, generateSourceId, normalizeEnum, parseCsvContent, toBool, toDigit, toUrl } from './csv-parser'
 import { ensureCity, geocodeAddressVerified, geocodeImportRow, reverseGeocode } from './geocoder'
 
 export type ProgressLine = {
@@ -92,7 +92,7 @@ function buildValidationPayload(row: CsvRow) {
     residenceType: normalizeEnum(row.residence_type) ?? undefined,
     targetAudience: normalizeEnum(row.target_audience) ?? 'etudiants',
     description: row.description?.trim() || undefined,
-    externalUrl: row.owner_url?.trim() || undefined,
+    externalUrl: toUrl(row.owner_url) ?? undefined,
     acceptWaitingList: toBool(row.accept_waiting_list) ?? undefined,
     nb_t1: toDigit(row.nb_t1) ?? undefined,
     nb_t1_bis: toDigit(row.nb_t1_bis) ?? undefined,
@@ -290,7 +290,7 @@ export async function executeCsvImport(
     id: toDigit(rows[0].owner_id),
     slug: rows[0].owner_slug?.trim(),
     name: rows[0].owner_name?.trim(),
-    url: rows[0].owner_url?.trim(),
+    url: toUrl(rows[0].owner_url) ?? undefined,
   })
   const { id: ownerId, name: ownerName } = owner
 
@@ -409,7 +409,7 @@ export async function executeCsvImport(
         scholarshipHoldersPriority: toBool(row.scholarship_holders_priority),
         socialHousingRequired: toBool(row.social_housing_required),
         imagesUrls: imagesUrls.length > 0 ? imagesUrls : null,
-        externalUrl: row.owner_url?.trim() || null,
+        externalUrl: toUrl(row.owner_url),
         externalReference: sourceId,
         ownerId,
         updatedAt: new Date(),

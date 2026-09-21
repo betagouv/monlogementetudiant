@@ -731,6 +731,7 @@ const residencesRouter = createTRPCRouter({
             published: accommodations.published,
             nbTotalApartments: accommodations.nbTotalApartments,
             nbAvailableApartments: nbAvailableApartmentsSum,
+            ownerId: accommodations.ownerId,
             ownerName: owners.name,
           })
           .from(accommodations)

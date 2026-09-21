@@ -24,6 +24,12 @@ export function normalizeEnum(value: string | undefined): string | null {
   return trimmed === '' ? null : trimmed
 }
 
+export function toUrl(value: string | undefined): string | null {
+  const trimmed = value?.trim()
+  if (!trimmed) return null
+  return /^[a-z][a-z\d+.-]*:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`
+}
+
 function detectSeparator(headerLine: string): string {
   const semicolons = headerLine.split(';').length
   const commas = headerLine.split(',').length
