@@ -2131,7 +2131,7 @@
       "list": {
         "residenceCount": "{count, plural, one {# résidence} other {# résidences}}",
         "availableFilter": "Logements disponibles",
-        "searchPlaceholder": "Nom résidence, ville...",
+        "searchPlaceholder": "Rechercher une résidence ou une ville",
         "housingCount": "{count, plural, one {# logement} other {# logements}}",
         "availableLabel": "Disponibles",
         "save": "Enregistrer",
@@ -2160,7 +2160,7 @@
       "titleDossierFacile": "Contacts avec DossierFacile",
       "loading": "Chargement...",
       "defaultCandidateName": "Candidat",
-      "searchResidenceLabel": "Rechercher une résidence",
+      "searchResidenceLabel": "Rechercher une résidence ou une ville",
       "settingsButtonTitle": "Réglages du mode de contact",
       "moderationButtonTitle": "Gérer les droits de modération",
       "noResidence": "Aucune résidence.",
@@ -2296,6 +2296,24 @@
         "non_retenu": "Non retenu",
         "a_contacter": "À contacter",
         "contacte": "Contacté"
+      },
+      "applicationsSuspendedBadge": "Candidatures suspendues",
+      "applicationsToggle": {
+        "label": "Recevoir des candidatures",
+        "openHint": "Les étudiants peuvent candidater sur cette résidence.",
+        "suspendedHint": "Candidatures suspendues : le bouton de candidature n'est plus affiché aux étudiants.",
+        "modalTitle": "Suspendre les candidatures ?",
+        "modalDescription": "Les étudiants ne pourront plus candidater sur cette résidence tant que vous ne réactivez pas la réception des candidatures. Les administrateurs de votre organisme seront prévenus par email.",
+        "cancel": "Annuler",
+        "confirm": "Suspendre les candidatures",
+        "suspendedSuccess": "Les candidatures sont suspendues pour cette résidence.",
+        "resumedSuccess": "Les candidatures sont de nouveau ouvertes pour cette résidence.",
+        "error": "La modification n'a pas pu être enregistrée."
+      },
+      "noManagerAlert": {
+        "title": "Aucun gestionnaire n'a accès aux dossiers des étudiants",
+        "description": "Par défaut, seuls les administrateurs voient les candidatures. Pour autoriser un gestionnaire à les consulter et à les traiter, cliquez sur le bouton <icon></icon> « Gérer les droits de modération ».",
+        "action": "Attribuer les droits"
       }
     },
     "ownerForm": {

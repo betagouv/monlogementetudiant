@@ -1,0 +1,3 @@
+ALTER TABLE "accommodation" ADD COLUMN "applications_suspended_at" timestamp with time zone;--> statement-breakpoint
+ALTER TABLE "accommodation" ADD COLUMN "applications_suspended_by_id" text;--> statement-breakpoint
+ALTER TABLE "accommodation" ADD CONSTRAINT "accommodation_applications_suspended_by_id_user_id_fk" FOREIGN KEY ("applications_suspended_by_id") REFERENCES "public"."user"("id") ON DELETE set null ON UPDATE no action;

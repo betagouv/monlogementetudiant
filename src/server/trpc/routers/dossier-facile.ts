@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { APARTMENT_TYPES } from '~/enums/apartment-type'
 import { DF_TENANT_STATUSES_BLOCKING_APPLICATION, type DFTenantStatus } from '~/enums/dossier-facile-tenant-status'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
+import { isOpenToApplications } from '~/server/bailleur/applications-open'
 import { db } from '~/server/db'
 import { accommodations, accommodationTypologies, dossierFacileApplications, dossierFacileTenants, owners } from '~/server/db/schema'
 import { ensureFavorite } from '~/server/favorites/ensure-favorite'
@@ -121,7 +122,7 @@ export const dossierFacileRouter = createTRPCRouter({
         throw new TRPCError({ code: 'BAD_REQUEST', message: "Ce gestionnaire n'accepte pas les candidatures DossierFacile" })
       }
 
-      if (!accommodation.acceptsApplications) {
+      if (!isOpenToApplications(accommodation)) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: "Cette résidence n'accepte pas les candidatures" })
       }
 

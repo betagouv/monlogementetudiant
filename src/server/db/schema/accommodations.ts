@@ -1,4 +1,5 @@
 import { bigint, boolean, index, integer, pgEnum, pgTable, text, timestamp, unique, varchar } from 'drizzle-orm/pg-core'
+import { user } from './auth'
 import { owners } from './owners'
 
 export const targetAudienceEnum = pgEnum('target_audience', [
@@ -48,6 +49,8 @@ export const accommodations = pgTable(
     bathroom: varchar('bathroom', { length: 50 }),
     acceptWaitingList: boolean('accept_waiting_list'),
     acceptsApplications: boolean('accepts_applications').notNull().default(true),
+    applicationsSuspendedAt: timestamp('applications_suspended_at', { withTimezone: true }),
+    applicationsSuspendedById: text('applications_suspended_by_id').references(() => user.id, { onDelete: 'set null' }),
     scholarshipHoldersPriority: boolean('scholarship_holders_priority'),
     socialHousingRequired: boolean('social_housing_required'),
 

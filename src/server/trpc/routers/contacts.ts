@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { APARTMENT_TYPES } from '~/enums/apartment-type'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { ZBirthDate, ZScholarshipStatus } from '~/schemas/student-profile/student-profile'
+import { isOpenToApplications } from '~/server/bailleur/applications-open'
 import { contactRetentionCutoff } from '~/server/candidatures/visibility'
 import { createClaimToken } from '~/server/contacts/claim-token'
 import { assertContactRequestRateLimit, hashIp } from '~/server/contacts/rate-limit'
@@ -28,6 +29,7 @@ const findAccommodationBySlug = async (slug: string) => {
       ownerId: accommodations.ownerId,
       nbAvailableApartments: accommodations.nbAvailableApartments,
       acceptsApplications: accommodations.acceptsApplications,
+      applicationsSuspendedAt: accommodations.applicationsSuspendedAt,
     })
     .from(accommodations)
     .where(and(eq(accommodations.slug, slug), eq(accommodations.published, true)))
@@ -90,7 +92,7 @@ export const contactsRouter = createTRPCRouter({
         throw new TRPCError({ code: 'BAD_REQUEST', message: "Ce gestionnaire n'accepte pas les demandes de contact" })
       }
 
-      if (!accommodation.acceptsApplications) {
+      if (!isOpenToApplications(accommodation)) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: "Cette résidence n'accepte pas les demandes de contact" })
       }
 
