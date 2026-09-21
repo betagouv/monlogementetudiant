@@ -1,7 +1,8 @@
 import { TRPCError } from '@trpc/server'
-import { and, between, count, desc, eq, ilike, inArray, isNull, or, sql } from 'drizzle-orm'
+import { and, between, count, desc, eq, ilike, inArray, isNull, or, type SQL, sql } from 'drizzle-orm'
 import { getTranslations } from 'next-intl/server'
 import { z } from 'zod'
+import { ELoginAttemptStatus } from '~/enums/login-attempt-status'
 import { EOwnerContactMode, OWNER_CONTACT_MODES, ZOwnerContactMode } from '~/enums/owner-contact-mode'
 import { FEATURES } from '~/lib/features'
 import { GESTIONNAIRE_PERMISSIONS_REQUIRED, gestionnairePermissionsAreUsable } from '~/schemas/bailleur-users/bailleur-user-form'
@@ -976,6 +977,23 @@ const matomoStatsRouter = createTRPCRouter({
   }),
 })
 
+/**
+ * Connexions d'un gestionnaire : les liens magiques validés font foi depuis leur mise en service,
+ * les sessions ne servent qu'à l'historique antérieur.
+ */
+function ownerLoginsSql(ownerId: SQL) {
+  const cutoff = sql`coalesce((SELECT min(created_at) FROM login_attempt), 'infinity'::timestamptz)`
+  return sql`(
+    SELECT s.created_at AS at FROM "session" s
+    INNER JOIN "user" u ON s.user_id = u.id
+    WHERE u.owner_id = ${ownerId} AND u.role != 'admin' AND s.impersonated_by IS NULL
+    AND s.created_at < ${cutoff}
+    UNION ALL
+    SELECT verified_at AS at FROM login_attempt
+    WHERE owner_id = ${ownerId} AND role = 'owner' AND status = ${ELoginAttemptStatus.COMPLETED}
+  )`
+}
+
 const ownerUsageRouter = createTRPCRouter({
   list: adminProcedure.input(dateRangeInput).query(async ({ input }) => {
     const ownerRows = await db
@@ -986,16 +1004,12 @@ const ownerUsageRouter = createTRPCRouter({
         url: owners.url,
         image: owners.image,
         nbLogins: sql<number>`(
-          SELECT count(*)::int FROM "session" s
-          INNER JOIN "user" u ON s.user_id = u.id
-          WHERE u.owner_id = "owner"."id" AND u.role != 'admin'
-          AND s.created_at >= ${input.from}::date
-          AND s.created_at < (${input.to}::date + 1)
+          SELECT count(*)::int FROM ${ownerLoginsSql(sql`"owner"."id"`)} logins
+          WHERE logins.at >= ${input.from}::date
+          AND logins.at < (${input.to}::date + 1)
         )`,
         lastLogin: sql<string | null>`(
-          SELECT max(s.created_at)::text FROM "session" s
-          INNER JOIN "user" u ON s.user_id = u.id
-          WHERE u.owner_id = "owner"."id" AND u.role != 'admin'
+          SELECT max(logins.at)::text FROM ${ownerLoginsSql(sql`"owner"."id"`)} logins
         )`,
         nbActions: sql<number>`(
           SELECT count(*)::int FROM activity_log
@@ -1041,16 +1055,13 @@ const ownerUsageRouter = createTRPCRouter({
   detail: adminProcedure.input(dateRangeInput.extend({ ownerId: z.number() })).query(async ({ input }) => {
     const loginsByDay = await db
       .select({
-        date: sql<string>`date(s.created_at)`.as('date'),
+        date: sql<string>`date(logins.at)`.as('date'),
         count: sql<number>`count(*)::int`.as('count'),
       })
-      .from(sql`"session" s`)
-      .innerJoin(sql`"user" u`, sql`s.user_id = u.id`)
-      .where(
-        sql`u.owner_id = ${input.ownerId} AND u.role != 'admin' AND s.created_at >= ${input.from}::date AND s.created_at < (${input.to}::date + 1)`,
-      )
-      .groupBy(sql`date(s.created_at)`)
-      .orderBy(sql`date(s.created_at)`)
+      .from(sql`${ownerLoginsSql(sql`${input.ownerId}`)} logins`)
+      .where(sql`logins.at >= ${input.from}::date AND logins.at < (${input.to}::date + 1)`)
+      .groupBy(sql`date(logins.at)`)
+      .orderBy(sql`date(logins.at)`)
 
     const actionsByDay = await db
       .select({

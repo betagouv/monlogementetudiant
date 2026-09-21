@@ -46,19 +46,23 @@ export const user = pgTable(
   (t) => [index('user_owner_id_idx').on(t.ownerId)],
 )
 
-export const session = pgTable('session', {
-  id: text().primaryKey(),
-  userId: text('user_id')
-    .notNull()
-    .references(() => user.id, { onDelete: 'cascade' }),
-  token: text().notNull().unique(),
-  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
-  ipAddress: text('ip_address'),
-  userAgent: text('user_agent'),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-  impersonatedBy: text('impersonated_by'),
-})
+export const session = pgTable(
+  'session',
+  {
+    id: text().primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    token: text().notNull().unique(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    ipAddress: text('ip_address'),
+    userAgent: text('user_agent'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+    impersonatedBy: text('impersonated_by'),
+  },
+  (t) => [index('session_user_id_created_at_idx').on(t.userId, t.createdAt)],
+)
 
 /**
  * Depuis Better Auth 1.7, l'identité d'un compte est portée par le couple `(issuer, accountId)` et
