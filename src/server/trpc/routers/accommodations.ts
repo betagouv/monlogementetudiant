@@ -12,6 +12,7 @@ import {
   toResidenceType,
   toTargetAudience,
 } from '~/server/accommodations/list-query'
+import { isOpenToApplications } from '~/server/bailleur/applications-open'
 import { db } from '~/server/db'
 import { academies } from '~/server/db/schema/academies'
 import { accommodationAddresses } from '~/server/db/schema/accommodation-addresses'
@@ -216,6 +217,7 @@ export const accommodationsRouter = createTRPCRouter({
         ownerImage: owners.image,
         ownerContactMode: owners.contactMode,
         acceptsApplications: accommodations.acceptsApplications,
+        applicationsSuspendedAt: accommodations.applicationsSuspendedAt,
         citySlug: cities.slug,
         cityBbox: bboxSelect(cities),
         departmentCode: departments.code,
@@ -310,9 +312,9 @@ export const accommodationsRouter = createTRPCRouter({
             url: row.ownerUrl ?? '',
             landingUrl: row.ownerLandingUrl ?? null,
             imageBase64: row.ownerImage ? `data:image/jpeg;base64,${Buffer.from(row.ownerImage).toString('base64')}` : null,
-            // Une résidence fermée aux candidatures se présente comme un parc sans parcours :
+            // Une résidence fermée ou suspendue se présente comme un parc sans parcours :
             // tous les boutons de candidature en dépendent déjà, rien d'autre n'est à filtrer.
-            contactMode: row.acceptsApplications ? (row.ownerContactMode ?? EOwnerContactMode.NONE) : EOwnerContactMode.NONE,
+            contactMode: isOpenToApplications(row) ? (row.ownerContactMode ?? EOwnerContactMode.NONE) : EOwnerContactMode.NONE,
           }
         : null,
       citySlug: row.citySlug,

@@ -14,7 +14,7 @@ const brevoHeaders = {
 interface TemplateEmailParams {
   to: string
   templateId: number
-  params?: Record<string, string>
+  params?: Record<string, string | string[]>
 }
 
 export async function sendTemplateEmail({ to, templateId, params }: TemplateEmailParams): Promise<void> {
@@ -104,6 +104,41 @@ export async function sendContactRequestConfirmationEmail(
     to: email,
     templateId: env.BREVO_TEMPLATE_CONTACT_CONFIRMATION,
     params: { CONFIRMATION_LINK: params.url, ACCOMMODATION_NAME: params.accommodationName },
+  })
+}
+
+export async function sendApplicationsManagementGrantedEmail(
+  email: string,
+  params: { firstname: string; ownerName: string; residences: string[]; residencesCount: number; url: string },
+): Promise<void> {
+  await sendTemplateEmail({
+    to: email,
+    templateId: env.BREVO_TEMPLATE_APPLICATIONS_MANAGEMENT_GRANTED,
+    params: {
+      FIRSTNAME: params.firstname,
+      OWNER_NAME: params.ownerName,
+      RESIDENCES: params.residences,
+      RESIDENCES_COUNT: String(params.residencesCount),
+      LINK: params.url,
+    },
+  })
+}
+
+export async function sendApplicationsSuspendedEmail(
+  email: string,
+  params: { firstname: string; residenceName: string; suspendedBy: string; ownerName: string; suspendedAt: string; url: string },
+): Promise<void> {
+  await sendTemplateEmail({
+    to: email,
+    templateId: env.BREVO_TEMPLATE_APPLICATIONS_SUSPENDED,
+    params: {
+      FIRSTNAME: params.firstname,
+      RESIDENCE_NAME: params.residenceName,
+      SUSPENDED_BY: params.suspendedBy,
+      OWNER_NAME: params.ownerName,
+      SUSPENDED_AT: params.suspendedAt,
+      LINK: params.url,
+    },
   })
 }
 

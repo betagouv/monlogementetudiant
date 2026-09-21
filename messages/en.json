@@ -2131,7 +2131,7 @@
       "list": {
         "residenceCount": "{count, plural, one {# residence} other {# residences}}",
         "availableFilter": "Available accommodation",
-        "searchPlaceholder": "Residence name, city...",
+        "searchPlaceholder": "Search for a residence or a city",
         "housingCount": "{count, plural, one {# accommodation} other {# accommodations}}",
         "availableLabel": "Available",
         "save": "Save",
@@ -2160,7 +2160,7 @@
       "titleDossierFacile": "Contacts with DossierFacile",
       "loading": "Loading...",
       "defaultCandidateName": "Applicant",
-      "searchResidenceLabel": "Search for a residence",
+      "searchResidenceLabel": "Search for a residence or a city",
       "settingsButtonTitle": "Contact mode settings",
       "moderationButtonTitle": "Manage moderation rights",
       "noResidence": "No residence.",
@@ -2296,6 +2296,24 @@
         "non_retenu": "Not selected",
         "a_contacter": "To contact",
         "contacte": "Contacted"
+      },
+      "applicationsSuspendedBadge": "Applications paused",
+      "applicationsToggle": {
+        "label": "Receive applications",
+        "openHint": "Students can apply to this residence.",
+        "suspendedHint": "Applications paused: the apply button is no longer shown to students.",
+        "modalTitle": "Pause applications?",
+        "modalDescription": "Students will no longer be able to apply to this residence until you resume applications. Your organisation administrators will be notified by email.",
+        "cancel": "Cancel",
+        "confirm": "Pause applications",
+        "suspendedSuccess": "Applications are paused for this residence.",
+        "resumedSuccess": "Applications are open again for this residence.",
+        "error": "The change could not be saved."
+      },
+      "noManagerAlert": {
+        "title": "No manager can access student applications",
+        "description": "By default, only administrators can see applications. To let a manager view and handle them, click the <icon></icon> \"Manage moderation rights\" button.",
+        "action": "Grant rights"
       }
     },
     "ownerForm": {
