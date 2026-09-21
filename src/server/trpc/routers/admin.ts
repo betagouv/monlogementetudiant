@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server'
-import { and, between, count, desc, eq, ilike, inArray, isNull, ne, or, sql } from 'drizzle-orm'
+import { and, between, count, desc, eq, ilike, inArray, isNull, or, type SQL, sql } from 'drizzle-orm'
 import { getTranslations } from 'next-intl/server'
 import { z } from 'zod'
 import { ELoginAttemptStatus } from '~/enums/login-attempt-status'
@@ -27,7 +27,6 @@ import { account, session, user } from '~/server/db/schema/auth'
 import { cities } from '~/server/db/schema/cities'
 import { eventStats } from '~/server/db/schema/event-stats'
 import { importJobs } from '~/server/db/schema/import-jobs'
-import { loginAttempts } from '~/server/db/schema/login-attempts'
 import { ownerFeedback } from '~/server/db/schema/owner-feedback'
 import { owners } from '~/server/db/schema/owners'
 import { stats } from '~/server/db/schema/stats'
@@ -978,6 +977,23 @@ const matomoStatsRouter = createTRPCRouter({
   }),
 })
 
+/**
+ * Connexions d'un gestionnaire : les liens magiques validés font foi depuis leur mise en service,
+ * les sessions ne servent qu'à l'historique antérieur.
+ */
+function ownerLoginsSql(ownerId: SQL) {
+  const cutoff = sql`coalesce((SELECT min(created_at) FROM login_attempt), 'infinity'::timestamptz)`
+  return sql`(
+    SELECT s.created_at AS at FROM "session" s
+    INNER JOIN "user" u ON s.user_id = u.id
+    WHERE u.owner_id = ${ownerId} AND u.role != 'admin' AND s.impersonated_by IS NULL
+    AND s.created_at < ${cutoff}
+    UNION ALL
+    SELECT verified_at AS at FROM login_attempt
+    WHERE owner_id = ${ownerId} AND role != 'admin' AND status = ${ELoginAttemptStatus.COMPLETED}
+  )`
+}
+
 const ownerUsageRouter = createTRPCRouter({
   list: adminProcedure.input(dateRangeInput).query(async ({ input }) => {
     const ownerRows = await db
@@ -990,16 +1006,12 @@ const ownerUsageRouter = createTRPCRouter({
         // Les sessions disparaissent à la déconnexion. Les traces de succès conservent
         // le bailleur et le rôle à l'envoi du lien, indépendamment de l'état actuel du compte.
         nbLogins: sql<number>`(
-          SELECT count(*)::int FROM login_attempt la
-          WHERE la.owner_id = "owner"."id" AND la.role != 'admin'
-          AND la.status = ${ELoginAttemptStatus.COMPLETED}
-          AND la.verified_at >= ${input.from}::date
-          AND la.verified_at < (${input.to}::date + 1)
+          SELECT count(*)::int FROM ${ownerLoginsSql(sql`"owner"."id"`)} logins
+          WHERE logins.at >= ${input.from}::date
+          AND logins.at < (${input.to}::date + 1)
         )`,
         lastLogin: sql<string | null>`(
-          SELECT max(la.verified_at)::text FROM login_attempt la
-          WHERE la.owner_id = "owner"."id" AND la.role != 'admin'
-          AND la.status = ${ELoginAttemptStatus.COMPLETED}
+          SELECT max(logins.at)::text FROM ${ownerLoginsSql(sql`"owner"."id"`)} logins
         )`,
         nbActions: sql<number>`(
           SELECT count(*)::int FROM activity_log
@@ -1045,20 +1057,13 @@ const ownerUsageRouter = createTRPCRouter({
   detail: adminProcedure.input(dateRangeInput.extend({ ownerId: z.number() })).query(async ({ input }) => {
     const loginsByDay = await db
       .select({
-        date: sql<string>`date(${loginAttempts.verifiedAt})`.as('date'),
+        date: sql<string>`date(logins.at)`.as('date'),
         count: sql<number>`count(*)::int`.as('count'),
       })
-      .from(loginAttempts)
-      .where(
-        and(
-          eq(loginAttempts.ownerId, input.ownerId),
-          ne(loginAttempts.role, 'admin'),
-          eq(loginAttempts.status, ELoginAttemptStatus.COMPLETED),
-          sql`${loginAttempts.verifiedAt} >= ${input.from}::date AND ${loginAttempts.verifiedAt} < (${input.to}::date + 1)`,
-        ),
-      )
-      .groupBy(sql`date(${loginAttempts.verifiedAt})`)
-      .orderBy(sql`date(${loginAttempts.verifiedAt})`)
+      .from(sql`${ownerLoginsSql(sql`${input.ownerId}`)} logins`)
+      .where(sql`logins.at >= ${input.from}::date AND logins.at < (${input.to}::date + 1)`)
+      .groupBy(sql`date(logins.at)`)
+      .orderBy(sql`date(logins.at)`)
 
     const actionsByDay = await db
       .select({
