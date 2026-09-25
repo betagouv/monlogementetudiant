@@ -57,7 +57,7 @@
     "scholarshipStatusRequired": "Veuillez indiquer si vous êtes boursier",
     "scholarshipTypeRequired": "Veuillez préciser votre bourse",
     "feedbackCommentMaxLength": "Votre commentaire ne doit pas dépasser {max} caractères",
-    "nbAccessibleApartmentsPositive": "Le nombre de logements accessibles doit être un entier positif",
+    "nbAccessibleApartmentsPositive": "Le nombre de logements adaptés PMR doit être un entier positif",
     "nbColivingApartmentsPositive": "Le nombre de logements en colocation doit être un entier positif"
   },
   "typologies": {

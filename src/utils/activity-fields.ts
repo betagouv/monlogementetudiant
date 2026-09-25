@@ -77,7 +77,7 @@ const ACCOMMODATION_FIELD_LABELS: Record<string, string> = {
   acceptWaitingList: 'Liste d’attente',
   scholarshipHoldersPriority: 'Priorité boursiers',
   socialHousingRequired: 'Logement social requis',
-  nbAccessibleApartments: 'Logements accessibles',
+  nbAccessibleApartments: 'Logements adaptés PMR',
   nbColivingApartments: 'Logements en coliving',
   bathroom: 'Salle de bain',
   kitchenType: 'Cuisine',
