@@ -4,6 +4,8 @@ import { useTranslations } from 'next-intl'
 import { FC } from 'react'
 import { tss } from 'tss-react'
 import { FindStudentAccomodationAutocompleteResults } from '~/components/find-student-accomodation/autocomplete/find-student-accomodation-autocomplete-results'
+import { GeolocationButton } from '~/components/find-student-accomodation/geolocation-button'
+import { useGeolocatedSearch } from '~/hooks/use-geolocated-search'
 import { useTerritories } from '~/hooks/use-territories'
 
 export const FindStudentAccomodationAutocompleteInput: FC = () => {
@@ -15,13 +17,14 @@ export const FindStudentAccomodationAutocompleteInput: FC = () => {
   const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     e.preventDefault()
   }
+  const { locate, isLocating } = useGeolocatedSearch()
 
   return (
     <div className="fr-position-relative">
       <Input
         classes={{ root: classes.input }}
         label={t('header.inputLabel')}
-        iconId="ri-map-pin-2-line"
+        addon={<GeolocationButton onClick={locate} isLocating={isLocating} iconOnly />}
         nativeInputProps={{ onBlur: handleInputBlur, onChange: handleInputChange, value: searchQuery }}
         state={isError ? 'error' : 'default'}
       />

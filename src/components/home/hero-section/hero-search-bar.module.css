@@ -11,6 +11,8 @@
 .inputContainer {
   position: relative;
   z-index: 10;
+  box-shadow: 0 6px 18px 0 rgb(0 0 18 / 16%);
+  border-radius: 4px 4px 0 0;
 }
 
 .nativeInput {

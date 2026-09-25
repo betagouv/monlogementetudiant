@@ -63,8 +63,9 @@ export const FindStudentAccomodationResultsContent: FC<FindStudentAccomodationRe
     ['recherche-par-carte']: parseAsBoolean,
   })
 
+  const isMapSearch = !!queryStates['recherche-par-carte']
   useEffect(() => {
-    if (accommodations?.results && accommodations.results.length < 6) {
+    if (!isMapSearch && accommodations?.results && accommodations.results.length < 6) {
       window.scrollTo({ behavior: 'smooth', top: 0 })
     }
   }, [accommodations?.results.length])
