@@ -1754,7 +1754,9 @@
         "addError": "Une erreur est survenue lors de l'ajout aux favoris.",
         "removed": "Logement supprimé des favoris !",
         "removeError": "Une erreur est survenue lors de la suppression des favoris."
-      }
+      },
+      "unpublished": "Cette résidence n’est plus proposée sur Mon Logement Étudiant.",
+      "unpublishedLink": "Voir les résidences {cityFormatted}"
     },
     "profile": {
       "modalTitle": "Complétez votre profil",
