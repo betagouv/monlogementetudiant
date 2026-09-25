@@ -6,7 +6,7 @@ import PrepareBudgetContentCard from '~/app/(public)/preparer-mon-budget-etudian
 import PrepareBudgetContentHeader from '~/app/(public)/preparer-mon-budget-etudiant/components/prepare-budget-content-header'
 import PrepareBudgetRedirectionCard from '~/app/(public)/preparer-mon-budget-etudiant/components/prepare-budget-redirection-card'
 import PrepareBudgetSimulateAidsCard from '~/app/(public)/preparer-mon-budget-etudiant/components/prepare-budget-simulate-aids-card'
-import imageHero from '~/images/prepare-budget-content.webp'
+import imageHero from '~/images/prepare-budget-content.svg'
 import styles from '../preparer-mon-budget-etudiant.module.css'
 
 export default async function PrepareBudgetContent() {
