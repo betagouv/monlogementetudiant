@@ -1820,6 +1820,7 @@
     "admin": {
       "errors": {
         "userNotFound": "User not found",
+        "userNotOwner": "Only a manager account can be linked to a landlord",
         "userAlreadyExists": "A user with this email already exists",
         "ownerNotFound": "Manager not found",
         "ownerDeleteHasAccommodations": "This manager is linked to residences. You must delete them or reassign them before the manager can be deleted."

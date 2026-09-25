@@ -121,9 +121,16 @@ export default function ResidencesPage() {
             }}
           />
         </div>
-        <div className="fr-col-md-6 fr-flex fr-justify-content-end">
+        <div className="fr-col-md-6 fr-flex fr-flex-wrap fr-flex-gap-4v fr-justify-content-end">
           <Button iconId="fr-icon-download-line" priority="secondary" linkProps={{ href: '/api/admin/residences/export' }}>
             Export CSV
+          </Button>
+          <Button
+            iconId="fr-icon-download-line"
+            priority="secondary"
+            linkProps={{ href: '/api/admin/residences/suivi-coordonnees/export' }}
+          >
+            Export suivi des coordonnées
           </Button>
         </div>
       </div>

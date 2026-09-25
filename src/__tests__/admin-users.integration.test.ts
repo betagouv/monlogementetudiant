@@ -13,27 +13,26 @@ vi.mock('~/server/services/brevo', async () => {
 
 describe('admin.users.list', () => {
   describe('unlinked filter', () => {
-    it('returns users without ownerId regardless of role', async () => {
+    it('returns only unlinked accounts of the requested role', async () => {
       await createUser({ id: 'user-no-owner', role: 'user', name: 'User No Owner' })
       await createUser({ id: 'owner-no-owner', role: 'owner', name: 'Owner No Owner' })
       await createUser({ id: 'admin-no-owner', role: 'admin', name: 'Admin No Owner' })
 
-      const result = await adminCaller.admin.users.list({ unlinked: true })
+      const result = await adminCaller.admin.users.list({ role: 'owner', unlinked: true })
 
-      expect(result.total).toBeGreaterThanOrEqual(3)
       const ids = result.items.map((u: { id: string }) => u.id)
-      expect(ids).toContain('user-no-owner')
       expect(ids).toContain('owner-no-owner')
-      expect(ids).toContain('admin-no-owner')
+      expect(ids).not.toContain('user-no-owner')
+      expect(ids).not.toContain('admin-no-owner')
     })
 
     it('excludes users that are already linked to an owner', async () => {
-      await createUser({ id: 'linked-user', role: 'user', name: 'Linked User' })
+      await createUser({ id: 'linked-user', role: 'owner', name: 'Linked User' })
       await createOwner({ userId: 'linked-user', name: 'Owner A', slug: 'owner-a' })
 
-      await createUser({ id: 'free-user', role: 'user', name: 'Free User' })
+      await createUser({ id: 'free-user', role: 'owner', name: 'Free User' })
 
-      const result = await adminCaller.admin.users.list({ unlinked: true })
+      const result = await adminCaller.admin.users.list({ role: 'owner', unlinked: true })
 
       const ids = result.items.map((u: { id: string }) => u.id)
       expect(ids).toContain('free-user')
@@ -41,15 +40,27 @@ describe('admin.users.list', () => {
     })
 
     it('combines unlinked with search filter', async () => {
-      await createUser({ id: 'alice-unlinked', role: 'user', name: 'Alice Dupont', email: 'alice@test.com' })
-      await createUser({ id: 'bob-unlinked', role: 'user', name: 'Bob Martin', email: 'bob@test.com' })
+      await createUser({ id: 'alice-unlinked', role: 'owner', name: 'Alice Dupont', email: 'alice@test.com' })
+      await createUser({ id: 'bob-unlinked', role: 'owner', name: 'Bob Martin', email: 'bob@test.com' })
 
-      const result = await adminCaller.admin.users.list({ unlinked: true, search: 'Alice' })
+      const result = await adminCaller.admin.users.list({ role: 'owner', unlinked: true, search: 'Alice' })
 
       const ids = result.items.map((u: { id: string }) => u.id)
       expect(ids).toContain('alice-unlinked')
       expect(ids).not.toContain('bob-unlinked')
     })
+  })
+})
+
+describe('admin.users.linkToOwner', () => {
+  it('rejects linking a student account to an owner', async () => {
+    await createUser({ id: 'student-link', role: 'user', name: 'Student', email: 'student-link@test.com' })
+    const owner = await createOwner({ name: 'Bailleur Etudiant', slug: 'bailleur-etudiant' })
+
+    await expect(adminCaller.admin.users.linkToOwner({ userId: 'student-link', ownerId: owner.id })).rejects.toThrow()
+
+    const student = await getTestDb().query.user.findFirst({ where: eq(user.id, 'student-link') })
+    expect(student?.ownerId).toBeNull()
   })
 })
 
