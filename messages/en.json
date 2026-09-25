@@ -2398,3 +2398,12 @@
     "poweredBy": "Powered by"
   }
 }
+  },
+  "geolocation": {
+    "button": "Use my location",
+    "buttonLabel": "Use my location to fill in the city",
+    "locating": "Locating…",
+    "denied": "You denied access to your location. Allow it in your browser settings to use this feature.",
+    "unavailable": "Unable to determine your location. Please enter your city.",
+    "unsupported": "Your browser does not support geolocation. Please enter your city.",
+    "notFound": "No French town was found at your location. Please enter your city."

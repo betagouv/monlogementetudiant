@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { usePathname } from 'next/navigation'
 import { parseAsBoolean, useQueryState, useQueryStates } from 'nuqs'
 import { accommodationsParsers } from '~/lib/accommodations-search-params'
@@ -67,5 +67,6 @@ export const useAccomodations = ({ cityId: cityIdOverride, citySlug, pageSize }:
       ownerSlug: gestionnaire ?? undefined,
     }),
     enabled: effectiveCitySlug ? !!cityId : effectiveDepartmentSlug ? !!departmentId : true,
+    placeholderData: keepPreviousData,
   })
 }

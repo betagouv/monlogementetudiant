@@ -2398,3 +2398,12 @@
     "poweredBy": "Proposé par"
   }
 }
+  },
+  "geolocation": {
+    "button": "Utiliser ma position",
+    "buttonLabel": "Utiliser ma position pour renseigner la ville",
+    "locating": "Localisation en cours…",
+    "denied": "Vous avez refusé l’accès à votre position. Autorisez-le dans les réglages de votre navigateur pour utiliser cette fonction.",
+    "unavailable": "Impossible de déterminer votre position. Veuillez saisir votre ville.",
+    "unsupported": "Votre navigateur ne permet pas la géolocalisation. Veuillez saisir votre ville.",
+    "notFound": "Aucune commune française n’a été trouvée à votre position. Veuillez saisir votre ville."

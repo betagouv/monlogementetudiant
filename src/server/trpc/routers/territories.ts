@@ -250,6 +250,19 @@ export const territoriesRouter = createTRPCRouter({
     }
   }),
 
+  findCityByCoordinates: baseProcedure
+    .input(z.object({ latitude: z.number().min(-90).max(90), longitude: z.number().min(-180).max(180) }))
+    .query(async ({ input }) => {
+      const point = sql`ST_SetSRID(ST_MakePoint(${input.longitude}, ${input.latitude}), 4326)`
+      const [city] = await db
+        .select({ id: cities.id, name: cities.name, slug: cities.slug, bbox: bboxSelect(cities) })
+        .from(cities)
+        .where(sql`ST_DWithin(${cities.boundary}, ${point}, 0.05)`)
+        .orderBy(sql`${cities.boundary} <-> ${point}`)
+        .limit(1)
+      return city ?? null
+    }),
+
   listAcademies: baseProcedure
     .input(z.object({ search: z.string().max(MAX_SEARCH_LENGTH).optional() }).optional())
     .query(async ({ input }) => {
