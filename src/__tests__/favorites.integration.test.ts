@@ -26,6 +26,20 @@ describe('favorites.list', () => {
     expect(result).toHaveLength(2)
   })
 
+  it('keeps an unpublished residence in the list, flagged as unpublished', async () => {
+    const hidden = await createAccommodation({
+      slug: 'fav-unpublished',
+      published: false,
+      geom: { type: 'Point', coordinates: [2.35, 48.85] },
+    })
+    await createFavoriteAccommodation({ userId: 'test-user-id', accommodationId: hidden.id })
+
+    const result = await authenticatedCaller.favorites.list()
+
+    expect(result).toHaveLength(1)
+    expect(result[0]?.accommodation.published).toBe(false)
+  })
+
   it('returns favorites in reverse chronological order', async () => {
     const accom1 = await createAccommodation({
       slug: 'fav-old',
