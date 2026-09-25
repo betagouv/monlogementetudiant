@@ -1820,6 +1820,7 @@
     "admin": {
       "errors": {
         "userNotFound": "Utilisateur introuvable",
+        "userNotOwner": "Seul un compte gestionnaire peut être lié à un bailleur",
         "userAlreadyExists": "Un utilisateur avec cet email existe déjà",
         "ownerNotFound": "Gestionnaire introuvable",
         "ownerDeleteHasAccommodations": "Ce gestionnaire est lié à des résidences. Vous devez les supprimer, ou les réassigner pour permettre la suppression du gestionnaire."

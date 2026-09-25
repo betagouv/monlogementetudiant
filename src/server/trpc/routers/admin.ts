@@ -55,8 +55,8 @@ const usersRouter = createTRPCRouter({
       }),
     )
     .query(async ({ input }) => {
-      const roleFilter = eq(user.role, input.role ?? 'user')
-      const conditions = [input.unlinked ? isNull(user.ownerId) : roleFilter]
+      const conditions = [eq(user.role, input.role ?? 'user')]
+      if (input.unlinked) conditions.push(isNull(user.ownerId))
 
       if (input.search && input.search.length >= 2) {
         const searchCondition = or(
@@ -267,6 +267,9 @@ const usersRouter = createTRPCRouter({
     const target = await db.query.user.findFirst({ where: eq(user.id, input.userId) })
     if (!target) {
       throw new TRPCError({ code: 'NOT_FOUND', message: (await getAdminErrorTranslations())('userNotFound') })
+    }
+    if (target.role !== 'owner') {
+      throw new TRPCError({ code: 'BAD_REQUEST', message: (await getAdminErrorTranslations())('userNotOwner') })
     }
 
     // Point de passage oblige : `users.create` ne rattache aucun bailleur, c'est ici que le plafond

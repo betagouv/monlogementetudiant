@@ -33,7 +33,7 @@ export function LinkUserToOwnerDialog({ ownerId, ownerName }: LinkUserToOwnerDia
   const [debouncedSearch] = useDebounce(search, 300)
 
   const { data: usersData } = useQuery({
-    ...trpc.admin.users.list.queryOptions({ page: 1, search: debouncedSearch, unlinked: true }),
+    ...trpc.admin.users.list.queryOptions({ page: 1, search: debouncedSearch, role: 'owner', unlinked: true }),
     enabled: debouncedSearch.length >= 2,
   })
 
@@ -78,7 +78,7 @@ export function LinkUserToOwnerDialog({ ownerId, ownerName }: LinkUserToOwnerDia
           nativeInputProps={{
             value: search,
             onChange: (e) => setSearch(e.target.value),
-            placeholder: 'Rechercher parmi les utilisateurs non rattachés...',
+            placeholder: 'Rechercher parmi les comptes gestionnaires non rattachés...',
           }}
         />
 
