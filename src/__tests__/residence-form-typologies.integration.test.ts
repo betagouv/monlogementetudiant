@@ -156,6 +156,7 @@ describe('formulaire résidence — typologies NULL en base', () => {
       nbTotal: null,
       nbAvailable: null,
       colocation: false,
+      availabilityUpdatedAt: null,
     })
   })
 
@@ -220,6 +221,7 @@ describe('formulaire résidence — champs omis (undefined) et valeur 0', () => 
       nbTotal: null,
       nbAvailable: null,
       colocation: false,
+      availabilityUpdatedAt: null,
     })
   })
 
