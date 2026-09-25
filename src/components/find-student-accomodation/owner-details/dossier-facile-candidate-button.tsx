@@ -242,7 +242,7 @@ const ContactRequestModal = ({ accommodationSlug }: { accommodationSlug: string 
 
   return (
     <ModalPortal>
-      <modal.Component title={t('title')} size="large">
+      <modal.Component titleAs="h2" title={t('title')} size="large">
         {step === 'form' ? (
           <form onSubmit={handleSubmit}>
             <div className={styles.title}>

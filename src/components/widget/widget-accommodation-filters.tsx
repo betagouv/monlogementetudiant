@@ -125,6 +125,7 @@ export const WidgetAccommodationFilters: FC<WidgetAccommodationFiltersProps> = (
         </div>
         <FindStudentAccommodationActiveFilters />
         <widgetMobileFiltersModal.Component
+          titleAs="h2"
           title={tHeader('filtersCta')}
           buttons={[{ children: tHeader('applyFilters'), onClick: () => widgetMobileFiltersModal.close() }]}
         >

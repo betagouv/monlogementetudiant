@@ -8,7 +8,9 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: '*',
-        allow: '/',
+        // embed.js doit rester accessible aux crawlers : les pages qui intègrent le widget
+        // ne peuvent pas être rendues sans lui (la règle allow la plus longue prime).
+        allow: ['/', '/widget/embed.js'],
         disallow: ['/administration*', '/bailleur*', '/mon-espace*', '/api/*', '/widget/*'],
       },
     ],

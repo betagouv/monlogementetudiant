@@ -25,6 +25,7 @@ export const LoginRequiredModal = ({ modal, description }: LoginRequiredModalPro
   const t = useTranslations('loginRequiredModal')
   return (
     <modal.Component
+      titleAs="h2"
       title={t('title')}
       iconId="ri-account-circle-line"
       buttons={[
