@@ -1953,7 +1953,8 @@
           "availability": {
             "title": "Update availability",
             "badge": "AVAILABILITY",
-            "status": "Residence Ariane"
+            "status": "Residence Ariane",
+            "lastUpdate": "Last updated on {date}"
           },
           "contactMode": {
             "title": "Choose the application management mode",
@@ -2139,7 +2140,8 @@
         "save": "Save",
         "editResidence": "Edit residence",
         "emptyTitle": "No residence found",
-        "emptyDescription": "No residence matches your search criteria."
+        "emptyDescription": "No residence matches your search criteria.",
+        "lastUpdate": "Last updated on {date}"
       }
     },
     "feedback": {

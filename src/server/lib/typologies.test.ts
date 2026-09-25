@@ -101,10 +101,16 @@ describe('typologiesByType', () => {
       nbTotal: 10,
       nbAvailable: 5,
       colocation: false,
+      availabilityUpdatedAt: null,
     })
     expect(out.t3?.colocation).toBe(true)
     expect(out.t3?.priceMin).toBe(800)
     expect(out.t2).toBeUndefined()
+  })
+
+  it('exposes the availability update date as an ISO string', () => {
+    const out = typologiesByType([{ ...row('t1'), availabilityUpdatedAt: new Date('2026-08-07T10:00:00Z') }] as never)
+    expect(out.t1?.availabilityUpdatedAt).toBe('2026-08-07T10:00:00.000Z')
   })
 
   it('returns an empty object for no rows', () => {

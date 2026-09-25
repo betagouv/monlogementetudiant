@@ -12,6 +12,7 @@ import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import avatarCecilia from '~/images/avatar-cecilia.svg'
 import avatarYasmine from '~/images/avatar-yasmine.svg'
 import { env } from '~/server/env'
+import { formatDay } from '~/utils/formatDate'
 import { buildHref } from '~/utils/preserve-query-params'
 import { DashboardTabs } from './dashboard-tabs'
 import { getBailleurDashboardPageContext } from './get-bailleur-dashboard-page-context'
@@ -25,7 +26,7 @@ export default async function TableauDeBordPage({ searchParams }: TableauDeBordP
   const calendlyUrl = z.string().parse(env.NEXT_PUBLIC_CALENDLY_URL)
   const awaitedSearchParams = await searchParams
   const t = await getTranslations('bailleur')
-  const { session, accommodations, ctx } = await getBailleurDashboardPageContext(awaitedSearchParams)
+  const { session, accommodations, lastAvailabilityUpdate, ctx } = await getBailleurDashboardPageContext(awaitedSearchParams)
 
   if (!session || !session.user) {
     return notFound()
@@ -146,6 +147,11 @@ export default async function TableauDeBordPage({ searchParams }: TableauDeBordP
                     </Badge>
                   </div>
                   <div className={styles.actionFooter}>
+                    {lastAvailabilityUpdate && (
+                      <span className={clsx('fr-text-mention--grey fr-text--sm fr-mb-0', styles.actionFooterText)}>
+                        {t('dashboard.priorityActions.actions.availability.lastUpdate', { date: formatDay(lastAvailabilityUpdate) })}
+                      </span>
+                    )}
                     <Link className="fr-link fr-link--no-underline" href={buildHref('/bailleur/residences', awaitedSearchParams)}>
                       <span className="ri-arrow-right-line" />
                     </Link>
