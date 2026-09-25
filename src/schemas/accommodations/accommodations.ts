@@ -20,6 +20,7 @@ export const ZTypologyView = z.object({
   nbTotal: z.number().nullable(),
   nbAvailable: z.number().nullable(),
   colocation: z.boolean(),
+  availabilityUpdatedAt: z.string().nullable().optional(),
 })
 export type TTypologyView = z.infer<typeof ZTypologyView>
 

@@ -10,6 +10,8 @@ import { TAccomodationMy } from '~/schemas/accommodations/accommodations'
 import { TYPOLOGIES, TYPOLOGY_TYPES } from '~/schemas/accommodations/typology'
 import { TUpdateResidence } from '~/schemas/accommodations/update-residence'
 import { calculateAvailability } from '~/utils/calculateAvailability'
+import { formatDay } from '~/utils/formatDate'
+import { getLastAvailabilityUpdate } from '~/utils/last-availability-update'
 import { TypologyTabContent } from './typology-tab-content'
 
 export const ResidenceAccommodationList = ({ accommodation }: { accommodation: TAccomodationMy }) => {
@@ -18,6 +20,8 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
   const t = useTranslations('findAccomodation.card')
   const tTypology = useTranslations('bailleur.residences.details.typologyTab')
   const tTypologies = useTranslations('schemas.typologies')
+  const tList = useTranslations('bailleur.residences.list')
+  const lastAvailabilityUpdate = getLastAvailabilityUpdate(accommodation.typologies)
   const {
     control,
     watch,
@@ -95,16 +99,23 @@ export const ResidenceAccommodationList = ({ accommodation }: { accommodation: T
   return (
     <div className="fr-border-bottom">
       <div className="fr-p-2w fr-p-md-6w">
-        <div className="fr-flex fr-justify-content-space-between fr-align-items-center fr-mb-2w">
+        <div className="fr-flex fr-flex-wrap fr-flex-gap-2v fr-justify-content-space-between fr-align-items-center fr-mb-2w">
           <h3 className="fr-mb-0">{tTypology('housingCount', { count: accommodation.nbTotalApartments ?? 0 })}</h3>
-          <AvailabilityBadge
-            nbAvailable={nbAvailable}
-            noAvailabilityText={t('noAvailability')}
-            availabilityText={(count) => t('availabilityCount', { count })}
-            unknownAvailabilityText={t('unknownAvailability')}
-            as="span"
-            context="owner"
-          />
+          <div className="fr-flex fr-flex-wrap fr-flex-gap-4v fr-align-items-center">
+            {lastAvailabilityUpdate && (
+              <span className="fr-text-mention--grey fr-text--sm fr-mb-0">
+                {tList('lastUpdate', { date: formatDay(lastAvailabilityUpdate) })}
+              </span>
+            )}
+            <AvailabilityBadge
+              nbAvailable={nbAvailable}
+              noAvailabilityText={t('noAvailability')}
+              availabilityText={(count) => t('availabilityCount', { count })}
+              unknownAvailabilityText={t('unknownAvailability')}
+              as="span"
+              context="owner"
+            />
+          </div>
         </div>
 
         {hasAnyTypologyError && <p className="fr-error-text fr-mb-2w">{tTypology('tabsHaveErrors')}</p>}

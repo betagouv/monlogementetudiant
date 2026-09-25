@@ -20,6 +20,7 @@ export type TTypologyView = {
   nbTotal: number | null
   nbAvailable: number | null
   colocation: boolean
+  availabilityUpdatedAt: string | null
 }
 
 /** Build the keyed `typologies` object from child rows, indexed by the typology type (= suffix). */
@@ -34,6 +35,7 @@ export function typologiesByType(rows: TypologyRow[]): Partial<Record<TypologyTy
       nbTotal: r.nbTotal,
       nbAvailable: r.nbAvailable,
       colocation: r.colocation,
+      availabilityUpdatedAt: r.availabilityUpdatedAt?.toISOString() ?? null,
     }
   }
   return out

@@ -1953,7 +1953,8 @@
           "availability": {
             "title": "Actualiser les disponibilités",
             "badge": "DISPONIBILITES",
-            "status": "Résidence Ariane"
+            "status": "Résidence Ariane",
+            "lastUpdate": "Dernière mise à jour le {date}"
           },
           "contactMode": {
             "title": "Choisir le mode de gestion des candidatures",
@@ -2139,7 +2140,8 @@
         "save": "Enregistrer",
         "editResidence": "Éditer la résidence",
         "emptyTitle": "Aucune résidence trouvée",
-        "emptyDescription": "Aucune résidence ne correspond à vos critères de recherche."
+        "emptyDescription": "Aucune résidence ne correspond à vos critères de recherche.",
+        "lastUpdate": "Dernière mise à jour le {date}"
       }
     },
     "feedback": {

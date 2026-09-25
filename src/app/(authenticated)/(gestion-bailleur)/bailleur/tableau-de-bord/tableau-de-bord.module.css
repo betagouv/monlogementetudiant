@@ -44,6 +44,10 @@
   align-items: center;
 }
 
+.actionFooterText {
+  margin-right: auto;
+}
+
 .customBadge {
   background-color: #fee7fc;
   color: #6e445a;
