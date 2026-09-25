@@ -18,7 +18,7 @@ Mon Logement Étudiant est une startup d'État (beta.gouv.fr) du Ministère de l
 
 ## Fonctionnalités principales
 
-- [Rechercher un logement étudiant](${baseUrl}/trouver-un-logement-etudiant): Moteur de recherche avec filtres par ville, budget, type de logement et accessibilité PMR
+- [Rechercher un logement étudiant](${baseUrl}/trouver-un-logement-etudiant): Moteur de recherche avec filtres par ville, budget, type de logement et logements adaptés PMR
 - [Simuler mes aides au logement](${baseUrl}/simuler-mes-aides-au-logement): Calculateur d'éligibilité aux aides CAF (APL, ALS, ALF)
 - [Préparer mon budget étudiant](${baseUrl}/preparer-mon-budget-etudiant): Simulateur de budget mensuel étudiant
 

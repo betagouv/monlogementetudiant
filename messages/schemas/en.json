@@ -57,7 +57,7 @@
     "scholarshipStatusRequired": "Please indicate whether you receive a scholarship",
     "scholarshipTypeRequired": "Please specify your scholarship",
     "feedbackCommentMaxLength": "Your comment must not exceed {max} characters",
-    "nbAccessibleApartmentsPositive": "The number of accessible units must be a positive whole number",
+    "nbAccessibleApartmentsPositive": "The number of homes adapted for people with reduced mobility must be a positive whole number",
     "nbColivingApartmentsPositive": "The number of shared units must be a positive whole number"
   },
   "typologies": {

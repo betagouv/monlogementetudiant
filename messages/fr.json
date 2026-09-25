@@ -274,7 +274,7 @@
     "tags": {
       "studio": "Studio",
       "shared": "Colocation",
-      "accessible": "Accessible",
+      "accessible": "Adapté PMR",
       "priceFrom": "À partir de {price} €"
     },
     "charges": "Charges comprises",
@@ -481,7 +481,7 @@
       "inputLabel": "Ville, académie ou département",
       "shared": "Colocation",
       "tooltip": {
-        "accessible": "Etablissements en capacité d'accueillir des personnes en situation de handicap"
+        "accessible": "Résidences proposant des logements adaptés aux personnes à mobilité réduite"
       },
       "rangeLabel": "Budget maximum",
       "filtersCta": "Filtres",
@@ -922,7 +922,7 @@
       "step3": {
         "badge": "Étape 3",
         "title": "Je trouve un logement étudiant",
-        "description": "Une recherche efficace grâce aux filtres personnalisés (localisation, budget, type de logement, accès PMR, etc.). La fiche détaillée présente la résidence en détails en incitant à consulter la page de destination de votre choix."
+        "description": "Une recherche efficace grâce aux filtres personnalisés (localisation, budget, type de logement, logements adaptés PMR, etc.). La fiche détaillée présente la résidence en détails en incitant à consulter la page de destination de votre choix."
       }
     },
     "callToAction": {
@@ -1544,7 +1544,7 @@
       "menuTitle": "Mon espace"
     },
     "welcome": {
-      "subtitle": "Bienvenue dans votre espace personnel",
+      "subtitle": "Bienvenue dans votre espace personnel ! Retrouvez vos logements favoris, suivez vos démarches, recevez des alertes, préparez votre dossier et consultez nos conseils pratiques pour réussir votre recherche de logement.",
       "greeting": "Ravi de vous revoir {firstname}"
     },
     "summary": {
@@ -1727,7 +1727,7 @@
       "deleteConfirm": "Confirmez la suppression de cette alerte",
       "maxPriceTag": "{price}€ max.",
       "colivingTag": "Colocation",
-      "accessibleTag": "Accessible",
+      "accessibleTag": "Adapté PMR",
       "toast": {
         "created": "Alerte créée avec succès !",
         "createError": "Une erreur est survenue lors de la création de l'alerte.",
@@ -2399,8 +2399,6 @@
   "widget": {
     "residencesCount": "{count, plural, one {# résidence} other {# résidences}}",
     "poweredBy": "Proposé par"
-  }
-}
   },
   "geolocation": {
     "button": "Utiliser ma position",
@@ -2410,3 +2408,5 @@
     "unavailable": "Impossible de déterminer votre position. Veuillez saisir votre ville.",
     "unsupported": "Votre navigateur ne permet pas la géolocalisation. Veuillez saisir votre ville.",
     "notFound": "Aucune commune française n’a été trouvée à votre position. Veuillez saisir votre ville."
+  }
+}

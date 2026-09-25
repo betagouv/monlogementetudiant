@@ -274,7 +274,7 @@
     "tags": {
       "studio": "Studio",
       "shared": "Shared flat",
-      "accessible": "Accessible",
+      "accessible": "Adapted for reduced mobility",
       "priceFrom": "From {price} €"
     },
     "charges": "Charges included",
@@ -481,11 +481,11 @@
       "inputLabel": "City, academy or department",
       "shared": "Shared flat",
       "tooltip": {
-        "accessible": "Institutions able to accommodate people with disabilities"
+        "accessible": "Residences offering homes adapted for people with reduced mobility"
       },
       "rangeLabel": "Maximum budget",
       "filtersCta": "Filters",
-      "accessbility": "Wheelchair accessible",
+      "accessbility": "Adapted for reduced mobility",
       "accommodations": "Residences",
       "availability": "Available accommodation",
       "availabilityLegend": "Availability",
@@ -922,7 +922,7 @@
       "step3": {
         "badge": "Step 3",
         "title": "I find student accommodation",
-        "description": "An efficient search thanks to personalized filters (location, budget, accommodation type, wheelchair access, etc.). The detailed page presents the residence in detail and encourages visitors to consult the destination page of your choice."
+        "description": "An efficient search thanks to personalized filters (location, budget, accommodation type, homes adapted for people with reduced mobility, etc.). The detailed page presents the residence in detail and encourages visitors to consult the destination page of your choice."
       }
     },
     "callToAction": {
@@ -1544,7 +1544,7 @@
       "menuTitle": "My area"
     },
     "welcome": {
-      "subtitle": "Welcome to your personal area",
+      "subtitle": "Welcome to your personal space! Find your favorite homes, track your applications, receive alerts, prepare your application file, and explore our practical tips to help you find a place to live.",
       "greeting": "Good to see you again {firstname}"
     },
     "summary": {
@@ -1704,7 +1704,7 @@
       "maxPriceLabel": "Maximum budget",
       "colivingLabel": "Shared flat",
       "colivingDescription": "Only be alerted about residences offering shared flats",
-      "accessibleLabel": "Accessible (reduced mobility)",
+      "accessibleLabel": "Adapted for reduced mobility",
       "accessibleDescription": "Only be alerted about residences adapted for people with reduced mobility",
       "locationLabel": "City, department or academy",
       "locationHint": "Enter the name of a city, department or academy",
@@ -1727,7 +1727,7 @@
       "deleteConfirm": "Confirm the deletion of this alert",
       "maxPriceTag": "€{price} max.",
       "colivingTag": "Shared flat",
-      "accessibleTag": "Accessible",
+      "accessibleTag": "Adapted for reduced mobility",
       "toast": {
         "created": "Alert created successfully!",
         "createError": "An error occurred while creating the alert.",
@@ -2040,7 +2040,7 @@
         "title": "Residence settings",
         "accommodationName": "Residence name",
         "waitingList": "The residence accepts waiting-list applications",
-        "accessible": "Number of wheelchair-accessible accommodations",
+        "accessible": "Number of homes adapted for people with reduced mobility",
         "coliving": "Number of shared accommodations in the residence",
         "scholarship": "Scholarship students have priority in the residence",
         "socialHousing": "A social housing application is required.",
@@ -2399,8 +2399,6 @@
   "widget": {
     "residencesCount": "{count, plural, one {# residence} other {# residences}}",
     "poweredBy": "Powered by"
-  }
-}
   },
   "geolocation": {
     "button": "Use my location",
@@ -2410,3 +2408,5 @@
     "unavailable": "Unable to determine your location. Please enter your city.",
     "unsupported": "Your browser does not support geolocation. Please enter your city.",
     "notFound": "No French town was found at your location. Please enter your city."
+  }
+}
