@@ -2117,7 +2117,8 @@
           "cancel": "Annuler",
           "save": "Enregistrer",
           "viewListing": "Voir la fiche",
-          "lastModified": "Dernière modification {time}"
+          "lastModified": "Dernière modification {time}",
+          "invalid": "Le formulaire contient des erreurs : corrigez les champs signalés avant d’enregistrer."
         },
         "equipments": {
           "title": "Équipements"
@@ -2297,6 +2298,7 @@
         "pageTitleDossierFacile": "Paramètres de réception des dossiers",
         "subtitle": "Sélectionnez les résidences acceptant des contacts d'étudiants",
         "subtitleDossierFacile": "Sélectionnez les résidences acceptant des dossiers d'étudiants",
+        "selectAll": "Sélectionner toutes les résidences ({count})",
         "residencesLegend": "Résidences",
         "residenceLocation": "{city} ({department})",
         "noResidence": "Aucune résidence pour le moment.",
@@ -2443,7 +2445,10 @@
     "button": "Utiliser ma position",
     "buttonLabel": "Utiliser ma position pour renseigner la ville",
     "locating": "Localisation en cours…",
-    "denied": "Vous avez refusé l’accès à votre position. Autorisez-le dans les réglages de votre navigateur pour utiliser cette fonction.",
+    "denied": "L’accès à votre position est bloqué pour ce site. Cliquez sur l’icône à gauche de la barre d’adresse, autorisez « Position », puis réessayez.",
+    "deniedBySystem": "Votre navigateur est autorisé, mais la localisation est désactivée pour lui dans les réglages de votre appareil (Confidentialité › Service de localisation). Activez-la, puis réessayez.",
+    "retry": "Réessayer",
+    "openSystemSettings": "Ouvrir les réglages",
     "unavailable": "Impossible de déterminer votre position. Veuillez saisir votre ville.",
     "unsupported": "Votre navigateur ne permet pas la géolocalisation. Veuillez saisir votre ville.",
     "notFound": "Aucune commune française n’a été trouvée à votre position. Veuillez saisir votre ville."

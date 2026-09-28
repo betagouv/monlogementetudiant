@@ -12,11 +12,13 @@ export const createToast = ({
   message,
   action,
   duration,
+  id,
 }: {
   priority: ToastPriority
   message: JSX.Element | string | null
   action?: ButtonProps
   duration?: number
+  id?: string
 }) => {
   toast.custom(
     (t) => (
@@ -39,6 +41,6 @@ export const createToast = ({
         />
       </div>
     ),
-    { duration },
+    { duration, id },
   )
 }

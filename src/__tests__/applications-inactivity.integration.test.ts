@@ -232,6 +232,24 @@ describe('runInactivityCheck — candidatures non traitées', () => {
     expect((await readResidence()).unprocessedApplicationsWarnedAt).toBeNull()
     expect(warningEmail).not.toHaveBeenCalled()
   })
+
+  it('--owner ne traite que le bailleur ciblé et force l’envoi des e-mails', async () => {
+    const qaOwner = await createOwner({ name: 'Bailleur QA', slug: 'bailleur-qa', contactMode: EOwnerContactMode.CONTACTS })
+    const qaResidence = await createAccommodation({ slug: 'res-qa', name: 'Res QA', ownerId: qaOwner.id, createdAt: daysAgo(100) }, [
+      typologyDraft('t1', { nbTotal: 10, nbAvailable: 2 }),
+    ])
+    await stampAvailability(daysAgo(1), qaResidence.id)
+    await createUser({ id: 'qa-admin', name: 'QA', firstname: 'QA', email: 'qa@test.com', role: 'owner' })
+    await getTestDb().update(user).set({ bailleurRole: 'administrator', ownerId: qaOwner.id }).where(eq(user.id, 'qa-admin'))
+    await addPendingContact(daysAgo(8))
+    await addPendingContact(daysAgo(8), qaResidence.id)
+
+    expect(await runInactivityCheck({ ownerSlug: 'bailleur-qa', sendOutsideProduction: true })).toMatchObject({ warned: 1 })
+    expect((await readResidence()).unprocessedApplicationsWarnedAt).toBeNull()
+    expect((await readResidence(qaResidence.id)).unprocessedApplicationsWarnedAt).not.toBeNull()
+    expect(warningEmail).toHaveBeenCalledTimes(1)
+    expect(warningEmail).toHaveBeenCalledWith('qa@test.com', expect.anything(), { force: true })
+  })
 })
 
 describe('runInactivityCheck — disponibilités', () => {

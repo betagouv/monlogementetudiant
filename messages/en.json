@@ -2117,7 +2117,8 @@
           "cancel": "Cancel",
           "save": "Save",
           "viewListing": "View listing",
-          "lastModified": "Last modified {time}"
+          "lastModified": "Last modified {time}",
+          "invalid": "The form contains errors: fix the highlighted fields before saving."
         },
         "equipments": {
           "title": "Amenities"
@@ -2297,6 +2298,7 @@
         "pageTitleDossierFacile": "Application files reception settings",
         "subtitle": "Select the residences accepting student contacts",
         "subtitleDossierFacile": "Select the residences accepting student application files",
+        "selectAll": "Select all residences ({count})",
         "residencesLegend": "Residences",
         "residenceLocation": "{city} ({department})",
         "noResidence": "No residence yet.",
@@ -2443,7 +2445,10 @@
     "button": "Use my location",
     "buttonLabel": "Use my location to fill in the city",
     "locating": "Locating…",
-    "denied": "You denied access to your location. Allow it in your browser settings to use this feature.",
+    "denied": "Location access is blocked for this site. Click the icon to the left of the address bar, allow “Location”, then try again.",
+    "deniedBySystem": "Your browser is allowed, but location is turned off for it in your device settings (Privacy › Location Services). Turn it on, then try again.",
+    "retry": "Try again",
+    "openSystemSettings": "Open settings",
     "unavailable": "Unable to determine your location. Please enter your city.",
     "unsupported": "Your browser does not support geolocation. Please enter your city.",
     "notFound": "No French town was found at your location. Please enter your city."

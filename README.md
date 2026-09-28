@@ -646,6 +646,7 @@ Variables d'env requises : `DATABASE_URL`, `BREVO_API_KEY`, `BREVO_TEMPLATE_ALER
 ```bash
 pnpm cli check-applications-inactivity --dry-run --verbose
 pnpm cli check-applications-inactivity
+pnpm cli check-applications-inactivity --owner <slug> --verbose   # recette : un seul bailleur
 ```
 
 Évalue chaque résidence ouverte aux candidatures (`accepts_applications`) d'un bailleur ayant choisi un parcours :
@@ -661,7 +662,7 @@ pnpm cli check-applications-inactivity
 - Les e-mails sont regroupés par destinataire : administrateurs du bailleur et gestionnaires dont le périmètre couvre la résidence (`manage_applications` pour les candidatures, `manage_residences` pour les disponibilités).
 - `owner.availability_imported` est posé par les commandes d'import et l'import CSV de l'admin.
 
-Suivi dans `import_job` (type `applications-inactivity`). Même double garde-fou que `expire-alerts` : rien hors production, sauf en `--dry-run`.
+Suivi dans `import_job` (type `applications-inactivity`). Même double garde-fou que `expire-alerts` : rien hors production, sauf en `--dry-run`. Exception pour la recette : `--owner <slug>` limite le passage à ce bailleur et agit, e-mails compris, même hors production (sur Scalingo : `scalingo --app <app> run "npx tsx cli/index.ts check-applications-inactivity --owner <slug> --verbose"`).
 
 Variables d'env requises : `DATABASE_URL`, `BREVO_API_KEY`, `BREVO_TEMPLATE_APPLICATIONS_INACTIVITY_WARNING`, `BREVO_TEMPLATE_APPLICATIONS_AUTO_SUSPENDED` (paramètres : `FIRSTNAME`, `OWNER_NAME`, `RESIDENCES[]`, `RESIDENCES_COUNT`, `LINK`).
 

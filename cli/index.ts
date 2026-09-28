@@ -256,6 +256,7 @@ program
   )
   .option('--dry-run', 'Simuler sans envoyer ni modifier la BDD')
   .option('--verbose', 'Afficher la décision prise pour chaque résidence')
+  .option('--owner <slug>', 'Limiter au bailleur donné ; actif et envoie les e-mails même hors production (recette)')
   .action((opts) => checkApplicationsInactivityCommand(opts))
 
 program
