@@ -117,6 +117,7 @@ export const getAccommodationMyById = async (slug: string): Promise<TAccomodatio
     imagesUrls: row.imagesUrls ?? null,
     externalUrl: row.externalUrl ?? undefined,
     virtualTourUrl: row.virtualTourUrl ?? null,
+    phoneNumber: row.phoneNumber,
     updatedAt: row.updatedAt ?? new Date(),
     scholarshipHoldersPriority: row.scholarshipHoldersPriority ?? false,
     socialHousingRequired: row.socialHousingRequired ?? false,

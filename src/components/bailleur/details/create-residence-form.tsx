@@ -13,6 +13,7 @@ import { CreateResidenceLocation } from '~/components/bailleur/details/create-re
 import { CreateResidencePictures } from '~/components/bailleur/details/create-residence-pictures'
 import { CreateResidencePublication } from '~/components/bailleur/details/create-residence-publication'
 import { ResidenceDetails } from '~/components/bailleur/details/residence-details'
+import { ResidencePhone } from '~/components/bailleur/details/residence-phone'
 import { ResidenceRedirection } from '~/components/bailleur/details/residence-redirection'
 import { ResidenceSummary } from '~/components/bailleur/details/residence-summary'
 import { ResidenceVirtualTour } from '~/components/bailleur/details/residence-virtual-tour'
@@ -40,6 +41,7 @@ export const CreateResidenceForm = () => {
       rentalChargesDetails: '',
       externalUrl: '',
       virtualTourUrl: '',
+      phoneNumber: null,
       acceptWaitingList: false,
       typologies: [
         {
@@ -103,6 +105,7 @@ export const CreateResidenceForm = () => {
           </div>
           <div className={clsx(styles.container, styles.stickyColumn, 'fr-width-full boxShadow')}>
             <ResidenceRedirection />
+            <ResidencePhone className="fr-border-top fr-mt-4w" />
             <div className="fr-flex fr-flex-gap-4v fr-justify-content-center fr-p-2w fr-p-md-4w">
               <Button type="submit" iconId="ri-add-line" disabled={createMutation.isPending}>
                 {t('create')}

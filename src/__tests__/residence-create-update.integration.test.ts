@@ -86,6 +86,39 @@ describe('residence create/update form write path', () => {
     expect((await accommodationBySlug(slug)).virtualTourUrl).toBeNull()
   })
 
+  it('normalizes the phone number on create and clears it on update', async () => {
+    await createOwner({ name: 'Owner Phone', slug: 'owner-phone', userId: 'test-owner-id' })
+
+    const { slug } = await ownerCaller.bailleur.create({
+      name: 'Résidence Téléphone',
+      addresses: [{ address: '1 rue de la Paix', city: 'Paris', postalCode: '75001' }],
+      externalUrl: 'https://example.com',
+      phoneNumber: '+33 1.45.67.89.10',
+      typologies: [fullTypology('t1')],
+    })
+    expect((await accommodationBySlug(slug)).phoneNumber).toBe('0145678910')
+
+    await ownerCaller.bailleur.update({ slug, typologies: [fullTypology('t1')] })
+    expect((await accommodationBySlug(slug)).phoneNumber).toBe('0145678910')
+
+    await ownerCaller.bailleur.update({ slug, phoneNumber: null })
+    expect((await accommodationBySlug(slug)).phoneNumber).toBeNull()
+  })
+
+  it('rejects an invalid phone number', async () => {
+    await createOwner({ name: 'Owner Bad Phone', slug: 'owner-bad-phone', userId: 'test-owner-id' })
+
+    await expect(
+      ownerCaller.bailleur.create({
+        name: 'Résidence Mauvais Numéro',
+        addresses: [{ address: '1 rue de la Paix', city: 'Paris', postalCode: '75001' }],
+        externalUrl: 'https://example.com',
+        phoneNumber: '12345',
+        typologies: [fullTypology('t1')],
+      }),
+    ).rejects.toThrow()
+  })
+
   it('create persists typology child rows and the derived parent aggregates', async () => {
     await createOwner({ name: 'Owner Flow', slug: 'owner-flow', userId: 'test-owner-id' })
 

@@ -1,3 +1,4 @@
+import Button from '@codegouvfr/react-dsfr/Button'
 import clsx from 'clsx'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -12,6 +13,7 @@ import { type ApartmentType } from '~/enums/apartment-type'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { TAccomodationDetails } from '~/schemas/accommodations/accommodations'
 import { formatDayjs } from '~/utils/dayjs'
+import { formatFrenchPhoneNumber, toTelHref } from '~/utils/phone-number'
 import styles from './owner-details.module.css'
 
 interface OwnerDetailsProps {
@@ -28,6 +30,7 @@ interface OwnerDetailsProps {
   availableApartmentTypes: ApartmentType[]
   contactMode: EOwnerContactMode
   updatedAt: Date
+  phoneNumber?: string | null
 }
 
 export const OwnerDetails = async ({
@@ -44,6 +47,7 @@ export const OwnerDetails = async ({
   availableApartmentTypes,
   contactMode,
   updatedAt,
+  phoneNumber,
 }: OwnerDetailsProps) => {
   const [t, tA11y, locale] = await Promise.all([getTranslations('accomodation'), getTranslations('accessibility'), getLocale()])
   const ownerUrl = externalUrl || owner?.url
@@ -104,6 +108,20 @@ export const OwnerDetails = async ({
         />
         {!!ownerUrl && (
           <ConsultOfferButton href={ownerUrl} slug={slug ?? ''} priority={!isAuthenticated || !isDossierFacile ? 'primary' : 'tertiary'} />
+        )}
+        {!!phoneNumber && (
+          <Button
+            className={clsx('fr-mt-2w', styles.sidebarOwnerButton)}
+            priority="tertiary"
+            iconId="ri-phone-line"
+            iconPosition="left"
+            linkProps={{
+              href: toTelHref(phoneNumber),
+              title: t('sidebar.buttons.call', { phoneNumber: formatFrenchPhoneNumber(phoneNumber) }),
+            }}
+          >
+            {formatFrenchPhoneNumber(phoneNumber)}
+          </Button>
         )}
       </div>
       {nbAvailable === 0 && (

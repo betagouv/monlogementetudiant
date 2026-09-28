@@ -72,6 +72,7 @@ const ACCOMMODATION_FIELD_LABELS: Record<string, string> = {
   target_audience: 'Public visé',
   externalUrl: 'Lien externe',
   virtualTourUrl: 'Visite virtuelle',
+  phoneNumber: 'Numéro de téléphone',
   imagesUrls: 'Photos',
   rentalChargesDetails: 'Détail des charges',
   acceptWaitingList: 'Liste d’attente',

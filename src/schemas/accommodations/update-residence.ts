@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { EResidenceType } from '~/enums/residence-type'
 import { ETargetAudience } from '~/enums/target-audience'
 import { frSchemaTranslator, type TSchemaTranslator } from '~/schemas/schema-translator'
+import { FRENCH_PHONE_NUMBER_REGEX, normalizeFrenchPhoneNumber } from '~/utils/phone-number'
 import { isValidVirtualTourInput } from '~/utils/virtual-tour'
 import { createZTypologies } from './typology'
 
@@ -24,6 +25,11 @@ export const createZUpdateResidence = (t: TSchemaTranslator = frSchemaTranslator
     rentalChargesDetails: z.string().optional(),
     externalUrl: z.url(t('errors.urlInvalid')).optional().or(z.literal('')),
     virtualTourUrl: z.string().max(2000).refine(isValidVirtualTourInput, t('errors.virtualTourNotAllowed')).optional(),
+    phoneNumber: z
+      .string()
+      .transform(normalizeFrenchPhoneNumber)
+      .pipe(z.string().min(1, t('errors.phoneNumberRequired')).regex(FRENCH_PHONE_NUMBER_REGEX, t('errors.phoneNumberInvalid')))
+      .nullish(),
 
     acceptWaitingList: z.boolean().optional(),
 

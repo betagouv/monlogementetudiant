@@ -11,6 +11,7 @@ import { ResidenceAccommodationList } from '~/components/bailleur/details/reside
 import { ResidenceDetails } from '~/components/bailleur/details/residence-details'
 import { ResidenceEquipments } from '~/components/bailleur/details/residence-equipments'
 import { ResidenceLocation } from '~/components/bailleur/details/residence-location'
+import { ResidencePhone } from '~/components/bailleur/details/residence-phone'
 import { ResidencePictures } from '~/components/bailleur/details/residence-pictures'
 import { ResidenceRedirection } from '~/components/bailleur/details/residence-redirection'
 import { ResidenceSummary } from '~/components/bailleur/details/residence-summary'
@@ -22,6 +23,7 @@ import { useUpdateResidenceDetails } from '~/hooks/use-update-residence-details'
 import { trackEvent } from '~/lib/tracking'
 import { TAccomodationMy } from '~/schemas/accommodations/accommodations'
 import { createZUpdateResidence, TUpdateResidence } from '~/schemas/accommodations/update-residence'
+import { formatFrenchPhoneNumber } from '~/utils/phone-number'
 import { sanitizeHTML } from '~/utils/sanitize-html'
 import { typologyFormDefaults } from '~/utils/typology-form-defaults'
 import styles from './update-residence-form.module.css'
@@ -53,6 +55,7 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
       rentalChargesDetails: accommodation.rentalChargesDetails || '',
       externalUrl: accommodation.externalUrl || '',
       virtualTourUrl: accommodation.virtualTourUrl || '',
+      phoneNumber: accommodation.phoneNumber ? formatFrenchPhoneNumber(accommodation.phoneNumber) : null,
       acceptWaitingList: accommodation.acceptWaitingList || false,
 
       typologies: typologyDefaults,
@@ -117,6 +120,7 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
               </span>
             </div>
             <ResidenceRedirection className="fr-border-top" />
+            <ResidencePhone className="fr-border-top fr-mt-4w" />
             <div className="fr-flex fr-flex-gap-4v fr-justify-content-center fr-p-2w fr-p-md-4w">
               <Button type="submit" iconId="ri-save-line" disabled={updateMutation.isPending}>
                 {t('save')}

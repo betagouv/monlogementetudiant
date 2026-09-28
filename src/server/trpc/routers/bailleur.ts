@@ -437,6 +437,7 @@ export const bailleurRouter = createTRPCRouter({
         rentalChargesDetails: fields.rentalChargesDetails ?? null,
         externalUrl: fields.externalUrl || null,
         virtualTourUrl: fields.virtualTourUrl?.trim() || null,
+        phoneNumber: fields.phoneNumber ?? null,
         acceptWaitingList: fields.acceptWaitingList ?? false,
         published: fields.published ?? false,
         scholarshipHoldersPriority: fields.scholarshipHoldersPriority ?? false,

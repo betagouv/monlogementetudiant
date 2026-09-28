@@ -305,6 +305,7 @@
         "dossierFacileApplied": "Candidature envoyée",
         "dossierFacileSelectType": "Type de logement",
         "consultDescription": "Vous serez redirigé vers le site de la résidence",
+        "call": "Appeler le {phoneNumber}",
         "dossierFacileDescription": "Dossier de location numérique certifié",
         "link": "Copier le lien",
         "email": "Envoyer par email",
@@ -2112,6 +2113,11 @@
         "redirection": {
           "label": "URL de redirection",
           "hint": "URL de la page de résidence"
+        },
+        "phone": {
+          "toggle": "Afficher un numéro de téléphone",
+          "hint": "Le numéro sera visible sur la fiche résidence",
+          "label": "Numéro de téléphone"
         },
         "pictures": {
           "title": "Photos de la résidence",
