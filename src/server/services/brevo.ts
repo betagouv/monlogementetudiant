@@ -39,6 +39,7 @@ interface RawEmailParams {
   to: string[]
   subject: string
   textContent: string
+  senderName?: string
   /** Coupe l'appel au-delà du délai : un Brevo bloqué ne doit pas faire traîner un conteneur cron. */
   timeoutMs?: number
 }
@@ -48,13 +49,19 @@ interface RawEmailParams {
  * le contenu est trop variable pour un template (message d'erreur, stack). Contrairement aux
  * envois par template, l'expéditeur doit être fourni explicitement.
  */
-export async function sendRawEmail({ to, subject, textContent, timeoutMs = 10_000 }: RawEmailParams): Promise<void> {
+export async function sendRawEmail({
+  to,
+  subject,
+  textContent,
+  senderName = 'MLE Crons',
+  timeoutMs = 10_000,
+}: RawEmailParams): Promise<void> {
   const response = await fetch(env.BREVO_API_URL, {
     method: 'POST',
     headers: brevoHeaders,
     signal: AbortSignal.timeout(timeoutMs),
     body: JSON.stringify({
-      sender: { email: SENDER_EMAIL, name: 'MLE Crons' },
+      sender: { email: SENDER_EMAIL, name: senderName },
       to: to.map((email) => ({ email })),
       replyTo: { email: SENDER_EMAIL },
       subject,

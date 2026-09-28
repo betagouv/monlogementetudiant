@@ -293,6 +293,22 @@
       "share": "Share accommodation",
       "emailSubject": "Student accommodation {title} {locationFormatted}",
       "emailBody": "Come and discover the student accommodation {title}, located {locationFormatted}.\n\n🔗 {url}\n📍 {location}\n\nKind regards,\nMon Logement Étudiant",
+      "report": {
+        "trigger": "Report an error",
+        "title": "Report an error",
+        "fieldLegend": "Information concerned",
+        "fields": {
+          "availability": "Housing availability",
+          "price": "Price",
+          "other": "Other"
+        },
+        "detailsLabel": "Details (optional)",
+        "cancel": "Cancel",
+        "submit": "Send the report",
+        "close": "Close",
+        "success": "Thank you, your report has been sent to our team.",
+        "error": "The report could not be sent. Please try again."
+      },
       "buttons": {
         "consult": "View the manager's offer",
         "dossierFacile": "Apply with Dossier Facile",

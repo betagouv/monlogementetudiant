@@ -526,6 +526,13 @@
       "when": 1790582187473,
       "tag": "0074_accommodation_phone_number",
       "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1790582580025,
+      "tag": "0075_accommodation_reports",
+      "breakpoints": true
     }
   ]
 }

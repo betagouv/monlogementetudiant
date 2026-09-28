@@ -293,6 +293,22 @@
       "share": "Partager le logement",
       "emailSubject": "Logement étudiant {title} {locationFormatted}",
       "emailBody": "Venez découvrir le logement étudiant {title}, situé {locationFormatted}.\n\n🔗 {url}\n📍 {location}\n\nCordialement,\nMon Logement Étudiant",
+      "report": {
+        "trigger": "Signaler une erreur",
+        "title": "Signaler une erreur",
+        "fieldLegend": "Information concernée",
+        "fields": {
+          "availability": "Disponibilité du logement",
+          "price": "Prix",
+          "other": "Autre"
+        },
+        "detailsLabel": "Précisions (facultatif)",
+        "cancel": "Annuler",
+        "submit": "Envoyer le signalement",
+        "close": "Fermer",
+        "success": "Merci, votre signalement a bien été transmis à nos équipes.",
+        "error": "Le signalement n'a pas pu être envoyé. Veuillez réessayer."
+      },
       "buttons": {
         "consult": "Consulter l'offre du gestionnaire",
         "dossierFacile": "Candidater avec Dossier Facile",

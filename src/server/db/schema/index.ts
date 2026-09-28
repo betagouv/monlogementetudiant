@@ -1,5 +1,6 @@
 export { academies } from './academies'
 export { accommodationAddresses } from './accommodation-addresses'
+export { accommodationReports } from './accommodation-reports'
 export { accommodationTypologies, typologyTypeEnum } from './accommodation-typologies'
 export { accommodations, targetAudienceEnum } from './accommodations'
 export { activityLog } from './activity-log'
