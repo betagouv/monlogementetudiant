@@ -19,7 +19,7 @@ type ResidenceOption = { id: number; name: string; cityName: string | null }
 
 type Props = {
   ownerId: number
-  namespace: 'bailleur.users.scope' | 'bailleur.contacts.settingsModal.residences'
+  namespace: 'bailleur.users.scope'
   value: TAccommodationSelection
   onChange: (value: TAccommodationSelection) => void
   initialSelection?: Array<{ id: number; name: string }>

@@ -149,6 +149,42 @@ export async function sendApplicationsSuspendedEmail(
   })
 }
 
+type InactivityEmailParams = { firstname: string; ownerName: string; residences: string[]; url: string }
+
+const inactivityParams = (params: InactivityEmailParams) => ({
+  FIRSTNAME: params.firstname,
+  OWNER_NAME: params.ownerName,
+  RESIDENCES: params.residences,
+  RESIDENCES_COUNT: String(params.residences.length),
+  LINK: params.url,
+})
+
+export async function sendApplicationsInactivityWarningEmail(email: string, params: InactivityEmailParams): Promise<void> {
+  if (env.NEXT_PUBLIC_APP_ENV !== 'production') {
+    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] alerte d'inactivité non envoyée à ${maskEmail(email)}`)
+    return
+  }
+
+  await sendTemplateEmail({
+    to: email,
+    templateId: env.BREVO_TEMPLATE_APPLICATIONS_INACTIVITY_WARNING,
+    params: inactivityParams(params),
+  })
+}
+
+export async function sendApplicationsAutoSuspendedEmail(email: string, params: InactivityEmailParams): Promise<void> {
+  if (env.NEXT_PUBLIC_APP_ENV !== 'production') {
+    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] suspension automatique non envoyée à ${maskEmail(email)}`)
+    return
+  }
+
+  await sendTemplateEmail({
+    to: email,
+    templateId: env.BREVO_TEMPLATE_APPLICATIONS_AUTO_SUSPENDED,
+    params: inactivityParams(params),
+  })
+}
+
 export async function sendOwnerAccountActivated(email: string, url: string): Promise<void> {
   await sendTemplateEmail({
     to: email,

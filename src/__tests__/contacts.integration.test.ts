@@ -7,7 +7,7 @@ import { createClaimToken, verifyClaimToken } from '~/server/contacts/claim-toke
 import { getClaimedContactRequest } from '~/server/contacts/claimed-request'
 import { linkGuestContactRequests } from '~/server/contacts/link-guest-requests'
 import { purgeContactRequests } from '~/server/contacts/purge'
-import { contactRequests } from '~/server/db/schema'
+import { accommodations, contactRequests, owners, user } from '~/server/db/schema'
 import { typologyDraft } from '../server/lib/typologies'
 import { createAccommodation, createOwner, createUser } from './fixtures/factories'
 import './helpers/setup-integration'
@@ -66,15 +66,6 @@ describe('contacts.create', () => {
     await createAccommodation({ slug: 'res-hidden', ownerId: owner!.id, published: false }, [typologyDraft('t1', { nbAvailable: 1 })])
 
     await expect(caller.contacts.create({ accommodationSlug: 'res-hidden', ...contactInput })).rejects.toMatchObject({ code: 'NOT_FOUND' })
-  })
-
-  it('rejects when the accommodation has no availability', async () => {
-    const owner = await createOwner({ name: 'Owner Contacts', slug: 'owner-contacts', contactMode: EOwnerContactMode.CONTACTS })
-    await createAccommodation({ slug: 'res-no-contact-availability', ownerId: owner!.id }, [typologyDraft('t1', { nbAvailable: 0 })])
-
-    await expect(
-      authenticatedCaller.contacts.create({ accommodationSlug: 'res-no-contact-availability', ...contactInput }),
-    ).rejects.toThrow("Ce logement n'a pas de disponibilités")
   })
 
   it('creates a contact request when the accommodation has availability', async () => {
@@ -500,5 +491,97 @@ describe('linkGuestContactRequests', () => {
       .from(contactRequests)
       .where(and(eq(contactRequests.userId, 'test-user-id'), isNull(contactRequests.reviewedAt)))
     expect(owned).toHaveLength(1)
+  })
+})
+
+describe('contacts.create — disponibilités et liste d’attente', () => {
+  const FULL_MESSAGE = "Cette résidence est complète et n'accepte pas de liste d'attente"
+
+  const seedResidence = async (slug: string, nbAvailable: number | null, acceptWaitingList: boolean | null) => {
+    const owner = await createOwner({ name: `Owner ${slug}`, slug: `owner-${slug}`, contactMode: EOwnerContactMode.CONTACTS })
+    await createAccommodation({ slug, ownerId: owner!.id, acceptWaitingList }, [typologyDraft('t1', { nbTotal: 10, nbAvailable })])
+  }
+
+  const cases: Array<{ label: string; nbAvailable: number | null; acceptWaitingList: boolean | null; accepted: boolean }> = [
+    { label: 'disponible, sans liste d’attente', nbAvailable: 3, acceptWaitingList: false, accepted: true },
+    { label: 'disponible, liste d’attente non renseignée', nbAvailable: 3, acceptWaitingList: null, accepted: true },
+    { label: 'disponible, avec liste d’attente', nbAvailable: 3, acceptWaitingList: true, accepted: true },
+    { label: 'complète, avec liste d’attente', nbAvailable: 0, acceptWaitingList: true, accepted: true },
+    { label: 'complète, sans liste d’attente', nbAvailable: 0, acceptWaitingList: false, accepted: false },
+    { label: 'complète, liste d’attente non renseignée', nbAvailable: 0, acceptWaitingList: null, accepted: false },
+    { label: 'disponibilité inconnue, avec liste d’attente', nbAvailable: null, acceptWaitingList: true, accepted: true },
+    { label: 'disponibilité inconnue, sans liste d’attente', nbAvailable: null, acceptWaitingList: false, accepted: false },
+  ]
+
+  for (const { label, nbAvailable, acceptWaitingList, accepted } of cases) {
+    it(`${accepted ? 'accepte' : 'refuse'} : ${label}`, async () => {
+      const slug = `res-${nbAvailable ?? 'na'}-${acceptWaitingList ?? 'na'}`
+      await seedResidence(slug, nbAvailable, acceptWaitingList)
+
+      const request = authenticatedCaller.contacts.create({ accommodationSlug: slug, ...contactInput })
+
+      if (accepted) {
+        await expect(request).resolves.toMatchObject({ userId: 'test-user-id' })
+      } else {
+        await expect(request).rejects.toMatchObject({ code: 'BAD_REQUEST', message: FULL_MESSAGE })
+        const rows = await getTestDb().select().from(contactRequests).where(eq(contactRequests.userId, 'test-user-id'))
+        expect(rows).toHaveLength(0)
+      }
+    })
+  }
+
+  it('applique la même règle aux visiteurs sans compte', async () => {
+    await seedResidence('res-guest-full', 0, false)
+    await seedResidence('res-guest-waiting', 0, true)
+
+    await expect(caller.contacts.create({ accommodationSlug: 'res-guest-full', ...contactInput })).rejects.toThrow(FULL_MESSAGE)
+    await expect(caller.contacts.create({ accommodationSlug: 'res-guest-waiting', ...contactInput })).resolves.toMatchObject({
+      userId: null,
+    })
+  })
+
+  it('agrège les typologies : une seule typologie disponible suffit', async () => {
+    const owner = await createOwner({ name: 'Owner Mixed', slug: 'owner-mixed', contactMode: EOwnerContactMode.CONTACTS })
+    await createAccommodation({ slug: 'res-mixed', ownerId: owner!.id, acceptWaitingList: false }, [
+      typologyDraft('t1', { nbTotal: 10, nbAvailable: 0 }),
+      typologyDraft('t2', { nbTotal: 10, nbAvailable: 1 }),
+    ])
+
+    await expect(authenticatedCaller.contacts.create({ accommodationSlug: 'res-mixed', ...contactInput })).resolves.not.toBeNull()
+  })
+
+  it('suit les disponibilités mises à jour par le gestionnaire', async () => {
+    await seedResidence('res-becomes-full', 2, false)
+    const [owner] = await getTestDb().select().from(owners).where(eq(owners.slug, 'owner-res-becomes-full'))
+    await getTestDb().update(user).set({ ownerId: owner.id, bailleurRole: 'administrator' }).where(eq(user.id, 'test-owner-id'))
+
+    await ownerCaller.bailleur.updateAvailability({ slug: 'res-becomes-full', availability: [{ type: 't1', nbAvailable: 0 }] })
+    await expect(authenticatedCaller.contacts.create({ accommodationSlug: 'res-becomes-full', ...contactInput })).rejects.toThrow(
+      FULL_MESSAGE,
+    )
+
+    await getTestDb().update(accommodations).set({ acceptWaitingList: true }).where(eq(accommodations.slug, 'res-becomes-full'))
+    await expect(authenticatedCaller.contacts.create({ accommodationSlug: 'res-becomes-full', ...contactInput })).resolves.not.toBeNull()
+  })
+
+  it('une résidence suspendue reste fermée même avec liste d’attente', async () => {
+    await seedResidence('res-suspended-waiting', 0, true)
+    await getTestDb()
+      .update(accommodations)
+      .set({ applicationsSuspendedAt: new Date() })
+      .where(eq(accommodations.slug, 'res-suspended-waiting'))
+
+    await expect(authenticatedCaller.contacts.create({ accommodationSlug: 'res-suspended-waiting', ...contactInput })).rejects.toThrow(
+      "Cette résidence n'accepte pas les demandes de contact",
+    )
+  })
+
+  it('une résidence fermée aux candidatures reste fermée même avec liste d’attente', async () => {
+    await seedResidence('res-closed-waiting', 0, true)
+    await getTestDb().update(accommodations).set({ acceptsApplications: false }).where(eq(accommodations.slug, 'res-closed-waiting'))
+
+    await expect(authenticatedCaller.contacts.create({ accommodationSlug: 'res-closed-waiting', ...contactInput })).rejects.toThrow(
+      "Cette résidence n'accepte pas les demandes de contact",
+    )
   })
 })

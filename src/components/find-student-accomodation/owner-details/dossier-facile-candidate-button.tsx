@@ -24,6 +24,7 @@ import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { trackEvent } from '~/lib/tracking'
 import type { TSchemaTranslator } from '~/schemas/schema-translator'
 import { createZBirthDate, createZScholarshipStatus } from '~/schemas/student-profile/student-profile'
+import { acceptsContactRequests } from '~/server/bailleur/applications-open'
 import { useTRPC, useTRPCClient } from '~/server/trpc/client'
 import { authClient } from '~/services/better-auth-client'
 import { isStudentProfileComplete } from '~/utils/student-profile'
@@ -33,14 +34,27 @@ import styles from './contact-request-modal.module.css'
 interface Props {
   accommodationSlug: string
   availableApartmentTypes: ApartmentType[]
+  nbAvailable: number | null
+  acceptWaitingList: boolean
   isAuthenticated: boolean
   contactMode: EOwnerContactMode
 }
 
-export const DossierFacileLinkButton = ({ accommodationSlug, availableApartmentTypes, isAuthenticated, contactMode }: Props) => {
+export const DossierFacileLinkButton = ({
+  accommodationSlug,
+  availableApartmentTypes,
+  nbAvailable,
+  acceptWaitingList,
+  isAuthenticated,
+  contactMode,
+}: Props) => {
   if (contactMode === EOwnerContactMode.NONE) return null
+  if (contactMode === EOwnerContactMode.CONTACTS) {
+    return acceptsContactRequests({ nbAvailableApartments: nbAvailable, acceptWaitingList }) ? (
+      <ContactRequestButton accommodationSlug={accommodationSlug} />
+    ) : null
+  }
   if (availableApartmentTypes.length === 0) return null
-  if (contactMode === EOwnerContactMode.CONTACTS) return <ContactRequestButton accommodationSlug={accommodationSlug} />
   if (!isAuthenticated) return null
   return <DossierFacileApplyButton accommodationSlug={accommodationSlug} availableApartmentTypes={availableApartmentTypes} />
 }

@@ -106,6 +106,7 @@ cli/
     detect-alert-jobs.ts    # Détecte les hausses de dispo et crée les jobs (réconciliation)
     send-alert-jobs.ts      # Draine la file de jobs et envoie les emails d'alerte
     expire-alerts.ts        # Relance à 3 mois puis désactive les alertes sans réaction
+    check-applications-inactivity.ts # Alerte puis suspend les résidences inactives (candidatures, dispos)
 ```
 
 ---
@@ -638,6 +639,34 @@ Variables d'env requises : `DATABASE_URL`, `BREVO_API_KEY`, `BREVO_TEMPLATE_ALER
 
 ---
 
+### Suivi de la réception des candidatures
+
+#### `check-applications-inactivity` — Suspension automatique des résidences inactives
+
+```bash
+pnpm cli check-applications-inactivity --dry-run --verbose
+pnpm cli check-applications-inactivity
+```
+
+Évalue chaque résidence ouverte aux candidatures (`accepts_applications`) d'un bailleur ayant choisi un parcours :
+
+| Règle | Alerte | Suspension | Bailleurs concernés |
+|-------|--------|------------|---------------------|
+| Candidature en attente dans la colonne à modérer (`a_contacter`, ou `a_moderer` en DossierFacile) | 7 jours | 10 jours | Tous |
+| Disponibilités non mises à jour (`accommodation_typology.availability_updated_at`) | 23 jours | 30 jours | Hors `owner.availability_imported` |
+
+- L'alerte horodate `unprocessed_applications_warned_at` / `stale_availability_warned_at` ; la suspension exige une alerte préalable et laisse tout le préavis (3 / 7 jours) même à une résidence déjà en retard.
+- La suspension renseigne `applications_suspended_at` et `applications_suspension_reason` (`unprocessed_applications`, `stale_availability`). Une suspension manuelle porte `manual` et n'est jamais levée automatiquement.
+- Reprise automatique dès que la cause disparaît : au passage du cron, et immédiatement après un changement de statut sur le board ou une mise à jour des disponibilités. Enregistrer ses disponibilités sans changement les confirme (horodatage).
+- Les e-mails sont regroupés par destinataire : administrateurs du bailleur et gestionnaires dont le périmètre couvre la résidence (`manage_applications` pour les candidatures, `manage_residences` pour les disponibilités).
+- `owner.availability_imported` est posé par les commandes d'import et l'import CSV de l'admin.
+
+Suivi dans `import_job` (type `applications-inactivity`). Même double garde-fou que `expire-alerts` : rien hors production, sauf en `--dry-run`.
+
+Variables d'env requises : `DATABASE_URL`, `BREVO_API_KEY`, `BREVO_TEMPLATE_APPLICATIONS_INACTIVITY_WARNING`, `BREVO_TEMPLATE_APPLICATIONS_AUTO_SUSPENDED` (paramètres : `FIRSTNAME`, `OWNER_NAME`, `RESIDENCES[]`, `RESIDENCES_COUNT`, `LINK`).
+
+---
+
 ### Commandes d'import
 
 Syntaxe : `pnpm cli import <type> [options]`
@@ -839,7 +868,9 @@ Les migrations Drizzle sont appliquées au déploiement via le hook `postdeploy`
 | `0 3 * * *` | `sync stats` | Tous les jours à 3h |
 | `30 3 * * *` | `purge-contact-requests` | Tous les jours à 3h30 |
 | `*/30 * * * *` | `send-alert-jobs` | Toutes les 30 min |
-| `0 8 * * *` | `detect-alert-jobs ; expire-alerts` | Tous les jours à 8h |
+| `0 7 * * *` | `expire-alerts` | Tous les jours à 7h |
+| `0 8 * * *` | `detect-alert-jobs` | Tous les jours à 8h |
+| `0 6 * * *` | `check-applications-inactivity` | Tous les jours à 6h |
 | `0 5 * * *` | `backup-db` | Tous les jours à 5h (production uniquement) |
 
 Pour vérifier les crons actifs : `scalingo --app <app> cron-tasks`

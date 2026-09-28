@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { APARTMENT_TYPES } from '~/enums/apartment-type'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { ZBirthDate, ZScholarshipStatus } from '~/schemas/student-profile/student-profile'
-import { isOpenToApplications } from '~/server/bailleur/applications-open'
+import { acceptsContactRequests, isOpenToApplications } from '~/server/bailleur/applications-open'
 import { contactRetentionCutoff } from '~/server/candidatures/visibility'
 import { createClaimToken } from '~/server/contacts/claim-token'
 import { assertContactRequestRateLimit, hashIp } from '~/server/contacts/rate-limit'
@@ -28,6 +28,7 @@ const findAccommodationBySlug = async (slug: string) => {
       name: accommodations.name,
       ownerId: accommodations.ownerId,
       nbAvailableApartments: accommodations.nbAvailableApartments,
+      acceptWaitingList: accommodations.acceptWaitingList,
       acceptsApplications: accommodations.acceptsApplications,
       applicationsSuspendedAt: accommodations.applicationsSuspendedAt,
     })
@@ -96,8 +97,8 @@ export const contactsRouter = createTRPCRouter({
         throw new TRPCError({ code: 'BAD_REQUEST', message: "Cette résidence n'accepte pas les demandes de contact" })
       }
 
-      if (!accommodation.nbAvailableApartments || accommodation.nbAvailableApartments <= 0) {
-        throw new TRPCError({ code: 'BAD_REQUEST', message: "Ce logement n'a pas de disponibilités" })
+      if (!acceptsContactRequests(accommodation)) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: "Cette résidence est complète et n'accepte pas de liste d'attente" })
       }
 
       const ipHash = hashIp(ctx.clientIp)

@@ -35,6 +35,12 @@ const CRON_JOB_DEF_MAP: Record<CronJobType, Omit<CronJobDef, 'type'>> = {
     description: 'Relance à 3 mois (template 46) puis désactivation après 7 jours (template 48)',
     schedule: 'Tous les jours à 8h00',
   },
+  'applications-inactivity': {
+    label: 'Suivi des candidatures',
+    description:
+      'Alerte puis suspend les résidences inactives : candidatures non traitées (7 j / 10 j), disponibilités non mises à jour (23 j / 30 j)',
+    schedule: 'Tous les jours à 7h00',
+  },
   'purge-contacts': {
     label: 'Purge RGPD candidatures',
     description: 'Demandes non confirmées supprimées, expirées anonymisées',

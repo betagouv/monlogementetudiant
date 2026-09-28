@@ -533,6 +533,13 @@
       "when": 1790582580025,
       "tag": "0075_accommodation_reports",
       "breakpoints": true
+    },
+    {
+      "idx": 76,
+      "version": "7",
+      "when": 1790600728050,
+      "tag": "0076_applications_inactivity_suspension",
+      "breakpoints": true
     }
   ]
 }

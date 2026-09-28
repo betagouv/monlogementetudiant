@@ -6,7 +6,7 @@ import SftpClient from 'ssh2-sftp-client'
 import { db } from '~/server/db'
 import { env } from '~/server/env'
 import { ensureCity, geocodeAddressVerified } from '~/server/lib/import/geocoder'
-import { resolveImportOwner } from '~/server/lib/import/resolve-owner'
+import { markAvailabilityImported, resolveImportOwner } from '~/server/lib/import/resolve-owner'
 import { syncTypologies, type TypologyDraft, typologyAggregates, typologyDraft } from '~/server/lib/typologies'
 import { accommodationAddresses, accommodations, externalSources } from '../../src/server/db/schema'
 import { generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
@@ -254,6 +254,7 @@ const command: ImportCommand = {
 
     const owner = await resolveImportOwner({ id: options.ownerId, slug: options.ownerSlug, name: OWNER_NAME })
     const ownerId = owner.id
+    if (!options.dryRun) await markAvailabilityImported(ownerId)
     result.ownerName = owner.name
     result.ownerId = ownerId
     if (options.verbose) console.log(`  Owner ${owner.name} id=${ownerId}`)

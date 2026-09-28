@@ -11,7 +11,7 @@ import { ZUpdateResidence } from '../../src/schemas/accommodations/update-reside
 import { accommodationAddresses, accommodations, externalSources } from '../../src/server/db/schema'
 import type { CsvRow } from '../../src/server/lib/import/csv-parser'
 import { generateSourceId, normalizeEnum, parseCsvContent, toBool, toDigit, toUrl } from '../../src/server/lib/import/csv-parser'
-import { resolveImportOwner } from '../../src/server/lib/import/resolve-owner'
+import { markAvailabilityImported, resolveImportOwner } from '../../src/server/lib/import/resolve-owner'
 import { syncTypologies, typologyAggregates, typologyDraft } from '../../src/server/lib/typologies'
 import { generateAccommodationKey, uploadFile } from '../../src/server/services/s3'
 import { generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
@@ -241,6 +241,7 @@ const command: ImportCommand = {
       const owner = await resolveImportOwner({ id: ownerIdColumn, slug: ownerSlug, name: ownerName, url: ownerUrl })
       ownerId = owner.id
       result.ownerId = owner.id
+      await markAvailabilityImported(owner.id)
       result.ownerName = owner.name
       if (options.verbose) console.log(`  Owner "${owner.name}" id=${ownerId}`)
     } else if (ownerIdColumn != null || ownerSlug) {

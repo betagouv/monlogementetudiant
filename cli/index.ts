@@ -7,6 +7,7 @@ import { backfillBrevoOwners } from './commands/backfill-brevo-owners'
 import { backfillCacheControl } from './commands/backfill-cache-control'
 import { backfillGeocoding } from './commands/backfill-geocoding'
 import { backupDb } from './commands/backup-db'
+import { checkApplicationsInactivityCommand } from './commands/check-applications-inactivity'
 import { compareCrous } from './commands/compare-crous'
 import { cronSelftest } from './commands/cron-selftest'
 import { demoteBailleurAdmins } from './commands/demote-bailleur-admins'
@@ -247,6 +248,15 @@ program
   .option('--dry-run', 'Simuler sans envoyer ni modifier la BDD')
   .option('--verbose', 'Afficher le détail des alertes relancées/désactivées')
   .action((opts) => expireAlertsCommand(opts))
+
+program
+  .command('check-applications-inactivity')
+  .description(
+    'Alerte puis suspend la réception des candidatures des résidences inactives (candidatures non traitées à 7/10 j, disponibilités non mises à jour à 23/30 j)',
+  )
+  .option('--dry-run', 'Simuler sans envoyer ni modifier la BDD')
+  .option('--verbose', 'Afficher la décision prise pour chaque résidence')
+  .action((opts) => checkApplicationsInactivityCommand(opts))
 
 program
   .command('purge-contact-requests')

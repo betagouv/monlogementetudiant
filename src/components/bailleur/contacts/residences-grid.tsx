@@ -56,12 +56,12 @@ export const ResidencesGrid = ({ mode, isAdministrator, resolvedOwnerId }: Props
           <Avatar width={72} height={72} color="blue-ecume" />
           <h1 className="fr-mb-0">{title}</h1>
         </div>
-        <div className="fr-flex fr-align-items-center fr-flex-gap-2v">
+        <div className="fr-flex fr-flex-grow-1 fr-justify-content-md-end fr-align-items-center fr-flex-gap-2v">
           <SearchInput label={t('searchResidenceLabel')} value={recherche} onChange={(value) => setRecherche(value || null)} />
           {isAdministrator && (
             <>
               <Button
-                linkProps={{ href: buildHref('/bailleur/contacts/moderation', searchParams) }}
+                linkProps={{ href: buildHref('/bailleur/contacts/parametres', searchParams) }}
                 priority="secondary"
                 iconId="ri-team-line"
                 title={t('moderationButtonTitle')}
@@ -93,7 +93,7 @@ export const ResidencesGrid = ({ mode, isAdministrator, resolvedOwnerId }: Props
                 size="small"
                 priority="secondary"
                 iconId="ri-team-line"
-                linkProps={{ href: buildHref('/bailleur/contacts/moderation', searchParams) }}
+                linkProps={{ href: buildHref('/bailleur/contacts/parametres', searchParams) }}
               >
                 {t('noManagerAlert.action')}
               </Button>
@@ -115,13 +115,14 @@ export const ResidencesGrid = ({ mode, isAdministrator, resolvedOwnerId }: Props
                 departmentCode={r.departmentCode}
                 aRappelerCount={r.aRappelerCount}
                 applicationsSuspended={r.applicationsSuspended}
+                applicationsSuspensionReason={r.applicationsSuspensionReason}
               />
             </div>
           ))}
         </div>
       )}
 
-      {isAdministrator && <ContactModeSettingsModal currentMode={mode} ownerId={ownerId} resolvedOwnerId={resolvedOwnerId} />}
+      {isAdministrator && <ContactModeSettingsModal currentMode={mode} ownerId={ownerId} />}
     </>
   )
 }

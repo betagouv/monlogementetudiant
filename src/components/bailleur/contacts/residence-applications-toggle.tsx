@@ -23,6 +23,8 @@ export const ResidenceApplicationsToggle = ({ slug }: Props) => {
 
   const { data } = useQuery(trpc.bailleur.listContactsByResidence.queryOptions({ slug }))
   const suspended = data?.residence.applicationsSuspended ?? false
+  const reason = data?.residence.applicationsSuspensionReason
+  const suspendedHint = reason && reason !== 'manual' ? t(`autoSuspendedHint.${reason}`) : t('suspendedHint')
 
   const { mutate, isPending } = useMutation(
     trpc.bailleur.setApplicationsSuspended.mutationOptions({
@@ -52,7 +54,7 @@ export const ResidenceApplicationsToggle = ({ slug }: Props) => {
     <>
       <ToggleSwitch
         label={t('label')}
-        helperText={suspended ? t('suspendedHint') : t('openHint')}
+        helperText={suspended ? suspendedHint : t('openHint')}
         inputTitle={t('label')}
         checked={!suspended}
         disabled={isPending || !data}

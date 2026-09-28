@@ -283,13 +283,29 @@ describe('notification d’attribution de la gestion des candidatures', () => {
     expect(grantedEmail).not.toHaveBeenCalled()
   })
 
-  it("prévient à l'octroi du droit depuis l'écran de modération, pas au retrait", async () => {
-    await ownerCaller.bailleur.users.setApplicationsPermission({ managers: [{ userId: GEST.id, enabled: false }] })
-    expect(grantedEmail).not.toHaveBeenCalled()
+  it("prévient à l'ajout d'une résidence depuis l'écran de réception, pas au retrait", async () => {
+    const save = (gestIn: Array<{ id: number }>) =>
+      ownerCaller.bailleur.saveContactReceptionSettings({
+        residences: [resIn, resOut].map((r) => ({
+          accommodationId: r.id,
+          managerIds: gestIn.includes(r) ? [GEST.id] : ['gest-b'],
+          acceptWaitingList: false,
+        })),
+      })
 
-    await ownerCaller.bailleur.users.setApplicationsPermission({ managers: [{ userId: GEST.id, enabled: true }] })
+    await createUser({ id: 'gest-b', name: 'Gest B', firstname: 'Gest', lastname: 'B', email: 'gest-b@a.com', role: 'owner' })
+    await getTestDb()
+      .update(user)
+      .set({ ownerId: ownerAId, bailleurRole: 'gestionnaire', bailleurPermissions: ['manage_residences'] })
+      .where(eq(user.id, 'gest-b'))
+
+    await save([resIn])
+    expect(grantedEmail).not.toHaveBeenCalledWith(GEST.email, expect.anything())
+
+    grantedEmail.mockClear()
+    await save([resIn, resOut])
     expect(grantedEmail).toHaveBeenCalledOnce()
-    expect(grantedEmail).toHaveBeenCalledWith(GEST.email, expect.objectContaining({ residences: ['Toutes les résidences de Bailleur A'] }))
+    expect(grantedEmail).toHaveBeenCalledWith(GEST.email, expect.objectContaining({ residences: ['Res Out'], residencesCount: 1 }))
   })
 
   it("un échec d'envoi ne fait pas échouer la mise à jour", async () => {

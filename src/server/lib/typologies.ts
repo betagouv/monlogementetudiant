@@ -142,7 +142,11 @@ function toRow(accommodationId: number, t: TypologyDraft): typeof accommodationT
 }
 
 /** Auteur de l'écriture, pour l'horodatage des disponibilités. Absent pour un import ou un script. */
-export type PersistTypologiesOptions = { updatedBy?: string | null }
+export type PersistTypologiesOptions = {
+  updatedBy?: string | null
+  /** Le gestionnaire confirme ses disponibilités : on horodate même les valeurs inchangées. */
+  confirmAvailability?: boolean
+}
 
 /**
  * Aligne les typologies d'une résidence sur `typologies` : les types fournis sont créés ou mis à
@@ -172,6 +176,7 @@ export async function persistTypologies(
 
   const now = new Date()
   const updatedBy = options.updatedBy ?? null
+  const restampsUnchanged = updatedBy != null && options.confirmAvailability === true ? sql`true` : sql`false`
 
   // Deux règles gouvernent l'horodatage, dans cet ordre :
   //
@@ -205,13 +210,13 @@ export async function persistTypologies(
         availabilityUpdatedAt: updatedBy
           ? sql`case
               when excluded.nb_available is null then null
-              when ${accommodationTypologies.nbAvailable} is distinct from excluded.nb_available then ${now.toISOString()}::timestamptz
+              when ${restampsUnchanged} or ${accommodationTypologies.nbAvailable} is distinct from excluded.nb_available then ${now.toISOString()}::timestamptz
               else ${accommodationTypologies.availabilityUpdatedAt} end`
           : sql`case when excluded.nb_available is null then null else ${accommodationTypologies.availabilityUpdatedAt} end`,
         availabilityUpdatedBy: updatedBy
           ? sql`case
               when excluded.nb_available is null then null
-              when ${accommodationTypologies.nbAvailable} is distinct from excluded.nb_available then ${updatedBy}::text
+              when ${restampsUnchanged} or ${accommodationTypologies.nbAvailable} is distinct from excluded.nb_available then ${updatedBy}::text
               else ${accommodationTypologies.availabilityUpdatedBy} end`
           : sql`case when excluded.nb_available is null then null else ${accommodationTypologies.availabilityUpdatedBy} end`,
       },
