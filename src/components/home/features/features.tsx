@@ -2,6 +2,7 @@ import Badge from '@codegouvfr/react-dsfr/Badge'
 import Button from '@codegouvfr/react-dsfr/Button'
 import clsx from 'clsx'
 import Image from 'next/image'
+import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 import styles from './features.module.css'
 
@@ -56,6 +57,9 @@ export const FeaturesSection = async () => {
             <Button priority="secondary" iconId="ri-calculator-line" iconPosition="left" linkProps={{ href: '/simuler-budget' }}>
               {tHome('features.calculateBudget.button')}
             </Button>
+            <Link className={clsx('fr-link', styles.featureCardLink)} href="/preparer-mon-budget-etudiant">
+              {tHome('features.calculateBudget.tipsLink')}
+            </Link>
           </div>
         </div>
       </div>

@@ -973,7 +973,8 @@
         "badge": "PRATIQUE",
         "title": "Calculez votre futur budget étudiant",
         "description": "Gérez vos finances facilement et visualisez votre budget mensuel en temps réel",
-        "button": "Calculer mon budget"
+        "button": "Calculer mon budget",
+        "tipsLink": "Conseils pratiques"
       },
       "prepareBudget": {
         "title": "Préparer son budget étudiant",
