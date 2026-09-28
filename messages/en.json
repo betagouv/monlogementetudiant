@@ -305,6 +305,7 @@
         "dossierFacileApplied": "Application sent",
         "dossierFacileSelectType": "Accommodation type",
         "consultDescription": "You will be redirected to the residence's website",
+        "call": "Call {phoneNumber}",
         "dossierFacileDescription": "Certified digital rental file",
         "link": "Copy link",
         "email": "Send by email",
@@ -2112,6 +2113,11 @@
         "redirection": {
           "label": "Redirect URL",
           "hint": "URL of the residence page"
+        },
+        "phone": {
+          "toggle": "Display a phone number",
+          "hint": "The number will be visible on the residence page",
+          "label": "Phone number"
         },
         "pictures": {
           "title": "Residence photos",

@@ -519,6 +519,13 @@
       "when": 1789993289635,
       "tag": "0073_accommodation_applications_suspended",
       "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1790582187473,
+      "tag": "0074_accommodation_phone_number",
+      "breakpoints": true
     }
   ]
 }

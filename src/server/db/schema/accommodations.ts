@@ -60,6 +60,7 @@ export const accommodations = pgTable(
     externalUrl: varchar('external_url', { length: 255 }),
     virtualTourUrl: text('virtual_tour_url'),
     externalReference: varchar('external_reference', { length: 255 }),
+    phoneNumber: varchar('phone_number', { length: 10 }),
 
     // Relations
     ownerId: bigint('owner_id', { mode: 'number' }).references(() => owners.id),

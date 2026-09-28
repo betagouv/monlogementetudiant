@@ -193,6 +193,7 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
           <div className={clsx('fr-mt-2w fr-mt-md-0 fr-px-2w fr-px-md-0', styles.stickyColumn)}>
             <OwnerDetails
               updatedAt={updatedAt}
+              phoneNumber={accommodation.phoneNumber}
               acceptWaitingList={acceptWaitingList}
               owner={owner}
               nbAvailable={nbAvailable}

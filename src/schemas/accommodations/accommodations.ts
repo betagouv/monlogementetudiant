@@ -96,6 +96,7 @@ export const ZAccomodationCard = ZAccomodation
 export type TAccomodationCard = z.infer<typeof ZAccomodationCard>
 
 export const ZAccomodationDetails = ZAccomodation.extend(ZAmenities.shape).extend({
+  phoneNumber: z.string().nullish(),
   owner: z
     .object({
       imageBase64: z.string().nullable(),
@@ -118,5 +119,6 @@ export type TPrepareStudentLifeAccommodationResidence = z.infer<typeof ZPrepareS
 export const ZAccomodationMy = ZAccomodation.extend(ZAmenities.shape).extend({
   isImported: z.boolean(),
   acceptsApplications: z.boolean(),
+  phoneNumber: z.string().nullish(),
 })
 export type TAccomodationMy = z.infer<typeof ZAccomodationMy>

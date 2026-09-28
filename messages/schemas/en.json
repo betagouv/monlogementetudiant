@@ -31,6 +31,8 @@
     "urlInvalid": "Please enter a valid URL",
     "virtualTourNotAllowed": "Paste an https link or an embed code from an allowed platform: Klapty, Matterport, Ricoh360, Giraffe360, YouTube, Vimeo or Google Drive, or a link to a video (.mp4, .webm, .ogg, .mov).",
     "externalUrlRequired": "The redirect URL is required",
+    "phoneNumberRequired": "Please enter a phone number",
+    "phoneNumberInvalid": "Please enter a valid phone number (e.g. 01 23 45 67 89)",
     "alertNameRequired": "The alert name is required",
     "alertMaxPricePositive": "The maximum price must be greater than 0",
     "alertTerritoryRequired": "Please select an area (city, department or academy)",
