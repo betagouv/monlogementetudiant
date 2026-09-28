@@ -8,15 +8,18 @@ import { CronPartialFailure } from '../cron-failure'
 interface CheckApplicationsInactivityOptions {
   dryRun?: boolean
   verbose?: boolean
+  owner?: string
 }
 
 export async function checkApplicationsInactivityCommand(options: CheckApplicationsInactivityOptions): Promise<void> {
-  if (env.NEXT_PUBLIC_APP_ENV !== 'production' && !options.dryRun) {
-    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] check-applications-inactivity ignoré hors production (utilisez --dry-run pour simuler)`)
+  if (env.NEXT_PUBLIC_APP_ENV !== 'production' && !options.dryRun && !options.owner) {
+    console.info(
+      `[${env.NEXT_PUBLIC_APP_ENV}] check-applications-inactivity ignoré hors production (utilisez --dry-run pour simuler ou --owner pour cibler un bailleur)`,
+    )
     return
   }
 
-  console.log('⏳ Suivi de la réception des candidatures...')
+  console.log(`⏳ Suivi de la réception des candidatures${options.owner ? ` (bailleur ${options.owner})` : ''}...`)
 
   let jobId: number | null = null
   if (!options.dryRun) {
@@ -34,7 +37,12 @@ export async function checkApplicationsInactivityCommand(options: CheckApplicati
   }
 
   try {
-    const { warned, suspended, resumed, cleared, failures } = await runInactivityCheck(options)
+    const { warned, suspended, resumed, cleared, failures } = await runInactivityCheck({
+      dryRun: options.dryRun,
+      verbose: options.verbose,
+      ownerSlug: options.owner,
+      sendOutsideProduction: Boolean(options.owner),
+    })
     const prefix = options.dryRun ? '[dry-run] ' : ''
 
     console.log(`\n  ${prefix}Résidences alertées : ${warned}`)

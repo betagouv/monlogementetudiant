@@ -87,6 +87,22 @@ const ReceptionSettingsFields = ({ ownerId, settings }: { ownerId: number; setti
     setSelectedTabId(tabId(residence.id))
   }
 
+  const allSelected = selected.length === settings.residences.length
+
+  const toggleAll = (checked: boolean) =>
+    setResidences(
+      checked
+        ? settings.residences.map(
+            (residence) =>
+              selected.find((r) => r.accommodationId === residence.id) ?? {
+                accommodationId: residence.id,
+                managers: residence.managers,
+                acceptWaitingList: residence.acceptWaitingList,
+              },
+          )
+        : [],
+    )
+
   const updateResidence = (index: number, patch: { managers?: TReceptionManager[]; acceptWaitingList?: boolean }) =>
     setResidences(selected.map((r, i) => (i === index ? { ...r, ...patch } : r)))
 
@@ -113,6 +129,17 @@ const ReceptionSettingsFields = ({ ownerId, settings }: { ownerId: number; setti
 
   return (
     <form onSubmit={handleSubmit(onSubmit, onInvalid)} noValidate>
+      {settings.residences.length > 1 && (
+        <Checkbox
+          className="fr-mb-2w"
+          options={[
+            {
+              label: t('selectAll', { count: settings.residences.length }),
+              nativeInputProps: { checked: allSelected, onChange: (event) => toggleAll(event.target.checked) },
+            },
+          ]}
+        />
+      )}
       <Checkbox
         legend={t('residencesLegend')}
         state={residencesError ? 'error' : 'default'}

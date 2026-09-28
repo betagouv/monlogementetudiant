@@ -159,8 +159,12 @@ const inactivityParams = (params: InactivityEmailParams) => ({
   LINK: params.url,
 })
 
-export async function sendApplicationsInactivityWarningEmail(email: string, params: InactivityEmailParams): Promise<void> {
-  if (env.NEXT_PUBLIC_APP_ENV !== 'production') {
+export async function sendApplicationsInactivityWarningEmail(
+  email: string,
+  params: InactivityEmailParams,
+  { force = false }: { force?: boolean } = {},
+): Promise<void> {
+  if (env.NEXT_PUBLIC_APP_ENV !== 'production' && !force) {
     console.info(`[${env.NEXT_PUBLIC_APP_ENV}] alerte d'inactivité non envoyée à ${maskEmail(email)}`)
     return
   }
@@ -172,8 +176,12 @@ export async function sendApplicationsInactivityWarningEmail(email: string, para
   })
 }
 
-export async function sendApplicationsAutoSuspendedEmail(email: string, params: InactivityEmailParams): Promise<void> {
-  if (env.NEXT_PUBLIC_APP_ENV !== 'production') {
+export async function sendApplicationsAutoSuspendedEmail(
+  email: string,
+  params: InactivityEmailParams,
+  { force = false }: { force?: boolean } = {},
+): Promise<void> {
+  if (env.NEXT_PUBLIC_APP_ENV !== 'production' && !force) {
     console.info(`[${env.NEXT_PUBLIC_APP_ENV}] suspension automatique non envoyée à ${maskEmail(email)}`)
     return
   }
