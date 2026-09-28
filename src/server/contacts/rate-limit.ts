@@ -2,7 +2,7 @@ import { createHmac } from 'node:crypto'
 import { TRPCError } from '@trpc/server'
 import { and, count, eq, gte } from 'drizzle-orm'
 import { db } from '~/server/db'
-import { contactRequests } from '~/server/db/schema'
+import { accommodationReports, contactRequests } from '~/server/db/schema'
 import { env } from '~/server/env'
 
 /** Nombre maximal de demandes de contact acceptées depuis une même IP sur la fenêtre. */
@@ -43,6 +43,22 @@ export const assertContactRequestRateLimit = async (ipHash: string | null): Prom
     throw new TRPCError({
       code: 'TOO_MANY_REQUESTS',
       message: 'Vous avez transmis trop de demandes de contact. Veuillez réessayer plus tard.',
+    })
+  }
+}
+
+export const assertAccommodationReportRateLimit = async (ipHash: string | null): Promise<void> => {
+  if (!ipHash) return
+
+  const [row] = await db
+    .select({ total: count() })
+    .from(accommodationReports)
+    .where(and(eq(accommodationReports.ipHash, ipHash), gte(accommodationReports.createdAt, new Date(Date.now() - WINDOW_MS))))
+
+  if ((row?.total ?? 0) >= MAX_REQUESTS_PER_WINDOW) {
+    throw new TRPCError({
+      code: 'TOO_MANY_REQUESTS',
+      message: 'Vous avez transmis trop de signalements. Veuillez réessayer plus tard.',
     })
   }
 }

@@ -7,6 +7,7 @@ import { ConsultOfferButton } from '~/components/find-student-accomodation/owner
 import { DossierFacileLinkButton } from '~/components/find-student-accomodation/owner-details/dossier-facile-candidate-button'
 import { OwnerDetailsActions } from '~/components/find-student-accomodation/owner-details/owner-details-actions'
 import { OwnerDetailsAlert } from '~/components/find-student-accomodation/owner-details/owner-details-alert'
+import { ReportErrorButton } from '~/components/find-student-accomodation/owner-details/report-error-modal'
 import { AvailabilityBadge } from '~/components/shared/availability-badge'
 import { WaitingListBadge } from '~/components/shared/waiting-list-badge'
 import { type ApartmentType } from '~/enums/apartment-type'
@@ -89,9 +90,17 @@ export const OwnerDetails = async ({
         )}
       </div>
       <div className="fr-flex fr-align-items-center fr-justify-content-center">{badgeAvailability}</div>
-      {nbAvailable !== null && (
-        <span className="fr-text--xs fr-mb-0">{t('sidebar.updatedAt', { date: formatDayjs(updatedAt, 'DD MMMM YYYY', locale) })}</span>
-      )}
+      <p className="fr-text--xs fr-mb-0 fr-mt-1w fr-flex fr-flex-wrap fr-justify-content-center fr-align-items-center fr-flex-gap-2v">
+        {nbAvailable !== null && (
+          <>
+            <span>{t('sidebar.updatedAt', { date: formatDayjs(updatedAt, 'DD MMMM YYYY', locale) })}</span>
+            <span aria-hidden="true" className="fr-text-mention--grey">
+              •
+            </span>
+          </>
+        )}
+        <ReportErrorButton accommodationSlug={accommodationSlug} />
+      </p>
 
       <DossierFacileLinkButton
         accommodationSlug={accommodationSlug}

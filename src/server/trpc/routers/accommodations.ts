@@ -1,9 +1,11 @@
+import * as Sentry from '@sentry/nextjs'
 import { TRPCError } from '@trpc/server'
 import { and, eq, notInArray, type SQL, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { EXPANDED_SEARCH_PAGE_SIZE, EXPANDED_SEARCH_RADIUS_KM } from '~/lib/accommodations-expanded-search'
 import type { TAccomodation } from '~/schemas/accommodations/accommodations'
+import { ZReportAccommodation } from '~/schemas/accommodations/report-accommodation'
 import {
   applyCenterRadiusFilter,
   applyCommonListFilters,
@@ -12,16 +14,22 @@ import {
   toResidenceType,
   toTargetAudience,
 } from '~/server/accommodations/list-query'
+import { buildAccommodationReportEmail } from '~/server/accommodations/report-email'
 import { isOpenToApplications } from '~/server/bailleur/applications-open'
+import { assertAccommodationReportRateLimit, hashIp } from '~/server/contacts/rate-limit'
 import { db } from '~/server/db'
 import { academies } from '~/server/db/schema/academies'
 import { accommodationAddresses } from '~/server/db/schema/accommodation-addresses'
+import { accommodationReports } from '~/server/db/schema/accommodation-reports'
 import { accommodationTypologies } from '~/server/db/schema/accommodation-typologies'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { cities } from '~/server/db/schema/cities'
 import { departments } from '~/server/db/schema/departments'
 import { owners } from '~/server/db/schema/owners'
+import { env } from '~/server/env'
 import { typologiesByType } from '~/server/lib/typologies'
+import { sendRawEmail } from '~/server/services/brevo'
+import { getCanonicalUrl } from '~/utils/canonical'
 import { baseProcedure, createTRPCRouter } from '../init'
 import { bboxSelect } from '../utils/spatial-helpers'
 
@@ -323,5 +331,54 @@ export const accommodationsRouter = createTRPCRouter({
       cityBbox: row.cityBbox,
       departmentCode: row.departmentCode,
     }
+  }),
+
+  report: baseProcedure.input(ZReportAccommodation).mutation(async ({ ctx, input }) => {
+    const [accommodation] = await db
+      .select({ id: accommodations.id, name: accommodations.name, ownerName: owners.name, citySlug: cities.slug })
+      .from(accommodations)
+      .innerJoin(
+        accommodationAddresses,
+        and(eq(accommodationAddresses.accommodationId, accommodations.id), eq(accommodationAddresses.isMain, true)),
+      )
+      .innerJoin(cities, eq(accommodationAddresses.cityId, cities.id))
+      .leftJoin(owners, eq(accommodations.ownerId, owners.id))
+      .where(and(eq(accommodations.slug, input.slug), eq(accommodations.published, true)))
+      .limit(1)
+
+    if (!accommodation) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Logement introuvable' })
+    }
+
+    const ipHash = hashIp(ctx.clientIp)
+    await assertAccommodationReportRateLimit(ipHash)
+
+    const [report] = await db
+      .insert(accommodationReports)
+      .values({ accommodationId: accommodation.id, field: input.field, details: input.details || null, ipHash })
+      .returning({ createdAt: accommodationReports.createdAt })
+
+    if (!env.ACCOMMODATION_REPORT_EMAIL) {
+      console.info(`[accommodations.report] ACCOMMODATION_REPORT_EMAIL absent, signalement non envoyé : ${input.slug}`)
+      return { success: true }
+    }
+
+    const { subject, textContent } = buildAccommodationReportEmail({
+      accommodationName: accommodation.name,
+      ownerName: accommodation.ownerName,
+      field: input.field,
+      details: input.details,
+      url: getCanonicalUrl(`/trouver-un-logement-etudiant/ville/${accommodation.citySlug}/${input.slug}`),
+      date: report.createdAt,
+    })
+
+    try {
+      await sendRawEmail({ to: [env.ACCOMMODATION_REPORT_EMAIL], subject, textContent, senderName: 'Mon Logement Étudiant' })
+    } catch (error) {
+      Sentry.captureException(error, { tags: { step: 'sendAccommodationReportEmail' } })
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: "Le signalement n'a pas pu être envoyé" })
+    }
+
+    return { success: true }
   }),
 })
