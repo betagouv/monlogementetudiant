@@ -2048,6 +2048,11 @@
         "unknownAvailability": "Availability<br></br>not provided",
         "occupied": "{count} occupied",
         "available": "{count} available"
+      },
+      "incompleteResidences": {
+        "title": "Complete your residences' information",
+        "description": "{count, plural, one {One of your residences needs} other {# of your residences need}} additional information to complete their listing.",
+        "more": "{count, plural, one {and # other residence} other {and # other residences}}"
       }
     },
     "residences": {

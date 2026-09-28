@@ -16,6 +16,7 @@ import { formatDay } from '~/utils/formatDate'
 import { buildHref } from '~/utils/preserve-query-params'
 import { DashboardTabs } from './dashboard-tabs'
 import { getBailleurDashboardPageContext } from './get-bailleur-dashboard-page-context'
+import { IncompleteResidencesAlert } from './incomplete-residences-alert'
 import styles from './tableau-de-bord.module.css'
 
 type TableauDeBordPageProps = {
@@ -26,7 +27,8 @@ export default async function TableauDeBordPage({ searchParams }: TableauDeBordP
   const calendlyUrl = z.string().parse(env.NEXT_PUBLIC_CALENDLY_URL)
   const awaitedSearchParams = await searchParams
   const t = await getTranslations('bailleur')
-  const { session, accommodations, lastAvailabilityUpdate, ctx } = await getBailleurDashboardPageContext(awaitedSearchParams)
+  const { session, accommodations, lastAvailabilityUpdate, incompleteAccommodations, ctx } =
+    await getBailleurDashboardPageContext(awaitedSearchParams)
 
   if (!session || !session.user) {
     return notFound()
@@ -44,6 +46,7 @@ export default async function TableauDeBordPage({ searchParams }: TableauDeBordP
         <DataVisualization width={62} height={66} />
         <h1 className="fr-mb-0">{t('dashboard.welcome.title', { firstname: session.user.firstname })}</h1>
       </div>
+      <IncompleteResidencesAlert residences={incompleteAccommodations} ownerId={awaitedSearchParams.ownerId} />
       <div className="fr-flex fr-direction-column fr-direction-md-row fr-flex-gap-4v">
         <div
           className={clsx(
