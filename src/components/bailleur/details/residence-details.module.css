@@ -3,3 +3,23 @@
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
 }
+
+fieldset.yesNoRadios {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+}
+
+fieldset.yesNoRadios :global(.fr-fieldset__content) {
+  flex-wrap: nowrap;
+  margin: 0;
+  width: auto;
+}
+
+fieldset.yesNoRadios :global(.fr-radio-group) {
+  margin-top: 0;
+}
+
+fieldset.yesNoRadios :global(.fr-messages-group:empty) {
+  display: none;
+}
