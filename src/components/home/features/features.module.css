@@ -13,6 +13,11 @@
   justify-content: center;
 }
 
+.featureCardButtons > a.featureCardLink {
+  width: auto;
+  align-self: center;
+}
+
 .featureCardPurple {
   border-left-color: #313178 !important;
   border-bottom: 1px solid var(--border-default-grey);

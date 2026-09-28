@@ -973,7 +973,8 @@
         "badge": "PRACTICAL",
         "title": "Calculate your future student budget",
         "description": "Manage your finances easily and view your monthly budget in real time",
-        "button": "Calculate my budget"
+        "button": "Calculate my budget",
+        "tipsLink": "Practical tips"
       },
       "prepareBudget": {
         "title": "Prepare your student budget",
