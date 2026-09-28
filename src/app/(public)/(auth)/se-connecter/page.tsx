@@ -5,7 +5,7 @@ import { Metadata } from 'next'
 import Image from 'next/image'
 import { getTranslations } from 'next-intl/server'
 import { CredentialsSignInForm } from '~/components/credentials-sign-in/credentials-sign-in'
-import background from '~/images/background-credentials.webp'
+import background from '~/images/connexion.svg'
 import authStyles from '../auth.module.css'
 
 export const generateMetadata = async (): Promise<Metadata> => {

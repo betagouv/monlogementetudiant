@@ -105,6 +105,8 @@ export const OwnerDetails = async ({
       <DossierFacileLinkButton
         accommodationSlug={accommodationSlug}
         availableApartmentTypes={availableApartmentTypes}
+        nbAvailable={nbAvailable}
+        acceptWaitingList={acceptWaitingList}
         isAuthenticated={isAuthenticated}
         contactMode={contactMode}
       />

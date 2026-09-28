@@ -4,7 +4,7 @@ import { Metadata } from 'next'
 import Image from 'next/image'
 import { getTranslations } from 'next-intl/server'
 import { SignUpForm } from '~/components/sign-up/sign-up-form'
-import background from '~/images/background-credentials.webp'
+import background from '~/images/connexion.svg'
 import { getClaimedContactRequest } from '~/server/contacts/claimed-request'
 import styles from '../auth.module.css'
 

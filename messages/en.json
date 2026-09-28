@@ -2058,6 +2058,7 @@
         "title": "Residence settings",
         "accommodationName": "Residence name",
         "waitingList": "The residence accepts waiting-list applications",
+        "waitingListHint": "Receive student requests even when your residence is full.",
         "accessible": "Number of homes adapted for people with reduced mobility",
         "coliving": "Number of shared accommodations in the residence",
         "scholarship": "Do scholarship students have priority in the residence?",
@@ -2192,7 +2193,7 @@
       "defaultCandidateName": "Applicant",
       "searchResidenceLabel": "Search for a residence or a city",
       "settingsButtonTitle": "Contact mode settings",
-      "moderationButtonTitle": "Manage moderation rights",
+      "moderationButtonTitle": "Reception settings",
       "noResidence": "No residence.",
       "toBeCalledBack": "{count} to call back",
       "residenceTitle": "Residence {name}",
@@ -2284,19 +2285,34 @@
         "dossierFacileHint": "Receive a complete applicant file: identity document, tax notice, proof of income, etc.",
         "noneLabel": "Disable applications",
         "noneHint": "Visitors are redirected to your website",
-        "lockedHint": "{hint} — coming soon",
-        "residences": {
-          "allLabel": "All residences",
-          "allHint": "Every residence accepts applications, including those you create later.",
-          "restrictedHint": "Only the checked residences accept applications. A residence created later will be open by default.",
-          "legend": "Residences accepting applications",
-          "searchLabel": "Search for a residence",
-          "searchPlaceholder": "Residence name",
-          "selectedCount": "{count} residence(s) open",
-          "selectAll": "Select all",
-          "selectNone": "Clear selection",
-          "refineSearch": "Refine your search to see the {count} remaining residences.",
-          "emptyWarning": "No residence will accept applications: visitors will be redirected to your website."
+        "lockedHint": "{hint} — coming soon"
+      },
+      "receptionSettings": {
+        "pageTitle": "Contact details reception settings",
+        "pageTitleDossierFacile": "Application files reception settings",
+        "subtitle": "Select the residences accepting student contacts",
+        "subtitleDossierFacile": "Select the residences accepting student application files",
+        "residencesLegend": "Residences",
+        "residenceLocation": "{city} ({department})",
+        "noResidence": "No residence yet.",
+        "tabsLabel": "Settings per residence",
+        "managersLabel": "Application managers",
+        "managersHint": "Select one or more managers who can access the applications",
+        "managersPlaceholder": "{count, plural, =0 {Search for a manager} one {# selected} other {# selected}}",
+        "noManagerFound": "No manager found",
+        "selectedManagers": "Selected managers",
+        "removeManager": "Remove {name}",
+        "noGestionnaire": "Administrators receive every application. To assign a residence to a manager, add them from User management.",
+        "addUser": "Add a manager",
+        "waitingListLabel": "The residence accepts waiting list applications",
+        "waitingListHint": "Receive student requests even when your residence is full.",
+        "save": "Save",
+        "saving": "Saving...",
+        "success": "Reception settings saved.",
+        "error": "An error occurred.",
+        "engagementNotice": {
+          "title": "Moderation commitment",
+          "description": "By activating the reception of student contact details, you commit to reviewing and handling these requests regularly to ensure a timely response."
         }
       },
       "promoBanner": {
@@ -2304,21 +2320,6 @@
         "text": "from students in your area",
         "link": "Receive applications",
         "dismiss": "Hide this message"
-      },
-      "moderation": {
-        "pageTitle": "Moderation settings",
-        "subtitle": "Select the managers allowed to moderate applicant files",
-        "hint": "Managers able to view and moderate applicant files. This selection can be edited later.",
-        "legend": "Managers allowed to moderate applicant files",
-        "toggleLabel": "Application management",
-        "toggleDescription": "Allows {name} to view and moderate applicant files",
-        "onlyPermissionHint": "This is the manager's only permission: change it from User management.",
-        "empty": "No manager yet.",
-        "addUser": "Add a manager",
-        "save": "Save",
-        "saving": "Saving...",
-        "toastSuccess": "Moderation rights updated",
-        "toastError": "Moderation rights could not be updated"
       },
       "availabilityCount": "{count, plural, one {# available} other {# available}}",
       "status": {
@@ -2328,6 +2329,10 @@
         "contacte": "Contacted"
       },
       "applicationsSuspendedBadge": "Applications paused",
+      "autoSuspendedBadge": {
+        "unprocessed_applications": "Suspended: unprocessed applications",
+        "stale_availability": "Suspended: availability to update"
+      },
       "applicationsToggle": {
         "label": "Receive applications",
         "openHint": "Students can apply to this residence.",
@@ -2338,11 +2343,15 @@
         "confirm": "Pause applications",
         "suspendedSuccess": "Applications are paused for this residence.",
         "resumedSuccess": "Applications are open again for this residence.",
-        "error": "The change could not be saved."
+        "error": "The change could not be saved.",
+        "autoSuspendedHint": {
+          "unprocessed_applications": "Automatic suspension: applications have been waiting for more than 10 days. Process them and reception will resume on its own.",
+          "stale_availability": "Automatic suspension: availability has not been updated for 30 days. Update it and reception will resume on its own."
+        }
       },
       "noManagerAlert": {
         "title": "No manager can access student applications",
-        "description": "By default, only administrators can see applications. To let a manager view and handle them, click the <icon></icon> \"Manage moderation rights\" button.",
+        "description": "By default, only administrators can see applications. To let a manager view and handle them, click the <icon></icon> \"Reception settings\" button.",
         "action": "Grant rights"
       }
     },

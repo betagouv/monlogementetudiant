@@ -46,3 +46,8 @@ export async function resolveImportOwner({ id, slug, name, url }: ResolveImportO
     .returning({ id: owners.id, name: owners.name })
   return created
 }
+
+/** Les disponibilités de ce bailleur arrivent par import : la règle de fraîcheur des dispos ne s'applique pas à lui. */
+export async function markAvailabilityImported(ownerId: number): Promise<void> {
+  await db.update(owners).set({ availabilityImported: true }).where(eq(owners.id, ownerId))
+}

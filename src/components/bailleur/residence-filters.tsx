@@ -32,7 +32,7 @@ export const ResidenceFilters = () => {
   return (
     <div className="fr-flex fr-direction-column fr-direction-md-row fr-justify-content-space-between fr-align-items-md-center fr-mb-4w fr-flex-gap-4v">
       <span className="fr-h4 fr-mb-0 fr-hidden fr-unhidden-sm">{t('residenceCount', { count: accommodations?.count ?? 0 })}</span>
-      <div className="fr-flex fr-direction-column fr-direction-md-row fr-flex-gap-4v fr-align-items-md-center">
+      <div className="fr-flex fr-flex-grow-1 fr-justify-content-md-end fr-direction-column fr-direction-md-row fr-flex-gap-4v fr-align-items-md-center">
         <div className="fr-flex fr-justify-content-space-between">
           <span className="fr-h4 fr-mb-0 fr-hidden-sm">{t('residenceCount', { count: accommodations?.count ?? 0 })}</span>
           <ToggleSwitch

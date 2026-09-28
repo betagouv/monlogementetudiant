@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm'
-import { bigint, customType, pgEnum, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core'
+import { bigint, boolean, customType, pgEnum, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { user } from './auth'
 
@@ -23,6 +23,7 @@ export const owners = pgTable('owner', {
   landingUrl: varchar('landing_url', { length: 500 }),
   image: bytea('image'),
   contactMode: ownerContactModeEnum('contact_mode').notNull().default(EOwnerContactMode.NONE),
+  availabilityImported: boolean('availability_imported').notNull().default(false),
 
   // Traçabilité des modifications de la *fiche* bailleur (nom, URL, logo, mode de contact).
   // Volontairement NULL sur les lignes existantes et sur les owners créés par import/CLI : NULL se lit

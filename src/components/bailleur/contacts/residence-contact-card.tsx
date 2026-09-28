@@ -4,6 +4,7 @@ import Badge from '@codegouvfr/react-dsfr/Badge'
 import clsx from 'clsx'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import type { SuspensionReason } from '~/server/bailleur/inactivity-rules'
 import { buildHref } from '~/utils/preserve-query-params'
 import styles from './residence-contact-card.module.css'
 
@@ -14,9 +15,18 @@ interface Props {
   departmentCode: string | null
   aRappelerCount: number
   applicationsSuspended: boolean
+  applicationsSuspensionReason: SuspensionReason | null
 }
 
-export const ResidenceContactCard = ({ slug, name, cityName, departmentCode, aRappelerCount, applicationsSuspended }: Props) => {
+export const ResidenceContactCard = ({
+  slug,
+  name,
+  cityName,
+  departmentCode,
+  aRappelerCount,
+  applicationsSuspended,
+  applicationsSuspensionReason,
+}: Props) => {
   const t = useTranslations('bailleur.contacts')
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -42,7 +52,9 @@ export const ResidenceContactCard = ({ slug, name, cityName, departmentCode, aRa
       </span>
       {applicationsSuspended && (
         <Badge severity="warning" small>
-          {t('applicationsSuspendedBadge')}
+          {applicationsSuspensionReason && applicationsSuspensionReason !== 'manual'
+            ? t(`autoSuspendedBadge.${applicationsSuspensionReason}`)
+            : t('applicationsSuspendedBadge')}
         </Badge>
       )}
     </button>

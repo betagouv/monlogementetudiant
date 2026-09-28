@@ -107,15 +107,16 @@ export const ResidenceDetails = () => {
           </div>
 
           <div>
-            <div className="fr-py-2w fr-flex fr-justify-content-space-between fr-align-items-center fr-border-bottom">
-              <span>{t('waitingList')}</span>
+            <div className="fr-py-2w fr-border-bottom">
               <Controller
                 name="acceptWaitingList"
                 control={control}
                 render={({ field }) => (
                   <ToggleSwitch
                     inputTitle={t('waitingList')}
-                    label=""
+                    label={t('waitingList')}
+                    helperText={t('waitingListHint')}
+                    labelPosition="left"
                     showCheckedHint={false}
                     checked={field.value}
                     onChange={field.onChange}

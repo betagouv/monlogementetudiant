@@ -10,7 +10,7 @@ type SearchParams = {
   ownerId?: string
 }
 
-export const getModerationPageContext = cache(async (searchParams: SearchParams) => {
+export const getContactReceptionPageContext = cache(async (searchParams: SearchParams) => {
   const ctx = await getBailleurContext(searchParams.ownerId)
 
   if (!ctx.isAdministrator) redirect(buildHref('/bailleur/tableau-de-bord', searchParams))
@@ -18,7 +18,10 @@ export const getModerationPageContext = cache(async (searchParams: SearchParams)
   if (ctx.owner.contactMode === EOwnerContactMode.NONE) redirect(buildHref('/bailleur/contacts', searchParams))
 
   const queryClient = getQueryClient()
-  await queryClient.prefetchQuery(trpc.bailleur.users.list.queryOptions({ ownerId: ctx.owner.id }))
+  await Promise.all([
+    queryClient.prefetchQuery(trpc.bailleur.getContactReceptionSettings.queryOptions({ ownerId: ctx.owner.id })),
+    queryClient.prefetchQuery(trpc.bailleur.users.list.queryOptions({ ownerId: ctx.owner.id, bailleurRole: 'gestionnaire' })),
+  ])
 
   return {
     dehydratedState: dehydrate(queryClient),

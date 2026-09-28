@@ -2,7 +2,7 @@ import clsx from 'clsx'
 import Image from 'next/image'
 import { getTranslations } from 'next-intl/server'
 import { MagicLinkSignInForm } from '~/components/magic-link-sign-in/magic-link-sign-in'
-import background from '~/images/background-owner.webp'
+import background from '~/images/connexion.svg'
 import authStyles from '../../auth.module.css'
 
 export const metadata = {
