@@ -46,7 +46,7 @@ const REASON_PERMISSIONS: Record<InactivityReason, BailleurPermission> = {
 const CONTACTS_URL = `${env.BASE_URL}/bailleur/contacts`
 
 /** Résidences ouvertes aux candidatures d'un bailleur ayant choisi un parcours, avec ce qu'il faut pour les juger. */
-export async function evaluateResidences({ accommodationIds }: { accommodationIds?: number[] } = {}) {
+export async function evaluateResidences({ accommodationIds, ownerSlug }: { accommodationIds?: number[]; ownerSlug?: string } = {}) {
   const pendingContactsSince = db
     .select({ since: min(sql`coalesce(${contactRequests.reviewedAt}, ${contactRequests.confirmedAt}, ${contactRequests.createdAt})`) })
     .from(contactRequests)
@@ -79,6 +79,7 @@ export async function evaluateResidences({ accommodationIds }: { accommodationId
     ne(owners.contactMode, EOwnerContactMode.NONE),
     eq(accommodations.acceptsApplications, true),
     accommodationIds ? inArray(accommodations.id, accommodationIds) : undefined,
+    ownerSlug ? eq(owners.slug, ownerSlug) : undefined,
   ]
 
   return db
@@ -232,6 +233,7 @@ async function sendGroupedEmails(
   send: typeof sendApplicationsInactivityWarningEmail,
   describe: (reason: InactivityReason) => string,
   failures: string[],
+  force: boolean,
 ) {
   const byRecipient = new Map<string, { member: Member; ownerName: string; lines: string[] }>()
   for (const { residence, reason } of notices) {
@@ -244,7 +246,7 @@ async function sendGroupedEmails(
 
   for (const { member, ownerName, lines } of byRecipient.values()) {
     try {
-      await send(member.email, { firstname: member.firstname, ownerName, residences: lines, url: CONTACTS_URL })
+      await send(member.email, { firstname: member.firstname, ownerName, residences: lines, url: CONTACTS_URL }, { force })
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       failures.push(`e-mail ${maskEmail(member.email)} : ${message}`)
@@ -252,13 +254,13 @@ async function sendGroupedEmails(
   }
 }
 
-type InactivityCheckOptions = { dryRun?: boolean; verbose?: boolean; now?: Date }
+type InactivityCheckOptions = { dryRun?: boolean; verbose?: boolean; now?: Date; ownerSlug?: string; sendOutsideProduction?: boolean }
 
 export type InactivityCheckResult = { warned: number; suspended: number; resumed: number; cleared: number; failures: string[] }
 
 export async function runInactivityCheck(options: InactivityCheckOptions = {}): Promise<InactivityCheckResult> {
   const now = options.now ?? new Date()
-  const plans = (await evaluateResidences())
+  const plans = (await evaluateResidences({ ownerSlug: options.ownerSlug }))
     .map((residence) => ({ residence, decision: decideInactivity(toInactivityState(residence), now) }))
     .filter(({ decision }) => hasAction(decision))
 
@@ -291,8 +293,9 @@ export async function runInactivityCheck(options: InactivityCheckOptions = {}): 
   }
 
   const members = await loadMembers([...new Set([...warnings, ...suspensions].map((n) => n.residence.ownerId))])
-  await sendGroupedEmails(warnings, members, sendApplicationsInactivityWarningEmail, warningLine, result.failures)
-  await sendGroupedEmails(suspensions, members, sendApplicationsAutoSuspendedEmail, suspensionLine, result.failures)
+  const force = options.sendOutsideProduction ?? false
+  await sendGroupedEmails(warnings, members, sendApplicationsInactivityWarningEmail, warningLine, result.failures, force)
+  await sendGroupedEmails(suspensions, members, sendApplicationsAutoSuspendedEmail, suspensionLine, result.failures, force)
 
   return result
 }

@@ -5,7 +5,7 @@ import Tag from '@codegouvfr/react-dsfr/Tag'
 import { zodResolver } from '@hookform/resolvers/zod'
 import clsx from 'clsx'
 import { useFormatter, useTranslations } from 'next-intl'
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { ResidenceAccommodationList } from '~/components/bailleur/details/residence-accommodation-list'
 import { ResidenceDetails } from '~/components/bailleur/details/residence-details'
@@ -19,6 +19,7 @@ import { ResidenceVirtualTour } from '~/components/bailleur/details/residence-vi
 import { UpdateResidencePublication } from '~/components/bailleur/details/update-residence-publication'
 import { EResidenceType } from '~/enums/residence-type'
 import { ETargetAudience } from '~/enums/target-audience'
+import { useResidenceFormInvalid } from '~/hooks/use-residence-form-invalid'
 import { useUpdateResidenceDetails } from '~/hooks/use-update-residence-details'
 import { trackEvent } from '~/lib/tracking'
 import { TAccomodationMy } from '~/schemas/accommodations/accommodations'
@@ -82,6 +83,9 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
     },
   })
 
+  const formRef = useRef<HTMLFormElement>(null)
+  const onInvalid = useResidenceFormInvalid<TUpdateResidence>(formRef)
+
   const onSubmit = async (data: TUpdateResidence) => {
     const sanitizedData = {
       ...data,
@@ -95,7 +99,7 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
     <FormProvider {...form}>
       {/* noValidate : la validation est assurée par Zod/RHF. La validation native du navigateur
           court-circuiterait le resolver et remplacerait les messages DSFR par ses propres bulles. */}
-      <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
+      <form ref={formRef} onSubmit={form.handleSubmit(onSubmit, onInvalid)} noValidate>
         <div className="fr-flex fr-direction-row fr-justify-content-space-between fr-align-items-md-center fr-flex-gap-4v">
           <div className="fr-flex fr-flex-gap-2v fr-align-items-center">
             <h1 className="fr-mb-0">{accommodation.name}</h1>

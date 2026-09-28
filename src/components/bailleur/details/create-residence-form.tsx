@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import clsx from 'clsx'
 import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { CreateResidenceAccommodationList } from '~/components/bailleur/details/create-residence-accommodation-list'
 import { CreateResidenceEquipments } from '~/components/bailleur/details/create-residence-equipments'
@@ -18,6 +18,7 @@ import { ResidenceRedirection } from '~/components/bailleur/details/residence-re
 import { ResidenceSummary } from '~/components/bailleur/details/residence-summary'
 import { ResidenceVirtualTour } from '~/components/bailleur/details/residence-virtual-tour'
 import { useCreateResidence } from '~/hooks/use-create-residence'
+import { useResidenceFormInvalid } from '~/hooks/use-residence-form-invalid'
 import { trackEvent } from '~/lib/tracking'
 import { createZCreateResidence, TCreateResidence } from '~/schemas/accommodations/create-residence'
 import { buildHref } from '~/utils/preserve-query-params'
@@ -76,6 +77,9 @@ export const CreateResidenceForm = () => {
     },
   })
 
+  const formRef = useRef<HTMLFormElement>(null)
+  const onInvalid = useResidenceFormInvalid<TCreateResidence>(formRef)
+
   const onSubmit = async (data: TCreateResidence) => {
     await createMutation.mutateAsync({
       ...data,
@@ -88,7 +92,7 @@ export const CreateResidenceForm = () => {
     <FormProvider {...form}>
       {/* noValidate : la validation est assurée par Zod/RHF. La validation native du navigateur
           court-circuiterait le resolver et remplacerait les messages DSFR par ses propres bulles. */}
-      <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
+      <form ref={formRef} onSubmit={form.handleSubmit(onSubmit, onInvalid)} noValidate>
         <div className="fr-flex fr-direction-row fr-justify-content-space-between fr-align-items-center">
           <h1>{t('newTitle')}</h1>
           <CreateResidencePublication />
