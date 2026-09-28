@@ -123,38 +123,26 @@ export const ResidenceDetails = () => {
                 )}
               />
             </div>
-            <div className="fr-py-2w fr-flex fr-justify-content-space-between fr-align-items-center fr-border-bottom">
-              <span>{t('scholarship')}</span>
-              <Controller
-                name="scholarshipHoldersPriority"
-                control={control}
-                render={({ field }) => (
-                  <ToggleSwitch
-                    inputTitle={t('scholarship')}
-                    label=""
-                    showCheckedHint={false}
-                    checked={field.value}
-                    onChange={field.onChange}
-                  />
-                )}
-              />
-            </div>
-            <div className="fr-py-2w fr-flex fr-justify-content-space-between fr-align-items-center fr-border-bottom">
-              <span>{t('socialHousing')}</span>
-              <Controller
-                name="socialHousingRequired"
-                control={control}
-                render={({ field }) => (
-                  <ToggleSwitch
-                    inputTitle={t('socialHousing')}
-                    label=""
-                    showCheckedHint={false}
-                    checked={field.value}
-                    onChange={field.onChange}
-                  />
-                )}
-              />
-            </div>
+            {(['scholarshipHoldersPriority', 'socialHousingRequired'] as const).map((name) => (
+              <div key={name} className="fr-pt-2w fr-border-bottom">
+                <Controller
+                  name={name}
+                  control={control}
+                  render={({ field }) => (
+                    <RadioButtons
+                      legend={t(name === 'scholarshipHoldersPriority' ? 'scholarship' : 'socialHousing')}
+                      name={name}
+                      orientation="horizontal"
+                      className="fr-mb-0"
+                      options={[
+                        { label: t('yes'), nativeInputProps: { checked: field.value === true, onChange: () => field.onChange(true) } },
+                        { label: t('no'), nativeInputProps: { checked: field.value === false, onChange: () => field.onChange(false) } },
+                      ]}
+                    />
+                  )}
+                />
+              </div>
+            ))}
             <div className="fr-py-1w fr-flex fr-justify-content-space-between fr-align-items-center fr-border-bottom">
               <span>{t('accessible')}</span>
               <Input
