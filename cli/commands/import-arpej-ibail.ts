@@ -3,7 +3,7 @@ import { EResidenceType } from '~/enums/residence-type'
 import { db } from '~/server/db'
 import { env } from '~/server/env'
 import { ensureCity, geocodeAddressVerified } from '~/server/lib/import/geocoder'
-import { resolveImportOwner } from '~/server/lib/import/resolve-owner'
+import { markAvailabilityImported, resolveImportOwner } from '~/server/lib/import/resolve-owner'
 import { mergeTypologies, syncTypologies, type TypologyPatch, typologyAggregates, typologyDraft } from '~/server/lib/typologies'
 import { accommodationAddresses, accommodations, externalSources, importBlocklist } from '../../src/server/db/schema'
 import { generateAccommodationKey, uploadFile } from '../../src/server/services/s3'
@@ -142,6 +142,7 @@ const command: ImportCommand = {
 
     const owner = await resolveImportOwner({ id: options.ownerId, slug: options.ownerSlug, name: OWNER_NAME, url: OWNER_URL })
     const ownerId = owner.id
+    if (!options.dryRun) await markAvailabilityImported(ownerId)
     result.ownerName = owner.name
     result.ownerId = ownerId
     if (options.verbose) console.log(`  🏢 Owner ${owner.name} id=${ownerId}`)

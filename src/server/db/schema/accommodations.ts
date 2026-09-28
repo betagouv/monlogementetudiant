@@ -9,6 +9,12 @@ export const targetAudienceEnum = pgEnum('target_audience', [
   'diffus-mixte-etudiants-jeunes-actifs',
 ])
 
+export const applicationsSuspensionReasonEnum = pgEnum('applications_suspension_reason', [
+  'manual',
+  'unprocessed_applications',
+  'stale_availability',
+])
+
 export const accommodations = pgTable(
   'accommodation',
   {
@@ -51,6 +57,9 @@ export const accommodations = pgTable(
     acceptsApplications: boolean('accepts_applications').notNull().default(true),
     applicationsSuspendedAt: timestamp('applications_suspended_at', { withTimezone: true }),
     applicationsSuspendedById: text('applications_suspended_by_id').references(() => user.id, { onDelete: 'set null' }),
+    applicationsSuspensionReason: applicationsSuspensionReasonEnum('applications_suspension_reason'),
+    unprocessedApplicationsWarnedAt: timestamp('unprocessed_applications_warned_at', { withTimezone: true }),
+    staleAvailabilityWarnedAt: timestamp('stale_availability_warned_at', { withTimezone: true }),
     scholarshipHoldersPriority: boolean('scholarship_holders_priority'),
     socialHousingRequired: boolean('social_housing_required'),
 

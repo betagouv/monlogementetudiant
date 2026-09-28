@@ -4,6 +4,7 @@
 
 @media (min-width: 48em) {
   .search {
-    width: 20rem;
+    flex: 0 1 25rem;
+    min-width: 0;
   }
 }

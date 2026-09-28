@@ -2058,6 +2058,7 @@
         "title": "Paramétrage de la résidence",
         "accommodationName": "Nom de la résidence",
         "waitingList": "La résidence accepte les candidatures en liste d’attente",
+        "waitingListHint": "Recevez des demandes d'étudiants même quand votre résidence est complète.",
         "accessible": "Nombre de logements adaptés PMR",
         "coliving": "Nombre de logements en colocation dans la résidence",
         "scholarship": "Les étudiants boursiers sont-ils prioritaires dans la résidence ?",
@@ -2192,7 +2193,7 @@
       "defaultCandidateName": "Candidat",
       "searchResidenceLabel": "Rechercher une résidence ou une ville",
       "settingsButtonTitle": "Réglages du mode de contact",
-      "moderationButtonTitle": "Gérer les droits de modération",
+      "moderationButtonTitle": "Paramètres de réception",
       "noResidence": "Aucune résidence.",
       "toBeCalledBack": "{count} à rappeler",
       "residenceTitle": "Résidence {name}",
@@ -2284,19 +2285,34 @@
         "dossierFacileHint": "Recevez un dossier complet des candidats : pièce d'identité, avis d'imposition, justificatifs de ressources, etc.",
         "noneLabel": "Désactiver les candidatures",
         "noneHint": "Les visiteurs sont redirigés vers votre site Internet",
-        "lockedHint": "{hint} — bientôt disponible",
-        "residences": {
-          "allLabel": "Toutes les résidences",
-          "allHint": "Toutes vos résidences acceptent les candidatures, y compris celles que vous créerez plus tard.",
-          "restrictedHint": "Seules les résidences cochées acceptent les candidatures. Une résidence créée plus tard sera ouverte par défaut.",
-          "legend": "Résidences acceptant les candidatures",
-          "searchLabel": "Rechercher une résidence",
-          "searchPlaceholder": "Nom de la résidence",
-          "selectedCount": "{count} résidence(s) ouverte(s)",
-          "selectAll": "Tout sélectionner",
-          "selectNone": "Tout désélectionner",
-          "refineSearch": "Affinez votre recherche pour voir les {count} autres résidences.",
-          "emptyWarning": "Aucune résidence n'acceptera de candidature : les visiteurs seront redirigés vers votre site."
+        "lockedHint": "{hint} — bientôt disponible"
+      },
+      "receptionSettings": {
+        "pageTitle": "Paramètres de réception de coordonnées",
+        "pageTitleDossierFacile": "Paramètres de réception des dossiers",
+        "subtitle": "Sélectionnez les résidences acceptant des contacts d'étudiants",
+        "subtitleDossierFacile": "Sélectionnez les résidences acceptant des dossiers d'étudiants",
+        "residencesLegend": "Résidences",
+        "residenceLocation": "{city} ({department})",
+        "noResidence": "Aucune résidence pour le moment.",
+        "tabsLabel": "Paramètres par résidence",
+        "managersLabel": "Gestionnaires de candidatures",
+        "managersHint": "Sélectionnez un ou plusieurs gestionnaires pouvant accéder aux dossiers",
+        "managersPlaceholder": "{count, plural, =0 {Rechercher un gestionnaire} one {# sélectionnée} other {# sélectionnées}}",
+        "noManagerFound": "Aucun gestionnaire trouvé",
+        "selectedManagers": "Gestionnaires sélectionnées",
+        "removeManager": "Retirer {name}",
+        "noGestionnaire": "Les administrateurs reçoivent toutes les candidatures. Pour confier une résidence à un gestionnaire, ajoutez-le depuis Gestion des utilisateurs.",
+        "addUser": "Ajouter un gestionnaire",
+        "waitingListLabel": "La résidence accepte les candidatures en liste d'attente",
+        "waitingListHint": "Recevez des demandes d'étudiants même quand votre résidence est complète.",
+        "save": "Enregistrer",
+        "saving": "Enregistrement...",
+        "success": "Paramètres de réception enregistrés.",
+        "error": "Une erreur est survenue.",
+        "engagementNotice": {
+          "title": "Engagement de modération",
+          "description": "En activant la réception des coordonnées d’étudiants à recontacter, vous vous engagez à consulter et traiter ces demandes régulièrement afin de garantir une réponse dans les meilleurs délais."
         }
       },
       "promoBanner": {
@@ -2304,21 +2320,6 @@
         "text": "d'étudiants sur votre espace",
         "link": "Recevoir des candidatures",
         "dismiss": "Masquer ce message"
-      },
-      "moderation": {
-        "pageTitle": "Paramètres de modération",
-        "subtitle": "Sélectionnez les gestionnaires pouvant modérer les dossiers des candidats",
-        "hint": "Gestionnaires pouvant voir et modérer les dossiers des candidats. Sélection éditable ultérieurement.",
-        "legend": "Gestionnaires autorisés à modérer les dossiers des candidats",
-        "toggleLabel": "Gestion des candidatures",
-        "toggleDescription": "Autorise {name} à voir et modérer les dossiers des candidats",
-        "onlyPermissionHint": "Seule autorisation de ce gestionnaire : modifiez-la depuis Gestion des utilisateurs.",
-        "empty": "Aucun gestionnaire pour le moment.",
-        "addUser": "Ajouter un gestionnaire",
-        "save": "Enregistrer",
-        "saving": "Enregistrement...",
-        "toastSuccess": "Droits de modération mis à jour",
-        "toastError": "Erreur lors de la mise à jour des droits de modération"
       },
       "availabilityCount": "{count, plural, one {# disponibilité} other {# disponibilités}}",
       "status": {
@@ -2328,6 +2329,10 @@
         "contacte": "Contacté"
       },
       "applicationsSuspendedBadge": "Candidatures suspendues",
+      "autoSuspendedBadge": {
+        "unprocessed_applications": "Suspendue : candidatures non traitées",
+        "stale_availability": "Suspendue : disponibilités à mettre à jour"
+      },
       "applicationsToggle": {
         "label": "Recevoir des candidatures",
         "openHint": "Les étudiants peuvent candidater sur cette résidence.",
@@ -2338,11 +2343,15 @@
         "confirm": "Suspendre les candidatures",
         "suspendedSuccess": "Les candidatures sont suspendues pour cette résidence.",
         "resumedSuccess": "Les candidatures sont de nouveau ouvertes pour cette résidence.",
-        "error": "La modification n'a pas pu être enregistrée."
+        "error": "La modification n'a pas pu être enregistrée.",
+        "autoSuspendedHint": {
+          "unprocessed_applications": "Suspension automatique : des candidatures attendent depuis plus de 10 jours. Traitez-les et la réception reprendra d'elle-même.",
+          "stale_availability": "Suspension automatique : les disponibilités n'ont pas été mises à jour depuis 30 jours. Mettez-les à jour et la réception reprendra d'elle-même."
+        }
       },
       "noManagerAlert": {
         "title": "Aucun gestionnaire n'a accès aux dossiers des étudiants",
-        "description": "Par défaut, seuls les administrateurs voient les candidatures. Pour autoriser un gestionnaire à les consulter et à les traiter, cliquez sur le bouton <icon></icon> « Gérer les droits de modération ».",
+        "description": "Par défaut, seuls les administrateurs voient les candidatures. Pour autoriser un gestionnaire à les consulter et à les traiter, cliquez sur le bouton <icon></icon> « Paramètres de réception ».",
         "action": "Attribuer les droits"
       }
     },

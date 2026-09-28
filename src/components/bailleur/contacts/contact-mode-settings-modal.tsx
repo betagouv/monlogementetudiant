@@ -3,16 +3,14 @@
 import { createModal } from '@codegouvfr/react-dsfr/Modal'
 import MainSend from '@codegouvfr/react-dsfr/picto/MainSend'
 import RadioButtons from '@codegouvfr/react-dsfr/RadioButtons'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { useEffect, useState } from 'react'
-import { AccommodationSelector } from '~/components/bailleur/accommodation-selector'
+import { useState } from 'react'
 import { createToast } from '~/components/ui/createToast'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import dossierFacile from '~/images/dossier-facile.svg'
-import type { TAccommodationSelection } from '~/schemas/accommodations/accommodation-selection'
 import { useTRPC } from '~/server/trpc/client'
 import { isDossierFacileSelectable } from '~/utils/feature-flags'
 
@@ -44,27 +42,13 @@ const MODE_OPTIONS: { mode: EOwnerContactMode; labelKey: string; hintKey: string
 interface Props {
   currentMode: EOwnerContactMode
   ownerId?: number
-  resolvedOwnerId: number
 }
 
-export const ContactModeSettingsModal = ({ currentMode, ownerId, resolvedOwnerId }: Props) => {
+export const ContactModeSettingsModal = ({ currentMode, ownerId }: Props) => {
   const t = useTranslations('bailleur.contacts.settingsModal')
   const trpc = useTRPC()
   const router = useRouter()
   const [mode, setMode] = useState<EOwnerContactMode>(currentMode)
-  const [residences, setResidences] = useState<TAccommodationSelection>({ mode: 'all' })
-
-  const { data: residenceOptions } = useQuery({
-    ...trpc.bailleur.listOwnerResidences.queryOptions({ ownerId: resolvedOwnerId }),
-    enabled: mode !== EOwnerContactMode.NONE,
-  })
-
-  useEffect(() => {
-    const items = residenceOptions?.items as Array<{ id: number; acceptsApplications: boolean }> | undefined
-    if (!items || items.length === 0) return
-    const open = items.filter((r) => r.acceptsApplications)
-    setResidences(open.length === items.length ? { mode: 'all' } : { mode: 'restricted', accommodationIds: open.map((r) => r.id) })
-  }, [residenceOptions])
 
   const { mutate, isPending } = useMutation(
     trpc.bailleur.setContactMode.mutationOptions({
@@ -94,7 +78,7 @@ export const ContactModeSettingsModal = ({ currentMode, ownerId, resolvedOwnerId
           priority: 'primary',
           disabled: isPending,
           doClosesModal: false,
-          onClick: () => mutate({ mode, ownerId, residences: mode === EOwnerContactMode.NONE ? undefined : residences }),
+          onClick: () => mutate({ mode, ownerId }),
         },
       ]}
     >
@@ -125,15 +109,6 @@ export const ContactModeSettingsModal = ({ currentMode, ownerId, resolvedOwnerId
           }
         })}
       />
-
-      {mode !== EOwnerContactMode.NONE && (
-        <AccommodationSelector
-          ownerId={resolvedOwnerId}
-          namespace="bailleur.contacts.settingsModal.residences"
-          value={residences}
-          onChange={setResidences}
-        />
-      )}
     </contactModeSettingsModal.Component>
   )
 }

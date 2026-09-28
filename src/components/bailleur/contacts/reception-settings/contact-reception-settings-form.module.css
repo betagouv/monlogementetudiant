@@ -1,0 +1,11 @@
+.residences {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem 1.5rem;
+}
+
+@media (min-width: 36em) {
+  .residences {
+    grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  }
+}

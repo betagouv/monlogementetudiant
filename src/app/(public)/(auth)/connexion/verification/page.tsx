@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { MagicLinkRedirect } from '~/components/magic-link-redirect/magic-link-redirect'
-import background from '~/images/background-owner.webp'
+import background from '~/images/connexion.svg'
 import { env } from '~/server/env'
 import authStyles from '../../auth.module.css'
 

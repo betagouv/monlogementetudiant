@@ -415,8 +415,8 @@ describe('bailleur.users — écriture du périmètre', () => {
       .set({ bailleurPermissions: ['manage_residences', 'manage_applications'] })
       .where(eq(user.id, SCOPED.id))
     await restrictTo(SCOPED.id, [resIn.id])
-    await ownerCaller.bailleur.users.setApplicationsPermission({ managers: [{ userId: SCOPED.id, enabled: false }] })
-    await ownerCaller.bailleur.users.setApplicationsPermission({ managers: [{ userId: SCOPED.id, enabled: true }] })
+    await ownerCaller.bailleur.users.update({ id: SCOPED.id, bailleurPermissions: ['manage_residences'] })
+    await ownerCaller.bailleur.users.update({ id: SCOPED.id, bailleurPermissions: ['manage_residences', 'manage_applications'] })
 
     expect(await scopeRows(SCOPED.id)).toHaveLength(1)
   })
@@ -465,68 +465,6 @@ describe('bailleur.listOwnerResidences', () => {
 
     const { items } = await scopedCaller().bailleur.listOwnerResidences({})
     expect(items.map((i) => i.name)).toEqual(['Res In'])
-  })
-})
-
-describe('setContactMode — résidences éligibles', () => {
-  const openIds = async () => {
-    const rows = await getTestDb().select().from(accommodations).where(eq(accommodations.ownerId, ownerAId))
-    return rows
-      .filter((r) => r.acceptsApplications)
-      .map((r) => r.id)
-      .sort()
-  }
-
-  it('« toutes » rouvre tout le parc', async () => {
-    await getTestDb().update(accommodations).set({ acceptsApplications: false }).where(eq(accommodations.id, resOut.id))
-
-    await ownerCaller.bailleur.setContactMode({ mode: EOwnerContactMode.CONTACTS, residences: { mode: 'all' } })
-
-    expect(await openIds()).toEqual([resIn.id, resOut.id].sort())
-  })
-
-  it('une sélection ferme les résidences non cochées', async () => {
-    await ownerCaller.bailleur.setContactMode({
-      mode: EOwnerContactMode.CONTACTS,
-      residences: { mode: 'restricted', accommodationIds: [resIn.id] },
-    })
-
-    expect(await openIds()).toEqual([resIn.id])
-  })
-
-  it('sans le champ, le parc est laissé tel quel', async () => {
-    await getTestDb().update(accommodations).set({ acceptsApplications: false }).where(eq(accommodations.id, resOut.id))
-
-    await ownerCaller.bailleur.setContactMode({ mode: EOwnerContactMode.CONTACTS })
-
-    expect(await openIds()).toEqual([resIn.id])
-  })
-
-  it('un gestionnaire restreint ne peut fermer aucune résidence', async () => {
-    await restrictTo(SCOPED.id, [resIn.id])
-    const before = await openIds()
-
-    await expect(
-      scopedCaller().bailleur.setContactMode({
-        mode: EOwnerContactMode.CONTACTS,
-        residences: { mode: 'restricted', accommodationIds: [] },
-      }),
-    ).rejects.toThrow(/Administrateur du bailleur requis/)
-
-    expect(await openIds()).toEqual(before)
-  })
-
-  it('journalise le changement de résidences éligibles', async () => {
-    await ownerCaller.bailleur.setContactMode({
-      mode: EOwnerContactMode.CONTACTS,
-      residences: { mode: 'restricted', accommodationIds: [resIn.id] },
-    })
-
-    const rows = await getTestDb()
-      .select()
-      .from(activityLog)
-      .where(and(eq(activityLog.action, 'owner.application_residences_updated'), eq(activityLog.ownerId, ownerAId)))
-    expect(rows).toHaveLength(1)
   })
 })
 
