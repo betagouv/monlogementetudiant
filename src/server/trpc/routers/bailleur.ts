@@ -4,7 +4,7 @@ import { SignJWT } from 'jose'
 
 import { z } from 'zod'
 import { EContactSource, ZContactSource } from '~/enums/contact-source'
-import { A_RAPPELER_STATUS, ZContactStatus } from '~/enums/contact-status'
+import { A_RAPPELER_STATUS, EContactStatus, ZContactStatus } from '~/enums/contact-status'
 import { EOwnerContactMode, ZOwnerContactMode } from '~/enums/owner-contact-mode'
 import type { TAccommodationSelection } from '~/schemas/accommodations/accommodation-selection'
 import { ZCreateResidence } from '~/schemas/accommodations/create-residence'
@@ -37,6 +37,7 @@ import {
   notifyApplicationsSuspended,
   notifyContactModeActivated,
   notifyContactModeDeactivated,
+  notifyContactRequestNotRetained,
   notifyContactResidencesUpdated,
   readManagedResidences,
 } from '~/server/bailleur/application-notifications'
@@ -1565,6 +1566,18 @@ export const bailleurRouter = createTRPCRouter({
         .where(eq(contactRequests.id, input.id))
         .returning()
       await resumeIfResolved(request.accommodationId)
+
+      // L'étudiant est prévenu du refus — uniquement au passage vers « non retenu » (pas si la
+      // fiche y était déjà), et si ses coordonnées sont encore présentes (non anonymisées).
+      if (
+        input.status === EContactStatus.NON_RETENU &&
+        request.status !== EContactStatus.NON_RETENU &&
+        request.email &&
+        !request.anonymizedAt
+      ) {
+        await notifyContactRequestNotRetained({ email: request.email, accommodationId: request.accommodationId })
+      }
+
       return updated
     }),
 

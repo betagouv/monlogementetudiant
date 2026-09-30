@@ -1,14 +1,18 @@
 import { and, asc, eq, ne } from 'drizzle-orm'
 import { db } from '~/server/db'
+import { accommodationAddresses } from '~/server/db/schema/accommodation-addresses'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { user } from '~/server/db/schema/auth'
 import { bailleurAccommodationScopes } from '~/server/db/schema/bailleur-accommodation-scopes'
+import { cities } from '~/server/db/schema/cities'
+import { owners } from '~/server/db/schema/owners'
 import { env } from '~/server/env'
 import {
   sendApplicationsManagementGrantedEmail,
   sendApplicationsSuspendedEmail,
   sendContactModeActivatedEmail,
   sendContactModeDeactivatedEmail,
+  sendContactRequestNotRetainedEmail,
   sendContactResidencesUpdatedEmail,
 } from '~/server/services/brevo'
 
@@ -140,6 +144,32 @@ export async function notifyContactResidencesUpdated({
       activeCount: after.length,
     }),
   )
+}
+
+/** Prévient l'étudiant que sa demande de contact n'a pas été retenue par le gestionnaire. */
+export async function notifyContactRequestNotRetained({ email, accommodationId }: { email: string; accommodationId: number }) {
+  try {
+    const [residence] = await db
+      .select({ residenceName: accommodations.name, cityName: cities.name, ownerName: owners.name })
+      .from(accommodations)
+      .leftJoin(
+        accommodationAddresses,
+        and(eq(accommodationAddresses.accommodationId, accommodations.id), eq(accommodationAddresses.isMain, true)),
+      )
+      .leftJoin(cities, eq(accommodationAddresses.cityId, cities.id))
+      .leftJoin(owners, eq(accommodations.ownerId, owners.id))
+      .where(eq(accommodations.id, accommodationId))
+      .limit(1)
+    if (!residence) return
+
+    await sendContactRequestNotRetainedEmail(email, {
+      residenceName: residence.residenceName,
+      cityName: residence.cityName ?? '',
+      ownerName: residence.ownerName ?? '',
+    })
+  } catch (err) {
+    console.error('Erreur envoi email demande non retenue', err)
+  }
 }
 
 export async function notifyApplicationsSuspended({

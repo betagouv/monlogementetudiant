@@ -151,6 +151,29 @@ export async function sendApplicationsSuspendedEmail(
   })
 }
 
+export async function sendContactRequestNotRetainedEmail(
+  email: string,
+  params: { residenceName: string; cityName: string; ownerName: string },
+  { force = false }: { force?: boolean } = {},
+): Promise<void> {
+  // Email adressé à un étudiant : jamais d'envoi depuis un environnement de dev/recette,
+  // dont les bases contiennent de vraies adresses.
+  if (env.NEXT_PUBLIC_APP_ENV !== 'production' && !force) {
+    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] email « demande non retenue » non envoyé à ${maskEmail(email)}`)
+    return
+  }
+
+  await sendTemplateEmail({
+    to: email,
+    templateId: env.BREVO_TEMPLATE_CONTACT_NOT_RETAINED,
+    params: {
+      RESIDENCE_NAME: params.residenceName,
+      VILLE_NAME: params.cityName,
+      OWNER_NAME: params.ownerName,
+    },
+  })
+}
+
 export async function sendContactModeActivatedEmail(email: string, params: { ownerName: string }): Promise<void> {
   await sendTemplateEmail({
     to: email,
