@@ -175,7 +175,7 @@ export async function resumeIfResolved(accommodationId: number, now = new Date()
   }
 }
 
-type Member = {
+export type Member = {
   id: string
   email: string
   firstname: string
@@ -185,7 +185,7 @@ type Member = {
   scope: Set<number> | null
 }
 
-async function loadMembers(ownerIds: number[]): Promise<Member[]> {
+export async function loadMembers(ownerIds: number[]): Promise<Member[]> {
   if (ownerIds.length === 0) return []
   const rows = await db
     .select({
