@@ -14,7 +14,9 @@ const brevoHeaders = {
 interface TemplateEmailParams {
   to: string
   templateId: number
-  params?: Record<string, string | string[]>
+  // Brevo accepte des valeurs imbriquées dans `params` (ex. liste d'objets parcourue
+  // par un `{% for %}` dans le template).
+  params?: Record<string, string | string[] | Array<Record<string, string | number>>>
 }
 
 export async function sendTemplateEmail({ to, templateId, params }: TemplateEmailParams): Promise<void> {
