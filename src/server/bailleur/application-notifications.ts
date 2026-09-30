@@ -4,7 +4,13 @@ import { accommodations } from '~/server/db/schema/accommodations'
 import { user } from '~/server/db/schema/auth'
 import { bailleurAccommodationScopes } from '~/server/db/schema/bailleur-accommodation-scopes'
 import { env } from '~/server/env'
-import { sendApplicationsManagementGrantedEmail, sendApplicationsSuspendedEmail } from '~/server/services/brevo'
+import {
+  sendApplicationsManagementGrantedEmail,
+  sendApplicationsSuspendedEmail,
+  sendContactModeActivatedEmail,
+  sendContactModeDeactivatedEmail,
+  sendContactResidencesUpdatedEmail,
+} from '~/server/services/brevo'
 
 export type ManagedResidences = { mode: 'all' | 'restricted'; residences: Array<{ id: number; name: string }> }
 
@@ -68,6 +74,72 @@ export async function notifyApplicationsManagementGranted({
   } catch (err) {
     console.error('Erreur envoi email attribution gestion des candidatures', err)
   }
+}
+
+/** Administrateurs du bailleur destinataires des notifications du parcours contact. */
+async function readOwnerAdministrators(ownerId: number) {
+  return db.query.user.findMany({
+    where: and(eq(user.ownerId, ownerId), eq(user.role, 'owner'), eq(user.bailleurRole, 'administrator'), eq(user.banned, false)),
+    columns: { email: true },
+  })
+}
+
+async function notifyOwnerAdministrators(owner: OwnerRef, label: string, send: (email: string) => Promise<void>) {
+  try {
+    const administrators = await readOwnerAdministrators(owner.id)
+    const results = await Promise.allSettled(administrators.map((admin) => send(admin.email)))
+    for (const result of results) {
+      if (result.status === 'rejected') console.error(`Erreur envoi email ${label}`, result.reason)
+    }
+  } catch (err) {
+    console.error(`Erreur envoi email ${label}`, err)
+  }
+}
+
+export async function notifyContactModeActivated({ owner }: { owner: OwnerRef }) {
+  await notifyOwnerAdministrators(owner, 'activation du parcours contact', (email) =>
+    sendContactModeActivatedEmail(email, { ownerName: owner.name }),
+  )
+}
+
+export async function notifyContactModeDeactivated({ owner }: { owner: OwnerRef }) {
+  await notifyOwnerAdministrators(owner, 'désactivation du parcours contact', (email) =>
+    sendContactModeDeactivatedEmail(email, { ownerName: owner.name }),
+  )
+}
+
+type ResidenceRef = { id: number; name: string }
+
+/** Delta d'une mise à jour de la sélection de résidences ouvertes aux demandes de contact. */
+export function diffResidenceSelection(before: ResidenceRef[], after: ResidenceRef[]) {
+  const beforeIds = new Set(before.map((r) => r.id))
+  const afterIds = new Set(after.map((r) => r.id))
+  return {
+    deactivated: before.filter((r) => !afterIds.has(r.id)).map((r) => r.name),
+    activated: after.filter((r) => !beforeIds.has(r.id)).map((r) => r.name),
+  }
+}
+
+export async function notifyContactResidencesUpdated({
+  owner,
+  before,
+  after,
+}: {
+  owner: OwnerRef
+  before: ResidenceRef[]
+  after: ResidenceRef[]
+}) {
+  const { deactivated, activated } = diffResidenceSelection(before, after)
+  if (deactivated.length === 0 && activated.length === 0) return
+
+  await notifyOwnerAdministrators(owner, 'mise à jour des résidences du parcours contact', (email) =>
+    sendContactResidencesUpdatedEmail(email, {
+      ownerName: owner.name,
+      deactivatedResidences: deactivated,
+      activatedResidences: activated,
+      activeCount: after.length,
+    }),
+  )
 }
 
 export async function notifyApplicationsSuspended({

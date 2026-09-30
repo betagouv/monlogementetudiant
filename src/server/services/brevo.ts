@@ -149,6 +149,38 @@ export async function sendApplicationsSuspendedEmail(
   })
 }
 
+export async function sendContactModeActivatedEmail(email: string, params: { ownerName: string }): Promise<void> {
+  await sendTemplateEmail({
+    to: email,
+    templateId: env.BREVO_TEMPLATE_CONTACT_MODE_ACTIVATED,
+    params: { OWNER_NAME: params.ownerName },
+  })
+}
+
+export async function sendContactModeDeactivatedEmail(email: string, params: { ownerName: string }): Promise<void> {
+  await sendTemplateEmail({
+    to: email,
+    templateId: env.BREVO_TEMPLATE_CONTACT_MODE_DEACTIVATED,
+    params: { OWNER_NAME: params.ownerName },
+  })
+}
+
+export async function sendContactResidencesUpdatedEmail(
+  email: string,
+  params: { ownerName: string; deactivatedResidences: string[]; activatedResidences: string[]; activeCount: number },
+): Promise<void> {
+  await sendTemplateEmail({
+    to: email,
+    templateId: env.BREVO_TEMPLATE_CONTACT_RESIDENCES_UPDATED,
+    params: {
+      OWNER_NAME: params.ownerName,
+      DEACTIVATED_RESIDENCES: params.deactivatedResidences,
+      ACTIVATED_RESIDENCES: params.activatedResidences,
+      ACTIVE_COUNT: String(params.activeCount),
+    },
+  })
+}
+
 type InactivityEmailParams = { firstname: string; ownerName: string; residences: string[]; url: string }
 
 const inactivityParams = (params: InactivityEmailParams) => ({
