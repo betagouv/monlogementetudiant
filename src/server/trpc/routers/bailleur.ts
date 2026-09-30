@@ -35,6 +35,9 @@ import {
 import {
   notifyApplicationsManagementGranted,
   notifyApplicationsSuspended,
+  notifyContactModeActivated,
+  notifyContactModeDeactivated,
+  notifyContactResidencesUpdated,
   readManagedResidences,
 } from '~/server/bailleur/application-notifications'
 import { getOwnerForUser } from '~/server/bailleur/get-owner-for-user'
@@ -1033,6 +1036,14 @@ export const bailleurRouter = createTRPCRouter({
           ownerName: owner.name,
           metadata: { diff: { contactMode: { old: previousMode, new: input.mode } } },
         })
+
+        // Confirmation envoyée aux administrateurs du bailleur. Seul le parcours « coordonnées » est
+        // couvert : un passage vers/depuis DossierFacile n'est ni une activation ni une désactivation.
+        if (previousMode === EOwnerContactMode.NONE && input.mode === EOwnerContactMode.CONTACTS) {
+          await notifyContactModeActivated({ owner: { id: owner.id, name: owner.name } })
+        } else if (previousMode === EOwnerContactMode.CONTACTS && input.mode === EOwnerContactMode.NONE) {
+          await notifyContactModeDeactivated({ owner: { id: owner.id, name: owner.name } })
+        }
       }
 
       return { contactMode: input.mode }
@@ -1196,13 +1207,20 @@ export const bailleurRouter = createTRPCRouter({
       })
     const ownerEntity = { entityType: 'owner', entityId: String(owner.id), entityName: owner.name } as const
 
+    const eligibleAfter = await readEligibleResidences(owner.id, ALL_ACCOMMODATIONS)
     const residencesBefore = describeEligibleResidences(previousResidences)
-    const residencesAfter = describeEligibleResidences(await readEligibleResidences(owner.id, ALL_ACCOMMODATIONS))
+    const residencesAfter = describeEligibleResidences(eligibleAfter)
     if (residencesBefore !== residencesAfter) {
       await log({
         ...ownerEntity,
         action: 'owner.application_residences_updated',
         metadata: { diff: { applicationResidences: { old: residencesBefore, new: residencesAfter } } },
+      })
+      // Les administrateurs sont informés du delta (résidences fermées/ouvertes aux demandes).
+      await notifyContactResidencesUpdated({
+        owner: { id: owner.id, name: owner.name },
+        before: previousResidences,
+        after: eligibleAfter,
       })
     }
 
