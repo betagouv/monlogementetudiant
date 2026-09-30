@@ -9,6 +9,7 @@ import { GESTIONNAIRE_PERMISSIONS_REQUIRED, gestionnairePermissionsAreUsable } f
 import { zNormalizedEmail } from '~/schemas/email'
 import { IMPORT_JOB_TYPES, ZImportJobType } from '~/schemas/import-jobs'
 import { assertAdministratorSlotAvailable } from '~/server/bailleur/administrator-limit'
+import { notifyContactModeActivated, notifyContactModeDeactivated } from '~/server/bailleur/application-notifications'
 import {
   BAILLEUR_PERMISSIONS,
   BAILLEUR_ROLES,
@@ -572,6 +573,14 @@ const ownersRouter = createTRPCRouter({
           ownerName: updated.name,
           metadata: { diff: { contactMode: { old: previousMode, new: fields.contactMode } } },
         })
+
+        // Mêmes notifications que l'activation self-service (cf. `setContactMode`) : les
+        // administrateurs du bailleur sont prévenus même quand le mode est changé côté admin.
+        if (previousMode === EOwnerContactMode.NONE && fields.contactMode === EOwnerContactMode.CONTACTS) {
+          await notifyContactModeActivated({ owner: { id: updated.id, name: updated.name } })
+        } else if (previousMode === EOwnerContactMode.CONTACTS && fields.contactMode === EOwnerContactMode.NONE) {
+          await notifyContactModeDeactivated({ owner: { id: updated.id, name: updated.name } })
+        }
       }
 
       const { image, ...rest } = updated
