@@ -181,6 +181,27 @@ export async function sendContactResidencesUpdatedEmail(
   })
 }
 
+export async function sendContactDailyDigestEmail(
+  email: string,
+  params: { date: string; residences: Array<{ name: string; count: number }>; totalCount: number },
+  { force = false }: { force?: boolean } = {},
+): Promise<void> {
+  if (env.NEXT_PUBLIC_APP_ENV !== 'production' && !force) {
+    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] récapitulatif quotidien des demandes non envoyé à ${maskEmail(email)}`)
+    return
+  }
+
+  await sendTemplateEmail({
+    to: email,
+    templateId: env.BREVO_TEMPLATE_CONTACT_DAILY_DIGEST,
+    params: {
+      DATE: params.date,
+      RESIDENCES: params.residences,
+      TOTAL_COUNT: String(params.totalCount),
+    },
+  })
+}
+
 type InactivityEmailParams = { firstname: string; ownerName: string; residences: string[]; url: string }
 
 const inactivityParams = (params: InactivityEmailParams) => ({

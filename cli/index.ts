@@ -23,6 +23,7 @@ import { purgeContactRequests } from './commands/purge-contact-requests'
 import { purgeLogs } from './commands/purge-logs'
 import { seedAlertSnapshotCommand } from './commands/seed-alert-snapshot'
 import { sendAlertJobs } from './commands/send-alert-jobs'
+import { sendContactDigestCommand } from './commands/send-contact-digest'
 import { auditStorage } from './commands/storage/auditStorage'
 import { uploadImages } from './commands/upload-images'
 import { verifyRamsese } from './commands/verify-ramsese'
@@ -258,6 +259,14 @@ program
   .option('--verbose', 'Afficher la décision prise pour chaque résidence')
   .option('--owner <slug>', 'Limiter au bailleur donné ; actif et envoie les e-mails même hors production (recette)')
   .action((opts) => checkApplicationsInactivityCommand(opts))
+
+program
+  .command('send-contact-digest')
+  .description('Récapitulatif quotidien envoyé aux gestionnaires : demandes de contact confirmées la veille, par résidence')
+  .option('--dry-run', 'Simuler sans envoyer ni modifier la BDD')
+  .option('--verbose', 'Afficher le détail par destinataire')
+  .option('--owner <slug>', 'Limiter au bailleur donné ; actif et envoie les e-mails même hors production (recette)')
+  .action((opts) => sendContactDigestCommand(opts))
 
 program
   .command('purge-contact-requests')
