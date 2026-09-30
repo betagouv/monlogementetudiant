@@ -107,6 +107,7 @@ cli/
     send-alert-jobs.ts      # Draine la file de jobs et envoie les emails d'alerte
     expire-alerts.ts        # Relance à 3 mois puis désactive les alertes sans réaction
     check-applications-inactivity.ts # Alerte puis suspend les résidences inactives (candidatures, dispos)
+    send-contact-digest.ts  # Récap quotidien des demandes de contact de la veille aux gestionnaires
 ```
 
 ---
