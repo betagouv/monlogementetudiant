@@ -58,6 +58,7 @@ const navSections: NavSection[] = [
       { label: 'Journaux', icon: 'fr-icon-article-line', href: '/administration/journaux' },
       { label: 'Connexions', icon: 'fr-icon-lock-line', href: '/administration/connexions' },
       { label: 'Feedback', icon: 'fr-icon-questionnaire-line', href: '/administration/feedback' },
+      { label: 'Tickets', icon: 'fr-icon-mail-line', href: '/administration/tickets' },
     ],
   },
 ]
