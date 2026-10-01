@@ -12,6 +12,7 @@ import { ownerFeedbackRouter } from './routers/owner-feedback'
 import { ownerStatisticsRouter } from './routers/owner-statistics'
 import { questionsAnswersRouter } from './routers/questions-answers'
 import { studentRouter } from './routers/student'
+import { supportTicketsRouter } from './routers/support-tickets'
 import { territoriesRouter } from './routers/territories'
 import { trackingRouter } from './routers/tracking'
 
@@ -31,6 +32,7 @@ export const appRouter = createTRPCRouter({
   student: studentRouter,
   housingAidSimulation: housingAidSimulationRouter,
   budgetSimulation: budgetSimulationRouter,
+  supportTickets: supportTicketsRouter,
 })
 
 export type AppRouter = typeof appRouter
