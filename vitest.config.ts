@@ -29,6 +29,7 @@ export default defineConfig({
             DATABASE_URL: 'postgres://test:test@localhost:5432/test',
             BREVO_API_KEY: 'test-brevo-key',
             ACCOMMODATION_REPORT_EMAIL: 'signalements@test.local',
+            SUPPORT_TICKET_EMAIL: 'tickets@test.local',
 
             BREVO_TEMPLATE_MAGIC_LINK: '1',
             BREVO_TEMPLATE_VALIDATION: '1',
@@ -91,6 +92,7 @@ export default defineConfig({
             DATABASE_URL: 'postgres://test:test@localhost:5491/mle_test',
             BREVO_API_KEY: 'test-brevo-api-key',
             ACCOMMODATION_REPORT_EMAIL: 'signalements@test.local',
+            SUPPORT_TICKET_EMAIL: 'tickets@test.local',
 
             BREVO_TEMPLATE_MAGIC_LINK: '1',
             BREVO_TEMPLATE_VALIDATION: '1',
