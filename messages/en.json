@@ -58,6 +58,9 @@
       },
       "personalInformations": {
         "title": "Personal information"
+      },
+      "reportProblem": {
+        "title": "Report a problem"
       }
     },
     "homeLabel": "Home"
@@ -1559,7 +1562,8 @@
       "favorites": "Favorites and applications",
       "alerts": "Housing alerts",
       "personalInformations": "Personal information",
-      "menuTitle": "My area"
+      "menuTitle": "My area",
+      "reportProblem": "Report a problem"
     },
     "welcome": {
       "subtitle": "Welcome to your personal space! Find your favorite homes, track your applications, receive alerts, prepare your application file, and explore our practical tips to help you find a place to live.",
@@ -1791,6 +1795,20 @@
       "yes": "Yes",
       "no": "No",
       "unknown": "I do not know"
+    },
+    "reportProblem": {
+      "title": "Report a problem",
+      "subtitle": "Found a bug or something not working? Describe it and the team will read it.",
+      "form": {
+        "categoryLabel": "Part of the website concerned",
+        "categoryPlaceholder": "Select an option",
+        "messageLabel": "Problem description",
+        "messageHint": "Describe what happened, what you expected, and the steps to reproduce the problem.",
+        "submit": "Send the report",
+        "successTitle": "Report sent",
+        "successMessage": "Thank you! The Mon Logement Étudiant team has received your report.",
+        "errorToast": "Your report could not be sent, please try again."
+      }
     }
   },
   "loginRequiredModal": {

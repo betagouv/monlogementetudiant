@@ -58,6 +58,9 @@
       },
       "personalInformations": {
         "title": "Informations personnelles"
+      },
+      "reportProblem": {
+        "title": "Signaler un problème"
       }
     },
     "homeLabel": "Accueil"
@@ -1559,7 +1562,8 @@
       "favorites": "Favoris et candidatures",
       "alerts": "Alertes logements",
       "personalInformations": "Informations personnelles",
-      "menuTitle": "Mon espace"
+      "menuTitle": "Mon espace",
+      "reportProblem": "Signaler un problème"
     },
     "welcome": {
       "subtitle": "Bienvenue dans votre espace personnel ! Retrouvez vos logements favoris, suivez vos démarches, recevez des alertes, préparez votre dossier et consultez nos conseils pratiques pour réussir votre recherche de logement.",
@@ -1791,6 +1795,20 @@
       "yes": "Oui",
       "no": "Non",
       "unknown": "Je ne sais pas"
+    },
+    "reportProblem": {
+      "title": "Signaler un problème",
+      "subtitle": "Un bug, un dysfonctionnement ? Décrivez-le, l’équipe vous lira.",
+      "form": {
+        "categoryLabel": "Partie du site concernée",
+        "categoryPlaceholder": "Sélectionnez une option",
+        "messageLabel": "Description du problème",
+        "messageHint": "Décrivez ce qui s’est passé, ce que vous attendiez, et les étapes pour reproduire le problème.",
+        "submit": "Envoyer le signalement",
+        "successTitle": "Signalement envoyé",
+        "successMessage": "Merci ! L’équipe Mon Logement Étudiant a bien reçu votre signalement.",
+        "errorToast": "Votre signalement n’a pas pu être envoyé, veuillez réessayer."
+      }
     }
   },
   "loginRequiredModal": {
