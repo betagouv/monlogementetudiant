@@ -39,6 +39,7 @@ const envSchema = z.object({
   // Destinataire des signalements d'erreur envoyés depuis les fiches résidence.
   // Facultatif hors prod/staging : sans valeur, le signalement est seulement enregistré.
   ACCOMMODATION_REPORT_EMAIL: isProd ? z.email() : z.preprocess((v) => (v === '' ? undefined : v), z.email().optional()),
+  SUPPORT_TICKET_EMAIL: isProd ? z.email() : z.preprocess((v) => (v === '' ? undefined : v), z.email().optional()),
 
   // Brevo (email)
   BREVO_API_KEY: z.string().min(1, 'BREVO_API_KEY is required'),
