@@ -16,6 +16,7 @@ const NAV_ITEMS = [
   { href: '/mon-espace/favoris', labelKey: 'favorites' },
   { href: '/mon-espace/alertes', labelKey: 'alerts' },
   { href: '/mon-espace/informations-personnelles', labelKey: 'personalInformations' },
+  { href: '/mon-espace/signaler-un-probleme', labelKey: 'reportProblem' },
 ] as const
 
 export const StudentSpaceNavigation = () => {
