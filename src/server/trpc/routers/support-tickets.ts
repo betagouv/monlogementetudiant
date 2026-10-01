@@ -60,6 +60,11 @@ export const supportTicketsRouter = createTRPCRouter({
   }),
 
   admin: createTRPCRouter({
+    count: adminProcedure.query(async () => {
+      const [row] = await db.select({ count: count() }).from(supportTickets)
+      return row?.count ?? 0
+    }),
+
     list: adminProcedure
       .input(z.object({ page: z.number().default(1), status: ZSupportTicketStatus.optional() }))
       .query(async ({ input }) => {
