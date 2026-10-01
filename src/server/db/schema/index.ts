@@ -49,4 +49,5 @@ export {
 } from './relations'
 export { stats } from './stats'
 export { studentAlerts } from './student-alerts'
+export { supportTicketCategoryEnum, supportTicketStatusEnum, supportTickets } from './support-tickets'
 export { trackingEvents } from './tracking-events'
