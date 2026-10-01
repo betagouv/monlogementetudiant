@@ -1,5 +1,6 @@
 'use client'
 
+import { useQuery } from '@tanstack/react-query'
 import clsx from 'clsx'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -7,12 +8,13 @@ import styles from '~/app/(authenticated)/administration/administration.module.c
 import { useAdminStats } from '~/hooks/use-admin-stats'
 import { useAdminUser } from '~/hooks/use-admin-user'
 import { FEATURES } from '~/lib/features'
+import { useTRPC } from '~/server/trpc/client'
 
 type NavItem = {
   label: string
   icon: string
   href: string
-  badgeKey?: 'owners' | 'users' | 'ownerAccounts'
+  badgeKey?: 'owners' | 'users' | 'ownerAccounts' | 'tickets'
 }
 
 type NavSection = {
@@ -58,7 +60,7 @@ const navSections: NavSection[] = [
       { label: 'Journaux', icon: 'fr-icon-article-line', href: '/administration/journaux' },
       { label: 'Connexions', icon: 'fr-icon-lock-line', href: '/administration/connexions' },
       { label: 'Feedback', icon: 'fr-icon-questionnaire-line', href: '/administration/feedback' },
-      { label: 'Tickets', icon: 'fr-icon-mail-line', href: '/administration/tickets' },
+      { label: 'Tickets', icon: 'fr-icon-mail-line', href: '/administration/tickets', badgeKey: 'tickets' },
     ],
   },
 ]
@@ -76,14 +78,18 @@ const extractUserIdFromUserDetail = (pathname: string): string | null => {
 
 export const AdminNavigation = () => {
   const pathname = usePathname()
+  const trpc = useTRPC()
   const { data: stats } = useAdminStats()
+  const { data: ticketCount } = useQuery(trpc.supportTickets.admin.count.queryOptions())
 
   const viewedUserId = extractUserIdFromUserDetail(pathname)
   const { data: viewedUser } = useAdminUser(viewedUserId)
   const viewedRoleIsBailleur = viewedUser?.role === 'owner' || viewedUser?.role === 'admin'
 
   const getBadgeValue = (key?: string) => {
-    if (!stats || !key) return null
+    if (!key) return null
+    if (key === 'tickets') return ticketCount ?? null
+    if (!stats) return null
     if (key === 'owners') return stats.owners
     if (key === 'ownerAccounts') return stats.users.owners
     if (key === 'users') return stats.users.students
