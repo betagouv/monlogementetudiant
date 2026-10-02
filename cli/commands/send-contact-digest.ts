@@ -41,7 +41,6 @@ export async function sendContactDigestCommand(options: SendContactDigestOptions
       dryRun: options.dryRun,
       verbose: options.verbose,
       ownerSlug: options.owner,
-      sendOutsideProduction: Boolean(options.owner),
     })
     const prefix = options.dryRun ? '[dry-run] ' : ''
 
