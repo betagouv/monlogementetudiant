@@ -39,6 +39,7 @@ import { adminProcedure, createTRPCRouter } from '../init'
 import { adminCandidaturesRouter } from './admin-candidatures'
 import { adminConnectionsRouter } from './admin-connections'
 import { consumersRouter } from './admin-consumers'
+import { adminEmailSettingsRouter } from './admin-email-settings'
 
 const PAGE_SIZE = 20
 
@@ -1355,4 +1356,5 @@ export const adminRouter = createTRPCRouter({
   consumers: consumersRouter,
   candidatures: adminCandidaturesRouter,
   connections: adminConnectionsRouter,
+  emailSettings: adminEmailSettingsRouter,
 })

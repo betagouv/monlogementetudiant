@@ -61,6 +61,9 @@ const navSections: NavSection[] = [
       { label: 'Connexions', icon: 'fr-icon-lock-line', href: '/administration/connexions' },
       { label: 'Feedback', icon: 'fr-icon-questionnaire-line', href: '/administration/feedback' },
       { label: 'Tickets', icon: 'fr-icon-mail-line', href: '/administration/tickets', badgeKey: 'tickets' },
+      ...(FEATURES.emailInterception
+        ? [{ label: 'Interception emails', icon: 'fr-icon-mail-line', href: '/administration/reglages-emails' }]
+        : []),
     ],
   },
 ]
