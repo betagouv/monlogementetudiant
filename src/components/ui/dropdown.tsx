@@ -47,9 +47,9 @@ export const Dropdown = ({
     isOpenedByDefault: false,
   })
 
-  // Le titre de la modale est son nom accessible, et le DSFR le rend dans un <h1>. Sans lui,
-  // ce <h1> reste vide : les lecteurs d'écran annoncent un titre muet, et le plan de la page
-  // gagne un titre de niveau 1 concurrent du vrai (RGAA 9.1). À défaut de titre explicite,
+  // Le titre de la modale est son nom accessible, rendu en <h2> (titleAs) pour ne pas
+  // concurrencer le <h1> de la page (RGAA 9.1, audit SEO). Sans titre, il resterait vide :
+  // les lecteurs d'écran annonceraient un titre muet. À défaut de titre explicite,
   // l'intitulé du bouton déclencheur fait office — c'est ce que la modale ouvre.
   const modalTitle = title ?? (typeof control === 'string' ? control : undefined)
 
@@ -100,7 +100,7 @@ export const Dropdown = ({
         >
           {control}
         </Button>
-        <modal.Component title={modalTitle}>
+        <modal.Component titleAs="h2" title={modalTitle}>
           <div className="fr-dropdown__modal" style={{ [alignRight ? 'right' : 'left']: 0 }}>
             {children}
           </div>

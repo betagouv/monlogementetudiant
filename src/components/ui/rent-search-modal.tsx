@@ -67,6 +67,7 @@ export const RentSearchModal = ({ onApply, onCancel }: RentSearchModalProps) => 
       </Button>
 
       <rentSearchModal.Component
+        titleAs="h2"
         title={
           <>
             <span className={clsx(classes.icon, 'ri-building-line')} />

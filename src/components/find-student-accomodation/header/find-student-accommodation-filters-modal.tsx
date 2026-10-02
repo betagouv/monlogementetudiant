@@ -20,6 +20,7 @@ export const FindStudentAccommodationFiltersModal: FC = () => {
 
   return (
     <mobileFiltersModal.Component
+      titleAs="h2"
       title={t('filtersCta')}
       buttons={[{ children: t('applyFilters'), onClick: () => mobileFiltersModal.close() }]}
     >

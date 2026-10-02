@@ -52,6 +52,7 @@ export const CandidatureModal = ({ accommodationSlug, availableApartmentTypes }:
   return (
     <ModalPortal>
       <modal.Component
+        titleAs="h2"
         title={step === 'form' ? t('title') : t('successTitle')}
         buttons={
           step === 'form'

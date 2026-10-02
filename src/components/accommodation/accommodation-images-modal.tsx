@@ -15,7 +15,7 @@ export const AccommodationImagesModal = ({ children, images, title }: { children
   return (
     <>
       {children}
-      <accommodationPicturesModal.Component title={title} size="large">
+      <accommodationPicturesModal.Component titleAs="h2" title={title} size="large">
         <div className={classes.container}>
           <div style={{ position: 'relative', width: '100%', height: '50vh' }}>
             <Image
