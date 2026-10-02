@@ -5,6 +5,12 @@ import { CRON_COMMANDS, jobNameFromArgv } from '../cron-failure'
 const fetchMock = vi.fn()
 vi.stubGlobal('fetch', fetchMock)
 
+// L'interception hors prod (ADR 0003) est testée dans email-delivery.test.ts. Ici on vérifie le
+// contrat d'envoi : on neutralise l'interception par un passthrough vers les destinataires.
+vi.mock('~/server/services/email-delivery', () => ({
+  resolveEmailDelivery: vi.fn(async (_category: string, recipients: string[]) => ({ action: 'send', recipients })),
+}))
+
 /**
  * Extrait le nom des commandes planifiées depuis `cron.json` : on retire l'expression cron et
  * le préfixe `npx tsx cli/index.ts`, on coupe aux options, et on gère les lignes composées

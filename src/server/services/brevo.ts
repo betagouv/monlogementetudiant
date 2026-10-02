@@ -1,5 +1,6 @@
 import { env } from '~/server/env'
 import { maskEmail } from '~/utils/mask-email'
+import { type EmailCategory, resolveEmailDelivery } from './email-delivery'
 
 const SENDER_EMAIL = 'no-reply@monlogementetudiant.beta.gouv.fr'
 
@@ -17,14 +18,22 @@ interface TemplateEmailParams {
   // Brevo accepte des valeurs imbriquées dans `params` (ex. liste d'objets parcourue
   // par un `{% for %}` dans le template).
   params?: Record<string, string | string[] | Array<Record<string, string | number>>>
+  /** Catégorie d'interception hors prod (ADR 0003). `standard` par défaut. */
+  category?: EmailCategory
 }
 
-export async function sendTemplateEmail({ to, templateId, params }: TemplateEmailParams): Promise<void> {
+export async function sendTemplateEmail({ to, templateId, params, category = 'standard' }: TemplateEmailParams): Promise<void> {
+  const delivery = await resolveEmailDelivery(category, [to])
+  if (delivery.action === 'drop') {
+    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] email (template ${templateId}) non envoyé à ${maskEmail(to)} — ${delivery.reason}`)
+    return
+  }
+
   const response = await fetch(env.BREVO_API_URL, {
     method: 'POST',
     headers: brevoHeaders,
     body: JSON.stringify({
-      to: [{ email: to }],
+      to: delivery.recipients.map((email) => ({ email })),
       templateId,
       replyTo: { email: SENDER_EMAIL },
       ...(params && { params }),
@@ -44,6 +53,8 @@ interface RawEmailParams {
   senderName?: string
   /** Coupe l'appel au-delà du délai : un Brevo bloqué ne doit pas faire traîner un conteneur cron. */
   timeoutMs?: number
+  /** Catégorie d'interception hors prod (ADR 0003). `standard` par défaut. */
+  category?: EmailCategory
 }
 
 /**
@@ -57,14 +68,21 @@ export async function sendRawEmail({
   textContent,
   senderName = 'MLE Crons',
   timeoutMs = 10_000,
+  category = 'standard',
 }: RawEmailParams): Promise<void> {
+  const delivery = await resolveEmailDelivery(category, to)
+  if (delivery.action === 'drop') {
+    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] email « ${subject} » non envoyé — ${delivery.reason}`)
+    return
+  }
+
   const response = await fetch(env.BREVO_API_URL, {
     method: 'POST',
     headers: brevoHeaders,
     signal: AbortSignal.timeout(timeoutMs),
     body: JSON.stringify({
       sender: { email: SENDER_EMAIL, name: senderName },
-      to: to.map((email) => ({ email })),
+      to: delivery.recipients.map((email) => ({ email })),
       replyTo: { email: SENDER_EMAIL },
       subject,
       textContent,
@@ -82,6 +100,7 @@ export async function sendVerificationEmail(email: string, url: string): Promise
     to: email,
     templateId: env.BREVO_TEMPLATE_VALIDATION,
     params: { VALIDATION_LINK: url },
+    category: 'auth',
   })
 }
 
@@ -90,6 +109,7 @@ export async function sendResetPasswordEmail(email: string, url: string): Promis
     to: email,
     templateId: env.BREVO_TEMPLATE_RESET_PASSWORD,
     params: { RESET_LINK: url },
+    category: 'auth',
   })
 }
 
@@ -98,6 +118,7 @@ export async function sendMagicLinkEmail(email: string, url: string): Promise<vo
     to: email,
     templateId: env.BREVO_TEMPLATE_MAGIC_LINK,
     params: { MAGIC_LINK: url },
+    category: 'auth',
   })
 }
 
@@ -154,15 +175,8 @@ export async function sendApplicationsSuspendedEmail(
 export async function sendContactRequestNotRetainedEmail(
   email: string,
   params: { residenceName: string; cityName: string; ownerName: string },
-  { force = false }: { force?: boolean } = {},
 ): Promise<void> {
-  // Email adressé à un étudiant : jamais d'envoi depuis un environnement de dev/recette,
-  // dont les bases contiennent de vraies adresses.
-  if (env.NEXT_PUBLIC_APP_ENV !== 'production' && !force) {
-    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] email « demande non retenue » non envoyé à ${maskEmail(email)}`)
-    return
-  }
-
+  // Protection hors prod gérée au niveau du transport (ADR 0003) : redirection vers la catch-all.
   await sendTemplateEmail({
     to: email,
     templateId: env.BREVO_TEMPLATE_CONTACT_NOT_RETAINED,
@@ -209,13 +223,8 @@ export async function sendContactResidencesUpdatedEmail(
 export async function sendContactDailyDigestEmail(
   email: string,
   params: { date: string; residences: Array<{ name: string; count: number }>; totalCount: number },
-  { force = false }: { force?: boolean } = {},
 ): Promise<void> {
-  if (env.NEXT_PUBLIC_APP_ENV !== 'production' && !force) {
-    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] récapitulatif quotidien des demandes non envoyé à ${maskEmail(email)}`)
-    return
-  }
-
+  // Protection hors prod gérée au niveau du transport (ADR 0003) : redirection vers la catch-all.
   await sendTemplateEmail({
     to: email,
     templateId: env.BREVO_TEMPLATE_CONTACT_DAILY_DIGEST,
@@ -276,6 +285,7 @@ export async function sendOwnerAccountActivated(email: string, url: string): Pro
     to: email,
     templateId: env.BREVO_TEMPLATE_MAGIC_LINK,
     params: { MAGIC_LINK: url },
+    category: 'auth',
   })
 }
 
@@ -294,6 +304,7 @@ export async function sendAdminResetPasswordEmail(email: string): Promise<void> 
   await sendTemplateEmail({
     to: email,
     templateId: env.BREVO_TEMPLATE_ADMIN_RESET_PASSWORD,
+    category: 'auth',
   })
 }
 
@@ -389,6 +400,13 @@ type BrevoDataUpdated = {
 }
 
 async function updateBrevoContactAttributes(email: string, attributes: BrevoDataUpdated | BrevoEspaceGestionnaire): Promise<void> {
+  // Hors prod (ADR 0003) : la clé Brevo est partagée avec la prod — écrire ici polluerait les
+  // vrais contacts prod. On ne synchronise jamais les contacts en dehors de la production.
+  if (env.NEXT_PUBLIC_APP_ENV !== 'production') {
+    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] synchronisation du contact Brevo ignorée pour ${maskEmail(email)}`)
+    return
+  }
+
   const response = await fetch(env.BREVO_CONTACTS_API_URL, {
     method: 'POST',
     headers: brevoHeaders,

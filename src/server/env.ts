@@ -41,6 +41,11 @@ const envSchema = z.object({
   ACCOMMODATION_REPORT_EMAIL: isProd ? z.email() : z.preprocess((v) => (v === '' ? undefined : v), z.email().optional()),
   SUPPORT_TICKET_EMAIL: isProd ? z.email() : z.preprocess((v) => (v === '' ? undefined : v), z.email().optional()),
 
+  // Redirection des emails hors production (ADR 0003). Consultée uniquement hors prod :
+  // tout email non-auth y est redirigé si aucune adresse n'est configurée en admin.
+  // Vide = drop + log (fail-safe). Jamais utilisée en production.
+  STAGING_EMAIL_REDIRECT: z.preprocess((v) => (v === '' ? undefined : v), z.email().optional()),
+
   // Brevo (email)
   BREVO_API_KEY: z.string().min(1, 'BREVO_API_KEY is required'),
   BREVO_API_URL: z.url().default('https://api.brevo.com/v3/smtp/email'),

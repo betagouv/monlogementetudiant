@@ -77,7 +77,7 @@ export function groupByRecipient(residences: ResidenceCount[], members: Member[]
   }))
 }
 
-type ContactDigestOptions = { dryRun?: boolean; verbose?: boolean; now?: Date; ownerSlug?: string; sendOutsideProduction?: boolean }
+type ContactDigestOptions = { dryRun?: boolean; verbose?: boolean; now?: Date; ownerSlug?: string }
 
 export type ContactDigestResult = { contacts: number; residences: number; recipients: number; failures: string[] }
 
@@ -124,7 +124,7 @@ export async function runContactDigest(options: ContactDigestOptions = {}): Prom
   if (!options.dryRun) {
     for (const { member, residences: lines, totalCount } of grouped) {
       try {
-        await sendContactDailyDigestEmail(member.email, { date, residences: lines, totalCount }, { force: options.sendOutsideProduction })
+        await sendContactDailyDigestEmail(member.email, { date, residences: lines, totalCount })
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
         failures.push(`e-mail ${maskEmail(member.email)} : ${message}`)

@@ -1,7 +1,26 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const fetchMock = vi.fn()
 vi.stubGlobal('fetch', fetchMock)
+
+// L'interception hors prod (ADR 0003) est testée dans email-delivery.test.ts. Ici on vérifie le
+// contrat d'envoi Brevo : on neutralise l'interception par un passthrough vers les destinataires.
+vi.mock('./email-delivery', () => ({
+  resolveEmailDelivery: vi.fn(async (_category: string, recipients: string[]) => ({ action: 'send', recipients })),
+}))
+
+// Les synchronisations de contacts ne s'exécutent qu'en production (ADR 0003). Ces tests de
+// contrat importent donc le service avec un env mocké en production.
+const importBrevoInProd = async () => {
+  vi.doMock('~/server/env', () => ({
+    env: {
+      NEXT_PUBLIC_APP_ENV: 'production',
+      BREVO_API_KEY: 'test-api-key',
+      BREVO_CONTACTS_API_URL: 'https://api.brevo.com/v3/contacts',
+    },
+  }))
+  return import('./brevo')
+}
 
 describe('brevo service', () => {
   beforeEach(() => {
@@ -14,6 +33,10 @@ describe('brevo service', () => {
     vi.stubEnv('BREVO_TEMPLATE_RESET_PASSWORD', '23')
     vi.stubEnv('BREVO_TEMPLATE_OWNER_WELCOME', '40')
     vi.stubEnv('BREVO_TEMPLATE_ALERT_CREATION', '43')
+  })
+
+  afterEach(() => {
+    vi.doUnmock('~/server/env')
   })
 
   describe('sendTemplateEmail', () => {
@@ -261,8 +284,7 @@ describe('brevo service', () => {
 
   describe('syncBrevoOwnerCreated', () => {
     it('sends COMPTE_ESPACE_GESTIONNAIRE and DATE_CREATION_COMPTE_ESPACE_GESTIONNAIRE attributes when contacts URL is set', async () => {
-      vi.stubEnv('BREVO_CONTACTS_API_URL', 'https://api.brevo.com/v3/contacts')
-      const { syncBrevoOwnerCreated } = await import('./brevo')
+      const { syncBrevoOwnerCreated } = await importBrevoInProd()
 
       await syncBrevoOwnerCreated('owner@test.com', { firstname: 'Jean', lastname: 'Dupont' })
 
@@ -281,8 +303,7 @@ describe('brevo service', () => {
     })
 
     it('uses the provided createdAt for DATE_CREATION_COMPTE_ESPACE_GESTIONNAIRE when given', async () => {
-      vi.stubEnv('BREVO_CONTACTS_API_URL', 'https://api.brevo.com/v3/contacts')
-      const { syncBrevoOwnerCreated } = await import('./brevo')
+      const { syncBrevoOwnerCreated } = await importBrevoInProd()
 
       await syncBrevoOwnerCreated('owner@test.com', {
         firstname: 'Jean',
@@ -293,12 +314,19 @@ describe('brevo service', () => {
       const body = JSON.parse(fetchMock.mock.calls[0][1].body)
       expect(body.attributes.DATE_CREATION_COMPTE_ESPACE_GESTIONNAIRE).toBe('2021-03-15')
     })
+
+    it('ne synchronise pas le contact hors production (ADR 0003)', async () => {
+      const { syncBrevoOwnerCreated } = await import('./brevo')
+
+      await syncBrevoOwnerCreated('owner@test.com', { firstname: 'Jean', lastname: 'Dupont' })
+
+      expect(fetchMock).not.toHaveBeenCalled()
+    })
   })
 
   describe('syncBrevoStudentCreated', () => {
     it('sends COMPTE_ESPACE_GESTIONNAIRE false with an empty DATE_CREATION_COMPTE_ESPACE_GESTIONNAIRE', async () => {
-      vi.stubEnv('BREVO_CONTACTS_API_URL', 'https://api.brevo.com/v3/contacts')
-      const { syncBrevoStudentCreated } = await import('./brevo')
+      const { syncBrevoStudentCreated } = await importBrevoInProd()
 
       await syncBrevoStudentCreated('student@test.com', { firstname: 'Marie', lastname: 'Martin' })
 
@@ -318,8 +346,7 @@ describe('brevo service', () => {
 
   describe('syncBrevoDataUpdated', () => {
     it('sends DATE_DERNIERE_MAJ_DONNEES attribute when contacts URL is set', async () => {
-      vi.stubEnv('BREVO_CONTACTS_API_URL', 'https://api.brevo.com/v3/contacts')
-      const { syncBrevoDataUpdated } = await import('./brevo')
+      const { syncBrevoDataUpdated } = await importBrevoInProd()
 
       await syncBrevoDataUpdated('owner@test.com')
 
