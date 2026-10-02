@@ -30,6 +30,7 @@ export default defineConfig({
             BREVO_API_KEY: 'test-brevo-key',
             ACCOMMODATION_REPORT_EMAIL: 'signalements@test.local',
             SUPPORT_TICKET_EMAIL: 'tickets@test.local',
+            STAGING_EMAIL_REDIRECT: '',
 
             BREVO_TEMPLATE_MAGIC_LINK: '1',
             BREVO_TEMPLATE_VALIDATION: '1',
@@ -93,6 +94,7 @@ export default defineConfig({
             BREVO_API_KEY: 'test-brevo-api-key',
             ACCOMMODATION_REPORT_EMAIL: 'signalements@test.local',
             SUPPORT_TICKET_EMAIL: 'tickets@test.local',
+            STAGING_EMAIL_REDIRECT: '',
 
             BREVO_TEMPLATE_MAGIC_LINK: '1',
             BREVO_TEMPLATE_VALIDATION: '1',
