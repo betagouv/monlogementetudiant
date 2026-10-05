@@ -37,6 +37,7 @@ import { generateSlug } from '~/server/trpc/utils/accommodation-helpers'
 import { findAvailableSlug } from '~/server/utils/slug'
 import { adminProcedure, createTRPCRouter } from '../init'
 import { adminCandidaturesRouter } from './admin-candidatures'
+import { adminChangelogRouter } from './admin-changelog'
 import { adminConnectionsRouter } from './admin-connections'
 import { consumersRouter } from './admin-consumers'
 
@@ -1355,4 +1356,5 @@ export const adminRouter = createTRPCRouter({
   consumers: consumersRouter,
   candidatures: adminCandidaturesRouter,
   connections: adminConnectionsRouter,
+  changelog: adminChangelogRouter,
 })
