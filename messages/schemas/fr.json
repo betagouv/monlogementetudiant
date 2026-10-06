@@ -60,7 +60,11 @@
     "scholarshipTypeRequired": "Veuillez préciser votre bourse",
     "feedbackCommentMaxLength": "Votre commentaire ne doit pas dépasser {max} caractères",
     "nbAccessibleApartmentsPositive": "Le nombre de logements adaptés PMR doit être un entier positif",
-    "nbColivingApartmentsPositive": "Le nombre de logements en colocation doit être un entier positif"
+    "nbColivingApartmentsPositive": "Le nombre de logements en colocation doit être un entier positif",
+    "goalTitleRequired": "Veuillez saisir votre objectif",
+    "goalTitleMaxLength": "L'objectif ne doit pas dépasser {max} caractères",
+    "goalsRequired": "Veuillez ajouter au moins un objectif",
+    "goalsTooMany": "Une liste ne peut pas contenir plus de {max} objectifs"
   },
   "typologies": {
     "t1": "Studio T1",
