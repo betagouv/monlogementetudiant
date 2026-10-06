@@ -1638,6 +1638,37 @@
           "ctaLabel": "Go to my housing alerts",
           "duration": "1 minute"
         }
+      },
+      "goals": {
+        "createCard": {
+          "title": "Create my goal list",
+          "description": "Set your own goals to give yourself the best chance",
+          "cta": "Create a custom list"
+        },
+        "listTitle": "Custom list #{number}",
+        "edit": "Edit custom list #{number}",
+        "remainingTasks": "{count, plural, one {# task to complete} other {# tasks to complete}}",
+        "modal": {
+          "title": "Create my goal list",
+          "editTitle": "Edit my goal list",
+          "intro": "Add the actions you want to carry out and set a deadline for each one. You will be able to track your progress and receive reminders.",
+          "goalLabel": "Goal #{number}",
+          "goalHint": "Example: Apply to 3 residences in Nantes",
+          "dueLabel": "By when?",
+          "dueHint": "Deadline to complete the task",
+          "delays": {
+            "one_week": "Within 1 week",
+            "two_weeks": "Within 2 weeks",
+            "one_month": "Within 1 month"
+          },
+          "addGoal": "Add a goal",
+          "removeGoal": "Remove goal #{number}",
+          "emailReminders": "Receive email reminders to reach my goals",
+          "emailRemindersDescription": "Enables email reminders before each goal's deadline",
+          "cancel": "Cancel",
+          "save": "Save my list",
+          "error": "An error occurred, please try again."
+        }
       }
     },
     "housingAid": {
