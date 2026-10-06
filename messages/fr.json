@@ -1638,6 +1638,37 @@
           "ctaLabel": "Accéder à mes alertes logement",
           "duration": "1 minute"
         }
+      },
+      "goals": {
+        "createCard": {
+          "title": "Créer ma liste d'objectifs",
+          "description": "Définissez vos propres objectifs pour mettre toutes les chances de votre côté",
+          "cta": "Créer une liste personnalisée"
+        },
+        "listTitle": "Liste personnalisée n°{number}",
+        "edit": "Modifier la liste personnalisée n°{number}",
+        "remainingTasks": "{count, plural, one {# tâche à réaliser} other {# tâches à réaliser}}",
+        "modal": {
+          "title": "Créer ma liste d'objectifs",
+          "editTitle": "Modifier ma liste d'objectifs",
+          "intro": "Ajoutez les actions que vous souhaitez réaliser et fixez une échéance pour chacune. Vous pourrez suivre votre progression et recevoir des rappels.",
+          "goalLabel": "Objectif n°{number}",
+          "goalHint": "Exemple : Candidater dans 3 résidences à Nantes",
+          "dueLabel": "Pour quand ?",
+          "dueHint": "Date limite pour réaliser la tâche",
+          "delays": {
+            "one_week": "D'ici 1 semaine",
+            "two_weeks": "D'ici 2 semaines",
+            "one_month": "D'ici 1 mois"
+          },
+          "addGoal": "Ajouter un objectif",
+          "removeGoal": "Supprimer l'objectif n°{number}",
+          "emailReminders": "Recevoir des rappels par e-mail pour atteindre mes objectifs",
+          "emailRemindersDescription": "Active l'envoi de rappels par e-mail avant l'échéance de chaque objectif",
+          "cancel": "Annuler",
+          "save": "Enregistrer ma liste",
+          "error": "Une erreur est survenue, veuillez réessayer."
+        }
       }
     },
     "housingAid": {

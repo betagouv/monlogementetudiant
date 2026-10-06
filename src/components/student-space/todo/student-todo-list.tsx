@@ -5,11 +5,16 @@ import LocationFrance from '@codegouvfr/react-dsfr/picto/LocationFrance'
 import Money from '@codegouvfr/react-dsfr/picto/Money'
 import Notification from '@codegouvfr/react-dsfr/picto/Notification'
 import Success from '@codegouvfr/react-dsfr/picto/Success'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import clsx from 'clsx'
 import { useTranslations } from 'next-intl'
-import type { ReactNode } from 'react'
+import { type ReactNode, useState } from 'react'
 import { useLocalStorage } from 'usehooks-ts'
+import type { EStudentGoalDueDelay } from '~/enums/student-goal'
 import { trackEvent } from '~/lib/tracking'
+import { useTRPC } from '~/server/trpc/client'
+import { StudentGoalListCard } from './student-goal-list-card'
+import { StudentGoalListModal, studentGoalListModal, type TEditableGoalList } from './student-goal-list-modal'
 import styles from './student-todo-list.module.css'
 
 /**
@@ -64,6 +69,17 @@ export const StudentTodoList = () => {
   const t = useTranslations('student.todo')
   const tA11y = useTranslations('accessibility')
   const [completedTodos, setCompletedTodos] = useLocalStorage<string[]>('student-completed-todos', [])
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
+  const [editingList, setEditingList] = useState<TEditableGoalList | null>(null)
+
+  const { data: goalLists } = useQuery(trpc.studentGoals.list.queryOptions())
+
+  const { mutate: toggleGoal } = useMutation(
+    trpc.studentGoals.toggleGoal.mutationOptions({
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: trpc.studentGoals.list.queryKey() }),
+    }),
+  )
 
   const items: TTodoItem[] = TODO_DEFINITIONS.map((definition) => {
     const label = t(`items.${definition.key}.cta`)
@@ -105,10 +121,65 @@ export const StudentTodoList = () => {
     setCompletedTodos((previous) => previous.filter((id) => id !== todoId))
   }
 
-  const renderSection = (title: string, sectionItems: TTodoItem[], borderStyle: string, action?: 'complete' | 'undo') => (
+  const numberedGoalLists = (goalLists ?? []).map((list, index) => ({ ...list, number: index + 1 }))
+  const goalListsTodo = numberedGoalLists.filter((list) => list.goals.some((goal) => !goal.isCompleted))
+  const goalListsDone = numberedGoalLists.filter((list) => list.goals.length > 0 && list.goals.every((goal) => goal.isCompleted))
+
+  const openCreateListModal = () => {
+    setEditingList(null)
+    studentGoalListModal.open()
+  }
+
+  const openEditListModal = (list: (typeof numberedGoalLists)[number]) => {
+    setEditingList({
+      id: list.id,
+      emailRemindersEnabled: list.emailRemindersEnabled,
+      goals: list.goals.map((goal) => ({ id: goal.id, title: goal.title, dueDelay: goal.dueDelay as EStudentGoalDueDelay })),
+    })
+    studentGoalListModal.open()
+  }
+
+  const handleToggleGoal = (goalId: number, isCompleted: boolean) => {
+    trackEvent({ category: 'Espace Etudiant', action: isCompleted ? 'objectif fait' : 'objectif remis' })
+    toggleGoal({ goalId, isCompleted })
+  }
+
+  const renderGoalCards = (lists: typeof numberedGoalLists, borderStyle: string) =>
+    lists.map((list) => (
+      <StudentGoalListCard
+        key={list.id}
+        number={list.number}
+        goals={list.goals}
+        borderStyle={borderStyle}
+        onEdit={() => openEditListModal(list)}
+        onToggleGoal={handleToggleGoal}
+      />
+    ))
+
+  const createListCard = (
+    <div className={clsx(styles.container, styles.itemToDoBorder, 'fr-flex fr-direction-column fr-background-default--grey fr-p-3w')}>
+      <h3 className="fr-h6 fr-mb-0">{t('goals.createCard.title')}</h3>
+      {t('goals.createCard.description')}
+      <div className="fr-mt-2w">
+        <Button size="small" priority="secondary" iconId="ri-add-line" onClick={openCreateListModal}>
+          {t('goals.createCard.cta')}
+        </Button>
+      </div>
+    </div>
+  )
+
+  const renderSection = (
+    title: string,
+    sectionItems: TTodoItem[],
+    borderStyle: string,
+    action?: 'complete' | 'undo',
+    leadingCards?: ReactNode,
+    trailingCards?: ReactNode,
+  ) => (
     <div className="fr-flex fr-direction-column">
       <h2 className="fr-text--lg fr-text-title--grey fr-text--bold">{title}</h2>
       <div className="fr-flex fr-direction-column fr-flex-gap-6v">
+        {leadingCards}
         {sectionItems.map((item) => (
           <div
             key={item.id}
@@ -144,14 +215,23 @@ export const StudentTodoList = () => {
             </div>
           </div>
         ))}
+        {trailingCards}
       </div>
     </div>
   )
 
   return (
     <>
-      {renderSection(t('sectionTodo'), itemsTodo, styles.itemToDoBorder, 'complete')}
-      {renderSection(t('sectionDone'), itemsDone, styles.itemDoneBorder, 'undo')}
+      {renderSection(
+        t('sectionTodo'),
+        itemsTodo,
+        styles.itemToDoBorder,
+        'complete',
+        renderGoalCards(goalListsTodo, styles.itemToDoBorder),
+        createListCard,
+      )}
+      {renderSection(t('sectionDone'), itemsDone, styles.itemDoneBorder, 'undo', renderGoalCards(goalListsDone, styles.itemDoneBorder))}
+      <StudentGoalListModal editingList={editingList} />
     </>
   )
 }
