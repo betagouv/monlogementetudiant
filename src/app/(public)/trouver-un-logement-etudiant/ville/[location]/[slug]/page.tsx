@@ -72,7 +72,7 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
     virtualTourUrl,
   } = accommodation
 
-  const citySearchUrl = `/trouver-un-logement-etudiant/ville/${encodeURIComponent(city)}?vue=carte&bbox=${cityBbox.west},${cityBbox.south},${cityBbox.east},${cityBbox.north}`
+  const citySearchUrl = `/trouver-un-logement-etudiant/ville/${accommodation.citySlug ?? encodeURIComponent(city)}?vue=carte&bbox=${cityBbox.west},${cityBbox.south},${cityBbox.east},${cityBbox.north}`
   const tags: TagProps[] = [
     ...[
       {
