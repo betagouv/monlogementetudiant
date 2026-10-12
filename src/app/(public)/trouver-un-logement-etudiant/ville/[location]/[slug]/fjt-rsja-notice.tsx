@@ -30,6 +30,7 @@ export const FjtRsjaNotice = () => {
       </div>
 
       <fjtRsjaModal.Component
+        titleAs="h2"
         title={t('fjtRsjaModalTitle')}
         buttons={[
           {
