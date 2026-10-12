@@ -80,7 +80,17 @@ span[class^="fr-"]::before {
     -webkit-print-color-adjust: exact;
   }
 
-  body.budgetPrintMode .budgetPrintHidden {
+  body.budgetPrintMode .budgetPrintHidden,
+  body.budgetPrintMode .recharts-tooltip-wrapper {
     display: none !important;
+  }
+
+  body.budgetPrintMode .recharts-responsive-container > div {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  body.budgetPrintMode .recharts-wrapper {
+    margin: 0 auto;
   }
 }

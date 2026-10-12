@@ -2,19 +2,19 @@
   color: #adadf9;
 }
 
-.positiveRemainingBalance {
+.positiveRemainingBalance.positiveRemainingBalance {
   color: #27a658;
 }
 
-.negativeRemainingBalance {
+.negativeRemainingBalance.negativeRemainingBalance {
   color: #e10600;
 }
 
-.totalIncomes {
+.totalIncomes.totalIncomes {
   color: #c9fcac;
 }
 
-.totalExpenses {
+.totalExpenses.totalExpenses {
   color: #fcc0b0;
 }
 
