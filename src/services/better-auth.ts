@@ -16,6 +16,7 @@ import { adminOwnerLinks } from '~/server/db/schema/admin-owner-links'
 import { env } from '~/server/env'
 import { sendMagicLinkEmail, sendResetPasswordEmail, sendVerificationEmail } from '~/server/services/brevo'
 import { MAGIC_LINK_EXPIRES_IN_SECONDS, recordMagicLinkSent } from '~/server/services/login-attempts'
+import { syncStudentBrevoContactOnSignup } from '~/server/student/sync-brevo-contact'
 
 export const oneDay = 24 * 60 * 60
 
@@ -135,6 +136,13 @@ export const auth = betterAuth({
     nextCookies(),
   ],
   databaseHooks: {
+    user: {
+      create: {
+        after: async (createdUser) => {
+          await syncStudentBrevoContactOnSignup(createdUser)
+        },
+      },
+    },
     session: {
       create: {
         // Filet de sécurité : couvre l'étudiant qui avait déjà un compte et a laissé ses coordonnées
