@@ -122,14 +122,14 @@ beforeEach(async () => {
 })
 
 describe('runInactivityCheck — candidatures non traitées', () => {
-  it('alerte au 7e jour, puis suspend au 10e jour, 3 jours après l’alerte', async () => {
-    await addPendingContact(daysAgo(7))
+  it('alerte au 14e jour, puis suspend 7 jours après l’alerte sans action', async () => {
+    await addPendingContact(daysAgo(14))
 
     expect(await runInactivityCheck()).toMatchObject({ warned: 1, suspended: 0 })
     expect((await readResidence()).unprocessedApplicationsWarnedAt).not.toBeNull()
     expect(warningEmail).toHaveBeenCalledTimes(2)
 
-    expect(await runInactivityCheck({ now: daysAhead(3) })).toMatchObject({ warned: 0, suspended: 1 })
+    expect(await runInactivityCheck({ now: daysAhead(7) })).toMatchObject({ warned: 0, suspended: 1 })
     const row = await readResidence()
     expect(row.applicationsSuspendedAt).not.toBeNull()
     expect(row.applicationsSuspensionReason).toBe('unprocessed_applications')
@@ -138,24 +138,24 @@ describe('runInactivityCheck — candidatures non traitées', () => {
   })
 
   it('laisse tout le préavis à une résidence déjà en retard à la première alerte', async () => {
-    await addPendingContact(daysAgo(20))
+    await addPendingContact(daysAgo(22))
 
     await runInactivityCheck()
-    expect(await runInactivityCheck({ now: daysAhead(1) })).toMatchObject({ suspended: 0 })
-    expect(await runInactivityCheck({ now: daysAhead(3) })).toMatchObject({ suspended: 1 })
+    expect(await runInactivityCheck({ now: daysAhead(6) })).toMatchObject({ suspended: 0 })
+    expect(await runInactivityCheck({ now: daysAhead(7) })).toMatchObject({ suspended: 1 })
   })
 
   it('est idempotent', async () => {
-    await addPendingContact(daysAgo(8))
+    await addPendingContact(daysAgo(15))
 
     await runInactivityCheck()
-    expect(await runInactivityCheck()).toMatchObject({ warned: 0, suspended: 0, resumed: 0, cleared: 0 })
+    expect(await runInactivityCheck()).toMatchObject({ warned: 0, suspended: 0, cleared: 0 })
     expect(warningEmail).toHaveBeenCalledTimes(2)
   })
 
   it('écrit aux administrateurs et aux gestionnaires du périmètre, une fois par destinataire', async () => {
-    await addPendingContact(daysAgo(8))
-    await addPendingContact(daysAgo(8), other.id)
+    await addPendingContact(daysAgo(15))
+    await addPendingContact(daysAgo(15), other.id)
 
     await runInactivityCheck()
 
@@ -166,8 +166,8 @@ describe('runInactivityCheck — candidatures non traitées', () => {
   })
 
   it('reprend dès qu’une candidature est traitée, via le board', async () => {
-    const contact = await addPendingContact(daysAgo(12))
-    await runInactivityCheck({ now: daysAgo(3) })
+    const contact = await addPendingContact(daysAgo(22))
+    await runInactivityCheck({ now: daysAgo(7) })
     await runInactivityCheck()
     expect((await readResidence()).applicationsSuspendedAt).not.toBeNull()
 
@@ -181,16 +181,33 @@ describe('runInactivityCheck — candidatures non traitées', () => {
     expect(await readActions()).toContain('accommodation.applications_auto_resumed')
   })
 
+  it('ne rouvre pas la résidence quand la candidature sort de la fenêtre de rétention', async () => {
+    await addPendingContact(daysAgo(31))
+    await getTestDb()
+      .update(accommodations)
+      .set({
+        unprocessedApplicationsWarnedAt: daysAgo(10),
+        applicationsSuspendedAt: daysAgo(3),
+        applicationsSuspensionReason: 'unprocessed_applications',
+      })
+      .where(eq(accommodations.id, res.id))
+
+    await runInactivityCheck()
+
+    expect((await readResidence()).applicationsSuspendedAt).not.toBeNull()
+    expect(await readActions()).not.toContain('accommodation.applications_auto_resumed')
+  })
+
   it('ne reprend jamais une suspension manuelle', async () => {
     await ownerCaller.bailleur.setApplicationsSuspended({ slug: res.slug, suspended: true })
 
-    expect(await runInactivityCheck()).toMatchObject({ resumed: 0 })
+    await runInactivityCheck()
     expect((await readResidence()).applicationsSuspensionReason).toBe('manual')
   })
 
   it('une reprise manuelle réarme le cycle alerte → suspension', async () => {
-    await addPendingContact(daysAgo(12))
-    await runInactivityCheck({ now: daysAgo(3) })
+    await addPendingContact(daysAgo(22))
+    await runInactivityCheck({ now: daysAgo(7) })
     await runInactivityCheck()
     await ownerCaller.bailleur.setApplicationsSuspended({ slug: res.slug, suspended: false })
 
@@ -206,9 +223,9 @@ describe('runInactivityCheck — candidatures non traitées', () => {
       accommodationSlug: res.slug,
       apartmentType: 't1',
       status: EContactStatus.A_MODERER,
-      createdAt: daysAgo(8),
+      createdAt: daysAgo(15),
     })
-    await addPendingContact(daysAgo(8), other.id)
+    await addPendingContact(daysAgo(15), other.id)
 
     expect(await runInactivityCheck()).toMatchObject({ warned: 1 })
     expect((await readResidence()).unprocessedApplicationsWarnedAt).not.toBeNull()
@@ -216,7 +233,7 @@ describe('runInactivityCheck — candidatures non traitées', () => {
   })
 
   it('ignore les résidences fermées et les bailleurs sans parcours', async () => {
-    await addPendingContact(daysAgo(8))
+    await addPendingContact(daysAgo(15))
     await getTestDb().update(accommodations).set({ acceptsApplications: false }).where(eq(accommodations.id, res.id))
     expect(await runInactivityCheck()).toMatchObject({ warned: 0 })
 
@@ -226,7 +243,7 @@ describe('runInactivityCheck — candidatures non traitées', () => {
   })
 
   it('--dry-run n’écrit rien', async () => {
-    await addPendingContact(daysAgo(8))
+    await addPendingContact(daysAgo(15))
 
     expect(await runInactivityCheck({ dryRun: true })).toMatchObject({ warned: 1 })
     expect((await readResidence()).unprocessedApplicationsWarnedAt).toBeNull()
@@ -241,8 +258,8 @@ describe('runInactivityCheck — candidatures non traitées', () => {
     await stampAvailability(daysAgo(1), qaResidence.id)
     await createUser({ id: 'qa-admin', name: 'QA', firstname: 'QA', email: 'qa@test.com', role: 'owner' })
     await getTestDb().update(user).set({ bailleurRole: 'administrator', ownerId: qaOwner.id }).where(eq(user.id, 'qa-admin'))
-    await addPendingContact(daysAgo(8))
-    await addPendingContact(daysAgo(8), qaResidence.id)
+    await addPendingContact(daysAgo(15))
+    await addPendingContact(daysAgo(15), qaResidence.id)
 
     expect(await runInactivityCheck({ ownerSlug: 'bailleur-qa', sendOutsideProduction: true })).toMatchObject({ warned: 1 })
     expect((await readResidence()).unprocessedApplicationsWarnedAt).toBeNull()
@@ -253,8 +270,8 @@ describe('runInactivityCheck — candidatures non traitées', () => {
 })
 
 describe('runInactivityCheck — disponibilités', () => {
-  it('alerte à 23 jours, suspend à 30 jours, et reprend à la mise à jour', async () => {
-    await stampAvailability(daysAgo(23))
+  it('alerte à 30 jours, suspend 7 jours après, et reprend à la mise à jour', async () => {
+    await stampAvailability(daysAgo(30))
 
     expect(await runInactivityCheck()).toMatchObject({ warned: 1 })
     expect(await runInactivityCheck({ now: daysAhead(7) })).toMatchObject({ suspended: 1 })
@@ -268,7 +285,7 @@ describe('runInactivityCheck — disponibilités', () => {
   })
 
   it('écrit aux gestionnaires qui gèrent les résidences, pas à ceux qui ne gèrent que les candidatures', async () => {
-    await stampAvailability(daysAgo(23))
+    await stampAvailability(daysAgo(30))
 
     await runInactivityCheck()
 
@@ -278,7 +295,7 @@ describe('runInactivityCheck — disponibilités', () => {
   it('ne s’applique pas aux bailleurs importés, qui restent suivis sur les candidatures', async () => {
     await getTestDb().update(owners).set({ availabilityImported: true }).where(eq(owners.id, ownerId))
     await stampAvailability(daysAgo(40))
-    await addPendingContact(daysAgo(8))
+    await addPendingContact(daysAgo(15))
 
     await runInactivityCheck()
 

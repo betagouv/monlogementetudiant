@@ -37,7 +37,7 @@ export async function checkApplicationsInactivityCommand(options: CheckApplicati
   }
 
   try {
-    const { warned, suspended, resumed, cleared, failures } = await runInactivityCheck({
+    const { warned, suspended, cleared, failures } = await runInactivityCheck({
       dryRun: options.dryRun,
       verbose: options.verbose,
       ownerSlug: options.owner,
@@ -47,7 +47,6 @@ export async function checkApplicationsInactivityCommand(options: CheckApplicati
 
     console.log(`\n  ${prefix}Résidences alertées : ${warned}`)
     console.log(`  ${prefix}Résidences suspendues : ${suspended}`)
-    console.log(`  ${prefix}Résidences réouvertes : ${resumed}`)
     console.log(`  ${prefix}Alertes levées : ${cleared}`)
     if (options.dryRun) return
 
@@ -58,7 +57,7 @@ export async function checkApplicationsInactivityCommand(options: CheckApplicati
           status: 'done',
           endedAt: new Date(),
           updatedAt: new Date(),
-          summary: { errors: failures, context: { warned, suspended, resumed, cleared } },
+          summary: { errors: failures, context: { warned, suspended, cleared } },
         })
         .where(eq(importJobs.id, jobId))
     }

@@ -21,6 +21,7 @@ import { importCrousTypologies } from './commands/import-crous-typologies'
 import { migrate } from './commands/migrate'
 import { purgeContactRequests } from './commands/purge-contact-requests'
 import { purgeLogs } from './commands/purge-logs'
+import { resetStaleAvailabilityCommand } from './commands/reset-stale-availability'
 import { seedAlertSnapshotCommand } from './commands/seed-alert-snapshot'
 import { sendAlertJobs } from './commands/send-alert-jobs'
 import { sendContactDigestCommand } from './commands/send-contact-digest'
@@ -253,7 +254,7 @@ program
 program
   .command('check-applications-inactivity')
   .description(
-    'Alerte puis suspend la réception des candidatures des résidences inactives (candidatures non traitées à 7/10 j, disponibilités non mises à jour à 23/30 j)',
+    'Alerte puis suspend la réception des candidatures des résidences inactives (candidatures non traitées à 14 j, disponibilités non mises à jour à 30 j, suspension 7 j après l’alerte)',
   )
   .option('--dry-run', 'Simuler sans envoyer ni modifier la BDD')
   .option('--verbose', 'Afficher la décision prise pour chaque résidence')
@@ -267,6 +268,16 @@ program
   .option('--verbose', 'Afficher le détail par destinataire')
   .option('--owner <slug>', 'Limiter au bailleur donné ; actif et envoie les e-mails même hors production (recette)')
   .action((opts) => sendContactDigestCommand(opts))
+
+program
+  .command('reset-stale-availability')
+  .description(
+    'Repasse en « non communiquée » les disponibilités non mises à jour depuis 30 jours, 7 jours après l’alerte (hors bailleurs importés)',
+  )
+  .option('--dry-run', 'Simuler sans envoyer ni modifier la BDD')
+  .option('--verbose', 'Afficher la décision prise pour chaque résidence')
+  .option('--owner <slug>', 'Limiter au bailleur donné ; actif et envoie les e-mails même hors production (recette)')
+  .action((opts) => resetStaleAvailabilityCommand(opts))
 
 program
   .command('purge-contact-requests')

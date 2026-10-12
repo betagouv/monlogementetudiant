@@ -108,6 +108,7 @@ cli/
     expire-alerts.ts        # Relance à 3 mois puis désactive les alertes sans réaction
     check-applications-inactivity.ts # Alerte puis suspend les résidences inactives (candidatures, dispos)
     send-contact-digest.ts  # Récap quotidien des demandes de contact de la veille aux gestionnaires
+    reset-stale-availability.ts # Alerte puis repasse en « non communiquée » les dispos non mises à jour
 ```
 
 ---
@@ -654,18 +655,36 @@ pnpm cli check-applications-inactivity --owner <slug> --verbose   # recette : un
 
 | Règle | Alerte | Suspension | Bailleurs concernés |
 |-------|--------|------------|---------------------|
-| Candidature en attente dans la colonne à modérer (`a_contacter`, ou `a_moderer` en DossierFacile) | 7 jours | 10 jours | Tous |
-| Disponibilités non mises à jour (`accommodation_typology.availability_updated_at`) | 23 jours | 30 jours | Hors `owner.availability_imported` |
+| Candidature en attente dans la colonne à modérer (`a_contacter`, ou `a_moderer` en DossierFacile) | 14 jours | 7 jours après l'alerte | Tous |
+| Disponibilités non mises à jour (`accommodation_typology.availability_updated_at`) | 30 jours | 7 jours après l'alerte | Hors `owner.availability_imported` |
 
-- L'alerte horodate `unprocessed_applications_warned_at` / `stale_availability_warned_at` ; la suspension exige une alerte préalable et laisse tout le préavis (3 / 7 jours) même à une résidence déjà en retard.
+- L'alerte horodate `unprocessed_applications_warned_at` / `stale_availability_warned_at` ; la suspension intervient si la cause persiste 7 jours après l'alerte, même pour une résidence déjà très en retard à l'alerte.
 - La suspension renseigne `applications_suspended_at` et `applications_suspension_reason` (`unprocessed_applications`, `stale_availability`). Une suspension manuelle porte `manual` et n'est jamais levée automatiquement.
-- Reprise automatique dès que la cause disparaît : au passage du cron, et immédiatement après un changement de statut sur le board ou une mise à jour des disponibilités. Enregistrer ses disponibilités sans changement les confirme (horodatage).
+- Reprise uniquement sur action du bailleur : changement de statut sur le board ou mise à jour des disponibilités qui fait disparaître la cause, ou réactivation manuelle. Le cron ne lève jamais une suspension, pour qu'une candidature sortie de la fenêtre de rétention (30 jours) ne rouvre pas la résidence d'elle-même. Enregistrer ses disponibilités sans changement les confirme (horodatage).
 - Les e-mails sont regroupés par destinataire : administrateurs du bailleur et gestionnaires dont le périmètre couvre la résidence (`manage_applications` pour les candidatures, `manage_residences` pour les disponibilités).
 - `owner.availability_imported` est posé par les commandes d'import et l'import CSV de l'admin.
 
 Suivi dans `import_job` (type `applications-inactivity`). Même double garde-fou que `expire-alerts` : rien hors production, sauf en `--dry-run`. Exception pour la recette : `--owner <slug>` limite le passage à ce bailleur et agit, e-mails compris, même hors production (sur Scalingo : `scalingo --app <app> run "npx tsx cli/index.ts check-applications-inactivity --owner <slug> --verbose"`).
 
 Variables d'env requises : `DATABASE_URL`, `BREVO_API_KEY`, `BREVO_TEMPLATE_APPLICATIONS_INACTIVITY_WARNING`, `BREVO_TEMPLATE_APPLICATIONS_AUTO_SUSPENDED` (paramètres : `FIRSTNAME`, `OWNER_NAME`, `RESIDENCES[]`, `RESIDENCES_COUNT`, `LINK`).
+
+#### `reset-stale-availability` — Disponibilités périmées
+
+```bash
+pnpm cli reset-stale-availability --dry-run --verbose
+pnpm cli reset-stale-availability
+pnpm cli reset-stale-availability --owner <slug> --verbose   # recette : un seul bailleur
+```
+
+Tous les bailleurs hors `owner.availability_imported`, avec ou sans parcours de candidature. Même règle que la suspension : disponibilités non mises à jour par un gestionnaire depuis 30 jours (à défaut, depuis la création de la résidence), puis 7 jours de préavis après l'alerte.
+
+- Résidences suivies par `check-applications-inactivity` (parcours actif, candidatures ouvertes) : l'alerte est celle de la suspension (`stale_availability_warned_at`, template `BREVO_TEMPLATE_APPLICATIONS_INACTIVITY_WARNING`) ; ce cron ne fait que repasser les disponibilités en « non communiquée » le jour de la suspension.
+- Autres résidences : ce cron envoie lui-même l'alerte (même colonne, template `BREVO_TEMPLATE_AVAILABILITY_RESET_WARNING`, lien vers `/bailleur/residences`), la lève si les disponibilités sont confirmées, puis réinitialise 7 jours après sans action.
+- La réinitialisation met `nb_available` à `null` sur toutes les typologies et recalcule les agrégats. Enregistrer ses disponibilités sans changement les confirme et relance le délai.
+
+Suivi dans `import_job` (type `availability-reset`) et `activity_log` (`accommodation.availability_reset_warned`, `accommodation.availability_auto_reset`). Mêmes garde-fous que `check-applications-inactivity`.
+
+Variables d'env requises : `BREVO_TEMPLATE_AVAILABILITY_RESET_WARNING` (mêmes paramètres que ci-dessus).
 
 ---
 
@@ -873,6 +892,7 @@ Les migrations Drizzle sont appliquées au déploiement via le hook `postdeploy`
 | `0 7 * * *` | `expire-alerts` | Tous les jours à 7h |
 | `0 8 * * *` | `detect-alert-jobs` | Tous les jours à 8h |
 | `0 6 * * *` | `check-applications-inactivity` | Tous les jours à 6h |
+| `30 6 * * *` | `reset-stale-availability` | Tous les jours à 6h30 |
 | `0 5 * * *` | `backup-db` | Tous les jours à 5h (production uniquement) |
 
 Pour vérifier les crons actifs : `scalingo --app <app> cron-tasks`

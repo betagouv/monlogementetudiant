@@ -41,6 +41,7 @@ import {
   notifyContactResidencesUpdated,
   readManagedResidences,
 } from '~/server/bailleur/application-notifications'
+import { confirmAvailability, listAvailabilityToConfirm } from '~/server/bailleur/availability-confirmation'
 import { getOwnerForUser } from '~/server/bailleur/get-owner-for-user'
 import { resumeIfResolved } from '~/server/bailleur/inactivity-suspension'
 import {
@@ -682,6 +683,22 @@ export const bailleurRouter = createTRPCRouter({
 
       return updated
     }),
+
+  listAvailabilityToConfirm: bailleurProcedure('manage_residences').query(async ({ ctx }) => {
+    const owner = await getOwnerForUser(ctx.session.user.id)
+    if (!owner) return []
+    return listAvailabilityToConfirm(owner.id, await getAccommodationScope(ctx.session.user.id))
+  }),
+
+  confirmAvailability: bailleurProcedure('manage_residences').mutation(async ({ ctx }) => {
+    const owner = await getOwnerForUser(ctx.session.user.id)
+    if (!owner) throw new TRPCError({ code: 'FORBIDDEN', message: 'Aucun bailleur associé à ce compte' })
+    return confirmAvailability({
+      owner,
+      scope: await getAccommodationScope(ctx.session.user.id),
+      user: { id: ctx.session.user.id, name: ctx.session.user.name },
+    })
+  }),
 
   updateAvailability: bailleurProcedure('manage_residences')
     .input(z.object({ slug: z.string() }).merge(ZUpdateResidenceList))

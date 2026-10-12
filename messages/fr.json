@@ -2424,6 +2424,21 @@
       "title": "Centre d'aide",
       "breadcrumbDashboard": "Tableau de bord",
       "contactTeam": "Contacter l'équipe"
+    },
+    "confirmAvailability": {
+      "pageTitle": "Confirmer mes disponibilités",
+      "breadcrumbDashboard": "Tableau de bord",
+      "intro": "Les disponibilités des résidences suivantes n’ont pas été mises à jour depuis plus de 30 jours. Sans action de votre part, elles passeront en « non communiquée ».",
+      "typology": "{label} : {available} disponible(s) sur {total}",
+      "typologyNoTotal": "{label} : {available} disponible(s)",
+      "confirm": "Aucun changement dans mes disponibilités",
+      "update": "Mettre à jour mes disponibilités",
+      "successTitle": "{count, plural, one {Disponibilités confirmées pour # résidence} other {Disponibilités confirmées pour # résidences}}",
+      "successDescription": "La date de mise à jour a été actualisée. Merci !",
+      "emptyTitle": "Aucune disponibilité à confirmer",
+      "emptyDescription": "Les disponibilités de vos résidences sont à jour.",
+      "backToResidences": "Voir mes résidences",
+      "error": "La confirmation a échoué, veuillez réessayer."
     }
   },
   "map": {

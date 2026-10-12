@@ -16,10 +16,11 @@ import { sendApplicationsAutoSuspendedEmail, sendApplicationsInactivityWarningEm
 import { maskEmail } from '~/utils/mask-email'
 import {
   decideInactivity,
-  INACTIVITY_THRESHOLDS,
+  INACTIVITY_WARNING_DAYS,
   type InactivityDecision,
   type InactivityReason,
   type ResidenceInactivityState,
+  SUSPENSION_NOTICE_DAYS,
 } from './inactivity-rules'
 import type { BailleurPermission } from './permissions'
 
@@ -30,13 +31,18 @@ const REASON_SUBJECTS: Record<InactivityReason, string> = {
   stale_availability: 'disponibilités non mises à jour',
 }
 
-const warningLine = (reason: InactivityReason) => {
-  const { warningDays, suspensionDays } = INACTIVITY_THRESHOLDS[reason]
-  return `${REASON_SUBJECTS[reason]} depuis ${warningDays} jours, suspension au ${suspensionDays}e jour`
+const overdueSubject = (reason: InactivityReason) => `${REASON_SUBJECTS[reason]} depuis plus de ${INACTIVITY_WARNING_DAYS[reason]} jours`
+
+const SUSPENSION_CONSEQUENCES: Record<InactivityReason, string> = {
+  unprocessed_applications: 'suspension des candidatures',
+  stale_availability: 'suspension des candidatures et disponibilités passées en « non communiquée »',
 }
 
+const warningLine = (reason: InactivityReason) =>
+  `${overdueSubject(reason)}, ${SUSPENSION_CONSEQUENCES[reason]} dans ${SUSPENSION_NOTICE_DAYS} jours sans action`
+
 const suspensionLine = (reason: InactivityReason) =>
-  `${REASON_SUBJECTS[reason]} depuis ${INACTIVITY_THRESHOLDS[reason].suspensionDays} jours`
+  `${overdueSubject(reason)}, sans action ${SUSPENSION_NOTICE_DAYS} jours après l’alerte : ${SUSPENSION_CONSEQUENCES[reason]}`
 
 const REASON_PERMISSIONS: Record<InactivityReason, BailleurPermission> = {
   unprocessed_applications: 'manage_applications',
@@ -44,6 +50,10 @@ const REASON_PERMISSIONS: Record<InactivityReason, BailleurPermission> = {
 }
 
 const CONTACTS_URL = `${env.BASE_URL}/bailleur/contacts`
+
+/** Résidences suivies par `decideInactivity` — miroir des deux premières conditions de `evaluateResidences`. */
+export const inInactivityScope = (residence: { contactMode: EOwnerContactMode; acceptsApplications: boolean }) =>
+  residence.contactMode !== EOwnerContactMode.NONE && residence.acceptsApplications
 
 /** Résidences ouvertes aux candidatures d'un bailleur ayant choisi un parcours, avec ce qu'il faut pour les juger. */
 export async function evaluateResidences({ accommodationIds, ownerSlug }: { accommodationIds?: number[]; ownerSlug?: string } = {}) {
@@ -168,7 +178,7 @@ export async function resumeIfResolved(accommodationId: number, now = new Date()
   try {
     const [residence] = await evaluateResidences({ accommodationIds: [accommodationId] })
     if (!residence) return
-    const decision = decideInactivity(toInactivityState(residence), now)
+    const decision = decideInactivity(toInactivityState(residence), now, { allowResume: true })
     await applyDecision(residence, { clearWarnings: decision.clearWarnings, warn: [], suspend: null, resume: decision.resume }, now)
   } catch (err) {
     console.error('Erreur levée de suspension automatique', err)
@@ -225,28 +235,30 @@ export const inactivityRecipients = (members: Member[], residence: { id: number;
     return m.scope === null || m.scope.has(residence.id)
   })
 
-type Notice = { residence: EvaluatedResidence; reason: InactivityReason }
+type Notice = { residence: { id: number; name: string; ownerId: number; ownerName: string }; reason: InactivityReason }
 
-async function sendGroupedEmails(
+export async function sendGroupedEmails(
   notices: Notice[],
   members: Member[],
   send: typeof sendApplicationsInactivityWarningEmail,
   describe: (reason: InactivityReason) => string,
   failures: string[],
   force: boolean,
+  url = CONTACTS_URL,
 ) {
   const byRecipient = new Map<string, { member: Member; ownerName: string; lines: string[] }>()
   for (const { residence, reason } of notices) {
     for (const member of inactivityRecipients(members, residence, reason)) {
       const entry = byRecipient.get(member.id) ?? { member, ownerName: residence.ownerName, lines: [] }
-      entry.lines.push(`${residence.name} : ${describe(reason)}`)
+      const detail = describe(reason)
+      entry.lines.push(detail ? `${residence.name} : ${detail}` : residence.name)
       byRecipient.set(member.id, entry)
     }
   }
 
   for (const { member, ownerName, lines } of byRecipient.values()) {
     try {
-      await send(member.email, { firstname: member.firstname, ownerName, residences: lines, url: CONTACTS_URL }, { force })
+      await send(member.email, { firstname: member.firstname, ownerName, residences: lines, url }, { force })
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       failures.push(`e-mail ${maskEmail(member.email)} : ${message}`)
@@ -256,18 +268,17 @@ async function sendGroupedEmails(
 
 type InactivityCheckOptions = { dryRun?: boolean; verbose?: boolean; now?: Date; ownerSlug?: string; sendOutsideProduction?: boolean }
 
-export type InactivityCheckResult = { warned: number; suspended: number; resumed: number; cleared: number; failures: string[] }
+export type InactivityCheckResult = { warned: number; suspended: number; cleared: number; failures: string[] }
 
 export async function runInactivityCheck(options: InactivityCheckOptions = {}): Promise<InactivityCheckResult> {
   const now = options.now ?? new Date()
   const plans = (await evaluateResidences({ ownerSlug: options.ownerSlug }))
-    .map((residence) => ({ residence, decision: decideInactivity(toInactivityState(residence), now) }))
+    .map((residence) => ({ residence, decision: decideInactivity(toInactivityState(residence), now, { allowResume: false }) }))
     .filter(({ decision }) => hasAction(decision))
 
   const result: InactivityCheckResult = {
     warned: plans.filter((p) => p.decision.warn.length > 0).length,
     suspended: plans.filter((p) => p.decision.suspend).length,
-    resumed: plans.filter((p) => p.decision.resume).length,
     cleared: plans.filter((p) => p.decision.clearWarnings.length > 0).length,
     failures: [],
   }
