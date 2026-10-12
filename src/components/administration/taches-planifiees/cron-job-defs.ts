@@ -44,7 +44,7 @@ const CRON_JOB_DEF_MAP: Record<CronJobType, Omit<CronJobDef, 'type'>> = {
   'contact-digest': {
     label: 'Récap demandes de contact',
     description: 'Récapitulatif quotidien des demandes de contact confirmées la veille, envoyé aux gestionnaires concernés',
-    schedule: 'Tous les jours à 8h00',
+    schedule: 'Tous les jours à 7h00',
   },
   'availability-reset': {
     label: 'Péremption des disponibilités',
