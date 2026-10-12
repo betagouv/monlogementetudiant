@@ -13,6 +13,7 @@ export function proxy(request: NextRequest) {
 
   const requestHeaders = new Headers(request.headers)
   requestHeaders.set('x-nonce', nonce)
+  requestHeaders.set('x-pathname', request.nextUrl.pathname + request.nextUrl.search)
   requestHeaders.set('Content-Security-Policy-Report-Only', csp)
 
   const response = NextResponse.next({ request: { headers: requestHeaders } })

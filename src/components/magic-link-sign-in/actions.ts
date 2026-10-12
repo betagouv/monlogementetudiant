@@ -5,6 +5,7 @@ import { headers } from 'next/headers'
 import { db } from '~/server/db'
 import { user } from '~/server/db/schema'
 import { auth } from '~/services/better-auth'
+import { safeCallbackPath } from '~/utils/safe-callback-path'
 
 /**
  * Sans `errorCallbackURL`, un lien expiré ou déjà consommé retombe sur la `callbackURL` de succès,
@@ -28,7 +29,10 @@ export async function sendMagicLink(rawEmail: string, role: 'owner' | 'admin', c
   if (result.length > 0) {
     const requestHeaders = await headers()
     const errorCallbackURL = ERROR_CALLBACK_URL_BY_ROLE[role]
-    await auth.api.signInMagicLink({ body: { email, callbackURL, errorCallbackURL }, headers: requestHeaders })
+    await auth.api.signInMagicLink({
+      body: { email, callbackURL: safeCallbackPath(callbackURL) ?? undefined, errorCallbackURL },
+      headers: requestHeaders,
+    })
   }
 
   return { success: true }

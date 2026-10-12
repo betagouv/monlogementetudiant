@@ -5,19 +5,20 @@ export type SuspensionReason = 'manual' | InactivityReason
 
 export const INACTIVITY_REASONS: InactivityReason[] = ['unprocessed_applications', 'stale_availability']
 
-export const INACTIVITY_THRESHOLDS: Record<InactivityReason, { warningDays: number; suspensionDays: number }> = {
-  unprocessed_applications: { warningDays: 7, suspensionDays: 10 },
-  stale_availability: { warningDays: 23, suspensionDays: 30 },
+export const INACTIVITY_WARNING_DAYS: Record<InactivityReason, number> = {
+  unprocessed_applications: 14,
+  stale_availability: 30,
 }
+
+/** Délai sans action après l'alerte avant la suspension. */
+export const SUSPENSION_NOTICE_DAYS = 7
 
 /** Tolérance sur l'heure de passage du cron, pour qu'un préavis de N jours ne glisse pas à N + 1. */
-const CRON_SLACK_MS = 12 * 60 * 60 * 1000
+const CRON_RUN_TOLERANCE_MS = 12 * 60 * 60 * 1000
 
-/** Préavis garanti entre l'alerte et le blocage, même pour une résidence déjà en retard à la première alerte. */
-export const suspensionNoticeMs = (reason: InactivityReason) => {
-  const { warningDays, suspensionDays } = INACTIVITY_THRESHOLDS[reason]
-  return (suspensionDays - warningDays) * DAY_MS - CRON_SLACK_MS
-}
+const SUSPENSION_NOTICE_MS = SUSPENSION_NOTICE_DAYS * DAY_MS - CRON_RUN_TOLERANCE_MS
+
+const noticeElapsed = (warnedAt: Date | null, now: Date) => warnedAt !== null && warnedAt.getTime() <= now.getTime() - SUSPENSION_NOTICE_MS
 
 export type ResidenceInactivityState = {
   /** Plus ancienne candidature encore à traiter, `null` s'il n'y en a pas. */
@@ -41,24 +42,49 @@ const sinceOf = (state: ResidenceInactivityState, reason: InactivityReason) =>
 
 const isOverdue = (since: Date | null, days: number, now: Date) => since !== null && since.getTime() <= now.getTime() - days * DAY_MS
 
-export function decideInactivity(state: ResidenceInactivityState, now: Date): InactivityDecision {
-  const warningDue = (reason: InactivityReason) => isOverdue(sinceOf(state, reason), INACTIVITY_THRESHOLDS[reason].warningDays, now)
-  const suspensionDue = (reason: InactivityReason) => isOverdue(sinceOf(state, reason), INACTIVITY_THRESHOLDS[reason].suspensionDays, now)
+/**
+ * `allowResume` : une suspension automatique n'est levée que sur une action du bailleur. Le cron ne la lève
+ * jamais, sans quoi une candidature sortie de la fenêtre de rétention rouvrirait la résidence toute seule.
+ */
+export function decideInactivity(
+  state: ResidenceInactivityState,
+  now: Date,
+  { allowResume }: { allowResume: boolean },
+): InactivityDecision {
+  const warningDue = (reason: InactivityReason) => isOverdue(sinceOf(state, reason), INACTIVITY_WARNING_DAYS[reason], now)
 
   const clearWarnings = INACTIVITY_REASONS.filter((reason) => state.warnedAt[reason] !== null && !warningDue(reason))
 
-  const autoSuspended = state.suspendedAt !== null && state.suspensionReason !== 'manual'
-  const resume = autoSuspended && !INACTIVITY_REASONS.some(suspensionDue)
+  const autoReason = state.suspendedAt !== null && state.suspensionReason !== 'manual' ? state.suspensionReason : null
+  const resume = allowResume && autoReason !== null && !warningDue(autoReason)
   const suspended = state.suspendedAt !== null && !resume
 
   if (suspended) return { clearWarnings, warn: [], suspend: null, resume }
 
   const warn = INACTIVITY_REASONS.filter((reason) => warningDue(reason) && state.warnedAt[reason] === null)
-  const suspend =
-    INACTIVITY_REASONS.find((reason) => {
-      const warnedAt = state.warnedAt[reason]
-      return suspensionDue(reason) && warnedAt !== null && warnedAt.getTime() <= now.getTime() - suspensionNoticeMs(reason)
-    }) ?? null
+  const suspend = INACTIVITY_REASONS.find((reason) => warningDue(reason) && noticeElapsed(state.warnedAt[reason], now)) ?? null
 
   return { clearWarnings, warn, suspend, resume }
+}
+
+export type AvailabilityResetState = {
+  hasAvailability: boolean
+  /** Dernière mise à jour des disponibilités par un gestionnaire, à défaut création de la résidence. */
+  availabilitySince: Date
+  warnedAt: Date | null
+  /** Résidence suivie par `decideInactivity`, qui gère alors seule l'alerte. */
+  inInactivityScope: boolean
+}
+
+export type AvailabilityResetAction = 'warn' | 'reset' | 'clear' | null
+
+/** Disponibilités périmées : alerte à 30 jours, puis « non communiquée » si rien n'est fait dans les 7 jours. */
+export function decideAvailabilityReset(state: AvailabilityResetState, now: Date): AvailabilityResetAction {
+  const stale = state.hasAvailability && isOverdue(state.availabilitySince, INACTIVITY_WARNING_DAYS.stale_availability, now)
+
+  if (stale && noticeElapsed(state.warnedAt, now)) return 'reset'
+  if (state.inInactivityScope) return null
+  if (stale && state.warnedAt === null) return 'warn'
+  if (!stale && state.warnedAt !== null) return 'clear'
+  return null
 }

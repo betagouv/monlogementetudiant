@@ -271,6 +271,23 @@ export async function sendApplicationsAutoSuspendedEmail(
   })
 }
 
+export async function sendAvailabilityResetWarningEmail(
+  email: string,
+  params: InactivityEmailParams,
+  { force = false }: { force?: boolean } = {},
+): Promise<void> {
+  if (env.NEXT_PUBLIC_APP_ENV !== 'production' && !force) {
+    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] alerte de disponibilités périmées non envoyée à ${maskEmail(email)}`)
+    return
+  }
+
+  await sendTemplateEmail({
+    to: email,
+    templateId: env.BREVO_TEMPLATE_AVAILABILITY_RESET_WARNING,
+    params: { ...inactivityParams(params), CONFIRM_LINK: `${env.BASE_URL}/bailleur/disponibilites/confirmer` },
+  })
+}
+
 export async function sendOwnerAccountActivated(email: string, url: string): Promise<void> {
   await sendTemplateEmail({
     to: email,

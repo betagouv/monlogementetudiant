@@ -2424,6 +2424,21 @@
       "title": "Help center",
       "breadcrumbDashboard": "Dashboard",
       "contactTeam": "Contact the team"
+    },
+    "confirmAvailability": {
+      "pageTitle": "Confirm my availability",
+      "breadcrumbDashboard": "Dashboard",
+      "intro": "The availability of the following residences has not been updated for more than 30 days. Without action on your part, it will be set to “not provided”.",
+      "typology": "{label}: {available} available out of {total}",
+      "typologyNoTotal": "{label}: {available} available",
+      "confirm": "No change in my availability",
+      "update": "Update my availability",
+      "successTitle": "{count, plural, one {Availability confirmed for # residence} other {Availability confirmed for # residences}}",
+      "successDescription": "The update date has been refreshed. Thank you!",
+      "emptyTitle": "No availability to confirm",
+      "emptyDescription": "The availability of your residences is up to date.",
+      "backToResidences": "See my residences",
+      "error": "Confirmation failed, please try again."
     }
   },
   "map": {
