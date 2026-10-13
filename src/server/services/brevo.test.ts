@@ -3,6 +3,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const fetchMock = vi.fn()
 vi.stubGlobal('fetch', fetchMock)
 
+// Stubber NEXT_PUBLIC_APP_ENV=production rendrait obligatoires toutes les vars `requiredInProd` :
+// on surcharge directement l'env validé.
+const mockEnv = (overrides: Record<string, unknown>) => {
+  vi.doMock('~/server/env', async (importOriginal) => {
+    const { env } = await importOriginal<typeof import('~/server/env')>()
+    return { env: { ...env, ...overrides } }
+  })
+}
+
 describe('brevo service', () => {
   beforeEach(() => {
     fetchMock.mockReset()
@@ -14,6 +23,50 @@ describe('brevo service', () => {
     vi.stubEnv('BREVO_TEMPLATE_RESET_PASSWORD', '23')
     vi.stubEnv('BREVO_TEMPLATE_OWNER_WELCOME', '40')
     vi.stubEnv('BREVO_TEMPLATE_ALERT_CREATION', '43')
+    vi.doUnmock('~/server/env')
+    // Hors production les destinataires sont réécrits : voir le bloc « redirection hors production ».
+    mockEnv({ NEXT_PUBLIC_APP_ENV: 'production' })
+  })
+
+  describe('redirection hors production', () => {
+    const REDIRECTED = 'user.at.test.com@qa-mail.monlogementetudiant.beta.gouv.fr'
+
+    it.each(['staging', 'development'])('réécrit le destinataire des templates en %s', async (appEnv) => {
+      mockEnv({ NEXT_PUBLIC_APP_ENV: appEnv })
+      const { sendTemplateEmail } = await import('./brevo')
+
+      await sendTemplateEmail({ to: 'user@test.com', templateId: 2 })
+
+      expect(JSON.parse(fetchMock.mock.calls[0][1].body).to).toEqual([{ email: REDIRECTED }])
+    })
+
+    it('réécrit le destinataire quand NEXT_PUBLIC_APP_ENV est absent', async () => {
+      vi.doUnmock('~/server/env')
+      vi.stubEnv('NEXT_PUBLIC_APP_ENV', undefined)
+      const { sendTemplateEmail } = await import('./brevo')
+
+      await sendTemplateEmail({ to: 'user@test.com', templateId: 2 })
+
+      expect(JSON.parse(fetchMock.mock.calls[0][1].body).to).toEqual([{ email: REDIRECTED }])
+    })
+
+    it('ne réécrit pas les mails bruts internes', async () => {
+      mockEnv({ NEXT_PUBLIC_APP_ENV: 'staging' })
+      const { sendRawEmail } = await import('./brevo')
+
+      await sendRawEmail({ to: ['ops@beta.gouv.fr'], subject: 'Échec', textContent: 'stack' })
+
+      expect(JSON.parse(fetchMock.mock.calls[0][1].body).to).toEqual([{ email: 'ops@beta.gouv.fr' }])
+    })
+
+    it('utilise BREVO_REDIRECT_DOMAIN', async () => {
+      mockEnv({ NEXT_PUBLIC_APP_ENV: 'staging', BREVO_REDIRECT_DOMAIN: 'qa.example.org' })
+      const { sendTemplateEmail } = await import('./brevo')
+
+      await sendTemplateEmail({ to: 'user@test.com', templateId: 2 })
+
+      expect(JSON.parse(fetchMock.mock.calls[0][1].body).to).toEqual([{ email: 'user.at.test.com@qa.example.org' }])
+    })
   })
 
   describe('sendTemplateEmail', () => {
@@ -42,6 +95,7 @@ describe('brevo service', () => {
     })
 
     it('throws when BREVO_API_KEY is not set', async () => {
+      vi.doUnmock('~/server/env')
       vi.stubEnv('BREVO_API_KEY', '')
 
       await expect(import('./brevo')).rejects.toThrow('BREVO_API_KEY is required')
