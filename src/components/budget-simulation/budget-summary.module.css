@@ -2,19 +2,19 @@
   color: #adadf9;
 }
 
-.positiveRemainingBalance {
+.positiveRemainingBalance.positiveRemainingBalance {
   color: #27a658;
 }
 
-.negativeRemainingBalance {
+.negativeRemainingBalance.negativeRemainingBalance {
   color: #e10600;
 }
 
-.totalIncomes {
+.totalIncomes.totalIncomes {
   color: #c9fcac;
 }
 
-.totalExpenses {
+.totalExpenses.totalExpenses {
   color: #fcc0b0;
 }
 
@@ -35,5 +35,17 @@
   width: 100%;
   @media (min-width: 768px) {
     width: 50%;
+  }
+}
+
+.chartContainer {
+  height: 200px;
+  width: 100%;
+}
+
+.chartContainerHorizontal {
+  @media (min-width: 768px) {
+    width: 45%;
+    flex-shrink: 0;
   }
 }

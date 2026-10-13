@@ -1,0 +1,216 @@
+import { and, asc, eq, ne } from 'drizzle-orm'
+import { db } from '~/server/db'
+import { accommodationAddresses } from '~/server/db/schema/accommodation-addresses'
+import { accommodations } from '~/server/db/schema/accommodations'
+import { user } from '~/server/db/schema/auth'
+import { bailleurAccommodationScopes } from '~/server/db/schema/bailleur-accommodation-scopes'
+import { cities } from '~/server/db/schema/cities'
+import { owners } from '~/server/db/schema/owners'
+import { env } from '~/server/env'
+import {
+  sendApplicationsManagementGrantedEmail,
+  sendApplicationsSuspendedEmail,
+  sendContactModeActivatedEmail,
+  sendContactModeDeactivatedEmail,
+  sendContactRequestNotRetainedEmail,
+  sendContactResidencesUpdatedEmail,
+} from '~/server/services/brevo'
+
+export type ManagedResidences = { mode: 'all' | 'restricted'; residences: Array<{ id: number; name: string }> }
+
+type OwnerRef = { id: number; name: string }
+
+/** Résidences dont le gestionnaire traite les candidatures ; `null` s'il n'en traite aucune. */
+export async function readManagedResidences(userId: string): Promise<ManagedResidences | null> {
+  const target = await db.query.user.findFirst({
+    where: eq(user.id, userId),
+    columns: { role: true, ownerId: true, bailleurRole: true, bailleurPermissions: true, applicationScopeRestricted: true },
+  })
+  if (!target?.ownerId || target.role !== 'owner' || target.bailleurRole !== 'gestionnaire') return null
+  if (!target.bailleurPermissions.includes('manage_applications')) return null
+
+  if (!target.applicationScopeRestricted) {
+    const residences = await db
+      .select({ id: accommodations.id, name: accommodations.name })
+      .from(accommodations)
+      .where(and(eq(accommodations.ownerId, target.ownerId), eq(accommodations.acceptsApplications, true)))
+      .orderBy(asc(accommodations.name))
+    return { mode: 'all', residences }
+  }
+
+  const residences = await db
+    .select({ id: accommodations.id, name: accommodations.name })
+    .from(bailleurAccommodationScopes)
+    .innerJoin(accommodations, eq(accommodations.id, bailleurAccommodationScopes.accommodationId))
+    .where(and(eq(bailleurAccommodationScopes.userId, userId), eq(accommodations.ownerId, target.ownerId)))
+    .orderBy(asc(accommodations.name))
+  return { mode: 'restricted', residences }
+}
+
+export async function notifyApplicationsManagementGranted({
+  userId,
+  before,
+  owner,
+}: {
+  userId: string
+  before: ManagedResidences | null
+  owner: OwnerRef
+}) {
+  try {
+    const after = await readManagedResidences(userId)
+    if (!after) return
+
+    const known = new Set(before?.residences.map((r) => r.id))
+    const added = after.residences.filter((r) => !known.has(r.id))
+    const becameAll = after.mode === 'all' && before?.mode !== 'all'
+    if (!becameAll && added.length === 0) return
+
+    const target = await db.query.user.findFirst({ where: eq(user.id, userId), columns: { email: true, firstname: true } })
+    if (!target) return
+
+    await sendApplicationsManagementGrantedEmail(target.email, {
+      firstname: target.firstname,
+      ownerName: owner.name,
+      residences: becameAll ? [`Toutes les résidences de ${owner.name}`] : added.map((r) => r.name),
+      residencesCount: becameAll ? after.residences.length : added.length,
+      url: `${env.BASE_URL}/bailleur/contacts`,
+    })
+  } catch (err) {
+    console.error('Erreur envoi email attribution gestion des candidatures', err)
+  }
+}
+
+/** Administrateurs du bailleur destinataires des notifications du parcours contact. */
+async function readOwnerAdministrators(ownerId: number) {
+  return db.query.user.findMany({
+    where: and(eq(user.ownerId, ownerId), eq(user.role, 'owner'), eq(user.bailleurRole, 'administrator'), eq(user.banned, false)),
+    columns: { email: true },
+  })
+}
+
+async function notifyOwnerAdministrators(owner: OwnerRef, label: string, send: (email: string) => Promise<void>) {
+  try {
+    const administrators = await readOwnerAdministrators(owner.id)
+    const results = await Promise.allSettled(administrators.map((admin) => send(admin.email)))
+    for (const result of results) {
+      if (result.status === 'rejected') console.error(`Erreur envoi email ${label}`, result.reason)
+    }
+  } catch (err) {
+    console.error(`Erreur envoi email ${label}`, err)
+  }
+}
+
+export async function notifyContactModeActivated({ owner }: { owner: OwnerRef }) {
+  await notifyOwnerAdministrators(owner, 'activation du parcours contact', (email) =>
+    sendContactModeActivatedEmail(email, { ownerName: owner.name }),
+  )
+}
+
+export async function notifyContactModeDeactivated({ owner }: { owner: OwnerRef }) {
+  await notifyOwnerAdministrators(owner, 'désactivation du parcours contact', (email) =>
+    sendContactModeDeactivatedEmail(email, { ownerName: owner.name }),
+  )
+}
+
+type ResidenceRef = { id: number; name: string }
+
+/** Delta d'une mise à jour de la sélection de résidences ouvertes aux demandes de contact. */
+export function diffResidenceSelection(before: ResidenceRef[], after: ResidenceRef[]) {
+  const beforeIds = new Set(before.map((r) => r.id))
+  const afterIds = new Set(after.map((r) => r.id))
+  return {
+    deactivated: before.filter((r) => !afterIds.has(r.id)).map((r) => r.name),
+    activated: after.filter((r) => !beforeIds.has(r.id)).map((r) => r.name),
+  }
+}
+
+export async function notifyContactResidencesUpdated({
+  owner,
+  before,
+  after,
+}: {
+  owner: OwnerRef
+  before: ResidenceRef[]
+  after: ResidenceRef[]
+}) {
+  const { deactivated, activated } = diffResidenceSelection(before, after)
+  if (deactivated.length === 0 && activated.length === 0) return
+
+  await notifyOwnerAdministrators(owner, 'mise à jour des résidences du parcours contact', (email) =>
+    sendContactResidencesUpdatedEmail(email, {
+      ownerName: owner.name,
+      deactivatedResidences: deactivated,
+      activatedResidences: activated,
+      activeCount: after.length,
+    }),
+  )
+}
+
+/** Prévient l'étudiant que sa demande de contact n'a pas été retenue par le gestionnaire. */
+export async function notifyContactRequestNotRetained({ email, accommodationId }: { email: string; accommodationId: number }) {
+  try {
+    const [residence] = await db
+      .select({ residenceName: accommodations.name, cityName: cities.name, ownerName: owners.name })
+      .from(accommodations)
+      .leftJoin(
+        accommodationAddresses,
+        and(eq(accommodationAddresses.accommodationId, accommodations.id), eq(accommodationAddresses.isMain, true)),
+      )
+      .leftJoin(cities, eq(accommodationAddresses.cityId, cities.id))
+      .leftJoin(owners, eq(accommodations.ownerId, owners.id))
+      .where(eq(accommodations.id, accommodationId))
+      .limit(1)
+    if (!residence) return
+
+    await sendContactRequestNotRetainedEmail(email, {
+      residenceName: residence.residenceName,
+      cityName: residence.cityName ?? '',
+      ownerName: residence.ownerName ?? '',
+    })
+  } catch (err) {
+    console.error('Erreur envoi email demande non retenue', err)
+  }
+}
+
+export async function notifyApplicationsSuspended({
+  accommodation,
+  actor,
+  owner,
+  suspendedAt,
+}: {
+  accommodation: { name: string; slug: string }
+  actor: { id: string; name: string }
+  owner: OwnerRef
+  suspendedAt: Date
+}) {
+  try {
+    const administrators = await db.query.user.findMany({
+      where: and(
+        eq(user.ownerId, owner.id),
+        eq(user.role, 'owner'),
+        eq(user.bailleurRole, 'administrator'),
+        eq(user.banned, false),
+        ne(user.id, actor.id),
+      ),
+      columns: { email: true, firstname: true },
+    })
+
+    const results = await Promise.allSettled(
+      administrators.map((admin) =>
+        sendApplicationsSuspendedEmail(admin.email, {
+          firstname: admin.firstname,
+          residenceName: accommodation.name,
+          suspendedBy: actor.name,
+          ownerName: owner.name,
+          suspendedAt: suspendedAt.toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Europe/Paris' }),
+          url: `${env.BASE_URL}/bailleur/contacts/${accommodation.slug}`,
+        }),
+      ),
+    )
+    for (const result of results) {
+      if (result.status === 'rejected') console.error('Erreur envoi email suspension des candidatures', result.reason)
+    }
+  } catch (err) {
+    console.error('Erreur envoi email suspension des candidatures', err)
+  }
+}

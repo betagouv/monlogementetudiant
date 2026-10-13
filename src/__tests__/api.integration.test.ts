@@ -1,9 +1,13 @@
+import { hashPassword } from 'better-auth/crypto'
+import { createLocalAccountIssuer } from 'better-auth/db'
 import { eq, sql } from 'drizzle-orm'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { apiV1App } from '~/server/api/v1/app'
 import { db } from '~/server/db'
 import { apikey } from '~/server/db/schema/api-key'
+import { account } from '~/server/db/schema/auth'
 import { departments } from '~/server/db/schema/departments'
+import { env } from '~/server/env'
 import { auth } from '~/services/better-auth'
 import {
   createAcademy,
@@ -385,5 +389,49 @@ describe('API v1 — admin consumers update', () => {
     const [row] = await db.select({ name: apikey.name, rateLimitMax: apikey.rateLimitMax }).from(apikey).where(eq(apikey.id, id))
     expect(row?.name).toBe('Renommé')
     expect(row?.rateLimitMax).toBe(50)
+  })
+})
+
+describe('API v1 — création de clés réservée au back-office', () => {
+  async function signInStudentOverHttp() {
+    const email = 'student-api-key@test.com'
+    const password = 'correctPassword123!'
+    await createUser({ id: 'student-api-key', email, emailVerified: true, role: 'user' })
+    await db.insert(account).values({
+      id: 'account-student-api-key',
+      userId: 'student-api-key',
+      accountId: 'student-api-key',
+      issuer: createLocalAccountIssuer('credential'),
+      providerId: 'credential',
+      password: await hashPassword(password),
+    })
+    const res = await auth.handler(
+      new Request(`${env.BASE_URL}/api/auth/sign-in/email`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', origin: env.BASE_URL },
+        body: JSON.stringify({ email, password }),
+      }),
+    )
+    expect(res.status).toBe(200)
+    return res.headers
+      .getSetCookie()
+      .map((cookie) => cookie.split(';')[0])
+      .join('; ')
+  }
+
+  it.each(['create', 'list', 'get', 'update', 'delete'])('refuse /api-key/%s en HTTP à un compte connecté', async (action) => {
+    const cookie = await signInStudentOverHttp()
+
+    const res = await auth.handler(
+      new Request(`${env.BASE_URL}/api/auth/api-key/${action}`, {
+        method: action === 'list' || action === 'get' ? 'GET' : 'POST',
+        headers: { 'content-type': 'application/json', origin: env.BASE_URL, cookie },
+        body: action === 'list' || action === 'get' ? undefined : JSON.stringify({ name: 'test', keyId: 'x' }),
+      }),
+    )
+
+    expect(res.status).toBe(404)
+    const keys = await db.select({ id: apikey.id }).from(apikey).where(eq(apikey.referenceId, 'student-api-key'))
+    expect(keys).toHaveLength(0)
   })
 })

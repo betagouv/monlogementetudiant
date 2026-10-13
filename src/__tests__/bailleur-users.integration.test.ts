@@ -144,6 +144,27 @@ describe('bailleur.users.create', () => {
     expect(stored?.bailleurRole).toBe('gestionnaire')
   })
 
+  it('enregistre l’e-mail en minuscules, sans espaces', async () => {
+    const created = await ownerCaller.bailleur.users.create({
+      email: '  Jean.Dupont@Bailleur-A.COM ',
+      firstname: 'Jean',
+      lastname: 'Dupont',
+      bailleurRole: 'gestionnaire',
+      bailleurPermissions: ['manage_residences'],
+    })
+
+    expect(created?.email).toBe('jean.dupont@bailleur-a.com')
+    await expect(
+      ownerCaller.bailleur.users.create({
+        email: 'JEAN.DUPONT@bailleur-a.com',
+        firstname: 'Jean',
+        lastname: 'Doublon',
+        bailleurRole: 'gestionnaire',
+        bailleurPermissions: ['manage_residences'],
+      }),
+    ).rejects.toMatchObject({ code: 'CONFLICT' })
+  })
+
   it('force permissions to [] when role is administrator', async () => {
     const created = await ownerCaller.bailleur.users.create({
       email: 'admin@bailleur-a.com',
@@ -452,7 +473,7 @@ describe('bailleur.users.update', () => {
       .where(eq(user.id, 'gest-self'))
     const gestCaller = gestionnaireCallerFactory({ id: 'gest-self', email: 'gs@a.com', permissions: ['manage_residences'] })
 
-    // Le refus tombe desormais au niveau du role : `canEditOwnAccount` reste une garde defensive.
+    // Le refus tombe au niveau du role : `canEditOwnAccount` reste une garde defensive.
     await expect(gestCaller.bailleur.users.update({ id: 'gest-self', firstname: 'Autoproclame' })).rejects.toThrow(
       /Administrateur du bailleur requis|FORBIDDEN/,
     )

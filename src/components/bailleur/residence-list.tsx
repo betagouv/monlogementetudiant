@@ -10,8 +10,9 @@ import { AvailabilityBadge } from '~/components/shared/availability-badge'
 import { Pagination } from '~/components/ui/pagination'
 import { useMyAccommodations } from '~/hooks/use-my-accommodations'
 import { calculateAvailability } from '~/utils/calculateAvailability'
+import { formatDay } from '~/utils/formatDate'
+import { getLastAvailabilityUpdate } from '~/utils/last-availability-update'
 import { buildHref } from '~/utils/preserve-query-params'
-import { sPluriel } from '~/utils/sPluriel'
 
 const ResidenceListSkeleton = () => (
   <div className="fr-flex fr-direction-column fr-flex-gap-6v">
@@ -53,6 +54,7 @@ const ResidenceListSkeleton = () => (
 
 export const ResidenceList: FC = () => {
   const t = useTranslations('findAccomodation.card')
+  const tList = useTranslations('bailleur.residences.list')
   const { data: accommodations, isLoading } = useMyAccommodations()
   const [queryStates] = useQueryStates({
     page: parseAsInteger.withDefault(1),
@@ -70,8 +72,8 @@ export const ResidenceList: FC = () => {
   if (accommodationsList.length === 0) {
     return (
       <div className="fr-flex fr-direction-column fr-align-items-center fr-py-8w">
-        <h3>Aucune résidence trouvée</h3>
-        <p>Aucune résidence ne correspond à vos critères de recherche.</p>
+        <h3>{tList('emptyTitle')}</h3>
+        <p>{tList('emptyDescription')}</p>
       </div>
     )
   }
@@ -82,12 +84,13 @@ export const ResidenceList: FC = () => {
         {accommodations?.count &&
           accommodationsList.map((accommodation, index) => {
             const nbAvailable = calculateAvailability(accommodation.typologies)
+            const lastAvailabilityUpdate = getLastAvailabilityUpdate(accommodation.typologies)
 
             const badgeAvailability = (
               <AvailabilityBadge
                 nbAvailable={nbAvailable}
                 noAvailabilityText={t('noAvailability')}
-                availabilityText={t('availability')}
+                availabilityText={(count) => t('availabilityCount', { count })}
                 unknownAvailabilityText={t('unknownAvailability')}
                 context="owner"
               />
@@ -106,13 +109,20 @@ export const ResidenceList: FC = () => {
                   href={buildHref(`/bailleur/residences/${accommodation.slug}`, { ownerId: queryStates.ownerId?.toString() })}
                 />
                 <UpdateResidenceList accommodation={accommodation}>
-                  <div className="fr-flex fr-justify-content-space-between">
+                  <div className="fr-flex fr-flex-wrap fr-flex-gap-2v fr-justify-content-space-between fr-align-items-center">
                     {!!accommodation.nbTotalApartments && (
                       <span className="fr-text-mention--grey fr-text--xl fr-mb-0">
-                        {accommodation.nbTotalApartments} logement{sPluriel(accommodation.nbTotalApartments ?? 0)}
+                        {tList('housingCount', { count: accommodation.nbTotalApartments })}
                       </span>
                     )}
-                    {badgeAvailability}
+                    <div className="fr-flex fr-flex-wrap fr-flex-gap-4v fr-align-items-center">
+                      {lastAvailabilityUpdate && (
+                        <span className="fr-text-mention--grey fr-text--sm fr-mb-0">
+                          {tList('lastUpdate', { date: formatDay(lastAvailabilityUpdate) })}
+                        </span>
+                      )}
+                      {badgeAvailability}
+                    </div>
                   </div>
                   <hr className="fr-mt-3w fr-mb-0" />
                 </UpdateResidenceList>

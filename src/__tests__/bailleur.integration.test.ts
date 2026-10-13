@@ -30,7 +30,6 @@ async function createCityWithName(name: string, slug: string, postalCodes: strin
   return createCity({ departmentId: department.id, name, slug, postalCodes })
 }
 
-// Create user records before each test
 beforeEach(async () => {
   await createUser({ id: 'test-owner-id', name: 'Test Owner', email: 'owner@test.com', role: 'owner' })
   await createUser({ id: 'test-owner-id-2', name: 'Test Owner 2', email: 'owner2@test.com', role: 'owner' })
@@ -462,7 +461,7 @@ describe('activity_log diff accuracy', () => {
     await db.delete(activityLog)
     await ownerCaller.bailleur.update({
       slug: 'diff-test',
-      virtualTourUrl: 'https://tour.example.com',
+      virtualTourUrl: 'https://tour.klapty.com/5m20OJ5Iae/',
     })
 
     const logs = await db.select().from(activityLog)
@@ -471,6 +470,21 @@ describe('activity_log diff accuracy', () => {
 
     const meta = logs[0].metadata as { diff: Record<string, unknown> }
     expect(Object.keys(meta.diff)).toEqual(['virtualTourUrl'])
+  })
+
+  it('rejects a virtual tour hosted outside the allowed platforms', async () => {
+    const owner = await createOwner({ name: 'Owner Tour', slug: 'owner-tour', userId: 'test-owner-id' })
+    await createAccommodation({ name: 'Tour Test', slug: 'tour-test', ownerId: owner.id, virtualTourUrl: null, geom: parisPoint })
+
+    await expect(
+      ownerCaller.bailleur.update({ slug: 'tour-test', virtualTourUrl: '<iframe src="https://evil.example/login"></iframe>' }),
+    ).rejects.toMatchObject({ code: 'BAD_REQUEST' })
+
+    const [row] = await getTestDb()
+      .select({ virtualTourUrl: accommodations.virtualTourUrl })
+      .from(accommodations)
+      .where(eq(accommodations.slug, 'tour-test'))
+    expect(row!.virtualTourUrl).toBeNull()
   })
 
   it('logs multiple changed fields in a single update', async () => {
@@ -741,7 +755,6 @@ describe('bailleur.list owner isolation', () => {
     await createAccommodation({ name: 'Résidence Hack 1', slug: 'hack-res-1', ownerId: owner1.id })
     await createAccommodation({ name: 'Résidence Hack 2', slug: 'hack-res-2', ownerId: owner2.id })
 
-    // Owner 1 tries to access Owner 2's residences via bailleur param
     const result = await ownerCaller.bailleur.list({ page: 1, ownerId: owner2.id })
     expect(result.count).toBe(1)
     expect(result.results[0].name).toBe('Résidence Hack 1')
@@ -754,7 +767,6 @@ describe('bailleur.list owner isolation', () => {
     await createAccommodation({ name: 'Résidence Cross 1', slug: 'cross-res-1', ownerId: owner1.id })
     await createAccommodation({ name: 'Résidence Cross 2', slug: 'cross-res-2', ownerId: owner2.id })
 
-    // Owner 2 tries to access Owner 1's residences via bailleur param
     const result = await ownerCaller2.bailleur.list({ page: 1, ownerId: owner1.id })
     expect(result.count).toBe(1)
     expect(result.results[0].name).toBe('Résidence Cross 2')
@@ -800,7 +812,7 @@ describe('bailleur.list owner isolation', () => {
     await createAccommodation({ name: 'Résidence Linked', slug: 'linked-res', ownerId: linkedOwner.id })
     await createAccommodation({ name: 'Résidence Unlinked', slug: 'unlinked-res', ownerId: unlinkedOwner.id })
 
-    // Admin tries to access unlinked owner via bailleur param — should fallback to linked owner
+    // An unlinked ownerId falls back to the linked owner
     const result = await adminCaller.bailleur.list({ page: 1, ownerId: unlinkedOwner.id })
     expect(result.count).toBe(1)
     expect(result.results[0].name).toBe('Résidence Linked')
@@ -818,21 +830,22 @@ describe('bailleur.setContactMode', () => {
 
     const noPermCaller = gestionnaireCallerFactory()
     await expect(noPermCaller.bailleur.setContactMode({ mode: EOwnerContactMode.CONTACTS })).rejects.toThrow(
-      'Permission denied: manage_applications',
+      'Administrateur du bailleur requis',
     )
   })
 
-  it('accepts a gestionnaire holding manage_applications', async () => {
+  it('rejects a gestionnaire even holding manage_applications: the mode applies to the whole owner', async () => {
     await createUser({ id: 'test-gestionnaire-id', name: 'Gestionnaire', email: 'gestionnaire@test.com', role: 'owner' })
     const owner = await createOwner({ name: 'Owner Perm', slug: 'owner-perm', userId: 'test-gestionnaire-id' })
 
     const permCaller = gestionnaireCallerFactory({ permissions: ['manage_applications'] })
-    const result = await permCaller.bailleur.setContactMode({ mode: EOwnerContactMode.CONTACTS })
-    expect(result.contactMode).toBe('contacts')
+    await expect(permCaller.bailleur.setContactMode({ mode: EOwnerContactMode.CONTACTS })).rejects.toThrow(
+      'Administrateur du bailleur requis',
+    )
 
     const db = getTestDb()
-    const updated = await db.query.owners.findFirst({ where: eq(owners.id, owner.id) })
-    expect(updated!.contactMode).toBe('contacts')
+    const unchanged = await db.query.owners.findFirst({ where: eq(owners.id, owner.id) })
+    expect(unchanged!.contactMode).toBe(owner.contactMode)
   })
 
   it('accepts an owner administrator', async () => {

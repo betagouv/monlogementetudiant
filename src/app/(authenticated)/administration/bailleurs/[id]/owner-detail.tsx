@@ -18,6 +18,7 @@ import { LinkUserToOwnerDialog } from '~/components/administration/link-user-to-
 import { OwnerForm } from '~/components/administration/owner-form'
 import { OwnerLogoForm } from '~/components/administration/owner-logo-form'
 import { RoleBadge } from '~/components/administration/role-badge'
+import { ImpersonateUserButton } from '~/components/impersonation/impersonate-user-button'
 import { createToast } from '~/components/ui/createToast'
 import { useAdminDeleteOwner } from '~/hooks/use-admin-delete-owner'
 import { useAdminOwner } from '~/hooks/use-admin-owner'
@@ -27,6 +28,7 @@ import { useTRPC, useTRPCClient } from '~/server/trpc/client'
 import { getInitials } from '~/utils/avatar'
 import { formatDateTime } from '~/utils/formatDate'
 import { getFaviconUrl } from '~/utils/get-favicon-url'
+import { buildHref } from '~/utils/preserve-query-params'
 import { sPluriel } from '~/utils/sPluriel'
 import styles from '../../administration.module.css'
 
@@ -440,6 +442,7 @@ function UsersTab({
                   </td>
                   <td>
                     <div className="fr-flex fr-flex-gap-1v">
+                      <ImpersonateUserButton userId={u.id} compact />
                       <Button priority="tertiary no outline" size="small" linkProps={{ href: `/administration/utilisateurs/${u.id}` }}>
                         Voir
                       </Button>
@@ -521,7 +524,11 @@ function ResidencesTab({
                     >
                       Voir
                     </Button>
-                    <Button priority="tertiary" size="small" linkProps={{ href: `/bailleur/residences/${acc.slug}` }}>
+                    <Button
+                      priority="tertiary"
+                      size="small"
+                      linkProps={{ href: buildHref(`/bailleur/residences/${acc.slug}`, null, { ownerId }) }}
+                    >
                       Modifier
                     </Button>
                   </div>

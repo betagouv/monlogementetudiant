@@ -1,4 +1,5 @@
 import { env } from '~/server/env'
+import { maskEmail } from '~/utils/mask-email'
 
 const SENDER_EMAIL = 'no-reply@monlogementetudiant.beta.gouv.fr'
 
@@ -13,7 +14,9 @@ const brevoHeaders = {
 interface TemplateEmailParams {
   to: string
   templateId: number
-  params?: Record<string, string>
+  // Brevo accepte des valeurs imbriquées dans `params` (ex. liste d'objets parcourue
+  // par un `{% for %}` dans le template).
+  params?: Record<string, string | string[] | Array<Record<string, string | number>>>
 }
 
 export async function sendTemplateEmail({ to, templateId, params }: TemplateEmailParams): Promise<void> {
@@ -38,6 +41,7 @@ interface RawEmailParams {
   to: string[]
   subject: string
   textContent: string
+  senderName?: string
   /** Coupe l'appel au-delà du délai : un Brevo bloqué ne doit pas faire traîner un conteneur cron. */
   timeoutMs?: number
 }
@@ -47,13 +51,19 @@ interface RawEmailParams {
  * le contenu est trop variable pour un template (message d'erreur, stack). Contrairement aux
  * envois par template, l'expéditeur doit être fourni explicitement.
  */
-export async function sendRawEmail({ to, subject, textContent, timeoutMs = 10_000 }: RawEmailParams): Promise<void> {
+export async function sendRawEmail({
+  to,
+  subject,
+  textContent,
+  senderName = 'MLE Crons',
+  timeoutMs = 10_000,
+}: RawEmailParams): Promise<void> {
   const response = await fetch(env.BREVO_API_URL, {
     method: 'POST',
     headers: brevoHeaders,
     signal: AbortSignal.timeout(timeoutMs),
     body: JSON.stringify({
-      sender: { email: SENDER_EMAIL, name: 'MLE Crons' },
+      sender: { email: SENDER_EMAIL, name: senderName },
       to: to.map((email) => ({ email })),
       replyTo: { email: SENDER_EMAIL },
       subject,
@@ -103,6 +113,178 @@ export async function sendContactRequestConfirmationEmail(
     to: email,
     templateId: env.BREVO_TEMPLATE_CONTACT_CONFIRMATION,
     params: { CONFIRMATION_LINK: params.url, ACCOMMODATION_NAME: params.accommodationName },
+  })
+}
+
+export async function sendApplicationsManagementGrantedEmail(
+  email: string,
+  params: { firstname: string; ownerName: string; residences: string[]; residencesCount: number; url: string },
+): Promise<void> {
+  await sendTemplateEmail({
+    to: email,
+    templateId: env.BREVO_TEMPLATE_APPLICATIONS_MANAGEMENT_GRANTED,
+    params: {
+      FIRSTNAME: params.firstname,
+      OWNER_NAME: params.ownerName,
+      RESIDENCES: params.residences,
+      RESIDENCES_COUNT: String(params.residencesCount),
+      LINK: params.url,
+    },
+  })
+}
+
+export async function sendApplicationsSuspendedEmail(
+  email: string,
+  params: { firstname: string; residenceName: string; suspendedBy: string; ownerName: string; suspendedAt: string; url: string },
+): Promise<void> {
+  await sendTemplateEmail({
+    to: email,
+    templateId: env.BREVO_TEMPLATE_APPLICATIONS_SUSPENDED,
+    params: {
+      FIRSTNAME: params.firstname,
+      RESIDENCE_NAME: params.residenceName,
+      SUSPENDED_BY: params.suspendedBy,
+      OWNER_NAME: params.ownerName,
+      SUSPENDED_AT: params.suspendedAt,
+      LINK: params.url,
+    },
+  })
+}
+
+export async function sendContactRequestNotRetainedEmail(
+  email: string,
+  params: { residenceName: string; cityName: string; ownerName: string },
+  { force = false }: { force?: boolean } = {},
+): Promise<void> {
+  // Email adressé à un étudiant : jamais d'envoi depuis un environnement de dev/recette,
+  // dont les bases contiennent de vraies adresses.
+  if (env.NEXT_PUBLIC_APP_ENV !== 'production' && !force) {
+    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] email « demande non retenue » non envoyé à ${maskEmail(email)}`)
+    return
+  }
+
+  await sendTemplateEmail({
+    to: email,
+    templateId: env.BREVO_TEMPLATE_CONTACT_NOT_RETAINED,
+    params: {
+      RESIDENCE_NAME: params.residenceName,
+      VILLE_NAME: params.cityName,
+      OWNER_NAME: params.ownerName,
+    },
+  })
+}
+
+export async function sendContactModeActivatedEmail(email: string, params: { ownerName: string }): Promise<void> {
+  await sendTemplateEmail({
+    to: email,
+    templateId: env.BREVO_TEMPLATE_CONTACT_MODE_ACTIVATED,
+    params: { OWNER_NAME: params.ownerName },
+  })
+}
+
+export async function sendContactModeDeactivatedEmail(email: string, params: { ownerName: string }): Promise<void> {
+  await sendTemplateEmail({
+    to: email,
+    templateId: env.BREVO_TEMPLATE_CONTACT_MODE_DEACTIVATED,
+    params: { OWNER_NAME: params.ownerName },
+  })
+}
+
+export async function sendContactResidencesUpdatedEmail(
+  email: string,
+  params: { ownerName: string; deactivatedResidences: string[]; activatedResidences: string[]; activeCount: number },
+): Promise<void> {
+  await sendTemplateEmail({
+    to: email,
+    templateId: env.BREVO_TEMPLATE_CONTACT_RESIDENCES_UPDATED,
+    params: {
+      OWNER_NAME: params.ownerName,
+      DEACTIVATED_RESIDENCES: params.deactivatedResidences,
+      ACTIVATED_RESIDENCES: params.activatedResidences,
+      ACTIVE_COUNT: String(params.activeCount),
+    },
+  })
+}
+
+export async function sendContactDailyDigestEmail(
+  email: string,
+  params: { date: string; residences: Array<{ name: string; count: number }>; totalCount: number },
+  { force = false }: { force?: boolean } = {},
+): Promise<void> {
+  if (env.NEXT_PUBLIC_APP_ENV !== 'production' && !force) {
+    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] récapitulatif quotidien des demandes non envoyé à ${maskEmail(email)}`)
+    return
+  }
+
+  await sendTemplateEmail({
+    to: email,
+    templateId: env.BREVO_TEMPLATE_CONTACT_DAILY_DIGEST,
+    params: {
+      DATE: params.date,
+      RESIDENCES: params.residences,
+      TOTAL_COUNT: String(params.totalCount),
+    },
+  })
+}
+
+type InactivityEmailParams = { firstname: string; ownerName: string; residences: string[]; url: string }
+
+const inactivityParams = (params: InactivityEmailParams) => ({
+  FIRSTNAME: params.firstname,
+  OWNER_NAME: params.ownerName,
+  RESIDENCES: params.residences,
+  RESIDENCES_COUNT: String(params.residences.length),
+  LINK: params.url,
+})
+
+export async function sendApplicationsInactivityWarningEmail(
+  email: string,
+  params: InactivityEmailParams,
+  { force = false }: { force?: boolean } = {},
+): Promise<void> {
+  if (env.NEXT_PUBLIC_APP_ENV !== 'production' && !force) {
+    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] alerte d'inactivité non envoyée à ${maskEmail(email)}`)
+    return
+  }
+
+  await sendTemplateEmail({
+    to: email,
+    templateId: env.BREVO_TEMPLATE_APPLICATIONS_INACTIVITY_WARNING,
+    params: inactivityParams(params),
+  })
+}
+
+export async function sendApplicationsAutoSuspendedEmail(
+  email: string,
+  params: InactivityEmailParams,
+  { force = false }: { force?: boolean } = {},
+): Promise<void> {
+  if (env.NEXT_PUBLIC_APP_ENV !== 'production' && !force) {
+    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] suspension automatique non envoyée à ${maskEmail(email)}`)
+    return
+  }
+
+  await sendTemplateEmail({
+    to: email,
+    templateId: env.BREVO_TEMPLATE_APPLICATIONS_AUTO_SUSPENDED,
+    params: inactivityParams(params),
+  })
+}
+
+export async function sendAvailabilityResetWarningEmail(
+  email: string,
+  params: InactivityEmailParams,
+  { force = false }: { force?: boolean } = {},
+): Promise<void> {
+  if (env.NEXT_PUBLIC_APP_ENV !== 'production' && !force) {
+    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] alerte de disponibilités périmées non envoyée à ${maskEmail(email)}`)
+    return
+  }
+
+  await sendTemplateEmail({
+    to: email,
+    templateId: env.BREVO_TEMPLATE_AVAILABILITY_RESET_WARNING,
+    params: { ...inactivityParams(params), CONFIRM_LINK: `${env.BASE_URL}/bailleur/disponibilites/confirmer` },
   })
 }
 
@@ -160,7 +342,7 @@ export async function sendAlertCreationConfirmationEmail(
 
 export async function sendAlertExpiryReminderEmail(email: string, params: { alertName: string; alertsUrl: string }): Promise<void> {
   if (env.NEXT_PUBLIC_APP_ENV !== 'production') {
-    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] relance de péremption non envoyée à ${email}`)
+    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] relance de péremption non envoyée à ${maskEmail(email)}`)
     return
   }
 
@@ -173,7 +355,7 @@ export async function sendAlertExpiryReminderEmail(email: string, params: { aler
 
 export async function sendAlertDeactivationEmail(email: string, params: { alertName: string; alertsUrl: string }): Promise<void> {
   if (env.NEXT_PUBLIC_APP_ENV !== 'production') {
-    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] désactivation d'alerte non envoyée à ${email}`)
+    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] désactivation d'alerte non envoyée à ${maskEmail(email)}`)
     return
   }
 
@@ -188,10 +370,9 @@ export async function sendStudentAlertEmail(
   email: string,
   params: { firstName: string; alertName?: string; accommodations: { nom: string; url: string }[] },
 ): Promise<void> {
-  // Anti-spam : on n'envoie réellement les alertes qu'en production.
-  // Jamais en dev, jamais en staging. Eviter les spam intempestifs.
+  // On n'envoie réellement les alertes qu'en production, jamais en dev ni en staging.
   if (env.NEXT_PUBLIC_APP_ENV !== 'production') {
-    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] email d'alerte non envoyé à ${email}`)
+    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] email d'alerte non envoyé à ${maskEmail(email)}`)
     return
   }
 

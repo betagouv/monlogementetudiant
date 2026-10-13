@@ -44,6 +44,81 @@ describe('residence create/update form write path', () => {
     await createUser({ id: 'test-owner-id', name: 'Test Owner', email: 'owner@test.com', role: 'owner' })
   })
 
+  it('create persists the virtual tour, equipments and independent apartment counts', async () => {
+    await createOwner({ name: 'Owner Fields', slug: 'owner-fields', userId: 'test-owner-id' })
+
+    const { slug } = await ownerCaller.bailleur.create({
+      name: 'Résidence Champs',
+      addresses: [{ address: '1 rue de la Paix', city: 'Paris', postalCode: '75001' }],
+      externalUrl: 'https://example.com',
+      virtualTourUrl: 'https://my.matterport.com/show/?m=bwtYCMgopaH',
+      typologies: [fullTypology('t1')],
+      wifi: true,
+      laundryRoom: true,
+      bathroom: 'private',
+      kitchenType: 'shared',
+      nbAccessibleApartments: 2,
+      nbColivingApartments: 3,
+    })
+
+    const row = await accommodationBySlug(slug)
+    expect(row.virtualTourUrl).toBe('https://my.matterport.com/show/?m=bwtYCMgopaH')
+    expect(row.wifi).toBe(true)
+    expect(row.laundryRoom).toBe(true)
+    expect(row.refrigerator).toBeNull()
+    expect(row.bathroom).toBe('private')
+    expect(row.kitchenType).toBe('shared')
+    expect(row.nbAccessibleApartments).toBe(2)
+    expect(row.nbColivingApartments).toBe(3)
+  })
+
+  it('create stores no virtual tour when the field is left empty', async () => {
+    await createOwner({ name: 'Owner Empty', slug: 'owner-empty', userId: 'test-owner-id' })
+
+    const { slug } = await ownerCaller.bailleur.create({
+      name: 'Résidence Vide',
+      addresses: [{ address: '1 rue de la Paix', city: 'Paris', postalCode: '75001' }],
+      externalUrl: 'https://example.com',
+      virtualTourUrl: '',
+      typologies: [fullTypology('t1')],
+    })
+
+    expect((await accommodationBySlug(slug)).virtualTourUrl).toBeNull()
+  })
+
+  it('normalizes the phone number on create and clears it on update', async () => {
+    await createOwner({ name: 'Owner Phone', slug: 'owner-phone', userId: 'test-owner-id' })
+
+    const { slug } = await ownerCaller.bailleur.create({
+      name: 'Résidence Téléphone',
+      addresses: [{ address: '1 rue de la Paix', city: 'Paris', postalCode: '75001' }],
+      externalUrl: 'https://example.com',
+      phoneNumber: '+33 1.45.67.89.10',
+      typologies: [fullTypology('t1')],
+    })
+    expect((await accommodationBySlug(slug)).phoneNumber).toBe('0145678910')
+
+    await ownerCaller.bailleur.update({ slug, typologies: [fullTypology('t1')] })
+    expect((await accommodationBySlug(slug)).phoneNumber).toBe('0145678910')
+
+    await ownerCaller.bailleur.update({ slug, phoneNumber: null })
+    expect((await accommodationBySlug(slug)).phoneNumber).toBeNull()
+  })
+
+  it('rejects an invalid phone number', async () => {
+    await createOwner({ name: 'Owner Bad Phone', slug: 'owner-bad-phone', userId: 'test-owner-id' })
+
+    await expect(
+      ownerCaller.bailleur.create({
+        name: 'Résidence Mauvais Numéro',
+        addresses: [{ address: '1 rue de la Paix', city: 'Paris', postalCode: '75001' }],
+        externalUrl: 'https://example.com',
+        phoneNumber: '12345',
+        typologies: [fullTypology('t1')],
+      }),
+    ).rejects.toThrow()
+  })
+
   it('create persists typology child rows and the derived parent aggregates', async () => {
     await createOwner({ name: 'Owner Flow', slug: 'owner-flow', userId: 'test-owner-id' })
 

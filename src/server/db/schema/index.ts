@@ -1,5 +1,6 @@
 export { academies } from './academies'
 export { accommodationAddresses } from './accommodation-addresses'
+export { accommodationReports } from './accommodation-reports'
 export { accommodationTypologies, typologyTypeEnum } from './accommodation-typologies'
 export { accommodations, targetAudienceEnum } from './accommodations'
 export { activityLog } from './activity-log'
@@ -9,6 +10,8 @@ export { alertJobSourceEnum, alertJobStatusEnum, alertJobs } from './alert-jobs'
 export { apikey } from './api-key'
 export { apiKeyUsageDaily } from './api-key-usage'
 export { account, session, user, verification } from './auth'
+export { bailleurAccommodationScopes } from './bailleur-accommodation-scopes'
+export { budgetSimulations } from './budget-simulations'
 export { cities } from './cities'
 export { contactRequests } from './contacts'
 export { departments } from './departments'
@@ -30,6 +33,7 @@ export {
   accommodationsRelations,
   accommodationTypologiesRelations,
   adminOwnerLinksRelations,
+  budgetSimulationsRelations,
   citiesRelations,
   contactRequestsRelations,
   departmentsRelations,
@@ -45,4 +49,6 @@ export {
 } from './relations'
 export { stats } from './stats'
 export { studentAlerts } from './student-alerts'
+export { studentGoalDueDelayEnum, studentGoalLists, studentGoals } from './student-goals'
+export { supportTicketCategoryEnum, supportTicketStatusEnum, supportTickets } from './support-tickets'
 export { trackingEvents } from './tracking-events'

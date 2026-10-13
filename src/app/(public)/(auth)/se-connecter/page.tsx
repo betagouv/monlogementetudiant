@@ -5,7 +5,7 @@ import { Metadata } from 'next'
 import Image from 'next/image'
 import { getTranslations } from 'next-intl/server'
 import { CredentialsSignInForm } from '~/components/credentials-sign-in/credentials-sign-in'
-import background from '~/images/background-credentials.webp'
+import background from '~/images/connexion.svg'
 import authStyles from '../auth.module.css'
 
 export const generateMetadata = async (): Promise<Metadata> => {
@@ -23,7 +23,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   return (
     <>
       <div className={authStyles.imageContainer}>
-        <Image className={authStyles.image} src={background} alt="Se connecter" priority quality={100} />
+        <Image className={authStyles.image} src={background} alt={t('labels.cta')} priority quality={100} />
       </div>
       <div className={clsx(authStyles.container, 'fr-container')}>
         <h1>{t('studentTitle')}</h1>

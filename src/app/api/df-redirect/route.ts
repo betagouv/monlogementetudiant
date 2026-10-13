@@ -1,9 +1,11 @@
 import { eq } from 'drizzle-orm'
 import { jwtVerify } from 'jose'
 import { NextResponse } from 'next/server'
-import { findVisibleApplicationForTenant } from '~/server/candidatures/visibility'
+import { checkAccommodationAccess } from '~/server/bailleur/accommodation-access'
+import { findScopedApplicationForTenant } from '~/server/bailleur/accommodation-scope'
+import { hasPermission } from '~/server/bailleur/permissions'
 import { db } from '~/server/db'
-import { accommodations, dossierFacileDocuments, dossierFacileTenants, user } from '~/server/db/schema'
+import { accommodations, dossierFacileDocuments, dossierFacileTenants } from '~/server/db/schema'
 import { env } from '~/server/env'
 import { getJwtSecret } from '~/server/utils/jwt-secret'
 import { getServerSession } from '~/services/better-auth'
@@ -18,10 +20,8 @@ function errorRedirect(errorType: string) {
 /**
  * Redirige vers une pièce du dossier DossierFacile d'un candidat.
  *
- * Le jeton signé (60 s) est une commodité, **pas** une autorisation : il a été émis à un instant où
- * la candidature était visible, ce qui ne dit rien de l'instant où il est consommé. Session,
- * propriété de la résidence et fenêtre de rétention sont donc revérifiées ici — sans quoi le jeton
- * serait un porteur pur, exploitable par quiconque l'intercepte, sans même être connecté.
+ * Le jeton signé (60 s) ne vaut pas autorisation : session, propriété de la résidence et fenêtre
+ * de rétention sont vérifiées à chaque consommation.
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -56,11 +56,18 @@ export async function GET(request: Request) {
     const tenantId = urlType === 'document' ? document?.tenantId : targetId
     if (!tenantId) return errorRedirect('doc_not_found')
 
-    // Hors rétention, ou dossier plus validé : l'accès tombe, jeton valide en main ou non.
-    const application = await findVisibleApplicationForTenant(tenantId)
+    const application = await findScopedApplicationForTenant(session.user.id, tenantId)
     if (!application) return errorRedirect('doc_forbidden')
 
-    if (!(await callerOwnsAccommodation(session.user.id, application.accommodationSlug))) {
+    // Route hors tRPC : les autorisations sont vérifiées ici.
+    const caller = {
+      role: session.user.role,
+      bailleurRole: session.user.bailleurRole ?? null,
+      bailleurPermissions: session.user.bailleurPermissions ?? [],
+    }
+    if (!hasPermission(caller, 'manage_applications')) return errorRedirect('doc_forbidden')
+
+    if ((await checkAccommodationAccess(session.user.id, eq(accommodations.slug, application.accommodationSlug))) !== 'ok') {
       return errorRedirect('doc_forbidden')
     }
 
@@ -84,17 +91,4 @@ export async function GET(request: Request) {
   } catch {
     return errorRedirect('doc_expired')
   }
-}
-
-/** Le compte consulte-t-il une résidence de son propre parc ? Un admin plateforme passe toujours. */
-async function callerOwnsAccommodation(userId: string, accommodationSlug: string): Promise<boolean> {
-  const usr = await db.query.user.findFirst({ where: eq(user.id, userId), with: { owner: true } })
-  if (usr?.role === 'admin') return true
-  if (!usr?.owner) return false
-
-  const accommodation = await db.query.accommodations.findFirst({
-    where: eq(accommodations.slug, accommodationSlug),
-    columns: { ownerId: true },
-  })
-  return accommodation?.ownerId === usr.owner.id
 }

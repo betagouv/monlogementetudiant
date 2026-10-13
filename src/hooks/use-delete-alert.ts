@@ -1,9 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { createToast } from '~/components/ui/createToast'
 import { useTRPC } from '~/server/trpc/client'
 
 export const useDeleteAlert = () => {
+  const t = useTranslations('student.alerts.toast')
   const queryClient = useQueryClient()
   const router = useRouter()
   const trpc = useTRPC()
@@ -17,14 +19,14 @@ export const useDeleteAlert = () => {
         })
         createToast({
           priority: 'success',
-          message: 'Alerte supprimée avec succès !',
+          message: t('deleted'),
         })
         router.refresh()
       },
       onError: (error) => {
         createToast({
           priority: 'error',
-          message: error.message || "Une erreur est survenue lors de la suppression de l'alerte.",
+          message: error.message || t('deleteError'),
         })
       },
     }),

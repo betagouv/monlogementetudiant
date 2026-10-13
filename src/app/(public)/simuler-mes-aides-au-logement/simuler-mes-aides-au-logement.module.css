@@ -2,8 +2,7 @@
   .heroSection {
     padding: 3.5rem;
   }
-  /* Le héros réserve la hauteur du formulaire qui le chevauche, uniquement sur grand écran.
-     Cette règle remplace le doublon mobile/desktop du bandeau, qui produisait deux <h1>. */
+  /* Le héros réserve la hauteur du formulaire qui le chevauche, uniquement sur grand écran. */
   .heroBanner {
     height: var(--simulator-height);
     min-height: var(--simulator-height);

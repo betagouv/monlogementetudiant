@@ -1,10 +1,10 @@
 import { Badge } from '@codegouvfr/react-dsfr/Badge'
-import { sPluriel } from '~/utils/sPluriel'
 
 interface AvailabilityBadgeProps {
   nbAvailable: number | null
   noAvailabilityText: string
-  availabilityText: string
+  /** Libellé accolé au nombre de logements disponibles ; reçoit ce nombre pour gérer l'accord (pluriel ICU). */
+  availabilityText: (count: number) => string
   unknownAvailabilityText?: string
   className?: string
   as?: 'span' | 'p'
@@ -40,10 +40,7 @@ export function AvailabilityBadge({
   return (
     <Badge severity="success" noIcon className={className} as={as}>
       {nbAvailable}&nbsp;
-      <span className="fr-text--uppercase fr-mb-0">
-        {availabilityText}
-        {sPluriel(nbAvailable)}
-      </span>
+      <span className="fr-text--uppercase fr-mb-0">{availabilityText(nbAvailable)}</span>
     </Badge>
   )
 }

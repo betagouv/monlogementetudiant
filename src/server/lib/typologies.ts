@@ -20,6 +20,7 @@ export type TTypologyView = {
   nbTotal: number | null
   nbAvailable: number | null
   colocation: boolean
+  availabilityUpdatedAt: string | null
 }
 
 /** Build the keyed `typologies` object from child rows, indexed by the typology type (= suffix). */
@@ -34,6 +35,7 @@ export function typologiesByType(rows: TypologyRow[]): Partial<Record<TypologyTy
       nbTotal: r.nbTotal,
       nbAvailable: r.nbAvailable,
       colocation: r.colocation,
+      availabilityUpdatedAt: r.availabilityUpdatedAt?.toISOString() ?? null,
     }
   }
   return out
@@ -140,17 +142,19 @@ function toRow(accommodationId: number, t: TypologyDraft): typeof accommodationT
 }
 
 /** Auteur de l'écriture, pour l'horodatage des disponibilités. Absent pour un import ou un script. */
-export type PersistTypologiesOptions = { updatedBy?: string | null }
+export type PersistTypologiesOptions = {
+  updatedBy?: string | null
+  /** Le gestionnaire confirme ses disponibilités : on horodate même les valeurs inchangées. */
+  confirmAvailability?: boolean
+}
 
 /**
  * Aligne les typologies d'une résidence sur `typologies` : les types fournis sont créés ou mis à
  * jour en place, les types absents sont supprimés.
  *
- * Historiquement un delete-then-insert, ce qui réattribuait un identifiant neuf à chaque
- * enregistrement — y compris quand rien ne changeait — et faisait perdre toute colonne portée par
- * la ligne. L'upsert conserve l'identité de la ligne, ce dont dépend l'horodatage des
- * disponibilités : sans lui, chaque enregistrement du formulaire, même sans toucher aux dispos,
- * remettrait le compteur à zéro.
+ * Upsert plutôt que delete-then-insert : la ligne garde son identité et ses colonnes, dont dépend
+ * l'horodatage des disponibilités — sinon chaque enregistrement du formulaire, même sans toucher
+ * aux dispos, remettrait le compteur à zéro.
  */
 export async function persistTypologies(
   tx: DbOrTx,
@@ -172,6 +176,7 @@ export async function persistTypologies(
 
   const now = new Date()
   const updatedBy = options.updatedBy ?? null
+  const restampsUnchanged = updatedBy != null && options.confirmAvailability === true ? sql`true` : sql`false`
 
   // Deux règles gouvernent l'horodatage, dans cet ordre :
   //
@@ -205,13 +210,13 @@ export async function persistTypologies(
         availabilityUpdatedAt: updatedBy
           ? sql`case
               when excluded.nb_available is null then null
-              when ${accommodationTypologies.nbAvailable} is distinct from excluded.nb_available then ${now.toISOString()}::timestamptz
+              when ${restampsUnchanged} or ${accommodationTypologies.nbAvailable} is distinct from excluded.nb_available then ${now.toISOString()}::timestamptz
               else ${accommodationTypologies.availabilityUpdatedAt} end`
           : sql`case when excluded.nb_available is null then null else ${accommodationTypologies.availabilityUpdatedAt} end`,
         availabilityUpdatedBy: updatedBy
           ? sql`case
               when excluded.nb_available is null then null
-              when ${accommodationTypologies.nbAvailable} is distinct from excluded.nb_available then ${updatedBy}::text
+              when ${restampsUnchanged} or ${accommodationTypologies.nbAvailable} is distinct from excluded.nb_available then ${updatedBy}::text
               else ${accommodationTypologies.availabilityUpdatedBy} end`
           : sql`case when excluded.nb_available is null then null else ${accommodationTypologies.availabilityUpdatedBy} end`,
       },

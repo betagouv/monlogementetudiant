@@ -20,6 +20,7 @@ export const ZTypologyView = z.object({
   nbTotal: z.number().nullable(),
   nbAvailable: z.number().nullable(),
   colocation: z.boolean(),
+  availabilityUpdatedAt: z.string().nullable().optional(),
 })
 export type TTypologyView = z.infer<typeof ZTypologyView>
 
@@ -51,7 +52,7 @@ const ZBaseAccommodationInfo = z.object({
   socialHousingRequired: z.boolean(),
   wifi: z.boolean(),
   isImported: z.boolean().optional(),
-  // Inline coordinates (replaces the GeoJSON geometry wrapper).
+  // Inline coordinates.
   latitude: z.number().nullable(),
   longitude: z.number().nullable(),
 })
@@ -85,7 +86,7 @@ const ZAmenities = z.object({
   cookingPlates: z.boolean().nullable(),
 })
 
-// Flat accommodation object (no more { geometry, properties } GeoJSON wrapper).
+// Flat accommodation object.
 export const ZAccomodation = ZBaseAccommodationInfo.extend(ZAggregates.shape)
   .extend(ZOwnerInfo.shape)
   .extend({ typologies: ZTypologiesRecord })
@@ -95,6 +96,7 @@ export const ZAccomodationCard = ZAccomodation
 export type TAccomodationCard = z.infer<typeof ZAccomodationCard>
 
 export const ZAccomodationDetails = ZAccomodation.extend(ZAmenities.shape).extend({
+  phoneNumber: z.string().nullish(),
   owner: z
     .object({
       imageBase64: z.string().nullable(),
@@ -114,5 +116,9 @@ export const ZPrepareStudentLifeAccommodationResidence = z.object({
 })
 export type TPrepareStudentLifeAccommodationResidence = z.infer<typeof ZPrepareStudentLifeAccommodationResidence>
 
-export const ZAccomodationMy = ZAccomodation.extend(ZAmenities.shape).extend({ isImported: z.boolean() })
+export const ZAccomodationMy = ZAccomodation.extend(ZAmenities.shape).extend({
+  isImported: z.boolean(),
+  acceptsApplications: z.boolean(),
+  phoneNumber: z.string().nullish(),
+})
 export type TAccomodationMy = z.infer<typeof ZAccomodationMy>

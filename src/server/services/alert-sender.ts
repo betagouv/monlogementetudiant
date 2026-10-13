@@ -3,6 +3,7 @@ import { db } from '~/server/db'
 import { accommodationAddresses, accommodations, alertJobs, cities, studentAlerts, user } from '~/server/db/schema'
 import { env } from '~/server/env'
 import { getAccommodationPath } from '~/utils/get-accommodation-url'
+import { maskEmail } from '~/utils/mask-email'
 import { sendStudentAlertEmail } from './brevo'
 
 // Nombre maximal de tentatives d'envoi par job (1 envoi initial + retries).
@@ -122,7 +123,7 @@ export async function sendPendingAlertJobs(options: { dryRun?: boolean; verbose?
   for (const batch of byBatch.values()) {
     if (options.dryRun) {
       if (options.verbose) {
-        console.log(`  [dry-run] ${batch.email} — alerte « ${batch.alertName} » — ${batch.accommodations.length} logement(s)`)
+        console.log(`  [dry-run] ${maskEmail(batch.email)} — alerte « ${batch.alertName} » — ${batch.accommodations.length} logement(s)`)
       }
       sent++
       continue
@@ -138,7 +139,7 @@ export async function sendPendingAlertJobs(options: { dryRun?: boolean; verbose?
         .update(alertJobs)
         .set({ status: 'sent', sentAt: new Date(), attempts: sql`${alertJobs.attempts} + 1` })
         .where(inArray(alertJobs.id, batch.jobIds))
-      if (options.verbose) console.log(`  ✓ ${batch.email} — ${batch.accommodations.length} logement(s)`)
+      if (options.verbose) console.log(`  ✓ ${maskEmail(batch.email)} — ${batch.accommodations.length} logement(s)`)
       sent++
       await new Promise((resolve) => setTimeout(resolve, BREVO_DELAY_MS))
     } catch (error) {
@@ -152,7 +153,7 @@ export async function sendPendingAlertJobs(options: { dryRun?: boolean; verbose?
         .where(inArray(alertJobs.id, batch.jobIds))
         .returning({ attempts: alertJobs.attempts })
       exhausted += updated.filter((job) => job.attempts >= MAX_ATTEMPTS).length
-      console.error(`  ✗ ${batch.email} — ${errorMessage}`)
+      console.error(`  ✗ ${maskEmail(batch.email)} — ${errorMessage}`)
       failed++
     }
   }

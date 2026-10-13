@@ -3,6 +3,7 @@ import { accommodationsRouter } from './routers/accommodations'
 import { adminRouter } from './routers/admin'
 import { alertsRouter } from './routers/alerts'
 import { bailleurRouter } from './routers/bailleur'
+import { budgetSimulationRouter } from './routers/budget-simulation'
 import { contactsRouter } from './routers/contacts'
 import { dossierFacileRouter } from './routers/dossier-facile'
 import { favoritesRouter } from './routers/favorites'
@@ -11,6 +12,8 @@ import { ownerFeedbackRouter } from './routers/owner-feedback'
 import { ownerStatisticsRouter } from './routers/owner-statistics'
 import { questionsAnswersRouter } from './routers/questions-answers'
 import { studentRouter } from './routers/student'
+import { studentGoalsRouter } from './routers/student-goals'
+import { supportTicketsRouter } from './routers/support-tickets'
 import { territoriesRouter } from './routers/territories'
 import { trackingRouter } from './routers/tracking'
 
@@ -28,7 +31,10 @@ export const appRouter = createTRPCRouter({
   ownerStatistics: ownerStatisticsRouter,
   ownerFeedback: ownerFeedbackRouter,
   student: studentRouter,
+  studentGoals: studentGoalsRouter,
   housingAidSimulation: housingAidSimulationRouter,
+  budgetSimulation: budgetSimulationRouter,
+  supportTickets: supportTicketsRouter,
 })
 
 export type AppRouter = typeof appRouter

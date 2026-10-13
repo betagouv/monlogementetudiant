@@ -1,4 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
+import { useTranslations } from 'next-intl'
 import { createToast } from '~/components/ui/createToast'
 import { trackEvent } from '~/lib/tracking'
 import { TSignUpForm } from '~/schemas/sign-up/sign-up'
@@ -27,21 +28,21 @@ export const postStudentRegistration = async (body: TSignUpForm): Promise<void> 
 }
 
 export const useStudentRegistration = () => {
+  const t = useTranslations('signUp')
   const { mutateAsync, isPending } = useMutation({
     mutationFn: async (data: TSignUpForm) => postStudentRegistration(data),
     onSuccess: () => {
       trackEvent({ category: 'Authentification', action: 'inscription', name: 'succes' })
       createToast({
         priority: 'success',
-        message:
-          "Votre demande d'inscription a bien été prise en compte. Si cette adresse email peut être utilisée, vous recevrez un email pour activer votre compte. Pensez à vérifier vos courriers indésirables.",
+        message: t('successToast'),
       })
     },
     onError: (error: Error) => {
       trackEvent({ category: 'Authentification', action: 'inscription', name: 'erreur' })
       createToast({
         priority: 'error',
-        message: error.message || "Une erreur est survenue lors de l'inscription.",
+        message: error.message || t('errorToast'),
       })
     },
   })

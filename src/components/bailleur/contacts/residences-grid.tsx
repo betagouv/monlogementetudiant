@@ -1,24 +1,28 @@
 'use client'
 
+import Alert from '@codegouvfr/react-dsfr/Alert'
 import Button from '@codegouvfr/react-dsfr/Button'
 import { Avatar } from '@codegouvfr/react-dsfr/picto'
-import { SearchBar } from '@codegouvfr/react-dsfr/SearchBar'
 import { useQuery } from '@tanstack/react-query'
 import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { parseAsString, useQueryState } from 'nuqs'
 import { useDebounce } from 'use-debounce'
+import { SearchInput } from '~/components/ui/search-input'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { useTRPC } from '~/server/trpc/client'
+import { buildHref } from '~/utils/preserve-query-params'
 import { ContactModeSettingsModal, contactModeSettingsModal } from './contact-mode-settings-modal'
 import { ResidenceContactCard } from './residence-contact-card'
-import styles from './residences-grid.module.css'
 
 interface Props {
   mode: Exclude<EOwnerContactMode, EOwnerContactMode.NONE>
+  /** Modération et changement du mode de contact (qui vaut pour tout le bailleur) : administrateurs seulement. */
+  isAdministrator: boolean
+  resolvedOwnerId: number
 }
 
-export const ResidencesGrid = ({ mode }: Props) => {
+export const ResidencesGrid = ({ mode, isAdministrator, resolvedOwnerId }: Props) => {
   const t = useTranslations('bailleur.contacts')
   const trpc = useTRPC()
   const searchParams = useSearchParams()
@@ -34,6 +38,14 @@ export const ResidencesGrid = ({ mode }: Props) => {
     }),
   )
 
+  const { data: users } = useQuery({
+    ...trpc.bailleur.users.list.queryOptions({ ownerId: resolvedOwnerId }),
+    enabled: isAdministrator,
+  })
+  const noManagerCanSeeApplications =
+    users !== undefined &&
+    !users.items.some((u) => u.bailleurRole === 'gestionnaire' && u.bailleurPermissions.includes('manage_applications'))
+
   const residences = data?.residences ?? []
   const title = mode === EOwnerContactMode.DOSSIER_FACILE ? t('titleDossierFacile') : t('title')
 
@@ -44,29 +56,51 @@ export const ResidencesGrid = ({ mode }: Props) => {
           <Avatar width={72} height={72} color="blue-ecume" />
           <h1 className="fr-mb-0">{title}</h1>
         </div>
-        <div className="fr-flex fr-align-items-center fr-flex-gap-2v">
-          <SearchBar
-            className={styles.search}
-            label={t('searchResidenceLabel')}
-            renderInput={({ className, id, type, placeholder }) => (
-              <input
-                className={className}
-                id={id}
-                type={type}
-                placeholder={placeholder}
-                value={recherche}
-                onChange={(e) => setRecherche(e.target.value || null)}
+        <div className="fr-flex fr-flex-grow-1 fr-justify-content-md-end fr-align-items-center fr-flex-gap-2v">
+          <SearchInput label={t('searchResidenceLabel')} value={recherche} onChange={(value) => setRecherche(value || null)} />
+          {isAdministrator && (
+            <>
+              <Button
+                linkProps={{ href: buildHref('/bailleur/contacts/parametres', searchParams) }}
+                priority="secondary"
+                iconId="ri-team-line"
+                title={t('moderationButtonTitle')}
               />
-            )}
-          />
-          <Button
-            {...contactModeSettingsModal.buttonProps}
-            priority="secondary"
-            iconId="ri-settings-3-line"
-            title={t('settingsButtonTitle')}
-          />
+              <Button
+                {...contactModeSettingsModal.buttonProps}
+                priority="secondary"
+                iconId="ri-settings-3-line"
+                title={t('settingsButtonTitle')}
+              />
+            </>
+          )}
         </div>
       </div>
+
+      {noManagerCanSeeApplications && (
+        <Alert
+          className="fr-mb-4w"
+          severity="info"
+          title={t('noManagerAlert.title')}
+          description={
+            <>
+              <p className="fr-mb-2w">
+                {t.rich('noManagerAlert.description', {
+                  icon: () => <span className="ri-team-line fr-icon--sm" aria-hidden="true" />,
+                })}
+              </p>
+              <Button
+                size="small"
+                priority="secondary"
+                iconId="ri-team-line"
+                linkProps={{ href: buildHref('/bailleur/contacts/parametres', searchParams) }}
+              >
+                {t('noManagerAlert.action')}
+              </Button>
+            </>
+          }
+        />
+      )}
 
       {residences.length === 0 ? (
         <p className="fr-py-8w fr-text--center fr-text-mention--grey">{t('noResidence')}</p>
@@ -80,13 +114,15 @@ export const ResidencesGrid = ({ mode }: Props) => {
                 cityName={r.cityName}
                 departmentCode={r.departmentCode}
                 aRappelerCount={r.aRappelerCount}
+                applicationsSuspended={r.applicationsSuspended}
+                applicationsSuspensionReason={r.applicationsSuspensionReason}
               />
             </div>
           ))}
         </div>
       )}
 
-      <ContactModeSettingsModal currentMode={mode} ownerId={ownerId} />
+      {isAdministrator && <ContactModeSettingsModal currentMode={mode} ownerId={ownerId} />}
     </>
   )
 }

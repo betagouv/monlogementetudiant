@@ -197,3 +197,30 @@ feat: add Crisp FAQ articles pagination
 fix: sanitize HTML from external API response
 chore: update env vars for Crisp helpdesk
 ```
+
+---
+
+## Changelog
+
+Quand une évolution est **perceptible par un humain** (nouvelle fonctionnalité, changement de comportement, correctif qu'un utilisateur a pu subir), ajouter une entrée dans `changelog/`. Elle apparaît dans l'espace d'administration (`/administration/changelog`).
+
+**Ne PAS créer d'entrée** pour : refactor, test, chore, renommage interne, bump de dépendance, ou tout changement invisible.
+
+**Format :** un fichier `changelog/AAAA-MM-JJ-slug.md` par entrée :
+
+```markdown
+---
+type: nouveaute
+perimetre: parcours-contact
+date: 2026-10-04
+---
+# Titre court
+Description en 1-3 phrases, en français, orientée bénéfice utilisateur (pas d'implémentation technique).
+```
+
+**Valeurs autorisées :**
+- `type` (obligatoire) : `nouveaute` · `amelioration` · `correctif` · `technique` (migrations, infra, gros refactors structurants)
+- `perimetre` (optionnel) : `recherche-logement` · `simulateurs` · `alertes-logement` · `candidatures` · `parcours-contact` · `comptes-acces` · `admin-interne` · `autre`
+- `date` (obligatoire) : date de mise en production, au format `AAAA-MM-JJ`
+
+**Rédaction :** ton produit, pas de jargon. Si l'intention produit (le « pourquoi ça compte ») n'est pas évidente depuis le code, **demander à l'utilisateur** avant d'écrire — ne pas inventer.

@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { APARTMENT_TYPES } from '~/enums/apartment-type'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { ZBirthDate, ZScholarshipStatus } from '~/schemas/student-profile/student-profile'
+import { acceptsContactRequests, isOpenToApplications } from '~/server/bailleur/applications-open'
 import { contactRetentionCutoff } from '~/server/candidatures/visibility'
 import { createClaimToken } from '~/server/contacts/claim-token'
 import { assertContactRequestRateLimit, hashIp } from '~/server/contacts/rate-limit'
@@ -19,7 +20,7 @@ import { baseProcedure, createTRPCRouter, userProcedure } from '../init'
 const buildConfirmationUrl = (contactRequestId: string) =>
   `${env.BASE_URL}/api/contacts/confirmer?token=${encodeURIComponent(createClaimToken(contactRequestId, 'confirm'))}`
 
-/** Résout une résidence par son slug (le slug reste l'identifiant public des URLs). */
+/** Résout une résidence **publiée** par son slug (le slug reste l'identifiant public des URLs). */
 const findAccommodationBySlug = async (slug: string) => {
   const [accommodation] = await db
     .select({
@@ -27,9 +28,12 @@ const findAccommodationBySlug = async (slug: string) => {
       name: accommodations.name,
       ownerId: accommodations.ownerId,
       nbAvailableApartments: accommodations.nbAvailableApartments,
+      acceptWaitingList: accommodations.acceptWaitingList,
+      acceptsApplications: accommodations.acceptsApplications,
+      applicationsSuspendedAt: accommodations.applicationsSuspendedAt,
     })
     .from(accommodations)
-    .where(eq(accommodations.slug, slug))
+    .where(and(eq(accommodations.slug, slug), eq(accommodations.published, true)))
     .limit(1)
 
   if (!accommodation) {
@@ -89,14 +93,20 @@ export const contactsRouter = createTRPCRouter({
         throw new TRPCError({ code: 'BAD_REQUEST', message: "Ce gestionnaire n'accepte pas les demandes de contact" })
       }
 
-      if (!accommodation.nbAvailableApartments || accommodation.nbAvailableApartments <= 0) {
-        throw new TRPCError({ code: 'BAD_REQUEST', message: "Ce logement n'a pas de disponibilités" })
+      if (!isOpenToApplications(accommodation)) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: "Cette résidence n'accepte pas les demandes de contact" })
+      }
+
+      if (!acceptsContactRequests(accommodation)) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: "Cette résidence est complète et n'accepte pas de liste d'attente" })
       }
 
       const ipHash = hashIp(ctx.clientIp)
       await assertContactRequestRateLimit(ipHash)
 
       const userId = ctx.session?.user.id ?? null
+      // Connecté : seule l'adresse du compte fait foi, celle du formulaire est ignorée.
+      const verifiedEmail = userId ? ctx.session!.user.email.trim().toLowerCase() : input.email
 
       const [request] = await db
         .insert(contactRequests)
@@ -105,7 +115,7 @@ export const contactsRouter = createTRPCRouter({
           accommodationId: accommodation.id,
           firstname: input.firstname,
           lastname: input.lastname,
-          email: input.email,
+          email: verifiedEmail,
           phone: input.phone || null,
           birthdate: input.birthdate,
           scholarshipStatus: input.scholarshipStatus,

@@ -1,5 +1,6 @@
+import type { getTranslations } from 'next-intl/server'
 import { getCanonicalUrl } from '~/utils/canonical'
-import { formatCityWithA } from '~/utils/french-contraction'
+import { formatCityWithPreposition } from '~/utils/french-contraction'
 import { getAccommodationPath } from '~/utils/get-accommodation-url'
 import { type BreadcrumbItem, type LodgingData } from '~/utils/schema'
 
@@ -17,14 +18,22 @@ type AccommodationJsonLdParams = {
   slug: string
 }
 
-export function getAccommodationBreadcrumbItems(name: string, city: string, slug: string): BreadcrumbItem[] {
-  const cityFormatted = formatCityWithA(city)
+type TBreadcrumbsTranslator = Awaited<ReturnType<typeof getTranslations<'breadcrumbs'>>>
+
+export function getAccommodationBreadcrumbItems(
+  t: TBreadcrumbsTranslator,
+  locale: string,
+  name: string,
+  city: string,
+  slug: string,
+): BreadcrumbItem[] {
+  const locationFormatted = formatCityWithPreposition(locale, 'à', city)
   const accommodationUrl = getCanonicalUrl(getAccommodationPath(city, slug))
 
   return [
-    { name: 'Accueil', item: getCanonicalUrl('/') },
+    { name: t('homeLabel'), item: getCanonicalUrl('/') },
     {
-      name: `Trouver un logement étudiant ${cityFormatted}`,
+      name: t('findAccomodationWithLocation', { locationFormatted }),
       item: getCanonicalUrl(`/trouver-un-logement-etudiant/ville/${encodeURIComponent(city)}`),
     },
     { name, item: accommodationUrl },

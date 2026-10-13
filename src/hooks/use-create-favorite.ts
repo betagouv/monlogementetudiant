@@ -1,9 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { createToast } from '~/components/ui/createToast'
 import { useTRPC } from '~/server/trpc/client'
 
 export const useCreateFavorite = () => {
+  const t = useTranslations('student.favorites.toast')
   const queryClient = useQueryClient()
   const router = useRouter()
   const trpc = useTRPC()
@@ -17,14 +19,14 @@ export const useCreateFavorite = () => {
         })
         createToast({
           priority: 'success',
-          message: 'Logement ajouté aux favoris !',
+          message: t('added'),
         })
         router.refresh()
       },
       onError: (error) => {
         createToast({
           priority: 'error',
-          message: error.message || "Une erreur est survenue lors de l'ajout aux favoris.",
+          message: error.message || t('addError'),
         })
       },
     }),

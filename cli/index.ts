@@ -7,6 +7,7 @@ import { backfillBrevoOwners } from './commands/backfill-brevo-owners'
 import { backfillCacheControl } from './commands/backfill-cache-control'
 import { backfillGeocoding } from './commands/backfill-geocoding'
 import { backupDb } from './commands/backup-db'
+import { checkApplicationsInactivityCommand } from './commands/check-applications-inactivity'
 import { compareCrous } from './commands/compare-crous'
 import { cronSelftest } from './commands/cron-selftest'
 import { demoteBailleurAdmins } from './commands/demote-bailleur-admins'
@@ -18,11 +19,12 @@ import { importCrousRents } from './commands/import-crous-rents'
 import { importCrousSurfaces } from './commands/import-crous-surfaces'
 import { importCrousTypologies } from './commands/import-crous-typologies'
 import { migrate } from './commands/migrate'
-import { migrateUsers } from './commands/migrate-users'
 import { purgeContactRequests } from './commands/purge-contact-requests'
 import { purgeLogs } from './commands/purge-logs'
+import { resetStaleAvailabilityCommand } from './commands/reset-stale-availability'
 import { seedAlertSnapshotCommand } from './commands/seed-alert-snapshot'
 import { sendAlertJobs } from './commands/send-alert-jobs'
+import { sendContactDigestCommand } from './commands/send-contact-digest'
 import { auditStorage } from './commands/storage/auditStorage'
 import { uploadImages } from './commands/upload-images'
 import { verifyRamsese } from './commands/verify-ramsese'
@@ -31,8 +33,6 @@ import { runImport, runSync } from './factory'
 import { captureCliException } from './sentry'
 
 program.name('mle').description('MLE CLI tools')
-
-program.command('migrate-users').description('Migrate Django users to better-auth').action(migrateUsers)
 
 program
   .command('backfill-brevo-contacts')
@@ -100,7 +100,10 @@ program
     parseInt,
   )
   .option('--max-rows <n>', 'Plafond de lignes par table et par run (défaut : 2000000)', parseInt)
-  .option('--table <name>', 'Ne purger qu’une table (tracking_event, activity_log, alert_job, import_job)')
+  .option(
+    '--table <name>',
+    'Ne purger qu’une table (tracking_event, activity_log, alert_job, import_job, login_attempt, session, verification)',
+  )
   .option('--no-archive', 'Supprimer sans déposer d’archive dans S3')
   // Commander expose `--no-archive` sous la forme `archive: false` : on le retraduit en
   // `noArchive` pour que la commande garde une option positive côté API.
@@ -247,6 +250,34 @@ program
   .option('--dry-run', 'Simuler sans envoyer ni modifier la BDD')
   .option('--verbose', 'Afficher le détail des alertes relancées/désactivées')
   .action((opts) => expireAlertsCommand(opts))
+
+program
+  .command('check-applications-inactivity')
+  .description(
+    'Alerte puis suspend la réception des candidatures des résidences inactives (candidatures non traitées à 14 j, disponibilités non mises à jour à 30 j, suspension 7 j après l’alerte)',
+  )
+  .option('--dry-run', 'Simuler sans envoyer ni modifier la BDD')
+  .option('--verbose', 'Afficher la décision prise pour chaque résidence')
+  .option('--owner <slug>', 'Limiter au bailleur donné ; actif et envoie les e-mails même hors production (recette)')
+  .action((opts) => checkApplicationsInactivityCommand(opts))
+
+program
+  .command('send-contact-digest')
+  .description('Récapitulatif quotidien envoyé aux gestionnaires : demandes de contact confirmées la veille, par résidence')
+  .option('--dry-run', 'Simuler sans envoyer ni modifier la BDD')
+  .option('--verbose', 'Afficher le détail par destinataire')
+  .option('--owner <slug>', 'Limiter au bailleur donné ; actif et envoie les e-mails même hors production (recette)')
+  .action((opts) => sendContactDigestCommand(opts))
+
+program
+  .command('reset-stale-availability')
+  .description(
+    'Repasse en « non communiquée » les disponibilités non mises à jour depuis 30 jours, 7 jours après l’alerte (hors bailleurs importés)',
+  )
+  .option('--dry-run', 'Simuler sans envoyer ni modifier la BDD')
+  .option('--verbose', 'Afficher la décision prise pour chaque résidence')
+  .option('--owner <slug>', 'Limiter au bailleur donné ; actif et envoie les e-mails même hors production (recette)')
+  .action((opts) => resetStaleAvailabilityCommand(opts))
 
 program
   .command('purge-contact-requests')

@@ -6,6 +6,7 @@ import { db } from '~/server/db'
 import { importJobs } from '~/server/db/schema'
 import type { CsvProgressEvent } from '~/server/lib/import/csv-importer'
 import { executeCsvImport } from '~/server/lib/import/csv-importer'
+import { crossOriginForbidden, isSameOriginRequest } from '~/server/utils/same-origin'
 import { getServerSession } from '~/services/better-auth'
 
 function sseEvent(data: unknown): string {
@@ -14,6 +15,7 @@ function sseEvent(data: unknown): string {
 
 export async function POST(request: Request) {
   if (!FEATURES.csvImport) return new Response(null, { status: 404 })
+  if (!isSameOriginRequest(request)) return crossOriginForbidden()
 
   const session = await getServerSession()
   if (!session || session.user.role !== 'admin') {
@@ -30,7 +32,6 @@ export async function POST(request: Request) {
 
   const content = await file.text()
 
-  // Create job record
   const [job] = await db
     .insert(importJobs)
     .values({ type: 'csv', status: 'running', source: source.trim(), createdBy: session.user.id })

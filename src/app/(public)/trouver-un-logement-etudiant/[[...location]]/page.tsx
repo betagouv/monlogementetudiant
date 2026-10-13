@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { HydrationBoundary } from '@tanstack/react-query'
 import { Metadata } from 'next'
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { FindStudentAccommodationCrousAlert } from '~/components/find-student-accomodation/crous-alert/find-student-accommodation-crous-alert'
 import { FindStudentAccommodationBanner } from '~/components/find-student-accomodation/find-student-accommodation-banner'
 import { FindStudentAccommodationTitle } from '~/components/find-student-accomodation/header/find-student-accommodation-title'
@@ -13,7 +13,7 @@ import { FindStudentAccomodationSortView } from '~/components/find-student-accom
 import { SearchParamsSync } from '~/components/search-params-sync'
 import { JsonLd } from '~/components/seo/json-ld'
 import { getCanonicalUrl, getDefaultOgImage } from '~/utils/canonical'
-import { formatCityWithA } from '~/utils/french-contraction'
+import { formatCityWithPreposition } from '~/utils/french-contraction'
 import { buildBreadcrumbSchema, buildFaqSchema } from '~/utils/schema'
 import { getSearchBreadcrumbItems, getSearchFaqItems } from './get-search-json-ld'
 import { getStudentAccommodationPageContext } from './get-student-accommodation-page-context'
@@ -45,7 +45,7 @@ export async function generateMetadata({
   const t = await getTranslations('metadata')
 
   if (territory) {
-    const locationFormatted = formatCityWithA(territory.name)
+    const locationFormatted = formatCityWithPreposition(await getLocale(), 'à', territory.name)
     return {
       title: t('searchDetails.title', { locationFormatted }),
       description: t('searchDetails.description', { locationFormatted }),
@@ -96,8 +96,9 @@ export default async function FindStudentAccommodationPage({
     awaitedSearchParams,
   )
 
-  const breadcrumbItems = getSearchBreadcrumbItems(territory, routeCategoryKey)
-  const faqItems = getSearchFaqItems()
+  const [tBreadcrumbs, tFaqJsonLd] = await Promise.all([getTranslations('breadcrumbs'), getTranslations('findAccomodation.faqJsonLd')])
+  const breadcrumbItems = getSearchBreadcrumbItems(tBreadcrumbs, territory, routeCategoryKey)
+  const faqItems = getSearchFaqItems(tFaqJsonLd)
 
   return (
     <HydrationBoundary state={dehydratedState}>

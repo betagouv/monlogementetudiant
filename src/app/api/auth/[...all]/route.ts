@@ -8,9 +8,9 @@ const MAGIC_LINK_VERIFY_PATH = '/magic-link/verify'
 
 /**
  * Une vérification réussie pose un cookie de session et redirige vers la `callbackURL`. En échec,
- * le plugin `magicLink` redirige vers cette même URL en y ajoutant `?error=…` (aucune
- * `errorCallbackURL` n'étant fournie). C'est donc la présence de ce paramètre — et non le code
- * HTTP, qui vaut 302 dans les deux cas — qui distingue les deux issues.
+ * le plugin `magicLink` redirige vers l'`errorCallbackURL` (à défaut la `callbackURL`) en y ajoutant
+ * `?error=…`. C'est donc la présence de ce paramètre — et non le code HTTP, qui vaut 302 dans les
+ * deux cas — qui distingue les deux issues.
  */
 function isVerificationSuccessful(response: Response): boolean {
   if (response.status >= 400) return false

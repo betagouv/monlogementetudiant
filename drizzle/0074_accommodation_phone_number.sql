@@ -1,0 +1,1 @@
+ALTER TABLE "accommodation" ADD COLUMN "phone_number" varchar(10);

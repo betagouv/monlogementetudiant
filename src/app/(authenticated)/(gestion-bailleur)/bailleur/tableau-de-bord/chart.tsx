@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { Cell, Label, Pie, PieChart } from 'recharts'
 
 interface ResidenceChartProps {
@@ -8,6 +9,8 @@ interface ResidenceChartProps {
 }
 
 export const ResidenceChart = ({ available, total }: ResidenceChartProps) => {
+  const t = useTranslations('bailleur.dashboard.chart')
+
   if (available === null || total === 0) {
     return (
       <div className="fr-flex fr-align-items-center fr-flex-gap-6v">
@@ -17,11 +20,7 @@ export const ResidenceChart = ({ available, total }: ResidenceChartProps) => {
             <Label value="-" position="center" fontSize={14} fontWeight="bold" fill="#000" />
           </Pie>
         </PieChart>
-        <span className="fr-text--sm fr-text-mention--grey fr-mb-0">
-          Disponibilité
-          <br />
-          non-renseignée
-        </span>
+        <span className="fr-text--sm fr-text-mention--grey fr-mb-0">{t.rich('unknownAvailability', { br: () => <br /> })}</span>
       </div>
     )
   }
@@ -30,8 +29,8 @@ export const ResidenceChart = ({ available, total }: ResidenceChartProps) => {
   const occupiedPercentage = total > 0 ? Math.round((occupied / total) * 100) : 0
 
   const data = [
-    { name: 'occupés', value: occupied, color: '#4B9F6C' },
-    { name: 'disponibles', value: available, color: '#F3EDE5' },
+    { label: t('occupied', { count: occupied }), value: occupied, color: '#4B9F6C' },
+    { label: t('available', { count: available }), value: available, color: '#F3EDE5' },
   ]
 
   return (
@@ -57,9 +56,7 @@ export const ResidenceChart = ({ available, total }: ResidenceChartProps) => {
                 flexShrink: 0,
               }}
             />
-            <span className="fr-text--sm fr-text-mention--grey fr-mb-0">
-              {item.value} {item.name}
-            </span>
+            <span className="fr-text--sm fr-text-mention--grey fr-mb-0">{item.label}</span>
           </div>
         ))}
       </div>

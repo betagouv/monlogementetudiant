@@ -5,12 +5,12 @@ import { dehydrate, HydrationBoundary } from '@tanstack/react-query'
 import { notFound, redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { ContactsBoard } from '~/components/bailleur/contacts/contacts-board'
+import { ResidenceApplicationsToggle } from '~/components/bailleur/contacts/residence-applications-toggle'
 import { CONTACT_RETENTION_DAYS } from '~/enums/contact-status'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { getBailleurContext } from '~/server/bailleur/get-bailleur-context'
 import { getQueryClient, trpc } from '~/server/trpc/server'
 import { buildHref } from '~/utils/preserve-query-params'
-import { sPluriel } from '~/utils/sPluriel'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -51,7 +51,7 @@ export default async function ResidenceContactsPage({ params, searchParams }: Pr
           <h1 className="fr-mb-0 fr-flex fr-align-items-center fr-flex-gap-2v">
             {t('residenceTitle', { name: residence.name })}
             <Badge severity="success" noIcon as="span">
-              {t('availability', { count: residence.disponibilites, s: sPluriel(residence.disponibilites) })}
+              {t('availabilityCount', { count: residence.disponibilites })}
             </Badge>
           </h1>
           <Button
@@ -62,7 +62,10 @@ export default async function ResidenceContactsPage({ params, searchParams }: Pr
             {t('editResidence')}
           </Button>
         </div>
-        <p className="fr-text-mention--grey fr-mb-4w">{t('retentionNotice', { days: CONTACT_RETENTION_DAYS })}</p>
+        <p className="fr-text-mention--grey fr-mb-2w">{t('retentionNotice', { days: CONTACT_RETENTION_DAYS })}</p>
+        <div className="fr-mb-4w">
+          <ResidenceApplicationsToggle slug={slug} />
+        </div>
 
         <ContactsBoard slug={slug} />
       </div>

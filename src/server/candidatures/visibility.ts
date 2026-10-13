@@ -38,9 +38,8 @@ export const visibleContactRequest = (): SQL | undefined =>
 /**
  * Candidature DossierFacile visible : même fenêtre de rétention, **et** dossier validé.
  *
- * Les deux moitiés sont volontairement inséparables — le statut du locataire était auparavant un
- * prédicat distinct que chaque lecteur devait penser à combiner, et deux d'entre eux l'oubliaient.
- * Suppose que `dossier_facile_tenant` est joint à la requête.
+ * Les deux moitiés sont volontairement inséparables, pour qu'aucun lecteur n'ait à penser à
+ * combiner le statut du locataire. Suppose que `dossier_facile_tenant` est joint à la requête.
  */
 export const visibleDossierFacileApplication = (): SQL | undefined =>
   and(gte(dossierFacileApplications.createdAt, dossierFacileRetentionCutoff()), eq(dossierFacileTenants.status, DF_TENANT_STATUS_VERIFIED))
@@ -75,9 +74,16 @@ export const findVisibleApplication = async (id: string) => {
  * C'est ce qui autorise l'accès au dossier : plus aucune candidature dans la fenêtre, plus de motif
  * pour un gestionnaire de consulter les pièces.
  */
-export const findVisibleApplicationForTenant = async (tenantId: string) => {
+export const findVisibleApplicationForTenant = async (tenantId: string, readerFilter?: SQL) => {
   const application = await db.query.dossierFacileApplications.findFirst({
-    where: and(eq(dossierFacileApplications.tenantId, tenantId), gte(dossierFacileApplications.createdAt, dossierFacileRetentionCutoff())),
+    where: and(
+      eq(dossierFacileApplications.tenantId, tenantId),
+      gte(dossierFacileApplications.createdAt, dossierFacileRetentionCutoff()),
+      // Restriction propre au lecteur, que ce module ne connaît pas. Elle doit être dans le `where` :
+      // ce `findFirst` n'est pas ordonné, et un locataire ayant candidaté sur deux résidences du même
+      // bailleur ferait sinon passer ou échouer la garde de l'appelant selon la ligne tirée.
+      readerFilter,
+    ),
     columns: { accommodationSlug: true },
     with: { tenant: { columns: { status: true } } },
   })

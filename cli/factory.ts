@@ -27,7 +27,6 @@ export function registerSync(name: string, loader: SyncLoader) {
   syncRegistry.set(name, loader)
 }
 
-// Register all commands
 registerImport('arpej-ibail', () => import('./commands/import-arpej-ibail'))
 registerImport('fac-habitat', () => import('./commands/import-fac-habitat'))
 registerImport('csv', () => import('./commands/import-csv'))

@@ -1,0 +1,1 @@
+ALTER TABLE "import_job" ALTER COLUMN "type" SET DATA TYPE varchar(50);

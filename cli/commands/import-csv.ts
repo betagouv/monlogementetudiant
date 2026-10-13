@@ -10,8 +10,8 @@ import { TYPOLOGIES } from '../../src/schemas/accommodations/typology'
 import { ZUpdateResidence } from '../../src/schemas/accommodations/update-residence'
 import { accommodationAddresses, accommodations, externalSources } from '../../src/server/db/schema'
 import type { CsvRow } from '../../src/server/lib/import/csv-parser'
-import { generateSourceId, normalizeEnum, parseCsvContent, toBool, toDigit } from '../../src/server/lib/import/csv-parser'
-import { resolveImportOwner } from '../../src/server/lib/import/resolve-owner'
+import { generateSourceId, normalizeEnum, parseCsvContent, toBool, toDigit, toUrl } from '../../src/server/lib/import/csv-parser'
+import { markAvailabilityImported, resolveImportOwner } from '../../src/server/lib/import/resolve-owner'
 import { syncTypologies, typologyAggregates, typologyDraft } from '../../src/server/lib/typologies'
 import { generateAccommodationKey, uploadFile } from '../../src/server/services/s3'
 import { generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
@@ -128,7 +128,7 @@ function buildValidationPayload(row: CsvRow) {
     residenceType: normalizeEnum(row.residence_type) ?? undefined,
     targetAudience: normalizeEnum(row.target_audience) ?? 'etudiants',
     description: row.description?.trim() || undefined,
-    externalUrl: row.owner_url?.trim() || undefined,
+    externalUrl: toUrl(row.owner_url) ?? undefined,
     acceptWaitingList: toBool(row.accept_waiting_list) ?? undefined,
     nb_t1: toDigit(row.nb_t1) ?? undefined,
     nb_t1_bis: toDigit(row.nb_t1_bis) ?? undefined,
@@ -231,7 +231,7 @@ const command: ImportCommand = {
     const ownerIdColumn = options.ownerId ?? toDigit(rows[0].owner_id)
     const ownerSlug = options.ownerSlug ?? rows[0].owner_slug?.trim()
     const ownerName = rows[0].owner_name?.trim()
-    const ownerUrl = rows[0].owner_url?.trim()
+    const ownerUrl = toUrl(rows[0].owner_url) ?? undefined
     if (ownerIdColumn == null && !ownerSlug && !ownerName) {
       throw new Error('owner_id, owner_slug ou owner_name manquant dans la première ligne')
     }
@@ -241,6 +241,7 @@ const command: ImportCommand = {
       const owner = await resolveImportOwner({ id: ownerIdColumn, slug: ownerSlug, name: ownerName, url: ownerUrl })
       ownerId = owner.id
       result.ownerId = owner.id
+      await markAvailabilityImported(owner.id)
       result.ownerName = owner.name
       if (options.verbose) console.log(`  Owner "${owner.name}" id=${ownerId}`)
     } else if (ownerIdColumn != null || ownerSlug) {
@@ -364,7 +365,7 @@ const command: ImportCommand = {
           scholarshipHoldersPriority: toBool(row.scholarship_holders_priority),
           socialHousingRequired: toBool(row.social_housing_required),
           imagesUrls: imagesUrls.length > 0 ? imagesUrls : null,
-          externalUrl: row.owner_url?.trim() || null,
+          externalUrl: toUrl(row.owner_url),
           externalReference: sourceId,
           ownerId: ownerId!,
           updatedAt: new Date(),

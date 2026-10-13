@@ -51,12 +51,14 @@ type HandlerModule = {
     get(key: string, ctx: { kind: string }): Promise<{ lastModified: number; value: CachedImage } | null>
     set(key: string, value: Record<string, unknown>, ctx: Record<string, unknown>): Promise<void>
   }
-  __testing: { clearMemory(): void; memorySize(): number; memoryBytes(): number; PREFIX: string }
+  __testing: { clearMemory(): void; memorySize(): number; memoryBytes(): number; isS3Disabled(): boolean; PREFIX: string }
 }
 
 async function loadHandler(): Promise<HandlerModule> {
   vi.resetModules()
-  const module = (await import('../../../../cache-handler.mjs')) as HandlerModule
+  // Passage par `unknown` : le handler est du JS non type, sa forme inferee ne recoupe pas
+  // la surface decrite ci-dessus.
+  const module = (await import('../../../../cache-handler.mjs')) as unknown as HandlerModule
   module.__testing.clearMemory()
   return module
 }
@@ -65,6 +67,9 @@ describe('cache-handler', () => {
   beforeEach(() => {
     sendMock.mockReset()
     vi.unstubAllEnvs()
+    // Les cas espionnent la console : sans restauration, `vi.spyOn` reutilise le meme mock
+    // d'un test a l'autre et les compteurs d'appels s'accumulent.
+    vi.restoreAllMocks()
   })
 
   describe('entrées IMAGE', () => {
@@ -177,6 +182,50 @@ describe('cache-handler', () => {
       // Le L1 a quand même l'entrée : ce container-là n'aura pas à réencoder.
       sendMock.mockReset()
       expect(await handler.get('abc123', { kind: 'IMAGE' })).not.toBeNull()
+    })
+  })
+
+  describe('étage S3 débrayable', () => {
+    it('ne touche pas à S3 quand IMAGE_CACHE_S3_DISABLED est posé', async () => {
+      vi.stubEnv('IMAGE_CACHE_S3_DISABLED', '1')
+      vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+      const { default: MleCacheHandler } = await loadHandler()
+      const handler = new MleCacheHandler({})
+
+      await handler.set('abc123', IMAGE_VALUE, { cacheControl: { revalidate: 15552000 } })
+
+      expect(sendMock).not.toHaveBeenCalled()
+      // Le L1 fait tout le travail : c'est le mode attendu en local.
+      expect(await handler.get('abc123', { kind: 'IMAGE' })).not.toBeNull()
+    })
+
+    it("débraie S3 au premier refus de droits, et n'y revient plus", async () => {
+      const { default: MleCacheHandler, __testing } = await loadHandler()
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+      const error = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+      sendMock.mockRejectedValue(Object.assign(new Error('Access Denied'), { Code: 'AccessDenied', $metadata: { httpStatusCode: 403 } }))
+      const handler = new MleCacheHandler({})
+
+      await handler.set('first', IMAGE_VALUE, { cacheControl: { revalidate: 60 } })
+      await handler.set('second', IMAGE_VALUE, { cacheControl: { revalidate: 60 } })
+      await handler.set('third', IMAGE_VALUE, { cacheControl: { revalidate: 60 } })
+
+      // Une seule tentative, un seul avertissement.
+      expect(sendMock).toHaveBeenCalledOnce()
+      expect(warn).toHaveBeenCalledOnce()
+      expect(error).not.toHaveBeenCalled()
+      expect(__testing.isS3Disabled()).toBe(true)
+    })
+
+    it('continue de signaler les incidents S3 qui ne sont pas des refus de droits', async () => {
+      const { default: MleCacheHandler, __testing } = await loadHandler()
+      const error = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+      sendMock.mockRejectedValue(new Error('S3 indisponible'))
+
+      await new MleCacheHandler({}).set('abc123', IMAGE_VALUE, { cacheControl: { revalidate: 60 } })
+
+      expect(error).toHaveBeenCalledOnce()
+      expect(__testing.isS3Disabled()).toBe(false)
     })
   })
 

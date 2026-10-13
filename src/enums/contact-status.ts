@@ -18,8 +18,8 @@ export const CONTACT_STATUSES = Object.values(EContactStatus)
 
 export const ZContactStatus = z.enum(EContactStatus)
 
+/** Le libellé affiché est traduit via `bailleur.contacts.status.<statut>`. */
 interface StatusConfig {
-  label: string
   /** Sévérité DSFR du Badge, ou `null` pour un rendu gris neutre (non retenu). */
   severity: BadgeProps['severity'] | null
   /** Couleur de la bordure basse de la carte. */
@@ -27,10 +27,10 @@ interface StatusConfig {
 }
 
 export const CONTACT_STATUS_CONFIG: Record<EContactStatus, StatusConfig> = {
-  [EContactStatus.A_MODERER]: { label: 'À modérer', severity: 'new', barColor: '#c3992a' },
-  [EContactStatus.NON_RETENU]: { label: 'Non retenu', severity: null, barColor: '#929292' },
-  [EContactStatus.A_CONTACTER]: { label: 'À contacter', severity: 'error', barColor: '#e1000f' },
-  [EContactStatus.CONTACTE]: { label: 'Contacté', severity: 'success', barColor: '#18753c' },
+  [EContactStatus.A_MODERER]: { severity: 'new', barColor: '#c3992a' },
+  [EContactStatus.NON_RETENU]: { severity: null, barColor: '#929292' },
+  [EContactStatus.A_CONTACTER]: { severity: 'error', barColor: '#e1000f' },
+  [EContactStatus.CONTACTE]: { severity: 'success', barColor: '#18753c' },
 }
 
 /** Colonnes du board selon le mode (ordre d'affichage = ordre des écrans). */

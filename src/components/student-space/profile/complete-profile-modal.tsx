@@ -6,13 +6,13 @@ import { useIsModalOpen } from '@codegouvfr/react-dsfr/Modal/useIsModalOpen'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { StudentProfileFields } from '~/components/student-space/profile/student-profile-fields'
 import { createToast } from '~/components/ui/createToast'
 import { ModalPortal } from '~/components/ui/modal-portal'
 import { useDsfrModalIsBound } from '~/hooks/use-dsfr-modal-is-bound'
-import { type TStudentProfileInfo, ZStudentProfileInfo } from '~/schemas/student-profile/student-profile'
+import { createZStudentProfileInfo, type TStudentProfileInfo } from '~/schemas/student-profile/student-profile'
 import { authClient } from '~/services/better-auth-client'
 
 const completeProfileModalId = 'complete-profile-modal'
@@ -30,6 +30,8 @@ interface Props {
 
 export const CompleteProfileModal = ({ mandatory = false, autoOpen = false, onCompleted }: Props) => {
   const t = useTranslations('student.profile')
+  const tSchemas = useTranslations('schemas')
+  const schema = useMemo(() => createZStudentProfileInfo(tSchemas), [tSchemas])
   const router = useRouter()
   const { data: session } = authClient.useSession()
   const [completed, setCompleted] = useState(false)
@@ -39,7 +41,7 @@ export const CompleteProfileModal = ({ mandatory = false, autoOpen = false, onCo
   const isBound = useDsfrModalIsBound(completeProfileModalId)
 
   const form = useForm<TStudentProfileInfo>({
-    resolver: zodResolver(ZStudentProfileInfo),
+    resolver: zodResolver(schema),
     values: {
       phone: session?.user?.phone ?? '',
       birthdate: session?.user?.birthdate ?? '',

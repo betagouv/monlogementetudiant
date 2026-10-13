@@ -10,11 +10,11 @@ import styles from './partners.module.css'
 export const PartnersSection = async () => {
   const tHome = await getTranslations('home')
   const logos = [
-    { src: parcourssup, alt: 'Logo ParcoursSup' },
-    { src: etudiantgouv, alt: 'Logo Etudiant.gouv.fr' },
-    { src: crous, alt: 'Logo CROUS' },
-    { src: messervices, alt: 'Logo MesServices.etudiant.gouv.fr' },
-    { src: monmaster, alt: 'Logo MonMaster' },
+    { src: parcourssup, name: 'ParcoursSup' },
+    { src: etudiantgouv, name: 'Etudiant.gouv.fr' },
+    { src: crous, name: 'CROUS' },
+    { src: messervices, name: 'MesServices.etudiant.gouv.fr' },
+    { src: monmaster, name: 'MonMaster' },
   ]
 
   return (
@@ -25,8 +25,15 @@ export const PartnersSection = async () => {
         </span>
         <div className="fr-flex fr-direction-column fr-direction-sm-row fr-justify-content-space-between">
           {logos.map((logo) => (
-            <div key={logo.alt} className={styles.partnerLogoItem}>
-              <Image src={logo.src} width={243} height={109} alt={logo.alt} className={styles.partnerLogoImage} quality={100} />
+            <div key={logo.name} className={styles.partnerLogoItem}>
+              <Image
+                src={logo.src}
+                width={243}
+                height={109}
+                alt={tHome('logoAlt', { name: logo.name })}
+                className={styles.partnerLogoImage}
+                quality={100}
+              />
             </div>
           ))}
         </div>

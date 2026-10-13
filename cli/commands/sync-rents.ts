@@ -47,7 +47,6 @@ const command: SyncCommand = {
     const response = await fetch(CSV_URL)
     if (!response.ok) throw new Error(`Erreur téléchargement CSV: ${response.status}`)
 
-    // Handle latin1 encoding
     const buffer = Buffer.from(await response.arrayBuffer())
     const text = buffer.toString('latin1')
     const rows = parseCSV(text)

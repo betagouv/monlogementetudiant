@@ -4,7 +4,7 @@ import { Metadata } from 'next'
 import Image from 'next/image'
 import { getTranslations } from 'next-intl/server'
 import { SignUpForm } from '~/components/sign-up/sign-up-form'
-import background from '~/images/background-credentials.webp'
+import background from '~/images/connexion.svg'
 import { getClaimedContactRequest } from '~/server/contacts/claimed-request'
 import styles from '../auth.module.css'
 
@@ -22,7 +22,7 @@ export default async function SignUpPage({ searchParams }: { searchParams: Promi
   return (
     <>
       <div className={styles.imageContainer}>
-        <Image className={styles.image} src={background} alt="S'inscrire" priority quality={100} />
+        <Image className={styles.image} src={background} alt={t('imageAlt')} priority quality={100} />
       </div>
       <div className={clsx(styles.container, 'fr-container')}>
         <Button

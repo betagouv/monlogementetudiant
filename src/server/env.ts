@@ -5,7 +5,6 @@ const isProdOnly = process.env.NEXT_PUBLIC_APP_ENV === 'production'
 
 const optionalUrl = z.preprocess((v) => (v === '' ? undefined : v), z.url().optional())
 const requiredInProdUrl = isProd ? z.url() : optionalUrl
-// const requiredInProdOnlyUrl = isProdOnly ? z.url() : optionalUrl
 const requiredInProd = isProd ? z.string().min(1) : z.string().optional()
 /** Requis en production seulement — staging n'a pas l'équivalent (backups, par exemple). */
 const requiredInProdOnly = isProdOnly ? z.string().min(1) : z.string().optional()
@@ -37,6 +36,11 @@ const envSchema = z.object({
     )
     .pipe(z.array(z.email({ message: 'CRON_FAILURE_EMAILS doit contenir des adresses email séparées par des virgules' }))),
 
+  // Destinataire des signalements d'erreur envoyés depuis les fiches résidence.
+  // Facultatif hors prod/staging : sans valeur, le signalement est seulement enregistré.
+  ACCOMMODATION_REPORT_EMAIL: isProd ? z.email() : z.preprocess((v) => (v === '' ? undefined : v), z.email().optional()),
+  SUPPORT_TICKET_EMAIL: isProd ? z.email() : z.preprocess((v) => (v === '' ? undefined : v), z.email().optional()),
+
   // Brevo (email)
   BREVO_API_KEY: z.string().min(1, 'BREVO_API_KEY is required'),
   BREVO_API_URL: z.url().default('https://api.brevo.com/v3/smtp/email'),
@@ -52,6 +56,16 @@ const envSchema = z.object({
   BREVO_TEMPLATE_ALERT_EXPIRY_REMINDER: z.coerce.number().int().positive(),
   BREVO_TEMPLATE_ALERT_DEACTIVATION: z.coerce.number().int().positive(),
   BREVO_TEMPLATE_CONTACT_CONFIRMATION: z.coerce.number().int().positive(),
+  BREVO_TEMPLATE_APPLICATIONS_MANAGEMENT_GRANTED: z.coerce.number().int().positive(),
+  BREVO_TEMPLATE_APPLICATIONS_SUSPENDED: z.coerce.number().int().positive(),
+  BREVO_TEMPLATE_APPLICATIONS_INACTIVITY_WARNING: z.coerce.number().int().positive(),
+  BREVO_TEMPLATE_APPLICATIONS_AUTO_SUSPENDED: z.coerce.number().int().positive(),
+  BREVO_TEMPLATE_CONTACT_MODE_ACTIVATED: z.coerce.number().int().positive(),
+  BREVO_TEMPLATE_CONTACT_MODE_DEACTIVATED: z.coerce.number().int().positive(),
+  BREVO_TEMPLATE_CONTACT_RESIDENCES_UPDATED: z.coerce.number().int().positive(),
+  BREVO_TEMPLATE_CONTACT_DAILY_DIGEST: z.coerce.number().int().positive(),
+  BREVO_TEMPLATE_CONTACT_NOT_RETAINED: z.coerce.number().int().positive(),
+  BREVO_TEMPLATE_AVAILABILITY_RESET_WARNING: z.coerce.number().int().positive(),
 
   // S3
   S3_ENDPOINT: z.url(),
@@ -73,6 +87,12 @@ const envSchema = z.object({
   // rester documenté et validé au démarrage, pas pour y être importé.
   IMAGE_CACHE_MEMORY_MB: z.coerce.number().int().positive().default(128),
 
+  // Coupe l'étage S3 du cache d'images : seul le cache mémoire du process reste actif.
+  // Destiné au développement local, où les identifiants S3 pointent sur un bucket partagé
+  // dont l'écriture du préfixe `image-cache/` n'est pas accordée. Lu directement par
+  // cache-handler.mjs, comme IMAGE_CACHE_MEMORY_MB.
+  IMAGE_CACHE_S3_DISABLED: z.enum(['0', '1', 'true', 'false']).default('0'),
+
   // Geocoding
   GEOCODING_API_URL: z.url().default('https://data.geopf.fr/geocodage/search'),
 
@@ -91,6 +111,11 @@ const envSchema = z.object({
   DOSSIERFACILE_REDIRECT_URI: requiredInProdUrl,
   DOSSIERFACILE_SCOPE: requiredInProd,
   DOSSIERFACILE_WEBHOOK_API_KEY: requiredInProd,
+
+  // Sentry : endpoint « security » qui reçoit les violations de la CSP Report-Only (src/proxy.ts).
+  // URL complète, telle que donnée par Sentry (Project Settings > Security Headers). Optionnelle même en
+  // production : sans elle la CSP Report-Only ne remonte rien, mais son absence ne doit pas bloquer le boot.
+  SENTRY_CSP_REPORT_URI: optionalUrl,
 
   // Public vars (validated server-side for CI)
   NEXT_PUBLIC_APP_ENV: z.enum(['development', 'staging', 'production']).default('development'),

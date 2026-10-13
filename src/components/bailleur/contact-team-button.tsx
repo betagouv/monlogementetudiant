@@ -1,9 +1,11 @@
 'use client'
 
 import Button from '@codegouvfr/react-dsfr/Button'
+import { useTranslations } from 'next-intl'
 import { trackEvent } from '~/lib/tracking'
 
 export const ContactTeamButton = () => {
+  const t = useTranslations('bailleur.helpCenter')
   return (
     <Button
       iconId="ri-search-line"
@@ -15,7 +17,7 @@ export const ContactTeamButton = () => {
         },
       }}
     >
-      Contacter l'équipe
+      {t('contactTeam')}
     </Button>
   )
 }

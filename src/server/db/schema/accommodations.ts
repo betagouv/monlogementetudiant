@@ -1,4 +1,5 @@
 import { bigint, boolean, index, integer, pgEnum, pgTable, text, timestamp, unique, varchar } from 'drizzle-orm/pg-core'
+import { user } from './auth'
 import { owners } from './owners'
 
 export const targetAudienceEnum = pgEnum('target_audience', [
@@ -6,6 +7,12 @@ export const targetAudienceEnum = pgEnum('target_audience', [
   'mixte-etudiants-jeunes-actifs',
   'diffus-etudiants',
   'diffus-mixte-etudiants-jeunes-actifs',
+])
+
+export const applicationsSuspensionReasonEnum = pgEnum('applications_suspension_reason', [
+  'manual',
+  'unprocessed_applications',
+  'stale_availability',
 ])
 
 export const accommodations = pgTable(
@@ -47,6 +54,12 @@ export const accommodations = pgTable(
     wifi: boolean('wifi'),
     bathroom: varchar('bathroom', { length: 50 }),
     acceptWaitingList: boolean('accept_waiting_list'),
+    acceptsApplications: boolean('accepts_applications').notNull().default(true),
+    applicationsSuspendedAt: timestamp('applications_suspended_at', { withTimezone: true }),
+    applicationsSuspendedById: text('applications_suspended_by_id').references(() => user.id, { onDelete: 'set null' }),
+    applicationsSuspensionReason: applicationsSuspensionReasonEnum('applications_suspension_reason'),
+    unprocessedApplicationsWarnedAt: timestamp('unprocessed_applications_warned_at', { withTimezone: true }),
+    staleAvailabilityWarnedAt: timestamp('stale_availability_warned_at', { withTimezone: true }),
     scholarshipHoldersPriority: boolean('scholarship_holders_priority'),
     socialHousingRequired: boolean('social_housing_required'),
 
@@ -56,6 +69,7 @@ export const accommodations = pgTable(
     externalUrl: varchar('external_url', { length: 255 }),
     virtualTourUrl: text('virtual_tour_url'),
     externalReference: varchar('external_reference', { length: 255 }),
+    phoneNumber: varchar('phone_number', { length: 10 }),
 
     // Relations
     ownerId: bigint('owner_id', { mode: 'number' }).references(() => owners.id),

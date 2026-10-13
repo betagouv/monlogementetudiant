@@ -1,9 +1,7 @@
 import Breadcrumb from '@codegouvfr/react-dsfr/Breadcrumb'
-import Button from '@codegouvfr/react-dsfr/Button'
-import Community from '@codegouvfr/react-dsfr/picto/Community'
+import { Ecosystem } from '@codegouvfr/react-dsfr/picto'
 import { HydrationBoundary } from '@tanstack/react-query'
 import { getTranslations } from 'next-intl/server'
-import { canEditOwnAccount } from '~/server/bailleur/permissions'
 import { buildHref } from '~/utils/preserve-query-params'
 import { getUsersPageContext } from './get-users-page-context'
 import { UsersList } from './users-list'
@@ -36,19 +34,19 @@ export default async function BailleurUsersPage({ searchParams }: PageProps) {
 
         <div className="fr-flex fr-justify-content-space-between fr-align-items-center">
           <div className="fr-flex fr-justify-content-space-between fr-align-items-center fr-width-full">
-            <div className="fr-flex fr-align-items-center fr-flex-gap-4v">
-              <Community width={72} height={72} />
+            <div className="fr-flex fr-align-items-center fr-flex-gap-4v fr-mb-4w">
+              <Ecosystem width={72} height={72} color="blue-ecume" />
               <h1 className="fr-mb-0">{t('pageTitle')}</h1>
-            </div>
-            <div>
-              <Button linkProps={{ href: buildHref('/bailleur/utilisateurs/nouveau', awaitedSearchParams) }} iconId="ri-add-line">
-                {t('addUser')}
-              </Button>
             </div>
           </div>
         </div>
-        <hr className="fr-mt-2w fr-mb-0" />
-        <UsersList currentUserId={ctx.session.user.id} currentUserIsAdministrator={canEditOwnAccount(ctx.user)} ownerId={ctx.owner.id} />
+        <UsersList
+          currentUserId={ctx.session.user.id}
+          currentUserIsAdministrator={ctx.canEditOwnAccount}
+          ownerId={ctx.owner.id}
+          ownerContactMode={ctx.owner.contactMode}
+          canGrantAdministratorRights={ctx.canGrantAdministratorRights}
+        />
       </div>
     </HydrationBoundary>
   )

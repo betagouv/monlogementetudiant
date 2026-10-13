@@ -5,24 +5,26 @@ import { Input } from '@codegouvfr/react-dsfr/Input'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as Sentry from '@sentry/nextjs'
 import { useTranslations } from 'next-intl'
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { tss } from 'tss-react'
 import { createToast } from '~/components/ui/createToast'
 import { RequiredLabel } from '~/components/ui/required-mark'
 import { trackEvent } from '~/lib/tracking'
-import { TMagicLinkSignInForm, ZMagicLinkSignInForm } from '~/schemas/magic-link-sign-in/magic-link-sign-in'
+import { createZMagicLinkSignInForm, TMagicLinkSignInForm } from '~/schemas/magic-link-sign-in/magic-link-sign-in'
 import { sendMagicLink } from './actions'
 
 export const MagicLinkSignInForm: FC<{ callbackURL?: string; type?: 'owner' | 'admin' }> = ({ callbackURL, type = 'owner' }) => {
   const t = useTranslations('login')
+  const tSchemas = useTranslations('schemas')
+  const schema = useMemo(() => createZMagicLinkSignInForm(tSchemas), [tSchemas])
   const { classes } = useStyles()
 
   const loginForm = useForm<TMagicLinkSignInForm>({
     defaultValues: {
       email: '',
     },
-    resolver: zodResolver(ZMagicLinkSignInForm),
+    resolver: zodResolver(schema),
   })
   const { formState, getValues, handleSubmit, register } = loginForm
 
@@ -40,7 +42,7 @@ export const MagicLinkSignInForm: FC<{ callbackURL?: string; type?: 'owner' | 'a
       trackEvent({ category: 'Authentification', action: 'connexion gestionnaire', name: 'erreur' })
       createToast({
         priority: 'error',
-        message: 'Une erreur est survenue lors de la connexion, veuillez réessayé ultérieurement',
+        message: t('magicLinkErrorToast'),
       })
     }
   }

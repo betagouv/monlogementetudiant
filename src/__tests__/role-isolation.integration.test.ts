@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
+import { createCallerFactory } from '~/server/trpc/init'
+import { appRouter } from '~/server/trpc/router'
 import { createUser } from './fixtures/factories'
 import './helpers/setup-integration'
 import { adminCaller, authenticatedCaller, caller, ownerCaller } from './helpers/test-caller'
@@ -161,5 +163,26 @@ describe('admin can access student routes', () => {
   it('admin can call dossierFacile.tenant', async () => {
     const result = await adminCaller.dossierFacile.tenant()
     expect(result).toBeNull()
+  })
+})
+
+// ─── Rôle inconnu : ni espace étudiant, ni espace bailleur ──────────────────
+
+describe('unknown role is denied everywhere', () => {
+  const createCaller = createCallerFactory(appRouter)
+  const unknownRoleCaller = createCaller({
+    session: {
+      user: { id: 'test-unknown-id', email: 'unknown@test.com', name: 'Unknown', role: 'moderator', emailVerified: true },
+      session: { id: 'unknown-session', userId: 'test-unknown-id', token: 'unknown-token', expiresAt: new Date(Date.now() + 3600000) },
+    },
+    clientIp: null,
+  } as unknown as Parameters<typeof createCaller>[0])
+
+  it('rejects an unknown role from owner routes', async () => {
+    await expect(unknownRoleCaller.bailleur.list({ page: 1 })).rejects.toThrow('Owner or admin role required')
+  })
+
+  it('rejects an unknown role from student routes', async () => {
+    await expect(unknownRoleCaller.favorites.list()).rejects.toThrow('Student or admin role required')
   })
 })

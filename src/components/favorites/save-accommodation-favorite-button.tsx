@@ -1,6 +1,7 @@
 'use client'
 
 import Button from '@codegouvfr/react-dsfr/Button'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { loginRequiredFavoritesModal } from '~/components/auth/login-required-modal'
 import { LiveRegion } from '~/components/ui/live-region'
@@ -10,12 +11,8 @@ import { useFavorites } from '~/hooks/use-favorites'
 import { trackEvent } from '~/lib/tracking'
 import { TUser } from '~/lib/types'
 
-export const FAVORITE_BUTTON_TITLES = {
-  ADD: 'Enregistrer en favoris',
-  REMOVE: 'Supprimer des favoris',
-} as const
-
 export const SaveAccommodationFavoriteButton = ({ slug, withLabel = false, user }: { slug: string; withLabel?: boolean; user?: TUser }) => {
+  const t = useTranslations('accomodation.favoriteButton')
   const { data: favorites } = useFavorites(user)
   const [announcement, setAnnouncement] = useState('')
 
@@ -28,12 +25,12 @@ export const SaveAccommodationFavoriteButton = ({ slug, withLabel = false, user 
       return
     }
     await mutateAsync({ accommodationSlug: slug })
-    setAnnouncement('Résidence ajoutée à vos favoris')
+    setAnnouncement(t('addedAnnouncement'))
     trackEvent({ category: 'Favoris', action: 'ajout favori', name: slug })
   }
   const handleDelete = async () => {
     await mutationDelete({ slug })
-    setAnnouncement('Résidence retirée de vos favoris')
+    setAnnouncement(t('removedAnnouncement'))
     trackEvent({ category: 'Favoris', action: 'suppression favori', name: slug })
   }
 
@@ -42,18 +39,18 @@ export const SaveAccommodationFavoriteButton = ({ slug, withLabel = false, user 
   // sur `isFavorite`, leur cœur s'afficherait plein à tort partout sur le site.
   const buttonProps = isFavorite
     ? {
-        title: FAVORITE_BUTTON_TITLES.REMOVE,
+        title: t('removeTitle'),
         iconId: 'ri-heart-fill' as const,
         disabled: isLoadingDelete,
         nativeButtonProps: { onClick: handleDelete, 'aria-pressed': true },
-        label: 'Retirer des favoris',
+        label: t('removeLabel'),
       }
     : {
-        title: FAVORITE_BUTTON_TITLES.ADD,
+        title: t('addTitle'),
         iconId: 'ri-heart-line' as const,
         disabled: isLoading,
         nativeButtonProps: { onClick: handleSave, 'aria-pressed': false },
-        label: 'Ajouter en favoris',
+        label: t('addLabel'),
       }
 
   return (

@@ -7,16 +7,9 @@
 }
 
 /**
- * Les intitulés du bloc « Villes étudiantes » (« Logements étudiants Clermont-Ferrand »)
- * demandent ~228 px, alors qu'une colonne `fr-col-md-2` en fait 204 : ils se coupaient sur
- * deux lignes. La règle précédente forçait `min-width: 250px` sur les <li>, mais elle
- * débordait de leur colonne et provoquait un défilement horizontal de 576 à 1248 px,
- * contraire au test RGAA 10.11.1 — d'où son retrait lors de la revue d'accessibilité.
- *
- * On élargit donc la colonne elle-même plutôt que son contenu : `space-between` répartit
- * l'espace restant, et les intitulés tiennent sur une ligne sans dépasser. Mesuré sans aucun
- * débordement ajouté de 992 à 1400 px ; en dessous les colonnes s'empilent et la coupure
- * redevient normale.
+ * Les intitulés « Villes étudiantes » demandent ~228 px, une colonne `fr-col-md-2` en fait 204.
+ * On élargit la colonne plutôt que son contenu (un `min-width` sur les <li> déborderait et créerait
+ * un défilement horizontal, RGAA 10.11.1) ; `space-between` répartit l'espace restant.
  */
 @media (min-width: 62em) {
   .footer :global(.fr-footer__top .fr-col-md-2) {

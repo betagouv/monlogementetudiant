@@ -7,7 +7,7 @@ import { typologyDraft } from '../server/lib/typologies'
 import { createAccommodation, createOwner, createUser } from './fixtures/factories'
 import { getTestDb } from './helpers/test-db'
 import './helpers/setup-integration'
-import { adminCaller, gestionnaireCallerFactory, ownerCaller } from './helpers/test-caller'
+import { adminCaller, ownerCaller } from './helpers/test-caller'
 
 type AccommodationOverrides = NonNullable<Parameters<typeof createAccommodation>[0]>
 const parisPoint = { type: 'Point', coordinates: [2.3522, 48.8566] } as NonNullable<AccommodationOverrides['geom']>
@@ -50,15 +50,13 @@ describe('owner.updatedAt/updatedBy — tamponnage sur la fiche bailleur', () =>
   })
 
   it("bailleur.setContactMode tamponne l'utilisateur bailleur, pas un admin", async () => {
-    await createUser({ id: 'test-gestionnaire-id', name: 'Gestionnaire', email: 'gestionnaire@test.com', role: 'owner' })
-    const owner = await createOwner({ name: 'Bailleur Mode', slug: 'bailleur-mode', userId: 'test-gestionnaire-id' })
+    const owner = await createOwner({ name: 'Bailleur Mode', slug: 'bailleur-mode', userId: 'test-owner-id' })
 
-    const permCaller = gestionnaireCallerFactory({ permissions: ['manage_applications'] })
-    await permCaller.bailleur.setContactMode({ mode: EOwnerContactMode.CONTACTS })
+    await ownerCaller.bailleur.setContactMode({ mode: EOwnerContactMode.CONTACTS })
 
     const updated = await readOwner(owner.id)
     expect(updated.updatedAt).toBeInstanceOf(Date)
-    expect(updated.updatedBy).toBe('test-gestionnaire-id')
+    expect(updated.updatedBy).toBe('test-owner-id')
   })
 
   it('un bailleur fraîchement créé reste à NULL (NULL = jamais modifié, pas la date de création)', async () => {

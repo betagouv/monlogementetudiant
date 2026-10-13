@@ -11,10 +11,12 @@ import styles from './student-space-navigation.module.css'
 const NAV_ITEMS = [
   { href: '/mon-espace/tableau-de-bord', labelKey: 'dashboard' },
   { href: '/mon-espace/to-do', labelKey: 'todoList' },
+  { href: '/mon-espace/mon-budget', labelKey: 'budget' },
   { href: '/mon-espace/aides-au-logement', labelKey: 'housingAid' },
   { href: '/mon-espace/favoris', labelKey: 'favorites' },
   { href: '/mon-espace/alertes', labelKey: 'alerts' },
   { href: '/mon-espace/informations-personnelles', labelKey: 'personalInformations' },
+  { href: '/mon-espace/signaler-un-probleme', labelKey: 'reportProblem' },
 ] as const
 
 export const StudentSpaceNavigation = () => {

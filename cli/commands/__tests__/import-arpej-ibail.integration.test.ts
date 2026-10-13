@@ -162,8 +162,7 @@ describe('import-arpej-ibail integration', () => {
     expect(typos.t1?.superficieMax).toBe(48)
     expect(created!.imagesUrls).toEqual(['https://s3.example.com/test.jpg'])
 
-    // Le point retenu est celui que la BAN confirme dans une commune du code
-    // postal : sans validation, l'import repartait sans coordonnées.
+    // Le point retenu est celui que la BAN confirme dans une commune du code postal.
     expect(geocoding.searchCalls).toHaveLength(1)
     const [addr] = await db.select().from(accommodationAddresses).where(eq(accommodationAddresses.accommodationId, created!.id))
     expect(addr.postalCode).toBe('91120')

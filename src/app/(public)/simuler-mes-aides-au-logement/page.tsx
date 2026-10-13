@@ -28,7 +28,11 @@ export const generateMetadata = async () => {
 }
 
 export default async function SimulateAccommodationAids() {
-  const questionsAnswers = await getGlobalQuestionsAnswers()
+  const [questionsAnswers, t, tFaq] = await Promise.all([
+    getGlobalQuestionsAnswers(),
+    getTranslations('simulator.faq'),
+    getTranslations('faq'),
+  ])
   return (
     <>
       <WrapperSimulator />
@@ -37,13 +41,10 @@ export default async function SimulateAccommodationAids() {
         <div className="fr-container">
           <div className={clsx('fr-col-md-12', styles.faqContainer)}>
             <div className={clsx('fr-col-md-4', styles.faqTitleContainer)}>
-              <h2 className={styles.faqTitle}>
-                Parmi les questions fréquentes sur les <br />
-                aides aux logements étudiants
-              </h2>
+              <h2 className={styles.faqTitle}>{t.rich('title', { br: () => <br /> })}</h2>
               <div className={styles.faqButtonContainer}>
                 <Button iconId="ri-question-line" className="whiteButton" priority="secondary" linkProps={{ href: '/foire-aux-questions' }}>
-                  Foire aux questions
+                  {tFaq('title')}
                 </Button>
               </div>
             </div>

@@ -1,10 +1,14 @@
+import { headers } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { ContactModePromoBanner } from '~/components/bailleur/contact-mode-promo-banner'
 import { OwnerFeedbackBanner } from '~/components/bailleur/owner-feedback-banner'
+import { ImpersonationBanner } from '~/components/impersonation/impersonation-banner'
 import { CommonFooter } from '~/components/ui/footer/footer'
 import { WorkspaceHeaderComponent } from '~/components/ui/header/workspace-header'
+import { canAccessOwnerSpace } from '~/lib/roles'
 import { getServerSession } from '~/services/better-auth'
+import { safeCallbackPath } from '~/utils/safe-callback-path'
 import styles from './layout.module.css'
 
 export const generateMetadata = async () => {
@@ -27,13 +31,15 @@ export default async function WorkspaceLayout({
   const session = await getServerSession()
 
   // Une session absente n'est pas une page introuvable : c'est le cas d'un lien de connexion périmé
-  // ou d'une session expirée, on renvoie l'utilisateur au formulaire de connexion.
+  // ou d'une session expirée, on renvoie l'utilisateur au formulaire de connexion, puis à la page demandée.
   if (!session) {
-    redirect('/gestionnaire/se-connecter')
+    const callbackPath = safeCallbackPath((await headers()).get('x-pathname'), '/bailleur/')
+    redirect(callbackPath ? `/gestionnaire/se-connecter?callbackUrl=${encodeURIComponent(callbackPath)}` : '/gestionnaire/se-connecter')
   }
 
-  // Un étudiant authentifié, en revanche, n'a pas à découvrir l'existence de l'espace gestionnaire.
-  if (session.user.role === 'user') {
+  // Un étudiant authentifié (ou un rôle inattendu), en revanche, n'a pas à découvrir l'existence de
+  // l'espace gestionnaire.
+  if (!canAccessOwnerSpace(session.user.role)) {
     return notFound()
   }
 
@@ -42,6 +48,7 @@ export default async function WorkspaceLayout({
   return (
     <>
       <WorkspaceHeaderComponent />
+      <ImpersonationBanner />
       <ContactModePromoBanner />
       <main className={styles.container}>{children}</main>
       {showFeedbackBanner && <OwnerFeedbackBanner />}

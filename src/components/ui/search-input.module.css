@@ -1,0 +1,10 @@
+.search {
+  width: 100%;
+}
+
+@media (min-width: 48em) {
+  .search {
+    flex: 0 1 25rem;
+    min-width: 0;
+  }
+}

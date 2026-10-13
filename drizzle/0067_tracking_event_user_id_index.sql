@@ -1,0 +1,1 @@
+CREATE INDEX "tracking_event_user_id_idx" ON "tracking_event" USING btree ("user_id") WHERE "tracking_event"."user_id" is not null;

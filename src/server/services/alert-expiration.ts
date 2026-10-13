@@ -2,6 +2,7 @@ import { and, eq, isNotNull, isNull, lte } from 'drizzle-orm'
 import { db } from '~/server/db'
 import { studentAlerts, user } from '~/server/db/schema'
 import { env } from '~/server/env'
+import { maskEmail } from '~/utils/mask-email'
 import { DAY_MS } from '~/utils/time'
 import { sendAlertDeactivationEmail, sendAlertExpiryReminderEmail } from './brevo'
 
@@ -37,11 +38,11 @@ export async function sendExpiryReminders(options: ExpirationOptions = {}): Prom
     try {
       await sendAlertExpiryReminderEmail(alert.email, { alertName: alert.name, alertsUrl: ALERTS_URL })
       await db.update(studentAlerts).set({ expiryReminderSentAt: now }).where(eq(studentAlerts.id, alert.id))
-      if (options.verbose) console.log(`  ↺ relance envoyée : ${alert.email} — « ${alert.name} »`)
+      if (options.verbose) console.log(`  ↺ relance envoyée : ${maskEmail(alert.email)} — « ${alert.name} »`)
       reminded++
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      console.error(`  ✗ relance échouée (${alert.email}) : ${message}`)
+      console.error(`  ✗ relance échouée (${maskEmail(alert.email)}) : ${message}`)
     }
   }
 
@@ -73,11 +74,11 @@ export async function expireStaleAlerts(options: ExpirationOptions = {}): Promis
     try {
       await sendAlertDeactivationEmail(alert.email, { alertName: alert.name, alertsUrl: ALERTS_URL })
       await db.update(studentAlerts).set({ receiveNotifications: false, expiredAt: now }).where(eq(studentAlerts.id, alert.id))
-      if (options.verbose) console.log(`  ⨯ alerte désactivée : ${alert.email} — « ${alert.name} »`)
+      if (options.verbose) console.log(`  ⨯ alerte désactivée : ${maskEmail(alert.email)} — « ${alert.name} »`)
       deactivated++
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      console.error(`  ✗ désactivation échouée (${alert.email}) : ${message}`)
+      console.error(`  ✗ désactivation échouée (${maskEmail(alert.email)}) : ${message}`)
     }
   }
 

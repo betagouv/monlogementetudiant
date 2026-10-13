@@ -23,7 +23,7 @@ export default async function SiteMap() {
       <div className={styles.borderBottom}>
         <h1>{t('title')}</h1>
         <p>
-          Mis à jour le <span className="fr-text--bold">01/01/25</span>
+          {t('lastUpdate')} <span className="fr-text--bold">01/01/25</span>
         </p>
       </div>
       <div className="fr-py-3w">
@@ -54,8 +54,7 @@ export default async function SiteMap() {
               text: t('links.findAccomodation'),
             },
             {
-              // La page locale a été retirée : les mentions légales vivent désormais sur le site
-              // éditorial, où le pied de page pointe déjà.
+              // Les mentions légales vivent sur le site éditorial, comme dans le pied de page.
               linkProps: {
                 href: 'https://info.monlogementetudiant.beta.gouv.fr/mentions-legales/',
                 target: '_blank',

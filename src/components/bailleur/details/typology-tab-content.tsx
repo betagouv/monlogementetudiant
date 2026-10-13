@@ -5,7 +5,7 @@ import Input from '@codegouvfr/react-dsfr/Input'
 import Select from '@codegouvfr/react-dsfr/Select'
 import { useTranslations } from 'next-intl'
 import { useFormContext } from 'react-hook-form'
-import { getTypologyLabel, TYPOLOGY_TYPES } from '~/schemas/accommodations/create-residence'
+import { TYPOLOGY_TYPES } from '~/schemas/accommodations/create-residence'
 import { isPerPersonTypology } from '~/utils/is-per-person-typology'
 
 type TypologyTabContentProps = {
@@ -17,6 +17,7 @@ type TypologyTabContentProps = {
 
 export const TypologyTabContent = (props: TypologyTabContentProps) => {
   const t = useTranslations('bailleur.residences.details.typologyTab')
+  const tTypologies = useTranslations('schemas.typologies')
   const {
     register,
     watch,
@@ -63,7 +64,7 @@ export const TypologyTabContent = (props: TypologyTabContentProps) => {
             </option>
             {TYPOLOGY_TYPES.filter((type) => !usedTypes.includes(type) || type === typologyType).map((type) => (
               <option key={type} value={type}>
-                {getTypologyLabel(type)}
+                {tTypologies(type)}
               </option>
             ))}
           </Select>

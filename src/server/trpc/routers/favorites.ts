@@ -110,7 +110,7 @@ export const favoritesRouter = createTRPCRouter({
       )
       .innerJoin(cities, eq(accommodationAddresses.cityId, cities.id))
       .leftJoin(owners, eq(accommodations.ownerId, owners.id))
-      .where(and(inArray(accommodations.id, followedIds), eq(accommodations.published, true)))
+      .where(inArray(accommodations.id, followedIds))
 
     const accIds = results.map((r) => r.accommodationId)
     const typologyRows =
@@ -143,7 +143,7 @@ export const favoritesRouter = createTRPCRouter({
     const userId = ctx.session.user.id
 
     const accom = await db.query.accommodations.findFirst({
-      where: eq(accommodations.slug, input.accommodationSlug),
+      where: and(eq(accommodations.slug, input.accommodationSlug), eq(accommodations.published, true)),
       columns: { id: true },
     })
 

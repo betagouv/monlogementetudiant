@@ -5,7 +5,7 @@ import { activityLog } from '../server/db/schema/activity-log'
 import { createOwner, createUser } from './fixtures/factories'
 import { getTestDb } from './helpers/test-db'
 import './helpers/setup-integration'
-import { adminCaller, gestionnaireCallerFactory } from './helpers/test-caller'
+import { adminCaller, ownerCaller } from './helpers/test-caller'
 
 const CONTACT_MODE_ACTION = 'owner.contact_mode_updated'
 
@@ -26,19 +26,17 @@ beforeEach(async () => {
   // les entrées d'un test précédent seraient relues sous le même `ownerId`.
   await getTestDb().delete(activityLog)
   await createUser({ id: 'test-admin-id', name: 'Test Admin', email: 'admin@test.com', role: 'admin' })
-  await createUser({ id: 'test-gestionnaire-id', name: 'Gestionnaire', email: 'gestionnaire@test.com', role: 'owner' })
+  await createUser({ id: 'test-owner-id', name: 'Test Owner', email: 'owner@test.com', role: 'owner', bailleurRole: 'administrator' })
 })
 
 describe('journal du mode de réception des candidatures', () => {
-  it('trace le choix fait en self-service par le gestionnaire', async () => {
-    const owner = await createOwner({ name: 'Bailleur Mode', slug: 'bailleur-mode', userId: 'test-gestionnaire-id' })
-    const permCaller = gestionnaireCallerFactory({ permissions: ['manage_applications'] })
-
-    await permCaller.bailleur.setContactMode({ mode: EOwnerContactMode.CONTACTS })
+  it('trace le choix fait en self-service par l’administrateur du bailleur', async () => {
+    const owner = await createOwner({ name: 'Bailleur Mode', slug: 'bailleur-mode', userId: 'test-owner-id' })
+    await ownerCaller.bailleur.setContactMode({ mode: EOwnerContactMode.CONTACTS })
 
     const [entry, ...rest] = await readContactModeLogs(owner.id)
     expect(rest).toHaveLength(0)
-    expect(entry.userId).toBe('test-gestionnaire-id')
+    expect(entry.userId).toBe('test-owner-id')
     expect(entry.entityType).toBe('owner')
     expect(entry.entityName).toBe('Bailleur Mode')
     expect(entry.ownerName).toBe('Bailleur Mode')
@@ -52,12 +50,10 @@ describe('journal du mode de réception des candidatures', () => {
     const owner = await createOwner({
       name: 'Bailleur DF',
       slug: 'bailleur-df',
-      userId: 'test-gestionnaire-id',
+      userId: 'test-owner-id',
       contactMode: EOwnerContactMode.CONTACTS,
     })
-    const permCaller = gestionnaireCallerFactory({ permissions: ['manage_applications'] })
-
-    await permCaller.bailleur.setContactMode({ mode: EOwnerContactMode.DOSSIER_FACILE })
+    await ownerCaller.bailleur.setContactMode({ mode: EOwnerContactMode.DOSSIER_FACILE })
 
     const [entry] = await readContactModeLogs(owner.id)
     expect((entry.metadata as ContactModeDiff).diff.contactMode).toEqual({
@@ -70,12 +66,10 @@ describe('journal du mode de réception des candidatures', () => {
     const owner = await createOwner({
       name: 'Bailleur Idem',
       slug: 'bailleur-idem',
-      userId: 'test-gestionnaire-id',
+      userId: 'test-owner-id',
       contactMode: EOwnerContactMode.CONTACTS,
     })
-    const permCaller = gestionnaireCallerFactory({ permissions: ['manage_applications'] })
-
-    await permCaller.bailleur.setContactMode({ mode: EOwnerContactMode.CONTACTS })
+    await ownerCaller.bailleur.setContactMode({ mode: EOwnerContactMode.CONTACTS })
 
     expect(await readContactModeLogs(owner.id)).toHaveLength(0)
   })

@@ -4,11 +4,12 @@ import Tabs from '@codegouvfr/react-dsfr/Tabs'
 import { useTranslations } from 'next-intl'
 import { parseAsString, useQueryState } from 'nuqs'
 import { useFieldArray, useFormContext } from 'react-hook-form'
-import { getTypologyLabel, TCreateResidence, TYPOLOGIES, TYPOLOGY_TYPES } from '~/schemas/accommodations/create-residence'
+import { TCreateResidence, TYPOLOGIES, TYPOLOGY_TYPES } from '~/schemas/accommodations/create-residence'
 import { TypologyTabContent } from './typology-tab-content'
 
 export const CreateResidenceAccommodationList = () => {
   const t = useTranslations('bailleur.residences.details.typologyTab')
+  const tTypologies = useTranslations('schemas.typologies')
   const {
     control,
     watch,
@@ -90,9 +91,9 @@ export const CreateResidenceAccommodationList = () => {
   const tabs = [
     ...sortedFieldsWithIndex.map(({ originalIndex, type }) => ({
       tabId: `tab-${originalIndex}`,
-      label: tabLabel(type ? getTypologyLabel(type) : 'Nouveau', originalIndex),
+      label: tabLabel(type ? tTypologies(type) : t('newTab'), originalIndex),
     })),
-    ...(canAddMore ? [{ tabId: 'tab-add', label: 'Ajouter' }] : []),
+    ...(canAddMore ? [{ tabId: 'tab-add', label: t('addTab') }] : []),
   ]
 
   const handleTabChange = (tabId: string) => {
@@ -106,7 +107,7 @@ export const CreateResidenceAccommodationList = () => {
   return (
     <div>
       <div className="fr-p-2w fr-p-md-6w">
-        <h3>Logements</h3>
+        <h3>{t('title')}</h3>
 
         {errors.typologies?.root && <p className="fr-error-text">{errors.typologies.root.message}</p>}
         {errors.typologies?.message && <p className="fr-error-text">{errors.typologies.message}</p>}

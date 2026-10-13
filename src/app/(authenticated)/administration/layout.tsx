@@ -1,6 +1,7 @@
 import { notFound, redirect } from 'next/navigation'
 import { AdminHeaderComponent } from '~/components/administration/admin-header'
 import { AdminNavigation } from '~/components/administration/admin-navigation'
+import { ImpersonationBanner } from '~/components/impersonation/impersonation-banner'
 import { CommonFooter } from '~/components/ui/footer/footer'
 import { getServerSession } from '~/services/better-auth'
 import styles from './administration.module.css'
@@ -28,6 +29,7 @@ export default async function AdministrationLayout({
   return (
     <>
       <AdminHeaderComponent />
+      <ImpersonationBanner />
       <main className="fr-flex">
         <AdminNavigation />
         <div className={styles.content}>{children}</div>

@@ -1,4 +1,4 @@
-import DOMPurify from 'isomorphic-dompurify'
+import DOMPurify from '~/utils/dompurify'
 
 /**
  * Balises autorisées dans un contenu éditorial saisi hors du code (base de données, CMS).

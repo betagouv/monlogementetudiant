@@ -76,7 +76,7 @@ export const ContactModeSettingsModal = ({ currentMode, ownerId }: Props) => {
         {
           children: isPending ? t('saving') : t('save'),
           priority: 'primary',
-          disabled: isPending || mode === currentMode,
+          disabled: isPending,
           doClosesModal: false,
           onClick: () => mutate({ mode, ownerId }),
         },

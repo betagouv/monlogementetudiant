@@ -5,6 +5,7 @@ import { headers } from 'next/headers'
 import { db } from '~/server/db'
 import { user } from '~/server/db/schema'
 import { auth } from '~/services/better-auth'
+import { safeCallbackPath } from '~/utils/safe-callback-path'
 
 /**
  * Sans `errorCallbackURL`, un lien expiré ou déjà consommé retombe sur la `callbackURL` de succès,
@@ -16,7 +17,9 @@ const ERROR_CALLBACK_URL_BY_ROLE = {
   admin: '/verification/erreur?role=admin',
 } as const
 
-export async function sendMagicLink(email: string, role: 'owner' | 'admin', callbackURL?: string) {
+export async function sendMagicLink(rawEmail: string, role: 'owner' | 'admin', callbackURL?: string) {
+  // Les comptes sont enregistrés en minuscules : une saisie « Jean@Bailleur.fr » doit les retrouver.
+  const email = rawEmail.trim().toLowerCase()
   const result = await db
     .select({ id: user.id })
     .from(user)
@@ -26,7 +29,10 @@ export async function sendMagicLink(email: string, role: 'owner' | 'admin', call
   if (result.length > 0) {
     const requestHeaders = await headers()
     const errorCallbackURL = ERROR_CALLBACK_URL_BY_ROLE[role]
-    await auth.api.signInMagicLink({ body: { email, callbackURL, errorCallbackURL }, headers: requestHeaders })
+    await auth.api.signInMagicLink({
+      body: { email, callbackURL: safeCallbackPath(callbackURL) ?? undefined, errorCallbackURL },
+      headers: requestHeaders,
+    })
   }
 
   return { success: true }

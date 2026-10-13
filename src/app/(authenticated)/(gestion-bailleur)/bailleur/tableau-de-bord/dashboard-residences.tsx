@@ -43,7 +43,7 @@ export function DashboardResidences({ accommodations, page, ownerId, canManageRe
                   )}
                   {!res.published && (
                     <Badge severity="warning" noIcon>
-                      Dépubliée
+                      {t('residences.details.unpublished')}
                     </Badge>
                   )}
                 </div>

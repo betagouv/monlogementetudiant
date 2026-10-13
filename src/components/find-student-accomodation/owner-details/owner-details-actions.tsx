@@ -1,15 +1,16 @@
 'use client'
 
 import Button from '@codegouvfr/react-dsfr/Button'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { useCallback, useEffect, useState } from 'react'
 import { tss } from 'tss-react'
 import { createToast } from '~/components/ui/createToast'
 import { trackEvent } from '~/lib/tracking'
-import { formatCityWithA } from '~/utils/french-contraction'
+import { formatCityWithPreposition } from '~/utils/french-contraction'
 
 export const OwnerDetailsActions = ({ title, location }: { title: string; location: string }) => {
   const t = useTranslations('accomodation')
+  const locale = useLocale()
   const { classes } = useStyles()
   const [currentUrl, setCurrentUrl] = useState('')
 
@@ -23,22 +24,22 @@ export const OwnerDetailsActions = ({ title, location }: { title: string; locati
       trackEvent({ category: 'Logement', action: 'partage copie lien' })
       createToast({
         priority: 'success',
-        message: 'Copié dans le presse-papiers',
+        message: t('sidebar.copySuccess'),
       })
     } catch {
       createToast({
         priority: 'error',
-        message: 'Erreur lors de la copie dans le presse-papiers',
+        message: t('sidebar.copyError'),
       })
     }
-  }, [currentUrl])
+  }, [currentUrl, t])
 
   const handlePrint = useCallback(() => {
     trackEvent({ category: 'Logement', action: 'partage impression' })
     window.print()
   }, [])
 
-  const locationFormatted = formatCityWithA(location)
+  const locationFormatted = formatCityWithPreposition(locale, 'à', location)
   const mailtoUrl = `mailto:?subject=${t('sidebar.emailSubject', { locationFormatted, title })}&body=${encodeURIComponent(t('sidebar.emailBody', { url: currentUrl, location, locationFormatted, title }))}`
 
   return (

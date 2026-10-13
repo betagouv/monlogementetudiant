@@ -5,7 +5,7 @@ export const importJobs = pgTable(
   'import_job',
   {
     id: integer().primaryKey().generatedByDefaultAsIdentity(),
-    type: varchar({ length: 20 }).notNull().$type<TImportJobType>(),
+    type: varchar({ length: 50 }).notNull().$type<TImportJobType>(),
     status: varchar({ length: 20 }).notNull().$type<TImportJobStatus>(),
     source: varchar({ length: 100 }),
     createdBy: text('created_by').notNull(),

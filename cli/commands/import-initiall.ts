@@ -2,7 +2,7 @@ import { and, eq, sql } from 'drizzle-orm'
 import type { TypologyType } from '~/schemas/accommodations/typology'
 import { db } from '~/server/db'
 import { ensureCity, geocodeAddressVerified } from '~/server/lib/import/geocoder'
-import { resolveImportOwner } from '~/server/lib/import/resolve-owner'
+import { markAvailabilityImported, resolveImportOwner } from '~/server/lib/import/resolve-owner'
 import { syncTypologies, type TypologyDraft, typologyAggregates, typologyDraft } from '~/server/lib/typologies'
 import { accommodationAddresses, accommodations, externalSources } from '../../src/server/db/schema'
 import { generateAccommodationKey, uploadFile } from '../../src/server/services/s3'
@@ -153,6 +153,7 @@ const command: ImportCommand = {
 
     const owner = await resolveImportOwner({ id: options.ownerId, slug: options.ownerSlug, name: OWNER_NAME, url: OWNER_URL })
     const ownerId = owner.id
+    if (!options.dryRun) await markAvailabilityImported(ownerId)
     result.ownerName = owner.name
     result.ownerId = ownerId
     if (options.verbose) console.log(`  Owner ${owner.name} id=${ownerId}`)

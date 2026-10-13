@@ -8,20 +8,10 @@ import Link from 'next/link'
 import type { CSSProperties, ReactNode } from 'react'
 
 /**
- * Reprise du MegaMenu du DSFR, avec un seul écart : le niveau du titre de catégorie est
- * paramétrable.
- *
- * Le composant d'origine rend ces intitulés en `<h5>` en dur. Comme le méga-menu se trouve dans
- * l'en-tête, ces `<h5>` suivent immédiatement le `<h1>` de la modale de paramètres d'affichage :
- * le plan de chaque page saute de h1 à h5, ce que le critère RGAA 9.1 interdit. Les remonter en
- * `<h2>` ne règle rien — ils se placent alors avant le `<h1>` de la page et la parasitent.
- *
- * La prop `as` permet donc de les sortir du plan de titres. Une colonne de méga-menu n'est pas
- * une section de contenu : c'est un groupe de liens dans un `<nav>` déjà nommé. Les classes
- * d'origine sont conservées telles quelles, si bien que l'apparence ne change pas.
- *
- * Le reste — structure, classes, identifiants générés, bouton de fermeture — est identique à
- * l'original, pour que la mise à jour du DSFR reste comparable ligne à ligne.
+ * Reprise du MegaMenu du DSFR, avec un seul écart : la balise des intitulés de catégorie est
+ * paramétrable. L'original les rend en `<h5>` en dur, ce qui fait sauter le plan de titres de h1
+ * à h5 depuis l'en-tête ; des `<h2>` précéderaient le `<h1>` de la page (RGAA 9.1). Le reste est
+ * identique à l'original, pour que la mise à jour du DSFR reste comparable ligne à ligne.
  */
 /**
  * Balise portant l'intitulé d'une catégorie.

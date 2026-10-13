@@ -26,7 +26,6 @@ export const StudentAlertLocation: FC<StudentAlertLocationProps> = ({ error, ini
   const [showResults, setShowResults] = useState(false)
   const { setValue } = useFormContext<TCreateAlertRequest>()
 
-  // Update local state when initialLocation changes
   useEffect(() => {
     setSelectedLocation(initialLocation || '')
     setSearchQuery(initialLocation || '')

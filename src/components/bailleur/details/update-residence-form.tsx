@@ -4,11 +4,14 @@ import Button from '@codegouvfr/react-dsfr/Button'
 import Tag from '@codegouvfr/react-dsfr/Tag'
 import { zodResolver } from '@hookform/resolvers/zod'
 import clsx from 'clsx'
+import { useFormatter, useTranslations } from 'next-intl'
+import { useMemo, useRef } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { ResidenceAccommodationList } from '~/components/bailleur/details/residence-accommodation-list'
 import { ResidenceDetails } from '~/components/bailleur/details/residence-details'
 import { ResidenceEquipments } from '~/components/bailleur/details/residence-equipments'
 import { ResidenceLocation } from '~/components/bailleur/details/residence-location'
+import { ResidencePhone } from '~/components/bailleur/details/residence-phone'
 import { ResidencePictures } from '~/components/bailleur/details/residence-pictures'
 import { ResidenceRedirection } from '~/components/bailleur/details/residence-redirection'
 import { ResidenceSummary } from '~/components/bailleur/details/residence-summary'
@@ -16,16 +19,21 @@ import { ResidenceVirtualTour } from '~/components/bailleur/details/residence-vi
 import { UpdateResidencePublication } from '~/components/bailleur/details/update-residence-publication'
 import { EResidenceType } from '~/enums/residence-type'
 import { ETargetAudience } from '~/enums/target-audience'
+import { useResidenceFormInvalid } from '~/hooks/use-residence-form-invalid'
 import { useUpdateResidenceDetails } from '~/hooks/use-update-residence-details'
 import { trackEvent } from '~/lib/tracking'
 import { TAccomodationMy } from '~/schemas/accommodations/accommodations'
-import { TUpdateResidence, ZUpdateResidence } from '~/schemas/accommodations/update-residence'
-import { formatRelativeTime } from '~/utils/formatRelativeTime'
+import { createZUpdateResidence, TUpdateResidence } from '~/schemas/accommodations/update-residence'
+import { formatFrenchPhoneNumber } from '~/utils/phone-number'
 import { sanitizeHTML } from '~/utils/sanitize-html'
 import { typologyFormDefaults } from '~/utils/typology-form-defaults'
 import styles from './update-residence-form.module.css'
 
 export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomodationMy }) => {
+  const t = useTranslations('bailleur.residences.details.form')
+  const tSchemas = useTranslations('schemas')
+  const schema = useMemo(() => createZUpdateResidence(tSchemas), [tSchemas])
+  const format = useFormatter()
   const { city } = accommodation
   const redirectUri = `/trouver-un-logement-etudiant/ville/${encodeURIComponent(city)}/${accommodation.slug}`
 
@@ -34,7 +42,7 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
   const typologyDefaults = typologyFormDefaults(accommodation.typologies)
 
   const form = useForm<TUpdateResidence>({
-    resolver: zodResolver(ZUpdateResidence),
+    resolver: zodResolver(schema),
     defaultValues: {
       name: accommodation.name || '',
       residenceType: (accommodation.residenceType as EResidenceType) || '',
@@ -48,6 +56,7 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
       rentalChargesDetails: accommodation.rentalChargesDetails || '',
       externalUrl: accommodation.externalUrl || '',
       virtualTourUrl: accommodation.virtualTourUrl || '',
+      phoneNumber: accommodation.phoneNumber ? formatFrenchPhoneNumber(accommodation.phoneNumber) : null,
       acceptWaitingList: accommodation.acceptWaitingList || false,
 
       typologies: typologyDefaults,
@@ -74,6 +83,9 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
     },
   })
 
+  const formRef = useRef<HTMLFormElement>(null)
+  const onInvalid = useResidenceFormInvalid<TUpdateResidence>(formRef)
+
   const onSubmit = async (data: TUpdateResidence) => {
     const sanitizedData = {
       ...data,
@@ -87,7 +99,7 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
     <FormProvider {...form}>
       {/* noValidate : la validation est assurée par Zod/RHF. La validation native du navigateur
           court-circuiterait le resolver et remplacerait les messages DSFR par ses propres bulles. */}
-      <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
+      <form ref={formRef} onSubmit={form.handleSubmit(onSubmit, onInvalid)} noValidate>
         <div className="fr-flex fr-direction-row fr-justify-content-space-between fr-align-items-md-center fr-flex-gap-4v">
           <div className="fr-flex fr-flex-gap-2v fr-align-items-center">
             <h1 className="fr-mb-0">{accommodation.name}</h1>
@@ -107,12 +119,15 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
           </div>
           <div className={clsx(styles.container, styles.stickyColumn, 'fr-width-full boxShadow')}>
             <div className="fr-flex fr-justify-content-center fr-p-6w">
-              <span className="fr-mb-0 fr-text--xs">Dernière modification {formatRelativeTime(accommodation.updatedAt)}</span>
+              <span className="fr-mb-0 fr-text--xs">
+                {t('lastModified', { time: format.relativeTime(new Date(accommodation.updatedAt), new Date()) })}
+              </span>
             </div>
             <ResidenceRedirection className="fr-border-top" />
+            <ResidencePhone className="fr-border-top fr-mt-4w" />
             <div className="fr-flex fr-flex-gap-4v fr-justify-content-center fr-p-2w fr-p-md-4w">
               <Button type="submit" iconId="ri-save-line" disabled={updateMutation.isPending}>
-                Enregistrer
+                {t('save')}
               </Button>
               <Button
                 priority="secondary"
@@ -122,7 +137,7 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
                   onClick: () => trackEvent({ category: 'Espace Gestionnaire', action: 'decouvrir-offre', name: accommodation.slug }),
                 }}
               >
-                Voir la fiche
+                {t('viewListing')}
               </Button>
             </div>
           </div>

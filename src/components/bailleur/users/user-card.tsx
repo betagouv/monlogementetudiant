@@ -4,11 +4,9 @@ import Badge from '@codegouvfr/react-dsfr/Badge'
 import Button from '@codegouvfr/react-dsfr/Button'
 import { createModal } from '@codegouvfr/react-dsfr/Modal'
 import Tag from '@codegouvfr/react-dsfr/Tag'
-import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useDeleteBailleurUser } from '~/hooks/use-bailleur-users'
 import type { BailleurPermission, BailleurRole } from '~/server/bailleur/permissions'
-import { buildHref } from '~/utils/preserve-query-params'
 import styles from './user-card.module.css'
 
 type UserItem = {
@@ -18,6 +16,7 @@ type UserItem = {
   email: string
   bailleurRole: BailleurRole | null
   bailleurPermissions: BailleurPermission[]
+  applicationScopeCount?: number | null
 }
 
 type Props = {
@@ -25,11 +24,15 @@ type Props = {
   canEdit: boolean
   canDelete: boolean
   ownerId?: number
+  onEdit: (user: UserItem) => void
 }
 
-export const UserCard = ({ user, canEdit, canDelete, ownerId }: Props) => {
-  const router = useRouter()
-  const searchParams = useSearchParams()
+const scopeSummary = (t: ReturnType<typeof useTranslations<'bailleur.users'>>, count: number | null | undefined) => {
+  if (count === null || count === undefined) return t('scope.summaryAll')
+  return count === 0 ? t('scope.summaryNone') : t('scope.summaryCount', { count })
+}
+
+export const UserCard = ({ user, canEdit, canDelete, ownerId, onEdit }: Props) => {
   const deleteUser = useDeleteBailleurUser()
   const t = useTranslations('bailleur.users')
 
@@ -48,23 +51,9 @@ export const UserCard = ({ user, canEdit, canDelete, ownerId }: Props) => {
           {t(`role.${role}`)}
         </Badge>
         <div className={styles.actions}>
-          {canEdit && (
-            <Button
-              priority="tertiary no outline"
-              size="small"
-              iconId="fr-icon-edit-line"
-              title={t('edit')}
-              onClick={() => router.push(buildHref(`/bailleur/utilisateurs/${user.id}`, searchParams))}
-            />
-          )}
+          {canEdit && <Button priority="tertiary" size="small" iconId="fr-icon-edit-line" title={t('edit')} onClick={() => onEdit(user)} />}
           {canDelete && (
-            <Button
-              priority="tertiary no outline"
-              size="small"
-              iconId="fr-icon-delete-line"
-              title={t('delete')}
-              onClick={() => modal.open()}
-            />
+            <Button priority="tertiary" size="small" iconId="fr-icon-delete-line" title={t('delete')} onClick={() => modal.open()} />
           )}
         </div>
       </div>
@@ -85,6 +74,9 @@ export const UserCard = ({ user, canEdit, canDelete, ownerId }: Props) => {
               {t(`permission.${p}`)}
             </Tag>
           ))
+        )}
+        {!isAdministrator && user.bailleurPermissions.includes('manage_applications') && (
+          <Tag small>{scopeSummary(t, user.applicationScopeCount)}</Tag>
         )}
       </div>
 

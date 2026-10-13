@@ -1,0 +1,4 @@
+.icon::before {
+  --icon-size: 1.25rem;
+  flex-shrink: 0;
+}

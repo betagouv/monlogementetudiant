@@ -2,9 +2,9 @@ import Button from '@codegouvfr/react-dsfr/Button'
 import Tabs from '@codegouvfr/react-dsfr/Tabs'
 import Tag from '@codegouvfr/react-dsfr/Tag'
 import clsx from 'clsx'
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import PrepareStudentLifeMap from '~/components/map/prepare-student-life-map'
-import { formatCityWithA, formatCityWithDe } from '~/utils/french-contraction'
+import { formatCityWithPreposition } from '~/utils/french-contraction'
 import styles from './prepare-student-life-summary.module.css'
 
 interface PrepareStudentLifeSummaryProps {
@@ -24,7 +24,7 @@ export default async function PrepareStudentLifeSummary({
   nbStudents,
   nearbyCities,
 }: PrepareStudentLifeSummaryProps) {
-  const t = await getTranslations('prepareStudentLife')
+  const [t, locale] = await Promise.all([getTranslations('prepareStudentLife'), getLocale()])
   const universities = [
     'Université Paris-Est Créteil (UPEC)',
     'Institut de Formation en Ergothérapie (IFE)',
@@ -39,7 +39,7 @@ export default async function PrepareStudentLifeSummary({
     <div className={clsx('fr-container', styles.mainContainer)}>
       <div className={clsx('fr-col-md-12', styles.container)}>
         <div className={clsx('fr-col-md-8', styles.mainContent)}>
-          <h1 className={styles.subtitle}>{t('subTitle', { titleFormatted: formatCityWithA(name) })}</h1>
+          <h1 className={styles.subtitle}>{t('subTitle', { titleFormatted: formatCityWithPreposition(locale, 'à', name) })}</h1>
           <p>
             Aliquip reprehenderit laborum consectetur mollit aliqua magna consectetur eiusmod ad. Deserunt proident dolore non et commodo
             dolor. Culpa id aliquip do nisi mollit sunt cupidatat fugiat. Nostrud aliquip aute eu. Aliquip reprehenderit laborum consectetur
@@ -105,7 +105,7 @@ export default async function PrepareStudentLifeSummary({
             <PrepareStudentLifeMap bbox={formattedBbox} />
           </div>
           <div className={styles.nearbyContainer}>
-            <p>{t('nearbyCities', { titleFormattedDe: formatCityWithDe(name) })}</p>
+            <p>{t('nearbyCities', { titleFormattedDe: formatCityWithPreposition(locale, 'de', name) })}</p>
             <div className={styles.tagContainer}>
               {nearbyCities.map((city) => (
                 <Tag key={city.slug}>{city.name}</Tag>

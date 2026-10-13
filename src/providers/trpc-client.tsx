@@ -33,6 +33,8 @@ export function TRPCReactProvider({ children }: { children: React.ReactNode }) {
         httpBatchLink({
           transformer: superjson,
           url: getUrl(),
+          // Doit rester sous `maxBatchSize` de la route /api/trpc, qui rejette les batchs plus gros.
+          maxItems: 10,
         }),
       ],
     }),

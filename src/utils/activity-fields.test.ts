@@ -105,7 +105,7 @@ describe('formatDiffFieldLabel', () => {
   })
 
   it('traduit les champs de la résidence, y compris la clé snake_case héritée', () => {
-    expect(formatDiffFieldLabel('nbAccessibleApartments')).toBe('Logements accessibles')
+    expect(formatDiffFieldLabel('nbAccessibleApartments')).toBe('Logements adaptés PMR')
     expect(formatDiffFieldLabel('targetAudience')).toBe('Public visé')
     expect(formatDiffFieldLabel('target_audience')).toBe('Public visé')
   })

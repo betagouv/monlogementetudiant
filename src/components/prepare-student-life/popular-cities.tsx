@@ -8,7 +8,6 @@ import { FC } from 'react'
 import { tss } from 'tss-react'
 import { useCities } from '~/hooks/use-cities'
 import { TCity } from '~/schemas/territories'
-import { sPluriel } from '~/utils/sPluriel'
 
 interface PopularCitiesProps {
   cities: TCity[]
@@ -35,13 +34,13 @@ export const PopularCities: FC<PopularCitiesProps> = ({ cities }) => {
       )}
       <div className={classes.tilesGrid}>
         {(sortedCities || cities).map((city) => {
-          const desc = !!city.nbTotalApartments && `${city.nbTotalApartments} logement${sPluriel(city.nbTotalApartments)} étudiants`
+          const desc = !!city.nbTotalApartments && t('cityAccommodationsCount', { count: city.nbTotalApartments })
           return (
             <Tile
               noIcon
               key={city.id}
               desc={desc}
-              detail={city.priceMin ? `Budget minimum ${city.priceMin}€` : undefined}
+              detail={city.priceMin ? t('minimumBudget', { price: city.priceMin }) : undefined}
               linkProps={{
                 href: `/preparer-sa-vie-etudiante/${city.slug}`,
               }}

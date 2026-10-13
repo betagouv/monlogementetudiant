@@ -1,0 +1,10 @@
+@media (min-width: 48em) {
+  .dueField {
+    flex: 0 0 240px;
+  }
+
+  /* Cale le bas du bouton sur le bas du champ (la marge basse du groupe DSFR déborde hors de la rangée flex). */
+  .rowAction {
+    align-self: flex-end;
+  }
+}

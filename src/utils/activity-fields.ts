@@ -72,12 +72,13 @@ const ACCOMMODATION_FIELD_LABELS: Record<string, string> = {
   target_audience: 'Public visé',
   externalUrl: 'Lien externe',
   virtualTourUrl: 'Visite virtuelle',
+  phoneNumber: 'Numéro de téléphone',
   imagesUrls: 'Photos',
   rentalChargesDetails: 'Détail des charges',
   acceptWaitingList: 'Liste d’attente',
   scholarshipHoldersPriority: 'Priorité boursiers',
   socialHousingRequired: 'Logement social requis',
-  nbAccessibleApartments: 'Logements accessibles',
+  nbAccessibleApartments: 'Logements adaptés PMR',
   nbColivingApartments: 'Logements en coliving',
   bathroom: 'Salle de bain',
   kitchenType: 'Cuisine',
@@ -97,6 +98,9 @@ const ACCOMMODATION_FIELD_LABELS: Record<string, string> = {
 /** Champs de la fiche gestionnaire (table `owner`). */
 const OWNER_FIELD_LABELS: Record<string, string> = {
   contactMode: 'Mode de réception des candidatures',
+  moderationManagers: 'Gestionnaires pouvant modérer les candidatures',
+  applicationScope: 'Périmètre des candidatures',
+  applicationResidences: 'Résidences ouvertes aux candidatures',
 }
 
 export type ParsedDiffField = { typology: TypologyType; field: TypologyField } | null

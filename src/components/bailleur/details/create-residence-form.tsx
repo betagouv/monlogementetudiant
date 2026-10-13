@@ -4,6 +4,8 @@ import Button from '@codegouvfr/react-dsfr/Button'
 import { zodResolver } from '@hookform/resolvers/zod'
 import clsx from 'clsx'
 import { useSearchParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
+import { useMemo, useRef } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { CreateResidenceAccommodationList } from '~/components/bailleur/details/create-residence-accommodation-list'
 import { CreateResidenceEquipments } from '~/components/bailleur/details/create-residence-equipments'
@@ -11,22 +13,27 @@ import { CreateResidenceLocation } from '~/components/bailleur/details/create-re
 import { CreateResidencePictures } from '~/components/bailleur/details/create-residence-pictures'
 import { CreateResidencePublication } from '~/components/bailleur/details/create-residence-publication'
 import { ResidenceDetails } from '~/components/bailleur/details/residence-details'
+import { ResidencePhone } from '~/components/bailleur/details/residence-phone'
 import { ResidenceRedirection } from '~/components/bailleur/details/residence-redirection'
 import { ResidenceSummary } from '~/components/bailleur/details/residence-summary'
 import { ResidenceVirtualTour } from '~/components/bailleur/details/residence-virtual-tour'
 import { useCreateResidence } from '~/hooks/use-create-residence'
+import { useResidenceFormInvalid } from '~/hooks/use-residence-form-invalid'
 import { trackEvent } from '~/lib/tracking'
-import { TCreateResidence, ZCreateResidence } from '~/schemas/accommodations/create-residence'
+import { createZCreateResidence, TCreateResidence } from '~/schemas/accommodations/create-residence'
 import { buildHref } from '~/utils/preserve-query-params'
 import { sanitizeHTML } from '~/utils/sanitize-html'
 import styles from './update-residence-form.module.css'
 
 export const CreateResidenceForm = () => {
+  const t = useTranslations('bailleur.residences.details.form')
+  const tSchemas = useTranslations('schemas')
+  const schema = useMemo(() => createZCreateResidence(tSchemas), [tSchemas])
   const createMutation = useCreateResidence()
   const searchParams = useSearchParams()
 
   const form = useForm<TCreateResidence>({
-    resolver: zodResolver(ZCreateResidence),
+    resolver: zodResolver(schema),
     defaultValues: {
       name: '',
       residenceType: '' as TCreateResidence['residenceType'],
@@ -35,6 +42,7 @@ export const CreateResidenceForm = () => {
       rentalChargesDetails: '',
       externalUrl: '',
       virtualTourUrl: '',
+      phoneNumber: null,
       acceptWaitingList: false,
       typologies: [
         {
@@ -69,6 +77,9 @@ export const CreateResidenceForm = () => {
     },
   })
 
+  const formRef = useRef<HTMLFormElement>(null)
+  const onInvalid = useResidenceFormInvalid<TCreateResidence>(formRef)
+
   const onSubmit = async (data: TCreateResidence) => {
     await createMutation.mutateAsync({
       ...data,
@@ -81,9 +92,9 @@ export const CreateResidenceForm = () => {
     <FormProvider {...form}>
       {/* noValidate : la validation est assurée par Zod/RHF. La validation native du navigateur
           court-circuiterait le resolver et remplacerait les messages DSFR par ses propres bulles. */}
-      <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
+      <form ref={formRef} onSubmit={form.handleSubmit(onSubmit, onInvalid)} noValidate>
         <div className="fr-flex fr-direction-row fr-justify-content-space-between fr-align-items-center">
-          <h1>Nouvelle résidence</h1>
+          <h1>{t('newTitle')}</h1>
           <CreateResidencePublication />
         </div>
         <div className="fr-flex fr-direction-md-row fr-direction-column fr-justify-content-space-between fr-py-4w fr-flex-gap-4v">
@@ -98,12 +109,13 @@ export const CreateResidenceForm = () => {
           </div>
           <div className={clsx(styles.container, styles.stickyColumn, 'fr-width-full boxShadow')}>
             <ResidenceRedirection />
+            <ResidencePhone className="fr-border-top fr-mt-4w" />
             <div className="fr-flex fr-flex-gap-4v fr-justify-content-center fr-p-2w fr-p-md-4w">
               <Button type="submit" iconId="ri-add-line" disabled={createMutation.isPending}>
-                Créer la résidence
+                {t('create')}
               </Button>
               <Button priority="secondary" linkProps={{ href: buildHref('/bailleur/residences', searchParams) }}>
-                Annuler
+                {t('cancel')}
               </Button>
             </div>
           </div>

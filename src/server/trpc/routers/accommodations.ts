@@ -1,9 +1,11 @@
+import * as Sentry from '@sentry/nextjs'
 import { TRPCError } from '@trpc/server'
 import { and, eq, notInArray, type SQL, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { EXPANDED_SEARCH_PAGE_SIZE, EXPANDED_SEARCH_RADIUS_KM } from '~/lib/accommodations-expanded-search'
 import type { TAccomodation } from '~/schemas/accommodations/accommodations'
+import { ZReportAccommodation } from '~/schemas/accommodations/report-accommodation'
 import {
   applyCenterRadiusFilter,
   applyCommonListFilters,
@@ -12,41 +14,56 @@ import {
   toResidenceType,
   toTargetAudience,
 } from '~/server/accommodations/list-query'
+import { buildAccommodationReportEmail } from '~/server/accommodations/report-email'
+import { isOpenToApplications } from '~/server/bailleur/applications-open'
+import { assertAccommodationReportRateLimit, hashIp } from '~/server/contacts/rate-limit'
 import { db } from '~/server/db'
 import { academies } from '~/server/db/schema/academies'
 import { accommodationAddresses } from '~/server/db/schema/accommodation-addresses'
+import { accommodationReports } from '~/server/db/schema/accommodation-reports'
 import { accommodationTypologies } from '~/server/db/schema/accommodation-typologies'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { cities } from '~/server/db/schema/cities'
 import { departments } from '~/server/db/schema/departments'
 import { owners } from '~/server/db/schema/owners'
+import { env } from '~/server/env'
 import { typologiesByType } from '~/server/lib/typologies'
+import { sendRawEmail } from '~/server/services/brevo'
+import { getCanonicalUrl } from '~/utils/canonical'
 import { baseProcedure, createTRPCRouter } from '../init'
 import { bboxSelect } from '../utils/spatial-helpers'
 
-// Les query builders vivent désormais dans `~/server/accommodations/list-query` (partagés avec l'API
+// Les query builders vivent dans `~/server/accommodations/list-query` (partagés avec l'API
 // publique REST v1). On ré-exporte les symboles encore importés directement depuis ce module par
 // d'autres routers (favorites, bailleur) et par `get-my-accommodations`.
 export { priceMaxComputed, rowsToAccommodationDTOs, toAccommodationDTO } from '~/server/accommodations/list-query'
+
+// Bornes des procédures publiques. L'API v1 (`publicCaller`) monte jusqu'à 100 par page.
+const MAX_PAGE_SIZE = 100
+const MAX_PARAM_LENGTH = 200
+const ZPage = z.number().int().min(1).max(1000).default(1)
+const ZPageSize = z.number().int().min(1).max(MAX_PAGE_SIZE)
+const ZRadius = z.number().min(0).max(100)
+const ZPriceMax = z.number().nonnegative().max(100_000)
 
 export const accommodationsRouter = createTRPCRouter({
   list: baseProcedure
     .input(
       z.object({
-        bbox: z.string().optional(),
-        center: z.string().optional(), // "lng,lat"
-        radius: z.number().default(10), // km
-        page: z.number().default(1),
-        pageSize: z.number().default(12),
+        bbox: z.string().max(MAX_PARAM_LENGTH).optional(),
+        center: z.string().max(MAX_PARAM_LENGTH).optional(), // "lng,lat"
+        radius: ZRadius.default(10), // km
+        page: ZPage,
+        pageSize: ZPageSize.default(12),
         isAccessible: z.boolean().optional(),
         hasColiving: z.boolean().optional(),
         onlyWithAvailability: z.boolean().optional(),
-        priceMax: z.number().optional(),
+        priceMax: ZPriceMax.optional(),
         viewCrous: z.boolean().default(false),
-        academyId: z.number().optional(),
-        ownerSlug: z.string().optional(),
-        cityId: z.number().optional(),
-        departmentId: z.number().optional(),
+        academyId: z.number().int().optional(),
+        ownerSlug: z.string().max(MAX_PARAM_LENGTH).optional(),
+        cityId: z.number().int().optional(),
+        departmentId: z.number().int().optional(),
       }),
     )
     .query(async ({ input }) => {
@@ -90,17 +107,17 @@ export const accommodationsRouter = createTRPCRouter({
   listExpandedByCity: baseProcedure
     .input(
       z.object({
-        city: z.string().min(1),
-        radius: z.number().default(EXPANDED_SEARCH_RADIUS_KM),
-        page: z.number().default(1),
-        pageSize: z.number().default(EXPANDED_SEARCH_PAGE_SIZE),
+        city: z.string().min(1).max(MAX_PARAM_LENGTH),
+        radius: ZRadius.default(EXPANDED_SEARCH_RADIUS_KM),
+        page: ZPage,
+        pageSize: ZPageSize.default(EXPANDED_SEARCH_PAGE_SIZE),
         isAccessible: z.boolean().optional(),
         hasColiving: z.boolean().optional(),
         onlyWithAvailability: z.boolean().optional(),
-        priceMax: z.number().optional(),
+        priceMax: ZPriceMax.optional(),
         viewCrous: z.boolean().default(false),
-        ownerSlug: z.string().optional(),
-        excludeIds: z.array(z.number()).optional(),
+        ownerSlug: z.string().max(MAX_PARAM_LENGTH).optional(),
+        excludeIds: z.array(z.number().int()).max(MAX_PAGE_SIZE).optional(),
       }),
     )
     .query(async ({ input }) => {
@@ -186,6 +203,7 @@ export const accommodationsRouter = createTRPCRouter({
         imagesUrls: accommodations.imagesUrls,
         externalUrl: accommodations.externalUrl,
         virtualTourUrl: accommodations.virtualTourUrl,
+        phoneNumber: accommodations.phoneNumber,
         updatedAt: accommodations.updatedAt,
         laundryRoom: accommodations.laundryRoom,
         commonAreas: accommodations.commonAreas,
@@ -207,6 +225,8 @@ export const accommodationsRouter = createTRPCRouter({
         ownerLandingUrl: owners.landingUrl,
         ownerImage: owners.image,
         ownerContactMode: owners.contactMode,
+        acceptsApplications: accommodations.acceptsApplications,
+        applicationsSuspendedAt: accommodations.applicationsSuspendedAt,
         citySlug: cities.slug,
         cityBbox: bboxSelect(cities),
         departmentCode: departments.code,
@@ -268,6 +288,7 @@ export const accommodationsRouter = createTRPCRouter({
       imagesUrls: row.imagesUrls ?? null,
       externalUrl: row.externalUrl ?? undefined,
       virtualTourUrl: row.virtualTourUrl ?? null,
+      phoneNumber: row.phoneNumber,
       updatedAt: row.updatedAt ?? new Date(),
       scholarshipHoldersPriority: row.scholarshipHoldersPriority ?? false,
       socialHousingRequired: row.socialHousingRequired ?? false,
@@ -301,12 +322,63 @@ export const accommodationsRouter = createTRPCRouter({
             url: row.ownerUrl ?? '',
             landingUrl: row.ownerLandingUrl ?? null,
             imageBase64: row.ownerImage ? `data:image/jpeg;base64,${Buffer.from(row.ownerImage).toString('base64')}` : null,
-            contactMode: row.ownerContactMode ?? EOwnerContactMode.NONE,
+            // Une résidence fermée ou suspendue se présente comme un parc sans parcours :
+            // tous les boutons de candidature en dépendent déjà, rien d'autre n'est à filtrer.
+            contactMode: isOpenToApplications(row) ? (row.ownerContactMode ?? EOwnerContactMode.NONE) : EOwnerContactMode.NONE,
           }
         : null,
       citySlug: row.citySlug,
       cityBbox: row.cityBbox,
       departmentCode: row.departmentCode,
     }
+  }),
+
+  report: baseProcedure.input(ZReportAccommodation).mutation(async ({ ctx, input }) => {
+    const [accommodation] = await db
+      .select({ id: accommodations.id, name: accommodations.name, ownerName: owners.name, citySlug: cities.slug })
+      .from(accommodations)
+      .innerJoin(
+        accommodationAddresses,
+        and(eq(accommodationAddresses.accommodationId, accommodations.id), eq(accommodationAddresses.isMain, true)),
+      )
+      .innerJoin(cities, eq(accommodationAddresses.cityId, cities.id))
+      .leftJoin(owners, eq(accommodations.ownerId, owners.id))
+      .where(and(eq(accommodations.slug, input.slug), eq(accommodations.published, true)))
+      .limit(1)
+
+    if (!accommodation) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Logement introuvable' })
+    }
+
+    const ipHash = hashIp(ctx.clientIp)
+    await assertAccommodationReportRateLimit(ipHash)
+
+    const [report] = await db
+      .insert(accommodationReports)
+      .values({ accommodationId: accommodation.id, field: input.field, details: input.details || null, ipHash })
+      .returning({ createdAt: accommodationReports.createdAt })
+
+    if (!env.ACCOMMODATION_REPORT_EMAIL) {
+      console.info(`[accommodations.report] ACCOMMODATION_REPORT_EMAIL absent, signalement non envoyé : ${input.slug}`)
+      return { success: true }
+    }
+
+    const { subject, textContent } = buildAccommodationReportEmail({
+      accommodationName: accommodation.name,
+      ownerName: accommodation.ownerName,
+      field: input.field,
+      details: input.details,
+      url: getCanonicalUrl(`/trouver-un-logement-etudiant/ville/${accommodation.citySlug}/${input.slug}`),
+      date: report.createdAt,
+    })
+
+    try {
+      await sendRawEmail({ to: [env.ACCOMMODATION_REPORT_EMAIL], subject, textContent, senderName: 'Mon Logement Étudiant' })
+    } catch (error) {
+      Sentry.captureException(error, { tags: { step: 'sendAccommodationReportEmail' } })
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: "Le signalement n'a pas pu être envoyé" })
+    }
+
+    return { success: true }
   }),
 })

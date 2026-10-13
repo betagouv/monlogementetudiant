@@ -1,12 +1,7 @@
 /**
- * Stub des APIs de géocodage pour les tests d'import.
- *
- * `resolveAddressLocation` interroge geo.api.gouv.fr (communes du code postal)
- * avant la BAN, et met les communes en cache pour toute la durée du process :
- * le nombre et l'ordre des appels `fetch` ne sont donc plus prévisibles depuis
- * un test. Les réponses sont routées par URL plutôt qu'empilées avec
- * `mockResolvedValueOnce`, ce qui rend les tests indépendants du détail de la
- * chaîne de résolution.
+ * Stub des APIs de géocodage pour les tests d'import. Réponses routées par URL plutôt
+ * qu'empilées avec `mockResolvedValueOnce` : `resolveAddressLocation` interroge geo.api.gouv.fr
+ * puis la BAN et met les communes en cache par process, l'ordre des `fetch` n'est pas prévisible.
  */
 
 export type TGeocodingPlace = {
