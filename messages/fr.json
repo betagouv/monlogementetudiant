@@ -2241,6 +2241,7 @@
         "availableLabel": "Disponibles",
         "save": "Enregistrer",
         "editResidence": "Éditer la résidence",
+        "viewResidence": "Voir la résidence",
         "emptyTitle": "Aucune résidence trouvée",
         "emptyDescription": "Aucune résidence ne correspond à vos critères de recherche.",
         "lastUpdate": "Dernière mise à jour le {date}"
