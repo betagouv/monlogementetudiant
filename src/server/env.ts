@@ -68,6 +68,7 @@ const envSchema = z.object({
   BREVO_TEMPLATE_CONTACT_RESIDENCES_UPDATED: z.coerce.number().int().positive(),
   BREVO_TEMPLATE_CONTACT_DAILY_DIGEST: z.coerce.number().int().positive(),
   BREVO_TEMPLATE_CONTACT_NOT_RETAINED: z.coerce.number().int().positive(),
+  BREVO_TEMPLATE_OTP_LOGIN: z.coerce.number().int().positive(),
   BREVO_TEMPLATE_AVAILABILITY_RESET_WARNING: z.coerce.number().int().positive(),
 
   // S3

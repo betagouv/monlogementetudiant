@@ -1091,6 +1091,22 @@
   "login": {
     "studentTitle": "Se connecter à mon espace étudiant",
     "ownerTitle": "Se connecter à mon espace gestionnaire",
+    "otp": {
+      "linkTitle": "Connexion par lien",
+      "codeTitle": "Connexion par code à usage unique",
+      "switchToOtp": "Se connecter avec un code à usage unique",
+      "switchToMagicLink": "Revenir à la connexion par lien",
+      "emailHint": "Vous recevrez un code à 6 chiffres, valable 10 minutes.",
+      "sendCta": "Recevoir un code de connexion",
+      "sending": "Envoi…",
+      "sendSuccess": "Si un compte existe pour cette adresse, un code vient de vous être envoyé.",
+      "sendError": "L'envoi du code a échoué. Veuillez réessayer.",
+      "sentTo": "Un code à 6 chiffres a été envoyé à <strong>{email}</strong>.",
+      "codeLabel": "Code de connexion",
+      "codeError": "Code invalide ou expiré. Vérifiez le code reçu ou demandez-en un nouveau.",
+      "verifying": "Vérification…",
+      "verifyCta": "Se connecter"
+    },
     "requiredFieldsNotice": "Sauf mention contraire, tous les champs sont obligatoires.",
     "labels": {
       "email": "Email",

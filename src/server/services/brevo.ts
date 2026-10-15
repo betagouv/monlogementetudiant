@@ -111,6 +111,14 @@ export async function sendMagicLinkEmail(email: string, url: string): Promise<vo
   })
 }
 
+export async function sendOtpLoginEmail(email: string, otp: string): Promise<void> {
+  await sendTemplateEmail({
+    to: email,
+    templateId: env.BREVO_TEMPLATE_OTP_LOGIN,
+    params: { OTP: otp },
+  })
+}
+
 /**
  * Double opt-in d'une demande de contact laissée en visiteur : tant que ce lien n'est pas cliqué,
  * les coordonnées ne sont pas transmises au gestionnaire.

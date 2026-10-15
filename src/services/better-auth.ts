@@ -3,7 +3,7 @@ import * as Sentry from '@sentry/nextjs'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { nextCookies } from 'better-auth/next-js'
-import { admin, magicLink } from 'better-auth/plugins'
+import { admin, emailOTP, magicLink } from 'better-auth/plugins'
 import { eq } from 'drizzle-orm'
 import { headers } from 'next/headers'
 import { cache } from 'react'
@@ -14,7 +14,7 @@ import { db } from '~/server/db'
 import * as schema from '~/server/db/schema'
 import { adminOwnerLinks } from '~/server/db/schema/admin-owner-links'
 import { env } from '~/server/env'
-import { sendMagicLinkEmail, sendResetPasswordEmail, sendVerificationEmail } from '~/server/services/brevo'
+import { sendMagicLinkEmail, sendOtpLoginEmail, sendResetPasswordEmail, sendVerificationEmail } from '~/server/services/brevo'
 import { MAGIC_LINK_EXPIRES_IN_SECONDS, recordMagicLinkSent } from '~/server/services/login-attempts'
 import { syncStudentBrevoContactOnSignup } from '~/server/student/sync-brevo-contact'
 
@@ -95,6 +95,23 @@ export const auth = betterAuth({
     },
   },
   plugins: [
+    emailOTP({
+      otpLength: 6,
+      expiresIn: 10 * 60,
+      allowedAttempts: 3,
+      disableSignUp: true,
+      storeOTP: 'hashed',
+      sendVerificationOTP: async ({ email, otp, type }) => {
+        // Codes de connexion réservés aux bailleurs et admins, comme les liens magiques.
+        if (type !== 'sign-in') return
+        const usr = await db.query.user.findFirst({
+          where: eq(schema.user.email, email),
+          columns: { role: true },
+        })
+        if (!canAccessOwnerSpace(usr?.role)) return
+        await sendOtpLoginEmail(email, otp)
+      },
+    }),
     magicLink({
       expiresIn: MAGIC_LINK_EXPIRES_IN_SECONDS,
       storeToken: 'hashed',

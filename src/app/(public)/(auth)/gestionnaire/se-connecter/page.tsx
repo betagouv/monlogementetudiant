@@ -4,7 +4,7 @@ import { Metadata } from 'next'
 import Image from 'next/image'
 import { getTranslations } from 'next-intl/server'
 import { z } from 'zod'
-import { MagicLinkSignInForm } from '~/components/magic-link-sign-in/magic-link-sign-in'
+import { SignInMethodSwitcher } from '~/components/otp-sign-in/otp-sign-in'
 import background from '~/images/connexion.svg'
 import { env } from '~/server/env'
 import { safeCallbackPath } from '~/utils/safe-callback-path'
@@ -28,7 +28,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       <div className={clsx(authStyles.container, 'fr-container')}>
         <h1>{t('ownerTitle')}</h1>
         <p>{t('requiredFieldsNotice')}</p>
-        <MagicLinkSignInForm callbackURL={safeCallbackPath(callbackUrl, '/bailleur/') ?? '/bailleur/tableau-de-bord'} />
+        <SignInMethodSwitcher callbackURL={safeCallbackPath(callbackUrl, '/bailleur/') ?? '/bailleur/tableau-de-bord'} />
         <div className={authStyles.dividerContainer}>
           <span className={authStyles.divider}>{t('labels.or')}</span>
         </div>

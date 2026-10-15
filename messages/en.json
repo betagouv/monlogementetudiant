@@ -1091,6 +1091,22 @@
   "login": {
     "studentTitle": "Sign in to my student area",
     "ownerTitle": "Sign in to my manager area",
+    "otp": {
+      "linkTitle": "Sign in with a link",
+      "codeTitle": "Sign in with a one-time code",
+      "switchToOtp": "Sign in with a one-time code",
+      "switchToMagicLink": "Back to link sign-in",
+      "emailHint": "You will receive a 6-digit code, valid for 10 minutes.",
+      "sendCta": "Receive a sign-in code",
+      "sending": "Sending…",
+      "sendSuccess": "If an account exists for this address, a code has just been sent.",
+      "sendError": "The code could not be sent. Please try again.",
+      "sentTo": "A 6-digit code has been sent to <strong>{email}</strong>.",
+      "codeLabel": "Sign-in code",
+      "codeError": "Invalid or expired code. Check the code you received or request a new one.",
+      "verifying": "Verifying…",
+      "verifyCta": "Sign in"
+    },
     "requiredFieldsNotice": "Unless otherwise stated, all fields are required.",
     "labels": {
       "email": "Email",
