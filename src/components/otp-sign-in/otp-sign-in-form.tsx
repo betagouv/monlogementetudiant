@@ -6,7 +6,7 @@ import { Input } from '@codegouvfr/react-dsfr/Input'
 import * as Sentry from '@sentry/nextjs'
 import clsx from 'clsx'
 import { useTranslations } from 'next-intl'
-import { ClipboardEvent, FC, FormEvent, KeyboardEvent, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { ClipboardEvent, FC, FormEvent, KeyboardEvent, useEffect, useId, useMemo, useRef, useState, useTransition } from 'react'
 import { sendMagicLink } from '~/components/magic-link-sign-in/actions'
 import { LOGIN_OTP_ALLOWED_ATTEMPTS, LOGIN_OTP_LENGTH } from '~/lib/login-otp'
 import { trackEvent } from '~/lib/tracking'
@@ -16,10 +16,7 @@ import styles from './otp-sign-in-form.module.css'
 
 const RESEND_COOLDOWN_SECONDS = 30
 
-type TOtpError =
-  | { kind: 'invalid'; remaining: number }
-  | { kind: 'exhausted' | 'rateLimited' | 'generic' }
-  | { kind: 'validation'; message: string }
+type TOtpError = { kind: 'invalid'; remaining: number } | { kind: 'exhausted' | 'rateLimited' | 'generic' }
 
 const emptyDigits = () => Array.from({ length: LOGIN_OTP_LENGTH }, () => '')
 
@@ -36,11 +33,9 @@ export const OtpSignInForm: FC<{ email: string; role: 'owner' | 'admin'; callbac
   const inputsRef = useRef<Array<HTMLInputElement | null>>([])
 
   const [digits, setDigits] = useState(emptyDigits)
-  const [failures, setFailures] = useState(0)
   const [error, setError] = useState<TOtpError | null>(isCodeExpired ? { kind: 'exhausted' } : null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [resent, setResent] = useState(false)
   const [cooldown, setCooldown] = useState(0)
+  const [isSubmitting, startSubmit] = useTransition()
 
   useEffect(() => {
     if (cooldown <= 0) return
@@ -49,6 +44,7 @@ export const OtpSignInForm: FC<{ email: string; role: 'owner' | 'admin'; callbac
   }, [cooldown])
 
   const isExhausted = error?.kind === 'exhausted'
+  const code = digits.join('')
 
   const focusDigit = (index: number) => inputsRef.current[Math.max(0, Math.min(index, LOGIN_OTP_LENGTH - 1))]?.focus()
 
@@ -85,51 +81,38 @@ export const OtpSignInForm: FC<{ email: string; role: 'owner' | 'admin'; callbac
     fillFrom(index, event.clipboardData.getData('text'))
   }
 
-  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const toError = (result: { status: number; code?: string }): TOtpError => {
+    if (result.status === 429) return { kind: 'rateLimited' }
+    if (result.code === 'TOO_MANY_ATTEMPTS' || result.code === 'OTP_EXPIRED') return { kind: 'exhausted' }
+    if (result.code !== 'INVALID_OTP') return { kind: 'generic' }
+    const remaining = (error?.kind === 'invalid' ? error.remaining : LOGIN_OTP_ALLOWED_ATTEMPTS) - 1
+    return remaining > 0 ? { kind: 'invalid', remaining } : { kind: 'exhausted' }
+  }
+
+  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const parsed = codeSchema.safeParse(digits.join(''))
-    if (!parsed.success) {
-      setError({ kind: 'validation', message: parsed.error.issues[0]?.message ?? '' })
-      return
-    }
+    const parsed = codeSchema.safeParse(code)
+    if (!parsed.success) return
 
-    setIsSubmitting(true)
-    const result = await authClient.signIn.emailOtp({ email, otp: parsed.data })
-    if (!result.error) {
-      trackEvent({ category: 'Authentification', action: 'connexion gestionnaire', name: 'code' })
-      window.location.assign(callbackURL)
-      return
-    }
-
-    setIsSubmitting(false)
-    setDigits(emptyDigits())
-    focusDigit(0)
-    if (result.error.status === 429) {
-      setError({ kind: 'rateLimited' })
-      return
-    }
-    if (result.error.code === 'INVALID_OTP') {
-      const nextFailures = failures + 1
-      setFailures(nextFailures)
-      const remaining = LOGIN_OTP_ALLOWED_ATTEMPTS - nextFailures
-      setError(remaining > 0 ? { kind: 'invalid', remaining } : { kind: 'exhausted' })
-      return
-    }
-    if (result.error.code === 'TOO_MANY_ATTEMPTS' || result.error.code === 'OTP_EXPIRED') {
-      setError({ kind: 'exhausted' })
-      return
-    }
-    setError({ kind: 'generic' })
+    startSubmit(async () => {
+      const result = await authClient.signIn.emailOtp({ email, otp: parsed.data })
+      if (!result.error) {
+        trackEvent({ category: 'Authentification', action: 'connexion gestionnaire', name: 'code' })
+        window.location.assign(callbackURL)
+        return
+      }
+      setError(toError(result.error))
+      setDigits(emptyDigits())
+      focusDigit(0)
+    })
   }
 
   const onResend = async () => {
     setCooldown(RESEND_COOLDOWN_SECONDS)
     try {
       await sendMagicLink(email, role, callbackURL)
-      setFailures(0)
       setError(null)
       setDigits(emptyDigits())
-      setResent(true)
     } catch (resendError) {
       Sentry.captureException(resendError, { tags: { feature: 'otp-sign-in' } })
       setError({ kind: 'generic' })
@@ -138,7 +121,6 @@ export const OtpSignInForm: FC<{ email: string; role: 'owner' | 'admin'; callbac
 
   const errorMessage = (() => {
     if (!error) return null
-    if (error.kind === 'validation') return error.message
     if (error.kind === 'invalid') return t('otp.errors.invalid', { remaining: error.remaining })
     return t(`otp.errors.${error.kind}`)
   })()
@@ -147,7 +129,7 @@ export const OtpSignInForm: FC<{ email: string; role: 'owner' | 'admin'; callbac
     <div className="fr-flex fr-direction-column fr-gap-4v">
       <Input label={t('labels.email')} disabled nativeInputProps={{ value: email, readOnly: true, autoComplete: 'email' }} />
 
-      {resent && <Alert severity="info" small description={t('otp.resent')} />}
+      {cooldown > 0 && error?.kind !== 'generic' && <Alert severity="info" small description={t('otp.resent')} />}
 
       {!isExhausted && (
         <form onSubmit={onSubmit} noValidate>
@@ -185,7 +167,7 @@ export const OtpSignInForm: FC<{ email: string; role: 'owner' | 'admin'; callbac
               </div>
             )}
           </fieldset>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting || !codeSchema.safeParse(code).success}>
             {isSubmitting ? t('otp.submitting') : t('otp.submit')}
           </Button>
         </form>
