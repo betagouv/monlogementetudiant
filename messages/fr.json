@@ -1124,9 +1124,8 @@
     "errorToast": "Une erreur est survenue lors de la connexion.",
     "magicLinkErrorToast": "Une erreur est survenue lors de la connexion, veuillez réessayer ultérieurement",
     "otp": {
-      "legend": "Code de connexion",
+      "label": "Code de connexion",
       "hint": "Saisissez le code à 6 chiffres reçu par email.",
-      "digitLabel": "Chiffre {index} sur {total}",
       "submit": "Se connecter",
       "submitting": "Connexion en cours...",
       "resend": "Renvoyer un code",

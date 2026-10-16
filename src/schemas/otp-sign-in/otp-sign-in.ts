@@ -1,9 +1,14 @@
 import { z } from 'zod'
 import { frSchemaTranslator, type TSchemaTranslator } from '~/schemas/schema-translator'
 
-export const createZOtpCode = (t: TSchemaTranslator = frSchemaTranslator) =>
-  z.string().regex(/^\d{6}$/, { message: t('errors.otpInvalid') })
+export const createZOtpSignInForm = (t: TSchemaTranslator = frSchemaTranslator) =>
+  z.object({
+    code: z
+      .string()
+      .trim()
+      .regex(/^\d{6}$/, { message: t('errors.otpInvalid') }),
+  })
 
-export const ZOtpCode = createZOtpCode()
+export const ZOtpSignInForm = createZOtpSignInForm()
 
-export type TOtpCode = z.infer<typeof ZOtpCode>
+export type TOtpSignInForm = z.infer<typeof ZOtpSignInForm>

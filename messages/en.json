@@ -1124,9 +1124,8 @@
     "errorToast": "An error occurred while signing in.",
     "magicLinkErrorToast": "An error occurred while signing in, please try again later",
     "otp": {
-      "legend": "Sign-in code",
+      "label": "Sign-in code",
       "hint": "Enter the 6-digit code you received by email.",
-      "digitLabel": "Digit {index} of {total}",
       "submit": "Sign in",
       "submitting": "Signing in...",
       "resend": "Send a new code",
