@@ -64,7 +64,8 @@
     "goalTitleRequired": "Veuillez saisir votre objectif",
     "goalTitleMaxLength": "L'objectif ne doit pas dépasser {max} caractères",
     "goalsRequired": "Veuillez ajouter au moins un objectif",
-    "goalsTooMany": "Une liste ne peut pas contenir plus de {max} objectifs"
+    "goalsTooMany": "Une liste ne peut pas contenir plus de {max} objectifs",
+    "otpInvalid": "Veuillez saisir les 6 chiffres du code"
   },
   "typologies": {
     "t1": "Studio T1",

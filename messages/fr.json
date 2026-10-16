@@ -1122,7 +1122,23 @@
     "invalidCredentials": "Email ou mot de passe incorrect.",
     "successToast": "Vous êtes connecté avec succès !",
     "errorToast": "Une erreur est survenue lors de la connexion.",
-    "magicLinkErrorToast": "Une erreur est survenue lors de la connexion, veuillez réessayer ultérieurement"
+    "magicLinkErrorToast": "Une erreur est survenue lors de la connexion, veuillez réessayer ultérieurement",
+    "otp": {
+      "legend": "Code de connexion",
+      "hint": "Saisissez le code à 6 chiffres reçu par email.",
+      "digitLabel": "Chiffre {index} sur {total}",
+      "submit": "Se connecter",
+      "submitting": "Connexion en cours...",
+      "resend": "Renvoyer un code",
+      "resendIn": "Renvoyer un code ({seconds} s)",
+      "resent": "Un nouvel email vous a été envoyé. Seul le dernier code reçu est valable.",
+      "errors": {
+        "invalid": "Code incorrect. Il vous reste {remaining, plural, one {# essai} other {# essais}}.",
+        "exhausted": "Ce code n'est plus valable. Demandez un nouveau code.",
+        "rateLimited": "Trop de tentatives. Patientez une minute avant de réessayer.",
+        "generic": "Une erreur est survenue, veuillez réessayer."
+      }
+    }
   },
   "forgotPassword": {
     "title": "Réinitialiser votre mot de passe",
@@ -1510,7 +1526,12 @@
       "title": "Vérification du lien de connexion",
       "description": "Vous allez être redirigé dans quelques instants.",
       "fallbackText": "Si rien ne se passe, cliquez sur le lien suivant :",
-      "fallbackLink": "Se connecter"
+      "fallbackLink": "Se connecter",
+      "otpTitle": "Connexion à votre espace",
+      "consumedDescription": "Ce lien a déjà été ouvert, par exemple par le filtre de sécurité de votre messagerie. Saisissez le code reçu dans le même email pour vous connecter.",
+      "expiredDescription": "Ce lien de connexion a expiré. Demandez un nouveau code pour vous connecter.",
+      "recovering": "Connexion en cours...",
+      "recoveryFailed": "La connexion n'a pas abouti. Demandez un nouveau lien depuis la page de connexion."
     },
     "genericError": "Erreur de vérification"
   },

@@ -8,7 +8,10 @@ import { createUser } from './fixtures/factories'
 import './helpers/setup-integration'
 import { getTestDb } from './helpers/test-db'
 
-vi.mock('next/headers', () => ({ headers: () => new Headers() }))
+vi.mock('next/headers', async () => {
+  const { testCookies } = await import('./helpers/test-cookies')
+  return { headers: () => new Headers(), cookies: async () => testCookies }
+})
 
 const sentEmails = vi.hoisted(() => [] as { email: string; url: string }[])
 

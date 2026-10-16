@@ -2,8 +2,10 @@
 
 import { and, eq } from 'drizzle-orm'
 import { headers } from 'next/headers'
+import { getClientIp, hashIp } from '~/server/contacts/rate-limit'
 import { db } from '~/server/db'
 import { user } from '~/server/db/schema'
+import { isLoginSendRateLimited } from '~/server/services/login-attempts'
 import { auth } from '~/services/better-auth'
 import { safeCallbackPath } from '~/utils/safe-callback-path'
 
@@ -28,6 +30,10 @@ export async function sendMagicLink(rawEmail: string, role: 'owner' | 'admin', c
 
   if (result.length > 0) {
     const requestHeaders = await headers()
+    // Plafond silencieux : la réponse ne doit pas révéler qu'un compte existe.
+    if (await isLoginSendRateLimited({ email, ipHash: hashIp(getClientIp({ headers: requestHeaders })) })) {
+      return { success: true }
+    }
     const errorCallbackURL = ERROR_CALLBACK_URL_BY_ROLE[role]
     await auth.api.signInMagicLink({
       body: { email, callbackURL: safeCallbackPath(callbackURL) ?? undefined, errorCallbackURL },

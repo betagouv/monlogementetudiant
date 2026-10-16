@@ -1122,7 +1122,23 @@
     "invalidCredentials": "Incorrect email or password.",
     "successToast": "You have successfully signed in!",
     "errorToast": "An error occurred while signing in.",
-    "magicLinkErrorToast": "An error occurred while signing in, please try again later"
+    "magicLinkErrorToast": "An error occurred while signing in, please try again later",
+    "otp": {
+      "legend": "Sign-in code",
+      "hint": "Enter the 6-digit code you received by email.",
+      "digitLabel": "Digit {index} of {total}",
+      "submit": "Sign in",
+      "submitting": "Signing in...",
+      "resend": "Send a new code",
+      "resendIn": "Send a new code ({seconds} s)",
+      "resent": "A new email has been sent. Only the latest code is valid.",
+      "errors": {
+        "invalid": "Incorrect code. {remaining, plural, one {# attempt} other {# attempts}} left.",
+        "exhausted": "This code is no longer valid. Request a new code.",
+        "rateLimited": "Too many attempts. Please wait a minute before trying again.",
+        "generic": "An error occurred, please try again."
+      }
+    }
   },
   "forgotPassword": {
     "title": "Reset your password",
@@ -1510,7 +1526,12 @@
       "title": "Verifying sign-in link",
       "description": "You will be redirected in a few moments.",
       "fallbackText": "If nothing happens, click the following link:",
-      "fallbackLink": "Sign in"
+      "fallbackLink": "Sign in",
+      "otpTitle": "Sign in to your account",
+      "consumedDescription": "This link has already been opened, for example by your mailbox security filter. Enter the code included in the same email to sign in.",
+      "expiredDescription": "This sign-in link has expired. Request a new code to sign in.",
+      "recovering": "Signing in...",
+      "recoveryFailed": "Sign-in failed. Request a new link from the sign-in page."
     },
     "genericError": "Verification error"
   },

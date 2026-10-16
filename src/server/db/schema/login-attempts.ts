@@ -29,10 +29,18 @@ export const loginAttempts = pgTable(
     verifiedAt: timestamp('verified_at', { withTimezone: true }),
     /** User-agent de la vérification : distingue un vrai navigateur d'un scanner de mails. */
     verifiedUserAgent: text('verified_user_agent'),
+    /** Empreinte du cookie posé dans le navigateur à l'origine de la demande. */
+    bindingHash: varchar('binding_hash', { length: 64 }),
+    /** Session ouverte par la consommation du lien : révoquée si un scanner l'a consommé à la place du gestionnaire. */
+    sessionId: text('session_id'),
+    /** HMAC de l'IP à l'origine de la demande, pour plafonner les envois. */
+    ipHash: varchar('ip_hash', { length: 64 }),
   },
   (table) => [
     index('login_attempt_created_at_idx').on(table.createdAt),
     index('login_attempt_owner_id_idx').on(table.ownerId),
     index('login_attempt_status_idx').on(table.status),
+    index('login_attempt_email_created_at_idx').on(table.email, table.createdAt),
+    index('login_attempt_ip_hash_created_at_idx').on(table.ipHash, table.createdAt),
   ],
 )
