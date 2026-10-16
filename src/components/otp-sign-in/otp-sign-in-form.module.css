@@ -1,18 +1,5 @@
-.digits {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.digit {
-  width: 2.75rem;
-  text-align: center;
+.code {
+  font-family: monospace;
   font-size: 1.5rem;
-  padding-left: 0;
-  padding-right: 0;
-}
-
-@media (min-width: 48em) {
-  .digit {
-    width: 3rem;
-  }
+  letter-spacing: 0.5em;
 }
