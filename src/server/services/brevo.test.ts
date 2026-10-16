@@ -140,6 +140,15 @@ describe('brevo service', () => {
       expect(body.params).toEqual({ MAGIC_LINK: 'https://example.com/magic' })
       expect(body.to).toEqual([{ email: 'user@test.com' }])
     })
+
+    it('adds the OTP_CODE param when a code is sent with the link', async () => {
+      const { sendMagicLinkEmail } = await import('./brevo')
+
+      await sendMagicLinkEmail('user@test.com', 'https://example.com/magic', '123456')
+
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body)
+      expect(body.params).toEqual({ MAGIC_LINK: 'https://example.com/magic', OTP_CODE: '123456' })
+    })
   })
 
   describe('sendVerificationEmail', () => {

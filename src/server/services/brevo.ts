@@ -103,11 +103,11 @@ export async function sendResetPasswordEmail(email: string, url: string): Promis
   })
 }
 
-export async function sendMagicLinkEmail(email: string, url: string): Promise<void> {
+export async function sendMagicLinkEmail(email: string, url: string, otp?: string): Promise<void> {
   await sendTemplateEmail({
     to: email,
     templateId: env.BREVO_TEMPLATE_MAGIC_LINK,
-    params: { MAGIC_LINK: url },
+    params: otp ? { MAGIC_LINK: url, OTP_CODE: otp } : { MAGIC_LINK: url },
   })
 }
 

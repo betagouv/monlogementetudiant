@@ -1,34 +1,17 @@
 import clsx from 'clsx'
 import { Metadata } from 'next'
 import Image from 'next/image'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { MagicLinkRedirect } from '~/components/magic-link-redirect/magic-link-redirect'
+import { LoginLinkRecovery } from '~/components/otp-sign-in/login-link-recovery'
+import { OtpSignInForm } from '~/components/otp-sign-in/otp-sign-in-form'
 import background from '~/images/connexion.svg'
-import { env } from '~/server/env'
+import { getSafeVerifyUrl, resolveLoginLinkOutcome } from '~/server/services/login-link-outcome'
+import { getServerSession } from '~/services/better-auth'
 import authStyles from '../../auth.module.css'
 
 export const revalidate = 0
-
-const MAGIC_LINK_VERIFY_PATH = '/api/auth/magic-link/verify'
-
-/**
- * Vérifie que l'URL cible est bien l'endpoint de vérification Better Auth de notre
- * propre origine : aucune autre destination de redirection n'est acceptée.
- */
-function getSafeVerifyUrl(url: string | undefined): string | null {
-  if (!url) return null
-  let parsed: URL
-  try {
-    parsed = new URL(url)
-  } catch {
-    return null
-  }
-  const base = new URL(env.BASE_URL)
-  if (parsed.origin !== base.origin) return null
-  if (!parsed.pathname.startsWith(MAGIC_LINK_VERIFY_PATH)) return null
-  return parsed.toString()
-}
 
 export async function generateMetadata(): Promise<Metadata> {
   const tMeta = await getTranslations('metadata')
@@ -51,21 +34,53 @@ export default async function VerificationBufferPage({ searchParams }: Verificat
     notFound()
   }
 
+  const outcome = await resolveLoginLinkOutcome(safeUrl)
+  if (outcome.kind === 'error') redirect(outcome.redirectTo)
+
+  if (outcome.kind === 'redirect') {
+    return (
+      <>
+        <div className={authStyles.imageContainer}>
+          <Image className={authStyles.image} src={background} alt="" priority quality={100} />
+        </div>
+        <div className={clsx(authStyles.container, 'fr-container')}>
+          <h1>{t('title')}</h1>
+          <p>{t('description')}</p>
+          <p className="fr-text--sm">
+            {t('fallbackText')}
+            <br />
+            <a href={safeUrl}>{t('fallbackLink')}</a>
+          </p>
+        </div>
+        <MagicLinkRedirect url={safeUrl} />
+      </>
+    )
+  }
+
+  const session = await getServerSession()
+  if (session?.user.email === outcome.email) redirect(outcome.callbackURL)
+
+  const otpForm =
+    outcome.kind === 'otp' ? (
+      <>
+        <p>{outcome.isCodeExpired ? t('expiredDescription') : t('consumedDescription')}</p>
+        <OtpSignInForm email={outcome.email} role={outcome.role} callbackURL={outcome.callbackURL} isCodeExpired={outcome.isCodeExpired} />
+      </>
+    ) : null
+
   return (
     <>
       <div className={authStyles.imageContainer}>
         <Image className={authStyles.image} src={background} alt="" priority quality={100} />
       </div>
       <div className={clsx(authStyles.container, 'fr-container')}>
-        <h1>{t('title')}</h1>
-        <p>{t('description')}</p>
-        <p className="fr-text--sm">
-          {t('fallbackText')}
-          <br />
-          <a href={safeUrl}>{t('fallbackLink')}</a>
-        </p>
+        <h1>{t('otpTitle')}</h1>
+        {outcome.kind === 'recover' ? (
+          <LoginLinkRecovery verifyUrl={safeUrl} callbackURL={outcome.callbackURL} fallback={<p>{t('recoveryFailed')}</p>} />
+        ) : (
+          otpForm
+        )}
       </div>
-      <MagicLinkRedirect url={safeUrl} />
     </>
   )
 }

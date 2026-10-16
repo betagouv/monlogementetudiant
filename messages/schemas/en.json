@@ -64,7 +64,8 @@
     "goalTitleRequired": "Please enter your goal",
     "goalTitleMaxLength": "The goal must not exceed {max} characters",
     "goalsRequired": "Please add at least one goal",
-    "goalsTooMany": "A list cannot contain more than {max} goals"
+    "goalsTooMany": "A list cannot contain more than {max} goals",
+    "otpInvalid": "Please enter the 6 digits of the code"
   },
   "typologies": {
     "t1": "T1 studio",
