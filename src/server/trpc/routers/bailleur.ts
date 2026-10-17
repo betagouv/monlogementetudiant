@@ -343,6 +343,7 @@ const accommodationSelectFields = {
   rentalChargesDetails: accommodations.rentalChargesDetails,
   address: accommodationAddresses.address,
   city: cities.name,
+  citySlug: cities.slug,
   postalCode: accommodationAddresses.postalCode,
   residenceType: accommodations.residenceType,
   targetAudience: accommodations.targetAudience,

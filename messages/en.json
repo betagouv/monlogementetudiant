@@ -2241,6 +2241,7 @@
         "availableLabel": "Available",
         "save": "Save",
         "editResidence": "Edit residence",
+        "viewResidence": "View residence",
         "emptyTitle": "No residence found",
         "emptyDescription": "No residence matches your search criteria.",
         "lastUpdate": "Last updated on {date}"
