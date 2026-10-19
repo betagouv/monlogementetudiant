@@ -17,6 +17,7 @@
     "test": "vitest",
     "test:unit": "vitest --project unit",
     "test:integration": "vitest --project integration --run",
+    "test:coverage": "vitest --run --coverage",
     "check-env": "tsx --env-file=.env src/server/env.ts",
     "cli": "tsx --env-file=.env cli/index.ts"
   },
@@ -89,6 +90,7 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "@types/ssh2-sftp-client": "^9.0.6",
+    "@vitest/coverage-v8": "^4.1.11",
     "axe-core": "^4.13.0",
     "cheerio": "^1.2.0",
     "domhandler": "^6.0.1",
