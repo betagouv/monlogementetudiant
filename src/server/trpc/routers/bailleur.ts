@@ -9,7 +9,7 @@ import { EOwnerContactMode, ZOwnerContactMode } from '~/enums/owner-contact-mode
 import type { TAccommodationSelection } from '~/schemas/accommodations/accommodation-selection'
 import { ZCreateResidence } from '~/schemas/accommodations/create-residence'
 import { getTypologyLabel } from '~/schemas/accommodations/typology'
-import { ZUpdateResidence } from '~/schemas/accommodations/update-residence'
+import { DESCRIPTION_SECTION_KEYS, ZUpdateResidence } from '~/schemas/accommodations/update-residence'
 import { ZUpdateResidenceList } from '~/schemas/accommodations/update-residence-list'
 import type { TBailleurAccommodationScope } from '~/schemas/bailleur-users/accommodation-scope'
 import {
@@ -389,6 +389,10 @@ async function verifyOwnership(slug: string, userId: string) {
 
 const PAGE_SIZE = 20
 
+function sanitizeSection(html: string | undefined): string | null {
+  return html ? sanitizeHTML(html) || null : null
+}
+
 /** Plafond du sélecteur de périmètre ; au-delà, l'UI invite à affiner la recherche. */
 const SCOPE_RESIDENCES_LIMIT = 2000
 
@@ -542,6 +546,12 @@ export const bailleurRouter = createTRPCRouter({
         residenceType: fields.residenceType ?? null,
         targetAudience: fields.targetAudience ?? null,
         description: fields.description ? sanitizeHTML(fields.description) : null,
+        tagline: fields.tagline?.trim() || null,
+        locationAndProximity: sanitizeSection(fields.locationAndProximity),
+        servicesAndEquipment: sanitizeSection(fields.servicesAndEquipment),
+        receptionAndContact: sanitizeSection(fields.receptionAndContact),
+        practicalInfo: sanitizeSection(fields.practicalInfo),
+        otherInformation: sanitizeSection(fields.otherInformation),
         rentalChargesDetails: fields.rentalChargesDetails ?? null,
         externalUrl: fields.externalUrl || null,
         virtualTourUrl: fields.virtualTourUrl?.trim() || null,
@@ -652,6 +662,10 @@ export const bailleurRouter = createTRPCRouter({
       }
       if (typeof camelFields.description === 'string') {
         camelFields.description = sanitizeHTML(camelFields.description)
+      }
+      if (typeof fields.tagline === 'string') camelFields.tagline = fields.tagline.trim() || null
+      for (const key of DESCRIPTION_SECTION_KEYS) {
+        if (typeof fields[key] === 'string') camelFields[key] = sanitizeSection(fields[key])
       }
       const userProvidedKeys = new Set(Object.keys(camelFields))
       const parentSet: Record<string, unknown> = { ...camelFields }

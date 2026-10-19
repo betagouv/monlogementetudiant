@@ -8,6 +8,7 @@ import type { TImportJobResidence, TImportJobSummary } from '~/schemas/import-jo
 import { db } from '~/server/db'
 import { accommodationAddresses, accommodations, externalSources } from '~/server/db/schema'
 import { env } from '~/server/env'
+import { splitDescription } from '~/server/lib/description-sections'
 import { markAvailabilityImported, resolveImportOwner } from '~/server/lib/import/resolve-owner'
 import { syncTypologies, typologyAggregates, typologyDraft } from '~/server/lib/typologies'
 import { generateAccommodationKey, uploadFile } from '~/server/services/s3'
@@ -384,9 +385,11 @@ export async function executeCsvImport(
 
       const derived = typologyAggregates(typologyDrafts)
 
+      const description = row.description?.trim() || null
       const accommodationData = {
         name,
-        description: row.description?.trim() || null,
+        description,
+        ...splitDescription(description),
         residenceType: normalizeEnum(row.residence_type),
         targetAudience: (normalizeEnum(row.target_audience) ?? 'etudiants') as ETargetAudience,
         published: true,

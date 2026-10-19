@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { ETargetAudience } from '~/enums/target-audience'
 import { db } from '~/server/db'
 import { env } from '~/server/env'
+import { splitDescription } from '~/server/lib/description-sections'
 import { ensureCity, geocodeAddressVerified, geocodeImportRow, reverseGeocode } from '~/server/lib/import/geocoder'
 import { TYPOLOGIES } from '../../src/schemas/accommodations/typology'
 import { ZUpdateResidence } from '../../src/schemas/accommodations/update-residence'
@@ -339,9 +340,11 @@ const command: ImportCommand = {
 
         const derived = typologyAggregates(typologyDrafts)
 
+        const description = row.description?.trim() || null
         const accommodationData = {
           name,
-          description: row.description?.trim() || null,
+          description,
+          ...splitDescription(description),
           residenceType: normalizeEnum(row.residence_type),
           targetAudience: (normalizeEnum(row.target_audience) ?? 'etudiants') as ETargetAudience,
           published: true,

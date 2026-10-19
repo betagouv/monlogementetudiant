@@ -25,6 +25,7 @@ import { resetStaleAvailabilityCommand } from './commands/reset-stale-availabili
 import { seedAlertSnapshotCommand } from './commands/seed-alert-snapshot'
 import { sendAlertJobs } from './commands/send-alert-jobs'
 import { sendContactDigestCommand } from './commands/send-contact-digest'
+import { splitDescriptions } from './commands/split-descriptions'
 import { auditStorage } from './commands/storage/auditStorage'
 import { uploadImages } from './commands/upload-images'
 import { verifyRamsese } from './commands/verify-ramsese'
@@ -216,6 +217,18 @@ program
   .option('--verbose', 'Afficher le détail de chaque problème')
   .option('--write', 'Appliquer les corrections (URLs cassées retirées de la base, fichiers orphelins supprimés de S3)')
   .action((opts) => auditStorage(opts))
+
+program
+  .command('split-descriptions')
+  .description('Découpe la description des résidences en rubriques (accroche, localisation, services, accueil, modalités, autre)')
+  .option('--csv [path]', 'Écrire le découpage dans un CSV (ouvrable dans Excel), sans rien appliquer')
+  .option('--write', 'Écrire les rubriques en base (par défaut : dry-run)')
+  .option('--dry-run', 'Simuler sans écrire, même avec --write')
+  .option('--force', 'Écraser les rubriques des résidences déjà découpées')
+  .option('--owner <id-or-slug>', 'Limiter à un gestionnaire')
+  .option('--limit <n>', 'Limiter le nombre de résidences', parseInt)
+  .option('--verbose', 'Afficher le découpage de chaque résidence')
+  .action((opts) => splitDescriptions(opts))
 
 program
   .command('seed-alert-snapshot')

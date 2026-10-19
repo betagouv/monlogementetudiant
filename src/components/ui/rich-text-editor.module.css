@@ -37,3 +37,15 @@
   padding: 0.75rem;
   outline: none;
 }
+
+.editor.compact {
+  min-height: 80px;
+}
+
+.editor :global(p.is-editor-empty:first-child)::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: var(--text-mention-grey);
+}

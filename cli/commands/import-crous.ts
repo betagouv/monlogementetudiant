@@ -1,6 +1,7 @@
 import { and, eq, sql } from 'drizzle-orm'
 import { db } from '~/server/db'
 import { env } from '~/server/env'
+import { splitDescription } from '~/server/lib/description-sections'
 import { ensureCity, reverseGeocode } from '~/server/lib/import/geocoder'
 import { markAvailabilityImported, resolveImportOwner } from '~/server/lib/import/resolve-owner'
 import { syncTypologies, type TypologyDraft, typologyAggregates, typologyDraft } from '~/server/lib/typologies'
@@ -313,10 +314,12 @@ const command: ImportCommand = {
           ...(geom ? { geom } : {}),
         }
 
+        const description = item.description_residence ? sanitizeHTML(item.description_residence) : null
         // Common fields for both insert and update
         const baseFields = {
           name,
-          description: item.description_residence ? sanitizeHTML(item.description_residence) : null,
+          description,
+          ...splitDescription(description),
           residenceType: 'residence-etudiante',
           targetAudience: 'etudiants' as const,
           published: true,

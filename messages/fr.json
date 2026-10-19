@@ -2203,8 +2203,32 @@
         },
         "summary": {
           "title": "En quelques mots",
-          "description": "Description",
-          "descriptionPlaceholder": "Décrivez votre résidence...",
+          "sections": {
+            "tagline": {
+              "label": "Accroche",
+              "placeholder": "Résidence calme et conviviale, idéale pour se concentrer sur ses études tout en profitant d'une vie de résidence animée."
+            },
+            "locationAndProximity": {
+              "label": "Localisation et proximité",
+              "placeholder": "La résidence se situe dans le quartier de la gare, à 10 minutes du campus universitaire A. Desservie par le tramway ligne B"
+            },
+            "servicesAndEquipment": {
+              "label": "Services et équipements spécifiques",
+              "placeholder": "Veilleur de nuit de 22h à 7h, salle de sport en accès libre, jardin partagé, accompagnement individualisé pour les démarches administratives."
+            },
+            "receptionAndContact": {
+              "label": "Accueil et contact",
+              "placeholder": "Accueil ouvert du lundi au vendredi de 9h à 17h. Contact : accueil@residence-exemple.fr"
+            },
+            "practicalInfo": {
+              "label": "Modalités pratiques",
+              "placeholder": "Réponse sous 5 jours ouvrés. Bail de 10 mois renouvelable."
+            },
+            "otherInformation": {
+              "label": "Autre",
+              "placeholder": ""
+            }
+          },
           "rentalChargesLabel": "Détails de la redevance locative",
           "rentalChargesHint": "Indiquez ce que comprennent les charges locatives.",
           "rentalChargesExample": "Exemple : chauffage collectif, wifi, entretien des parties communes, salle de sport, etc."

@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { Controller, useFormContext } from 'react-hook-form'
 import { RichTextEditor } from '~/components/ui/rich-text-editor'
 import { TCreateResidence } from '~/schemas/accommodations/create-residence'
-import { TUpdateResidence } from '~/schemas/accommodations/update-residence'
+import { DESCRIPTION_SECTION_KEYS, TUpdateResidence } from '~/schemas/accommodations/update-residence'
 
 export const ResidenceSummary = () => {
   const t = useTranslations('bailleur.residences.details.summary')
@@ -14,16 +14,35 @@ export const ResidenceSummary = () => {
     <div className="fr-border-bottom">
       <div className="fr-p-2w fr-p-md-6w">
         <h3>{t('title')}</h3>
-        <span>{t('description')}</span>
-        <div className="fr-mt-2w">
-          <Controller
-            name="description"
-            control={control}
-            render={({ field }) => (
-              <RichTextEditor value={field.value || ''} onChange={field.onChange} placeholder={t('descriptionPlaceholder')} />
-            )}
-          />
-        </div>
+
+        <Input
+          label={t('sections.tagline.label')}
+          textArea
+          nativeTextAreaProps={{ rows: 2, placeholder: t('sections.tagline.placeholder'), ...register('tagline') }}
+        />
+
+        {DESCRIPTION_SECTION_KEYS.map((key) => (
+          <div key={key} className="fr-input-group">
+            <span id={`residence-section-${key}`} className="fr-label">
+              {t(`sections.${key}.label`)}
+            </span>
+            <div className="fr-mt-1w">
+              <Controller
+                name={key}
+                control={control}
+                render={({ field }) => (
+                  <RichTextEditor
+                    value={field.value || ''}
+                    onChange={field.onChange}
+                    placeholder={t(`sections.${key}.placeholder`)}
+                    labelledBy={`residence-section-${key}`}
+                    compact
+                  />
+                )}
+              />
+            </div>
+          </div>
+        ))}
 
         <Input
           className="fr-mt-4w"

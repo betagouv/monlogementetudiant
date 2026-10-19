@@ -575,6 +575,13 @@
       "when": 1792398346245,
       "tag": "0081_typology_zero_totals",
       "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1792415981921,
+      "tag": "0082_accommodation_description_sections",
+      "breakpoints": true
     }
   ]
 }
