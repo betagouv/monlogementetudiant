@@ -33,7 +33,7 @@ workflows:
       - test_unit:
           requires:
             - prepare_workspace_dependencies
-      - test_integration:
+      - test_coverage:
           requires:
             - prepare_workspace_dependencies
 
@@ -83,7 +83,7 @@ jobs:
           name: 'Run unit tests'
           command: pnpm test:unit
 
-  test_integration:
+  test_coverage:
     docker:
       - image: cimg/node:24.11.1
       - image: postgis/postgis:16-3.4
@@ -101,11 +101,11 @@ jobs:
           name: 'Wait for PostgreSQL'
           command: for i in $(seq 1 30); do pg_isready -h localhost -U test && break; sleep 2; done
       - run:
-          name: 'Run Drizzle migrations'
-          command: DATABASE_URL="$DATABASE_URL_TEST" pnpm drizzle-kit migrate
-      - run:
-          name: 'Run integration tests'
-          command: pnpm test:integration
+          name: 'Run full test suite with coverage'
+          command: pnpm test:coverage
+      - store_artifacts:
+          path: coverage
+          destination: coverage
 
 commands:
   install_pnpm:
