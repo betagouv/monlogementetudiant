@@ -211,6 +211,63 @@ const isAssignedToResidence = (gestionnaire: OwnerGestionnaire, accommodationId:
 
 const describeEligibleResidences = (rows: Array<{ name: string }>) => rows.map((r) => r.name).join(', ') || 'Aucune résidence'
 
+/**
+ * Un périmètre candidats restreint ne vise que des résidences ouvertes aux candidatures : une résidence
+ * fermée y est refusée, sauf si l'administrateur a confirmé son ouverture.
+ */
+async function openScopeResidences(tx: DbTransaction, ownerId: number, scope: TBailleurAccommodationScope, confirmed: boolean) {
+  if (scope.mode !== 'restricted' || scope.accommodationIds.length === 0) return 0
+
+  const closed = await tx
+    .select({ id: accommodations.id })
+    .from(accommodations)
+    .where(
+      and(
+        eq(accommodations.ownerId, ownerId),
+        inArray(accommodations.id, scope.accommodationIds),
+        eq(accommodations.acceptsApplications, false),
+      ),
+    )
+  if (closed.length === 0) return 0
+  if (!confirmed) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: 'Certaines résidences sélectionnées ne reçoivent pas de candidatures : confirmez leur ouverture',
+    })
+  }
+
+  await tx
+    .update(accommodations)
+    .set({ acceptsApplications: true })
+    .where(
+      inArray(
+        accommodations.id,
+        closed.map((r) => r.id),
+      ),
+    )
+  return closed.length
+}
+
+async function reportOpenedResidences(
+  actor: { id: string; name: string },
+  owner: { id: number; name: string },
+  before: Array<{ id: number; name: string }>,
+) {
+  const after = await readEligibleResidences(owner.id, ALL_ACCOMMODATIONS)
+  await logActivity({
+    userId: actor.id,
+    userName: actor.name,
+    ownerId: owner.id,
+    ownerName: owner.name,
+    entityType: 'owner',
+    entityId: String(owner.id),
+    entityName: owner.name,
+    action: 'owner.application_residences_updated',
+    metadata: { diff: { applicationResidences: { old: describeEligibleResidences(before), new: describeEligibleResidences(after) } } },
+  })
+  await notifyContactResidencesUpdated({ owner: { id: owner.id, name: owner.name }, before, after })
+}
+
 type ApplicationScopeWrite = {
   userId: string
   ownerId: number
@@ -1124,8 +1181,7 @@ export const bailleurRouter = createTRPCRouter({
       .select({ id: accommodations.id, name: accommodations.name })
       .from(accommodations)
       .where(eq(accommodations.ownerId, owner.id))
-    const ownerResidenceIds = ownerResidences.map((r) => r.id)
-    const ownedIds = new Set(ownerResidenceIds)
+    const ownedIds = new Set(ownerResidences.map((r) => r.id))
     if (checkedIds.some((id) => !ownedIds.has(id))) {
       throw new TRPCError({ code: 'BAD_REQUEST', message: "Une residence selectionnee n'appartient pas a ce bailleur" })
     }
@@ -1163,7 +1219,6 @@ export const bailleurRouter = createTRPCRouter({
         scope: gestionnaire.scope,
         selectedIn,
         removedFrom: checkedIds.filter((id) => !selectedIn.includes(id)),
-        ownerAccommodationIds: ownerResidenceIds,
       })
       const permissions = sanitizeGestionnairePermissions(
         nextApplicationsPermissions(gestionnaire.bailleurPermissions, next.applicationsEnabled),
@@ -1638,7 +1693,15 @@ export const bailleurRouter = createTRPCRouter({
           const rows = await db
             .select({ userId: bailleurAccommodationScopes.userId, n: sql<number>`count(*)::int` })
             .from(bailleurAccommodationScopes)
-            .where(inArray(bailleurAccommodationScopes.userId, restrictedIds))
+            .innerJoin(accommodations, eq(accommodations.id, bailleurAccommodationScopes.accommodationId))
+            // Même filtre que la page Contacts : une résidence fermée aux candidatures n'y apparaît pas.
+            .where(
+              and(
+                inArray(bailleurAccommodationScopes.userId, restrictedIds),
+                eq(accommodations.ownerId, owner.id),
+                eq(accommodations.acceptsApplications, true),
+              ),
+            )
             .groupBy(bailleurAccommodationScopes.userId)
           for (const r of rows) counts.set(r.userId, r.n)
         }
@@ -1698,6 +1761,11 @@ export const bailleurRouter = createTRPCRouter({
         }
 
         const id = crypto.randomUUID()
+        const createdPermissions =
+          input.bailleurRole === 'administrator' ? [] : sanitizeGestionnairePermissions(input.bailleurPermissions, owner.contactMode)
+        const scopeOpensResidences = createdPermissions.includes('manage_applications') && input.applicationScope !== undefined
+        const eligibleBefore = scopeOpensResidences ? await readEligibleResidences(owner.id, ALL_ACCOMMODATIONS) : []
+        let openedCount = 0
         const created = await db.transaction(async (tx) => {
           const [row] = await tx
             .insert(user)
@@ -1710,8 +1778,7 @@ export const bailleurRouter = createTRPCRouter({
               role: 'owner',
               ownerId: owner.id,
               bailleurRole: input.bailleurRole,
-              bailleurPermissions:
-                input.bailleurRole === 'administrator' ? [] : sanitizeGestionnairePermissions(input.bailleurPermissions, owner.contactMode),
+              bailleurPermissions: createdPermissions,
             })
             .returning()
 
@@ -1722,10 +1789,14 @@ export const bailleurRouter = createTRPCRouter({
               bailleurRole: input.bailleurRole,
               scope: input.applicationScope,
             })
+            if (scopeOpensResidences) {
+              openedCount = await openScopeResidences(tx, owner.id, input.applicationScope, input.openClosedResidences === true)
+            }
           }
 
           return row
         })
+        if (openedCount > 0) await reportOpenedResidences(ctx.session.user, owner, eligibleBefore)
 
         try {
           await sendOwnerWelcomeEmail(created.email, { firstname: input.firstname, lastname: input.lastname })
@@ -1819,14 +1890,22 @@ export const bailleurRouter = createTRPCRouter({
 
         const previousScope = scopeToWrite ? await readApplicationScope(target.id) : null
         const managedBefore = await readManagedResidences(target.id)
+        const nextPermissions = (updateData.bailleurPermissions as BailleurPermission[] | undefined) ?? target.bailleurPermissions
+        const scopeOpensResidences = nextRole === 'gestionnaire' && nextPermissions.includes('manage_applications') && !!scopeToWrite
+        const eligibleBefore = scopeOpensResidences ? await readEligibleResidences(owner.id, ALL_ACCOMMODATIONS) : []
+        let openedCount = 0
 
         const updated = await db.transaction(async (tx) => {
           const [row] = await tx.update(user).set(updateData).where(eq(user.id, input.id)).returning()
           if (scopeToWrite) {
             await writeApplicationScope(tx, { userId: target.id, ownerId: owner.id, bailleurRole: nextRole, scope: scopeToWrite })
+            if (scopeOpensResidences) {
+              openedCount = await openScopeResidences(tx, owner.id, scopeToWrite, input.openClosedResidences === true)
+            }
           }
           return row
         })
+        if (openedCount > 0) await reportOpenedResidences(ctx.session.user, owner, eligibleBefore)
 
         if (previousScope) {
           const nextScope = await readApplicationScope(target.id)

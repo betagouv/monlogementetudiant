@@ -444,6 +444,64 @@ describe('bailleur.users — écriture du périmètre', () => {
     expect(items.find((i) => i.id === FREE.id)?.applicationScopeCount).toBeNull()
   })
 
+  it('refuse un périmètre visant une résidence fermée sans confirmation, sans rien écrire', async () => {
+    await getTestDb().update(accommodations).set({ acceptsApplications: false }).where(eq(accommodations.id, resOut.id))
+
+    await expect(
+      ownerCaller.bailleur.users.update({
+        id: SCOPED.id,
+        applicationScope: { mode: 'restricted', accommodationIds: [resIn.id, resOut.id] },
+      }),
+    ).rejects.toThrow(/confirmez leur ouverture/)
+
+    expect(await scopeRows(SCOPED.id)).toHaveLength(0)
+    const [closed] = await getTestDb().select().from(accommodations).where(eq(accommodations.id, resOut.id))
+    expect(closed?.acceptsApplications).toBe(false)
+  })
+
+  it('ouvre aux candidatures les résidences fermées confirmées et le journalise', async () => {
+    await getTestDb().update(accommodations).set({ acceptsApplications: false }).where(eq(accommodations.id, resOut.id))
+
+    await ownerCaller.bailleur.users.update({
+      id: SCOPED.id,
+      applicationScope: { mode: 'restricted', accommodationIds: [resIn.id, resOut.id] },
+      openClosedResidences: true,
+    })
+
+    expect(await scopeRows(SCOPED.id)).toHaveLength(2)
+    const [opened] = await getTestDb().select().from(accommodations).where(eq(accommodations.id, resOut.id))
+    expect(opened?.acceptsApplications).toBe(true)
+    const logs = await getTestDb()
+      .select()
+      .from(activityLog)
+      .where(and(eq(activityLog.action, 'owner.application_residences_updated'), eq(activityLog.ownerId, ownerAId)))
+    expect(logs).toHaveLength(1)
+  })
+
+  it('n’ouvre rien pour un gestionnaire sans la gestion des candidats', async () => {
+    await getTestDb().update(accommodations).set({ acceptsApplications: false }).where(eq(accommodations.id, resOut.id))
+
+    await ownerCaller.bailleur.users.update({
+      id: SCOPED.id,
+      bailleurPermissions: ['manage_residences'],
+      applicationScope: { mode: 'restricted', accommodationIds: [resOut.id] },
+    })
+
+    const [closed] = await getTestDb().select().from(accommodations).where(eq(accommodations.id, resOut.id))
+    expect(closed?.acceptsApplications).toBe(false)
+  })
+
+  it('users.list ne compte pas les résidences fermées aux candidatures', async () => {
+    await restrictTo(SCOPED.id, [resIn.id, resOut.id])
+    await getTestDb().update(accommodations).set({ acceptsApplications: false }).where(eq(accommodations.id, resOut.id))
+    try {
+      const { items } = await ownerCaller.bailleur.users.list({})
+      expect(items.find((i) => i.id === SCOPED.id)?.applicationScopeCount).toBe(1)
+    } finally {
+      await getTestDb().update(accommodations).set({ acceptsApplications: true }).where(eq(accommodations.id, resOut.id))
+    }
+  })
+
   it('users.getById remonte le périmètre avec les libellés', async () => {
     await restrictTo(SCOPED.id, [resIn.id])
     const target = await ownerCaller.bailleur.users.getById({ id: SCOPED.id })
