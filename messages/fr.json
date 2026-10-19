@@ -538,7 +538,8 @@
       "noAvailability": "Aucune disponibilité",
       "waitingList": "Dépôt de dossier possible",
       "accommodationsCount": "{count} logements",
-      "availabilityCount": "{count, plural, one {Disponibilité} other {Disponibilités}}"
+      "availabilityCount": "{count, plural, one {Disponibilité} other {Disponibilités}}",
+      "lastUpdate": "Mise à jour le {date}"
     },
     "results": {
       "noResult": "Aucun résultat pour votre recherche",
@@ -2064,7 +2065,8 @@
         "viewAll": "Toutes les actions prioritaires"
       },
       "statistics": {
-        "title": "En quelques chiffres"
+        "title": "En quelques chiffres",
+        "lastUpdate": "Mise à jour le {date}"
       },
       "engagementStatistics": {
         "title": "À propos des visiteurs sur Mon Logement étudiant",

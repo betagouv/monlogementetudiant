@@ -538,7 +538,8 @@
       "noAvailability": "No availability",
       "waitingList": "Applications can be submitted",
       "accommodationsCount": "{count} homes",
-      "availabilityCount": "{count, plural, other {Available}}"
+      "availabilityCount": "{count, plural, other {Available}}",
+      "lastUpdate": "Updated on {date}"
     },
     "results": {
       "noResult": "No results for your search",
@@ -2064,7 +2065,8 @@
         "viewAll": "All priority actions"
       },
       "statistics": {
-        "title": "Key figures"
+        "title": "Key figures",
+        "lastUpdate": "Updated on {date}"
       },
       "engagementStatistics": {
         "title": "About visitors on Mon Logement étudiant",
