@@ -11,6 +11,7 @@ import {
   applyCommonListFilters,
   crousExistsCondition,
   listAccommodationsWithConditions,
+  priceMaxCondition,
   toResidenceType,
   toTargetAudience,
 } from '~/server/accommodations/list-query'
@@ -72,7 +73,7 @@ export const accommodationsRouter = createTRPCRouter({
       const conditions: SQL[] = [eq(accommodations.published, true), sql`${accommodationAddresses.geom} IS NOT NULL`]
       // On applique tous les filtres SAUF crous : les conditions résultantes servent à compter les deux buckets,
       // puis on ajoute le filtre crous par-dessus pour les résultats paginés.
-      await applyCommonListFilters(conditions, { ...input, skipCrous: true })
+      await applyCommonListFilters(conditions, { ...input, priceMax: undefined, skipCrous: true })
 
       let addressOrderHint: SQL | undefined
       if (input.cityId) {
@@ -99,9 +100,13 @@ export const accommodationsRouter = createTRPCRouter({
         applyCenterRadiusFilter(conditions, center, radius)
       }
 
+      const crousCondition = input.viewCrous ? crousExistsCondition : sql`NOT (${crousExistsCondition})`
+      const priceBoundsWhere = and(...conditions, crousCondition)
+      if (input.priceMax != null) conditions.push(priceMaxCondition(input.priceMax))
+
       const whereWithoutCrous = and(...conditions)
-      const where = and(whereWithoutCrous, input.viewCrous ? crousExistsCondition : sql`NOT (${crousExistsCondition})`)
-      return listAccommodationsWithConditions({ page, pageSize, where, whereWithoutCrous, addressOrderHint })
+      const where = and(whereWithoutCrous, crousCondition)
+      return listAccommodationsWithConditions({ page, pageSize, where, whereWithoutCrous, priceBoundsWhere, addressOrderHint })
     }),
 
   listExpandedByCity: baseProcedure

@@ -507,8 +507,8 @@
       "filtersCta": "Filters",
       "accessbility": "Adapted for reduced mobility",
       "accommodations": "Residences",
-      "availability": "Available accommodation",
-      "availabilityLegend": "Availability",
+      "availability": "Available only",
+      "availabilityLegend": "Housing availability",
       "advancedFiltersToggle": "Show more filters",
       "advancedFiltersShow": "More filters",
       "advancedFiltersHide": "Close",
@@ -519,7 +519,11 @@
       "crous": "Crous",
       "others": "Other residences",
       "availabilityDescription": "Only show residences with at least one available accommodation",
-      "sharedDescription": "Only show residences offering shared flats"
+      "sharedDescription": "Only show residences offering shared flats",
+      "whereLabel": "Where do you want to study?",
+      "maxRentLabel": "Maximum rent",
+      "crousTag": "CROUS housing",
+      "accessibleTag": "Wheelchair accessible"
     },
     "filters": {
       "accommodations": "residence",

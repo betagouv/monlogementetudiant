@@ -507,8 +507,8 @@
       "filtersCta": "Filtres",
       "accessbility": "Adapté PMR",
       "accommodations": "Résidences",
-      "availability": "Logements disponibles",
-      "availabilityLegend": "Disponibilités",
+      "availability": "Disponibles uniquement",
+      "availabilityLegend": "Disponibilités des logements",
       "advancedFiltersToggle": "Afficher plus de filtres",
       "advancedFiltersShow": "Plus de filtres",
       "advancedFiltersHide": "Fermer",
@@ -519,7 +519,11 @@
       "crous": "Crous",
       "others": "Autres résidences",
       "availabilityDescription": "N'afficher que les résidences ayant au moins un logement disponible",
-      "sharedDescription": "N'afficher que les résidences proposant de la colocation"
+      "sharedDescription": "N'afficher que les résidences proposant de la colocation",
+      "whereLabel": "Où souhaitez-vous étudier ?",
+      "maxRentLabel": "Loyer maximum",
+      "crousTag": "Logement CROUS",
+      "accessibleTag": "Accessible PMR"
     },
     "filters": {
       "accommodations": "résidence",
