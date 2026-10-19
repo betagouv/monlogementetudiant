@@ -20,7 +20,7 @@ importers:
         version: 3.1112.0(@aws-sdk/client-s3@3.1112.0)
       '@better-auth/api-key':
         specifier: 1.7.0
-        version: 1.7.0(@better-auth/core@1.7.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.4.3))(jose@6.2.9)(kysely@0.29.5)(nanostores@1.5.1))(@better-auth/utils@0.4.2)(better-auth@1.7.0(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@opentelemetry/api@1.9.1)(kysely@0.29.5)(postgres@3.4.9))(next@16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11))(better-call@1.4.0(zod@4.4.3))
+        version: 1.7.0(@better-auth/core@1.7.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.4.3))(jose@6.2.9)(kysely@0.29.5)(nanostores@1.5.1))(@better-auth/utils@0.4.2)(better-auth@1.7.0(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@opentelemetry/api@1.9.1)(kysely@0.29.5)(postgres@3.4.9))(next@16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11))(better-call@1.4.0(zod@4.4.3))
       '@better-auth/drizzle-adapter':
         specifier: ^1.7.0
         version: 1.7.0(@better-auth/core@1.7.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.4.3))(jose@6.2.9)(kysely@0.29.5)(nanostores@1.5.1))(@better-auth/utils@0.4.2)(drizzle-orm@0.45.2(@opentelemetry/api@1.9.1)(kysely@0.29.5)(postgres@3.4.9))
@@ -53,10 +53,10 @@ importers:
         version: 0.11.5(hono@4.13.5)
       '@sentry/nextjs':
         specifier: ^10.70.0
-        version: 10.70.0(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.10.0(@opentelemetry/api@1.9.1))(next@16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react@19.2.8)(webpack@5.107.2(postcss@8.5.26))
+        version: 10.70.0(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.10.0(@opentelemetry/api@1.9.1))(next@16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react@19.2.8)(webpack@5.107.2(postcss@8.5.26))
       '@socialgouv/matomo-next':
         specifier: ^1.14.2
-        version: 1.14.2(next@16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react@19.2.8)
+        version: 1.14.2(next@16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react@19.2.8)
       '@tanstack/react-query':
         specifier: ^5.101.4
         version: 5.101.4(react@19.2.8)
@@ -86,7 +86,7 @@ importers:
         version: 11.18.0(@tanstack/react-query@5.101.4(react@19.2.8))(@trpc/client@11.18.0(@trpc/server@11.18.0(typescript@6.0.3))(typescript@6.0.3))(@trpc/server@11.18.0(typescript@6.0.3))(react@19.2.8)(typescript@6.0.3)
       better-auth:
         specifier: ^1.7.0
-        version: 1.7.0(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@opentelemetry/api@1.9.1)(kysely@0.29.5)(postgres@3.4.9))(next@16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11)
+        version: 1.7.0(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@opentelemetry/api@1.9.1)(kysely@0.29.5)(postgres@3.4.9))(next@16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11)
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -131,13 +131,13 @@ importers:
         version: 18.0.10
       next:
         specifier: ^16.3.6
-        version: 16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0)
+        version: 16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0)
       next-intl:
         specifier: ^4.13.7
-        version: 4.13.7(@swc/helpers@0.5.23)(next@16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react@19.2.8)(typescript@6.0.3)
+        version: 4.13.7(@swc/helpers@0.5.23)(next@16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react@19.2.8)(typescript@6.0.3)
       nuqs:
         specifier: ^2.9.6
-        version: 2.9.6(next@16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react@19.2.8)
+        version: 2.9.6(next@16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react@19.2.8)
       postgres:
         specifier: ^3.4.9
         version: 3.4.9
@@ -196,6 +196,9 @@ importers:
       '@biomejs/biome':
         specifier: 2.4.14
         version: 2.4.14
+      '@playwright/test':
+        specifier: 1.63.0
+        version: 1.63.0
       '@types/leaflet':
         specifier: ^1.9.22
         version: 1.9.22
@@ -227,8 +230,8 @@ importers:
         specifier: ^0.31.10
         version: 0.31.10
       playwright:
-        specifier: ^1.62.1
-        version: 1.62.1
+        specifier: 1.63.0
+        version: 1.63.0
       postcss:
         specifier: ^8.5.26
         version: 8.5.26
@@ -1358,6 +1361,11 @@ packages:
   '@parcel/watcher@2.6.0':
     resolution: {integrity: sha512-7FNeNl8NCE7aINx7WXiKQrPYZWC/hvrTsmk6zmxbI7LTXE7hVek/n8AfVgpe2y82zl3w0HvCHN0bVKMBoJcC0w==}
     engines: {node: '>= 10.0.0'}
+
+  '@playwright/test@1.63.0':
+    resolution: {integrity: sha512-oxMK4vllB9RK5NQ2l1pq1IfOf2AvnEuj/vYGDj0H2nMtmtZpKtCwt/l00GEO6xjGfpBNAvjovvYdCm50dRQkpQ==}
+    engines: {node: '>=20'}
+    hasBin: true
 
   '@react-leaflet/core@3.0.0':
     resolution: {integrity: sha512-3EWmekh4Nz+pGcr+xjf0KNyYfC3U2JjnkWsh0zcqaexYqmmB5ZhH37kz41JXGmKzpaMZCnPofBBm64i+YrEvGQ==}
@@ -2793,11 +2801,6 @@ packages:
     resolution: {integrity: sha512-78/PXT1wlLLDgTzDs7sjq9hzz0vXD+zn+7wypEe4fXQxCmdmqfGsEPQxmiCSQI3ajFV91bVSsvNtrJRiW6nGng==}
     engines: {node: '>=10'}
 
-  fsevents@2.3.2:
-    resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
-    engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
-    os: [darwin]
-
   fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
@@ -3240,13 +3243,13 @@ packages:
     resolution: {integrity: sha512-RvwwcruNjI1ncT5xRakeyS9Lf8lcItv34KD+aif+VH9kduAyfYBipGh12274xtenIPZ119/R9BdTBa8gAwSh0A==}
     engines: {node: '>=12'}
 
-  playwright-core@1.62.1:
-    resolution: {integrity: sha512-wPYSwEBJY9GHraISXqyqtx0na0LpO3XEX7jNDhntbex7tzUS7kLnZsOlFruFJB4Hi/rhDMjXGqHewDZ68nYZVw==}
+  playwright-core@1.63.0:
+    resolution: {integrity: sha512-rYCsBF/M5HjUch52bbtVONEFjv6Xu8sm8h72dNlR5bzIE1fvC/bxgspzkjSfU+MweEMmPM8KJebG6nnyxo5mCg==}
     engines: {node: '>=20'}
     hasBin: true
 
-  playwright@1.62.1:
-    resolution: {integrity: sha512-0M+L3LAD8/nm554LOla9Ayx0j0tmFZ0FBcoQ7F1VuVHpM/XpiC8RcDzBQB8W5+hA8L22THxELzeF+2WcUzvcLg==}
+  playwright@1.63.0:
+    resolution: {integrity: sha512-+7ziBLidS4NaNCdt57SUDT+wYmmd5fmiQejUic/kb+YsYSCPyOOE9sebzMjNmQrsnNpDJqd4WHvV/8lfKfUDUg==}
     engines: {node: '>=20'}
     hasBin: true
 
@@ -4288,11 +4291,11 @@ snapshots:
 
   '@bcoe/v8-coverage@1.0.2': {}
 
-  '@better-auth/api-key@1.7.0(@better-auth/core@1.7.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.4.3))(jose@6.2.9)(kysely@0.29.5)(nanostores@1.5.1))(@better-auth/utils@0.4.2)(better-auth@1.7.0(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@opentelemetry/api@1.9.1)(kysely@0.29.5)(postgres@3.4.9))(next@16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11))(better-call@1.4.0(zod@4.4.3))':
+  '@better-auth/api-key@1.7.0(@better-auth/core@1.7.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.4.3))(jose@6.2.9)(kysely@0.29.5)(nanostores@1.5.1))(@better-auth/utils@0.4.2)(better-auth@1.7.0(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@opentelemetry/api@1.9.1)(kysely@0.29.5)(postgres@3.4.9))(next@16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11))(better-call@1.4.0(zod@4.4.3))':
     dependencies:
       '@better-auth/core': 1.7.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.4.3))(jose@6.2.9)(kysely@0.29.5)(nanostores@1.5.1)
       '@better-auth/utils': 0.4.2
-      better-auth: 1.7.0(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@opentelemetry/api@1.9.1)(kysely@0.29.5)(postgres@3.4.9))(next@16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11)
+      better-auth: 1.7.0(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@opentelemetry/api@1.9.1)(kysely@0.29.5)(postgres@3.4.9))(next@16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11)
       better-call: 1.4.0(zod@4.4.3)
       zod: 4.4.3
 
@@ -4928,6 +4931,10 @@ snapshots:
       '@parcel/watcher-win32-arm64': 2.6.0
       '@parcel/watcher-win32-x64': 2.6.0
 
+  '@playwright/test@1.63.0':
+    dependencies:
+      playwright: 1.63.0
+
   '@react-leaflet/core@3.0.0(leaflet@1.9.4)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
       leaflet: 1.9.4
@@ -5169,7 +5176,7 @@ snapshots:
     dependencies:
       '@sentry/core': 10.70.0
 
-  '@sentry/nextjs@10.70.0(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.10.0(@opentelemetry/api@1.9.1))(next@16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react@19.2.8)(webpack@5.107.2(postcss@8.5.26))':
+  '@sentry/nextjs@10.70.0(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.10.0(@opentelemetry/api@1.9.1))(next@16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react@19.2.8)(webpack@5.107.2(postcss@8.5.26))':
     dependencies:
       '@opentelemetry/api': 1.9.1
       '@rollup/plugin-commonjs': 28.0.1(rollup@4.62.4)
@@ -5183,7 +5190,7 @@ snapshots:
       '@sentry/server-utils': 10.70.0
       '@sentry/vercel-edge': 10.70.0
       '@sentry/webpack-plugin': 5.4.0(rollup@4.62.4)(webpack@5.107.2(postcss@8.5.26))
-      next: 16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0)
+      next: 16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0)
       rollup: 4.62.4
       stacktrace-parser: 0.1.11
     transitivePeerDependencies:
@@ -5305,9 +5312,9 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@socialgouv/matomo-next@1.14.2(next@16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react@19.2.8)':
+  '@socialgouv/matomo-next@1.14.2(next@16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react@19.2.8)':
     dependencies:
-      next: 16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0)
+      next: 16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0)
       react: 19.2.8
 
   '@standard-schema/spec@1.1.0': {}
@@ -5851,7 +5858,7 @@ snapshots:
     dependencies:
       tweetnacl: 0.14.5
 
-  better-auth@1.7.0(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@opentelemetry/api@1.9.1)(kysely@0.29.5)(postgres@3.4.9))(next@16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11):
+  better-auth@1.7.0(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@opentelemetry/api@1.9.1)(kysely@0.29.5)(postgres@3.4.9))(next@16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11):
     dependencies:
       '@better-auth/core': 1.7.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.4.3))(jose@6.2.9)(kysely@0.29.5)(nanostores@1.5.1)
       '@better-auth/drizzle-adapter': 1.7.0(@better-auth/core@1.7.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@opentelemetry/api@1.9.1)(better-call@1.4.0(zod@4.4.3))(jose@6.2.9)(kysely@0.29.5)(nanostores@1.5.1))(@better-auth/utils@0.4.2)(drizzle-orm@0.45.2(@opentelemetry/api@1.9.1)(kysely@0.29.5)(postgres@3.4.9))
@@ -5873,7 +5880,7 @@ snapshots:
     optionalDependencies:
       drizzle-kit: 0.31.10
       drizzle-orm: 0.45.2(@opentelemetry/api@1.9.1)(kysely@0.29.5)(postgres@3.4.9)
-      next: 16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0)
+      next: 16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0)
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
       vitest: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@25.9.5)(@vitest/coverage-v8@4.1.11)(jsdom@29.1.1(@noble/hashes@2.3.0))(vite@6.4.3(@types/node@25.9.5)(sass@1.102.0)(terser@5.50.0)(tsx@4.23.12)(yaml@2.9.0))
@@ -6241,9 +6248,6 @@ snapshots:
       locate-path: 6.0.0
       path-exists: 4.0.0
 
-  fsevents@2.3.2:
-    optional: true
-
   fsevents@2.3.3:
     optional: true
 
@@ -6520,14 +6524,14 @@ snapshots:
 
   next-intl-swc-plugin-extractor@4.13.7: {}
 
-  next-intl@4.13.7(@swc/helpers@0.5.23)(next@16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react@19.2.8)(typescript@6.0.3):
+  next-intl@4.13.7(@swc/helpers@0.5.23)(next@16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react@19.2.8)(typescript@6.0.3):
     dependencies:
       '@formatjs/intl-localematcher': 0.8.13
       '@parcel/watcher': 2.6.0
       '@swc/core': 1.15.47(@swc/helpers@0.5.23)
       icu-minify: 4.13.7
       negotiator: 1.0.0
-      next: 16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0)
+      next: 16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0)
       next-intl-swc-plugin-extractor: 4.13.7
       po-parser: 2.2.0
       react: 19.2.8
@@ -6537,7 +6541,7 @@ snapshots:
     transitivePeerDependencies:
       - '@swc/helpers'
 
-  next@16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0):
+  next@16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0):
     dependencies:
       '@next/env': 16.3.6
       '@swc/helpers': 0.5.23
@@ -6557,6 +6561,7 @@ snapshots:
       '@next/swc-win32-arm64-msvc': 16.3.6
       '@next/swc-win32-x64-msvc': 16.3.6
       '@opentelemetry/api': 1.9.1
+      '@playwright/test': 1.63.0
       sass: 1.102.0
       sharp: 0.35.4(@types/node@25.9.5)
     transitivePeerDependencies:
@@ -6578,12 +6583,12 @@ snapshots:
     dependencies:
       boolbase: 1.0.0
 
-  nuqs@2.9.6(next@16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react@19.2.8):
+  nuqs@2.9.6(next@16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react@19.2.8):
     dependencies:
       '@standard-schema/spec': 1.1.0
       react: 19.2.8
     optionalDependencies:
-      next: 16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0)
+      next: 16.3.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0)
 
   object-assign@4.1.1: {}
 
@@ -6650,13 +6655,11 @@ snapshots:
 
   picomatch@4.0.5: {}
 
-  playwright-core@1.62.1: {}
+  playwright-core@1.63.0: {}
 
-  playwright@1.62.1:
+  playwright@1.63.0:
     dependencies:
-      playwright-core: 1.62.1
-    optionalDependencies:
-      fsevents: 2.3.2
+      playwright-core: 1.63.0
 
   po-parser@2.2.0: {}
 

@@ -15,6 +15,9 @@
     "test:unit": "vitest --project unit",
     "test:integration": "vitest --project integration --run",
     "test:coverage": "vitest --run --coverage",
+    "e2e:seed": "DATABASE_URL_TEST=postgres://test:test@localhost:5491/mle_e2e tsx --env-file=.env e2e/seed.ts",
+    "test:e2e": "pnpm e2e:seed && playwright test",
+    "test:e2e:ui": "pnpm e2e:seed && playwright test --ui",
     "check-env": "tsx --env-file=.env src/server/env.ts",
     "cli": "tsx --env-file=.env cli/index.ts"
   },
@@ -82,6 +85,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.14",
+    "@playwright/test": "1.63.0",
     "@types/leaflet": "^1.9.22",
     "@types/node": "^25.9.5",
     "@types/react": "^19.2.18",
@@ -92,7 +96,7 @@
     "cheerio": "^1.2.0",
     "domhandler": "^6.0.1",
     "drizzle-kit": "^0.31.10",
-    "playwright": "^1.62.1",
+    "playwright": "1.63.0",
     "postcss": "^8.5.26",
     "sass": "^1.102.0",
     "typescript": "^6.0.3",

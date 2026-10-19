@@ -52,3 +52,8 @@ docs/audit-rgaa/
 # Audit RGAA : outillage local, non versionné
 cli/commands/audit-rgaa/
 cli/local/
+
+# Playwright
+/test-results
+/playwright-report
+/.next-e2e

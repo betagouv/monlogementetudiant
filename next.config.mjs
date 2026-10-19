@@ -68,6 +68,9 @@ const buildCsp = (frameAncestors) =>
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Répertoire de build séparé pour le serveur e2e (cf. playwright.config.ts) : permet de le
+  // lancer en parallèle du serveur de dev (verrou Next par distDir) sans mélanger les caches.
+  distDir: process.env.NEXT_DIST_DIR ?? '.next',
   env: {
     ENABLE_PROXY_LOGS: process.env.ENABLE_PROXY_LOGS,
   },
