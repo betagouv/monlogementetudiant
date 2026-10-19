@@ -9,26 +9,11 @@
  */
 import postgres from 'postgres'
 import { createAcademy, createAccommodation, createCity, createDepartment, createExternalSource } from '../src/__tests__/fixtures/factories'
+import { squareBoundary } from '../src/__tests__/helpers/geo'
 import { cleanTables, setupTestDb, teardownTestDb } from '../src/__tests__/helpers/test-db'
 
 const E2E_DB_NAME = 'mle_e2e'
 const ADMIN_URL = 'postgres://test:test@localhost:5491/postgres'
-
-/** La liste de recherche filtre par ST_Within(point, boundary) : la ville doit avoir un polygone. */
-const square = (lng: number, lat: number, d = 0.05) => ({
-  type: 'MultiPolygon' as const,
-  coordinates: [
-    [
-      [
-        [lng - d, lat - d],
-        [lng + d, lat - d],
-        [lng + d, lat + d],
-        [lng - d, lat + d],
-        [lng - d, lat - d],
-      ],
-    ],
-  ],
-})
 
 const SAINT_ETIENNE: [number, number] = [4.39, 45.44]
 const PARIS: [number, number] = [2.35, 48.85]
@@ -53,7 +38,7 @@ async function seed() {
     slug: 'saint-etienne',
     postalCodes: ['42000'],
     popular: true,
-    boundary: square(...SAINT_ETIENNE),
+    boundary: squareBoundary(...SAINT_ETIENNE),
   })
 
   await createAccommodation(
@@ -159,7 +144,7 @@ async function seed() {
     name: 'Roanne',
     slug: 'roanne',
     postalCodes: ['42300'],
-    boundary: square(4.07, 46.03),
+    boundary: squareBoundary(4.07, 46.03),
   })
 
   // Ville voisine (~5 km) sans résidence propre : la recherche élargie (+10 km) doit
@@ -169,7 +154,7 @@ async function seed() {
     name: 'Villars',
     slug: 'villars',
     postalCodes: ['42390'],
-    boundary: square(4.46, 45.47, 0.02),
+    boundary: squareBoundary(4.46, 45.47, 0.02),
   })
 
   // Hors de Saint-Étienne : ne doit PAS apparaître dans la recherche par ville.
