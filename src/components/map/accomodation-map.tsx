@@ -4,7 +4,7 @@ import { fr } from '@codegouvfr/react-dsfr'
 import L from 'leaflet'
 import { useTranslations } from 'next-intl'
 import { FC, useEffect } from 'react'
-import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet'
+import { MapContainer, Marker, TileLayer, useMap, ZoomControl } from 'react-leaflet'
 import { tss } from 'tss-react'
 import { MapAccessibleName } from '~/components/map/map-accessible-name'
 import 'leaflet/dist/leaflet.css'
@@ -37,11 +37,11 @@ export const AccomodationMap: FC<{ positions: Position[]; withScroll: boolean; l
       zoom={isSingle ? 16 : 13}
       className={classes.mapContainer}
       scrollWheelZoom={withScroll}
-      dragging={withScroll}
-      touchZoom={withScroll}
-      doubleClickZoom={withScroll}
-      zoomControl={withScroll}
+      // Sur mobile, le glisser à un doigt piégerait le défilement de la page : on n'y garde que le pincement.
+      dragging={withScroll || !L.Browser.mobile}
+      zoomControl={false}
     >
+      <ZoomControl zoomInTitle={t('zoomIn')} zoomOutTitle={t('zoomOut')} />
       <MapAccessibleName label={label ?? t('accommodationLabel')} />
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
