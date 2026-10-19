@@ -15,7 +15,13 @@ import styles from './accommodation-selector.module.css'
 
 const VISIBLE_LIMIT = 200
 
-type ResidenceOption = { id: number; name: string; cityName: string | null }
+const normalizeSearch = (value: string) =>
+  value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+
+type ResidenceOption = { id: number; name: string; cityName: string | null; acceptsApplications: boolean | null }
 
 type Props = {
   ownerId: number
@@ -41,12 +47,12 @@ export const AccommodationSelector = ({ ownerId, namespace, value, onChange, ini
   const residences = useMemo(() => {
     const loaded = (data?.items ?? []) as ResidenceOption[]
     if (loaded.length > 0) return loaded
-    return initialSelection.map((r) => ({ ...r, cityName: null }))
+    return initialSelection.map((r) => ({ ...r, cityName: null, acceptsApplications: null }))
   }, [data, initialSelection])
 
   const filtered = useMemo(() => {
-    const needle = search.trim().toLowerCase()
-    const matches = needle ? residences.filter((r) => r.name.toLowerCase().includes(needle)) : residences
+    const needle = normalizeSearch(search.trim())
+    const matches = needle ? residences.filter((r) => normalizeSearch(`${r.name} ${r.cityName ?? ''}`).includes(needle)) : residences
     return [...matches].sort((a, b) => Number(selectedIds.includes(b.id)) - Number(selectedIds.includes(a.id)))
   }, [residences, search, selectedIds])
 
@@ -110,6 +116,7 @@ export const AccommodationSelector = ({ ownerId, namespace, value, onChange, ini
                   options={[
                     {
                       label: residence.cityName ? `${residence.name} — ${residence.cityName}` : residence.name,
+                      hintText: residence.acceptsApplications === false ? t('closedHint') : undefined,
                       nativeInputProps: {
                         checked: selectedIds.includes(residence.id),
                         onChange: (e) => toggle(residence.id, e.target.checked),
