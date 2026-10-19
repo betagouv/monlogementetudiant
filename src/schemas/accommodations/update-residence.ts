@@ -6,6 +6,16 @@ import { FRENCH_PHONE_NUMBER_REGEX, normalizeFrenchPhoneNumber } from '~/utils/p
 import { isValidVirtualTourInput } from '~/utils/virtual-tour'
 import { createZTypologies } from './typology'
 
+export const DESCRIPTION_SECTION_KEYS = [
+  'locationAndProximity',
+  'servicesAndEquipment',
+  'receptionAndContact',
+  'practicalInfo',
+  'otherInformation',
+] as const
+
+export type TDescriptionSectionKey = (typeof DESCRIPTION_SECTION_KEYS)[number]
+
 export const createZUpdateResidence = (t: TSchemaTranslator = frSchemaTranslator) =>
   z.object({
     name: z.string().min(1, t('errors.residenceNameRequired')).optional(),
@@ -22,6 +32,12 @@ export const createZUpdateResidence = (t: TSchemaTranslator = frSchemaTranslator
       .min(1, t('errors.addressesRequired'))
       .optional(),
     description: z.string().optional(),
+    tagline: z.string().optional(),
+    locationAndProximity: z.string().optional(),
+    servicesAndEquipment: z.string().optional(),
+    receptionAndContact: z.string().optional(),
+    practicalInfo: z.string().optional(),
+    otherInformation: z.string().optional(),
     rentalChargesDetails: z.string().optional(),
     externalUrl: z.url(t('errors.urlInvalid')).optional().or(z.literal('')),
     virtualTourUrl: z.string().max(2000).refine(isValidVirtualTourInput, t('errors.virtualTourNotAllowed')).optional(),

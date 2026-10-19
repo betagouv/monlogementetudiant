@@ -2201,8 +2201,32 @@
         },
         "summary": {
           "title": "In a few words",
-          "description": "Description",
-          "descriptionPlaceholder": "Describe your residence...",
+          "sections": {
+            "tagline": {
+              "label": "Tagline",
+              "placeholder": "A quiet and friendly residence, ideal for focusing on your studies while enjoying a lively community life."
+            },
+            "locationAndProximity": {
+              "label": "Location and surroundings",
+              "placeholder": "The residence is located in the station district, 10 minutes from university campus A. Served by tram line B."
+            },
+            "servicesAndEquipment": {
+              "label": "Specific services and facilities",
+              "placeholder": "Night watchman from 10pm to 7am, free-access gym, shared garden, personalised support with administrative procedures."
+            },
+            "receptionAndContact": {
+              "label": "Reception and contact",
+              "placeholder": "Reception open Monday to Friday, 9am to 5pm. Contact: accueil@residence-exemple.fr"
+            },
+            "practicalInfo": {
+              "label": "Practical details",
+              "placeholder": "Answer within 5 working days. 10-month renewable lease."
+            },
+            "otherInformation": {
+              "label": "Other",
+              "placeholder": ""
+            }
+          },
           "rentalChargesLabel": "Rental charges details",
           "rentalChargesHint": "Specify what the rental charges include.",
           "rentalChargesExample": "Example: shared heating, Wi-Fi, maintenance of common areas, gym, etc."
