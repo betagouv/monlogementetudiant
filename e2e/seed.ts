@@ -8,7 +8,7 @@
  * Lancer via : pnpm e2e:seed (DATABASE_URL_TEST pointe alors vers mle_e2e).
  */
 import postgres from 'postgres'
-import { createAcademy, createAccommodation, createCity, createDepartment } from '../src/__tests__/fixtures/factories'
+import { createAcademy, createAccommodation, createCity, createDepartment, createExternalSource } from '../src/__tests__/fixtures/factories'
 import { cleanTables, setupTestDb, teardownTestDb } from '../src/__tests__/helpers/test-db'
 
 const E2E_DB_NAME = 'mle_e2e'
@@ -87,6 +87,72 @@ async function seed() {
     [{ type: 't1_bis', priceMin: 650, priceMax: 740, superficieMin: 22, superficieMax: 28, nbTotal: 20, nbAvailable: 8, colocation: false }],
   )
 
+  // Sans logement disponible (et sans liste d'attente) : visible par défaut en fin de liste,
+  // masquée par le switch « Logements disponibles ».
+  await createAccommodation(
+    {
+      name: 'Résidence E2E Complète',
+      slug: 'residence-e2e-complete',
+      published: true,
+      cityId: city.id,
+      geom: { type: 'Point', coordinates: [SAINT_ETIENNE[0] - 0.01, SAINT_ETIENNE[1] - 0.01] },
+    },
+    [{ type: 't1', priceMin: 500, priceMax: 560, superficieMin: 18, superficieMax: 22, nbTotal: 10, nbAvailable: 0, colocation: false }],
+  )
+
+  // Avec colocation : pour le filtre « Colocation » (nbColivingApartments > 0).
+  await createAccommodation(
+    {
+      name: 'Résidence E2E Coloc',
+      slug: 'residence-e2e-coloc',
+      published: true,
+      cityId: city.id,
+      geom: { type: 'Point', coordinates: [SAINT_ETIENNE[0] + 0.02, SAINT_ETIENNE[1] - 0.01] },
+    },
+    [{ type: 't3', priceMin: 450, priceMax: 520, superficieMin: 60, superficieMax: 75, nbTotal: 6, nbAvailable: 2, colocation: true }],
+  )
+
+  // Avec logements adaptés PMR : pour le filtre « Adapté PMR » (nbAccessibleApartments > 0).
+  await createAccommodation(
+    {
+      name: 'Résidence E2E PMR',
+      slug: 'residence-e2e-pmr',
+      published: true,
+      cityId: city.id,
+      nbAccessibleApartments: 2,
+      geom: { type: 'Point', coordinates: [SAINT_ETIENNE[0] - 0.02, SAINT_ETIENNE[1] + 0.01] },
+    },
+    [{ type: 't2', priceMin: 560, priceMax: 620, superficieMin: 30, superficieMax: 40, nbTotal: 8, nbAvailable: 3, colocation: false }],
+  )
+
+  // Résidence Crous : exclue de la vue par défaut, visible via le segment « Crous ».
+  const crousResidence = await createAccommodation(
+    {
+      name: 'Résidence E2E Crous',
+      slug: 'residence-e2e-crous',
+      published: true,
+      cityId: city.id,
+      geom: { type: 'Point', coordinates: [SAINT_ETIENNE[0] + 0.015, SAINT_ETIENNE[1] + 0.015] },
+    },
+    [{ type: 't1', priceMin: 380, priceMax: 430, superficieMin: 16, superficieMax: 20, nbTotal: 50, nbAvailable: 10, colocation: false }],
+  )
+  await createExternalSource({ accommodationId: crousResidence.id, source: 'crous' })
+
+  // Remplissage pour dépasser la page de 12 : 1 seul logement disponible chacune, donc toujours
+  // après les résidences nommées dans le tri par défaut (priorité puis disponibilités décroissantes).
+  for (let i = 1; i <= 8; i++) {
+    await createAccommodation(
+      {
+        name: `Résidence E2E Remplissage ${i}`,
+        slug: `residence-e2e-remplissage-${i}`,
+        published: true,
+        cityId: city.id,
+        geom: { type: 'Point', coordinates: [SAINT_ETIENNE[0] + 0.002 * i, SAINT_ETIENNE[1] - 0.002 * i] },
+      },
+      [{ type: 't1', priceMin: 700 + i, priceMax: 780 + i, superficieMin: 18, superficieMax: 24, nbTotal: 5, nbAvailable: 1, colocation: false }],
+    )
+  }
+
   // Ville sans aucune résidence : pour le scénario « aucun résultat ».
   await createCity({
     departmentId: department.id,
@@ -94,6 +160,16 @@ async function seed() {
     slug: 'roanne',
     postalCodes: ['42300'],
     boundary: square(4.07, 46.03),
+  })
+
+  // Ville voisine (~5 km) sans résidence propre : la recherche élargie (+10 km) doit
+  // remonter les résidences de Saint-Étienne.
+  await createCity({
+    departmentId: department.id,
+    name: 'Villars',
+    slug: 'villars',
+    postalCodes: ['42390'],
+    boundary: square(4.46, 45.47, 0.02),
   })
 
   // Hors de Saint-Étienne : ne doit PAS apparaître dans la recherche par ville.
