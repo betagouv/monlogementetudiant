@@ -8,6 +8,9 @@ export default defineConfig({
   testDir: 'e2e',
   outputDir: 'test-results',
   fullyParallel: true,
+  // Le serveur e2e tourne en mode dev : les premières visites compilent les pages, ce qui peut
+  // dépasser les 5 s par défaut quand plusieurs workers sollicitent le serveur en parallèle.
+  expect: { timeout: 10_000 },
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : [['list']],

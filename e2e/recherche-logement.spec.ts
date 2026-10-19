@@ -56,4 +56,70 @@ test.describe('Recherche de logement par ville', () => {
 
     await expect(page.getByText('Aucun résultat pour votre recherche')).toBeVisible()
   })
+
+  test('masque les résidences complètes via le switch « Logements disponibles »', async ({ page }) => {
+    await page.goto('/trouver-un-logement-etudiant/ville/saint-etienne')
+    await expect(page.getByText(/13 résidences/)).toBeVisible()
+
+    // Les toggles DSFR recouvrent leur checkbox : on clique le label visible.
+    await page.getByText('Logements disponibles', { exact: true }).filter({ visible: true }).click()
+
+    // Seule la Résidence E2E Complète (0 disponibilité) sort de la liste.
+    await expect(page.getByText(/12 résidences/)).toBeVisible()
+    await expect(page.getByText('Résidence E2E Complète')).toHaveCount(0)
+  })
+
+  test('filtre les résidences proposant de la colocation', async ({ page }) => {
+    await page.goto('/trouver-un-logement-etudiant/ville/saint-etienne')
+
+    await page.getByRole('button', { name: 'Plus de filtres' }).filter({ visible: true }).click()
+    await page.getByText('Colocation', { exact: true }).filter({ visible: true }).click()
+
+    await expect(page.getByText('Résidence E2E Coloc')).toBeVisible()
+    await expect(page.getByText('Résidence E2E du Centre')).toHaveCount(0)
+  })
+
+  test('filtre les résidences adaptées PMR', async ({ page }) => {
+    await page.goto('/trouver-un-logement-etudiant/ville/saint-etienne')
+
+    await page.getByRole('button', { name: 'Plus de filtres' }).filter({ visible: true }).click()
+    await page.getByText('Adapté PMR').filter({ visible: true }).click()
+
+    await expect(page.getByText('Résidence E2E PMR')).toBeVisible()
+    await expect(page.getByText('Résidence E2E du Centre')).toHaveCount(0)
+  })
+
+  test('sépare les résidences Crous des autres résidences', async ({ page }) => {
+    await page.goto('/trouver-un-logement-etudiant/ville/saint-etienne')
+
+    // La vue par défaut (« Autres résidences ») exclut le Crous.
+    await expect(page.getByText('Résidence E2E Crous')).toHaveCount(0)
+
+    await page.getByText(/^Crous \(/).filter({ visible: true }).click()
+
+    await expect(page.getByText('Résidence E2E Crous')).toBeVisible()
+    await expect(page.getByText('Résidence E2E du Centre')).toHaveCount(0)
+  })
+
+  test('pagine la liste au-delà de douze résidences', async ({ page }) => {
+    await page.goto('/trouver-un-logement-etudiant/ville/saint-etienne')
+
+    // Page 1 : les résidences avec disponibilités ; la Résidence E2E Complète est reléguée en page 2.
+    await expect(page.getByText('Résidence E2E de la Gare')).toBeVisible()
+    await expect(page.getByText('Résidence E2E Complète')).toHaveCount(0)
+
+    await page.getByRole('navigation', { name: 'Pagination' }).getByRole('link', { name: '2', exact: true }).click()
+
+    await expect(page.getByText('Résidence E2E Complète')).toBeVisible()
+    await expect(page.getByText('Résidence E2E de la Gare')).toHaveCount(0)
+  })
+
+  test("élargit la recherche autour d'une ville voisine sans résidence", async ({ page }) => {
+    await page.goto('/trouver-un-logement-etudiant/ville/villars')
+
+    // Aucune résidence à Villars même, mais celles de Saint-Étienne (~5 km) remontent
+    // dans la section « Plus de résultats autour de… » (+10 km).
+    await expect(page.getByText(/Plus de résultats autour/)).toBeVisible()
+    await expect(page.getByText('Résidence E2E du Centre')).toBeVisible()
+  })
 })
