@@ -6,15 +6,18 @@ import { logActivity } from '~/server/services/activity-logger'
 import { type AccommodationScope, scopeAccommodationIdCondition } from './accommodation-scope'
 import { resumeIfResolved } from './inactivity-suspension'
 
-/** Résidences du bailleur, dans le périmètre de l'appelant, dont les disponibilités font l'objet d'une alerte. */
-export async function listAvailabilityToConfirm(ownerId: number, scope: AccommodationScope) {
+/**
+ * Résidences du bailleur, dans le périmètre de l'appelant, ayant des disponibilités renseignées :
+ * par défaut seulement celles qui font l'objet d'une alerte, toutes avec `onlyWarned: false`.
+ */
+export async function listAvailabilityToConfirm(ownerId: number, scope: AccommodationScope, { onlyWarned = true } = {}) {
   const residences = await db
     .select({ id: accommodations.id, slug: accommodations.slug, name: accommodations.name })
     .from(accommodations)
     .where(
       and(
         eq(accommodations.ownerId, ownerId),
-        isNotNull(accommodations.staleAvailabilityWarnedAt),
+        onlyWarned ? isNotNull(accommodations.staleAvailabilityWarnedAt) : undefined,
         scopeAccommodationIdCondition(scope),
         sql`exists (select 1 from ${accommodationTypologies} where ${accommodationTypologies.accommodationId} = ${accommodations.id} and ${accommodationTypologies.nbAvailable} is not null)`,
       ),
@@ -51,11 +54,12 @@ type ConfirmAvailabilityInput = {
   owner: { id: number; name: string }
   scope: AccommodationScope
   user: { id: string; name: string }
+  onlyWarned?: boolean
 }
 
 /** « Rien n'a changé » : horodate les disponibilités renseignées et lève l'alerte, comme un enregistrement sans modification. */
-export async function confirmAvailability({ owner, scope, user }: ConfirmAvailabilityInput) {
-  const residences = await listAvailabilityToConfirm(owner.id, scope)
+export async function confirmAvailability({ owner, scope, user, onlyWarned = true }: ConfirmAvailabilityInput) {
+  const residences = await listAvailabilityToConfirm(owner.id, scope, { onlyWarned })
   if (residences.length === 0) return { confirmed: 0 }
 
   const ids = residences.map((r) => r.id)

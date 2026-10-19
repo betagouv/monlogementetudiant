@@ -2272,12 +2272,23 @@
         "searchPlaceholder": "Rechercher une résidence ou une ville",
         "housingCount": "{count, plural, one {# logement} other {# logements}}",
         "availableLabel": "Disponibles",
-        "save": "Enregistrer",
         "editResidence": "Éditer la résidence",
-        "viewResidence": "Voir la résidence",
         "emptyTitle": "Aucune résidence trouvée",
         "emptyDescription": "Aucune résidence ne correspond à vos critères de recherche.",
-        "lastUpdate": "Dernière mise à jour le {date}"
+        "lastUpdate": "Disponibilités confirmées le {date}",
+        "contacts": "Contacts",
+        "viewResidenceNamed": "Voir la résidence {name}",
+        "confirm": "Confirmer les disponibilités",
+        "confirmHint": "Vérifiez les nombres ci-dessus, puis confirmez, même s’ils n’ont pas changé.",
+        "confirmSuccess": "Disponibilités confirmées",
+        "confirmAllSuccess": "{count, plural, one {Disponibilités confirmées pour # résidence} other {Disponibilités confirmées pour # résidences}}",
+        "confirmAllError": "La confirmation des autres résidences a échoué, veuillez réessayer.",
+        "confirmAllModal": {
+          "title": "Confirmer les disponibilités de toutes vos résidences ?",
+          "description": "Si les disponibilités de vos autres résidences n’ont pas changé non plus, confirmez-les toutes en une fois : leur date de confirmation sera actualisée, sans modifier les nombres.",
+          "confirmOne": "Seulement cette résidence",
+          "confirmAll": "Confirmer toutes mes résidences"
+        }
       }
     },
     "feedback": {

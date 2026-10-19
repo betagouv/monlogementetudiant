@@ -19,9 +19,10 @@ import { TAccomodationCard } from '~/schemas/accommodations/accommodations'
 type ResidenceCardProps = {
   accomodation: TAccomodationCard
   href?: string
+  contactsHref?: string
 }
 
-export const ResidenceCard: FC<ResidenceCardProps> = ({ accomodation, href }) => {
+export const ResidenceCard: FC<ResidenceCardProps> = ({ accomodation, href, contactsHref }) => {
   const t = useTranslations('findAccomodation.card')
   const tList = useTranslations('bailleur.residences')
   const tA11y = useTranslations('accessibility')
@@ -62,18 +63,12 @@ export const ResidenceCard: FC<ResidenceCardProps> = ({ accomodation, href }) =>
       linkProps: { href: editUri },
     },
   ]
-  if (published && publicUri) {
-    footerButtons.unshift({
-      children: tList('list.viewResidence'),
-      priority: 'tertiary',
-      iconId: 'ri-external-link-line',
-      iconPosition: 'left',
-      className: classes.viewResidenceButton,
-      linkProps: {
-        href: publicUri,
-        target: '_blank',
-        title: tA11y('linkNewWindow', { label: tList('list.viewResidence') }),
-      },
+  if (contactsHref) {
+    footerButtons.push({
+      children: tList('list.contacts'),
+      priority: 'secondary',
+      iconId: 'ri-contacts-book-2-line',
+      linkProps: { href: contactsHref },
     })
   }
 
@@ -99,7 +94,7 @@ export const ResidenceCard: FC<ResidenceCardProps> = ({ accomodation, href }) =>
           )}
         </>
       }
-      footer={<ButtonsGroup buttonsEquisized buttonsSize="small" alignment="right" buttons={footerButtons} />}
+      footer={<ButtonsGroup inlineLayoutWhen="always" buttonsSize="small" buttons={footerButtons} />}
       start={
         <ul className="fr-tags-group">
           <li>
@@ -107,6 +102,15 @@ export const ResidenceCard: FC<ResidenceCardProps> = ({ accomodation, href }) =>
           </li>
         </ul>
       }
+      {...(published && publicUri
+        ? {
+            linkProps: {
+              href: publicUri,
+              target: '_blank',
+              title: tA11y('linkNewWindow', { label: tList('list.viewResidenceNamed', { name }) }),
+            },
+          }
+        : {})}
       size="small"
       title={name}
       titleAs="h2"
@@ -126,10 +130,5 @@ export const useStyles = tss.create({
   },
   description: {
     color: '#666666',
-  },
-  viewResidenceButton: {
-    '&::after': {
-      display: 'none !important',
-    },
   },
 })

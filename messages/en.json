@@ -2272,12 +2272,23 @@
         "searchPlaceholder": "Search for a residence or a city",
         "housingCount": "{count, plural, one {# accommodation} other {# accommodations}}",
         "availableLabel": "Available",
-        "save": "Save",
         "editResidence": "Edit residence",
-        "viewResidence": "View residence",
         "emptyTitle": "No residence found",
         "emptyDescription": "No residence matches your search criteria.",
-        "lastUpdate": "Last updated on {date}"
+        "lastUpdate": "Availability confirmed on {date}",
+        "contacts": "Contacts",
+        "viewResidenceNamed": "View residence {name}",
+        "confirm": "Confirm availability",
+        "confirmHint": "Check the numbers above, then confirm, even if they have not changed.",
+        "confirmSuccess": "Availability confirmed",
+        "confirmAllSuccess": "{count, plural, one {Availability confirmed for # residence} other {Availability confirmed for # residences}}",
+        "confirmAllError": "Confirming the other residences failed, please try again.",
+        "confirmAllModal": {
+          "title": "Confirm availability for all your residences?",
+          "description": "If the availability of your other residences has not changed either, confirm them all at once: their confirmation date will be refreshed without changing the numbers.",
+          "confirmOne": "Only this residence",
+          "confirmAll": "Confirm all my residences"
+        }
       }
     },
     "feedback": {

@@ -516,7 +516,10 @@ export const bailleurRouter = createTRPCRouter({
         previous: input.page > 1 ? String(input.page - 1) : null,
         minPrice: priceBounds[0]?.minPrice != null ? Number(priceBounds[0].minPrice) : null,
         maxPrice: priceBounds[0]?.maxPrice != null ? Number(priceBounds[0].maxPrice) : null,
-        results: await rowsToAccommodationDTOs(results),
+        results: (await rowsToAccommodationDTOs(results)).map((dto, index) => ({
+          ...dto,
+          acceptsApplications: results[index]?.acceptsApplications ?? false,
+        })),
       }
     }),
   create: bailleurProcedure('manage_residences')
@@ -762,15 +765,18 @@ export const bailleurRouter = createTRPCRouter({
     return listAvailabilityToConfirm(owner.id, await getAccommodationScope(ctx.session.user.id))
   }),
 
-  confirmAvailability: bailleurProcedure('manage_residences').mutation(async ({ ctx }) => {
-    const owner = await getOwnerForUser(ctx.session.user.id)
-    if (!owner) throw new TRPCError({ code: 'FORBIDDEN', message: 'Aucun bailleur associé à ce compte' })
-    return confirmAvailability({
-      owner,
-      scope: await getAccommodationScope(ctx.session.user.id),
-      user: { id: ctx.session.user.id, name: ctx.session.user.name },
-    })
-  }),
+  confirmAvailability: bailleurProcedure('manage_residences')
+    .input(z.object({ all: z.boolean().optional(), ownerId: z.number().optional() }).optional())
+    .mutation(async ({ ctx, input }) => {
+      const owner = await getOwnerForUser(ctx.session.user.id, input?.ownerId)
+      if (!owner) throw new TRPCError({ code: 'FORBIDDEN', message: 'Aucun bailleur associé à ce compte' })
+      return confirmAvailability({
+        owner,
+        scope: await getAccommodationScope(ctx.session.user.id),
+        user: { id: ctx.session.user.id, name: ctx.session.user.name },
+        onlyWarned: !input?.all,
+      })
+    }),
 
   updateAvailability: bailleurProcedure('manage_residences')
     .input(z.object({ slug: z.string() }).merge(ZUpdateResidenceList))
