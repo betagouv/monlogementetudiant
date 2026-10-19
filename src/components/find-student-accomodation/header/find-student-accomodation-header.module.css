@@ -1,36 +1,17 @@
 .container {
   border-bottom: 1px solid var(--border-default-grey);
-  display: grid;
-  grid-template-columns: 1fr auto auto auto auto;
-  row-gap: 2rem;
-  column-gap: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
   margin-bottom: 2rem;
-  padding-bottom: 1rem;
+  padding-bottom: 1.5rem;
 }
 
 .mainRow {
   display: grid;
-  grid-template-columns: subgrid;
-  grid-column: 1 / -1;
-  align-items: end;
-  justify-items: end;
-}
-
-.mainRowOpen {
+  grid-template-columns: minmax(0, 1fr) auto minmax(220px, 260px);
+  column-gap: 3rem;
   align-items: start;
-  justify-items: start;
-}
-
-.advancedRow {
-  display: grid;
-  grid-template-columns: subgrid;
-  grid-column: 1 / -1;
-  align-items: center;
-  justify-items: start;
-}
-
-.toggleButton {
-  align-self: end;
 }
 
 .mobileContainer {
