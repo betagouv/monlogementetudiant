@@ -34,7 +34,8 @@ beforeEach(async () => {
 describe('admin.stats.overview — suivi des mises à jour de disponibilité', () => {
   it('classe les résidences publiées hors CROUS selon la fraîcheur de leur disponibilité', async () => {
     const manual = await createOwner({ slug: 'manuel' })
-    const imported = await createOwner({ slug: 'importe', availabilityImported: true })
+    const csvImported = await createOwner({ slug: 'import-csv', availabilityImported: true })
+    const api = await createOwner({ slug: 'arpej', availabilityImported: true })
 
     const recentManual = await createAccommodation({ ownerId: manual.id }, [studio(2)])
     await stampAvailability(recentManual.id, daysAgo(5))
@@ -43,22 +44,30 @@ describe('admin.stats.overview — suivi des mises à jour de disponibilité', (
     await stampAvailability(staleManual.id, daysAgo(45))
 
     await createAccommodation({ ownerId: manual.id }, [studio(null)])
-    await createAccommodation({ ownerId: imported.id, updatedAt: daysAgo(1) }, [studio(3)])
-    await createAccommodation({ ownerId: imported.id, updatedAt: daysAgo(60) }, [studio(3)])
+
+    const staleCsv = await createAccommodation({ ownerId: csvImported.id, updatedAt: daysAgo(1) }, [studio(3)])
+    await stampAvailability(staleCsv.id, daysAgo(90))
+
+    const recentApi = await createAccommodation({ ownerId: api.id, updatedAt: daysAgo(1) }, [studio(3)])
+    await stampAvailability(recentApi.id, daysAgo(90))
+    await createExternalSource({ accommodationId: recentApi.id, source: 'arpej', sourceId: 'arpej-1' })
+
+    const staleApi = await createAccommodation({ ownerId: api.id, updatedAt: daysAgo(60) }, [studio(3)])
+    await stampAvailability(staleApi.id, daysAgo(90))
+    await createExternalSource({ accommodationId: staleApi.id, source: 'fac-habitat', sourceId: 'fac-1' })
 
     await createAccommodation({ ownerId: manual.id, published: false }, [studio(2)])
-    const crous = await createAccommodation({ ownerId: imported.id, updatedAt: daysAgo(1) }, [studio(3)])
+    const crous = await createAccommodation({ ownerId: api.id, updatedAt: daysAgo(1) }, [studio(3)])
     await createExternalSource({ accommodationId: crous.id, source: 'crous', sourceId: 'crous-1' })
 
     const { suiviDispo } = await adminCaller.admin.stats.overview()
 
     expect(suiviDispo).toEqual({
       recentDays: 30,
-      total: 5,
-      recent: 2,
-      recentImported: 1,
-      nonRenseignee: 1,
-      ancienne: 2,
+      total: { count: 6, manual: 4, api: 2 },
+      recent: { count: 2, manual: 1, api: 1 },
+      nonRenseignee: { count: 1, manual: 1, api: 0 },
+      ancienne: { count: 3, manual: 2, api: 1 },
     })
   })
 })

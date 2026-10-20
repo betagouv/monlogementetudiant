@@ -403,20 +403,18 @@ function KeyFigures({ data, isLoading }: { data: ReturnType<typeof useAdminStats
 
 function AvailabilityFollowUp({ data, isLoading }: { data: ReturnType<typeof useAdminStats>['data']; isLoading: boolean }) {
   const suivi = data?.suiviDispo
-  const total = suivi?.total ?? 0
+  const total = suivi?.total.count ?? 0
   const fmt = (n: number) => n.toLocaleString('fr-FR')
   const pct = (n: number) =>
     `${(total ? (n / total) * 100 : 0).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} %`
 
-  const rows = [
-    {
-      label: 'Disponibilité mise à jour récemment',
-      value: suivi?.recent ?? 0,
-      imported: `${fmt(suivi?.recentImported ?? 0)} résidences, soit ${pct(suivi?.recentImported ?? 0)} des ${fmt(total)}`,
-    },
-    { label: 'Aucune disponibilité renseignée', value: suivi?.nonRenseignee ?? 0, imported: '—' },
-    { label: 'Disponibilité renseignée, mais pas récemment', value: suivi?.ancienne ?? 0, imported: '—' },
-  ]
+  const rows = suivi
+    ? [
+        { label: 'Disponibilité mise à jour récemment', ...suivi.recent },
+        { label: 'Aucune disponibilité renseignée', ...suivi.nonRenseignee },
+        { label: 'Disponibilité renseignée, mais pas récemment', ...suivi.ancienne },
+      ]
+    : []
 
   return (
     <div className="fr-mb-3w">
@@ -430,7 +428,7 @@ function AvailabilityFollowUp({ data, isLoading }: { data: ReturnType<typeof use
         <div className="fr-px-3w">
           <p className="fr-text--sm fr-text-mention--grey fr-mt-2w fr-mb-0">
             Résidences publiées hors CROUS. « Récemment » : dans les {suivi?.recentDays ?? 30} derniers jours, par un gestionnaire ou par
-            l&apos;import automatique pour les bailleurs importés.
+            l&apos;import automatique des API (ARPEJ, Fac-Habitat, Initiall).
           </p>
           {isLoading || !suivi ? (
             <p className="fr-text--sm fr-text-mention--grey fr-py-3w fr-mb-0">Chargement...</p>
@@ -440,10 +438,16 @@ function AvailabilityFollowUp({ data, isLoading }: { data: ReturnType<typeof use
               noCaption
               caption="Suivi des mises à jour de disponibilité"
               className="fr-mb-0"
-              headers={['Situation', 'Résidences', `Part des ${fmt(total)}`, 'Dont bailleurs importés']}
+              headers={['Situation', 'Nb résidences', 'Part du total', 'Dont part des màj manuelles', 'Dont part des API']}
               data={[
-                ...rows.map((row) => [row.label, fmt(row.value), pct(row.value), row.imported]),
-                [<strong key="label">Total</strong>, <strong key="value">{fmt(total)}</strong>, <strong key="pct">100 %</strong>, '—'],
+                ...rows.map((row) => [row.label, fmt(row.count), pct(row.count), pct(row.manual), pct(row.api)]),
+                [
+                  <strong key="label">Total</strong>,
+                  <strong key="value">{fmt(total)}</strong>,
+                  <strong key="pct">100 %</strong>,
+                  <strong key="manual">{pct(suivi.total.manual)}</strong>,
+                  <strong key="api">{pct(suivi.total.api)}</strong>,
+                ],
               ]}
             />
           )}

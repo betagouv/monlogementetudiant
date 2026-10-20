@@ -777,38 +777,46 @@ const residencesRouter = createTRPCRouter({
     }),
 })
 
-// Les imports n'horodatent pas les typologies : pour un bailleur importé, la date du dernier import fait foi.
+const AVAILABILITY_API_SOURCES = ['arpej', 'fac-habitat', 'initiall']
+
+// Les imports API n'horodatent pas les typologies : pour leurs résidences, la date du dernier import fait foi.
 async function getAvailabilityFollowUp() {
   const recentSince = new Date(Date.now() - INACTIVITY_WARNING_DAYS.stale_availability * DAY_MS).toISOString()
   const isCrous = sql`exists (select 1 from external_source where accommodation_id = ${accommodations.id} and source = 'crous')`
+  const isApi = sql`exists (select 1 from external_source where accommodation_id = ${accommodations.id} and source in (${sql.join(
+    AVAILABILITY_API_SOURCES.map((source) => sql`${source}`),
+    sql`, `,
+  )}))`
   const hasAvailability = sql`exists (select 1 from ${accommodationTypologies} where ${accommodationTypologies.accommodationId} = ${accommodations.id} and ${accommodationTypologies.nbAvailable} is not null)`
   const lastUpdate = sql`greatest(
     (select max(${accommodationTypologies.availabilityUpdatedAt}) from ${accommodationTypologies} where ${accommodationTypologies.accommodationId} = ${accommodations.id}),
-    case when ${owners.availabilityImported} then ${accommodations.updatedAt} end
+    case when ${isApi} then ${accommodations.updatedAt} end
   )`
   const isRecent = sql`(${hasAvailability} and ${lastUpdate} >= ${recentSince}::timestamptz)`
+  const isNonRenseignee = sql`(not ${hasAvailability})`
+  const isAncienne = sql`(${hasAvailability} and not ${isRecent})`
 
   const [row] = await db
     .select({
       total: count(),
+      totalApi: sql<number>`count(*) filter (where ${isApi})`.mapWith(Number),
       recent: sql<number>`count(*) filter (where ${isRecent})`.mapWith(Number),
-      recentImported: sql<number>`count(*) filter (where ${isRecent} and ${owners.availabilityImported})`.mapWith(Number),
-      nonRenseignee: sql<number>`count(*) filter (where not ${hasAvailability})`.mapWith(Number),
+      recentApi: sql<number>`count(*) filter (where ${isRecent} and ${isApi})`.mapWith(Number),
+      nonRenseignee: sql<number>`count(*) filter (where ${isNonRenseignee})`.mapWith(Number),
+      nonRenseigneeApi: sql<number>`count(*) filter (where ${isNonRenseignee} and ${isApi})`.mapWith(Number),
+      ancienne: sql<number>`count(*) filter (where ${isAncienne})`.mapWith(Number),
+      ancienneApi: sql<number>`count(*) filter (where ${isAncienne} and ${isApi})`.mapWith(Number),
     })
     .from(accommodations)
-    .innerJoin(owners, eq(owners.id, accommodations.ownerId))
     .where(and(eq(accommodations.published, true), sql`not ${isCrous}`))
 
-  const total = row?.total ?? 0
-  const recent = row?.recent ?? 0
-  const nonRenseignee = row?.nonRenseignee ?? 0
+  const situation = (value: number, api: number) => ({ count: value, manual: value - api, api })
   return {
     recentDays: INACTIVITY_WARNING_DAYS.stale_availability,
-    total,
-    recent,
-    recentImported: row?.recentImported ?? 0,
-    nonRenseignee,
-    ancienne: total - recent - nonRenseignee,
+    total: situation(row?.total ?? 0, row?.totalApi ?? 0),
+    recent: situation(row?.recent ?? 0, row?.recentApi ?? 0),
+    nonRenseignee: situation(row?.nonRenseignee ?? 0, row?.nonRenseigneeApi ?? 0),
+    ancienne: situation(row?.ancienne ?? 0, row?.ancienneApi ?? 0),
   }
 }
 
