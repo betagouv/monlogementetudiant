@@ -528,6 +528,8 @@
     "filters": {
       "accommodations": "residence",
       "accommodationsWithLocation": "residence{pluralize} {locationFormatted}",
+      "crousAccommodations": "CROUS residence{pluralize}",
+      "crousAccommodationsWithLocation": "CROUS residence{pluralize} {locationFormatted}",
       "grid": "List",
       "map": "Map",
       "sortByPrice": "Sorted by price",
