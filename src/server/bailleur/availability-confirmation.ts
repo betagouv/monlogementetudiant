@@ -69,7 +69,7 @@ export async function confirmAvailability({ owner, scope, user, onlyWarned = tru
       .update(accommodationTypologies)
       .set({ availabilityUpdatedAt: now, availabilityUpdatedBy: user.id })
       .where(and(inArray(accommodationTypologies.accommodationId, ids), isNotNull(accommodationTypologies.nbAvailable)))
-    await tx.update(accommodations).set({ staleAvailabilityWarnedAt: null }).where(inArray(accommodations.id, ids))
+    await tx.update(accommodations).set({ staleAvailabilityWarnedAt: null, updatedAt: now }).where(inArray(accommodations.id, ids))
   })
 
   for (const residence of residences) {
