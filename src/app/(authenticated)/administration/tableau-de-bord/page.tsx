@@ -3,6 +3,7 @@
 import Button from '@codegouvfr/react-dsfr/Button'
 import Input from '@codegouvfr/react-dsfr/Input'
 import { createModal } from '@codegouvfr/react-dsfr/Modal'
+import { Table } from '@codegouvfr/react-dsfr/Table'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import clsx from 'clsx'
 import Image from 'next/image'
@@ -84,6 +85,8 @@ export default function DashboardPage() {
       <ScholarshipBreakdown data={data} isLoading={isLoading} />
 
       <KeyFigures data={data} isLoading={isLoading} />
+
+      <AvailabilityFollowUp data={data} isLoading={isLoading} />
 
       <MyLinkedOwners />
 
@@ -395,6 +398,58 @@ function KeyFigures({ data, isLoading }: { data: ReturnType<typeof useAdminStats
         </div>
       </div>
     </>
+  )
+}
+
+function AvailabilityFollowUp({ data, isLoading }: { data: ReturnType<typeof useAdminStats>['data']; isLoading: boolean }) {
+  const suivi = data?.suiviDispo
+  const total = suivi?.total ?? 0
+  const fmt = (n: number) => n.toLocaleString('fr-FR')
+  const pct = (n: number) =>
+    `${(total ? (n / total) * 100 : 0).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} %`
+
+  const rows = [
+    {
+      label: 'Disponibilité mise à jour récemment',
+      value: suivi?.recent ?? 0,
+      imported: `${fmt(suivi?.recentImported ?? 0)} résidences, soit ${pct(suivi?.recentImported ?? 0)} des ${fmt(total)}`,
+    },
+    { label: 'Aucune disponibilité renseignée', value: suivi?.nonRenseignee ?? 0, imported: '—' },
+    { label: 'Disponibilité renseignée, mais pas récemment', value: suivi?.ancienne ?? 0, imported: '—' },
+  ]
+
+  return (
+    <div className="fr-mb-3w">
+      <div className={styles.card}>
+        <div className={styles.cardHeader}>
+          <span className={styles.cardTitle}>
+            <span className="ri-refresh-line fr-icon--sm fr-mr-1w" aria-hidden="true" />
+            Suivi des mises à jour de disponibilité
+          </span>
+        </div>
+        <div className="fr-px-3w">
+          <p className="fr-text--sm fr-text-mention--grey fr-mt-2w fr-mb-0">
+            Résidences publiées hors CROUS. « Récemment » : dans les {suivi?.recentDays ?? 30} derniers jours, par un gestionnaire ou par
+            l&apos;import automatique pour les bailleurs importés.
+          </p>
+          {isLoading || !suivi ? (
+            <p className="fr-text--sm fr-text-mention--grey fr-py-3w fr-mb-0">Chargement...</p>
+          ) : (
+            <Table
+              fixed
+              noCaption
+              caption="Suivi des mises à jour de disponibilité"
+              className="fr-mb-0"
+              headers={['Situation', 'Résidences', `Part des ${fmt(total)}`, 'Dont bailleurs importés']}
+              data={[
+                ...rows.map((row) => [row.label, fmt(row.value), pct(row.value), row.imported]),
+                [<strong key="label">Total</strong>, <strong key="value">{fmt(total)}</strong>, <strong key="pct">100 %</strong>, '—'],
+              ]}
+            />
+          )}
+        </div>
+      </div>
+    </div>
   )
 }
 
