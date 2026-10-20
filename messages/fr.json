@@ -2060,6 +2060,10 @@
             "title": "Choisir le mode de gestion des candidatures",
             "badge": "CANDIDATURES"
           },
+          "contactsModeration": {
+            "title": "Modérer les contacts d'étudiants",
+            "badge": "CANDIDATURES"
+          },
           "applications": {
             "title": "Modérer vos candidatures",
             "badge": "CANDIDATURES",

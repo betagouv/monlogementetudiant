@@ -2060,6 +2060,10 @@
             "title": "Choose the application management mode",
             "badge": "APPLICATIONS"
           },
+          "contactsModeration": {
+            "title": "Moderate student contacts",
+            "badge": "APPLICATIONS"
+          },
           "applications": {
             "title": "Moderate your applications",
             "badge": "APPLICATIONS",
