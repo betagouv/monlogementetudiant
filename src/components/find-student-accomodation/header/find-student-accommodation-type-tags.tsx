@@ -1,7 +1,7 @@
 'use client'
 
-import type { TagProps } from '@codegouvfr/react-dsfr/Tag'
-import { TagsGroup } from '@codegouvfr/react-dsfr/TagsGroup'
+import { Tag, type TagProps } from '@codegouvfr/react-dsfr/Tag'
+import { Tooltip } from '@codegouvfr/react-dsfr/Tooltip'
 import { useTranslations } from 'next-intl'
 import { parseAsBoolean, parseAsInteger, useQueryStates } from 'nuqs'
 import { FC } from 'react'
@@ -21,13 +21,22 @@ export const FindStudentAccommodationTypeTags: FC = () => {
     trackEvent({ category: 'Recherche', action, name: next ? 'active' : 'inactive' })
     setQueryStates({ [key]: next || null, page: 1 }, { shallow: key !== 'crous' })
   }
+  const toggleCrous = toggle('crous', 'filtre crous')
 
-  const tags: [TagProps, ...TagProps[]] = [
+  const tags: (TagProps & { tooltip?: string })[] = [
     {
       children: t('crousTag'),
       iconId: 'fr-icon-building-line',
       pressed: !!queryStates.crous,
-      nativeButtonProps: { onClick: toggle('crous', 'filtre crous') },
+      nativeButtonProps: { onClick: toggleCrous },
+      tooltip: t('tooltip.crous'),
+    },
+    {
+      children: t('nonCrousTag'),
+      iconId: 'fr-icon-home-4-line',
+      pressed: !queryStates.crous,
+      nativeButtonProps: { onClick: toggleCrous },
+      tooltip: t('tooltip.nonCrous'),
     },
     {
       children: t('shared'),
@@ -43,5 +52,19 @@ export const FindStudentAccommodationTypeTags: FC = () => {
     },
   ]
 
-  return <TagsGroup className="fr-mb-0" tags={tags} />
+  return (
+    <ul className="fr-tags-group fr-mb-0">
+      {tags.map(({ tooltip, ...tagProps }, i) => (
+        <li key={i}>
+          {tooltip ? (
+            <Tooltip kind="hover" title={tooltip}>
+              <Tag {...tagProps} />
+            </Tooltip>
+          ) : (
+            <Tag {...tagProps} />
+          )}
+        </li>
+      ))}
+    </ul>
+  )
 }

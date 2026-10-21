@@ -30,13 +30,13 @@ export const FindStudentAccomodationSortView: FC<FindStudentAccomodationSortView
   const pluralize = sPluriel(accommodations?.count ?? 0)
   const title =
     territory?.name && !queryStates['recherche-par-carte']
-      ? t(queryStates.crous ? 'crousAccommodationsWithLocation' : 'accommodationsWithLocation', {
+      ? t(queryStates.crous ? 'crousAccommodationsWithLocation' : 'nonCrousAccommodationsWithLocation', {
           pluralize,
           locationFormatted: formatCityWithPreposition(locale, 'à', territory.name),
         })
       : queryStates.crous
         ? t('crousAccommodations', { pluralize })
-        : `${t('accommodations')}${pluralize}`
+        : t('nonCrousAccommodations', { pluralize })
   return (
     <div className={classes.headerContainer}>
       <div role="status" aria-live="polite">
