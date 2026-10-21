@@ -1,14 +1,18 @@
 'use client'
 
 import { Tag, type TagProps } from '@codegouvfr/react-dsfr/Tag'
-import { Tooltip } from '@codegouvfr/react-dsfr/Tooltip'
+import clsx from 'clsx'
 import { useTranslations } from 'next-intl'
 import { parseAsBoolean, parseAsInteger, useQueryStates } from 'nuqs'
-import { FC } from 'react'
+import { FC, MouseEvent, useId } from 'react'
 import { trackEvent } from '~/lib/tracking'
+import styles from './find-student-accommodation-type-tags.module.css'
 
 export const FindStudentAccommodationTypeTags: FC = () => {
   const t = useTranslations('findAccomodation.header')
+  const id = useId()
+  const crousTooltipId = `tooltip-crous-tag-${id}`
+  const nonCrousTooltipId = `tooltip-non-crous-tag-${id}`
   const [queryStates, setQueryStates] = useQueryStates({
     crous: parseAsBoolean,
     colocation: parseAsBoolean,
@@ -21,22 +25,26 @@ export const FindStudentAccommodationTypeTags: FC = () => {
     trackEvent({ category: 'Recherche', action, name: next ? 'active' : 'inactive' })
     setQueryStates({ [key]: next || null, page: 1 }, { shallow: key !== 'crous' })
   }
-  const toggleCrous = toggle('crous', 'filtre crous')
+  const toggleCrous = (e: MouseEvent<HTMLButtonElement>) => {
+    toggle('crous', 'filtre crous')()
+    // Un clic souris donne le focus au bouton, ce qui garde l'infobulle DSFR ouverte.
+    if (e.detail > 0) e.currentTarget.blur()
+  }
 
-  const tags: (TagProps & { tooltip?: string })[] = [
+  const tags: (TagProps & { tooltip?: { id: string; title: string } })[] = [
     {
       children: t('crousTag'),
       iconId: 'fr-icon-building-line',
       pressed: !!queryStates.crous,
-      nativeButtonProps: { onClick: toggleCrous },
-      tooltip: t('tooltip.crous'),
+      nativeButtonProps: { onClick: toggleCrous, 'aria-describedby': crousTooltipId },
+      tooltip: { id: crousTooltipId, title: t('tooltip.crous') },
     },
     {
       children: t('nonCrousTag'),
       iconId: 'fr-icon-home-4-line',
       pressed: !queryStates.crous,
-      nativeButtonProps: { onClick: toggleCrous },
-      tooltip: t('tooltip.nonCrous'),
+      nativeButtonProps: { onClick: toggleCrous, 'aria-describedby': nonCrousTooltipId },
+      tooltip: { id: nonCrousTooltipId, title: t('tooltip.nonCrous') },
     },
     {
       children: t('shared'),
@@ -56,12 +64,11 @@ export const FindStudentAccommodationTypeTags: FC = () => {
     <ul className="fr-tags-group fr-mb-0">
       {tags.map(({ tooltip, ...tagProps }, i) => (
         <li key={i}>
-          {tooltip ? (
-            <Tooltip kind="hover" title={tooltip}>
-              <Tag {...tagProps} />
-            </Tooltip>
-          ) : (
-            <Tag {...tagProps} />
+          <Tag {...tagProps} />
+          {tooltip && (
+            <span className={clsx(styles.tooltip, 'fr-tooltip fr-placement')} id={tooltip.id} role="tooltip">
+              {tooltip.title}
+            </span>
           )}
         </li>
       ))}

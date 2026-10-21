@@ -1,0 +1,5 @@
+/* 1ms et non 0 : le DSFR attend `transitionend` pour masquer l'infobulle. */
+.tooltip:global(.fr-tooltip) {
+  transition-delay: 1ms;
+  pointer-events: none;
+}
