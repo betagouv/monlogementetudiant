@@ -19,10 +19,10 @@ export const hashIp = (ip: string | null): string | null => {
 }
 
 /** Extrait l'IP cliente des en-têtes posés par le routeur Scalingo (premier maillon de la chaîne). */
-export const getClientIp = (req: Request | undefined): string | null => {
-  const forwarded = req?.headers.get('x-forwarded-for')
+export const getClientIp = (req: { headers?: Headers | null } | undefined): string | null => {
+  const forwarded = req?.headers?.get('x-forwarded-for')
   if (forwarded) return forwarded.split(',')[0]!.trim() || null
-  return req?.headers.get('x-real-ip')?.trim() || null
+  return req?.headers?.get('x-real-ip')?.trim() || null
 }
 
 /**

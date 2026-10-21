@@ -15,9 +15,11 @@ import styles from './update-residence-list.module.css'
 interface UpdateResidenceListProps {
   accommodation: TAccomodation
   children: React.ReactNode
+  /** Reçoit l'enregistrement une fois le formulaire validé : la liste peut proposer de confirmer toutes les résidences. */
+  onConfirm: (submit: () => Promise<void>) => void
 }
 
-export const UpdateResidenceList: FC<UpdateResidenceListProps> = ({ accommodation, children }) => {
+export const UpdateResidenceList: FC<UpdateResidenceListProps> = ({ accommodation, children, onConfirm }) => {
   const t = useTranslations('bailleur.residences.list')
   const tSchemas = useTranslations('schemas')
   const { mutateAsync: updateAccommodation, isPending } = useUpdateAccommodation(accommodation.slug)
@@ -43,8 +45,10 @@ export const UpdateResidenceList: FC<UpdateResidenceListProps> = ({ accommodatio
 
   const { fields } = useFieldArray({ control, name: 'availability' })
 
-  const onSubmit = async (data: TUpdateResidenceList) => {
-    await updateAccommodation(data)
+  const onSubmit = (data: TUpdateResidenceList) => {
+    onConfirm(async () => {
+      await updateAccommodation(data)
+    })
   }
 
   return (
@@ -79,11 +83,14 @@ export const UpdateResidenceList: FC<UpdateResidenceListProps> = ({ accommodatio
               </div>
             </div>
 
-            <div className={styles.buttonContainer}>
-              <Button size="small" type="submit" priority="secondary" iconId="ri-save-line" disabled={isPending}>
-                {t('save')}
-              </Button>
-            </div>
+            {fields.length > 0 && (
+              <div className={styles.buttonContainer}>
+                <span className="fr-text--xs fr-mb-0 fr-text-mention--grey">{t('confirmHint')}</span>
+                <Button type="submit" iconId="ri-check-line" disabled={isPending}>
+                  {t('confirm')}
+                </Button>
+              </div>
+            )}
           </div>
         </form>
       </FormProvider>

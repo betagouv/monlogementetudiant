@@ -529,6 +529,33 @@ Options :
 
 Variables d'env requises : `DATABASE_URL`, `S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`
 
+#### `split-descriptions` — Découper les descriptions en rubriques
+
+```bash
+pnpm cli split-descriptions --verbose                 # dry-run, détail par résidence
+pnpm cli split-descriptions --csv ./reports/split.csv # rapport CSV ouvrable dans Excel
+pnpm cli split-descriptions --owner mon-bailleur --write
+pnpm cli split-descriptions --write                   # écriture en base
+```
+
+Découpe la description libre (`description`) de chaque résidence en rubriques : accroche, localisation et proximité, services et équipements, accueil et contact, modalités pratiques, autre. Ce sont ces rubriques qui sont éditées par les gestionnaires et affichées sur la fiche résidence : à jouer en prod avant la mise en ligne du formulaire par rubriques.
+
+Sans `--write`, tout s'exécute en dry-run. Les résidences dont une rubrique est déjà renseignée sont ignorées, sauf avec `--force`.
+
+Les imports qui fournissent une description (CROUS, ARPEJ, CSV CLI et admin) appellent le même découpage à chaque passage : leurs rubriques sont réécrites depuis la source, comme l'était déjà `description`.
+
+Options :
+
+| Option | Description |
+|--------|-------------|
+| `--verbose` | Affiche le découpage de chaque résidence |
+| `--csv [path]` | Écrit le découpage dans un CSV (défaut : `split-descriptions-{timestamp}.csv`) |
+| `--write` | Écrit les rubriques en base |
+| `--dry-run` | Simule sans écrire, même avec `--write` |
+| `--force` | Écrase les rubriques des résidences déjà découpées (y compris les saisies des gestionnaires) |
+| `--owner <id-or-slug>` | Limite à un gestionnaire |
+| `--limit <n>` | Limite le nombre de résidences |
+
 ---
 
 ### RAMSESE — établissements d'enseignement supérieur

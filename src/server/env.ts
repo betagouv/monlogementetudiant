@@ -44,6 +44,9 @@ const envSchema = z.object({
   // Brevo (email)
   BREVO_API_KEY: z.string().min(1, 'BREVO_API_KEY is required'),
   BREVO_API_URL: z.url().default('https://api.brevo.com/v3/smtp/email'),
+  // Hors production, tous les destinataires sont réécrits vers ce domaine, relayé dans le Mailpit
+  // de la QA (voir `src/utils/redirect-email.ts`). Aucun mail ne part vers une vraie adresse.
+  BREVO_REDIRECT_DOMAIN: z.string().min(1).default('qa-mail.monlogementetudiant.beta.gouv.fr'),
   BREVO_CONTACTS_API_URL: z.url(),
   // accepts only entire positive numbers for the brevo templates.
   BREVO_TEMPLATE_MAGIC_LINK: z.coerce.number().int().positive(),

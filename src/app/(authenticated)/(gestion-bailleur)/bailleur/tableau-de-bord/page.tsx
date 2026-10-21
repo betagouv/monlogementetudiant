@@ -136,6 +136,25 @@ export default async function TableauDeBordPage({ searchParams }: TableauDeBordP
                   </div>
                 </div>
               )}
+              {ctx.owner.contactMode !== EOwnerContactMode.NONE && ctx.hasPermission('manage_applications') && (
+                <div className={styles.actionCard}>
+                  <div className={styles.actionHeader}>
+                    <Link className="fr-link fr-link--no-underline" href={buildHref('/bailleur/contacts', awaitedSearchParams)}>
+                      <span className="fr-h6 fr-text-title--blue-france fr-mb-0">
+                        {t('dashboard.priorityActions.actions.contactsModeration.title')}
+                      </span>
+                    </Link>
+                    <Badge severity="new" className="fr-hidden fr-unhidden-md" noIcon>
+                      {t('dashboard.priorityActions.actions.contactsModeration.badge')}
+                    </Badge>
+                  </div>
+                  <div className={styles.actionFooter}>
+                    <Link className="fr-link fr-link--no-underline" href={buildHref('/bailleur/contacts', awaitedSearchParams)}>
+                      <span className="ri-arrow-right-line" />
+                    </Link>
+                  </div>
+                </div>
+              )}
               {/* Sans manage_residences, la section renvoie ici : la carte serait un lien mort. */}
               {ctx.hasPermission('manage_residences') && (
                 <div className={styles.actionCard}>

@@ -657,6 +657,28 @@ describe('accommodations.list', () => {
     expect(result.maxPrice).toBe(600)
   })
 
+  it('computes price bounds regardless of priceMax filter', async () => {
+    await createAccommodation(
+      {
+        slug: 'cheap',
+        geom: { type: 'Point', coordinates: [4.39, 45.44] },
+      },
+      [typologyDraft('t1', { priceMin: 200, priceMax: 400 })],
+    )
+    await createAccommodation(
+      {
+        slug: 'expensive',
+        geom: { type: 'Point', coordinates: [4.39, 45.44] },
+      },
+      [typologyDraft('t1', { priceMin: 800, priceMax: 1200 })],
+    )
+
+    const result = await caller.accommodations.list({ priceMax: 500 })
+    expect(result.count).toBe(1)
+    expect(result.minPrice).toBe(200)
+    expect(result.maxPrice).toBe(1200)
+  })
+
   it('filters by ownerSlug', async () => {
     const owner1 = await createOwner({ name: 'Promologis', slug: 'promologis' })
     const owner2 = await createOwner({ name: 'Autre Bailleur', slug: 'autre-bailleur' })

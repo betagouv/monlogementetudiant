@@ -16,6 +16,7 @@ export const zCreateBailleurUser = z.object({
   bailleurRole: z.enum(BAILLEUR_ROLES),
   bailleurPermissions: z.array(z.enum(BAILLEUR_PERMISSIONS)).default([]),
   applicationScope: ZBailleurAccommodationScope.optional(),
+  openClosedResidences: z.boolean().optional(),
 })
 
 export const zUpdateBailleurUser = z.object({
@@ -26,6 +27,7 @@ export const zUpdateBailleurUser = z.object({
   bailleurRole: z.enum(BAILLEUR_ROLES).optional(),
   bailleurPermissions: z.array(z.enum(BAILLEUR_PERMISSIONS)).optional(),
   applicationScope: ZBailleurAccommodationScope.optional(),
+  openClosedResidences: z.boolean().optional(),
 })
 
 /**

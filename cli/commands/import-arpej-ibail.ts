@@ -2,6 +2,7 @@ import { and, eq, sql } from 'drizzle-orm'
 import { EResidenceType } from '~/enums/residence-type'
 import { db } from '~/server/db'
 import { env } from '~/server/env'
+import { splitDescription } from '~/server/lib/description-sections'
 import { ensureCity, geocodeAddressVerified } from '~/server/lib/import/geocoder'
 import { markAvailabilityImported, resolveImportOwner } from '~/server/lib/import/resolve-owner'
 import { mergeTypologies, syncTypologies, type TypologyPatch, typologyAggregates, typologyDraft } from '~/server/lib/typologies'
@@ -240,6 +241,7 @@ const command: ImportCommand = {
           const accommodationId = existingSource[0].accommodationId
           const updateData: Partial<typeof accommodations.$inferInsert> = {
             ...omitNullish(accommodationData),
+            ...(accommodationData.description ? splitDescription(accommodationData.description) : {}),
             ...(imageUrls.length > 0 ? { imagesUrls: imageUrls } : {}),
           }
 
@@ -267,6 +269,7 @@ const command: ImportCommand = {
             .insert(accommodations)
             .values({
               ...accommodationData,
+              ...splitDescription(accommodationData.description),
               name: residence.title,
               imagesUrls: imageUrls.length > 0 ? imageUrls : null,
               slug,

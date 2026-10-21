@@ -189,3 +189,7 @@
     max-width: calc(33.33% - 1.5rem);
   }
 }
+
+.descriptionSection > :last-child {
+  margin-bottom: 0;
+}

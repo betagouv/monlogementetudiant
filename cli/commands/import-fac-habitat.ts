@@ -3,7 +3,9 @@ import * as os from 'node:os'
 import * as path from 'node:path'
 import { and, eq, sql } from 'drizzle-orm'
 import SftpClient from 'ssh2-sftp-client'
+import { z } from 'zod'
 import { db } from '~/server/db'
+import { accommodationTypologies } from '~/server/db/schema/accommodation-typologies'
 import { env } from '~/server/env'
 import { ensureCity, geocodeAddressVerified } from '~/server/lib/import/geocoder'
 import { markAvailabilityImported, resolveImportOwner } from '~/server/lib/import/resolve-owner'
@@ -18,93 +20,109 @@ const SOURCE = 'fac-habitat'
 const OWNER_NAME = 'Fac-Habitat'
 const DEFAULT_REMOTE_PATH = '/export/monlogementetudiant.json'
 
-interface FacHabitatResidence {
-  id: number | string
-  name: string
-  address: string
-  city: string
-  postal_code: string
-  marque?: string
-  nb_t1?: number
-  nb_t1_bis?: number
-  nb_t1_prime?: number
-  nb_studio_double?: number
-  nb_t2?: number
-  nb_t2_duplex?: number
-  nb_duplex?: number
-  nb_t3?: number
-  nb_duo?: number
-  nb_t4?: number
-  nb_t5?: number
-  nb_t5_en_colocation?: number
-  t1_rent_min?: number
-  t1_rent_max?: number
-  t1_bis_rent_min?: number
-  t1_bis_rent_max?: number
-  t1_prime_rent_min?: number
-  t1_prime_rent_max?: number
-  studio_double_rent_min?: number
-  studio_double_rent_max?: number
-  t2_rent_min?: number
-  t2_rent_max?: number
-  t2_duplex_rent_min?: number
-  t2_duplex_rent_max?: number
-  duplex_rent_min?: number
-  duplex_rent_max?: number
-  t3_rent_min?: number
-  t3_rent_max?: number
-  duo_rent_min?: number
-  duo_rent_max?: number
-  t4_rent_min?: number
-  t4_rent_max?: number
-  t5_rent_min?: number
-  t5_rent_max?: number
-  t5_en_colocation_rent_min?: number
-  t5_en_colocation_rent_max?: number
-  accept_waiting_list?: boolean
-  laundry_room?: boolean
-  parking?: boolean
-  residence_manager?: boolean
-  kitchen_type?: string
-  refrigerator?: boolean
-  bathroom?: string
-  nb_t1_available?: number
-  nb_t1_bis_available?: number
-  nb_t1_prime_available?: number
-  nb_studio_double_available?: number
-  nb_t2_available?: number
-  nb_t2_duplex_available?: number
-  nb_duplex_available?: number
-  nb_t3_available?: number
-  nb_duo_available?: number
-  nb_t4_available?: number
-  nb_t5_en_colocation_available?: number
-  t1_surface_min?: number | null
-  t1_surface_max?: number | null
-  t1_bis_surface_min?: number | null
-  t1_bis_surface_max?: number | null
-  t1_prime_surface_min?: number | null
-  t1_prime_surface_max?: number | null
-  studio_double_surface_min?: number | null
-  studio_double_surface_max?: number | null
-  t2_surface_min?: number | null
-  t2_surface_max?: number | null
-  t2_duplex_surface_min?: number | null
-  t2_duplex_surface_max?: number | null
-  duplex_surface_min?: number | null
-  duplex_surface_max?: number | null
-  t3_surface_min?: number | null
-  t3_surface_max?: number | null
-  duo_surface_min?: number | null
-  duo_surface_max?: number | null
-  t4_surface_min?: number | null
-  t4_surface_max?: number | null
-  t5_en_colocation_surface_min?: number | null
-  t5_en_colocation_surface_max?: number | null
-  nb_accessible_apartments?: number
-  nb_coliving_apartments?: number
-  nb_total_apartments?: number
-}
+const num = z.number().nullish()
+const bool = z.boolean().nullish()
+
+const ZFacHabitatResidence = z.object({
+  id: z.union([z.number(), z.string()]),
+  name: z.string(),
+  address: z.string(),
+  city: z.string(),
+  postal_code: z.string(),
+  marque: z.string().nullish(),
+  nb_t1: num,
+  nb_t1_bis: num,
+  nb_t1_prime: num,
+  nb_studio_double: num,
+  nb_t2: num,
+  nb_t2_duplex: num,
+  nb_duplex: num,
+  nb_t3: num,
+  nb_duo: num,
+  nb_t4: num,
+  nb_t5: num,
+  nb_t5_en_colocation: num,
+  t1_rent_min: num,
+  t1_rent_max: num,
+  t1_bis_rent_min: num,
+  t1_bis_rent_max: num,
+  t1_prime_rent_min: num,
+  t1_prime_rent_max: num,
+  studio_double_rent_min: num,
+  studio_double_rent_max: num,
+  t2_rent_min: num,
+  t2_rent_max: num,
+  t2_duplex_rent_min: num,
+  t2_duplex_rent_max: num,
+  duplex_rent_min: num,
+  duplex_rent_max: num,
+  t3_rent_min: num,
+  t3_rent_max: num,
+  duo_rent_min: num,
+  duo_rent_max: num,
+  t4_rent_min: num,
+  t4_rent_max: num,
+  t5_rent_min: num,
+  t5_rent_max: num,
+  t5_en_colocation_rent_min: num,
+  t5_en_colocation_rent_max: num,
+  accept_waiting_list: bool,
+  t1_accept_waiting_list: bool,
+  t1_bis_accept_waiting_list: bool,
+  t1_prime_accept_waiting_list: bool,
+  studio_double_accept_waiting_list: bool,
+  t2_accept_waiting_list: bool,
+  t2_duplex_accept_waiting_list: bool,
+  duplex_accept_waiting_list: bool,
+  t3_accept_waiting_list: bool,
+  duo_accept_waiting_list: bool,
+  t4_accept_waiting_list: bool,
+  t5_en_colocation_accept_waiting_list: bool,
+  laundry_room: bool,
+  parking: bool,
+  residence_manager: bool,
+  kitchen_type: z.string().nullish(),
+  refrigerator: bool,
+  bathroom: z.string().nullish(),
+  nb_t1_available: num,
+  nb_t1_bis_available: num,
+  nb_t1_prime_available: num,
+  nb_studio_double_available: num,
+  nb_t2_available: num,
+  nb_t2_duplex_available: num,
+  nb_duplex_available: num,
+  nb_t3_available: num,
+  nb_duo_available: num,
+  nb_t4_available: num,
+  nb_t5_en_colocation_available: num,
+  t1_surface_min: num,
+  t1_surface_max: num,
+  t1_bis_surface_min: num,
+  t1_bis_surface_max: num,
+  t1_prime_surface_min: num,
+  t1_prime_surface_max: num,
+  studio_double_surface_min: num,
+  studio_double_surface_max: num,
+  t2_surface_min: num,
+  t2_surface_max: num,
+  t2_duplex_surface_min: num,
+  t2_duplex_surface_max: num,
+  duplex_surface_min: num,
+  duplex_surface_max: num,
+  t3_surface_min: num,
+  t3_surface_max: num,
+  duo_surface_min: num,
+  duo_surface_max: num,
+  t4_surface_min: num,
+  t4_surface_max: num,
+  t5_en_colocation_surface_min: num,
+  t5_en_colocation_surface_max: num,
+  nb_accessible_apartments: num,
+  nb_coliving_apartments: num,
+  nb_total_apartments: num,
+})
+
+type TFacHabitatResidence = z.infer<typeof ZFacHabitatResidence>
 
 async function downloadFromSftp(verbose?: boolean): Promise<string> {
   const {
@@ -147,7 +165,7 @@ async function downloadFromSftp(verbose?: boolean): Promise<string> {
 
 // FAC-Habitat splits some DB typologies across several source columns (e.g. t1_bis = t1_bis + t1_prime
 // + studio_double + duplex). The grouping below maps those source columns onto the DB typology types.
-function buildTypologyDrafts(item: FacHabitatResidence): TypologyDraft[] {
+function buildTypologyDrafts(item: TFacHabitatResidence): TypologyDraft[] {
   const sumIfAny = (...vals: (number | undefined | null)[]) => {
     const nums = vals.filter((v): v is number => v != null)
     return nums.length > 0 ? nums.reduce((a, b) => a + b, 0) : null
@@ -162,10 +180,13 @@ function buildTypologyDrafts(item: FacHabitatResidence): TypologyDraft[] {
     return nums.length > 0 ? Math.round(Math.max(...nums)) : null
   }
 
+  const gate = (available: number | undefined | null, acceptsApplications: boolean | undefined | null) =>
+    available != null && acceptsApplications === false ? 0 : available
+
   return [
     typologyDraft('t1', {
       nbTotal: sumIfAny(item.nb_t1),
-      nbAvailable: sumIfAny(item.nb_t1_available),
+      nbAvailable: sumIfAny(gate(item.nb_t1_available, item.t1_accept_waiting_list)),
       priceMin: minOf(item.t1_rent_min),
       priceMax: maxOf(item.t1_rent_max),
       superficieMin: minOf(item.t1_surface_min),
@@ -174,10 +195,10 @@ function buildTypologyDrafts(item: FacHabitatResidence): TypologyDraft[] {
     typologyDraft('t1_bis', {
       nbTotal: sumIfAny(item.nb_t1_bis, item.nb_t1_prime, item.nb_studio_double, item.nb_duplex),
       nbAvailable: sumIfAny(
-        item.nb_t1_bis_available,
-        item.nb_t1_prime_available,
-        item.nb_studio_double_available,
-        item.nb_duplex_available,
+        gate(item.nb_t1_bis_available, item.t1_bis_accept_waiting_list),
+        gate(item.nb_t1_prime_available, item.t1_prime_accept_waiting_list),
+        gate(item.nb_studio_double_available, item.studio_double_accept_waiting_list),
+        gate(item.nb_duplex_available, item.duplex_accept_waiting_list),
       ),
       priceMin: minOf(item.t1_bis_rent_min, item.t1_prime_rent_min, item.studio_double_rent_min, item.duplex_rent_min),
       priceMax: maxOf(item.t1_bis_rent_max, item.t1_prime_rent_max, item.studio_double_rent_max, item.duplex_rent_max),
@@ -186,7 +207,10 @@ function buildTypologyDrafts(item: FacHabitatResidence): TypologyDraft[] {
     }),
     typologyDraft('t2', {
       nbTotal: sumIfAny(item.nb_t2, item.nb_t2_duplex),
-      nbAvailable: sumIfAny(item.nb_t2_available, item.nb_t2_duplex_available),
+      nbAvailable: sumIfAny(
+        gate(item.nb_t2_available, item.t2_accept_waiting_list),
+        gate(item.nb_t2_duplex_available, item.t2_duplex_accept_waiting_list),
+      ),
       priceMin: minOf(item.t2_rent_min, item.t2_duplex_rent_min),
       priceMax: maxOf(item.t2_rent_max, item.t2_duplex_rent_max),
       superficieMin: minOf(item.t2_surface_min, item.t2_duplex_surface_min),
@@ -194,7 +218,10 @@ function buildTypologyDrafts(item: FacHabitatResidence): TypologyDraft[] {
     }),
     typologyDraft('t3', {
       nbTotal: sumIfAny(item.nb_t3, item.nb_duo),
-      nbAvailable: sumIfAny(item.nb_t3_available, item.nb_duo_available),
+      nbAvailable: sumIfAny(
+        gate(item.nb_t3_available, item.t3_accept_waiting_list),
+        gate(item.nb_duo_available, item.duo_accept_waiting_list),
+      ),
       priceMin: minOf(item.t3_rent_min, item.duo_rent_min),
       priceMax: maxOf(item.t3_rent_max, item.duo_rent_max),
       superficieMin: minOf(item.t3_surface_min, item.duo_surface_min),
@@ -202,7 +229,7 @@ function buildTypologyDrafts(item: FacHabitatResidence): TypologyDraft[] {
     }),
     typologyDraft('t4', {
       nbTotal: sumIfAny(item.nb_t4),
-      nbAvailable: sumIfAny(item.nb_t4_available),
+      nbAvailable: sumIfAny(gate(item.nb_t4_available, item.t4_accept_waiting_list)),
       priceMin: minOf(item.t4_rent_min),
       priceMax: maxOf(item.t4_rent_max),
       superficieMin: minOf(item.t4_surface_min),
@@ -210,7 +237,7 @@ function buildTypologyDrafts(item: FacHabitatResidence): TypologyDraft[] {
     }),
     typologyDraft('t5', {
       nbTotal: sumIfAny(item.nb_t5, item.nb_t5_en_colocation),
-      nbAvailable: sumIfAny(item.nb_t5_en_colocation_available),
+      nbAvailable: sumIfAny(gate(item.nb_t5_en_colocation_available, item.t5_en_colocation_accept_waiting_list)),
       priceMin: minOf(item.t5_rent_min, item.t5_en_colocation_rent_min),
       priceMax: maxOf(item.t5_rent_max, item.t5_en_colocation_rent_max),
       superficieMin: minOf(item.t5_en_colocation_surface_min),
@@ -219,7 +246,47 @@ function buildTypologyDrafts(item: FacHabitatResidence): TypologyDraft[] {
   ]
 }
 
-async function loadResidences(options: ImportOptions): Promise<FacHabitatResidence[]> {
+function acceptsWaitingList(item: TFacHabitatResidence): boolean | null {
+  const byType = [
+    item.t1_accept_waiting_list,
+    item.t1_bis_accept_waiting_list,
+    item.t1_prime_accept_waiting_list,
+    item.studio_double_accept_waiting_list,
+    item.t2_accept_waiting_list,
+    item.t2_duplex_accept_waiting_list,
+    item.duplex_accept_waiting_list,
+    item.t3_accept_waiting_list,
+    item.duo_accept_waiting_list,
+    item.t4_accept_waiting_list,
+    item.t5_en_colocation_accept_waiting_list,
+  ].filter((v): v is boolean => v != null)
+  return byType.length > 0 ? byType.some(Boolean) : (item.accept_waiting_list ?? null)
+}
+
+async function describeChanges(accommodationId: number, drafts: TypologyDraft[], acceptWaitingList: boolean | null): Promise<string[]> {
+  const [current] = await db
+    .select({ acceptWaitingList: accommodations.acceptWaitingList })
+    .from(accommodations)
+    .where(eq(accommodations.id, accommodationId))
+  const rows = await db.select().from(accommodationTypologies).where(eq(accommodationTypologies.accommodationId, accommodationId))
+  const before = new Map(rows.map((r) => [r.type, r]))
+
+  const changes: string[] = []
+  if (current?.acceptWaitingList !== acceptWaitingList) {
+    changes.push(`liste d'attente : ${current?.acceptWaitingList ?? '∅'} → ${acceptWaitingList ?? '∅'}`)
+  }
+  for (const draft of drafts) {
+    const prev = before.get(draft.type)
+    const empty = [draft.nbTotal, draft.nbAvailable, draft.priceMin, draft.priceMax].every((v) => v == null)
+    if (empty && !prev) continue
+    if (prev?.nbAvailable !== draft.nbAvailable)
+      changes.push(`${draft.type} dispo : ${prev?.nbAvailable ?? '∅'} → ${draft.nbAvailable ?? '∅'}`)
+    if (prev?.nbTotal !== draft.nbTotal) changes.push(`${draft.type} total : ${prev?.nbTotal ?? '∅'} → ${draft.nbTotal ?? '∅'}`)
+  }
+  return changes
+}
+
+async function loadResidences(options: ImportOptions): Promise<unknown[]> {
   let filePath: string
   let tmpFile = false
 
@@ -232,7 +299,7 @@ async function loadResidences(options: ImportOptions): Promise<FacHabitatResiden
 
   try {
     const raw = fs.readFileSync(filePath, 'utf-8')
-    const data: FacHabitatResidence[] = JSON.parse(raw)
+    const data = z.array(z.unknown()).parse(JSON.parse(raw))
     return options.limit ? data.slice(0, options.limit) : data
   } finally {
     if (tmpFile) {
@@ -263,7 +330,14 @@ const command: ImportCommand = {
     console.log(`  ${residences.length} résidences chargées`)
 
     for (let i = 0; i < residences.length; i++) {
-      const item = residences[i]
+      const parsed = ZFacHabitatResidence.safeParse(residences[i])
+      if (!parsed.success) {
+        const msg = `Ligne ${i + 1} : format invalide (${parsed.error.issues.map((issue) => `${issue.path.join('.')} ${issue.message}`).join(', ')})`
+        result.errors.push(msg)
+        console.error(`    ❌ ${msg}`)
+        continue
+      }
+      const item = parsed.data
       try {
         const sourceId = String(item.id)
         if (options.verbose) console.log(`  [${i + 1}/${residences.length}] ${item.name} (${sourceId})`)
@@ -315,7 +389,7 @@ const command: ImportCommand = {
           kitchenType: item.kitchen_type ?? null,
           refrigerator: item.refrigerator ?? null,
           bathroom: item.bathroom ?? null,
-          acceptWaitingList: item.accept_waiting_list ?? null,
+          acceptWaitingList: acceptsWaitingList(item),
           externalReference: sourceId,
           ownerId,
           updatedAt: new Date(),
@@ -323,10 +397,16 @@ const command: ImportCommand = {
 
         if (options.dryRun) {
           if (existingSource[0]) {
-            if (options.verbose) console.log(`    [dry-run] Mise à jour id=${existingSource[0].accommodationId}`)
+            const changes = await describeChanges(existingSource[0].accommodationId, typologyDrafts, accommodationData.acceptWaitingList)
+            if (changes.length > 0) {
+              console.log(`  ~ ${item.name} (${sourceId}, id=${existingSource[0].accommodationId})`)
+              for (const change of changes) console.log(`      ${change}`)
+            } else if (options.verbose) {
+              console.log(`    [dry-run] Mise à jour id=${existingSource[0].accommodationId} (aucun changement de dispo)`)
+            }
             result.updated++
           } else {
-            if (options.verbose) console.log(`    [dry-run] Création`)
+            console.log(`  + ${item.name} (${sourceId}) — création`)
             result.created++
           }
           continue

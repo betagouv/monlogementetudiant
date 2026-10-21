@@ -114,6 +114,9 @@ export type TCommonListFiltersInput = {
   skipCrous?: boolean
 }
 
+export const priceMaxCondition = (priceMax: number) =>
+  sql`${accommodations.priceMin} IS NOT NULL AND ${accommodations.priceMin} <= ${priceMax}`
+
 export const applyCommonListFilters = async (conditions: SQL[], input: TCommonListFiltersInput) => {
   const { hasColiving, isAccessible, onlyWithAvailability, ownerSlug, priceMax, viewCrous, skipCrous } = input
 
@@ -130,7 +133,7 @@ export const applyCommonListFilters = async (conditions: SQL[], input: TCommonLi
   }
 
   if (priceMax != null) {
-    conditions.push(sql`${accommodations.priceMin} IS NOT NULL AND ${accommodations.priceMin} <= ${priceMax}`)
+    conditions.push(priceMaxCondition(priceMax))
   }
 
   if (!skipCrous) {
@@ -213,6 +216,7 @@ export const listAccommodationsWithConditions = async ({
   pageSize,
   where,
   whereWithoutCrous,
+  priceBoundsWhere = where,
   addressOrderHint,
 }: {
   page: number
@@ -220,6 +224,8 @@ export const listAccommodationsWithConditions = async ({
   where: SQL | undefined
   // Mêmes conditions que `where` mais sans le filtre crous : sert à compter les deux buckets (crous / autres).
   whereWithoutCrous?: SQL
+  // Mêmes conditions que `where` mais sans le filtre prix : les bornes ne bougent pas quand on ajuste le budget.
+  priceBoundsWhere?: SQL
   addressOrderHint?: SQL
 }) => {
   const offset = (page - 1) * pageSize
@@ -243,7 +249,7 @@ export const listAccommodationsWithConditions = async ({
       .from(accommodations)
       .innerJoin(accommodationAddresses, eq(accommodationAddresses.accommodationId, accommodations.id))
       .innerJoin(cities, eq(accommodationAddresses.cityId, cities.id))
-      .where(where),
+      .where(priceBoundsWhere),
 
     db.execute<Record<string, unknown>>(sql`
       WITH deduped AS (

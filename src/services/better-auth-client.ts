@@ -1,10 +1,10 @@
-import { adminClient, inferAdditionalFields, magicLinkClient } from 'better-auth/client/plugins'
+import { adminClient, emailOTPClient, inferAdditionalFields, magicLinkClient } from 'better-auth/client/plugins'
 import { createAuthClient } from 'better-auth/react'
 import { trackEvent } from '~/lib/tracking'
 import type { auth } from '~/services/better-auth'
 
 export const authClient = createAuthClient({
-  plugins: [magicLinkClient(), adminClient(), inferAdditionalFields<typeof auth>()],
+  plugins: [magicLinkClient(), emailOTPClient(), adminClient(), inferAdditionalFields<typeof auth>()],
 })
 
 export function getRedirectUrlByRole(role: string | undefined): string {

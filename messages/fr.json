@@ -507,8 +507,8 @@
       "filtersCta": "Filtres",
       "accessbility": "Adapté PMR",
       "accommodations": "Résidences",
-      "availability": "Logements disponibles",
-      "availabilityLegend": "Disponibilités",
+      "availability": "Disponibles uniquement",
+      "availabilityLegend": "Disponibilités des logements",
       "advancedFiltersToggle": "Afficher plus de filtres",
       "advancedFiltersShow": "Plus de filtres",
       "advancedFiltersHide": "Fermer",
@@ -519,11 +519,17 @@
       "crous": "Crous",
       "others": "Autres résidences",
       "availabilityDescription": "N'afficher que les résidences ayant au moins un logement disponible",
-      "sharedDescription": "N'afficher que les résidences proposant de la colocation"
+      "sharedDescription": "N'afficher que les résidences proposant de la colocation",
+      "whereLabel": "Où souhaitez-vous étudier ?",
+      "maxRentLabel": "Loyer maximum",
+      "crousTag": "Logement CROUS",
+      "accessibleTag": "Accessible PMR"
     },
     "filters": {
       "accommodations": "résidence",
       "accommodationsWithLocation": "résidence{pluralize} {locationFormatted}",
+      "crousAccommodations": "résidence{pluralize} CROUS",
+      "crousAccommodationsWithLocation": "résidence{pluralize} CROUS {locationFormatted}",
       "grid": "Liste",
       "map": "Carte",
       "sortByPrice": "Triés par prix",
@@ -538,7 +544,8 @@
       "noAvailability": "Aucune disponibilité",
       "waitingList": "Dépôt de dossier possible",
       "accommodationsCount": "{count} logements",
-      "availabilityCount": "{count, plural, one {Disponibilité} other {Disponibilités}}"
+      "availabilityCount": "{count, plural, one {Disponibilité} other {Disponibilités}}",
+      "lastUpdate": "Mise à jour le {date}"
     },
     "results": {
       "noResult": "Aucun résultat pour votre recherche",
@@ -1122,7 +1129,22 @@
     "invalidCredentials": "Email ou mot de passe incorrect.",
     "successToast": "Vous êtes connecté avec succès !",
     "errorToast": "Une erreur est survenue lors de la connexion.",
-    "magicLinkErrorToast": "Une erreur est survenue lors de la connexion, veuillez réessayer ultérieurement"
+    "magicLinkErrorToast": "Une erreur est survenue lors de la connexion, veuillez réessayer ultérieurement",
+    "otp": {
+      "label": "Code de connexion",
+      "hint": "Saisissez le code à 6 chiffres reçu par email.",
+      "submit": "Se connecter",
+      "submitting": "Connexion en cours...",
+      "resend": "Renvoyer un code",
+      "resendIn": "Renvoyer un code ({seconds} s)",
+      "resent": "Un nouvel email vous a été envoyé. Seul le dernier code reçu est valable.",
+      "errors": {
+        "invalid": "Code incorrect. Il vous reste {remaining, plural, one {# essai} other {# essais}}.",
+        "exhausted": "Ce code n'est plus valable. Demandez un nouveau code.",
+        "rateLimited": "Trop de tentatives. Patientez une minute avant de réessayer.",
+        "generic": "Une erreur est survenue, veuillez réessayer."
+      }
+    }
   },
   "forgotPassword": {
     "title": "Réinitialiser votre mot de passe",
@@ -1510,7 +1532,12 @@
       "title": "Vérification du lien de connexion",
       "description": "Vous allez être redirigé dans quelques instants.",
       "fallbackText": "Si rien ne se passe, cliquez sur le lien suivant :",
-      "fallbackLink": "Se connecter"
+      "fallbackLink": "Se connecter",
+      "otpTitle": "Connexion à votre espace",
+      "consumedDescription": "Ce lien a déjà été ouvert, par exemple par le filtre de sécurité de votre messagerie. Saisissez le code reçu dans le même email pour vous connecter.",
+      "expiredDescription": "Ce lien de connexion a expiré. Demandez un nouveau code pour vous connecter.",
+      "recovering": "Connexion en cours...",
+      "recoveryFailed": "La connexion n'a pas abouti. Demandez un nouveau lien depuis la page de connexion."
     },
     "genericError": "Erreur de vérification"
   },
@@ -1945,6 +1972,7 @@
       },
       "permission": {
         "manage_residences": "Gestion des résidences",
+        "manageResidencesTag": "Gestion de toutes les résidences",
         "manage_applications": "Gestion des candidats",
         "applicationsRgpdHint": "Pour des raisons de protection des données personnelles, nous vous invitons à limiter l’autorisation de Gestion des candidats uniquement aux gestionnaires qui en ont réellement besoin dans le cadre de leurs missions.",
         "applicationsRequiresContactMode": "Disponible une fois que vous aurez choisi un parcours de candidature (coordonnées à recontacter ou DossierFacile).",
@@ -1971,16 +1999,22 @@
         "allHint": "Ce gestionnaire voit les candidatures de toutes vos résidences, y compris celles que vous créerez plus tard.",
         "restrictedHint": "Ce gestionnaire ne voit que les candidatures des résidences cochées. Une résidence créée plus tard ne lui sera pas visible tant que vous ne l'aurez pas ajoutée.",
         "legend": "Résidences dont ce gestionnaire voit les candidatures",
-        "searchLabel": "Rechercher une résidence",
-        "searchPlaceholder": "Nom de la résidence",
+        "searchLabel": "Rechercher une résidence ou une ville",
+        "searchPlaceholder": "Nom de la résidence ou de la ville",
         "selectedCount": "{count} sélectionnée(s)",
         "selectAll": "Tout sélectionner",
         "selectNone": "Tout désélectionner",
         "refineSearch": "Affinez votre recherche pour voir les {count} autres résidences.",
         "emptyWarning": "Ce gestionnaire n'aura accès à aucune candidature. L'onglet Contacts lui sera masqué.",
-        "summaryAll": "Périmètre : toutes les résidences",
-        "summaryNone": "Périmètre : aucune résidence",
-        "summaryCount": "Périmètre : {count} résidence(s)"
+        "summaryAll": "Gestion des candidats de toutes les résidences",
+        "summaryNone": "Gestion des candidats : aucune résidence",
+        "summaryCount": "Gestion des candidats {count, plural, one {d’une résidence} other {de # résidences}}",
+        "closedHint": "Ne reçoit pas de candidatures pour l’instant",
+        "confirmOpenTitle": "Ouvrir des résidences aux candidatures ?",
+        "confirmOpenIntro": "{count, plural, one {Cette résidence ne reçoit pas de candidatures pour l’instant. En l’attribuant à ce gestionnaire, elle deviendra éligible à la réception des candidatures :} other {Ces # résidences ne reçoivent pas de candidatures pour l’instant. En les attribuant à ce gestionnaire, elles deviendront éligibles à la réception des candidatures :}}",
+        "confirmOpenBack": "Retour",
+        "confirmOpenRemove": "{count, plural, one {Retirer cette résidence} other {Retirer ces résidences}}",
+        "confirmOpenSubmit": "Ouvrir aux candidatures et enregistrer"
       }
     },
     "header": {
@@ -2028,6 +2062,10 @@
             "title": "Choisir le mode de gestion des candidatures",
             "badge": "CANDIDATURES"
           },
+          "contactsModeration": {
+            "title": "Modérer les contacts d'étudiants",
+            "badge": "CANDIDATURES"
+          },
           "applications": {
             "title": "Modérer vos candidatures",
             "badge": "CANDIDATURES",
@@ -2037,7 +2075,8 @@
         "viewAll": "Toutes les actions prioritaires"
       },
       "statistics": {
-        "title": "En quelques chiffres"
+        "title": "En quelques chiffres",
+        "lastUpdate": "Mise à jour le {date}"
       },
       "engagementStatistics": {
         "title": "À propos des visiteurs sur Mon Logement étudiant",
@@ -2174,8 +2213,32 @@
         },
         "summary": {
           "title": "En quelques mots",
-          "description": "Description",
-          "descriptionPlaceholder": "Décrivez votre résidence...",
+          "sections": {
+            "tagline": {
+              "label": "Accroche",
+              "placeholder": "Résidence calme et conviviale, idéale pour se concentrer sur ses études tout en profitant d'une vie de résidence animée."
+            },
+            "locationAndProximity": {
+              "label": "Localisation et proximité",
+              "placeholder": "La résidence se situe dans le quartier de la gare, à 10 minutes du campus universitaire A. Desservie par le tramway ligne B"
+            },
+            "servicesAndEquipment": {
+              "label": "Services et équipements spécifiques",
+              "placeholder": "Veilleur de nuit de 22h à 7h, salle de sport en accès libre, jardin partagé, accompagnement individualisé pour les démarches administratives."
+            },
+            "receptionAndContact": {
+              "label": "Accueil et contact",
+              "placeholder": "Accueil ouvert du lundi au vendredi de 9h à 17h. Contact : accueil@residence-exemple.fr"
+            },
+            "practicalInfo": {
+              "label": "Modalités pratiques",
+              "placeholder": "Réponse sous 5 jours ouvrés. Bail de 10 mois renouvelable."
+            },
+            "otherInformation": {
+              "label": "Autre",
+              "placeholder": ""
+            }
+          },
           "rentalChargesLabel": "Détails de la redevance locative",
           "rentalChargesHint": "Indiquez ce que comprennent les charges locatives.",
           "rentalChargesExample": "Exemple : chauffage collectif, wifi, entretien des parties communes, salle de sport, etc."
@@ -2219,11 +2282,23 @@
         "searchPlaceholder": "Rechercher une résidence ou une ville",
         "housingCount": "{count, plural, one {# logement} other {# logements}}",
         "availableLabel": "Disponibles",
-        "save": "Enregistrer",
         "editResidence": "Éditer la résidence",
         "emptyTitle": "Aucune résidence trouvée",
         "emptyDescription": "Aucune résidence ne correspond à vos critères de recherche.",
-        "lastUpdate": "Dernière mise à jour le {date}"
+        "lastUpdate": "Disponibilités confirmées le {date}",
+        "contacts": "Contacts",
+        "viewResidenceNamed": "Voir la résidence {name}",
+        "confirm": "Confirmer les disponibilités",
+        "confirmHint": "Vérifiez les nombres ci-dessus, puis confirmez, même s’ils n’ont pas changé.",
+        "confirmSuccess": "Disponibilités confirmées",
+        "confirmAllSuccess": "{count, plural, one {Disponibilités confirmées pour # résidence} other {Disponibilités confirmées pour # résidences}}",
+        "confirmAllError": "La confirmation des autres résidences a échoué, veuillez réessayer.",
+        "confirmAllModal": {
+          "title": "Confirmer les disponibilités de toutes vos résidences ?",
+          "description": "Si les disponibilités de vos autres résidences n’ont pas changé non plus, confirmez-les toutes en une fois : leur date de confirmation sera actualisée, sans modifier les nombres.",
+          "confirmOne": "Seulement cette résidence",
+          "confirmAll": "Confirmer toutes mes résidences"
+        }
       }
     },
     "feedback": {
@@ -2352,12 +2427,17 @@
         "residenceLocation": "{city} ({department})",
         "noResidence": "Aucune résidence pour le moment.",
         "tabsLabel": "Paramètres par résidence",
+        "tabLabel": "{name} – {city}",
         "managersLabel": "Gestionnaires de candidatures",
         "managersHint": "Sélectionnez un ou plusieurs gestionnaires pouvant accéder aux dossiers",
         "managersPlaceholder": "{count, plural, =0 {Rechercher un gestionnaire} one {# sélectionnée} other {# sélectionnées}}",
         "noManagerFound": "Aucun gestionnaire trouvé",
         "selectedManagers": "Gestionnaires sélectionnées",
         "removeManager": "Retirer {name}",
+        "selectAllManagers": "Tout sélectionner",
+        "deselectAllManagers": "Tout désélectionner",
+        "selectAllManagersLabel": "Sélectionner tous les gestionnaires pour cette résidence",
+        "deselectAllManagersLabel": "Désélectionner tous les gestionnaires pour cette résidence",
         "noGestionnaire": "Les administrateurs reçoivent toutes les candidatures. Pour confier une résidence à un gestionnaire, ajoutez-le depuis Gestion des utilisateurs.",
         "addUser": "Ajouter un gestionnaire",
         "waitingListLabel": "La résidence accepte les candidatures en liste d'attente",

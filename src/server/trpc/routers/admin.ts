@@ -10,6 +10,7 @@ import { zNormalizedEmail } from '~/schemas/email'
 import { IMPORT_JOB_TYPES, ZImportJobType } from '~/schemas/import-jobs'
 import { assertAdministratorSlotAvailable } from '~/server/bailleur/administrator-limit'
 import { notifyContactModeActivated, notifyContactModeDeactivated } from '~/server/bailleur/application-notifications'
+import { INACTIVITY_WARNING_DAYS } from '~/server/bailleur/inactivity-rules'
 import {
   BAILLEUR_PERMISSIONS,
   BAILLEUR_ROLES,
@@ -35,6 +36,7 @@ import { logActivity } from '~/server/services/activity-logger'
 import { sendAdminResetPasswordEmail, sendOwnerWelcomeEmail } from '~/server/services/brevo'
 import { generateSlug } from '~/server/trpc/utils/accommodation-helpers'
 import { findAvailableSlug } from '~/server/utils/slug'
+import { DAY_MS } from '~/utils/time'
 import { adminProcedure, createTRPCRouter } from '../init'
 import { adminCandidaturesRouter } from './admin-candidatures'
 import { adminChangelogRouter } from './admin-changelog'
@@ -775,6 +777,49 @@ const residencesRouter = createTRPCRouter({
     }),
 })
 
+const AVAILABILITY_API_SOURCES = ['arpej', 'fac-habitat', 'initiall']
+
+// Les imports API n'horodatent pas les typologies : pour leurs résidences, la date du dernier import fait foi.
+async function getAvailabilityFollowUp() {
+  const recentSince = new Date(Date.now() - INACTIVITY_WARNING_DAYS.stale_availability * DAY_MS).toISOString()
+  const isCrous = sql`exists (select 1 from external_source where accommodation_id = ${accommodations.id} and source = 'crous')`
+  const isApi = sql`exists (select 1 from external_source where accommodation_id = ${accommodations.id} and source in (${sql.join(
+    AVAILABILITY_API_SOURCES.map((source) => sql`${source}`),
+    sql`, `,
+  )}))`
+  const hasAvailability = sql`exists (select 1 from ${accommodationTypologies} where ${accommodationTypologies.accommodationId} = ${accommodations.id} and ${accommodationTypologies.nbAvailable} is not null)`
+  const lastUpdate = sql`greatest(
+    (select max(${accommodationTypologies.availabilityUpdatedAt}) from ${accommodationTypologies} where ${accommodationTypologies.accommodationId} = ${accommodations.id}),
+    case when ${isApi} then ${accommodations.updatedAt} end
+  )`
+  const isRecent = sql`(${hasAvailability} and ${lastUpdate} >= ${recentSince}::timestamptz)`
+  const isNonRenseignee = sql`(not ${hasAvailability})`
+  const isAncienne = sql`(${hasAvailability} and not ${isRecent})`
+
+  const [row] = await db
+    .select({
+      total: count(),
+      totalApi: sql<number>`count(*) filter (where ${isApi})`.mapWith(Number),
+      recent: sql<number>`count(*) filter (where ${isRecent})`.mapWith(Number),
+      recentApi: sql<number>`count(*) filter (where ${isRecent} and ${isApi})`.mapWith(Number),
+      nonRenseignee: sql<number>`count(*) filter (where ${isNonRenseignee})`.mapWith(Number),
+      nonRenseigneeApi: sql<number>`count(*) filter (where ${isNonRenseignee} and ${isApi})`.mapWith(Number),
+      ancienne: sql<number>`count(*) filter (where ${isAncienne})`.mapWith(Number),
+      ancienneApi: sql<number>`count(*) filter (where ${isAncienne} and ${isApi})`.mapWith(Number),
+    })
+    .from(accommodations)
+    .where(and(eq(accommodations.published, true), sql`not ${isCrous}`))
+
+  const situation = (value: number, api: number) => ({ count: value, manual: value - api, api })
+  return {
+    recentDays: INACTIVITY_WARNING_DAYS.stale_availability,
+    total: situation(row?.total ?? 0, row?.totalApi ?? 0),
+    recent: situation(row?.recent ?? 0, row?.recentApi ?? 0),
+    nonRenseignee: situation(row?.nonRenseignee ?? 0, row?.nonRenseigneeApi ?? 0),
+    ancienne: situation(row?.ancienne ?? 0, row?.ancienneApi ?? 0),
+  }
+}
+
 const statsRouter = createTRPCRouter({
   overview: adminProcedure.query(async () => {
     const isCrous = sql`exists (select 1 from external_source where accommodation_id = ${accommodations.id} and source = 'crous')`
@@ -782,54 +827,63 @@ const statsRouter = createTRPCRouter({
     const isAvailable = sql`(${accommodations.nbAvailableApartments} > 0)`
     const isUnknown = sql`(${accommodations.nbAvailableApartments} IS NULL)`
 
-    const [usersCount, ownersCount, accommodationsCount, apartmentsStats, residencesBreakdown, logementsBreakdown, availabilityBreakdown] =
-      await Promise.all([
-        db
-          .select({
-            total: count(),
-            admins: sql<number>`count(*) filter (where role = 'admin')`.mapWith(Number),
-            ownerUsers: sql<number>`count(*) filter (where role = 'owner')`.mapWith(Number),
-            students: sql<number>`count(*) filter (where role = 'user')`.mapWith(Number),
-            boursiers: sql<number>`count(*) filter (where role = 'user' and scholarship_status = 'yes')`.mapWith(Number),
-            nonBoursiers: sql<number>`count(*) filter (where role = 'user' and scholarship_status = 'no')`.mapWith(Number),
-            bourseNonRenseignee:
-              sql<number>`count(*) filter (where role = 'user' and (scholarship_status = 'unknown' or scholarship_status is null))`.mapWith(
-                Number,
-              ),
-          })
-          .from(user),
-        db.select({ count: count() }).from(owners),
-        db.select({ count: count() }).from(accommodations),
-        db
-          .select({
-            totalApartments: sql<number>`coalesce(sum(coalesce(nb_total_apartments, 0)), 0)::int`,
-            availableApartments: sql<number>`coalesce(sum(${nbAvailableApartmentsSum}), 0)::int`,
-          })
-          .from(accommodations),
-        db
-          .select({
-            crous: sql<number>`count(*) filter (where ${isCrous})`.mapWith(Number),
-            autres: sql<number>`count(*) filter (where not ${isCrous})`.mapWith(Number),
-          })
-          .from(accommodations),
-        db
-          .select({
-            crous: sql<number>`coalesce(sum(coalesce(nb_total_apartments, 0)) filter (where ${isCrous}), 0)::int`.mapWith(Number),
-            autres: sql<number>`coalesce(sum(coalesce(nb_total_apartments, 0)) filter (where not ${isCrous}), 0)::int`.mapWith(Number),
-          })
-          .from(accommodations),
-        db
-          .select({
-            avecDispo: sql<number>`count(*) filter (where ${isAvailable} and not ${isCrous})`.mapWith(Number),
-            sansDispo: sql<number>`count(*) filter (where not ${isAvailable} and not ${isUnknown} and not ${isCrous})`.mapWith(Number),
-            nonRenseignee: sql<number>`count(*) filter (where ${isUnknown} and not ${isCrous})`.mapWith(Number),
-            // Nombre de logements (et non de résidences) disponibles chez les bailleurs hors-CROUS.
-            logementsDisponibles: sql<number>`coalesce(sum(${nbAvailableApartmentsSum}) filter (where not ${isCrous}), 0)::int`.mapWith(
+    const [
+      usersCount,
+      ownersCount,
+      accommodationsCount,
+      apartmentsStats,
+      residencesBreakdown,
+      logementsBreakdown,
+      availabilityBreakdown,
+      suiviDispo,
+    ] = await Promise.all([
+      db
+        .select({
+          total: count(),
+          admins: sql<number>`count(*) filter (where role = 'admin')`.mapWith(Number),
+          ownerUsers: sql<number>`count(*) filter (where role = 'owner')`.mapWith(Number),
+          students: sql<number>`count(*) filter (where role = 'user')`.mapWith(Number),
+          boursiers: sql<number>`count(*) filter (where role = 'user' and scholarship_status = 'yes')`.mapWith(Number),
+          nonBoursiers: sql<number>`count(*) filter (where role = 'user' and scholarship_status = 'no')`.mapWith(Number),
+          bourseNonRenseignee:
+            sql<number>`count(*) filter (where role = 'user' and (scholarship_status = 'unknown' or scholarship_status is null))`.mapWith(
               Number,
             ),
-          })
-          .from(accommodations),
-      ])
+        })
+        .from(user),
+      db.select({ count: count() }).from(owners),
+      db.select({ count: count() }).from(accommodations),
+      db
+        .select({
+          totalApartments: sql<number>`coalesce(sum(coalesce(nb_total_apartments, 0)), 0)::int`,
+          availableApartments: sql<number>`coalesce(sum(${nbAvailableApartmentsSum}), 0)::int`,
+        })
+        .from(accommodations),
+      db
+        .select({
+          crous: sql<number>`count(*) filter (where ${isCrous})`.mapWith(Number),
+          autres: sql<number>`count(*) filter (where not ${isCrous})`.mapWith(Number),
+        })
+        .from(accommodations),
+      db
+        .select({
+          crous: sql<number>`coalesce(sum(coalesce(nb_total_apartments, 0)) filter (where ${isCrous}), 0)::int`.mapWith(Number),
+          autres: sql<number>`coalesce(sum(coalesce(nb_total_apartments, 0)) filter (where not ${isCrous}), 0)::int`.mapWith(Number),
+        })
+        .from(accommodations),
+      db
+        .select({
+          avecDispo: sql<number>`count(*) filter (where ${isAvailable} and not ${isCrous})`.mapWith(Number),
+          sansDispo: sql<number>`count(*) filter (where not ${isAvailable} and not ${isUnknown} and not ${isCrous})`.mapWith(Number),
+          nonRenseignee: sql<number>`count(*) filter (where ${isUnknown} and not ${isCrous})`.mapWith(Number),
+          // Nombre de logements (et non de résidences) disponibles chez les bailleurs hors-CROUS.
+          logementsDisponibles: sql<number>`coalesce(sum(${nbAvailableApartmentsSum}) filter (where not ${isCrous}), 0)::int`.mapWith(
+            Number,
+          ),
+        })
+        .from(accommodations),
+      getAvailabilityFollowUp(),
+    ])
 
     const totalApartments = apartmentsStats[0]?.totalApartments ?? 0
     const availableApartments = apartmentsStats[0]?.availableApartments ?? 0
@@ -868,6 +922,7 @@ const statsRouter = createTRPCRouter({
         nonRenseignee: availabilityBreakdown[0]?.nonRenseignee ?? 0,
         logementsDisponibles: availabilityBreakdown[0]?.logementsDisponibles ?? 0,
       },
+      suiviDispo,
     }
   }),
 })

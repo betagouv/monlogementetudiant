@@ -2,27 +2,39 @@ import { apiKey } from '@better-auth/api-key'
 import * as Sentry from '@sentry/nextjs'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
+import { createAuthMiddleware } from 'better-auth/api'
 import { nextCookies } from 'better-auth/next-js'
-import { admin, magicLink } from 'better-auth/plugins'
+import { admin, emailOTP, magicLink } from 'better-auth/plugins'
 import { eq } from 'drizzle-orm'
 import { headers } from 'next/headers'
 import { cache } from 'react'
 import type { EOwnerContactMode } from '~/enums/owner-contact-mode'
+import { LOGIN_OTP_ALLOWED_ATTEMPTS, LOGIN_OTP_LENGTH } from '~/lib/login-otp'
 import { canAccessOwnerSpace } from '~/lib/roles'
 import { linkGuestContactRequestsSafely } from '~/server/contacts/link-guest-requests'
+import { getClientIp, hashIp } from '~/server/contacts/rate-limit'
 import { db } from '~/server/db'
 import * as schema from '~/server/db/schema'
 import { adminOwnerLinks } from '~/server/db/schema/admin-owner-links'
 import { env } from '~/server/env'
 import { sendMagicLinkEmail, sendResetPasswordEmail, sendVerificationEmail } from '~/server/services/brevo'
-import { MAGIC_LINK_EXPIRES_IN_SECONDS, recordMagicLinkSent } from '~/server/services/login-attempts'
+import {
+  findPendingMagicLinks,
+  MAGIC_LINK_EXPIRES_IN_SECONDS,
+  recordMagicLinkSent,
+  recordMagicLinkSession,
+  recordOtpSignIn,
+  revokeSessionsFromConsumedLinks,
+} from '~/server/services/login-attempts'
+import { bindLoginRequestToBrowser, LOGIN_BINDING_COOKIE } from '~/server/services/login-binding'
+import { createLoginOtp } from '~/server/services/login-otp'
 import { syncStudentBrevoContactOnSignup } from '~/server/student/sync-brevo-contact'
 
 export const oneDay = 24 * 60 * 60
 
 const shouldLogAuthLinks = env.NEXT_PUBLIC_APP_ENV === 'development' && ['localhost', '127.0.0.1'].includes(new URL(env.BASE_URL).hostname)
 
-function logLocalAuthLink(kind: 'activation' | 'connexion' | 'reset-password', email: string, url: string) {
+function logLocalAuthLink(kind: 'activation' | 'connexion' | 'code' | 'reset-password', email: string, url: string) {
   if (!shouldLogAuthLinks) return
   console.log(`[better-auth:${kind}] ${email} -> ${url}`)
 }
@@ -53,6 +65,15 @@ export const auth = betterAuth({
     '/admin/unban-user',
     '/admin/update-user',
     '/verify-password',
+    // Le code de connexion n'est émis qu'avec le lien magique : seule la connexion par code reste exposée.
+    '/email-otp/send-verification-otp',
+    '/email-otp/check-verification-otp',
+    '/email-otp/verify-email',
+    '/forget-password/email-otp',
+    '/email-otp/request-password-reset',
+    '/email-otp/reset-password',
+    '/email-otp/request-email-change',
+    '/email-otp/change-email',
   ],
   database: drizzleAdapter(db, { provider: 'pg', schema }),
   session: {
@@ -99,7 +120,7 @@ export const auth = betterAuth({
       expiresIn: MAGIC_LINK_EXPIRES_IN_SECONDS,
       storeToken: 'hashed',
       disableSignUp: true,
-      sendMagicLink: async ({ email, url, token }) => {
+      sendMagicLink: async ({ email, url, token }, ctx) => {
         const usr = await db.query.user.findFirst({
           where: eq(schema.user.email, email),
           columns: { role: true },
@@ -110,13 +131,28 @@ export const auth = betterAuth({
         // de mail d'entreprise (Safe Links, Proofpoint…) pré-ouvrent les liens en GET et
         // brûleraient le token à usage unique. On passe par une page tampon qui ne
         // déclenche la vérification qu'en JavaScript (voir /connexion/verification).
+        // Si un scanner l'a tout de même consommé, la page reconnaît le navigateur à l'origine
+        // de la demande grâce au cookie de liaison, et demande sinon le code envoyé avec le lien.
         const buffer = new URL('/connexion/verification', env.BASE_URL)
         buffer.searchParams.set('url', url)
+        const otp = await createLoginOtp(email)
+        const bindingHash = await bindLoginRequestToBrowser()
         logLocalAuthLink('connexion', email, buffer.toString())
-        await sendMagicLinkEmail(email, buffer.toString())
+        logLocalAuthLink('code', email, otp)
+        await sendMagicLinkEmail(email, buffer.toString(), otp)
         // Suivi du parcours de connexion (espace administration > Connexions). Enregistré après
         // l'envoi : la table décrit les liens réellement partis, pas les demandes ignorées.
-        await recordMagicLinkSent({ email, token })
+        await recordMagicLinkSent({ email, token, bindingHash, ipHash: hashIp(getClientIp(ctx)) })
+      },
+    }),
+    emailOTP({
+      otpLength: LOGIN_OTP_LENGTH,
+      expiresIn: MAGIC_LINK_EXPIRES_IN_SECONDS,
+      allowedAttempts: LOGIN_OTP_ALLOWED_ATTEMPTS,
+      storeOTP: 'hashed',
+      disableSignUp: true,
+      sendVerificationOTP: async () => {
+        // Le code part uniquement dans l'email du lien magique (voir `sendMagicLink`).
       },
     }),
     // Clés d'API pour l'API publique v1 : attribution du trafic + rate-limit par clé (stocké en PG).
@@ -135,6 +171,34 @@ export const auth = betterAuth({
     }),
     nextCookies(),
   ],
+  hooks: {
+    // Le code survit à la consommation du lien : c'est le recours quand un scanner de mails l'a ouvert
+    // avant le gestionnaire. Une connexion par code invalide les liens en attente et ferme les sessions
+    // ouvertes par les liens déjà consommés.
+    after: createAuthMiddleware(async (ctx) => {
+      const newSession = ctx.context.newSession
+      if (!newSession) return
+
+      if (ctx.path === '/magic-link/verify') {
+        const token = typeof ctx.query?.token === 'string' ? ctx.query.token : null
+        if (token) await recordMagicLinkSession({ token, sessionId: newSession.session.id })
+        return
+      }
+
+      if (ctx.path !== '/sign-in/email-otp') return
+      const email = newSession.user.email
+
+      ctx.setCookie(LOGIN_BINDING_COOKIE, '', { path: '/', maxAge: 0 })
+      const pendingLinks = await findPendingMagicLinks(email)
+      for (const link of pendingLinks) {
+        await ctx.context.internalAdapter.deleteVerificationByIdentifier(link.verificationIdentifier)
+      }
+      if (pendingLinks[0]) {
+        await recordOtpSignIn({ attemptId: pendingLinks[0].id, userAgent: ctx.headers?.get('user-agent') ?? null })
+      }
+      await revokeSessionsFromConsumedLinks(email)
+    }),
+  },
   databaseHooks: {
     user: {
       create: {

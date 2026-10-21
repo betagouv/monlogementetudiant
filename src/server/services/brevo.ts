@@ -1,7 +1,14 @@
 import { env } from '~/server/env'
 import { maskEmail } from '~/utils/mask-email'
+import { redirectEmail } from '~/utils/redirect-email'
 
 const SENDER_EMAIL = 'no-reply@monlogementetudiant.beta.gouv.fr'
+
+// Seule la production explicite envoie aux vraies adresses : partout ailleurs (staging, dev, env
+// absent), le destinataire est réécrit vers le Mailpit de la QA.
+const recipient = (email: string) => ({
+  email: env.NEXT_PUBLIC_APP_ENV === 'production' ? email : redirectEmail(email, env.BREVO_REDIRECT_DOMAIN),
+})
 
 const brevoHeaders = {
   'api-key': env.BREVO_API_KEY,
@@ -24,7 +31,7 @@ export async function sendTemplateEmail({ to, templateId, params }: TemplateEmai
     method: 'POST',
     headers: brevoHeaders,
     body: JSON.stringify({
-      to: [{ email: to }],
+      to: [recipient(to)],
       templateId,
       replyTo: { email: SENDER_EMAIL },
       ...(params && { params }),
@@ -50,6 +57,9 @@ interface RawEmailParams {
  * Envoi en texte libre (sans template Brevo), réservé aux mails internes d'exploitation dont
  * le contenu est trop variable pour un template (message d'erreur, stack). Contrairement aux
  * envois par template, l'expéditeur doit être fourni explicitement.
+ *
+ * Pas de redirection hors production : les destinataires sont des adresses internes
+ * (`CRON_FAILURE_EMAILS`) réglées par environnement, et l'équipe doit recevoir les alertes du staging.
  */
 export async function sendRawEmail({
   to,
@@ -93,11 +103,11 @@ export async function sendResetPasswordEmail(email: string, url: string): Promis
   })
 }
 
-export async function sendMagicLinkEmail(email: string, url: string): Promise<void> {
+export async function sendMagicLinkEmail(email: string, url: string, otp?: string): Promise<void> {
   await sendTemplateEmail({
     to: email,
     templateId: env.BREVO_TEMPLATE_MAGIC_LINK,
-    params: { MAGIC_LINK: url },
+    params: otp ? { MAGIC_LINK: url, OTP_CODE: otp } : { MAGIC_LINK: url },
   })
 }
 
@@ -380,7 +390,7 @@ export async function sendStudentAlertEmail(
     method: 'POST',
     headers: brevoHeaders,
     body: JSON.stringify({
-      to: [{ email }],
+      to: [recipient(email)],
       templateId: env.BREVO_TEMPLATE_STUDENT_ALERT,
       replyTo: { email: SENDER_EMAIL },
       params,

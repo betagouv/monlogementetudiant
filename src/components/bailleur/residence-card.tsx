@@ -2,7 +2,8 @@
 
 import { fr } from '@codegouvfr/react-dsfr'
 import { Badge } from '@codegouvfr/react-dsfr/Badge'
-import Button from '@codegouvfr/react-dsfr/Button'
+import { type ButtonProps } from '@codegouvfr/react-dsfr/Button'
+import ButtonsGroup from '@codegouvfr/react-dsfr/ButtonsGroup'
 import { Card } from '@codegouvfr/react-dsfr/Card'
 import { Tag } from '@codegouvfr/react-dsfr/Tag'
 import clsx from 'clsx'
@@ -18,13 +19,15 @@ import { TAccomodationCard } from '~/schemas/accommodations/accommodations'
 type ResidenceCardProps = {
   accomodation: TAccomodationCard
   href?: string
+  contactsHref?: string
 }
 
-export const ResidenceCard: FC<ResidenceCardProps> = ({ accomodation, href }) => {
+export const ResidenceCard: FC<ResidenceCardProps> = ({ accomodation, href, contactsHref }) => {
   const t = useTranslations('findAccomodation.card')
   const tList = useTranslations('bailleur.residences')
+  const tA11y = useTranslations('accessibility')
   const { classes } = useStyles()
-  const { city, imagesUrls, name, nbTotalApartments, postalCode, published } = accomodation
+  const { city, citySlug, imagesUrls, name, nbTotalApartments, postalCode, published } = accomodation
   const accommodationsTypes = accomodation.nbColivingApartments ? [t('individual'), t('colocation')] : [t('individual')]
   const imageProps =
     imagesUrls && imagesUrls.length > 0
@@ -49,7 +52,26 @@ export const ResidenceCard: FC<ResidenceCardProps> = ({ accomodation, href }) =>
         ),
       }
 
-  const redirectUri = href ?? `/trouver-un-logement-etudiant/ville/${encodeURIComponent(city)}/${accomodation.slug}`
+  const editUri = href ?? `/bailleur/residences/${accomodation.slug}`
+  const publicUri = citySlug ? `/trouver-un-logement-etudiant/ville/${citySlug}/${accomodation.slug}` : null
+
+  const footerButtons: [ButtonProps, ...ButtonProps[]] = [
+    {
+      children: tList('list.editResidence'),
+      priority: 'secondary',
+      iconId: 'ri-pencil-line',
+      linkProps: { href: editUri },
+    },
+  ]
+  if (contactsHref) {
+    footerButtons.push({
+      children: tList('list.contacts'),
+      priority: 'secondary',
+      iconId: 'ri-contacts-book-2-line',
+      linkProps: { href: contactsHref },
+    })
+  }
+
   return (
     <Card
       {...badgeProps}
@@ -57,7 +79,6 @@ export const ResidenceCard: FC<ResidenceCardProps> = ({ accomodation, href }) =>
       classes={{
         root: classes.root,
         header: classes.header,
-        footer: 'fr-flex fr-justify-content-end',
       }}
       id={`accomodation-${accomodation.id}`}
       background
@@ -73,11 +94,7 @@ export const ResidenceCard: FC<ResidenceCardProps> = ({ accomodation, href }) =>
           )}
         </>
       }
-      footer={
-        <Button size="small" priority="secondary" iconId="ri-pencil-line" linkProps={{ href: redirectUri }}>
-          {tList('list.editResidence')}
-        </Button>
-      }
+      footer={<ButtonsGroup inlineLayoutWhen="always" buttonsSize="small" buttons={footerButtons} />}
       start={
         <ul className="fr-tags-group">
           <li>
@@ -85,6 +102,15 @@ export const ResidenceCard: FC<ResidenceCardProps> = ({ accomodation, href }) =>
           </li>
         </ul>
       }
+      {...(published && publicUri
+        ? {
+            linkProps: {
+              href: publicUri,
+              target: '_blank',
+              title: tA11y('linkNewWindow', { label: tList('list.viewResidenceNamed', { name }) }),
+            },
+          }
+        : {})}
       size="small"
       title={name}
       titleAs="h2"

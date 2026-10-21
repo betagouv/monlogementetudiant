@@ -507,8 +507,8 @@
       "filtersCta": "Filters",
       "accessbility": "Adapted for reduced mobility",
       "accommodations": "Residences",
-      "availability": "Available accommodation",
-      "availabilityLegend": "Availability",
+      "availability": "Available only",
+      "availabilityLegend": "Housing availability",
       "advancedFiltersToggle": "Show more filters",
       "advancedFiltersShow": "More filters",
       "advancedFiltersHide": "Close",
@@ -519,11 +519,17 @@
       "crous": "Crous",
       "others": "Other residences",
       "availabilityDescription": "Only show residences with at least one available accommodation",
-      "sharedDescription": "Only show residences offering shared flats"
+      "sharedDescription": "Only show residences offering shared flats",
+      "whereLabel": "Where do you want to study?",
+      "maxRentLabel": "Maximum rent",
+      "crousTag": "CROUS housing",
+      "accessibleTag": "Wheelchair accessible"
     },
     "filters": {
       "accommodations": "residence",
       "accommodationsWithLocation": "residence{pluralize} {locationFormatted}",
+      "crousAccommodations": "CROUS residence{pluralize}",
+      "crousAccommodationsWithLocation": "CROUS residence{pluralize} {locationFormatted}",
       "grid": "List",
       "map": "Map",
       "sortByPrice": "Sorted by price",
@@ -538,7 +544,8 @@
       "noAvailability": "No availability",
       "waitingList": "Applications can be submitted",
       "accommodationsCount": "{count} homes",
-      "availabilityCount": "{count, plural, other {Available}}"
+      "availabilityCount": "{count, plural, other {Available}}",
+      "lastUpdate": "Updated on {date}"
     },
     "results": {
       "noResult": "No results for your search",
@@ -1122,7 +1129,22 @@
     "invalidCredentials": "Incorrect email or password.",
     "successToast": "You have successfully signed in!",
     "errorToast": "An error occurred while signing in.",
-    "magicLinkErrorToast": "An error occurred while signing in, please try again later"
+    "magicLinkErrorToast": "An error occurred while signing in, please try again later",
+    "otp": {
+      "label": "Sign-in code",
+      "hint": "Enter the 6-digit code you received by email.",
+      "submit": "Sign in",
+      "submitting": "Signing in...",
+      "resend": "Send a new code",
+      "resendIn": "Send a new code ({seconds} s)",
+      "resent": "A new email has been sent. Only the latest code is valid.",
+      "errors": {
+        "invalid": "Incorrect code. {remaining, plural, one {# attempt} other {# attempts}} left.",
+        "exhausted": "This code is no longer valid. Request a new code.",
+        "rateLimited": "Too many attempts. Please wait a minute before trying again.",
+        "generic": "An error occurred, please try again."
+      }
+    }
   },
   "forgotPassword": {
     "title": "Reset your password",
@@ -1510,7 +1532,12 @@
       "title": "Verifying sign-in link",
       "description": "You will be redirected in a few moments.",
       "fallbackText": "If nothing happens, click the following link:",
-      "fallbackLink": "Sign in"
+      "fallbackLink": "Sign in",
+      "otpTitle": "Sign in to your account",
+      "consumedDescription": "This link has already been opened, for example by your mailbox security filter. Enter the code included in the same email to sign in.",
+      "expiredDescription": "This sign-in link has expired. Request a new code to sign in.",
+      "recovering": "Signing in...",
+      "recoveryFailed": "Sign-in failed. Request a new link from the sign-in page."
     },
     "genericError": "Verification error"
   },
@@ -1945,6 +1972,7 @@
       },
       "permission": {
         "manage_residences": "Residence management",
+        "manageResidencesTag": "Management of all residences",
         "manage_applications": "Candidate management",
         "applicationsRgpdHint": "To protect personal data, we recommend granting the Candidate management permission only to managers who genuinely need it for their duties.",
         "applicationsRequiresContactMode": "Available once you have chosen an application journey (contact details or DossierFacile).",
@@ -1971,16 +1999,22 @@
         "allHint": "This manager sees applications for every residence, including those you create later.",
         "restrictedHint": "This manager only sees applications for the checked residences. A residence created later will stay hidden until you add it.",
         "legend": "Residences whose applications this manager can see",
-        "searchLabel": "Search for a residence",
-        "searchPlaceholder": "Residence name",
+        "searchLabel": "Search for a residence or a city",
+        "searchPlaceholder": "Residence or city name",
         "selectedCount": "{count} selected",
         "selectAll": "Select all",
         "selectNone": "Clear selection",
         "refineSearch": "Refine your search to see the {count} remaining residences.",
         "emptyWarning": "This manager will not have access to any application. The Contacts tab will be hidden for them.",
-        "summaryAll": "Scope: all residences",
-        "summaryNone": "Scope: no residence",
-        "summaryCount": "Scope: {count} residence(s)"
+        "summaryAll": "Candidate management for all residences",
+        "summaryNone": "Candidate management: no residence",
+        "summaryCount": "Candidate management for {count, plural, one {# residence} other {# residences}}",
+        "closedHint": "Not receiving applications yet",
+        "confirmOpenTitle": "Open residences to applications?",
+        "confirmOpenIntro": "{count, plural, one {This residence does not receive applications yet. Assigning it to this manager will make it eligible to receive applications:} other {These # residences do not receive applications yet. Assigning them to this manager will make them eligible to receive applications:}}",
+        "confirmOpenBack": "Back",
+        "confirmOpenRemove": "{count, plural, one {Remove this residence} other {Remove these residences}}",
+        "confirmOpenSubmit": "Open to applications and save"
       }
     },
     "header": {
@@ -2028,6 +2062,10 @@
             "title": "Choose the application management mode",
             "badge": "APPLICATIONS"
           },
+          "contactsModeration": {
+            "title": "Moderate student contacts",
+            "badge": "APPLICATIONS"
+          },
           "applications": {
             "title": "Moderate your applications",
             "badge": "APPLICATIONS",
@@ -2037,7 +2075,8 @@
         "viewAll": "All priority actions"
       },
       "statistics": {
-        "title": "Key figures"
+        "title": "Key figures",
+        "lastUpdate": "Updated on {date}"
       },
       "engagementStatistics": {
         "title": "About visitors on Mon Logement étudiant",
@@ -2174,8 +2213,32 @@
         },
         "summary": {
           "title": "In a few words",
-          "description": "Description",
-          "descriptionPlaceholder": "Describe your residence...",
+          "sections": {
+            "tagline": {
+              "label": "Tagline",
+              "placeholder": "A quiet and friendly residence, ideal for focusing on your studies while enjoying a lively community life."
+            },
+            "locationAndProximity": {
+              "label": "Location and surroundings",
+              "placeholder": "The residence is located in the station district, 10 minutes from university campus A. Served by tram line B."
+            },
+            "servicesAndEquipment": {
+              "label": "Specific services and facilities",
+              "placeholder": "Night watchman from 10pm to 7am, free-access gym, shared garden, personalised support with administrative procedures."
+            },
+            "receptionAndContact": {
+              "label": "Reception and contact",
+              "placeholder": "Reception open Monday to Friday, 9am to 5pm. Contact: accueil@residence-exemple.fr"
+            },
+            "practicalInfo": {
+              "label": "Practical details",
+              "placeholder": "Answer within 5 working days. 10-month renewable lease."
+            },
+            "otherInformation": {
+              "label": "Other",
+              "placeholder": ""
+            }
+          },
           "rentalChargesLabel": "Rental charges details",
           "rentalChargesHint": "Specify what the rental charges include.",
           "rentalChargesExample": "Example: shared heating, Wi-Fi, maintenance of common areas, gym, etc."
@@ -2219,11 +2282,23 @@
         "searchPlaceholder": "Search for a residence or a city",
         "housingCount": "{count, plural, one {# accommodation} other {# accommodations}}",
         "availableLabel": "Available",
-        "save": "Save",
         "editResidence": "Edit residence",
         "emptyTitle": "No residence found",
         "emptyDescription": "No residence matches your search criteria.",
-        "lastUpdate": "Last updated on {date}"
+        "lastUpdate": "Availability confirmed on {date}",
+        "contacts": "Contacts",
+        "viewResidenceNamed": "View residence {name}",
+        "confirm": "Confirm availability",
+        "confirmHint": "Check the numbers above, then confirm, even if they have not changed.",
+        "confirmSuccess": "Availability confirmed",
+        "confirmAllSuccess": "{count, plural, one {Availability confirmed for # residence} other {Availability confirmed for # residences}}",
+        "confirmAllError": "Confirming the other residences failed, please try again.",
+        "confirmAllModal": {
+          "title": "Confirm availability for all your residences?",
+          "description": "If the availability of your other residences has not changed either, confirm them all at once: their confirmation date will be refreshed without changing the numbers.",
+          "confirmOne": "Only this residence",
+          "confirmAll": "Confirm all my residences"
+        }
       }
     },
     "feedback": {
@@ -2352,12 +2427,17 @@
         "residenceLocation": "{city} ({department})",
         "noResidence": "No residence yet.",
         "tabsLabel": "Settings per residence",
+        "tabLabel": "{name} – {city}",
         "managersLabel": "Application managers",
         "managersHint": "Select one or more managers who can access the applications",
         "managersPlaceholder": "{count, plural, =0 {Search for a manager} one {# selected} other {# selected}}",
         "noManagerFound": "No manager found",
         "selectedManagers": "Selected managers",
         "removeManager": "Remove {name}",
+        "selectAllManagers": "Select all",
+        "deselectAllManagers": "Deselect all",
+        "selectAllManagersLabel": "Select all managers for this residence",
+        "deselectAllManagersLabel": "Deselect all managers for this residence",
         "noGestionnaire": "Administrators receive every application. To assign a residence to a manager, add them from User management.",
         "addUser": "Add a manager",
         "waitingListLabel": "The residence accepts waiting list applications",

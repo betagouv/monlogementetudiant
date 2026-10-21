@@ -356,6 +356,70 @@ describe('import-fac-habitat integration', () => {
     expect(typos.t3).toBeUndefined()
   })
 
+  it('forces 0 available on a type that does not accept applications', async () => {
+    const db = getTestDb()
+
+    await createOwner({ name: 'Fac-Habitat', slug: 'fac-habitat-wl' })
+
+    const residence = makeResidence({
+      id: 9101,
+      accept_waiting_list: true,
+      nb_t1_available: 4,
+      t1_accept_waiting_list: false,
+      nb_t2_available: 2,
+      t2_accept_waiting_list: true,
+      nb_t1_prime: 1,
+      nb_t1_prime_available: 3,
+      t1_prime_accept_waiting_list: false,
+      nb_duplex: 1,
+      nb_duplex_available: 1,
+      duplex_accept_waiting_list: true,
+    })
+
+    mockGeocoder()
+    await command.execute({ file: writeTmpJson([residence]) })
+
+    const [acc] = await db.select().from(accommodations).where(eq(accommodations.externalReference, '9101'))
+    const typos = await loadTypologies(acc!.id)
+    expect(typos.t1?.nbAvailable).toBe(0)
+    expect(typos.t2?.nbAvailable).toBe(2)
+    expect(typos.t1_bis?.nbAvailable).toBe(1)
+    expect(acc!.acceptWaitingList).toBe(true)
+  })
+
+  it('derives the residence waiting list from the types when they are provided', async () => {
+    const db = getTestDb()
+
+    await createOwner({ name: 'Fac-Habitat', slug: 'fac-habitat-wl-res' })
+
+    mockGeocoder()
+    mockGeocoder()
+    await command.execute({
+      file: writeTmpJson([
+        makeResidence({ id: 9201, accept_waiting_list: true, t1_accept_waiting_list: false, t2_accept_waiting_list: false }),
+        makeResidence({ id: 9202, accept_waiting_list: false, t1_accept_waiting_list: false, t2_accept_waiting_list: true }),
+      ]),
+    })
+
+    const [allClosed] = await db.select().from(accommodations).where(eq(accommodations.externalReference, '9201'))
+    const oneOpen = await db.select().from(accommodations).where(eq(accommodations.externalReference, '9202'))
+    expect(allClosed!.acceptWaitingList).toBe(false)
+    expect(oneOpen[0]!.acceptWaitingList).toBe(true)
+  })
+
+  it('reports a malformed row without stopping the import', async () => {
+    await createOwner({ name: 'Fac-Habitat', slug: 'fac-habitat-invalid' })
+
+    mockGeocoder()
+    const result = await command.execute({
+      file: writeTmpJson([makeResidence({ id: 9301, nb_t1: 'dix' }), makeResidence({ id: 9302 })]),
+    })
+
+    expect(result.created).toBe(1)
+    expect(result.errors).toHaveLength(1)
+    expect(result.errors[0]).toContain('nb_t1')
+  })
+
   it('slug must not change on re-import with same name', async () => {
     const db = getTestDb()
 

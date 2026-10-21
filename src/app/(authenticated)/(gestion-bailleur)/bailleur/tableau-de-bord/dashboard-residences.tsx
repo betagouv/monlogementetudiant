@@ -8,6 +8,7 @@ import { ResidenceChart } from '~/app/(authenticated)/(gestion-bailleur)/bailleu
 import { Pagination } from '~/components/ui/pagination'
 import { TGetAccomodationsResponse } from '~/schemas/accommodations/get-accommodations'
 import { calculateAvailability } from '~/utils/calculateAvailability'
+import { formatDay } from '~/utils/formatDate'
 import { buildHref } from '~/utils/preserve-query-params'
 import styles from './tableau-de-bord.module.css'
 
@@ -52,13 +53,21 @@ export function DashboardResidences({ accommodations, page, ownerId, canManageRe
                 </p>
               </div>
               <ResidenceChart available={available} total={total} />
-              {canManageResidences && (
-                <div className="fr-flex fr-justify-content-end">
-                  <Link className="fr-link fr-link--no-underline" href={buildHref(`/bailleur/residences/${res.slug}`, { ownerId })}>
+              <div className="fr-flex fr-justify-content-space-between fr-align-items-center fr-flex-gap-2v">
+                {res.updatedAt && (
+                  <span className="fr-text--xs fr-mb-0 fr-text-mention--grey">
+                    {t('dashboard.statistics.lastUpdate', { date: formatDay(new Date(res.updatedAt)) })}
+                  </span>
+                )}
+                {canManageResidences && (
+                  <Link
+                    className="fr-link fr-link--no-underline fr-ml-auto"
+                    href={buildHref(`/bailleur/residences/${res.slug}`, { ownerId })}
+                  >
                     <span className="ri-arrow-right-line fr-text-title--blue-france ri-xl" />
                   </Link>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           )
         })}

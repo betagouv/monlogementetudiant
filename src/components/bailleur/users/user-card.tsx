@@ -69,14 +69,10 @@ export const UserCard = ({ user, canEdit, canDelete, ownerId, onEdit }: Props) =
         ) : user.bailleurPermissions.length === 0 ? (
           <span className="fr-text-mention--grey fr-text--xs">{t('noPermissions')}</span>
         ) : (
-          user.bailleurPermissions.map((p) => (
-            <Tag key={p} small>
-              {t(`permission.${p}`)}
-            </Tag>
-          ))
-        )}
-        {!isAdministrator && user.bailleurPermissions.includes('manage_applications') && (
-          <Tag small>{scopeSummary(t, user.applicationScopeCount)}</Tag>
+          <>
+            {user.bailleurPermissions.includes('manage_residences') && <Tag small>{t('permission.manageResidencesTag')}</Tag>}
+            {user.bailleurPermissions.includes('manage_applications') && <Tag small>{scopeSummary(t, user.applicationScopeCount)}</Tag>}
+          </>
         )}
       </div>
 

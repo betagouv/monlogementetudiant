@@ -561,6 +561,27 @@
       "when": 1791269507890,
       "tag": "0079_student_goals",
       "breakpoints": true
+    },
+    {
+      "idx": 80,
+      "version": "7",
+      "when": 1792141140927,
+      "tag": "0080_login_attempt_binding",
+      "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "7",
+      "when": 1792398346245,
+      "tag": "0081_typology_zero_totals",
+      "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1792415981921,
+      "tag": "0082_accommodation_description_sections",
+      "breakpoints": true
     }
   ]
 }
