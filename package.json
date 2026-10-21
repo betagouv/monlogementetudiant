@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "packageManager": "pnpm@11.0.9",
+  "engines": {
+    "node": ">=24.22.1 <25"
+  },
   "scripts": {
     "predev": "react-dsfr update-icons && cp node_modules/@codegouvfr/react-dsfr/dsfr/favicon/favicon.svg public/favicon.svg && cp node_modules/@codegouvfr/react-dsfr/dsfr/favicon/favicon.ico public/favicon.ico",
     "prebuild": "react-dsfr update-icons && cp node_modules/@codegouvfr/react-dsfr/dsfr/favicon/favicon.svg public/favicon.svg && cp node_modules/@codegouvfr/react-dsfr/dsfr/favicon/favicon.ico public/favicon.ico",
@@ -96,8 +99,5 @@
     "sass": "^1.102.0",
     "typescript": "^6.0.3",
     "vitest": "^4.1.11"
-  },
-  "volta": {
-    "node": "23.11.1"
   }
 }
