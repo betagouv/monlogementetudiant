@@ -42,9 +42,8 @@ export const ResidencesGrid = ({ mode, isAdministrator, resolvedOwnerId }: Props
     ...trpc.bailleur.users.list.queryOptions({ ownerId: resolvedOwnerId }),
     enabled: isAdministrator,
   })
-  const noManagerCanSeeApplications =
-    users !== undefined &&
-    !users.items.some((u) => u.bailleurRole === 'gestionnaire' && u.bailleurPermissions.includes('manage_applications'))
+  const managers = users?.items.filter((u) => u.bailleurRole === 'gestionnaire') ?? []
+  const noManagerCanSeeApplications = managers.length > 0 && !managers.some((u) => u.bailleurPermissions.includes('manage_applications'))
 
   const residences = data?.residences ?? []
   const title = mode === EOwnerContactMode.DOSSIER_FACILE ? t('titleDossierFacile') : t('title')
