@@ -11,6 +11,7 @@ import { AdminDataTable } from '~/components/administration/admin-data-table'
 import { useOwnerUsage, useOwnerUsageDetail } from '~/hooks/use-owner-usage'
 import { getAvatarColor, getInitials } from '~/utils/avatar'
 import { formatChartDate, getDateFrom } from '~/utils/date-helpers'
+import { formatDay } from '~/utils/formatDate'
 import { getFaviconUrl } from '~/utils/get-favicon-url'
 import styles from '../administration.module.css'
 import statStyles from '../statistiques/statistiques.module.css'
@@ -66,7 +67,7 @@ const ownerColumns: ColumnDef<OwnerRow, unknown>[] = [
     header: 'Dernière connexion',
     cell: ({ getValue }) => {
       const v = getValue() as string | null
-      return v ? new Date(v).toLocaleDateString('fr-FR') : '—'
+      return v ? formatDay(new Date(v)) : '—'
     },
     size: 140,
   },
@@ -104,7 +105,7 @@ const accommodationColumns: ColumnDef<AccommodationRow, unknown>[] = [
     header: 'Créée le',
     cell: ({ getValue }) => {
       const v = getValue() as Date | null
-      return v ? new Date(v).toLocaleDateString('fr-FR') : '—'
+      return v ? formatDay(new Date(v)) : '—'
     },
     size: 120,
   },
@@ -113,7 +114,7 @@ const accommodationColumns: ColumnDef<AccommodationRow, unknown>[] = [
     header: 'Modifiée le',
     cell: ({ getValue }) => {
       const v = getValue() as Date | null
-      return v ? new Date(v).toLocaleDateString('fr-FR') : '—'
+      return v ? formatDay(new Date(v)) : '—'
     },
     size: 120,
   },

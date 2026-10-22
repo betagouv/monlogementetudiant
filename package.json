@@ -51,7 +51,6 @@
     "commander": "^14.0.3",
     "date-fns": "^4.4.0",
     "date-fns-tz": "^3.2.0",
-    "dayjs": "^1.11.23",
     "dompurify": "^3.4.13",
     "drizzle-orm": "^0.45.2",
     "fflate": "^0.8.3",
