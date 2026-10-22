@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server'
-import { and, between, count, desc, eq, ilike, inArray, isNull, or, type SQL, sql } from 'drizzle-orm'
+import { and, between, count, desc, eq, ilike, inArray, isNotNull, isNull, ne, or, type SQL, sql } from 'drizzle-orm'
 import { getTranslations } from 'next-intl/server'
 import { z } from 'zod'
 import { ELoginAttemptStatus } from '~/enums/login-attempt-status'
@@ -708,6 +708,7 @@ const residencesRouter = createTRPCRouter({
       z.object({
         page: z.number().default(1),
         search: z.string().optional(),
+        applications: z.enum(['paused', 'suspended']).optional(),
       }),
     )
     .query(async ({ input }) => {
@@ -720,6 +721,15 @@ const residencesRouter = createTRPCRouter({
             ilike(cities.name, `%${input.search}%`),
             ilike(owners.name, `%${input.search}%`),
           ),
+        )
+      }
+
+      if (input.applications) {
+        conditions.push(
+          isNotNull(accommodations.applicationsSuspendedAt),
+          input.applications === 'paused'
+            ? eq(accommodations.applicationsSuspensionReason, 'manual')
+            : ne(accommodations.applicationsSuspensionReason, 'manual'),
         )
       }
 
@@ -749,16 +759,21 @@ const residencesRouter = createTRPCRouter({
             nbAvailableApartments: nbAvailableApartmentsSum,
             ownerId: accommodations.ownerId,
             ownerName: owners.name,
+            applicationsSuspendedAt: accommodations.applicationsSuspendedAt,
+            applicationsSuspensionReason: accommodations.applicationsSuspensionReason,
+            applicationsSuspendedBy: sql<string | null>`nullif(trim(concat_ws(' ', ${user.firstname}, ${user.lastname})), '')`,
+            applicationsSuspendedByEmail: user.email,
           })
           .from(accommodations)
           .leftJoin(owners, eq(accommodations.ownerId, owners.id))
+          .leftJoin(user, eq(accommodations.applicationsSuspendedById, user.id))
           .innerJoin(
             accommodationAddresses,
             and(eq(accommodationAddresses.accommodationId, accommodations.id), eq(accommodationAddresses.isMain, true)),
           )
           .innerJoin(cities, eq(accommodationAddresses.cityId, cities.id))
           .where(where)
-          .orderBy(accommodations.name)
+          .orderBy(...(input.applications ? [desc(accommodations.applicationsSuspendedAt)] : []), accommodations.name)
           .limit(PAGE_SIZE)
           .offset(offset),
       ])
@@ -766,9 +781,13 @@ const residencesRouter = createTRPCRouter({
       const total = countResult[0]?.count ?? 0
 
       return {
-        items: results.map((r) => ({
+        items: results.map(({ applicationsSuspendedByEmail, ...r }) => ({
           ...r,
           ownerName: r.ownerName ?? '-',
+          applicationsSuspendedBy:
+            r.applicationsSuspendedAt && r.applicationsSuspensionReason === 'manual'
+              ? (r.applicationsSuspendedBy ?? applicationsSuspendedByEmail)
+              : null,
         })),
         total,
         pageCount: Math.ceil(total / PAGE_SIZE),

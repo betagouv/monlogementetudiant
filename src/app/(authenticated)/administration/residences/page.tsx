@@ -3,12 +3,15 @@
 import Badge from '@codegouvfr/react-dsfr/Badge'
 import Button from '@codegouvfr/react-dsfr/Button'
 import Input from '@codegouvfr/react-dsfr/Input'
+import Select from '@codegouvfr/react-dsfr/Select'
 import { useQuery } from '@tanstack/react-query'
 import { ColumnDef, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
 import clsx from 'clsx'
-import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
+import { parseAsInteger, parseAsString, parseAsStringLiteral, useQueryStates } from 'nuqs'
 import { useDebounce } from 'use-debounce'
 import { Pagination } from '~/components/ui/pagination'
+import { SUSPENSION_REASON_LABELS } from '~/enums/applications-suspension-reason'
+import type { SuspensionReason } from '~/server/bailleur/inactivity-rules'
 import { useTRPC } from '~/server/trpc/client'
 import { buildHref } from '~/utils/preserve-query-params'
 import styles from '../administration.module.css'
@@ -24,7 +27,14 @@ type ResidenceRow = {
   nbAvailableApartments: number
   ownerId: number | null
   ownerName: string
+  applicationsSuspendedAt: Date | null
+  applicationsSuspensionReason: SuspensionReason | null
+  applicationsSuspendedBy: string | null
 }
+
+const APPLICATIONS_FILTERS = ['paused', 'suspended'] as const
+
+const formatDate = (date: Date) => date.toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' })
 
 const columns: ColumnDef<ResidenceRow, unknown>[] = [
   {
@@ -56,6 +66,32 @@ const columns: ColumnDef<ResidenceRow, unknown>[] = [
     cell: ({ row }) => (row.original.published ? <Badge severity="success">Publiée</Badge> : <Badge severity="warning">Depubliée</Badge>),
   },
   {
+    id: 'applications',
+    header: 'Candidatures',
+    cell: ({ row }) => {
+      const { applicationsSuspendedAt, applicationsSuspensionReason, applicationsSuspendedBy } = row.original
+      if (!applicationsSuspendedAt) return '-'
+      const paused = applicationsSuspensionReason === 'manual'
+      return (
+        <div>
+          <Badge severity={paused ? 'warning' : 'error'} noIcon small as="span">
+            {paused ? 'En pause' : 'Suspendues'}
+          </Badge>
+          <div className="fr-text--xs fr-text-mention--grey fr-mb-0">
+            {applicationsSuspensionReason && !paused && (
+              <>
+                {SUSPENSION_REASON_LABELS[applicationsSuspensionReason]}
+                <br />
+              </>
+            )}
+            Depuis le {formatDate(applicationsSuspendedAt)}
+            {paused && applicationsSuspendedBy && <> par {applicationsSuspendedBy}</>}
+          </div>
+        </div>
+      )
+    },
+  },
+  {
     id: 'actions',
     header: '',
     cell: ({ row }) => (
@@ -80,9 +116,10 @@ const columns: ColumnDef<ResidenceRow, unknown>[] = [
 ]
 
 export default function ResidencesPage() {
-  const [{ search, page }, setQueryStates] = useQueryStates({
+  const [{ search, page, candidatures }, setQueryStates] = useQueryStates({
     search: parseAsString.withDefault(''),
     page: parseAsInteger.withDefault(1),
+    candidatures: parseAsStringLiteral(APPLICATIONS_FILTERS),
   })
   const [debouncedSearch] = useDebounce(search, 300)
   const trpc = useTRPC()
@@ -90,6 +127,7 @@ export default function ResidencesPage() {
     trpc.admin.residences.list.queryOptions({
       page,
       search: debouncedSearch.length >= 2 ? debouncedSearch : undefined,
+      applications: candidatures ?? undefined,
     }),
   )
 
@@ -111,7 +149,7 @@ export default function ResidencesPage() {
       </div>
 
       <div className="fr-grid-row fr-grid-row--gutters fr-mb-2w fr-align-items-end">
-        <div className="fr-col-md-6">
+        <div className="fr-col-12 fr-col-md-4">
           <Input
             label="Rechercher"
             nativeInputProps={{
@@ -121,7 +159,23 @@ export default function ResidencesPage() {
             }}
           />
         </div>
-        <div className="fr-col-md-6 fr-flex fr-flex-wrap fr-flex-gap-4v fr-justify-content-end">
+        <div className="fr-col-12 fr-col-md-3">
+          <Select
+            label="Candidatures"
+            nativeSelectProps={{
+              value: candidatures ?? '',
+              onChange: (e) => {
+                const value = e.target.value
+                setQueryStates({ candidatures: value === 'paused' || value === 'suspended' ? value : null, page: 1 })
+              },
+            }}
+          >
+            <option value="">Toutes les résidences</option>
+            <option value="paused">Mises en pause par le gestionnaire</option>
+            <option value="suspended">Suspendues automatiquement</option>
+          </Select>
+        </div>
+        <div className="fr-col-12 fr-col-md-5 fr-flex fr-flex-wrap fr-flex-gap-4v fr-justify-content-end">
           <Button iconId="fr-icon-download-line" priority="secondary" linkProps={{ href: '/api/admin/residences/export' }}>
             Export CSV
           </Button>
