@@ -3,7 +3,7 @@ import { getOwnerForUser } from '~/server/bailleur/get-owner-for-user'
 import { getDateRange, listAccommodationStats, ZStatisticsPeriod } from '~/server/statistics/accommodation-stats'
 import { getServerSession } from '~/services/better-auth'
 import { type TCsvColumn, toCsv } from '~/utils/csv'
-import { formatIsoDate } from '~/utils/dayjs'
+import { formatIsoDate } from '~/utils/date-helpers'
 
 type TStatsCsvRow = {
   residence: string

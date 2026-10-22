@@ -1,19 +1,6 @@
 import { z } from 'zod'
 import { frSchemaTranslator, type TSchemaTranslator } from '~/schemas/schema-translator'
-
-/**
- * Calcule l'âge (en années) à partir d'une date ISO `YYYY-MM-DD`.
- */
-const computeAge = (isoDate: string): number => {
-  const today = new Date()
-  const birth = new Date(isoDate)
-  let age = today.getFullYear() - birth.getFullYear()
-  const monthDiff = today.getMonth() - birth.getMonth()
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-    age -= 1
-  }
-  return age
-}
+import { computeAge } from '~/utils/date-helpers'
 
 /**
  * Numéro de téléphone portable — validation internationale permissive.
@@ -42,8 +29,8 @@ export const createZBirthDate = (t: TSchemaTranslator = frSchemaTranslator) =>
     .refine((val) => /^\d{4}-\d{2}-\d{2}$/.test(val), { message: t('errors.birthdateFormat') })
     .refine((val) => !Number.isNaN(new Date(val).getTime()), { message: t('errors.dateInvalid') })
     .refine((val) => new Date(val) < new Date(), { message: t('errors.birthdateInPast') })
-    .refine((val) => computeAge(val) >= 15, { message: t('errors.birthdateMinAge') })
-    .refine((val) => computeAge(val) <= 100, { message: t('errors.birthdateInvalid') })
+    .refine((val) => (computeAge(val) ?? -1) >= 15, { message: t('errors.birthdateMinAge') })
+    .refine((val) => (computeAge(val) ?? 0) <= 100, { message: t('errors.birthdateInvalid') })
 
 export const ZBirthDate = createZBirthDate()
 

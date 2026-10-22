@@ -13,7 +13,7 @@ import { WaitingListBadge } from '~/components/shared/waiting-list-badge'
 import { type ApartmentType } from '~/enums/apartment-type'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { TAccomodationDetails } from '~/schemas/accommodations/accommodations'
-import { formatDayjs } from '~/utils/dayjs'
+import { formatLocalizedDate } from '~/utils/date-helpers'
 import { formatFrenchPhoneNumber, toTelHref } from '~/utils/phone-number'
 import styles from './owner-details.module.css'
 
@@ -93,7 +93,7 @@ export const OwnerDetails = async ({
       <p className="fr-text--xs fr-mb-0 fr-mt-1w fr-flex fr-flex-wrap fr-justify-content-center fr-align-items-center fr-flex-gap-2v">
         {nbAvailable !== null && (
           <>
-            <span>{t('sidebar.updatedAt', { date: formatDayjs(updatedAt, 'DD MMMM YYYY', locale) })}</span>
+            <span>{t('sidebar.updatedAt', { date: formatLocalizedDate(updatedAt, 'dd MMMM yyyy', locale) })}</span>
             <span aria-hidden="true" className="fr-text-mention--grey">
               •
             </span>

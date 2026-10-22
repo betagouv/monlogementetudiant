@@ -13,6 +13,7 @@ import { Pagination } from '~/components/ui/pagination'
 import { SUSPENSION_REASON_LABELS } from '~/enums/applications-suspension-reason'
 import type { SuspensionReason } from '~/server/bailleur/inactivity-rules'
 import { useTRPC } from '~/server/trpc/client'
+import { formatDay } from '~/utils/formatDate'
 import { buildHref } from '~/utils/preserve-query-params'
 import styles from '../administration.module.css'
 
@@ -33,8 +34,6 @@ type ResidenceRow = {
 }
 
 const APPLICATIONS_FILTERS = ['paused', 'suspended'] as const
-
-const formatDate = (date: Date) => date.toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' })
 
 const columns: ColumnDef<ResidenceRow, unknown>[] = [
   {
@@ -84,7 +83,7 @@ const columns: ColumnDef<ResidenceRow, unknown>[] = [
                 <br />
               </>
             )}
-            Depuis le {formatDate(applicationsSuspendedAt)}
+            Depuis le {formatDay(applicationsSuspendedAt)}
             {paused && applicationsSuspendedBy && <> par {applicationsSuspendedBy}</>}
           </div>
         </div>
