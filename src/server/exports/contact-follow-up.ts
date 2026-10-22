@@ -1,4 +1,5 @@
 import { sql } from 'drizzle-orm'
+import { SUSPENSION_REASON_LABELS } from '~/enums/applications-suspension-reason'
 import { CONTACT_RETENTION_DAYS, EContactStatus } from '~/enums/contact-status'
 import { ELoginAttemptStatus } from '~/enums/login-attempt-status'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
@@ -13,6 +14,9 @@ export type TContactFollowUpRow = {
   derniere_connexion: string | null
   depot_active: boolean
   date_activation: string | null
+  suspension: string | null
+  date_suspension: string | null
+  suspendue_par: string | null
   nb_recues: number
   derniere_reception: string | null
   nb_traitees: number
@@ -29,6 +33,9 @@ export const CONTACT_FOLLOW_UP_COLUMNS: TCsvColumn<TContactFollowUpRow>[] = [
   { key: 'derniere_connexion', header: 'Dernière connexion d’un administrateur' },
   { key: 'depot_active', header: 'Dépôt de coordonnées activé' },
   { key: 'date_activation', header: 'Date d’activation du dépôt' },
+  { key: 'suspension', header: 'Pause ou suspension' },
+  { key: 'date_suspension', header: 'Date de pause ou suspension' },
+  { key: 'suspendue_par', header: 'Mise en pause par' },
   { key: 'nb_recues', header: 'Coordonnées reçues' },
   { key: 'derniere_reception', header: 'Dernière réception' },
   { key: 'nb_traitees', header: 'Coordonnées traitées' },
@@ -104,9 +111,15 @@ export const getContactFollowUpRows = async () => {
     residences AS (
       SELECT a.id, a.name, o.name AS owner_name,
         (o.contact_mode = ${EOwnerContactMode.CONTACTS} AND a.accepts_applications AND a.applications_suspended_at IS NULL) AS active,
-        greatest(me.at, r.at) AS activated_at
+        greatest(me.at, r.at) AS activated_at,
+        a.applications_suspended_at AS suspended_at,
+        CASE WHEN a.applications_suspended_at IS NOT NULL THEN a.applications_suspension_reason END AS suspension_reason,
+        CASE WHEN a.applications_suspended_at IS NOT NULL AND a.applications_suspension_reason = 'manual' THEN
+          concat_ws(' ', nullif(trim(concat_ws(' ', su.firstname, su.lastname)), ''), '<' || su.email || '>')
+        END AS suspended_by
       FROM accommodation a
       JOIN owner o ON o.id = a.owner_id
+      LEFT JOIN "user" su ON su.id = a.applications_suspended_by_id
       LEFT JOIN mode_enabled me ON me.owner_id = a.owner_id
       LEFT JOIN resumed r ON r.entity_id = a.id::text
     )
@@ -118,6 +131,13 @@ export const getContactFollowUpRows = async () => {
       ${formatDate('mbr.last_login')} AS derniere_connexion,
       res.active AS depot_active,
       CASE WHEN res.active THEN ${formatDate('res.activated_at')} END AS date_activation,
+      CASE res.suspension_reason
+        WHEN 'manual' THEN ${SUSPENSION_REASON_LABELS.manual}
+        WHEN 'unprocessed_applications' THEN ${SUSPENSION_REASON_LABELS.unprocessed_applications}
+        WHEN 'stale_availability' THEN ${SUSPENSION_REASON_LABELS.stale_availability}
+      END AS suspension,
+      ${formatDate('res.suspended_at')} AS date_suspension,
+      nullif(res.suspended_by, '') AS suspendue_par,
       coalesce(c.received, 0)::int AS nb_recues,
       ${formatDate('c.last_received')} AS derniere_reception,
       coalesce(c.treated, 0)::int AS nb_traitees,
