@@ -501,7 +501,9 @@
       "inputLabel": "City, academy or department",
       "shared": "Shared flat",
       "tooltip": {
-        "accessible": "Residences offering homes adapted for people with reduced mobility"
+        "accessible": "Residences offering homes adapted for people with reduced mobility",
+        "crous": "Residences managed by CROUS",
+        "nonCrous": "Public and private residences outside CROUS"
       },
       "rangeLabel": "Maximum budget",
       "filtersCta": "Filters",
@@ -517,17 +519,18 @@
       "priceAll": "All",
       "removeFilter": "Remove filter {filter}",
       "crous": "Crous",
-      "others": "Other residences",
+      "others": "Non-CROUS",
       "availabilityDescription": "Only show residences with at least one available accommodation",
       "sharedDescription": "Only show residences offering shared flats",
       "whereLabel": "Where do you want to study?",
       "maxRentLabel": "Maximum rent",
       "crousTag": "CROUS housing",
+      "nonCrousTag": "Non-CROUS housing",
       "accessibleTag": "Wheelchair accessible"
     },
     "filters": {
-      "accommodations": "residence",
-      "accommodationsWithLocation": "residence{pluralize} {locationFormatted}",
+      "nonCrousAccommodations": "non-CROUS residence{pluralize}",
+      "nonCrousAccommodationsWithLocation": "non-CROUS residence{pluralize} {locationFormatted}",
       "crousAccommodations": "CROUS residence{pluralize}",
       "crousAccommodationsWithLocation": "CROUS residence{pluralize} {locationFormatted}",
       "grid": "List",

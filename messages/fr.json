@@ -501,7 +501,9 @@
       "inputLabel": "Ville, académie ou département",
       "shared": "Colocation",
       "tooltip": {
-        "accessible": "Résidences proposant des logements adaptés aux personnes à mobilité réduite"
+        "accessible": "Résidences proposant des logements adaptés aux personnes à mobilité réduite",
+        "crous": "Résidences gérées par le CROUS",
+        "nonCrous": "Résidences publiques et privées hors CROUS"
       },
       "rangeLabel": "Budget maximum",
       "filtersCta": "Filtres",
@@ -517,17 +519,18 @@
       "priceAll": "Tous",
       "removeFilter": "Retirer le filtre {filter}",
       "crous": "Crous",
-      "others": "Autres résidences",
+      "others": "Hors CROUS",
       "availabilityDescription": "N'afficher que les résidences ayant au moins un logement disponible",
       "sharedDescription": "N'afficher que les résidences proposant de la colocation",
       "whereLabel": "Où souhaitez-vous étudier ?",
       "maxRentLabel": "Loyer maximum",
       "crousTag": "Logement CROUS",
+      "nonCrousTag": "Logement hors CROUS",
       "accessibleTag": "Accessible PMR"
     },
     "filters": {
-      "accommodations": "résidence",
-      "accommodationsWithLocation": "résidence{pluralize} {locationFormatted}",
+      "nonCrousAccommodations": "résidence{pluralize} hors CROUS",
+      "nonCrousAccommodationsWithLocation": "résidence{pluralize} hors CROUS {locationFormatted}",
       "crousAccommodations": "résidence{pluralize} CROUS",
       "crousAccommodationsWithLocation": "résidence{pluralize} CROUS {locationFormatted}",
       "grid": "Liste",
