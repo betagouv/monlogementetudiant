@@ -291,7 +291,7 @@ export const listAccommodationsWithConditions = async ({
         ORDER BY ${accommodations.id}, ${addressOrder}
       )
       SELECT * FROM deduped
-      ORDER BY ${priorityOrder} ASC, ${totalAvailable} DESC
+      ORDER BY ${priorityOrder} ASC, "updatedAt" DESC NULLS LAST, id ASC
       LIMIT ${pageSize} OFFSET ${offset}
     `),
 
