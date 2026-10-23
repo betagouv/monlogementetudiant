@@ -1,5 +1,6 @@
 'use client'
 
+import ButtonsGroup from '@codegouvfr/react-dsfr/ButtonsGroup'
 import Input from '@codegouvfr/react-dsfr/Input'
 import type { TagProps } from '@codegouvfr/react-dsfr/Tag'
 import TagsGroup from '@codegouvfr/react-dsfr/TagsGroup'
@@ -39,11 +40,16 @@ export const ManagerCombobox = ({ id, ownerId, value, onChange, error }: Props) 
     placeholderData: (previous) => previous,
   })
 
-  const options: TReceptionManager[] = (data?.items ?? []).map((u) => ({
+  const { data: allData } = useQuery(trpc.bailleur.users.list.queryOptions({ ownerId, bailleurRole: 'gestionnaire' }))
+
+  const toManager = (u: { id: string; firstname: string | null; lastname: string | null; email: string }): TReceptionManager => ({
     id: u.id,
-    name: `${u.firstname} ${u.lastname}`.trim() || u.email,
-  }))
+    name: `${u.firstname ?? ''} ${u.lastname ?? ''}`.trim() || u.email,
+  })
+  const options = (data?.items ?? []).map(toManager)
+  const allManagers = (allData?.items ?? []).map(toManager)
   const selectedIds = new Set(value.map((m) => m.id))
+  const allSelected = allManagers.length > 0 && allManagers.every((m) => selectedIds.has(m.id))
 
   const toggle = (manager: TReceptionManager) => {
     onChange(selectedIds.has(manager.id) ? value.filter((m) => m.id !== manager.id) : [...value, manager])
@@ -125,6 +131,30 @@ export const ManagerCombobox = ({ id, ownerId, value, onChange, error }: Props) 
           </div>
         )}
       </div>
+
+      <ButtonsGroup
+        className="fr-mt-2w"
+        inlineLayoutWhen="always"
+        buttonsSize="small"
+        buttons={[
+          {
+            children: t('selectAllManagers'),
+            priority: 'tertiary',
+            type: 'button',
+            disabled: allManagers.length === 0 || allSelected,
+            onClick: () => onChange([...value, ...allManagers.filter((m) => !selectedIds.has(m.id))]),
+            nativeButtonProps: { 'aria-label': t('selectAllManagersLabel') },
+          },
+          {
+            children: t('deselectAllManagers'),
+            priority: 'tertiary',
+            type: 'button',
+            disabled: value.length === 0,
+            onClick: () => onChange([]),
+            nativeButtonProps: { 'aria-label': t('deselectAllManagersLabel') },
+          },
+        ]}
+      />
 
       {tags.length > 0 && (
         <div className="fr-mt-3w">

@@ -3,6 +3,7 @@
 import Button from '@codegouvfr/react-dsfr/Button'
 import Input from '@codegouvfr/react-dsfr/Input'
 import { createModal } from '@codegouvfr/react-dsfr/Modal'
+import { Table } from '@codegouvfr/react-dsfr/Table'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import clsx from 'clsx'
 import Image from 'next/image'
@@ -84,6 +85,8 @@ export default function DashboardPage() {
       <ScholarshipBreakdown data={data} isLoading={isLoading} />
 
       <KeyFigures data={data} isLoading={isLoading} />
+
+      <AvailabilityFollowUp data={data} isLoading={isLoading} />
 
       <MyLinkedOwners />
 
@@ -395,6 +398,62 @@ function KeyFigures({ data, isLoading }: { data: ReturnType<typeof useAdminStats
         </div>
       </div>
     </>
+  )
+}
+
+function AvailabilityFollowUp({ data, isLoading }: { data: ReturnType<typeof useAdminStats>['data']; isLoading: boolean }) {
+  const suivi = data?.suiviDispo
+  const total = suivi?.total.count ?? 0
+  const fmt = (n: number) => n.toLocaleString('fr-FR')
+  const pct = (n: number) =>
+    `${(total ? (n / total) * 100 : 0).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} %`
+
+  const rows = suivi
+    ? [
+        { label: 'Disponibilité mise à jour récemment', ...suivi.recent },
+        { label: 'Aucune disponibilité renseignée', ...suivi.nonRenseignee },
+        { label: 'Disponibilité renseignée, mais pas récemment', ...suivi.ancienne },
+      ]
+    : []
+
+  return (
+    <div className="fr-mb-3w">
+      <div className={styles.card}>
+        <div className={styles.cardHeader}>
+          <span className={styles.cardTitle}>
+            <span className="ri-refresh-line fr-icon--sm fr-mr-1w" aria-hidden="true" />
+            Suivi des mises à jour de disponibilité
+          </span>
+        </div>
+        <div className="fr-px-3w">
+          <p className="fr-text--sm fr-text-mention--grey fr-mt-2w fr-mb-0">
+            Résidences publiées hors CROUS. « Récemment » : dans les {suivi?.recentDays ?? 30} derniers jours, par un gestionnaire ou par
+            l&apos;import automatique des API (ARPEJ, Fac-Habitat, Initiall).
+          </p>
+          {isLoading || !suivi ? (
+            <p className="fr-text--sm fr-text-mention--grey fr-py-3w fr-mb-0">Chargement...</p>
+          ) : (
+            <Table
+              fixed
+              noCaption
+              caption="Suivi des mises à jour de disponibilité"
+              className="fr-mb-0"
+              headers={['Situation', 'Nb résidences', 'Part du total', 'Dont part des màj manuelles', 'Dont part des API']}
+              data={[
+                ...rows.map((row) => [row.label, fmt(row.count), pct(row.count), pct(row.manual), pct(row.api)]),
+                [
+                  <strong key="label">Total</strong>,
+                  <strong key="value">{fmt(total)}</strong>,
+                  <strong key="pct">100 %</strong>,
+                  <strong key="manual">{pct(suivi.total.manual)}</strong>,
+                  <strong key="api">{pct(suivi.total.api)}</strong>,
+                ],
+              ]}
+            />
+          )}
+        </div>
+      </div>
+    </div>
   )
 }
 

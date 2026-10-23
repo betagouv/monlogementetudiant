@@ -1,6 +1,6 @@
 import { useTranslations } from 'next-intl'
 import type { TContactDetail } from '~/schemas/contacts/contact-detail'
-import { computeAge } from '~/utils/dayjs'
+import { computeAge } from '~/utils/date-helpers'
 
 const Line = ({ icon, children }: { icon: string; children: React.ReactNode }) => (
   <li className="fr-flex fr-align-items-center fr-flex-gap-1v">

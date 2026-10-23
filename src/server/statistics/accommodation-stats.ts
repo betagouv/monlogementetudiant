@@ -1,4 +1,4 @@
-import dayjs from 'dayjs'
+import { subDays } from 'date-fns'
 import { sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { db } from '~/server/db'
@@ -18,15 +18,15 @@ export function periodToDays(period: TStatisticsPeriod): number {
 /** Période courante : des `days` derniers jours à maintenant. */
 export function getDateRange(period: TStatisticsPeriod): { from: Date; to: Date; days: number } {
   const days = periodToDays(period)
-  const to = dayjs()
-  return { from: to.subtract(days, 'day').toDate(), to: to.toDate(), days }
+  const to = new Date()
+  return { from: subDays(to, days), to, days }
 }
 
 /** Période immédiatement antérieure, de même durée : sert à calculer les évolutions. */
 export function getPreviousDateRange(period: TStatisticsPeriod): { from: Date; to: Date } {
   const days = periodToDays(period)
-  const to = dayjs().subtract(days, 'day')
-  return { from: to.subtract(days, 'day').toDate(), to: to.toDate() }
+  const to = subDays(new Date(), days)
+  return { from: subDays(to, days), to }
 }
 
 export type TAccommodationStatsRow = {

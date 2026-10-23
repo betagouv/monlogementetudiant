@@ -23,6 +23,10 @@
   margin-right: 0rem !important;
 }
 
+.largeArrow :global(.fr-card__title) a::after {
+  --icon-size: 1.5rem !important;
+}
+
 .endDetail {
   margin-top: auto;
 }

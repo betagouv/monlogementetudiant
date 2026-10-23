@@ -22,7 +22,6 @@ import { useResidenceFormInvalid } from '~/hooks/use-residence-form-invalid'
 import { trackEvent } from '~/lib/tracking'
 import { createZCreateResidence, TCreateResidence } from '~/schemas/accommodations/create-residence'
 import { buildHref } from '~/utils/preserve-query-params'
-import { sanitizeHTML } from '~/utils/sanitize-html'
 import styles from './update-residence-form.module.css'
 
 export const CreateResidenceForm = () => {
@@ -38,7 +37,12 @@ export const CreateResidenceForm = () => {
       name: '',
       residenceType: '' as TCreateResidence['residenceType'],
       targetAudience: '' as TCreateResidence['targetAudience'],
-      description: '',
+      tagline: '',
+      locationAndProximity: '',
+      servicesAndEquipment: '',
+      receptionAndContact: '',
+      practicalInfo: '',
+      otherInformation: '',
       rentalChargesDetails: '',
       externalUrl: '',
       virtualTourUrl: '',
@@ -81,10 +85,7 @@ export const CreateResidenceForm = () => {
   const onInvalid = useResidenceFormInvalid<TCreateResidence>(formRef)
 
   const onSubmit = async (data: TCreateResidence) => {
-    await createMutation.mutateAsync({
-      ...data,
-      description: data.description ? sanitizeHTML(data.description) : data.description,
-    })
+    await createMutation.mutateAsync(data)
     trackEvent({ category: 'Espace Gestionnaire', action: 'creation residence', name: data.name })
   }
 

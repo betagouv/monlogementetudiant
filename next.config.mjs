@@ -35,20 +35,24 @@ const matomoOrigin = (() => {
 const wpOrigin = 'https://info.monlogementetudiant.beta.gouv.fr'
 const ovhBuckets = 'https://*.s3.gra.io.cloud.ovh.net'
 
+// Doc Scalar de l'API publique : bundle servi par jsDelivr, polices par fonts.scalar.com.
+const scalarScriptOrigin = 'https://cdn.jsdelivr.net'
+const scalarFontOrigin = 'https://fonts.scalar.com'
+
 /** Le widget est embarquable par des tiers, le reste du site non : seul `frame-ancestors` varie. */
-const buildCsp = (frameAncestors) =>
+const buildCsp = (frameAncestors, { scriptSrc = [], fontSrc = [] } = {}) =>
   [
     "default-src 'self'",
     // Next injecte ses scripts d'hydratation en inline sans nonce ; `unsafe-eval` n'est requis
     // que par le Fast Refresh du serveur de dev.
-    ['script-src', "'self'", "'unsafe-inline'", isDev && "'unsafe-eval'", matomoOrigin].filter(Boolean).join(' '),
+    ['script-src', "'self'", "'unsafe-inline'", isDev && "'unsafe-eval'", matomoOrigin, ...scriptSrc].filter(Boolean).join(' '),
     // DSFR et emotion (tss-react) injectent des styles inline.
     `style-src 'self' 'unsafe-inline' ${wpOrigin}`,
     // `https:` : les favicons des sites bailleurs viennent d'origines non énumérables
     // (src/utils/get-favicon-url.ts). Couvre aussi les tuiles OSM, les marqueurs Leaflet (cdnjs,
     // raw.githubusercontent) et les photos S3 ; `blob:` sert aux aperçus avant upload.
     "img-src 'self' data: blob: https:",
-    `font-src 'self' data: ${wpOrigin} ${ovhBuckets}`,
+    ['font-src', "'self'", 'data:', wpOrigin, ovhBuckets, ...fontSrc].join(' '),
     // Autocomplétion d'adresse (data.geopf.fr), remontée d'erreurs Sentry, suivi Matomo.
     // `ws:` couvre le rechargement à chaud en dev.
     ['connect-src', "'self'", 'https://data.geopf.fr', 'https://sentry.incubateur.net', matomoOrigin, isDev && 'ws:']
@@ -111,6 +115,16 @@ const nextConfig = {
       {
         source: '/widget/:path*',
         headers: [{ key: 'Content-Security-Policy', value: buildCsp('*') }],
+      },
+      {
+        // Placé après la règle générale : Next applique la dernière valeur d'un même en-tête.
+        source: '/api/v1/docs',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: buildCsp("'self'", { scriptSrc: [scalarScriptOrigin], fontSrc: [scalarFontOrigin] }),
+          },
+        ],
       },
     ]
   },

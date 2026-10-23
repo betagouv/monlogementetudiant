@@ -166,7 +166,14 @@ const ReceptionSettingsFields = ({ ownerId, settings }: { ownerId: number; setti
           label={t('tabsLabel')}
           selectedTabId={activeTabId}
           onTabChange={setSelectedTabId}
-          tabs={selected.map((r) => ({ tabId: tabId(r.accommodationId), label: residenceById.get(r.accommodationId)?.name ?? '' }))}
+          tabs={selected.map((r) => {
+            const residence = residenceById.get(r.accommodationId)
+            const name = residence?.name ?? ''
+            return {
+              tabId: tabId(r.accommodationId),
+              label: residence?.cityName ? t('tabLabel', { name, city: residence.cityName }) : name,
+            }
+          })}
         >
           {selected.map((r, index) => (
             <div key={r.accommodationId} className={tabId(r.accommodationId) === activeTabId ? undefined : 'fr-hidden'}>

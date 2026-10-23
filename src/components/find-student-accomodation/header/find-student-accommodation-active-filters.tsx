@@ -21,8 +21,6 @@ export const FindStudentAccommodationActiveFilters: FC = () => {
 
   if (queryStates.crous) {
     chips.push({ label: t('crous'), onRemove: () => setQueryStates({ crous: null, page: 1 }) })
-  } else if (queryStates.crous === false) {
-    chips.push({ label: t('others'), onRemove: () => setQueryStates({ crous: null, page: 1 }) })
   }
   if (queryStates.disponible) {
     chips.push({ label: t('availability'), onRemove: () => setQueryStates({ disponible: null, page: 1 }) })

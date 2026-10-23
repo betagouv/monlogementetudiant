@@ -66,7 +66,6 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
     owner,
     postalCode,
     externalUrl,
-    description,
     updatedAt,
     acceptWaitingList,
     virtualTourUrl,
@@ -119,7 +118,7 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
     imagesUrls: imagesUrls,
     priceMin: accommodation.priceMin,
     priceMax: accommodation.priceMax,
-    description: description ?? null,
+    description: accommodation.tagline,
     slug,
   })
 
@@ -187,7 +186,15 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
             <AccommodationEquipments accommodation={accommodation} />
             <AccommodationLocalisation addresses={addressList} positions={mapPositions} />
             <AccommodationNearbyEtablissements etablissements={nearbyEtablissements} />
-            <AccommodationDescription title={name} description={description} />
+            <AccommodationDescription
+              title={name}
+              tagline={accommodation.tagline}
+              locationAndProximity={accommodation.locationAndProximity}
+              servicesAndEquipment={accommodation.servicesAndEquipment}
+              receptionAndContact={accommodation.receptionAndContact}
+              practicalInfo={accommodation.practicalInfo}
+              otherInformation={accommodation.otherInformation}
+            />
           </div>
           <div className="fr-hidden-sm">{<AccommodationMap positions={mapPositions} />}</div>
           <div className={clsx('fr-mt-2w fr-mt-md-0 fr-px-2w fr-px-md-0', styles.stickyColumn)}>

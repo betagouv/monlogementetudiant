@@ -616,6 +616,36 @@ describe('accommodations.list', () => {
     expect(result.results[1].slug).toBe('no-availability')
   })
 
+  it('orders by availability group, then by most recent update within each group', async () => {
+    const geom = { type: 'Point', coordinates: [4.39, 45.44] as [number, number] }
+    const at = (day: number) => new Date(Date.UTC(2026, 9, day))
+    const seeds = [
+      { slug: 'none-recent', acceptWaitingList: false, updatedAt: at(20), nbAvailable: 0 },
+      { slug: 'unknown-waitlist-old', acceptWaitingList: true, updatedAt: at(2), nbAvailable: null },
+      { slug: 'available-old', acceptWaitingList: false, updatedAt: at(1), nbAvailable: 5 },
+      { slug: 'waitlist-recent', acceptWaitingList: true, updatedAt: at(18), nbAvailable: 0 },
+      { slug: 'unknown-recent', acceptWaitingList: false, updatedAt: at(15), nbAvailable: null },
+      { slug: 'available-recent', acceptWaitingList: false, updatedAt: at(10), nbAvailable: 1 },
+      { slug: 'waitlist-old', acceptWaitingList: true, updatedAt: at(3), nbAvailable: 0 },
+      { slug: 'none-old', acceptWaitingList: false, updatedAt: at(4), nbAvailable: 0 },
+    ]
+    for (const { nbAvailable, ...seed } of seeds) {
+      await createAccommodation({ ...seed, geom }, [typologyDraft('t1', { nbAvailable })])
+    }
+
+    const result = await caller.accommodations.list({})
+    expect(result.results.map((r) => r.slug)).toEqual([
+      'available-recent',
+      'available-old',
+      'waitlist-recent',
+      'waitlist-old',
+      'unknown-waitlist-old',
+      'unknown-recent',
+      'none-recent',
+      'none-old',
+    ])
+  })
+
   it('paginates correctly', async () => {
     for (let i = 0; i < 5; i++) {
       await createAccommodation({
@@ -655,6 +685,28 @@ describe('accommodations.list', () => {
     const result = await caller.accommodations.list({})
     expect(result.minPrice).toBe(150)
     expect(result.maxPrice).toBe(600)
+  })
+
+  it('computes price bounds regardless of priceMax filter', async () => {
+    await createAccommodation(
+      {
+        slug: 'cheap',
+        geom: { type: 'Point', coordinates: [4.39, 45.44] },
+      },
+      [typologyDraft('t1', { priceMin: 200, priceMax: 400 })],
+    )
+    await createAccommodation(
+      {
+        slug: 'expensive',
+        geom: { type: 'Point', coordinates: [4.39, 45.44] },
+      },
+      [typologyDraft('t1', { priceMin: 800, priceMax: 1200 })],
+    )
+
+    const result = await caller.accommodations.list({ priceMax: 500 })
+    expect(result.count).toBe(1)
+    expect(result.minPrice).toBe(200)
+    expect(result.maxPrice).toBe(1200)
   })
 
   it('filters by ownerSlug', async () => {
