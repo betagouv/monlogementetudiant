@@ -120,24 +120,6 @@ const nextConfig = {
       },
     ]
   },
-  async redirects() {
-    return [
-      // Assets statiques WordPress (Bedrock : `app` = `wp-content` renommé). Ils sont déjà
-      // référencés en absolu depuis `info.` ; on renvoie le navigateur en direct plutôt que
-      // de relayer les octets à travers le container. Les pages éditoriales, elles, sont
-      // redirigées par des Route Handlers — cf. src/utils/wp-redirect.ts.
-      {
-        source: '/wp-content/:path*',
-        destination: 'https://info.monlogementetudiant.beta.gouv.fr/wp-content/:path*',
-        permanent: true,
-      },
-      {
-        source: '/app/:path*',
-        destination: 'https://info.monlogementetudiant.beta.gouv.fr/app/:path*',
-        permanent: true,
-      },
-    ]
-  },
   webpack: (config) => {
     config.module.rules.push({
       test: /\.woff2$/,
