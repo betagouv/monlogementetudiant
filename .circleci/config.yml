@@ -112,7 +112,7 @@ jobs:
 
   test_e2e:
     docker:
-      - image: cimg/node:24.11.1
+      - image: cimg/node:24
       - image: postgis/postgis:16-3.4
         environment:
           POSTGRES_USER: test
