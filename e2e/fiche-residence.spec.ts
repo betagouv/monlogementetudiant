@@ -1,4 +1,4 @@
-import { expect, test } from './fixtures'
+import { expect, gotoHydrated, test } from './fixtures'
 
 // Parcours : consultation de la fiche d'une résidence (données seedées par e2e/seed.ts).
 
@@ -36,14 +36,15 @@ test.describe("Fiche d'une résidence", () => {
   })
 
   test("revient à la recherche de la ville depuis le fil d'Ariane", async ({ page }) => {
-    await page.goto(FICHE_CENTRE)
+    await gotoHydrated(page, FICHE_CENTRE)
 
     await page
       .getByRole('navigation', { name: /vous êtes ici/i })
       .getByRole('link', { name: /Saint-Étienne/ })
       .click()
 
-    await expect(page).toHaveURL(/\/trouver-un-logement-etudiant\/ville\//)
+    // Le lien pointe sur le nom de la ville, redirigé vers son slug en gardant la vue carte.
+    await expect(page).toHaveURL(/\/trouver-un-logement-etudiant\/ville\/saint-etienne\?vue=carte/)
     await expect(page.getByRole('heading', { level: 1, name: 'Trouver un logement social étudiant à Saint-Étienne' })).toBeVisible()
   })
 })
