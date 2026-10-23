@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm'
 import { createAccommodation, createOwner, createUser } from '../src/__tests__/fixtures/factories'
 import { getTestDb, teardownTestDb } from '../src/__tests__/helpers/test-db'
 import { EOwnerContactMode } from '../src/enums/owner-contact-mode'
+import { accommodationTypologies } from '../src/server/db/schema/accommodation-typologies'
 import { account } from '../src/server/db/schema/auth'
 import { cities } from '../src/server/db/schema/cities'
 
@@ -99,6 +100,17 @@ export async function createResidence(
     typologies,
   )
 }
+
+/** Fait remonter la dernière confirmation des disponibilités d'une résidence à la date donnée. */
+export async function backdateAvailability(accommodationId: number, date: Date) {
+  await getTestDb()
+    .update(accommodationTypologies)
+    .set({ availabilityUpdatedAt: date })
+    .where(eq(accommodationTypologies.accommodationId, accommodationId))
+}
+
+/** Date du jour telle qu'affichée dans l'espace gestionnaire (jj/mm/aaaa, heure de Paris). */
+export const todayLabel = () => new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris' }).format(new Date())
 
 export async function getCityId(slug: string) {
   const [city] = await getTestDb().select({ id: cities.id }).from(cities).where(eq(cities.slug, slug))
