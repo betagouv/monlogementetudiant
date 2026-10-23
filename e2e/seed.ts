@@ -5,15 +5,16 @@
  * sur le schéma Drizzle, et les migrations sont appliquées au démarrage (via setupTestDb) —
  * le seed ne peut donc pas dériver silencieusement du schéma.
  *
- * Lancer via : pnpm e2e:seed (DATABASE_URL_TEST pointe alors vers mle_e2e).
+ * Lancer via : pnpm e2e:seed (env chargé depuis .env.e2e).
  */
 import postgres from 'postgres'
 import { createAcademy, createAccommodation, createCity, createDepartment, createExternalSource } from '../src/__tests__/fixtures/factories'
 import { squareBoundary } from '../src/__tests__/helpers/geo'
 import { cleanTables, setupTestDb, teardownTestDb } from '../src/__tests__/helpers/test-db'
 
-const E2E_DB_NAME = 'mle_e2e'
-const ADMIN_URL = 'postgres://test:test@localhost:5491/postgres'
+const E2E_DB_URL = new URL(process.env.DATABASE_URL_TEST as string)
+const E2E_DB_NAME = E2E_DB_URL.pathname.slice(1)
+const ADMIN_URL = new URL('/postgres', E2E_DB_URL).toString()
 
 const SAINT_ETIENNE: [number, number] = [4.39, 45.44]
 const PARIS: [number, number] = [2.35, 48.85]
