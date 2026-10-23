@@ -13,7 +13,9 @@ const port = new URL(baseURL).port
 export default defineConfig({
   testDir: 'e2e',
   outputDir: 'test-results',
+  globalSetup: './e2e/warmup.ts',
   fullyParallel: true,
+  workers: process.env.CI ? 2 : undefined,
   // Le serveur e2e tourne en mode dev : les premières visites compilent les pages, ce qui peut
   // dépasser les 5 s par défaut quand plusieurs workers sollicitent le serveur en parallèle.
   expect: { timeout: 10_000 },
