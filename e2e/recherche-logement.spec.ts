@@ -36,8 +36,7 @@ test.describe('Recherche de logement par ville', () => {
   test('trouve une ville via la barre de recherche avec autocomplétion', async ({ page }) => {
     await gotoHydrated(page, '/trouver-un-logement-etudiant')
 
-    // Le DSFR rend aussi une version mobile cachée du champ : on cible la visible.
-    await page.getByLabel('Ville, académie ou département').filter({ visible: true }).fill('Saint-É')
+    await page.getByRole('textbox', { name: 'Où souhaitez-vous étudier ?' }).filter({ visible: true }).fill('Saint-É')
 
     const suggestions = page.getByRole('region', { name: 'Suggestions de recherche' }).filter({ visible: true })
     await suggestions
@@ -56,9 +55,12 @@ test.describe('Recherche de logement par ville', () => {
     await expect(page.getByText('Résidence E2E du Centre')).toBeVisible()
     await expect(page.getByText('Résidence E2E de la Gare')).toBeVisible()
 
-    // « Moins de 500€ » : seule la Résidence du Centre (à partir de 420 €) reste.
-    // Même sélecteur dans la modale de filtres mobile (cachée) : on cible le visible.
-    await page.getByLabel('Budget maximum').filter({ visible: true }).selectOption({ label: 'Moins de 500€' })
+    // Loyer maximum à 500 € : la Résidence de la Gare (à partir de 650 €) sort de la liste.
+    // Même curseur dans la modale de filtres mobile (cachée) : on cible le visible.
+    // La recherche n'est relancée qu'au relâchement du curseur (ici, la perte de focus).
+    const slider = page.getByRole('slider', { name: 'Loyer maximum' }).filter({ visible: true })
+    await slider.fill('500')
+    await slider.blur()
 
     await expect(page.getByText('Résidence E2E de la Gare')).toHaveCount(0)
     await expect(page.getByText('Résidence E2E du Centre')).toBeVisible()
@@ -74,8 +76,8 @@ test.describe('Recherche de logement par ville', () => {
     await gotoHydrated(page, '/trouver-un-logement-etudiant/ville/saint-etienne')
     const total = await readResultsCount(page)
 
-    // Les toggles DSFR recouvrent leur checkbox : on clique le label visible.
-    await page.getByText('Logements disponibles', { exact: true }).filter({ visible: true }).click()
+    // Les cases DSFR sont recouvertes par leur label : on clique le label visible.
+    await page.getByText('Disponibles uniquement', { exact: true }).filter({ visible: true }).click()
 
     // Seule la Résidence E2E Complète (0 disponibilité) sort de la liste.
     await expect(page.getByText(`${total - 1} résidences`)).toBeVisible()
@@ -85,8 +87,7 @@ test.describe('Recherche de logement par ville', () => {
   test('filtre les résidences proposant de la colocation', async ({ page }) => {
     await gotoHydrated(page, '/trouver-un-logement-etudiant/ville/saint-etienne')
 
-    await page.getByRole('button', { name: 'Plus de filtres' }).filter({ visible: true }).click()
-    await page.getByText('Colocation', { exact: true }).filter({ visible: true }).click()
+    await page.getByRole('button', { name: 'Colocation', exact: true }).filter({ visible: true }).click()
 
     // D'abord attendre que la liste soit filtrée : la résidence attendue figure déjà dans la liste initiale.
     await expect(page.getByText('Résidence E2E du Centre')).toHaveCount(0)
@@ -96,8 +97,7 @@ test.describe('Recherche de logement par ville', () => {
   test('filtre les résidences adaptées PMR', async ({ page }) => {
     await gotoHydrated(page, '/trouver-un-logement-etudiant/ville/saint-etienne')
 
-    await page.getByRole('button', { name: 'Plus de filtres' }).filter({ visible: true }).click()
-    await page.getByText('Adapté PMR').filter({ visible: true }).click()
+    await page.getByRole('button', { name: 'Accessible PMR' }).filter({ visible: true }).click()
 
     // D'abord attendre que la liste soit filtrée : la résidence attendue figure déjà dans la liste initiale.
     await expect(page.getByText('Résidence E2E du Centre')).toHaveCount(0)
@@ -107,13 +107,14 @@ test.describe('Recherche de logement par ville', () => {
   test('sépare les résidences Crous des autres résidences', async ({ page }) => {
     await gotoHydrated(page, '/trouver-un-logement-etudiant/ville/saint-etienne')
 
-    // La vue par défaut (« Autres résidences ») exclut le Crous.
+    // La vue par défaut (« Logement hors CROUS ») exclut le Crous.
+    await expect(page.getByRole('button', { name: 'Logement hors CROUS' }).filter({ visible: true })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
     await expect(page.getByText('Résidence E2E Crous')).toHaveCount(0)
 
-    await page
-      .getByText(/^Crous \(/)
-      .filter({ visible: true })
-      .click()
+    await page.getByRole('button', { name: 'Logement CROUS', exact: true }).filter({ visible: true }).click()
 
     await expect(page.getByText('Résidence E2E Crous')).toBeVisible()
     await expect(page.getByText('Résidence E2E du Centre')).toHaveCount(0)
@@ -137,8 +138,9 @@ test.describe('Recherche de logement par ville', () => {
 
     // Aucune résidence à Villars même, mais celles de Saint-Étienne (~5 km) remontent
     // dans la section « Plus de résultats autour de… » (+10 km).
-    await expect(page.getByText(/Plus de résultats autour/)).toBeVisible()
-    await expect(page.getByText('Résidence E2E du Centre')).toBeVisible()
+    await expect(page.getByText('Aucun résultat pour votre recherche')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Plus de résultats autour de Villars' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 2, name: /^Résidence E2E / }).first()).toBeVisible()
   })
 
   test('redirige un nom de ville vers son slug en conservant les filtres', async ({ page }) => {
@@ -159,8 +161,7 @@ test.describe('Recherche de logement par ville', () => {
   test('conserve les filtres après rechargement de la page', async ({ page }) => {
     await gotoHydrated(page, '/trouver-un-logement-etudiant/ville/saint-etienne')
 
-    await page.getByRole('button', { name: 'Plus de filtres' }).filter({ visible: true }).click()
-    await page.getByText('Adapté PMR').filter({ visible: true }).click()
+    await page.getByRole('button', { name: 'Accessible PMR' }).filter({ visible: true }).click()
     await expect(page).toHaveURL(/accessible=true/)
 
     await page.reload()
