@@ -1,5 +1,11 @@
 import { defineConfig, devices } from '@playwright/test'
 
+// Env e2e versionné (services externes neutralisés) ; les variables du shell, comme en CI, priment.
+process.loadEnvFile('.env.e2e')
+
+const baseURL = process.env.BASE_URL as string
+const port = new URL(baseURL).port
+
 /**
  * Tests e2e : parcours critiques dans un vrai navigateur, contre un serveur Next local
  * branché sur la base dédiée `mle_e2e` (conteneur db-test, seedée via `pnpm e2e:seed`).
@@ -15,14 +21,14 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : [['list']],
   use: {
-    baseURL: 'http://localhost:3210',
+    baseURL,
     locale: 'fr-FR',
     trace: 'on-first-retry',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
-    command: 'NEXT_DIST_DIR=.next-e2e DATABASE_URL=postgres://test:test@localhost:5491/mle_e2e pnpm exec next dev -p 3210',
-    url: 'http://localhost:3210',
+    command: `NEXT_DIST_DIR=.next-e2e pnpm exec next dev -p ${port}`,
+    url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
   },
