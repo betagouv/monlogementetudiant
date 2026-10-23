@@ -1,4 +1,4 @@
-import { createStudent, expect, signIn, test } from './fixtures'
+import { createStudent, expect, gotoHydrated, signIn, test } from './fixtures'
 
 // Parcours : favoris d'un étudiant depuis la fiche d'une résidence.
 
@@ -6,7 +6,7 @@ const FICHE_GARE = '/trouver-un-logement-etudiant/ville/saint-etienne/residence-
 
 test.describe('Favoris', () => {
   test('invite un visiteur non connecté à se connecter', async ({ page }) => {
-    await page.goto(FICHE_GARE)
+    await gotoHydrated(page, FICHE_GARE)
 
     await page.getByRole('button', { name: 'Ajouter en favoris' }).first().click()
 
@@ -20,7 +20,7 @@ test.describe('Favoris', () => {
     const student = await createStudent()
     await signIn(page, student.email)
 
-    await page.goto(FICHE_GARE)
+    await gotoHydrated(page, FICHE_GARE)
     await page.getByRole('button', { name: 'Ajouter en favoris' }).first().click()
     await expect(page.getByRole('button', { name: 'Retirer des favoris' }).first()).toHaveAttribute('aria-pressed', 'true')
 
@@ -28,7 +28,7 @@ test.describe('Favoris', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'Favoris et candidatures' })).toBeVisible()
     await expect(page.getByText('Résidence E2E de la Gare')).toBeVisible()
 
-    await page.goto(FICHE_GARE)
+    await gotoHydrated(page, FICHE_GARE)
     await page.getByRole('button', { name: 'Retirer des favoris' }).first().click()
     await expect(page.getByRole('button', { name: 'Ajouter en favoris' }).first()).toBeVisible()
 

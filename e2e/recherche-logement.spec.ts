@@ -1,4 +1,5 @@
-import { expect, type Page, test } from '@playwright/test'
+import type { Page } from '@playwright/test'
+import { expect, gotoHydrated, test } from './fixtures'
 
 // Parcours : recherche de logement par ville (données seedées par e2e/seed.ts).
 
@@ -21,7 +22,7 @@ test.describe('Recherche de logement par ville', () => {
   })
 
   test("ouvre la fiche d'une résidence depuis la liste", async ({ page }) => {
-    await page.goto('/trouver-un-logement-etudiant/ville/saint-etienne')
+    await gotoHydrated(page, '/trouver-un-logement-etudiant/ville/saint-etienne')
 
     await page
       .getByRole('link', { name: /Résidence E2E du Centre/ })
@@ -33,7 +34,7 @@ test.describe('Recherche de logement par ville', () => {
   })
 
   test('trouve une ville via la barre de recherche avec autocomplétion', async ({ page }) => {
-    await page.goto('/trouver-un-logement-etudiant')
+    await gotoHydrated(page, '/trouver-un-logement-etudiant')
 
     // Le DSFR rend aussi une version mobile cachée du champ : on cible la visible.
     await page.getByLabel('Ville, académie ou département').filter({ visible: true }).fill('Saint-É')
@@ -49,7 +50,7 @@ test.describe('Recherche de logement par ville', () => {
   })
 
   test('filtre les résidences par budget maximum', async ({ page }) => {
-    await page.goto('/trouver-un-logement-etudiant/ville/saint-etienne')
+    await gotoHydrated(page, '/trouver-un-logement-etudiant/ville/saint-etienne')
 
     // Les deux résidences sont là avant le filtre.
     await expect(page.getByText('Résidence E2E du Centre')).toBeVisible()
@@ -70,7 +71,7 @@ test.describe('Recherche de logement par ville', () => {
   })
 
   test('masque les résidences complètes via le switch « Logements disponibles »', async ({ page }) => {
-    await page.goto('/trouver-un-logement-etudiant/ville/saint-etienne')
+    await gotoHydrated(page, '/trouver-un-logement-etudiant/ville/saint-etienne')
     const total = await readResultsCount(page)
 
     // Les toggles DSFR recouvrent leur checkbox : on clique le label visible.
@@ -82,7 +83,7 @@ test.describe('Recherche de logement par ville', () => {
   })
 
   test('filtre les résidences proposant de la colocation', async ({ page }) => {
-    await page.goto('/trouver-un-logement-etudiant/ville/saint-etienne')
+    await gotoHydrated(page, '/trouver-un-logement-etudiant/ville/saint-etienne')
 
     await page.getByRole('button', { name: 'Plus de filtres' }).filter({ visible: true }).click()
     await page.getByText('Colocation', { exact: true }).filter({ visible: true }).click()
@@ -93,7 +94,7 @@ test.describe('Recherche de logement par ville', () => {
   })
 
   test('filtre les résidences adaptées PMR', async ({ page }) => {
-    await page.goto('/trouver-un-logement-etudiant/ville/saint-etienne')
+    await gotoHydrated(page, '/trouver-un-logement-etudiant/ville/saint-etienne')
 
     await page.getByRole('button', { name: 'Plus de filtres' }).filter({ visible: true }).click()
     await page.getByText('Adapté PMR').filter({ visible: true }).click()
@@ -104,7 +105,7 @@ test.describe('Recherche de logement par ville', () => {
   })
 
   test('sépare les résidences Crous des autres résidences', async ({ page }) => {
-    await page.goto('/trouver-un-logement-etudiant/ville/saint-etienne')
+    await gotoHydrated(page, '/trouver-un-logement-etudiant/ville/saint-etienne')
 
     // La vue par défaut (« Autres résidences ») exclut le Crous.
     await expect(page.getByText('Résidence E2E Crous')).toHaveCount(0)
@@ -119,7 +120,7 @@ test.describe('Recherche de logement par ville', () => {
   })
 
   test('pagine la liste au-delà de douze résidences', async ({ page }) => {
-    await page.goto('/trouver-un-logement-etudiant/ville/saint-etienne')
+    await gotoHydrated(page, '/trouver-un-logement-etudiant/ville/saint-etienne')
 
     // Page 1 : les résidences avec disponibilités ; la Résidence E2E Complète est reléguée en page 2.
     await expect(page.getByText('Résidence E2E de la Gare')).toBeVisible()
@@ -156,7 +157,7 @@ test.describe('Recherche de logement par ville', () => {
   })
 
   test('conserve les filtres après rechargement de la page', async ({ page }) => {
-    await page.goto('/trouver-un-logement-etudiant/ville/saint-etienne')
+    await gotoHydrated(page, '/trouver-un-logement-etudiant/ville/saint-etienne')
 
     await page.getByRole('button', { name: 'Plus de filtres' }).filter({ visible: true }).click()
     await page.getByText('Adapté PMR').filter({ visible: true }).click()
