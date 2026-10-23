@@ -3,7 +3,7 @@ import { createBailleur, createResidence, createStudent, expect, gotoHydrated, s
 
 // Parcours : un étudiant connecté laisse ses coordonnées au gestionnaire d'une résidence.
 
-const ficheUrl = (slug: string) => `/trouver-un-logement-etudiant/ville/saint-etienne/${slug}`
+const ficheUrl = (slug: string) => `/trouver-un-logement-etudiant/ville/clermont-ferrand/${slug}`
 
 test.describe('Être recontacté par le gestionnaire', () => {
   test('transmet les coordonnées pré-remplies d’un étudiant connecté', async ({ page }) => {

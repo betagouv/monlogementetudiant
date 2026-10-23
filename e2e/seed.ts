@@ -18,6 +18,7 @@ const ADMIN_URL = new URL('/postgres', E2E_DB_URL).toString()
 
 const SAINT_ETIENNE: [number, number] = [4.39, 45.44]
 const PARIS: [number, number] = [2.35, 48.85]
+const CLERMONT_FERRAND: [number, number] = [3.08, 45.78]
 
 async function ensureDatabaseExists() {
   const conn = postgres(ADMIN_URL, { max: 1 })
@@ -182,6 +183,16 @@ async function seed() {
     slug: 'villars',
     postalCodes: ['42390'],
     boundary: squareBoundary(4.46, 45.47, 0.02),
+  })
+
+  // Ville des résidences créées par les tests eux-mêmes (e2e/fixtures.ts) : loin de Saint-Étienne,
+  // pour ne pas modifier les résultats attendus par les specs de recherche.
+  await createCity({
+    departmentId: department.id,
+    name: 'Clermont-Ferrand',
+    slug: 'clermont-ferrand',
+    postalCodes: ['63000'],
+    boundary: squareBoundary(...CLERMONT_FERRAND),
   })
 
   // Hors de Saint-Étienne : ne doit PAS apparaître dans la recherche par ville.
