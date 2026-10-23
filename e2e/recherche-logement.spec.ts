@@ -23,20 +23,26 @@ test.describe('Recherche de logement par ville', () => {
   test("ouvre la fiche d'une résidence depuis la liste", async ({ page }) => {
     await page.goto('/trouver-un-logement-etudiant/ville/saint-etienne')
 
-    await page.getByRole('link', { name: /Résidence E2E du Centre/ }).first().click()
+    await page
+      .getByRole('link', { name: /Résidence E2E du Centre/ })
+      .first()
+      .click()
 
     await expect(page).toHaveURL(/residence-e2e-du-centre/)
     await expect(page.getByRole('heading', { name: /Résidence E2E du Centre/ }).first()).toBeVisible()
   })
 
-  test("trouve une ville via la barre de recherche avec autocomplétion", async ({ page }) => {
+  test('trouve une ville via la barre de recherche avec autocomplétion', async ({ page }) => {
     await page.goto('/trouver-un-logement-etudiant')
 
     // Le DSFR rend aussi une version mobile cachée du champ : on cible la visible.
     await page.getByLabel('Ville, académie ou département').filter({ visible: true }).fill('Saint-É')
 
     const suggestions = page.getByRole('region', { name: 'Suggestions de recherche' }).filter({ visible: true })
-    await suggestions.getByRole('option', { name: /Saint-Étienne/ }).first().click()
+    await suggestions
+      .getByRole('option', { name: /Saint-Étienne/ })
+      .first()
+      .click()
 
     await expect(page).toHaveURL(/ville\/saint-etienne/)
     await expect(page.getByText('Résidence E2E du Centre')).toBeVisible()
@@ -57,7 +63,7 @@ test.describe('Recherche de logement par ville', () => {
     await expect(page.getByText('Résidence E2E du Centre')).toBeVisible()
   })
 
-  test("affiche le message « aucun résultat » pour une ville sans résidence", async ({ page }) => {
+  test('affiche le message « aucun résultat » pour une ville sans résidence', async ({ page }) => {
     await page.goto('/trouver-un-logement-etudiant/ville/roanne')
 
     await expect(page.getByText('Aucun résultat pour votre recherche')).toBeVisible()
@@ -103,7 +109,10 @@ test.describe('Recherche de logement par ville', () => {
     // La vue par défaut (« Autres résidences ») exclut le Crous.
     await expect(page.getByText('Résidence E2E Crous')).toHaveCount(0)
 
-    await page.getByText(/^Crous \(/).filter({ visible: true }).click()
+    await page
+      .getByText(/^Crous \(/)
+      .filter({ visible: true })
+      .click()
 
     await expect(page.getByText('Résidence E2E Crous')).toBeVisible()
     await expect(page.getByText('Résidence E2E du Centre')).toHaveCount(0)
@@ -131,7 +140,7 @@ test.describe('Recherche de logement par ville', () => {
     await expect(page.getByText('Résidence E2E du Centre')).toBeVisible()
   })
 
-  test("redirige un nom de ville vers son slug en conservant les filtres", async ({ page }) => {
+  test('redirige un nom de ville vers son slug en conservant les filtres', async ({ page }) => {
     await page.goto('/trouver-un-logement-etudiant/ville/Saint-Étienne?colocation=true')
 
     await expect(page).toHaveURL(/\/ville\/saint-etienne\?colocation=true$/)
@@ -139,7 +148,7 @@ test.describe('Recherche de logement par ville', () => {
     await expect(page.getByText('Résidence E2E du Centre')).toHaveCount(0)
   })
 
-  test("affiche la page 404 pour une résidence inconnue", async ({ page }) => {
+  test('affiche la page 404 pour une résidence inconnue', async ({ page }) => {
     const response = await page.goto('/trouver-un-logement-etudiant/ville/saint-etienne/residence-inexistante')
 
     expect(response?.status()).toBe(404)
