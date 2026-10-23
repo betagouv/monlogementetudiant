@@ -76,7 +76,10 @@ export async function createBailleur({
   return { user, owner }
 }
 
-/** Résidence de Saint-Étienne propre au test, avec des logements disponibles par défaut. */
+/**
+ * Résidence propre au test, avec des logements disponibles par défaut. Elle est créée à
+ * Clermont-Ferrand (ville seedée à part) pour ne pas modifier les résultats de la recherche à Saint-Étienne.
+ */
 export async function createResidence(
   overrides: Partial<Parameters<typeof createAccommodation>[0]> = {},
   typologies: Parameters<typeof createAccommodation>[1] = [
@@ -89,8 +92,8 @@ export async function createResidence(
       name: `Résidence E2E ${id}`,
       slug: `residence-e2e-${id}`,
       published: true,
-      cityId: await getCityId('saint-etienne'),
-      geom: { type: 'Point', coordinates: [4.39, 45.44] },
+      cityId: await getCityId('clermont-ferrand'),
+      geom: { type: 'Point', coordinates: [3.08, 45.78] },
       ...overrides,
     },
     typologies,
