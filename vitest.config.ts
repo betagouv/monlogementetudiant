@@ -10,6 +10,13 @@ export default defineConfig({
     },
   },
   test: {
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'json-summary'],
+      reportsDirectory: 'coverage',
+      include: ['src/**', 'cli/**'],
+      exclude: ['src/**/*.test.ts', 'cli/**/*.test.ts', 'src/__tests__/**'],
+    },
     projects: [
       {
         resolve: {
