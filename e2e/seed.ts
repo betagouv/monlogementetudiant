@@ -50,6 +50,8 @@ async function seed() {
       cityId: city.id,
       address: '1 place Jean-Jaurès',
       postalCode: '42000',
+      externalUrl: 'https://bailleur.example.com/residence-du-centre',
+      phoneNumber: '0477000000',
       geom: { type: 'Point', coordinates: SAINT_ETIENNE },
     },
     [
