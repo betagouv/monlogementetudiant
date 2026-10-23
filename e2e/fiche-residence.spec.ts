@@ -43,7 +43,7 @@ test.describe("Fiche d'une résidence", () => {
       .getByRole('link', { name: /Saint-Étienne/ })
       .click()
 
-    await expect(page).toHaveURL(/\/ville\/Saint-%C3%89tienne|\/ville\/saint-etienne/)
-    await expect(page.getByText('Résidence E2E de la Gare').first()).toBeVisible()
+    await expect(page).toHaveURL(/\/trouver-un-logement-etudiant\/ville\//)
+    await expect(page.getByRole('heading', { level: 1, name: 'Trouver un logement social étudiant à Saint-Étienne' })).toBeVisible()
   })
 })

@@ -1,3 +1,4 @@
+import { randomInt } from 'node:crypto'
 import { EOwnerContactMode } from '../src/enums/owner-contact-mode'
 import { createBailleur, createResidence, createStudent, expect, gotoHydrated, signIn, test } from './fixtures'
 
@@ -11,6 +12,9 @@ test.describe('Être recontacté par le gestionnaire', () => {
     const residence = await createResidence({ ownerId: owner.id })
     const student = await createStudent()
     await signIn(page, student.email)
+    // Les demandes de contact sont plafonnées par IP (lue dans x-forwarded-for) : une IP par test
+    // évite d'atteindre le plafond quand la suite est rejouée sans re-seed.
+    await page.setExtraHTTPHeaders({ 'x-forwarded-for': `10.0.${randomInt(256)}.${randomInt(256)}` })
 
     await gotoHydrated(page, ficheUrl(residence.slug))
     await page.getByRole('button', { name: 'Être recontacté' }).click()
