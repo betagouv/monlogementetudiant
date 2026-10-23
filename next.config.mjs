@@ -30,11 +30,6 @@ const matomoOrigin = (() => {
   }
 })()
 
-// Les pages éditoriales du WordPress `info.` sont relayées sous notre domaine (cf. src/utils/wp-proxy.ts) :
-// leur HTML pointe vers des styles restés là-bas et vers les polices Marianne du bucket WordPress.
-const wpOrigin = 'https://info.monlogementetudiant.beta.gouv.fr'
-const ovhBuckets = 'https://*.s3.gra.io.cloud.ovh.net'
-
 // Doc Scalar de l'API publique : bundle servi par jsDelivr, polices par fonts.scalar.com.
 const scalarScriptOrigin = 'https://cdn.jsdelivr.net'
 const scalarFontOrigin = 'https://fonts.scalar.com'
@@ -47,12 +42,12 @@ const buildCsp = (frameAncestors, { scriptSrc = [], fontSrc = [] } = {}) =>
     // que par le Fast Refresh du serveur de dev.
     ['script-src', "'self'", "'unsafe-inline'", isDev && "'unsafe-eval'", matomoOrigin, ...scriptSrc].filter(Boolean).join(' '),
     // DSFR et emotion (tss-react) injectent des styles inline.
-    `style-src 'self' 'unsafe-inline' ${wpOrigin}`,
+    "style-src 'self' 'unsafe-inline'",
     // `https:` : les favicons des sites bailleurs viennent d'origines non énumérables
     // (src/utils/get-favicon-url.ts). Couvre aussi les tuiles OSM, les marqueurs Leaflet (cdnjs,
     // raw.githubusercontent) et les photos S3 ; `blob:` sert aux aperçus avant upload.
     "img-src 'self' data: blob: https:",
-    ['font-src', "'self'", 'data:', wpOrigin, ovhBuckets, ...fontSrc].join(' '),
+    ['font-src', "'self'", 'data:', ...fontSrc].join(' '),
     // Autocomplétion d'adresse (data.geopf.fr), remontée d'erreurs Sentry, suivi Matomo.
     // `ws:` couvre le rechargement à chaud en dev.
     ['connect-src', "'self'", 'https://data.geopf.fr', 'https://sentry.incubateur.net', matomoOrigin, isDev && 'ws:']
@@ -129,8 +124,8 @@ const nextConfig = {
     return [
       // Assets statiques WordPress (Bedrock : `app` = `wp-content` renommé). Ils sont déjà
       // référencés en absolu depuis `info.` ; on renvoie le navigateur en direct plutôt que
-      // de relayer les octets à travers le container. Les pages éditoriales, elles, passent
-      // par des Route Handlers cachés — cf. src/utils/wp-proxy.ts.
+      // de relayer les octets à travers le container. Les pages éditoriales, elles, sont
+      // redirigées par des Route Handlers — cf. src/utils/wp-redirect.ts.
       {
         source: '/wp-content/:path*',
         destination: 'https://info.monlogementetudiant.beta.gouv.fr/wp-content/:path*',
