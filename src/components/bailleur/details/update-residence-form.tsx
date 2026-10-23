@@ -25,7 +25,6 @@ import { trackEvent } from '~/lib/tracking'
 import { TAccomodationMy } from '~/schemas/accommodations/accommodations'
 import { createZUpdateResidence, TUpdateResidence } from '~/schemas/accommodations/update-residence'
 import { formatFrenchPhoneNumber } from '~/utils/phone-number'
-import { sanitizeHTML } from '~/utils/sanitize-html'
 import { typologyFormDefaults } from '~/utils/typology-form-defaults'
 import styles from './update-residence-form.module.css'
 
@@ -52,7 +51,12 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
         city: a.city || '',
         postalCode: a.postalCode || '',
       })),
-      description: accommodation.description || '',
+      tagline: accommodation.tagline || '',
+      locationAndProximity: accommodation.locationAndProximity || '',
+      servicesAndEquipment: accommodation.servicesAndEquipment || '',
+      receptionAndContact: accommodation.receptionAndContact || '',
+      practicalInfo: accommodation.practicalInfo || '',
+      otherInformation: accommodation.otherInformation || '',
       rentalChargesDetails: accommodation.rentalChargesDetails || '',
       externalUrl: accommodation.externalUrl || '',
       virtualTourUrl: accommodation.virtualTourUrl || '',
@@ -87,11 +91,7 @@ export const UpdateResidenceForm = ({ accommodation }: { accommodation: TAccomod
   const onInvalid = useResidenceFormInvalid<TUpdateResidence>(formRef)
 
   const onSubmit = async (data: TUpdateResidence) => {
-    const sanitizedData = {
-      ...data,
-      description: data.description && sanitizeHTML(data.description),
-    }
-    await updateMutation.mutateAsync(sanitizedData)
+    await updateMutation.mutateAsync(data)
     trackEvent({ category: 'Espace Gestionnaire', action: 'mise a jour residence', name: accommodation.slug })
   }
 

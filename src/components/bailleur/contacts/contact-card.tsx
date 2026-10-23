@@ -8,7 +8,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { forwardRef, type HTMLAttributes } from 'react'
 import { EContactSource } from '~/enums/contact-source'
 import { CONTACT_STATUS_CONFIG, CONTACT_STATUSES, EContactStatus } from '~/enums/contact-status'
-import { formatDayjs } from '~/utils/dayjs'
+import { formatLocalizedDate } from '~/utils/date-helpers'
 import { buildHref } from '~/utils/preserve-query-params'
 import styles from './contact-card.module.css'
 
@@ -55,7 +55,7 @@ export const ContactCard = forwardRef<HTMLDivElement, Props>(({ contact, slug, o
       </Badge>
 
       <span className="fr-text-mention--grey fr-text--xs fr-mt-1v fr-mb-2v">
-        {t('card.postedOn', { date: formatDayjs(contact.createdAt, 'DD MMMM YYYY', locale) })}
+        {t('card.postedOn', { date: formatLocalizedDate(contact.createdAt, 'dd MMMM yyyy', locale) })}
       </span>
 
       <span

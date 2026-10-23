@@ -18,6 +18,7 @@ import { trackEvent } from '~/lib/tracking'
 import { TUser } from '~/lib/types'
 import { TAccomodationCard } from '~/schemas/accommodations/accommodations'
 import { calculateAvailability } from '~/utils/calculateAvailability'
+import { formatDay } from '~/utils/formatDate'
 import { getAccommodationPath } from '~/utils/get-accommodation-url'
 import { appendWidgetCampaign } from '~/utils/widget-campaign'
 import styles from './find-student-accomodation-card.module.css'
@@ -43,7 +44,7 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
   const widgetCampaign = useWidgetCampaign()
   const t = useTranslations('findAccomodation.card')
   const tA11y = useTranslations('accessibility')
-  const { city, imagesUrls, name, nbTotalApartments, postalCode, priceMin, acceptWaitingList } = accomodation
+  const { city, imagesUrls, name, nbTotalApartments, postalCode, priceMin, acceptWaitingList, updatedAt } = accomodation
   const nbAvailable = calculateAvailability(accomodation.typologies)
   const nbIndividualApartments = (accomodation.nbTotalApartments || 0) - (accomodation.nbColivingApartments || 0)
   const accommodationsTypes = [
@@ -83,10 +84,10 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
       {...badgeProps}
       {...imageProps}
       classes={{
-        root: clsx(className, selectedAccommodation === accomodation.id.toString() && styles.active, styles.hover),
+        root: clsx(className, selectedAccommodation === accomodation.id.toString() && styles.active, styles.hover, styles.largeArrow),
         header: styles.header,
         start: styles.start,
-        endDetail: clsx('fr-justify-content-end', styles.endDetail),
+        endDetail: styles.endDetail,
       }}
       id={`accomodation-${accomodation.id}`}
       background
@@ -122,6 +123,7 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
           {showFavorite && <SaveAccommodationFavoriteButton slug={accomodation.slug} user={user} />}
         </div>
       }
+      endDetail={updatedAt ? t('lastUpdate', { date: formatDay(new Date(updatedAt)) }) : undefined}
       size="small"
       title={<span className="fr-text-title--blue-france fr-mb-0">{name}</span>}
       titleAs="h2"

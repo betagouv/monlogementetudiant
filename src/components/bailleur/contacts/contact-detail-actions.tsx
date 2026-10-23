@@ -13,7 +13,7 @@ import { CONTACT_RETENTION_DAYS, EContactStatus } from '~/enums/contact-status'
 import { useSignedDocumentUrl } from '~/hooks/use-signed-document-url'
 import type { TContactDetail } from '~/schemas/contacts/contact-detail'
 import { useTRPC } from '~/server/trpc/client'
-import { daysLeftFrom } from '~/utils/dayjs'
+import { daysLeftFrom } from '~/utils/date-helpers'
 import { sPluriel } from '~/utils/sPluriel'
 import styles from './contact-detail.module.css'
 

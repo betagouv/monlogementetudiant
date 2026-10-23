@@ -5,6 +5,7 @@ import { HydrationBoundary } from '@tanstack/react-query'
 import { getTranslations } from 'next-intl/server'
 import { ResidenceFilters } from '~/components/bailleur/residence-filters'
 import { ResidenceList } from '~/components/bailleur/residence-list'
+import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { buildHref } from '~/utils/preserve-query-params'
 import { getResidencesPageContext } from './get-residences-page-context'
 
@@ -24,12 +25,13 @@ type ResidencesPageProps = {
 
 export default async function ResidencesPage({ searchParams }: ResidencesPageProps) {
   const awaitedSearchParams = await searchParams
-  const [t, { dehydratedState }] = await Promise.all([
+  const [t, { dehydratedState, ctx }] = await Promise.all([
     getTranslations('bailleur.residences'),
     getResidencesPageContext(awaitedSearchParams),
   ])
 
   const newResidenceHref = buildHref('/bailleur/residences/nouvelle-residence', awaitedSearchParams)
+  const canSeeContacts = ctx.hasPermission('manage_applications') && ctx.owner.contactMode !== EOwnerContactMode.NONE
 
   return (
     <HydrationBoundary state={dehydratedState}>
@@ -55,7 +57,7 @@ export default async function ResidencesPage({ searchParams }: ResidencesPagePro
         </div>
         <hr className="fr-mt-2w fr-mb-0" />
         <ResidenceFilters />
-        <ResidenceList />
+        <ResidenceList canSeeContacts={canSeeContacts} />
       </div>
     </HydrationBoundary>
   )

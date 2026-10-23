@@ -106,6 +106,7 @@ function writeTmpCsv(rows: string[][], headers?: string[]): string {
     'refrigerator',
     'bathroom',
     'accept_waiting_list',
+    'rental_charges_details',
   ]
 
   const h = headers ?? defaultHeaders
@@ -169,6 +170,7 @@ function makeRow(overrides: Record<string, string> = {}): string[] {
     refrigerator: 'oui',
     bathroom: 'private',
     accept_waiting_list: 'oui',
+    rental_charges_details: 'Eau, chauffage et électricité',
   }
 
   const merged = { ...defaults, ...overrides }
@@ -228,6 +230,7 @@ function makeRow(overrides: Record<string, string> = {}): string[] {
     'refrigerator',
     'bathroom',
     'accept_waiting_list',
+    'rental_charges_details',
   ]
 
   return headers.map((h) => merged[h] ?? '')
@@ -281,6 +284,7 @@ describe('import-csv integration', () => {
     expect(created!.refrigerator).toBe(true)
     expect(created!.bathroom).toBe('private')
     expect(created!.acceptWaitingList).toBe(true)
+    expect(created!.rentalChargesDetails).toBe('Eau, chauffage et électricité')
     expect(created!.externalUrl).toBe('https://monbailleur.fr')
 
     const sources = await db.select().from(externalSources).where(eq(externalSources.source, 'test-source'))

@@ -3,29 +3,29 @@
 import Button from '@codegouvfr/react-dsfr/Button'
 import Input from '@codegouvfr/react-dsfr/Input'
 import { createModal } from '@codegouvfr/react-dsfr/Modal'
+import { Placeholder } from '@tiptap/extensions'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import clsx from 'clsx'
 import { useTranslations } from 'next-intl'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useId, useMemo, useState } from 'react'
 import { z } from 'zod'
 import styles from './rich-text-editor.module.css'
 
 const urlSchema = z.string().url()
 
-const linkModal = createModal({
-  id: 'rich-text-link-modal',
-  isOpenedByDefault: false,
-})
-
 interface RichTextEditorProps {
   value: string
   onChange: (value: string) => void
   placeholder?: string
+  compact?: boolean
+  labelledBy?: string
 }
 
-export const RichTextEditor = ({ value, onChange }: RichTextEditorProps) => {
+export const RichTextEditor = ({ value, onChange, placeholder, compact = false, labelledBy }: RichTextEditorProps) => {
   const t = useTranslations('shared.richTextEditor')
+  const instanceId = useId().replace(/[^a-zA-Z0-9_-]/g, '')
+  const linkModal = useMemo(() => createModal({ id: `rich-text-link-modal-${instanceId}`, isOpenedByDefault: false }), [instanceId])
   const [linkUrl, setLinkUrl] = useState('')
   const [linkError, setLinkError] = useState<string | null>(null)
 
@@ -44,20 +44,22 @@ export const RichTextEditor = ({ value, onChange }: RichTextEditorProps) => {
           },
         },
       }),
+      ...(placeholder ? [Placeholder.configure({ placeholder })] : []),
     ],
     content: value,
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML())
+      onChange(editor.isEmpty ? '' : editor.getHTML())
     },
     editorProps: {
       attributes: {
-        class: clsx('fr-input', styles.editor),
+        class: clsx('fr-input', styles.editor, compact && styles.compact),
+        ...(labelledBy && { 'aria-labelledby': labelledBy }),
       },
     },
   })
 
   useEffect(() => {
-    if (editor && value !== editor.getHTML()) {
+    if (editor && value !== editor.getHTML() && !(value === '' && editor.isEmpty)) {
       editor.commands.setContent(value)
     }
   }, [editor, value])
@@ -68,7 +70,7 @@ export const RichTextEditor = ({ value, onChange }: RichTextEditorProps) => {
     setLinkUrl(previousUrl)
     setLinkError(null)
     linkModal.open()
-  }, [editor])
+  }, [editor, linkModal])
 
   const handleSaveLink = useCallback(() => {
     if (!editor) return
@@ -87,13 +89,13 @@ export const RichTextEditor = ({ value, onChange }: RichTextEditorProps) => {
     editor.chain().focus().extendMarkRange('link').setLink({ href: linkUrl }).run()
     setLinkError(null)
     linkModal.close()
-  }, [editor, linkUrl, t])
+  }, [editor, linkUrl, linkModal, t])
 
   const handleCancelLink = useCallback(() => {
     setLinkUrl('')
     setLinkError(null)
     linkModal.close()
-  }, [])
+  }, [linkModal])
 
   if (!editor) {
     return null
@@ -120,25 +122,29 @@ export const RichTextEditor = ({ value, onChange }: RichTextEditorProps) => {
           icon="ri-underline"
           title={t('underline')}
         />
-        <Separator />
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-          active={editor.isActive('heading', { level: 1 })}
-          icon="ri-h-1"
-          title={t('heading1')}
-        />
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          active={editor.isActive('heading', { level: 2 })}
-          icon="ri-h-2"
-          title={t('heading2')}
-        />
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-          active={editor.isActive('heading', { level: 3 })}
-          icon="ri-h-3"
-          title={t('heading3')}
-        />
+        {!compact && (
+          <>
+            <Separator />
+            <ToolbarButton
+              onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+              active={editor.isActive('heading', { level: 1 })}
+              icon="ri-h-1"
+              title={t('heading1')}
+            />
+            <ToolbarButton
+              onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+              active={editor.isActive('heading', { level: 2 })}
+              icon="ri-h-2"
+              title={t('heading2')}
+            />
+            <ToolbarButton
+              onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+              active={editor.isActive('heading', { level: 3 })}
+              icon="ri-h-3"
+              title={t('heading3')}
+            />
+          </>
+        )}
         <Separator />
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBulletList().run()}
@@ -152,12 +158,14 @@ export const RichTextEditor = ({ value, onChange }: RichTextEditorProps) => {
           icon="ri-list-ordered"
           title={t('orderedList')}
         />
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          active={editor.isActive('blockquote')}
-          icon="ri-double-quotes-l"
-          title={t('blockquote')}
-        />
+        {!compact && (
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleBlockquote().run()}
+            active={editor.isActive('blockquote')}
+            icon="ri-double-quotes-l"
+            title={t('blockquote')}
+          />
+        )}
         <Separator />
         <ToolbarButton onClick={openLinkModal} active={editor.isActive('link')} icon="ri-link" title={t('link')} />
       </div>

@@ -1,18 +1,27 @@
 'use client'
 
+import { createModal } from '@codegouvfr/react-dsfr/Modal'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import clsx from 'clsx'
 import { useTranslations } from 'next-intl'
 import { parseAsBoolean, parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
-import { FC } from 'react'
+import { FC, useRef, useState } from 'react'
 import { ResidenceCard } from '~/components/bailleur/residence-card'
 import { UpdateResidenceList } from '~/components/bailleur/update-residence-list'
 import { AvailabilityBadge } from '~/components/shared/availability-badge'
+import { createToast } from '~/components/ui/createToast'
 import { Pagination } from '~/components/ui/pagination'
 import { useMyAccommodations } from '~/hooks/use-my-accommodations'
+import { useTRPC } from '~/server/trpc/client'
 import { calculateAvailability } from '~/utils/calculateAvailability'
 import { formatDay } from '~/utils/formatDate'
 import { getLastAvailabilityUpdate } from '~/utils/last-availability-update'
 import { buildHref } from '~/utils/preserve-query-params'
+
+const confirmAllModal = createModal({
+  id: 'confirm-all-availability-modal',
+  isOpenedByDefault: false,
+})
 
 const ResidenceListSkeleton = () => (
   <div className="fr-flex fr-direction-column fr-flex-gap-6v">
@@ -52,9 +61,16 @@ const ResidenceListSkeleton = () => (
   </div>
 )
 
-export const ResidenceList: FC = () => {
+type ResidenceListProps = {
+  /** Contacts actifs pour le bailleur et visibles par l'utilisateur ; reste à vérifier résidence par résidence. */
+  canSeeContacts: boolean
+}
+
+export const ResidenceList: FC<ResidenceListProps> = ({ canSeeContacts }) => {
   const t = useTranslations('findAccomodation.card')
   const tList = useTranslations('bailleur.residences.list')
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
   const { data: accommodations, isLoading } = useMyAccommodations()
   const [queryStates] = useQueryStates({
     page: parseAsInteger.withDefault(1),
@@ -64,6 +80,47 @@ export const ResidenceList: FC = () => {
   })
 
   const accommodationsList = accommodations?.results || []
+
+  // « Premier clic » : la proposition de tout confirmer n'est faite qu'une fois par visite de la page.
+  const [confirmAllAnswered, setConfirmAllAnswered] = useState(false)
+  const pendingSubmit = useRef<(() => Promise<void>) | null>(null)
+
+  const { mutateAsync: confirmAll, isPending: isConfirmingAll } = useMutation(trpc.bailleur.confirmAvailability.mutationOptions())
+
+  const confirmOne = async (submit: () => Promise<void>) => {
+    await submit()
+    createToast({ priority: 'success', message: tList('confirmSuccess') })
+  }
+
+  const onConfirm = (submit: () => Promise<void>) => {
+    if (confirmAllAnswered || (accommodations?.count ?? 0) <= 1) {
+      void confirmOne(submit)
+      return
+    }
+    pendingSubmit.current = submit
+    confirmAllModal.open()
+  }
+
+  const answerConfirmAll = async (all: boolean) => {
+    const submit = pendingSubmit.current
+    pendingSubmit.current = null
+    setConfirmAllAnswered(true)
+    confirmAllModal.close()
+    if (!submit) return
+    if (!all) return confirmOne(submit)
+
+    await submit()
+    try {
+      const { confirmed } = await confirmAll({ all: true, ownerId: queryStates.ownerId ?? undefined })
+      createToast({ priority: 'success', message: tList('confirmAllSuccess', { count: confirmed }) })
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: trpc.bailleur.list.queryKey(), exact: false }),
+        queryClient.invalidateQueries({ queryKey: trpc.bailleur.listAvailabilityToConfirm.queryKey() }),
+      ])
+    } catch {
+      createToast({ priority: 'error', message: tList('confirmAllError') })
+    }
+  }
 
   if (isLoading) {
     return <ResidenceListSkeleton />
@@ -107,8 +164,13 @@ export const ResidenceList: FC = () => {
                   key={index}
                   accomodation={accommodation}
                   href={buildHref(`/bailleur/residences/${accommodation.slug}`, { ownerId: queryStates.ownerId?.toString() })}
+                  contactsHref={
+                    canSeeContacts && accommodation.acceptsApplications
+                      ? buildHref(`/bailleur/contacts/${accommodation.slug}`, { ownerId: queryStates.ownerId?.toString() })
+                      : undefined
+                  }
                 />
-                <UpdateResidenceList accommodation={accommodation}>
+                <UpdateResidenceList accommodation={accommodation} onConfirm={onConfirm}>
                   <div className="fr-flex fr-flex-wrap fr-flex-gap-2v fr-justify-content-space-between fr-align-items-center">
                     {!!accommodation.nbTotalApartments && (
                       <span className="fr-text-mention--grey fr-text--xl fr-mb-0">
@@ -130,6 +192,27 @@ export const ResidenceList: FC = () => {
             )
           })}
       </div>
+      <confirmAllModal.Component
+        title={tList('confirmAllModal.title')}
+        buttons={[
+          {
+            children: tList('confirmAllModal.confirmOne'),
+            priority: 'secondary',
+            doClosesModal: false,
+            disabled: isConfirmingAll,
+            onClick: () => answerConfirmAll(false),
+          },
+          {
+            children: tList('confirmAllModal.confirmAll'),
+            iconId: 'ri-check-double-line',
+            doClosesModal: false,
+            disabled: isConfirmingAll,
+            onClick: () => answerConfirmAll(true),
+          },
+        ]}
+      >
+        <p>{tList('confirmAllModal.description')}</p>
+      </confirmAllModal.Component>
       {accommodations && accommodations.count > accommodations.pageSize && (
         <Pagination
           showFirstLast={false}

@@ -1,50 +1,32 @@
 'use client'
 
 import Button from '@codegouvfr/react-dsfr/Button'
-import clsx from 'clsx'
 import { useTranslations } from 'next-intl'
-import { parseAsBoolean, useQueryStates } from 'nuqs'
-import { FC, useState } from 'react'
+import { FC } from 'react'
 import { FindStudentAccomodationAutocompleteInput } from '~/components/find-student-accomodation/autocomplete/find-student-accomodation-autocomplete-input'
-import { FindStudentAccessibleAccomodationSwitch } from '~/components/find-student-accomodation/header/find-student-accessible-accomodation-switch'
 import { FindStudentAccommodationActiveFilters } from '~/components/find-student-accomodation/header/find-student-accommodation-active-filters'
 import { FindStudentAccommodationAvailabilitySwitch } from '~/components/find-student-accomodation/header/find-student-accommodation-availability-switch'
-import { FindStudentAccommodationCrousFilter } from '~/components/find-student-accomodation/header/find-student-accommodation-crous-filter'
 import {
   FindStudentAccommodationFiltersModal,
   mobileFiltersModal,
 } from '~/components/find-student-accomodation/header/find-student-accommodation-filters-modal'
-import { FindStudentAccommodationPrice } from '~/components/find-student-accomodation/header/find-student-accommodation-price'
-import { FindStudentColivingAccomodationSwitch } from '~/components/find-student-accomodation/header/find-student-coliving-accomodation'
+import { FindStudentAccommodationPriceRange } from '~/components/find-student-accomodation/header/find-student-accommodation-price-range'
+import { FindStudentAccommodationTypeTags } from '~/components/find-student-accomodation/header/find-student-accommodation-type-tags'
 import styles from './find-student-accomodation-header.module.css'
 
 export const FindStudentAccomodationHeader: FC = () => {
   const t = useTranslations('findAccomodation.header')
-  const [{ accessible, colocation }] = useQueryStates({
-    accessible: parseAsBoolean,
-    colocation: parseAsBoolean,
-  })
-  const [showAdvanced, setShowAdvanced] = useState(() => !!accessible || !!colocation)
 
   return (
     <>
       <div className="fr-hidden fr-unhidden-md">
         <div className={styles.container}>
-          <div className={clsx(styles.mainRow, showAdvanced && styles.mainRowOpen)}>
+          <div className={styles.mainRow}>
             <FindStudentAccomodationAutocompleteInput />
             <FindStudentAccommodationAvailabilitySwitch />
-            <FindStudentAccommodationPrice />
-            <FindStudentAccommodationCrousFilter />
-            <Button className={styles.toggleButton} priority="tertiary" onClick={() => setShowAdvanced((v) => !v)}>
-              {showAdvanced ? t('advancedFiltersHide') : t('advancedFiltersShow')}
-            </Button>
+            <FindStudentAccommodationPriceRange />
           </div>
-          {showAdvanced && (
-            <div className={styles.advancedRow}>
-              <FindStudentAccessibleAccomodationSwitch />
-              <FindStudentColivingAccomodationSwitch />
-            </div>
-          )}
+          <FindStudentAccommodationTypeTags />
         </div>
       </div>
       <div className="fr-hidden-md">

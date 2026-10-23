@@ -17,6 +17,7 @@ type FindStudentAccomodationSortViewProps = {
 export const FindStudentAccomodationSortView: FC<FindStudentAccomodationSortViewProps> = ({ territory }) => {
   const [queryStates, setQueryStates] = useQueryStates({
     bbox: parseAsString,
+    crous: parseAsBoolean,
     ['recherche-par-carte']: parseAsBoolean.withDefault(false),
     vue: parseAsString.withDefault('grille'),
   })
@@ -26,13 +27,16 @@ export const FindStudentAccomodationSortView: FC<FindStudentAccomodationSortView
 
   const { classes } = useStyles({ hasResults: accommodations && accommodations.count > 0 })
 
+  const pluralize = sPluriel(accommodations?.count ?? 0)
   const title =
     territory?.name && !queryStates['recherche-par-carte']
-      ? t('accommodationsWithLocation', {
-          pluralize: sPluriel(accommodations?.count ?? 0),
+      ? t(queryStates.crous ? 'crousAccommodationsWithLocation' : 'nonCrousAccommodationsWithLocation', {
+          pluralize,
           locationFormatted: formatCityWithPreposition(locale, 'à', territory.name),
         })
-      : `${t('accommodations')}${sPluriel(accommodations?.count ?? 0)}`
+      : queryStates.crous
+        ? t('crousAccommodations', { pluralize })
+        : t('nonCrousAccommodations', { pluralize })
   return (
     <div className={classes.headerContainer}>
       <div role="status" aria-live="polite">

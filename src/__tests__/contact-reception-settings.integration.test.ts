@@ -141,7 +141,7 @@ describe('bailleur.saveContactReceptionSettings', () => {
     ])
   })
 
-  it('restreint un gestionnaire « toutes résidences » retiré d’une résidence cochée', async () => {
+  it('restreint un gestionnaire « toutes résidences » aux résidences cochées où il est sélectionné', async () => {
     await save([
       { accommodationId: resA.id, managerIds: [MARINE] },
       { accommodationId: resB.id, managerIds: [ALEXIS] },
@@ -150,7 +150,7 @@ describe('bailleur.saveContactReceptionSettings', () => {
     expect(await readUser(MARINE)).toEqual({
       permissions: ['manage_applications', 'manage_residences'],
       restricted: true,
-      scope: [resA.id, resC.id],
+      scope: [resA.id],
     })
   })
 
@@ -163,7 +163,7 @@ describe('bailleur.saveContactReceptionSettings', () => {
     expect(await readUser(MARINE)).toMatchObject({ restricted: false, scope: [] })
   })
 
-  it('étend le périmètre d’un gestionnaire restreint et accorde le droit', async () => {
+  it('remplace le périmètre d’un gestionnaire restreint et accorde le droit', async () => {
     await restrictTo(ALEXIS, [resC.id])
 
     const result = await save([
@@ -174,7 +174,7 @@ describe('bailleur.saveContactReceptionSettings', () => {
     expect(await readUser(ALEXIS)).toEqual({
       permissions: ['manage_applications', 'manage_residences'],
       restricted: true,
-      scope: [resA.id, resC.id],
+      scope: [resA.id],
     })
     expect(result.updated).toBe(1)
   })

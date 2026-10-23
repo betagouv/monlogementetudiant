@@ -23,9 +23,9 @@ export const FindStudentAccomodationAutocompleteInput: FC = () => {
     <div className="fr-position-relative">
       <Input
         classes={{ root: classes.input }}
-        label={t('header.inputLabel')}
+        label={t('header.whereLabel')}
         addon={<GeolocationButton onClick={locate} isLocating={isLocating} iconOnly />}
-        nativeInputProps={{ onBlur: handleInputBlur, onChange: handleInputChange, value: searchQuery }}
+        nativeInputProps={{ placeholder: t('header.inputLabel'), onBlur: handleInputBlur, onChange: handleInputChange, value: searchQuery }}
         state={isError ? 'error' : 'default'}
       />
 
@@ -37,6 +37,5 @@ export const FindStudentAccomodationAutocompleteInput: FC = () => {
 const useStyles = tss.create({
   input: {
     marginBottom: '0 !important',
-    maxWidth: '260px',
   },
 })

@@ -23,10 +23,6 @@ export const useUpdateAccommodation = (slug: string) => {
         queryKey: trpc.bailleur.list.queryKey(),
         exact: false,
       })
-      createToast({
-        priority: 'success',
-        message: t('residenceUpdated'),
-      })
       router.refresh()
     },
     onError: () => {

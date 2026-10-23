@@ -237,3 +237,23 @@ describe('confirmation des disponibilités depuis l’e-mail', () => {
     expect((await readResidence(foreign.id)).staleAvailabilityWarnedAt).not.toBeNull()
   })
 })
+
+describe('confirmation de toutes les résidences depuis la liste', () => {
+  it('horodate aussi les résidences sans alerte et ignore celles sans disponibilité', async () => {
+    const stampedAt = daysAgo(10)
+    await stampAvailability(stampedAt)
+    const empty = await createAccommodation(
+      { slug: 'res-empty', name: 'Res vide', ownerId, createdAt: daysAgo(100), updatedAt: stampedAt },
+      [typologyDraft('t1', { nbTotal: 10, nbAvailable: null })],
+    )
+
+    expect(await ownerCaller.bailleur.confirmAvailability()).toEqual({ confirmed: 0 })
+    expect(await ownerCaller.bailleur.confirmAvailability({ all: true })).toEqual({ confirmed: 1 })
+
+    const typologies = await readTypologies()
+    expect(typologies.every((t) => t.availabilityUpdatedAt !== null && t.availabilityUpdatedAt > stampedAt)).toBe(true)
+    expect((await readResidence()).updatedAt?.getTime()).toBe(typologies[0].availabilityUpdatedAt?.getTime())
+    expect((await readTypologies(empty.id)).every((t) => t.availabilityUpdatedAt === null)).toBe(true)
+    expect((await readResidence(empty.id)).updatedAt?.getTime()).toBe(stampedAt.getTime())
+  })
+})

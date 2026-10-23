@@ -58,6 +58,15 @@ const ZBaseAccommodationInfo = z.object({
 })
 
 /** Denormalized aggregates kept on the parent (typology detail lives in `typologies`). */
+const ZDescriptionSections = z.object({
+  tagline: z.string().nullable(),
+  locationAndProximity: z.string().nullable(),
+  servicesAndEquipment: z.string().nullable(),
+  receptionAndContact: z.string().nullable(),
+  practicalInfo: z.string().nullable(),
+  otherInformation: z.string().nullable(),
+})
+
 const ZAggregates = z.object({
   nbAccessibleApartments: z.number().nullable(),
   nbColivingApartments: z.number().nullable(),
@@ -95,19 +104,21 @@ export type TAccomodation = z.infer<typeof ZAccomodation>
 export const ZAccomodationCard = ZAccomodation
 export type TAccomodationCard = z.infer<typeof ZAccomodationCard>
 
-export const ZAccomodationDetails = ZAccomodation.extend(ZAmenities.shape).extend({
-  phoneNumber: z.string().nullish(),
-  owner: z
-    .object({
-      imageBase64: z.string().nullable(),
-      name: z.string().max(150),
-      slug: z.string().max(250),
-      url: z.string().max(500),
-      landingUrl: z.string().max(500).nullable(),
-      contactMode: ZOwnerContactMode,
-    })
-    .nullable(),
-})
+export const ZAccomodationDetails = ZAccomodation.extend(ZAmenities.shape)
+  .extend(ZDescriptionSections.shape)
+  .extend({
+    phoneNumber: z.string().nullish(),
+    owner: z
+      .object({
+        imageBase64: z.string().nullable(),
+        name: z.string().max(150),
+        slug: z.string().max(250),
+        url: z.string().max(500),
+        landingUrl: z.string().max(500).nullable(),
+        contactMode: ZOwnerContactMode,
+      })
+      .nullable(),
+  })
 export type TAccomodationDetails = z.infer<typeof ZAccomodationDetails>
 
 export const ZPrepareStudentLifeAccommodationResidence = z.object({
@@ -116,7 +127,7 @@ export const ZPrepareStudentLifeAccommodationResidence = z.object({
 })
 export type TPrepareStudentLifeAccommodationResidence = z.infer<typeof ZPrepareStudentLifeAccommodationResidence>
 
-export const ZAccomodationMy = ZAccomodation.extend(ZAmenities.shape).extend({
+export const ZAccomodationMy = ZAccomodation.extend(ZAmenities.shape).extend(ZDescriptionSections.shape).extend({
   isImported: z.boolean(),
   acceptsApplications: z.boolean(),
   phoneNumber: z.string().nullish(),

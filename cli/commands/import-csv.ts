@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { ETargetAudience } from '~/enums/target-audience'
 import { db } from '~/server/db'
 import { env } from '~/server/env'
+import { splitDescription } from '~/server/lib/description-sections'
 import { ensureCity, geocodeAddressVerified, geocodeImportRow, reverseGeocode } from '~/server/lib/import/geocoder'
 import { TYPOLOGIES } from '../../src/schemas/accommodations/typology'
 import { ZUpdateResidence } from '../../src/schemas/accommodations/update-residence'
@@ -100,6 +101,7 @@ const ZAccommodationImport = ZUpdateResidence.pick({
   description: true,
   externalUrl: true,
   acceptWaitingList: true,
+  rentalChargesDetails: true,
   nbAccessibleApartments: true,
   nbColivingApartments: true,
   refrigerator: true,
@@ -130,6 +132,7 @@ function buildValidationPayload(row: CsvRow) {
     description: row.description?.trim() || undefined,
     externalUrl: toUrl(row.owner_url) ?? undefined,
     acceptWaitingList: toBool(row.accept_waiting_list) ?? undefined,
+    rentalChargesDetails: row.rental_charges_details?.trim() || undefined,
     nb_t1: toDigit(row.nb_t1) ?? undefined,
     nb_t1_bis: toDigit(row.nb_t1_bis) ?? undefined,
     nb_t2: toDigit(row.nb_t2) ?? undefined,
@@ -339,9 +342,11 @@ const command: ImportCommand = {
 
         const derived = typologyAggregates(typologyDrafts)
 
+        const description = row.description?.trim() || null
         const accommodationData = {
           name,
-          description: row.description?.trim() || null,
+          description,
+          ...splitDescription(description),
           residenceType: normalizeEnum(row.residence_type),
           targetAudience: (normalizeEnum(row.target_audience) ?? 'etudiants') as ETargetAudience,
           published: true,
@@ -362,6 +367,7 @@ const command: ImportCommand = {
           refrigerator: toBool(row.refrigerator),
           bathroom: normalizeEnum(row.bathroom),
           acceptWaitingList: toBool(row.accept_waiting_list),
+          rentalChargesDetails: row.rental_charges_details?.trim() || null,
           scholarshipHoldersPriority: toBool(row.scholarship_holders_priority),
           socialHousingRequired: toBool(row.social_housing_required),
           imagesUrls: imagesUrls.length > 0 ? imagesUrls : null,

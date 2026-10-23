@@ -4,6 +4,7 @@ import { EContactStatus } from '~/enums/contact-status'
 import { ELoginAttemptStatus } from '~/enums/login-attempt-status'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { activityLog, bailleurAccommodationScopes, contactRequests, loginAttempts } from '~/server/db/schema'
+import { formatDay } from '~/utils/formatDate'
 import { createAccommodation, createOwner, createUser } from './fixtures/factories'
 import { getTestDb } from './helpers/test-db'
 import './helpers/setup-integration'
@@ -20,7 +21,6 @@ import { GET } from '~/app/api/admin/residences/suivi-coordonnees/export/route'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 const daysAgo = (days: number) => new Date(Date.now() - days * DAY_MS)
-const frDate = (date: Date) => date.toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' })
 
 async function readCsv(response: Response) {
   const [headerLine, ...rows] = (await response.text()).replace(/^﻿/, '').split('\n')
@@ -141,22 +141,71 @@ describe('GET /api/admin/residences/suivi-coordonnees/export', () => {
       ID: String(open.id),
       Gestionnaire: 'Bailleur Suivi',
       'Administrateurs (nom et email)': 'Alice Admin <admin@suivi.fr>',
-      'Dernière connexion d’un administrateur': frDate(daysAgo(10)),
+      'Dernière connexion d’un administrateur': formatDay(daysAgo(10)),
       'Dépôt de coordonnées activé': 'oui',
-      'Date d’activation du dépôt': frDate(activatedAt),
+      'Date d’activation du dépôt': formatDay(activatedAt),
       'Coordonnées reçues': '3',
-      'Dernière réception': frDate(lastReceived),
+      'Dernière réception': formatDay(lastReceived),
       'Coordonnées traitées': '1',
-      'Dernier changement de statut': frDate(reviewedAt),
+      'Dernier changement de statut': formatDay(reviewedAt),
       'En attente de traitement': '1',
       'Expirées sans traitement': '1',
     })
     expect(suspendedRow).toMatchObject({
       'Administrateurs (nom et email)': 'Alice Admin <admin@suivi.fr>, Rémi Restreint <restreint@suivi.fr>',
-      'Dernière connexion d’un administrateur': frDate(gestionnaireLogin),
+      'Dernière connexion d’un administrateur': formatDay(gestionnaireLogin),
       'Dépôt de coordonnées activé': 'non',
       'Date d’activation du dépôt': '',
       'Coordonnées reçues': '0',
+    })
+  })
+
+  it('indique les résidences mises en pause ou suspendues, avec le motif, la date et l’auteur de la pause', async () => {
+    const owner = await createOwner({ name: 'Bailleur Pause', slug: 'bailleur-pause', contactMode: EOwnerContactMode.CONTACTS })
+    await createUser({
+      id: 'auteur-pause',
+      email: 'pause@suivi.fr',
+      role: 'owner',
+      firstname: 'Paul',
+      lastname: 'Pause',
+      ownerId: owner.id,
+      bailleurRole: 'administrator',
+    })
+    const pausedAt = daysAgo(4)
+    const suspendedAt = daysAgo(2)
+    await createAccommodation({
+      name: 'Résidence En Pause',
+      slug: 'residence-en-pause',
+      ownerId: owner.id,
+      applicationsSuspendedAt: pausedAt,
+      applicationsSuspensionReason: 'manual',
+      applicationsSuspendedById: 'auteur-pause',
+    })
+    await createAccommodation({
+      name: 'Résidence Inactive',
+      slug: 'residence-inactive',
+      ownerId: owner.id,
+      applicationsSuspendedAt: suspendedAt,
+      applicationsSuspensionReason: 'unprocessed_applications',
+    })
+    await createAccommodation({ name: 'Résidence Active', slug: 'residence-active', ownerId: owner.id })
+
+    const rows = await readCsv(await GET())
+
+    expect(rows.find((row) => row['Résidence'] === 'Résidence En Pause')).toMatchObject({
+      'Pause ou suspension': 'Mise en pause par le gestionnaire',
+      'Date de pause ou suspension': formatDay(pausedAt),
+      'Mise en pause par': 'Paul Pause <pause@suivi.fr>',
+    })
+    expect(rows.find((row) => row['Résidence'] === 'Résidence Inactive')).toMatchObject({
+      'Pause ou suspension': 'Suspension automatique : candidatures non traitées',
+      'Date de pause ou suspension': formatDay(suspendedAt),
+      'Mise en pause par': '',
+    })
+    expect(rows.find((row) => row['Résidence'] === 'Résidence Active')).toMatchObject({
+      'Pause ou suspension': '',
+      'Date de pause ou suspension': '',
+      'Mise en pause par': '',
     })
   })
 })
