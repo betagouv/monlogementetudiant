@@ -3,7 +3,7 @@ import { test as base, expect, type Page } from '@playwright/test'
 import { hashPassword } from 'better-auth/crypto'
 import { createLocalAccountIssuer } from 'better-auth/db'
 import { eq } from 'drizzle-orm'
-import { createOwner, createUser } from '../src/__tests__/fixtures/factories'
+import { createAccommodation, createOwner, createUser } from '../src/__tests__/fixtures/factories'
 import { getTestDb, teardownTestDb } from '../src/__tests__/helpers/test-db'
 import { EOwnerContactMode } from '../src/enums/owner-contact-mode'
 import { account } from '../src/server/db/schema/auth'
@@ -76,6 +76,27 @@ export async function createBailleur({
   return { user, owner }
 }
 
+/** Résidence de Saint-Étienne propre au test, avec des logements disponibles par défaut. */
+export async function createResidence(
+  overrides: Partial<Parameters<typeof createAccommodation>[0]> = {},
+  typologies: Parameters<typeof createAccommodation>[1] = [
+    { type: 't1', priceMin: 430, priceMax: 510, superficieMin: 18, superficieMax: 24, nbTotal: 20, nbAvailable: 4, colocation: false },
+  ],
+) {
+  const id = uniqueId()
+  return createAccommodation(
+    {
+      name: `Résidence E2E ${id}`,
+      slug: `residence-e2e-${id}`,
+      published: true,
+      cityId: await getCityId('saint-etienne'),
+      geom: { type: 'Point', coordinates: [4.39, 45.44] },
+      ...overrides,
+    },
+    typologies,
+  )
+}
+
 export async function getCityId(slug: string) {
   const [city] = await getTestDb().select({ id: cities.id }).from(cities).where(eq(cities.slug, slug))
   return city.id
@@ -93,6 +114,12 @@ export async function signIn(page: Page, email: string) {
     headers: { origin: process.env.BASE_URL as string },
   })
   expect(response.ok(), `Connexion e2e refusée pour ${email} (${response.status()})`).toBeTruthy()
+}
+
+/** Les boutons qui ouvrent une modale DSFR ne réagissent qu'une fois la page hydratée. */
+export async function gotoHydrated(page: Page, url: string) {
+  await page.goto(url)
+  await page.waitForLoadState('networkidle')
 }
 
 export const test = base.extend<object, { db: ReturnType<typeof getTestDb> }>({
