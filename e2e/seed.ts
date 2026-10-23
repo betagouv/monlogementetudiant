@@ -86,13 +86,15 @@ async function seed() {
     [{ type: 't1', priceMin: 500, priceMax: 560, superficieMin: 18, superficieMax: 22, nbTotal: 10, nbAvailable: 0, colocation: false }],
   )
 
-  // Avec colocation : pour le filtre « Colocation » (nbColivingApartments > 0).
+  // Avec colocation : pour le filtre « Colocation » (nbColivingApartments > 0, renseigné par l'appelant,
+  // non dérivé des typologies).
   await createAccommodation(
     {
       name: 'Résidence E2E Coloc',
       slug: 'residence-e2e-coloc',
       published: true,
       cityId: city.id,
+      nbColivingApartments: 2,
       geom: { type: 'Point', coordinates: [SAINT_ETIENNE[0] + 0.02, SAINT_ETIENNE[1] - 0.01] },
     },
     [{ type: 't3', priceMin: 450, priceMax: 520, superficieMin: 60, superficieMax: 75, nbTotal: 6, nbAvailable: 2, colocation: true }],
