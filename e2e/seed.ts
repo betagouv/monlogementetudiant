@@ -70,7 +70,18 @@ async function seed() {
     },
     // Plus chère que la Résidence du Centre : permet de tester le filtre « Budget maximum »
     // (la liste garde les résidences dont priceMin <= budget choisi).
-    [{ type: 't1_bis', priceMin: 650, priceMax: 740, superficieMin: 22, superficieMax: 28, nbTotal: 20, nbAvailable: 8, colocation: false }],
+    [
+      {
+        type: 't1_bis',
+        priceMin: 650,
+        priceMax: 740,
+        superficieMin: 22,
+        superficieMax: 28,
+        nbTotal: 20,
+        nbAvailable: 8,
+        colocation: false,
+      },
+    ],
   )
 
   // Sans logement disponible (et sans liste d'attente) : visible par défaut en fin de liste,
@@ -137,7 +148,18 @@ async function seed() {
         cityId: city.id,
         geom: { type: 'Point', coordinates: [SAINT_ETIENNE[0] + 0.002 * i, SAINT_ETIENNE[1] - 0.002 * i] },
       },
-      [{ type: 't1', priceMin: 700 + i, priceMax: 780 + i, superficieMin: 18, superficieMax: 24, nbTotal: 5, nbAvailable: 1, colocation: false }],
+      [
+        {
+          type: 't1',
+          priceMin: 700 + i,
+          priceMax: 780 + i,
+          superficieMin: 18,
+          superficieMax: 24,
+          nbTotal: 5,
+          nbAvailable: 1,
+          colocation: false,
+        },
+      ],
     )
   }
 
