@@ -1,6 +1,5 @@
-import { proxyWp } from '~/utils/wp-proxy'
+import { redirectToWp } from '~/utils/wp-redirect'
 
-// Proxy caché vers la FAQ WordPress.
-const handler = (request: Request) => proxyWp(request, { path: '/foire-aux-questions/' })
+const handler = (request: Request) => redirectToWp(request, '/foire-aux-questions/')
 
 export { handler as GET }
