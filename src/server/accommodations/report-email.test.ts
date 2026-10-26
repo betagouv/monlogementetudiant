@@ -20,6 +20,7 @@ describe('buildAccommodationReportEmail', () => {
     ownerName: 'Crous Créteil',
     field: EAccommodationReportField.AVAILABILITY,
     url: 'https://example.com/trouver-un-logement-etudiant/ville/paris/residence-test',
+    adminUrl: 'https://example.com/administration/tickets?onglet=signalements',
     date: new Date('2026-10-11T08:30:00Z'),
   }
 
@@ -32,6 +33,7 @@ describe('buildAccommodationReportEmail', () => {
     expect(textContent).toContain('Précisions : Plus aucune place')
     expect(textContent).toContain(`URL du logement : ${base.url}`)
     expect(textContent).toContain('Date du signalement : 11/10/2026 10:30')
+    expect(textContent).toContain(`Traiter le signalement : ${base.adminUrl}`)
   })
 
   it('keeps user input inert in a single-line subject', () => {

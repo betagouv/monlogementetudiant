@@ -21,6 +21,7 @@ interface AccommodationReportEmailParams {
   field: EAccommodationReportField
   details?: string | null
   url: string
+  adminUrl: string
   date: Date
 }
 
@@ -30,6 +31,7 @@ export const buildAccommodationReportEmail = ({
   field,
   details,
   url,
+  adminUrl,
   date,
 }: AccommodationReportEmailParams) => {
   const name = sanitizeMailLine(accommodationName)
@@ -49,6 +51,8 @@ export const buildAccommodationReportEmail = ({
       '',
       `URL du logement : ${url}`,
       `Date du signalement : ${formatReportDate(date)}`,
+      '',
+      `Traiter le signalement : ${adminUrl}`,
     ].join('\n'),
   }
 }
