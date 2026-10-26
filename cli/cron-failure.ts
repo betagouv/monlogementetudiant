@@ -23,6 +23,7 @@ export const CRON_COMMANDS = new Set([
   'check-applications-inactivity',
   'send-contact-digest',
   'reset-stale-availability',
+  'send-availability-recap',
   'purge-contact-requests',
   'purge-logs',
   'backup-db',
