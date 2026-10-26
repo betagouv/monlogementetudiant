@@ -82,7 +82,11 @@ describe('runStaleAvailabilityReset — bailleurs sans parcours', () => {
     expect((await readResidence()).nbAvailableApartments).toBe(3)
     expect(resetWarningEmail).toHaveBeenCalledWith(
       'owner@test.com',
-      expect.objectContaining({ residences: ['Res A'], url: expect.stringContaining('/bailleur/residences') }),
+      expect.objectContaining({
+        residences: [expect.objectContaining({ name: 'Res A', nbAvailable: 3 })],
+        confirmUrl: expect.stringContaining('/api/disponibilites/confirmer?jeton='),
+        updateUrl: expect.stringContaining('/bailleur/residences'),
+      }),
       { force: false },
     )
   })
@@ -194,6 +198,9 @@ describe('confirmation des disponibilités depuis l’e-mail', () => {
         id: res.id,
         slug: 'res-a',
         name: 'Res A',
+        city: expect.stringMatching(/^Ville Test/),
+        nbAvailable: 3,
+        lastUpdatedAt: expect.any(Date),
         typologies: [
           { type: 't1', nbAvailable: 2, nbTotal: 10 },
           { type: 't2', nbAvailable: 1, nbTotal: 5 },
@@ -203,7 +210,7 @@ describe('confirmation des disponibilités depuis l’e-mail', () => {
   })
 
   it('« rien n’a changé » horodate les disponibilités, lève l’alerte et évite la réinitialisation', async () => {
-    expect(await ownerCaller.bailleur.confirmAvailability()).toEqual({ confirmed: 1 })
+    expect(await ownerCaller.bailleur.confirmAvailability()).toEqual({ confirmed: 1, skipped: 0 })
 
     const typologies = await readTypologies()
     expect(typologies.every((t) => t.nbAvailable !== null && t.availabilityUpdatedBy === 'test-owner-id')).toBe(true)
@@ -247,8 +254,8 @@ describe('confirmation de toutes les résidences depuis la liste', () => {
       [typologyDraft('t1', { nbTotal: 10, nbAvailable: null })],
     )
 
-    expect(await ownerCaller.bailleur.confirmAvailability()).toEqual({ confirmed: 0 })
-    expect(await ownerCaller.bailleur.confirmAvailability({ all: true })).toEqual({ confirmed: 1 })
+    expect(await ownerCaller.bailleur.confirmAvailability()).toEqual({ confirmed: 0, skipped: 0 })
+    expect(await ownerCaller.bailleur.confirmAvailability({ all: true })).toEqual({ confirmed: 1, skipped: 0 })
 
     const typologies = await readTypologies()
     expect(typologies.every((t) => t.availabilityUpdatedAt !== null && t.availabilityUpdatedAt > stampedAt)).toBe(true)

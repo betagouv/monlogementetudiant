@@ -706,12 +706,29 @@ pnpm cli reset-stale-availability --owner <slug> --verbose   # recette : un seul
 Tous les bailleurs hors `owner.availability_imported`, avec ou sans parcours de candidature. Même règle que la suspension : disponibilités non mises à jour par un gestionnaire depuis 30 jours (à défaut, depuis la création de la résidence), puis 7 jours de préavis après l'alerte.
 
 - Résidences suivies par `check-applications-inactivity` (parcours actif, candidatures ouvertes) : l'alerte est celle de la suspension (`stale_availability_warned_at`, template `BREVO_TEMPLATE_APPLICATIONS_INACTIVITY_WARNING`) ; ce cron ne fait que repasser les disponibilités en « non communiquée » le jour de la suspension.
-- Autres résidences : ce cron envoie lui-même l'alerte (même colonne, template `BREVO_TEMPLATE_AVAILABILITY_RESET_WARNING`, lien vers `/bailleur/residences`), la lève si les disponibilités sont confirmées, puis réinitialise 7 jours après sans action.
+- Autres résidences : ce cron envoie lui-même l'alerte (même colonne, template `BREVO_TEMPLATE_AVAILABILITY_RESET_WARNING`, même mise en page que le récap mensuel ci-dessous, limitée aux résidences en alerte), la lève si les disponibilités sont confirmées, puis réinitialise 7 jours après sans action.
 - La réinitialisation met `nb_available` à `null` sur toutes les typologies et recalcule les agrégats. Enregistrer ses disponibilités sans changement les confirme et relance le délai.
 
 Suivi dans `import_job` (type `availability-reset`) et `activity_log` (`accommodation.availability_reset_warned`, `accommodation.availability_auto_reset`). Mêmes garde-fous que `check-applications-inactivity`.
 
-Variables d'env requises : `BREVO_TEMPLATE_AVAILABILITY_RESET_WARNING` (mêmes paramètres que ci-dessus).
+Variables d'env requises : `BREVO_TEMPLATE_AVAILABILITY_RESET_WARNING` (paramètres : voir `send-availability-recap`).
+
+#### `send-availability-recap` — Récap mensuel des disponibilités
+
+```bash
+pnpm cli send-availability-recap --dry-run --verbose
+pnpm cli send-availability-recap --owner <slug> --verbose   # recette : un seul bailleur
+```
+
+Le 1er du mois, chaque destinataire (administrateurs du bailleur, gestionnaires `manage_residences` dont le périmètre couvre la résidence) reçoit les disponibilités renseignées de ses résidences, avec ville et date de dernière mise à jour. Bailleurs `owner.availability_imported` exclus.
+
+- « Rien n'a changé » : lien signé propre au destinataire (`/api/disponibilites/confirmer?jeton=…`, 35 jours, HMAC `AUTH_SECRET`), sans connexion. La route ne fait que poser le jeton en cookie et rediriger vers `/disponibilites/confirmer` ; la confirmation n'a lieu qu'au clic. Les droits sont relus au clic (compte actif, même bailleur, `manage_residences`, périmètre).
+- Seules les disponibilités inchangées depuis l'envoi sont re-horodatées : une saisie faite entre-temps depuis l'espace gestionnaire n'est jamais écrasée.
+- « Mettre à jour les disponibilités » mène à `/bailleur/residences` (connexion requise).
+
+Suivi dans `import_job` (type `availability-recap`) et `activity_log` (`accommodation.availability_confirmed`, `metadata.via = 'email'`). Mêmes garde-fous que `check-applications-inactivity`.
+
+Variables d'env requises : `BREVO_TEMPLATE_AVAILABILITY_MONTHLY_RECAP` (paramètres : `FIRSTNAME`, `OWNER_NAME`, `RESIDENCES[]` = `{ NAME, CITY, AVAILABLE, AVAILABLE_LABEL, UPDATED_AT }`, `RESIDENCES_COUNT`, `CONFIRM_LINK`, `UPDATE_LINK`). HTML des deux templates : `docs/brevo/`.
 
 ---
 
@@ -912,7 +929,7 @@ Les migrations Drizzle sont appliquées au déploiement via le hook `postdeploy`
 | `0 1 * * 0` | `sync cities` | Dimanche à 1h |
 | `0 4 1 */3 *` | `sync rents` | 1er du trimestre à 4h |
 | `10 4 1 * *` | `sync students` | 1er du mois à 4h10 |
-| `0 5 1 * *` | `purge-logs` | 1er du mois à 5h |
+| `0 5 1 * *` | `purge-logs ; send-availability-recap` | 1er du mois à 5h |
 | `0 3 * * *` | `sync stats` | Tous les jours à 3h |
 | `30 3 * * *` | `purge-contact-requests` | Tous les jours à 3h30 |
 | `*/30 * * * *` | `send-alert-jobs` | Toutes les 30 min |

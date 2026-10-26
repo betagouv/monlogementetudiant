@@ -2522,6 +2522,26 @@
       "emptyDescription": "The availability of your residences is up to date.",
       "backToResidences": "See my residences",
       "error": "Confirmation failed, please try again."
+    },
+    "emailConfirmAvailability": {
+      "pageTitle": "Confirm my availability",
+      "intro": "Here is the availability provided for your residences, with the date of the last update.",
+      "confirmHint": "Nothing has changed? Confirm in one click: the update date becomes today, without changing the values.",
+      "available": "{count, plural, =0 {No availability} one {# available} other {# available}}",
+      "lastUpdate": "Last update: {date}",
+      "neverUpdated": "Last update: not provided",
+      "confirm": "Nothing has changed",
+      "update": "Update availability",
+      "successTitle": "{count, plural, one {Availability confirmed for # residence} other {Availability confirmed for # residences}}",
+      "successDescription": "The update date has been refreshed. Thank you!",
+      "skippedDescription": "{count, plural, one {# residence was updated in the meantime from the manager area: its data was kept.} other {# residences were updated in the meantime from the manager area: their data was kept.}}",
+      "upToDateTitle": "Your availability is already up to date",
+      "upToDateDescription": "It has been confirmed or updated since this email was sent. Nothing else to do.",
+      "expiredTitle": "This link has expired",
+      "invalidTitle": "This link is no longer valid",
+      "loginDescription": "Log in to your manager area to confirm or update your availability.",
+      "login": "Log in to confirm",
+      "error": "Confirmation failed, please try again."
     }
   },
   "map": {

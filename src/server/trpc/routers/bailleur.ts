@@ -766,7 +766,7 @@ export const bailleurRouter = createTRPCRouter({
   }),
 
   confirmAvailability: bailleurProcedure('manage_residences')
-    .input(z.object({ all: z.boolean().optional(), ownerId: z.number().optional() }).optional())
+    .input(z.object({ all: z.boolean().optional(), ownerId: z.number().optional(), since: z.coerce.date().optional() }).optional())
     .mutation(async ({ ctx, input }) => {
       const owner = await getOwnerForUser(ctx.session.user.id, input?.ownerId)
       if (!owner) throw new TRPCError({ code: 'FORBIDDEN', message: 'Aucun bailleur associé à ce compte' })
@@ -775,6 +775,7 @@ export const bailleurRouter = createTRPCRouter({
         scope: await getAccommodationScope(ctx.session.user.id),
         user: { id: ctx.session.user.id, name: ctx.session.user.name },
         onlyWarned: !input?.all,
+        notUpdatedSince: input?.since,
       })
     }),
 

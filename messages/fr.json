@@ -2522,6 +2522,26 @@
       "emptyDescription": "Les disponibilités de vos résidences sont à jour.",
       "backToResidences": "Voir mes résidences",
       "error": "La confirmation a échoué, veuillez réessayer."
+    },
+    "emailConfirmAvailability": {
+      "pageTitle": "Confirmer mes disponibilités",
+      "intro": "Voici les disponibilités renseignées pour vos résidences, avec leur date de dernière mise à jour.",
+      "confirmHint": "Rien n’a changé ? Confirmez en un clic : la date de mise à jour passe à aujourd’hui, sans modifier les valeurs renseignées.",
+      "available": "{count, plural, =0 {Aucune disponibilité} one {# disponibilité} other {# disponibilités}}",
+      "lastUpdate": "Dernière mise à jour : {date}",
+      "neverUpdated": "Dernière mise à jour : non renseignée",
+      "confirm": "Rien n’a changé",
+      "update": "Mettre à jour les disponibilités",
+      "successTitle": "{count, plural, one {Disponibilités confirmées pour # résidence} other {Disponibilités confirmées pour # résidences}}",
+      "successDescription": "La date de mise à jour a été actualisée. Merci !",
+      "skippedDescription": "{count, plural, one {# résidence a été mise à jour entre-temps depuis l’espace gestionnaire : sa saisie a été conservée.} other {# résidences ont été mises à jour entre-temps depuis l’espace gestionnaire : leur saisie a été conservée.}}",
+      "upToDateTitle": "Vos disponibilités sont déjà à jour",
+      "upToDateDescription": "Elles ont été confirmées ou mises à jour depuis l’envoi de cet e-mail. Il n’y a rien d’autre à faire.",
+      "expiredTitle": "Ce lien a expiré",
+      "invalidTitle": "Ce lien n’est plus valide",
+      "loginDescription": "Connectez-vous à votre espace gestionnaire pour confirmer ou mettre à jour vos disponibilités.",
+      "login": "Me connecter pour confirmer",
+      "error": "La confirmation a échoué, veuillez réessayer."
     }
   },
   "map": {

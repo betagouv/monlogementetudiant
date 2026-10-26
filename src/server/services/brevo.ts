@@ -1,4 +1,5 @@
 import { env } from '~/server/env'
+import { formatLongDay } from '~/utils/formatDate'
 import { maskEmail } from '~/utils/mask-email'
 import { redirectEmail } from '~/utils/redirect-email'
 
@@ -281,11 +282,43 @@ export async function sendApplicationsAutoSuspendedEmail(
   })
 }
 
-export async function sendAvailabilityResetWarningEmail(
+export type AvailabilityRecapResidence = { name: string; city: string | null; nbAvailable: number; lastUpdatedAt: Date | null }
+
+export type AvailabilityRecapEmailParams = {
+  firstname: string
+  ownerName: string
+  residences: AvailabilityRecapResidence[]
+  confirmUrl: string
+  updateUrl: string
+}
+
+const availabilityLabel = (count: number) => {
+  if (count === 0) return 'Aucune disponibilité'
+  return count === 1 ? '1 disponibilité' : `${count} disponibilités`
+}
+
+export const availabilityRecapParams = (params: AvailabilityRecapEmailParams) => ({
+  FIRSTNAME: params.firstname,
+  OWNER_NAME: params.ownerName,
+  RESIDENCES: params.residences.map((residence) => ({
+    NAME: residence.name,
+    CITY: residence.city ?? '',
+    AVAILABLE: residence.nbAvailable,
+    AVAILABLE_LABEL: availabilityLabel(residence.nbAvailable),
+    UPDATED_AT: residence.lastUpdatedAt ? formatLongDay(residence.lastUpdatedAt) : 'non renseignée',
+  })),
+  RESIDENCES_COUNT: String(params.residences.length),
+  CONFIRM_LINK: params.confirmUrl,
+  UPDATE_LINK: params.updateUrl,
+})
+
+export type SendAvailabilityRecapEmail = (
   email: string,
-  params: InactivityEmailParams,
-  { force = false }: { force?: boolean } = {},
-): Promise<void> {
+  params: AvailabilityRecapEmailParams,
+  options?: { force?: boolean },
+) => Promise<void>
+
+export const sendAvailabilityResetWarningEmail: SendAvailabilityRecapEmail = async (email, params, { force = false } = {}) => {
   if (env.NEXT_PUBLIC_APP_ENV !== 'production' && !force) {
     console.info(`[${env.NEXT_PUBLIC_APP_ENV}] alerte de disponibilités périmées non envoyée à ${maskEmail(email)}`)
     return
@@ -294,7 +327,20 @@ export async function sendAvailabilityResetWarningEmail(
   await sendTemplateEmail({
     to: email,
     templateId: env.BREVO_TEMPLATE_AVAILABILITY_RESET_WARNING,
-    params: { ...inactivityParams(params), CONFIRM_LINK: `${env.BASE_URL}/bailleur/disponibilites/confirmer` },
+    params: availabilityRecapParams(params),
+  })
+}
+
+export const sendAvailabilityMonthlyRecapEmail: SendAvailabilityRecapEmail = async (email, params, { force = false } = {}) => {
+  if (env.NEXT_PUBLIC_APP_ENV !== 'production' && !force) {
+    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] récap mensuel des disponibilités non envoyé à ${maskEmail(email)}`)
+    return
+  }
+
+  await sendTemplateEmail({
+    to: email,
+    templateId: env.BREVO_TEMPLATE_AVAILABILITY_MONTHLY_RECAP,
+    params: availabilityRecapParams(params),
   })
 }
 
