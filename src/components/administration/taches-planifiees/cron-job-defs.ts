@@ -15,7 +15,7 @@ type CronJobDef = {
 // Record exhaustif : TypeScript garantit que tous les types cron sont couverts
 const CRON_JOB_DEF_MAP: Record<CronJobType, Omit<CronJobDef, 'type'>> = {
   'arpej-ibail': { label: 'Import ARPEJ iBAIL', description: 'Résidences ARPEJ via API iBAIL', schedule: 'Tous les jours à 2h00' },
-  'fac-habitat': { label: 'Import FAC Habitat', description: 'Résidences FAC Habitat via SFTP', schedule: 'Tous les jours à 2h30' },
+  'fac-habitat': { label: 'Import FAC Habitat', description: 'Résidences FAC Habitat via SFTP', schedule: 'Toutes les 30 min de 7h à 20h' },
   initiall: { label: 'Import Initiall', description: 'Résidences Initiall via API WordPress', schedule: 'Tous les jours à 4h00' },
   'sync-cities': { label: 'Sync Villes', description: 'Communes depuis geo.api.gouv.fr', schedule: 'Tous les dimanches à 1h00' },
   'sync-rents': { label: 'Sync Loyers', description: 'Loyers moyens depuis data.gouv.fr', schedule: 'Le 1er de chaque trimestre à 4h00' },
@@ -51,6 +51,12 @@ const CRON_JOB_DEF_MAP: Record<CronJobType, Omit<CronJobDef, 'type'>> = {
     description:
       'Disponibilités non mises à jour depuis 30 jours : alerte, puis « non communiquée » 7 j après sans action (hors bailleurs importés)',
     schedule: 'Tous les jours à 6h30',
+  },
+  'availability-recap': {
+    label: 'Récap mensuel des disponibilités',
+    description:
+      'Rappel des disponibilités renseignées et de leur date de mise à jour, avec confirmation « Rien n’a changé » (hors bailleurs importés)',
+    schedule: 'Le 1er de chaque mois à 5h00',
   },
   'purge-contacts': {
     label: 'Purge RGPD candidatures',

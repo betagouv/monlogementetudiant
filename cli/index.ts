@@ -24,6 +24,7 @@ import { purgeLogs } from './commands/purge-logs'
 import { resetStaleAvailabilityCommand } from './commands/reset-stale-availability'
 import { seedAlertSnapshotCommand } from './commands/seed-alert-snapshot'
 import { sendAlertJobs } from './commands/send-alert-jobs'
+import { sendAvailabilityRecapCommand } from './commands/send-availability-recap'
 import { sendContactDigestCommand } from './commands/send-contact-digest'
 import { splitDescriptions } from './commands/split-descriptions'
 import { auditStorage } from './commands/storage/auditStorage'
@@ -291,6 +292,14 @@ program
   .option('--verbose', 'Afficher la décision prise pour chaque résidence')
   .option('--owner <slug>', 'Limiter au bailleur donné ; actif et envoie les e-mails même hors production (recette)')
   .action((opts) => resetStaleAvailabilityCommand(opts))
+
+program
+  .command('send-availability-recap')
+  .description('Récap mensuel des disponibilités renseignées, avec lien « Rien n’a changé » (hors bailleurs importés)')
+  .option('--dry-run', 'Simuler sans envoyer')
+  .option('--verbose', 'Afficher chaque résidence récapitulée')
+  .option('--owner <slug>', 'Limiter au bailleur donné ; actif et envoie les e-mails même hors production (recette)')
+  .action((opts) => sendAvailabilityRecapCommand(opts))
 
 program
   .command('purge-contact-requests')
