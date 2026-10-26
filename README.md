@@ -907,7 +907,7 @@ Les migrations Drizzle sont appliquées au déploiement via le hook `postdeploy`
 | Cron | Commande | Fréquence |
 |------|----------|-----------|
 | `0 2 * * *` | `import arpej-ibail --owner-slug arpej` | Tous les jours à 2h |
-| `30 2 * * *` | `import fac-habitat --owner-slug fac-habitat` | Tous les jours à 2h30 |
+| `*/30 5-19 * * *` | `import fac-habitat --owner-slug fac-habitat` | Toutes les 30 min de 5h à 19h30 UTC (couvre 7h-20h à Paris, été comme hiver) |
 | `0 4 * * *` | `import initiall --owner-slug initiall` | Tous les jours à 4h |
 | `0 1 * * 0` | `sync cities` | Dimanche à 1h |
 | `0 4 1 */3 *` | `sync rents` | 1er du trimestre à 4h |
