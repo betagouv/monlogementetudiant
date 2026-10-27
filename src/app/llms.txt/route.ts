@@ -24,7 +24,7 @@ Mon Logement Étudiant est une startup d'État (beta.gouv.fr) du Ministère de l
 
 ## Informations légales
 
-- [Mentions légales](${baseUrl}/mentions-legales)
+- [Mentions légales](https://info.monlogementetudiant.beta.gouv.fr/mentions-legales/)
 - [Politique de confidentialité](${baseUrl}/politique-de-confidentialite)
 - [Accessibilité](${baseUrl}/accessibilite)
 
