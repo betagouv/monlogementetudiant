@@ -616,6 +616,36 @@ describe('accommodations.list', () => {
     expect(result.results[1].slug).toBe('no-availability')
   })
 
+  it('orders by availability group, then by most recent update within each group', async () => {
+    const geom = { type: 'Point', coordinates: [4.39, 45.44] as [number, number] }
+    const at = (day: number) => new Date(Date.UTC(2026, 9, day))
+    const seeds = [
+      { slug: 'none-recent', acceptWaitingList: false, updatedAt: at(20), nbAvailable: 0 },
+      { slug: 'unknown-waitlist-old', acceptWaitingList: true, updatedAt: at(2), nbAvailable: null },
+      { slug: 'available-old', acceptWaitingList: false, updatedAt: at(1), nbAvailable: 5 },
+      { slug: 'waitlist-recent', acceptWaitingList: true, updatedAt: at(18), nbAvailable: 0 },
+      { slug: 'unknown-recent', acceptWaitingList: false, updatedAt: at(15), nbAvailable: null },
+      { slug: 'available-recent', acceptWaitingList: false, updatedAt: at(10), nbAvailable: 1 },
+      { slug: 'waitlist-old', acceptWaitingList: true, updatedAt: at(3), nbAvailable: 0 },
+      { slug: 'none-old', acceptWaitingList: false, updatedAt: at(4), nbAvailable: 0 },
+    ]
+    for (const { nbAvailable, ...seed } of seeds) {
+      await createAccommodation({ ...seed, geom }, [typologyDraft('t1', { nbAvailable })])
+    }
+
+    const result = await caller.accommodations.list({})
+    expect(result.results.map((r) => r.slug)).toEqual([
+      'available-recent',
+      'available-old',
+      'waitlist-recent',
+      'waitlist-old',
+      'unknown-waitlist-old',
+      'unknown-recent',
+      'none-recent',
+      'none-old',
+    ])
+  })
+
   it('paginates correctly', async () => {
     for (let i = 0; i < 5; i++) {
       await createAccommodation({

@@ -386,6 +386,7 @@ export const accommodationsRouter = createTRPCRouter({
       field: input.field,
       details: input.details,
       url: getCanonicalUrl(`/trouver-un-logement-etudiant/ville/${accommodation.citySlug}/${input.slug}`),
+      adminUrl: `${env.BASE_URL}/administration/tickets?onglet=signalements`,
       date: report.createdAt,
     })
 

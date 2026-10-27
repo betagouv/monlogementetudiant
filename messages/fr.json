@@ -503,7 +503,7 @@
       "tooltip": {
         "accessible": "Résidences proposant des logements adaptés aux personnes à mobilité réduite",
         "crous": "Résidences gérées par le CROUS",
-        "nonCrous": "Résidences publiques et privées hors CROUS"
+        "nonCrous": "Résidences sociales publiques et privées"
       },
       "rangeLabel": "Budget maximum",
       "filtersCta": "Filtres",
@@ -519,18 +519,18 @@
       "priceAll": "Tous",
       "removeFilter": "Retirer le filtre {filter}",
       "crous": "Crous",
-      "others": "Hors CROUS",
+      "others": "Autres résidences",
       "availabilityDescription": "N'afficher que les résidences ayant au moins un logement disponible",
       "sharedDescription": "N'afficher que les résidences proposant de la colocation",
       "whereLabel": "Où souhaitez-vous étudier ?",
       "maxRentLabel": "Loyer maximum",
-      "crousTag": "Logement CROUS",
-      "nonCrousTag": "Logement hors CROUS",
+      "crousTag": "Résidence CROUS",
+      "nonCrousTag": "Autre résidence",
       "accessibleTag": "Accessible PMR"
     },
     "filters": {
-      "nonCrousAccommodations": "résidence{pluralize} hors CROUS",
-      "nonCrousAccommodationsWithLocation": "résidence{pluralize} hors CROUS {locationFormatted}",
+      "nonCrousAccommodations": "résidence{pluralize}",
+      "nonCrousAccommodationsWithLocation": "résidence{pluralize} {locationFormatted}",
       "crousAccommodations": "résidence{pluralize} CROUS",
       "crousAccommodationsWithLocation": "résidence{pluralize} CROUS {locationFormatted}",
       "grid": "Liste",

@@ -1,11 +1,12 @@
 packages:
   - "."
 
-minimumReleaseAge: 21600
+minimumReleaseAge: 10080
 
 overrides:
   esbuild: 0.25.0
-  fast-uri: 3.1.6
+  fast-uri: 3.1.8
+  'vite@<6.4.4': 6.4.4
 
 allowBuilds:
   '@parcel/watcher': true

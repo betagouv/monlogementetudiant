@@ -11,12 +11,13 @@ import {
   createOwner,
   createUser,
 } from './fixtures/factories'
+import { squareBoundary } from './helpers/geo'
 import './helpers/setup-integration'
 import { caller, ownerCaller } from './helpers/test-caller'
 import { getTestDb } from './helpers/test-db'
 
 let cityHelperCounter = 0
-async function createCityWithGeom(name: string, slug: string, postalCodes: string[], boundary: number[][][][]) {
+async function createCityWithGeom(name: string, slug: string, postalCodes: string[], boundary: ReturnType<typeof squareBoundary>) {
   const suffix = ++cityHelperCounter
   const academy = await createAcademy({ name: `Académie MA ${name} ${suffix}` })
   const department = await createDepartment({ academyId: academy.id, name: `Dept MA ${name} ${suffix}`, code: String(50 + suffix) })
@@ -25,24 +26,8 @@ async function createCityWithGeom(name: string, slug: string, postalCodes: strin
     name,
     slug: `${slug}-${suffix}`,
     postalCodes,
-    boundary: { type: 'MultiPolygon', coordinates: boundary },
+    boundary,
   })
-}
-
-// Simple square boundary helper (approx 0.1 degree around center)
-function squareBoundary(lng: number, lat: number): number[][][][] {
-  const d = 0.05
-  return [
-    [
-      [
-        [lng - d, lat - d],
-        [lng + d, lat - d],
-        [lng + d, lat + d],
-        [lng - d, lat + d],
-        [lng - d, lat - d],
-      ],
-    ],
-  ]
 }
 
 beforeEach(async () => {

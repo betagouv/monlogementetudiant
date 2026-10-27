@@ -33,7 +33,10 @@ workflows:
       - test_unit:
           requires:
             - prepare_workspace_dependencies
-      - test_integration:
+      - test_coverage:
+          requires:
+            - prepare_workspace_dependencies
+      - test_e2e:
           requires:
             - prepare_workspace_dependencies
 
@@ -83,7 +86,7 @@ jobs:
           name: 'Run unit tests'
           command: pnpm test:unit
 
-  test_integration:
+  test_coverage:
     docker:
       - image: cimg/node:24
       - image: postgis/postgis:16-3.4
@@ -101,11 +104,41 @@ jobs:
           name: 'Wait for PostgreSQL'
           command: for i in $(seq 1 30); do pg_isready -h localhost -U test && break; sleep 2; done
       - run:
-          name: 'Run Drizzle migrations'
-          command: DATABASE_URL="$DATABASE_URL_TEST" pnpm drizzle-kit migrate
+          name: 'Run full test suite with coverage'
+          command: pnpm test:coverage
+      - store_artifacts:
+          path: coverage
+          destination: coverage
+
+  test_e2e:
+    docker:
+      - image: cimg/node:24
+      - image: postgis/postgis:16-3.4
+        environment:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: mle_test
+    environment:
+      DATABASE_URL: postgres://test:test@localhost:5432/mle_e2e
+      DATABASE_URL_TEST: postgres://test:test@localhost:5432/mle_e2e
+    steps:
+      - checkout
+      - install_dependencies
       - run:
-          name: 'Run integration tests'
-          command: pnpm test:integration
+          name: 'Install Playwright Chromium'
+          command: pnpm exec playwright install --with-deps chromium
+      - run:
+          name: 'Wait for PostgreSQL'
+          command: for i in $(seq 1 30); do pg_isready -h localhost -U test && break; sleep 2; done
+      - run:
+          name: 'Run e2e tests'
+          command: pnpm test:e2e
+      - store_artifacts:
+          path: playwright-report
+          destination: playwright-report
+      - store_artifacts:
+          path: test-results
+          destination: test-results
 
 commands:
   install_pnpm:

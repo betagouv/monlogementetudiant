@@ -18,6 +18,7 @@ import {
   createOwner,
   createUser,
 } from './fixtures/factories'
+import { squareBoundary as square } from './helpers/geo'
 import './helpers/setup-integration'
 import { adminCaller } from './helpers/test-caller'
 
@@ -51,22 +52,6 @@ async function req(path: string, key?: string) {
   }
   return { status: res.status, body: body as Record<string, unknown> }
 }
-
-/** Polygone carré (MultiPolygon) centré sur un point, pour les filtres ST_Within. */
-const square = (lng: number, lat: number, d = 0.05) => ({
-  type: 'MultiPolygon' as const,
-  coordinates: [
-    [
-      [
-        [lng - d, lat - d],
-        [lng + d, lat - d],
-        [lng + d, lat + d],
-        [lng - d, lat + d],
-        [lng - d, lat - d],
-      ],
-    ],
-  ],
-})
 
 beforeEach(() => {
   keyUserSeq = 0
