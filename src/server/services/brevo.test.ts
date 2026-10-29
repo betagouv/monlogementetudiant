@@ -397,3 +397,34 @@ describe('brevo service', () => {
     })
   })
 })
+
+describe('availabilityRecapParams', () => {
+  it('formate les résidences pour le template Brevo', async () => {
+    const { availabilityRecapParams } = await import('./brevo')
+
+    expect(
+      availabilityRecapParams({
+        firstname: 'Alice',
+        ownerName: 'Bailleur A',
+        residences: [
+          { name: 'Res A', city: 'Lyon', nbAvailable: 3, lastUpdatedAt: new Date('2026-03-12T23:30:00Z') },
+          { name: 'Res B', city: null, nbAvailable: 1, lastUpdatedAt: null },
+          { name: 'Res C', city: 'Lille', nbAvailable: 0, lastUpdatedAt: new Date('2026-03-08T10:00:00Z') },
+        ],
+        confirmUrl: 'https://exemple.fr/confirmer',
+        updateUrl: 'https://exemple.fr/residences',
+      }),
+    ).toEqual({
+      FIRSTNAME: 'Alice',
+      OWNER_NAME: 'Bailleur A',
+      RESIDENCES: [
+        { NAME: 'Res A', CITY: 'Lyon', AVAILABLE: 3, AVAILABLE_LABEL: '3 disponibilités', UPDATED_AT: '13 mars 2026' },
+        { NAME: 'Res B', CITY: '', AVAILABLE: 1, AVAILABLE_LABEL: '1 disponibilité', UPDATED_AT: 'non renseignée' },
+        { NAME: 'Res C', CITY: 'Lille', AVAILABLE: 0, AVAILABLE_LABEL: 'Aucune disponibilité', UPDATED_AT: '8 mars 2026' },
+      ],
+      RESIDENCES_COUNT: '3',
+      CONFIRM_LINK: 'https://exemple.fr/confirmer',
+      UPDATE_LINK: 'https://exemple.fr/residences',
+    })
+  })
+})

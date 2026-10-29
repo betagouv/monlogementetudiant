@@ -18,7 +18,7 @@ export const ConfirmAvailability = () => {
   const queryClient = useQueryClient()
   const [confirmed, setConfirmed] = useState<number | null>(null)
 
-  const { data: residences, isPending: isLoading } = useQuery(trpc.bailleur.listAvailabilityToConfirm.queryOptions())
+  const { data: residences, isPending: isLoading, dataUpdatedAt } = useQuery(trpc.bailleur.listAvailabilityToConfirm.queryOptions())
   const { mutate, isPending } = useMutation(
     trpc.bailleur.confirmAvailability.mutationOptions({
       onSuccess: async (result) => {
@@ -60,6 +60,7 @@ export const ConfirmAvailability = () => {
         {residences.map((residence) => (
           <li key={residence.id} className="fr-mb-2w">
             <strong>{residence.name}</strong>
+            {residence.city && ` — ${residence.city}`}
             <ul>
               {residence.typologies.map((typology) => (
                 <li key={typology.type}>
@@ -79,7 +80,12 @@ export const ConfirmAvailability = () => {
       <ButtonsGroup
         inlineLayoutWhen="md and up"
         buttons={[
-          { children: t('confirm'), iconId: 'ri-check-line', disabled: isPending, onClick: () => mutate() },
+          {
+            children: t('confirm'),
+            iconId: 'ri-check-line',
+            disabled: isPending,
+            onClick: () => mutate({ since: new Date(dataUpdatedAt) }),
+          },
           { children: t('update'), priority: 'secondary', linkProps: { href: RESIDENCES_HREF } },
         ]}
       />

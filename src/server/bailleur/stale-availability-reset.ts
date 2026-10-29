@@ -3,12 +3,12 @@ import { db } from '~/server/db'
 import { accommodationTypologies } from '~/server/db/schema/accommodation-typologies'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { owners } from '~/server/db/schema/owners'
-import { env } from '~/server/env'
 import { recomputeAndPersistAggregates } from '~/server/lib/typologies'
 import { logActivity } from '~/server/services/activity-logger'
 import { sendAvailabilityResetWarningEmail } from '~/server/services/brevo'
+import { recapResidencesByIds, sendAvailabilityRecapEmails } from './availability-recap'
 import { type AvailabilityResetAction, decideAvailabilityReset } from './inactivity-rules'
-import { inInactivityScope, loadMembers, sendGroupedEmails } from './inactivity-suspension'
+import { inInactivityScope } from './inactivity-suspension'
 
 type StaleAvailabilityResetOptions = {
   dryRun?: boolean
@@ -21,11 +21,6 @@ type StaleAvailabilityResetOptions = {
 export type StaleAvailabilityResetResult = { warned: number; reset: number; cleared: number; failures: string[] }
 
 type Candidate = Awaited<ReturnType<typeof findCandidates>>[number]
-
-const RESIDENCES_URL = `${env.BASE_URL}/bailleur/residences`
-
-/** Le template porte le contexte : une ligne par résidence suffit. */
-const residenceNameOnly = () => ''
 
 /** Résidences hors import qui ont des disponibilités renseignées ou une alerte en cours. */
 async function findCandidates(ownerSlug?: string) {
@@ -135,16 +130,14 @@ export async function runStaleAvailabilityReset(options: StaleAvailabilityResetO
     }
   }
 
-  const members = await loadMembers([...new Set(warned.map((r) => r.ownerId))])
-  await sendGroupedEmails(
-    warned.map((residence) => ({ residence, reason: 'stale_availability' as const })),
-    members,
-    sendAvailabilityResetWarningEmail,
-    residenceNameOnly,
-    result.failures,
-    options.sendOutsideProduction ?? false,
-    RESIDENCES_URL,
-  )
+  await sendAvailabilityRecapEmails({
+    residences: await recapResidencesByIds(warned.map((r) => r.id)),
+    send: sendAvailabilityResetWarningEmail,
+    onlyWarned: true,
+    issuedAt: now,
+    force: options.sendOutsideProduction ?? false,
+    failures: result.failures,
+  })
 
   return result
 }
