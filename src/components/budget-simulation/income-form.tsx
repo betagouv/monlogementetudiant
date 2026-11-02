@@ -42,8 +42,8 @@ export function IncomeForm() {
 
   return (
     <div className="fr-flex fr-direction-column fr-flex-gap-4v">
-      {state.activeIncomeTypes.map((type) => (
-        <fieldset key={type} className={clsx('fr-flex fr-align-items-end fr-flex-gap-4v', styles.formRow, styles.rowFieldset)}>
+      {state.activeIncomeTypes.map((type, index) => (
+        <fieldset key={index} className={clsx('fr-flex fr-align-items-end fr-flex-gap-4v', styles.formRow, styles.rowFieldset)}>
           <legend className="fr-sr-only">{t('incomeRowLegend', { source: t(`types.${type}`) })}</legend>
           <div className={clsx('fr-flex-basis-0 fr-flex-grow-1', styles.sourceSelect)}>
             <Select
