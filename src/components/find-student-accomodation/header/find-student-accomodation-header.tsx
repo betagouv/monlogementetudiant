@@ -14,7 +14,7 @@ import { FindStudentAccommodationPriceRange } from '~/components/find-student-ac
 import { FindStudentAccommodationTypeTags } from '~/components/find-student-accomodation/header/find-student-accommodation-type-tags'
 import styles from './find-student-accomodation-header.module.css'
 
-export const FindStudentAccomodationHeader: FC = () => {
+export const FindStudentAccomodationHeader: FC<{ location?: string }> = ({ location }) => {
   const t = useTranslations('findAccomodation.header')
 
   return (
@@ -22,7 +22,7 @@ export const FindStudentAccomodationHeader: FC = () => {
       <div className="fr-hidden fr-unhidden-md">
         <div className={styles.container}>
           <div className={styles.mainRow}>
-            <FindStudentAccomodationAutocompleteInput />
+            <FindStudentAccomodationAutocompleteInput key={location} location={location} />
             <FindStudentAccommodationAvailabilitySwitch />
             <FindStudentAccommodationPriceRange />
           </div>
@@ -32,7 +32,7 @@ export const FindStudentAccomodationHeader: FC = () => {
       <div className="fr-hidden-md">
         <div className={styles.mobileContainer}>
           <div className={styles.mobileRow}>
-            <FindStudentAccomodationAutocompleteInput />
+            <FindStudentAccomodationAutocompleteInput key={location} location={location} />
             <Button iconId="ri-equalizer-line" priority="secondary" title={t('filtersCta')} {...mobileFiltersModal.buttonProps} />
           </div>
           <FindStudentAccommodationActiveFilters />
