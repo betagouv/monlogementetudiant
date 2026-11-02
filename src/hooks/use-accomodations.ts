@@ -10,7 +10,7 @@ interface UseAccomodationsOptions {
   pageSize?: number
 }
 
-export const useAccomodations = ({ cityId: cityIdOverride, citySlug, pageSize }: UseAccomodationsOptions = {}) => {
+const useAccommodationsFilters = ({ cityId: cityIdOverride, citySlug }: Omit<UseAccomodationsOptions, 'pageSize'> = {}) => {
   const [queryStates] = useQueryStates(accommodationsParsers)
   const { bbox, academie, accessible, city, colocation, disponible, gestionnaire, page, prix, crous } = queryStates
   const [rechercheParCarte] = useQueryState('recherche-par-carte', parseAsBoolean)
@@ -51,13 +51,12 @@ export const useAccomodations = ({ cityId: cityIdOverride, citySlug, pageSize }:
   const cityId = cityIdOverride ?? (effectiveCitySlug ? territory?.id : undefined)
   const departmentId = effectiveDepartmentSlug ? departmentTerritory?.id : undefined
 
-  return useQuery({
-    ...trpc.accommodations.list.queryOptions({
+  return {
+    page: page ?? 1,
+    filters: {
       bbox: cityId || departmentId ? undefined : (bbox ?? undefined),
       cityId,
       departmentId,
-      page: page ?? 1,
-      pageSize: pageSize ?? 12,
       isAccessible: accessible || undefined,
       hasColiving: colocation || undefined,
       onlyWithAvailability: disponible || undefined,
@@ -65,8 +64,29 @@ export const useAccomodations = ({ cityId: cityIdOverride, citySlug, pageSize }:
       viewCrous: !!crous,
       academyId: academie ? Number(academie) : undefined,
       ownerSlug: gestionnaire ?? undefined,
-    }),
+    },
     enabled: effectiveCitySlug ? !!cityId : effectiveDepartmentSlug ? !!departmentId : true,
+  }
+}
+
+export const useAccomodations = ({ pageSize, ...options }: UseAccomodationsOptions = {}) => {
+  const trpc = useTRPC()
+  const { page, filters, enabled } = useAccommodationsFilters(options)
+
+  return useQuery({
+    ...trpc.accommodations.list.queryOptions({ ...filters, page, pageSize: pageSize ?? 12 }),
+    enabled,
+    placeholderData: keepPreviousData,
+  })
+}
+
+export const useAccommodationMapMarkers = () => {
+  const trpc = useTRPC()
+  const { filters, enabled } = useAccommodationsFilters()
+
+  return useQuery({
+    ...trpc.accommodations.mapMarkers.queryOptions(filters),
+    enabled,
     placeholderData: keepPreviousData,
   })
 }

@@ -3,16 +3,20 @@
 import { useQuery } from '@tanstack/react-query'
 import L from 'leaflet'
 import { FC, RefObject, useCallback, useEffect, useMemo, useRef } from 'react'
-import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet'
+import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from 'react-leaflet'
+import MarkerClusterGroup from 'react-leaflet-cluster'
 import { tss } from 'tss-react'
+import { AccommodationMapPreview } from '~/components/map/accommodation-map-preview'
 import { MapAccessibleName } from '~/components/map/map-accessible-name'
 import 'leaflet/dist/leaflet.css'
 import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css'
 import 'leaflet-defaulticon-compatibility'
+import 'react-leaflet-cluster/dist/assets/MarkerCluster.css'
+import 'react-leaflet-cluster/dist/assets/MarkerCluster.Default.css'
 import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { parseAsBoolean, parseAsString, useQueryState, useQueryStates } from 'nuqs'
-import { useAccomodations } from '~/hooks/use-accomodations'
+import { useAccommodationMapMarkers } from '~/hooks/use-accomodations'
 import { useTRPC } from '~/server/trpc/client'
 
 const MIN_FRAME_SIZE_METERS = 6000
@@ -190,34 +194,33 @@ export const AccomodationsMap: FC = () => {
     [territoryBbox],
   )
 
-  const { data: accommodations } = useAccomodations()
+  const { data: markersData } = useAccommodationMapMarkers()
 
-  const accommodationsData = useMemo(() => accommodations?.results ?? [], [accommodations])
-
-  const markerPositions = useMemo<L.LatLngTuple[]>(
-    () => accommodationsData.map((a) => [a.latitude ?? 0, a.longitude ?? 0]),
-    [accommodationsData],
-  )
+  const markerPositions = useMemo<L.LatLngTuple[]>(() => (markersData ?? []).map((m) => [m.lat, m.lng]), [markersData])
 
   const markers = useMemo(() => {
-    return accommodationsData.map((accommodation, i) => (
+    return (markersData ?? []).map((marker, i) => (
       <Marker
         eventHandlers={{
           click: () => {
-            const element = document.getElementById(`accomodation-${accommodation.id}`)
+            const element = document.getElementById(`accomodation-${marker.id}`)
             if (element) {
-              setQueryStates({ id: accommodation.id.toString() })
+              setQueryStates({ id: marker.id.toString() })
               element.scrollIntoView({ behavior: 'smooth' })
             }
           },
         }}
-        key={accommodation.id}
+        key={marker.id}
         position={markerPositions[i]}
-        title={accommodation.name}
-        alt={accommodation.name}
-      />
+        title={marker.name}
+        alt={marker.name}
+      >
+        <Popup>
+          <AccommodationMapPreview id={marker.id} />
+        </Popup>
+      </Marker>
     ))
-  }, [accommodationsData, markerPositions, setQueryStates])
+  }, [markersData, markerPositions, setQueryStates])
 
   const appliedBbox = useRef<string | null>(null)
 
@@ -231,7 +234,9 @@ export const AccomodationsMap: FC = () => {
         />
         <BoundsHandler markerPositions={markerPositions} territoryBounds={territoryBounds} appliedBbox={appliedBbox} />
         <CustomZoomControls appliedBbox={appliedBbox} />
-        {markers}
+        <MarkerClusterGroup chunkedLoading showCoverageOnHover={false} maxClusterRadius={50}>
+          {markers}
+        </MarkerClusterGroup>
       </MapContainer>
     )
   }, [markers, markerPositions, territoryBounds, queryStates.bbox])
