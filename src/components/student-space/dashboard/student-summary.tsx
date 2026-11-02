@@ -2,6 +2,7 @@ import Tile from '@codegouvfr/react-dsfr/Tile'
 import { getTranslations } from 'next-intl/server'
 import { getAlerts } from '~/server/student/get-alerts'
 import { getFavorites } from '~/server/student/get-favorites'
+import { sPluriel } from '~/utils/sPluriel'
 import styles from './student-summary.module.css'
 
 export const StudentSummary = async () => {
@@ -19,7 +20,7 @@ export const StudentSummary = async () => {
               href: 'favoris',
             }}
             orientation="vertical"
-            title={t('favorites', { count: favorites.count })}
+            title={t('favorites', { count: favorites.count, pluralize: sPluriel(favorites.count) })}
             titleAs="h3"
           />
         </div>
@@ -31,7 +32,7 @@ export const StudentSummary = async () => {
               href: 'alertes',
             }}
             orientation="vertical"
-            title={t('alerts', { count: alerts.count })}
+            title={t('alerts', { count: alerts.count, pluralize: sPluriel(alerts.count) })}
             titleAs="h3"
           />
         </div>

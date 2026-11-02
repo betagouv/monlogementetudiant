@@ -1601,9 +1601,9 @@
     },
     "summary": {
       "title": "Summary",
-      "favorites": "{count} favorites",
+      "favorites": "{count} favorite{pluralize}",
       "applications": "{count} application",
-      "alerts": "{count} alerts"
+      "alerts": "{count} alert{pluralize}"
     },
     "maximizeChances": {
       "title": "Give yourself the best chance",
