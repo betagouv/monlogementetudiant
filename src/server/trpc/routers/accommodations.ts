@@ -10,7 +10,6 @@ import {
   applyCenterRadiusFilter,
   applyCommonListFilters,
   crousExistsCondition,
-  listAccommodationMapMarkers,
   listAccommodationsWithConditions,
   priceMaxCondition,
   toResidenceType,
@@ -47,6 +46,7 @@ const ZPage = z.number().int().min(1).max(1000).default(1)
 const ZPageSize = z.number().int().min(1).max(MAX_PAGE_SIZE)
 const ZRadius = z.number().min(0).max(100)
 const ZPriceMax = z.number().nonnegative().max(100_000)
+const MAP_MARKERS_LIMIT = 5000
 
 const ZListFilters = z.object({
   bbox: z.string().max(MAX_PARAM_LENGTH).optional(),
@@ -114,7 +114,19 @@ export const accommodationsRouter = createTRPCRouter({
 
   mapMarkers: baseProcedure.input(ZListFilters).query(async ({ input }) => {
     const { where, addressOrderHint } = await buildListWhere(input)
-    return listAccommodationMapMarkers({ where, addressOrderHint })
+    return db
+      .selectDistinctOn([accommodations.id], {
+        id: accommodations.id,
+        name: accommodations.name,
+        lat: sql<number>`ST_Y(${accommodationAddresses.geom}::geometry)`.mapWith(Number),
+        lng: sql<number>`ST_X(${accommodationAddresses.geom}::geometry)`.mapWith(Number),
+      })
+      .from(accommodations)
+      .innerJoin(accommodationAddresses, eq(accommodationAddresses.accommodationId, accommodations.id))
+      .innerJoin(cities, eq(cities.id, accommodationAddresses.cityId))
+      .where(where)
+      .orderBy(accommodations.id, addressOrderHint ?? sql`${accommodationAddresses.isMain} DESC`)
+      .limit(MAP_MARKERS_LIMIT)
   }),
 
   mapPreview: baseProcedure.input(z.object({ id: z.number().int().positive() })).query(async ({ input }) => {
