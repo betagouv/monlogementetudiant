@@ -2352,6 +2352,7 @@
       "statusChangeError": "Status change failed.",
       "card": {
         "postedOn": "Posted on {date}",
+        "age": "{count} years old",
         "scholarship": "Scholarship student",
         "viewCandidate": "View {name}",
         "viewCandidateFallback": "the applicant"

@@ -56,6 +56,7 @@ import {
 } from '~/server/bailleur/permissions'
 import { nextManagerAssignment, type StoredScope } from '~/server/bailleur/reception-assignment'
 import {
+  CONTACT_BIRTHDATE_SQL,
   CONTACT_SCHOLARSHIP_STATUS_SQL,
   CONTACT_STUDENT_NAME_SQL,
   contactStudentName,
@@ -1477,6 +1478,7 @@ export const bailleurRouter = createTRPCRouter({
       let items: Array<{
         id: string
         studentName: string | null
+        studentBirthdate: string | null
         scholarshipStatus: string | null
         apartmentType: string | null
         status: string
@@ -1489,6 +1491,7 @@ export const bailleurRouter = createTRPCRouter({
           .select({
             id: dossierFacileApplications.id,
             studentName: DOSSIER_FACILE_STUDENT_NAME_SQL,
+            studentBirthdate: user.birthdate,
             scholarshipStatus: user.scholarshipStatus,
             apartmentType: dossierFacileApplications.apartmentType,
             status: dossierFacileApplications.status,
@@ -1505,6 +1508,7 @@ export const bailleurRouter = createTRPCRouter({
           .select({
             id: contactRequests.id,
             studentName: CONTACT_STUDENT_NAME_SQL,
+            studentBirthdate: CONTACT_BIRTHDATE_SQL,
             scholarshipStatus: CONTACT_SCHOLARSHIP_STATUS_SQL,
             apartmentType: contactRequests.apartmentType,
             status: contactRequests.status,

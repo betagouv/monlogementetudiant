@@ -280,6 +280,7 @@ describe('rétention côté gestionnaire', () => {
 
     const board = await ownerCaller.bailleur.listContactsByResidence({ slug: 'res-info-guest' })
     expect(board.items[0]!.scholarshipStatus).toBe(contactInput.scholarshipStatus)
+    expect(board.items[0]!.studentBirthdate).toBe(contactInput.birthdate)
   })
 
   it('hides a request past 30 days everywhere, including by direct URL', async () => {

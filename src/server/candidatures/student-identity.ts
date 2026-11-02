@@ -22,6 +22,8 @@ export const CONTACT_STUDENT_NAME_SQL = sql<string | null>`coalesce(
  */
 export const CONTACT_SCHOLARSHIP_STATUS_SQL = sql<string | null>`coalesce(${contactRequests.scholarshipStatus}, ${user.scholarshipStatus})`
 
+export const CONTACT_BIRTHDATE_SQL = sql<string | null>`coalesce(${contactRequests.birthdate}, ${user.birthdate})`
+
 /** Version SQL, pour les projections de liste (mode `dossier_facile`). */
 export const DOSSIER_FACILE_STUDENT_NAME_SQL = sql<string | null>`coalesce(${dossierFacileTenants.name}, ${user.name})`
 
