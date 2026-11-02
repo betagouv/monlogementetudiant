@@ -113,54 +113,55 @@ export const FindStudentAccomodationResultsContent: FC<FindStudentAccomodationRe
               <p>{t('description2')}</p>
             </div>
           )}
-
-          {accommodations && accommodations.count > accommodations.pageSize && (
-            <div className={classes.paginationContainer}>
-              <Pagination
-                showFirstLast={false}
-                count={Math.ceil(accommodations.count / accommodations.pageSize)}
-                defaultPage={queryStates.page ?? 1}
-                getPageLinkProps={(page: number) => {
-                  const params = new URLSearchParams()
-                  if (queryStates.vue) params.set('vue', queryStates.vue)
-
-                  const hasMapInteraction = !!queryStates['recherche-par-carte']
-                  if (hasMapInteraction && queryStates.bbox) {
-                    params.set('bbox', queryStates.bbox)
-                    params.set('recherche-par-carte', 'true')
-                  } else if (queryStates.academie) {
-                    params.set('academie', queryStates.academie)
-                  } else if (queryStates.bbox) {
-                    params.set('bbox', queryStates.bbox)
-                  }
-
-                  if (queryStates.accessible) {
-                    params.set('accessible', 'true')
-                  }
-                  if (queryStates.colocation) {
-                    params.set('colocation', 'true')
-                  }
-                  if (queryStates.prix) {
-                    params.set('prix', queryStates.prix.toString())
-                  }
-                  if (queryStates.crous) {
-                    params.set('crous', 'true')
-                  }
-                  if (queryStates.disponible) {
-                    params.set('disponible', 'true')
-                  }
-                  params.set('page', page.toString())
-                  return {
-                    href: `${pathname}?${params.toString()}`,
-                    onClick: () => trackEvent({ category: 'Recherche', action: 'pagination', value: page }),
-                  }
-                }}
-              />
-            </div>
-          )}
         </div>
 
         {queryStates.vue === 'carte' && <div className={clsx('fr-hidden', 'fr-unhidden-sm', classes.mapContainer)}>{card}</div>}
+      </div>
+      <div className={classes.accomodationsContainer}>
+        {accommodations && accommodations.count > accommodations.pageSize && (
+          <div className={classes.paginationContainer}>
+            <Pagination
+              showFirstLast={false}
+              count={Math.ceil(accommodations.count / accommodations.pageSize)}
+              defaultPage={queryStates.page ?? 1}
+              getPageLinkProps={(page: number) => {
+                const params = new URLSearchParams()
+                if (queryStates.vue) params.set('vue', queryStates.vue)
+
+                const hasMapInteraction = !!queryStates['recherche-par-carte']
+                if (hasMapInteraction && queryStates.bbox) {
+                  params.set('bbox', queryStates.bbox)
+                  params.set('recherche-par-carte', 'true')
+                } else if (queryStates.academie) {
+                  params.set('academie', queryStates.academie)
+                } else if (queryStates.bbox) {
+                  params.set('bbox', queryStates.bbox)
+                }
+
+                if (queryStates.accessible) {
+                  params.set('accessible', 'true')
+                }
+                if (queryStates.colocation) {
+                  params.set('colocation', 'true')
+                }
+                if (queryStates.prix) {
+                  params.set('prix', queryStates.prix.toString())
+                }
+                if (queryStates.crous) {
+                  params.set('crous', 'true')
+                }
+                if (queryStates.disponible) {
+                  params.set('disponible', 'true')
+                }
+                params.set('page', page.toString())
+                return {
+                  href: `${pathname}?${params.toString()}`,
+                  onClick: () => trackEvent({ category: 'Recherche', action: 'pagination', value: page }),
+                }
+              }}
+            />
+          </div>
+        )}
       </div>
     </>
   )
