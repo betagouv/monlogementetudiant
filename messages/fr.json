@@ -2352,6 +2352,7 @@
       "statusChangeError": "Le changement de statut a échoué.",
       "card": {
         "postedOn": "Postée le {date}",
+        "age": "{count} ans",
         "scholarship": "Boursier",
         "viewCandidate": "Voir {name}",
         "viewCandidateFallback": "le candidat"
