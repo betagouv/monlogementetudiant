@@ -1,3 +1,4 @@
+import clsx from 'clsx'
 import { notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { ImpersonationBanner } from '~/components/impersonation/impersonation-banner'
@@ -10,6 +11,7 @@ import { CommonFooter } from '~/components/ui/footer/footer'
 import { CommonHeader } from '~/components/ui/header/common-header'
 import { canAccessStudentSpace } from '~/lib/roles'
 import { getServerSession } from '~/services/better-auth'
+import styles from './mon-espace.module.css'
 
 export const generateMetadata = async () => {
   const t = await getTranslations('metadata')
@@ -45,7 +47,7 @@ export default async function WorkspaceLayout({
       <CommonHeader withNavigation={false} />
       <ImpersonationBanner />
       <main id={MAIN_CONTENT_ID} tabIndex={-1} className="primaryBackgroundColor">
-        <div className="fr-container fr-pb-12w">
+        <div className={clsx('fr-container fr-pb-12w', styles.layoutContainer)}>
           <StudentBreadcrumb />
           <div className="fr-col-md-12 fr-flex fr-direction-column fr-direction-md-row fr-background-default--grey">
             <div className="fr-border fr-col-md-4">
