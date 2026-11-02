@@ -102,6 +102,7 @@ function writeTmpCsv(rows: string[][], headers?: string[]): string {
     'kitchen_type',
     'desk',
     'cooking_plates',
+    'wifi',
     'microwave',
     'refrigerator',
     'bathroom',
@@ -166,6 +167,7 @@ function makeRow(overrides: Record<string, string> = {}): string[] {
     kitchen_type: 'private',
     desk: 'oui',
     cooking_plates: 'oui',
+    wifi: 'oui',
     microwave: 'oui',
     refrigerator: 'oui',
     bathroom: 'private',
@@ -226,6 +228,7 @@ function makeRow(overrides: Record<string, string> = {}): string[] {
     'kitchen_type',
     'desk',
     'cooking_plates',
+    'wifi',
     'microwave',
     'refrigerator',
     'bathroom',
@@ -280,6 +283,7 @@ describe('import-csv integration', () => {
     expect(created!.kitchenType).toBe('private')
     expect(created!.desk).toBe(true)
     expect(created!.cookingPlates).toBe(true)
+    expect(created!.wifi).toBe(true)
     expect(created!.microwave).toBe(true)
     expect(created!.refrigerator).toBe(true)
     expect(created!.bathroom).toBe('private')
@@ -641,6 +645,7 @@ describe('import-csv integration', () => {
       'kitchen_type',
       'desk',
       'cooking_plates',
+      'wifi',
       'microwave',
       'refrigerator',
       'bathroom',
@@ -774,6 +779,7 @@ describe('import-csv integration', () => {
       'kitchen_type',
       'desk',
       'cooking_plates',
+      'wifi',
       'microwave',
       'refrigerator',
       'bathroom',
