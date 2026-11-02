@@ -3,28 +3,9 @@
 import clsx from 'clsx'
 import { useTranslations } from 'next-intl'
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
+import { EXPENSE_COLORS } from '~/utils/budget-colors'
 import { getMonthlyEquivalent, useBudgetSimulator } from './budget-simulator-context'
 import styles from './budget-summary.module.css'
-
-const expensesColors = {
-  housing: '#ADADF9',
-  housingCharges: '#9A9AE8',
-  food: '#FCC63A',
-  dailyLife: '#FFB6C1',
-  communication: '#87CEEB',
-  transport: '#B8FEC9',
-  registrationFees: '#DDA0DD',
-  cvec: '#C8A2C8',
-  studyMaterials: '#E6D4FF',
-  mutuelle: '#FABFF5',
-  otherHealthcare: '#F5A3F0',
-  enjoyment: '#FB9175',
-  childcare: '#F0E68C',
-  other: '#D3D3D3',
-  securityDeposit: '#C5E1A5',
-  agencyFees: '#FFD180',
-  apartmentEquipment: '#80CBC4',
-}
 
 interface ExpensesPieChartProps {
   className?: string
@@ -84,7 +65,7 @@ export function ExpensesPieChart({ className, horizontal = false }: ExpensesPieC
             <PieChart>
               <Pie data={activeExpenses} cx="50%" cy="50%" innerRadius={60} outerRadius={80} dataKey="value">
                 {activeExpenses.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={expensesColors[entry.type]} stroke="none" />
+                  <Cell key={`cell-${index}`} fill={EXPENSE_COLORS[entry.type]} stroke="none" />
                 ))}
               </Pie>
               <Tooltip formatter={(value) => [`${value}€`, t('summary.chartTooltipAmount')]} />
@@ -100,7 +81,7 @@ export function ExpensesPieChart({ className, horizontal = false }: ExpensesPieC
                   style={{
                     width: '10px',
                     height: '10px',
-                    backgroundColor: expensesColors[expense.type],
+                    backgroundColor: EXPENSE_COLORS[expense.type],
                     borderRadius: '50%',
                     marginRight: '8px',
                     flexShrink: 0,
