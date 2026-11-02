@@ -525,7 +525,7 @@
       "whereLabel": "Où souhaitez-vous étudier ?",
       "maxRentLabel": "Loyer maximum",
       "crousTag": "Résidences Crous",
-      "nonCrousTag": "Autre résidence",
+      "nonCrousTag": "Autres résidences",
       "accessibleTag": "Accessible PMR"
     },
     "filters": {
