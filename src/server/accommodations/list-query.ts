@@ -333,50 +333,6 @@ export const listAccommodationsWithConditions = async ({
   }
 }
 
-export const MAP_MARKERS_LIMIT = 5000
-
-const ZMapMarkerRow = z.object({
-  id: z.coerce.number(),
-  name: z.string(),
-  lat: z.number(),
-  lng: z.number(),
-})
-
-export type TAccommodationMapMarker = z.infer<typeof ZMapMarkerRow>
-
-export const listAccommodationMapMarkers = async ({
-  where,
-  addressOrderHint,
-}: {
-  where: SQL | undefined
-  addressOrderHint?: SQL
-}): Promise<TAccommodationMapMarker[]> => {
-  const addressOrder = addressOrderHint ?? sql`${accommodationAddresses.isMain} DESC`
-  const whereClause = where ? sql`WHERE ${where}` : sql``
-
-  const results = await db.execute<Record<string, unknown>>(sql`
-    SELECT DISTINCT ON (${accommodations.id})
-      ${accommodations.id} as id,
-      ${accommodations.name} as name,
-      ST_Y(${accommodationAddresses.geom}::geometry) as lat,
-      ST_X(${accommodationAddresses.geom}::geometry) as lng
-    FROM ${accommodations}
-    INNER JOIN ${accommodationAddresses} ON ${accommodationAddresses.accommodationId} = ${accommodations.id}
-    INNER JOIN ${cities} ON ${cities.id} = ${accommodationAddresses.cityId}
-    ${whereClause}
-    ORDER BY ${accommodations.id}, ${addressOrder}
-    LIMIT ${MAP_MARKERS_LIMIT}
-  `)
-
-  const rawRows = Array.isArray(results) ? results : (results as { rows: unknown[] }).rows
-  const parsed = z.array(ZMapMarkerRow).safeParse(rawRows)
-  if (!parsed.success) {
-    console.error('[listAccommodationMapMarkers] Shape de rows marqueur invalide', parsed.error)
-    return []
-  }
-  return parsed.data
-}
-
 /**
  * Batch-fetch typology rows for a page of result rows and map each to the flat accommodation DTO.
  * Search ranking/pagination stays in the raw CTE (which uses the parent aggregates); this only
