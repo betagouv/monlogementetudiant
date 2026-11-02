@@ -19,6 +19,7 @@ const ROUTES = [
   '/bailleur/tableau-de-bord',
   '/bailleur/residences',
   '/bailleur/residences/nouvelle-residence',
+  '/bailleur/residences/residence-e2e-du-centre',
   '/bailleur/disponibilites/confirmer',
 ]
 
