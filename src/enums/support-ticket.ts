@@ -12,6 +12,10 @@ export enum ESupportTicketCategory {
 
 export const SUPPORT_TICKET_CATEGORIES = Object.values(ESupportTicketCategory)
 
+export const SUPPORT_TICKET_SELECTABLE_CATEGORIES = SUPPORT_TICKET_CATEGORIES.filter(
+  (category) => category !== ESupportTicketCategory.CONTACT_REQUEST,
+)
+
 export const ZSupportTicketCategory = z.enum(ESupportTicketCategory)
 
 export const SUPPORT_TICKET_CATEGORY_LABELS: Record<ESupportTicketCategory, string> = {

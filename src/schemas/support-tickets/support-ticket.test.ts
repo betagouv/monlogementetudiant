@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ESupportTicketCategory } from '~/enums/support-ticket'
+import { ESupportTicketCategory, SUPPORT_TICKET_SELECTABLE_CATEGORIES } from '~/enums/support-ticket'
 import { SUPPORT_TICKET_MESSAGE_MAX_LENGTH, ZSupportTicketCreate } from './support-ticket'
 
 const validInput = { category: ESupportTicketCategory.SEARCH, message: 'La carte ne se charge pas' }
@@ -56,9 +56,14 @@ describe('ZSupportTicketCreate', () => {
     }
   })
 
-  it('accepte chaque catégorie valide', () => {
-    for (const category of Object.values(ESupportTicketCategory)) {
+  it('accepte chaque catégorie sélectionnable', () => {
+    for (const category of SUPPORT_TICKET_SELECTABLE_CATEGORIES) {
       expect(ZSupportTicketCreate.safeParse({ category, message: validInput.message }).success).toBe(true)
     }
+  })
+
+  it('rejette la catégorie « Demande de contact »', () => {
+    const result = ZSupportTicketCreate.safeParse({ category: ESupportTicketCategory.CONTACT_REQUEST, message: validInput.message })
+    expect(result.success).toBe(false)
   })
 })
