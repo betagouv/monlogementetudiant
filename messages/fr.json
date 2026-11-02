@@ -2549,7 +2549,10 @@
     "zoomOutLabel": "Zoom arrière sur la carte",
     "resultsLabel": "Carte des résidences correspondant à votre recherche. La liste des résultats, affichée à côté de la carte, en donne l'équivalent textuel.",
     "accommodationLabel": "Carte de localisation de la résidence. L'adresse complète figure en texte au-dessus de la carte.",
-    "markerLabel": "Emplacement de la résidence sur la carte"
+    "markerLabel": "Emplacement de la résidence sur la carte",
+    "previewLoading": "Chargement de la résidence…",
+    "previewError": "Impossible de charger cette résidence.",
+    "previewLink": "Voir la résidence"
   },
   "impersonation": {
     "title": "Mode usurpation actif",

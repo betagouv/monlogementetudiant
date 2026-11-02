@@ -913,6 +913,56 @@ describe('accommodations.list — filter combinations', () => {
   })
 })
 
+describe('accommodations.mapMarkers', () => {
+  it('returns every matching accommodation in the bbox, beyond the list page size', async () => {
+    for (let i = 0; i < 15; i++) {
+      await createAccommodation({ slug: `in-bbox-${i}`, geom: { type: 'Point', coordinates: [2.3 + i * 0.01, 48.85] } })
+    }
+    await createAccommodation({ slug: 'outside-bbox', geom: { type: 'Point', coordinates: [5.0, 43.3] } })
+
+    const bbox = '2.0,48.5,3.0,49.0'
+    const list = await caller.accommodations.list({ bbox })
+    const markers = await caller.accommodations.mapMarkers({ bbox })
+
+    expect(list.results).toHaveLength(12)
+    expect(markers).toHaveLength(15)
+    expect(markers.map((m) => m.id)).toEqual(expect.arrayContaining(list.results.map((r) => r.id)))
+    expect(markers[0]).toEqual({ id: expect.any(Number), name: expect.any(String), lat: 48.85, lng: expect.any(Number) })
+  })
+
+  it('applies the same filters as the list', async () => {
+    await createAccommodation({ slug: 'cheap', priceMin: 300, geom: { type: 'Point', coordinates: [2.35, 48.85] } })
+    await createAccommodation({ slug: 'expensive', priceMin: 900, geom: { type: 'Point', coordinates: [2.36, 48.85] } })
+    await createAccommodation({ slug: 'unpublished', published: false, geom: { type: 'Point', coordinates: [2.37, 48.85] } })
+
+    const input = { bbox: '2.0,48.5,3.0,49.0', priceMax: 500 }
+    const list = await caller.accommodations.list(input)
+    const markers = await caller.accommodations.mapMarkers(input)
+
+    expect(markers.map((m) => m.id)).toEqual(list.results.map((r) => r.id))
+    expect(list.results.map((r) => r.slug)).toEqual(['cheap'])
+  })
+})
+
+describe('accommodations.mapPreview', () => {
+  it('returns the accommodation card data', async () => {
+    const accommodation = await createAccommodation({ slug: 'preview', geom: { type: 'Point', coordinates: [2.35, 48.85] } })
+
+    const result = await caller.accommodations.mapPreview({ id: accommodation.id })
+    expect(result.slug).toBe('preview')
+  })
+
+  it('throws NOT_FOUND for an unpublished accommodation', async () => {
+    const accommodation = await createAccommodation({
+      slug: 'hidden',
+      published: false,
+      geom: { type: 'Point', coordinates: [2.35, 48.85] },
+    })
+
+    await expect(caller.accommodations.mapPreview({ id: accommodation.id })).rejects.toMatchObject({ code: 'NOT_FOUND' })
+  })
+})
+
 describe('accommodations.getBySlug', () => {
   it('returns full detail with owner', async () => {
     const owner = await createOwner({ name: 'CROUS', slug: 'crous', url: 'https://crous.fr' })
