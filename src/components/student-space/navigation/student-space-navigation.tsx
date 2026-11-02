@@ -2,6 +2,7 @@
 
 import Button from '@codegouvfr/react-dsfr/Button'
 import SideMenu from '@codegouvfr/react-dsfr/SideMenu'
+import clsx from 'clsx'
 import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useLocalStorage } from 'usehooks-ts'
@@ -39,7 +40,12 @@ export const StudentSpaceNavigation = () => {
           {t('backToHome')}
         </Button>
       </div>
-      <SideMenu align="left" burgerMenuButtonText={t('menuTitle')} items={items} classes={{ root: 'fr-p-3w', inner: styles.menuInner }} />
+      <SideMenu
+        align="left"
+        burgerMenuButtonText={t('menuTitle')}
+        items={items}
+        classes={{ root: clsx('fr-p-3w', styles.menuRoot), inner: styles.menuInner }}
+      />
     </>
   )
 }
