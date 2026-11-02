@@ -49,7 +49,7 @@ const TODO_DEFINITIONS = [
     key: 'createHousingAlert',
     pictogram: <Notification width={48} height={48} />,
     href: '/mon-espace/alertes',
-    external: false,
+    external: true,
   },
 ] as const
 
