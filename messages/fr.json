@@ -781,7 +781,7 @@
         "title": "A la recherche d’un logement en résidence étudiante ?",
         "description": "Mon Logement Etudiant facilite l'accès au logement et aux droits pour les étudiants.",
         "cta": "Trouver un logement étudiant",
-        "ctaDisclaimer": "Plus de 1600 résidences partout en France"
+        "ctaDisclaimer": "Plus de {count, number} résidences partout en France"
       }
     }
   },
@@ -982,7 +982,7 @@
     "hero": {
       "title": "Trouvez votre prochain",
       "titleHighlight": "logement social étudiant",
-      "counter": "Plus de <strong>70 000 logements</strong> déjà référencés"
+      "counter": "Plus de <strong>{count, number} logements</strong> déjà référencés"
     },
     "cta": "Rechercher un logement",
     "title": "Plus de 1300 résidences étudiantes",
