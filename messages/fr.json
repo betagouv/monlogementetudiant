@@ -1515,6 +1515,23 @@
       "annualTotal": "Soit {amount} par an",
       "schoolYearBudgetTitle": "Budget de rentrée",
       "schoolYearBudgetDescription": "Pour la rentrée scolaire, vous devez prévoir {firstMonth}, puis {followingMonths} par mois pour les mois suivants."
+    },
+    "pdf": {
+      "republic": "RÉPUBLIQUE\nFRANÇAISE",
+      "motto": "Liberté\nÉgalité\nFraternité",
+      "title": "Mon budget étudiant",
+      "generatedOn": "Simulation générée le {date}",
+      "incomesTitle": "Revenus",
+      "expensesTitle": "Dépenses",
+      "distributionTitle": "Répartition des dépenses mensualisées",
+      "columnCategory": "Catégorie",
+      "columnFrequency": "Fréquence",
+      "columnAmount": "Montant",
+      "columnMonthly": "Équivalent mensuel",
+      "total": "Total mensualisé",
+      "empty": "Aucune ligne renseignée.",
+      "disclaimer": "Ce document est une estimation réalisée à partir des montants que vous avez saisis sur Mon Logement Étudiant. Il n'a pas de valeur contractuelle.",
+      "error": "Le PDF n'a pas pu être généré. Veuillez réessayer."
     }
   },
   "verification": {

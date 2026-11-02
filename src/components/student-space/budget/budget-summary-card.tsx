@@ -3,28 +3,55 @@
 import Button from '@codegouvfr/react-dsfr/Button'
 import clsx from 'clsx'
 import { useTranslations } from 'next-intl'
-import { formatBudgetAmount, useBudgetTotals } from '~/components/budget-simulation/budget-simulator-context'
+import { useState } from 'react'
+import { formatBudgetAmount, useBudgetSimulator, useBudgetTotals } from '~/components/budget-simulation/budget-simulator-context'
 import summaryStyles from '~/components/budget-simulation/budget-summary.module.css'
 import { ExpensesPieChart } from '~/components/budget-simulation/expenses-pie-chart'
+import { createToast } from '~/components/ui/createToast'
 import { LiveRegion } from '~/components/ui/live-region'
+import { useSaveBudgetSimulation } from '~/hooks/use-budget-simulation'
 import styles from './saved-budget.module.css'
 
-function printBudgetSummary() {
-  document.body.classList.add('budgetPrintMode')
-  try {
-    window.print()
-  } finally {
-    document.body.classList.remove('budgetPrintMode')
-  }
+const BUDGET_PDF_URL = '/api/student/budget-pdf'
+
+async function downloadBudgetPdf() {
+  const response = await fetch(BUDGET_PDF_URL)
+  if (!response.ok) throw new Error(`Budget PDF failed: ${response.status}`)
+
+  const fileName = response.headers.get('Content-Disposition')?.match(/filename="([^"]+)"/)?.[1] ?? 'mon-budget-etudiant.pdf'
+  const url = URL.createObjectURL(await response.blob())
+  const link = document.createElement('a')
+  link.href = url
+  link.download = fileName
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
 }
 
 export function BudgetSummaryCard() {
   const t = useTranslations('budgetSimulator.summary')
+  const tPdf = useTranslations('budgetSimulator.pdf')
+  const { state } = useBudgetSimulator()
   const { totalIncomes, totalExpenses, remainingBalance } = useBudgetTotals()
+  const { mutateAsync: saveSimulation } = useSaveBudgetSimulation({ silent: true })
+  const [isDownloading, setIsDownloading] = useState(false)
+
+  const handleDownload = async () => {
+    setIsDownloading(true)
+    try {
+      await saveSimulation(state)
+      await downloadBudgetPdf()
+    } catch {
+      createToast({ priority: 'error', message: tPdf('error') })
+    } finally {
+      setIsDownloading(false)
+    }
+  }
   const savingsRate = totalIncomes > 0 && remainingBalance >= 0 ? (remainingBalance / totalIncomes) * 100 : null
 
   return (
-    <div className={clsx(styles.summaryCard, 'budgetPrintArea fr-p-4w')}>
+    <div className={clsx(styles.summaryCard, 'fr-p-4w')}>
       <LiveRegion
         debounceMs={1200}
         message={t('announcement', {
@@ -38,8 +65,16 @@ export function BudgetSummaryCard() {
           <h2 className="fr-text-inverted--grey fr-h3 fr-mb-0">{t('title')}</h2>
           <span className={summaryStyles.summarySubtitle}>{t('subtitle')}</span>
         </div>
-        <div className="budgetPrintHidden">
-          <Button priority="secondary" className="whiteButton" iconId="ri-download-2-line" iconPosition="left" onClick={printBudgetSummary}>
+        <div>
+          <Button
+            priority="secondary"
+            className="whiteButton"
+            iconId="ri-download-2-line"
+            iconPosition="left"
+            onClick={handleDownload}
+            disabled={isDownloading}
+            nativeButtonProps={{ 'aria-busy': isDownloading }}
+          >
             {t('downloadPdfCta')}
           </Button>
         </div>

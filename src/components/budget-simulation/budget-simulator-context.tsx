@@ -3,6 +3,7 @@
 import { createContext, type ReactNode, useContext, useEffect, useState } from 'react'
 import { trackEvent } from '~/lib/tracking'
 import type { TBudgetFrequency, TBudgetSimulation } from '~/schemas/budget-simulation'
+import { formatBudgetAmount, getMonthlyEquivalent } from '~/utils/budget-amount'
 
 export type BudgetFrequency = TBudgetFrequency
 
@@ -78,9 +79,7 @@ export const EXPENSE_RANGES = {
 
 export const CVEC_AMOUNT = 105 // montant fixé par décret, 2025-2026
 
-export function getMonthlyEquivalent(amount: number, frequency: BudgetFrequency) {
-  return frequency === 'yearly' ? amount / 12 : amount
-}
+export { formatBudgetAmount, getMonthlyEquivalent }
 
 export const DEFAULT_BUDGET_SIMULATOR_STATE: BudgetSimulatorState = {
   monthlyIncomes: {
@@ -258,8 +257,4 @@ export function useBudgetTotals() {
   )
 
   return { totalIncomes, totalExpenses, remainingBalance: totalIncomes - totalExpenses }
-}
-
-export function formatBudgetAmount(amount: number) {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount)
 }

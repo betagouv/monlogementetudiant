@@ -1515,6 +1515,23 @@
       "annualTotal": "That is {amount} per year",
       "schoolYearBudgetTitle": "Start-of-year budget",
       "schoolYearBudgetDescription": "For the start of the academic year, you should plan for {firstMonth}, then {followingMonths} per month for the following months."
+    },
+    "pdf": {
+      "republic": "RÉPUBLIQUE\nFRANÇAISE",
+      "motto": "Liberté\nÉgalité\nFraternité",
+      "title": "My student budget",
+      "generatedOn": "Simulation generated on {date}",
+      "incomesTitle": "Income",
+      "expensesTitle": "Expenses",
+      "distributionTitle": "Breakdown of monthly expenses",
+      "columnCategory": "Category",
+      "columnFrequency": "Frequency",
+      "columnAmount": "Amount",
+      "columnMonthly": "Monthly equivalent",
+      "total": "Monthly total",
+      "empty": "No lines entered.",
+      "disclaimer": "This document is an estimate based on the amounts you entered on Mon Logement Étudiant. It has no contractual value.",
+      "error": "The PDF could not be generated. Please try again."
     }
   },
   "verification": {

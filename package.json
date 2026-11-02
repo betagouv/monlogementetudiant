@@ -37,6 +37,7 @@
     "@getbrevo/brevo": "^5.0.4",
     "@hono/zod-openapi": "1.4.0",
     "@hookform/resolvers": "^5.9.1",
+    "@react-pdf/renderer": "^4.9.0",
     "@scalar/hono-api-reference": "0.11.5",
     "@sentry/nextjs": "^10.76.2",
     "@socialgouv/matomo-next": "^1.14.2",
