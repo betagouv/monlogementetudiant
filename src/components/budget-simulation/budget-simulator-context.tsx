@@ -21,6 +21,8 @@ interface BudgetSimulatorContextType {
   removeIncomeType: (type: keyof MonthlyIncomes) => void
   addExpenseType: (type: keyof MonthlyExpenses) => void
   removeExpenseType: (type: keyof MonthlyExpenses) => void
+  replaceIncomeType: (from: IncomeType, to: IncomeType) => void
+  replaceExpenseType: (from: ExpenseType, to: ExpenseType) => void
 }
 
 export type ExpenseType = keyof MonthlyExpenses
@@ -116,6 +118,26 @@ export const DEFAULT_BUDGET_SIMULATOR_STATE: BudgetSimulatorState = {
   activeExpenseTypes: ['housing', 'food', 'transport'],
 }
 
+export function replaceIncomeTypeInState(state: BudgetSimulatorState, from: IncomeType, to: IncomeType): BudgetSimulatorState {
+  if (from === to) return state
+  return {
+    ...state,
+    activeIncomeTypes: state.activeIncomeTypes.map((type) => (type === from ? to : type)),
+    monthlyIncomes: { ...state.monthlyIncomes, [from]: 0, [to]: state.monthlyIncomes[from] },
+    incomeFrequencies: { ...state.incomeFrequencies, [from]: DEFAULT_INCOME_FREQUENCIES[from], [to]: DEFAULT_INCOME_FREQUENCIES[to] },
+  }
+}
+
+export function replaceExpenseTypeInState(state: BudgetSimulatorState, from: ExpenseType, to: ExpenseType): BudgetSimulatorState {
+  if (from === to) return state
+  return {
+    ...state,
+    activeExpenseTypes: state.activeExpenseTypes.map((type) => (type === from ? to : type)),
+    monthlyExpenses: { ...state.monthlyExpenses, [from]: 0, [to]: state.monthlyExpenses[from] },
+    expenseFrequencies: { ...state.expenseFrequencies, [from]: DEFAULT_EXPENSE_FREQUENCIES[from], [to]: DEFAULT_EXPENSE_FREQUENCIES[to] },
+  }
+}
+
 const BudgetSimulatorContext = createContext<BudgetSimulatorContextType | undefined>(undefined)
 
 interface BudgetSimulatorProviderProps {
@@ -189,6 +211,10 @@ export function BudgetSimulatorProvider({ children, initialState, trackStart = t
     }))
   }
 
+  const replaceIncomeType = (from: IncomeType, to: IncomeType) => setState((prev) => replaceIncomeTypeInState(prev, from, to))
+
+  const replaceExpenseType = (from: ExpenseType, to: ExpenseType) => setState((prev) => replaceExpenseTypeInState(prev, from, to))
+
   return (
     <BudgetSimulatorContext.Provider
       value={{
@@ -202,6 +228,8 @@ export function BudgetSimulatorProvider({ children, initialState, trackStart = t
         removeIncomeType,
         addExpenseType,
         removeExpenseType,
+        replaceIncomeType,
+        replaceExpenseType,
       }}
     >
       {children}
