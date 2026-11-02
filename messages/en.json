@@ -524,15 +524,15 @@
       "sharedDescription": "Only show residences offering shared flats",
       "whereLabel": "Where do you want to study?",
       "maxRentLabel": "Maximum rent",
-      "crousTag": "CROUS residence",
+      "crousTag": "Crous residences",
       "nonCrousTag": "Other residence",
       "accessibleTag": "Wheelchair accessible"
     },
     "filters": {
       "nonCrousAccommodations": "residence{pluralize}",
       "nonCrousAccommodationsWithLocation": "residence{pluralize} {locationFormatted}",
-      "crousAccommodations": "CROUS residence{pluralize}",
-      "crousAccommodationsWithLocation": "CROUS residence{pluralize} {locationFormatted}",
+      "crousAccommodations": "Crous residence{pluralize}",
+      "crousAccommodationsWithLocation": "Crous residence{pluralize} {locationFormatted}",
       "grid": "List",
       "map": "Map",
       "sortByPrice": "Sorted by price",
