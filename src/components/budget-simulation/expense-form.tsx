@@ -53,11 +53,11 @@ export function ExpenseForm() {
 
   return (
     <div className="fr-flex fr-direction-column fr-flex-gap-4v">
-      {state.activeExpenseTypes.map((type) => {
+      {state.activeExpenseTypes.map((type, index) => {
         const yearlyOnly = YEARLY_ONLY_EXPENSE_TYPES.includes(type as (typeof YEARLY_ONLY_EXPENSE_TYPES)[number])
 
         return (
-          <fieldset key={type} className={clsx('fr-flex fr-flex-gap-4v', styles.formRow, styles.rowFieldset)}>
+          <fieldset key={index} className={clsx('fr-flex fr-flex-gap-4v', styles.formRow, styles.rowFieldset)}>
             <legend className="fr-sr-only">{t('expenseRowLegend', { category: t(`types.${type}`) })}</legend>
             <div className={clsx('fr-flex-basis-0 fr-flex-grow-1', styles.sourceSelect)}>
               <Select
