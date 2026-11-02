@@ -1601,9 +1601,9 @@
     },
     "summary": {
       "title": "En résumé",
-      "favorites": "{count} favoris",
+      "favorites": "{count} favori{pluralize}",
       "applications": "{count} candidature",
-      "alerts": "{count} alertes"
+      "alerts": "{count} alerte{pluralize}"
     },
     "maximizeChances": {
       "title": "Mettez toutes les chances de votre côté",
