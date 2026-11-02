@@ -2,10 +2,11 @@ import clsx from 'clsx'
 import Image from 'next/image'
 import { getTranslations } from 'next-intl/server'
 import { HeroSearchBar } from '~/components/home/hero-section/hero-search-bar'
+import { getPublicAccommodationStats } from '~/server/accommodations/public-stats'
 import styles from './hero-section.module.css'
 
 export const HeroSection = async () => {
-  const tHome = await getTranslations('home')
+  const [tHome, stats] = await Promise.all([getTranslations('home'), getPublicAccommodationStats()])
   return (
     <section className={styles.heroSection}>
       <div className="fr-container">
@@ -20,6 +21,7 @@ export const HeroSection = async () => {
           </div>
           <p className="fr-mb-0 fr-text-default--grey">
             {tHome.rich('hero.counter', {
+              count: stats.logements,
               strong: (chunks) => <strong className="fr-text-title--grey fr-text--bold">{chunks}</strong>,
             })}
           </p>

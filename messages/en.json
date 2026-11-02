@@ -781,7 +781,7 @@
         "title": "Looking for accommodation in a student residence?",
         "description": "Mon Logement Etudiant makes access to housing and rights easier for students.",
         "cta": "Find student accommodation",
-        "ctaDisclaimer": "More than 1,600 residences throughout France"
+        "ctaDisclaimer": "More than {count, number} residences throughout France"
       }
     }
   },
@@ -982,7 +982,7 @@
     "hero": {
       "title": "Find your next",
       "titleHighlight": "student social housing",
-      "counter": "More than <strong>70,000 accommodations</strong> already listed"
+      "counter": "More than <strong>{count, number} accommodations</strong> already listed"
     },
     "cta": "Search for accommodation",
     "title": "More than 1,300 student residences",
