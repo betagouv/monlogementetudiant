@@ -4,7 +4,7 @@ import { ESupportTicketCategory } from '~/enums/support-ticket'
 export const SUPPORT_TICKET_MESSAGE_MAX_LENGTH = 2000
 
 export const ZSupportTicketCreate = z.object({
-  category: z.enum(ESupportTicketCategory, { message: 'Veuillez sélectionner la partie du site concernée' }),
+  category: z.enum(ESupportTicketCategory).exclude(['CONTACT_REQUEST'], { message: 'Veuillez sélectionner la partie du site concernée' }),
   message: z
     .string()
     .trim()

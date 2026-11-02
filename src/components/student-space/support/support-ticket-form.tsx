@@ -9,7 +9,7 @@ import { useMutation } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { SUPPORT_TICKET_CATEGORIES, SUPPORT_TICKET_CATEGORY_LABELS } from '~/enums/support-ticket'
+import { SUPPORT_TICKET_CATEGORY_LABELS, SUPPORT_TICKET_SELECTABLE_CATEGORIES } from '~/enums/support-ticket'
 import {
   SUPPORT_TICKET_MESSAGE_MAX_LENGTH,
   type TSupportTicketCreate,
@@ -63,7 +63,7 @@ export const SupportTicketForm = () => {
         stateRelatedMessage={errors.category?.message}
       >
         <option value="">{t('categoryPlaceholder')}</option>
-        {SUPPORT_TICKET_CATEGORIES.map((category) => (
+        {SUPPORT_TICKET_SELECTABLE_CATEGORIES.map((category) => (
           <option key={category} value={category}>
             {SUPPORT_TICKET_CATEGORY_LABELS[category]}
           </option>
