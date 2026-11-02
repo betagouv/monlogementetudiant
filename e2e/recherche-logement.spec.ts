@@ -107,11 +107,11 @@ test.describe('Recherche de logement par ville', () => {
   test('sépare les résidences Crous des autres résidences', async ({ page }) => {
     await gotoHydrated(page, '/trouver-un-logement-etudiant/ville/saint-etienne')
 
-    // La vue par défaut (« Autre résidence ») exclut le Crous.
-    await expect(page.getByRole('button', { name: 'Autre résidence' }).filter({ visible: true })).toHaveAttribute('aria-pressed', 'true')
+    // La vue par défaut (« Autres résidences ») exclut le Crous.
+    await expect(page.getByRole('button', { name: 'Autres résidences' }).filter({ visible: true })).toHaveAttribute('aria-pressed', 'true')
     await expect(page.getByText('Résidence E2E Crous')).toHaveCount(0)
 
-    await page.getByRole('button', { name: 'Résidence CROUS', exact: true }).filter({ visible: true }).click()
+    await page.getByRole('button', { name: 'Résidences Crous', exact: true }).filter({ visible: true }).click()
 
     await expect(page.getByText('Résidence E2E Crous')).toBeVisible()
     await expect(page.getByText('Résidence E2E du Centre')).toHaveCount(0)
