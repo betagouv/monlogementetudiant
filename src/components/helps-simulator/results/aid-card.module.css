@@ -51,3 +51,13 @@
   color: var(--text-default-warning);
   font-size: 0.875rem;
 }
+
+@media (max-width: 47.98em) {
+  .content {
+    min-width: 0;
+  }
+
+  .logoContainer {
+    margin-left: 0.5rem;
+  }
+}

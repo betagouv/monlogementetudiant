@@ -15,11 +15,11 @@ export default async function HousingAidPage() {
 
   return (
     <>
-      <div className="fr-border-right fr-border-top fr-border-bottom fr-px-6w fr-py-5w">
+      <div className="fr-border-right fr-border-top fr-border-bottom fr-px-2w fr-px-md-6w fr-py-5w">
         <h1>{t('title')}</h1>
         <span className="fr-text--xl fr-text-mention--grey">{t('description')}</span>
       </div>
-      <div className={clsx(styles.summaryContainer, 'fr-px-6w fr-py-5w')}>
+      <div className={clsx(styles.summaryContainer, 'fr-px-2w fr-px-md-6w fr-py-5w')}>
         <SavedSimulationResults inputs={inputs} />
       </div>
     </>
