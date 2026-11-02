@@ -1,7 +1,9 @@
 import path from 'node:path'
-import { Document, Font, Page, StyleSheet, Text, View } from '@react-pdf/renderer'
+import { Document, Font, Page, Path, StyleSheet, Svg, Text, View } from '@react-pdf/renderer'
 import type { TBudgetFrequency } from '~/schemas/budget-simulation'
 import { formatPdfAmount, formatPdfPercent, type TBudgetPdfData, type TBudgetPdfLine } from '~/server/budget-pdf/budget-pdf-data'
+import { donutSlices } from '~/server/budget-pdf/donut'
+import { EXPENSE_COLORS } from '~/utils/budget-colors'
 
 const FONTS_DIR = path.join(process.cwd(), 'node_modules/@codegouvfr/react-dsfr/dsfr/fonts')
 
@@ -24,6 +26,10 @@ function registerMarianneFont(): boolean {
 
 const FONT_FAMILY = registerMarianneFont() ? 'Marianne' : 'Helvetica'
 
+const DONUT_SIZE = 96
+const DONUT_OUTER = 48
+const DONUT_INNER = 36
+
 const BLUE_FRANCE = '#000091'
 const RED_MARIANNE = '#e1000f'
 const GREY_TEXT = '#666666'
@@ -32,12 +38,12 @@ const INCOME_COLOR = '#18753c'
 const EXPENSE_COLOR = '#ce0500'
 
 const styles = StyleSheet.create({
-  page: { padding: 40, paddingBottom: 56, fontFamily: FONT_FAMILY, fontSize: 10, color: '#161616', lineHeight: 1.4 },
+  page: { padding: 40, paddingBottom: 72, fontFamily: FONT_FAMILY, fontSize: 10, color: '#161616' },
   header: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 24,
-    paddingBottom: 16,
+    marginBottom: 16,
+    paddingBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: BORDER,
   },
@@ -49,32 +55,35 @@ const styles = StyleSheet.create({
   serviceName: { fontSize: 12, fontWeight: 'bold' },
   serviceTagline: { fontSize: 8, color: GREY_TEXT },
   title: { fontSize: 18, fontWeight: 'bold', lineHeight: 1.3, marginBottom: 4 },
-  subtitle: { fontSize: 9, color: GREY_TEXT, marginBottom: 20 },
-  kpis: { flexDirection: 'row', marginBottom: 20, borderWidth: 1, borderColor: BORDER },
+  subtitle: { fontSize: 9, color: GREY_TEXT, marginBottom: 16 },
+  kpis: { flexDirection: 'row', marginBottom: 16, borderWidth: 1, borderColor: BORDER },
   kpi: { flex: 1, padding: 10, alignItems: 'center' },
   kpiSeparator: { borderLeftWidth: 1, borderLeftColor: BORDER },
   kpiLabel: { fontSize: 8, color: GREY_TEXT, marginBottom: 4, textAlign: 'center' },
   kpiValue: { fontSize: 14, fontWeight: 'bold' },
   kpiHint: { fontSize: 7, color: GREY_TEXT, marginTop: 2, textAlign: 'center' },
-  section: { marginBottom: 18 },
+  section: { marginBottom: 14 },
   sectionTitle: { fontSize: 12, fontWeight: 'bold', marginBottom: 6, paddingBottom: 4, borderBottomWidth: 1, borderBottomColor: BORDER },
   tableHeader: { flexDirection: 'row', paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: BORDER },
   tableHeaderCell: { fontSize: 8, color: GREY_TEXT, fontWeight: 'bold' },
-  row: { flexDirection: 'row', paddingVertical: 4, borderBottomWidth: 0.5, borderBottomColor: '#eeeeee' },
+  row: { flexDirection: 'row', paddingVertical: 3, borderBottomWidth: 0.5, borderBottomColor: '#eeeeee' },
   totalRow: { flexDirection: 'row', paddingVertical: 5 },
-  colLabel: { flex: 3, paddingRight: 8 },
-  colFrequency: { flex: 1.2 },
+  colLabel: { flex: 4, paddingRight: 8 },
+  colFrequency: { flex: 1 },
   colAmount: { flex: 1.2, textAlign: 'right' },
   colMonthly: { flex: 1.4, textAlign: 'right' },
   bold: { fontWeight: 'bold' },
   empty: { color: GREY_TEXT, fontStyle: 'italic', paddingVertical: 4 },
-  shareRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 5 },
-  shareLabel: { width: '40%', paddingRight: 8, fontSize: 9 },
-  shareTrack: { flex: 1, height: 8, backgroundColor: '#eeeeee' },
-  shareBar: { height: 8, backgroundColor: BLUE_FRANCE },
-  shareValue: { width: 90, textAlign: 'right', fontSize: 9 },
-  disclaimer: { fontSize: 8, color: GREY_TEXT, marginTop: 8 },
-  pagination: { position: 'absolute', bottom: 24, left: 40, right: 40, textAlign: 'center', fontSize: 8, color: GREY_TEXT },
+  chartRow: { flexDirection: 'row', alignItems: 'center' },
+  chart: { width: DONUT_SIZE, height: DONUT_SIZE, marginRight: 24 },
+  legend: { flex: 1 },
+  legendRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 5 },
+  legendDot: { width: 8, height: 8, borderRadius: 4, marginRight: 6 },
+  legendLabel: { flex: 1, fontSize: 9, paddingRight: 8 },
+  legendValue: { fontSize: 9, textAlign: 'right' },
+  legendPercent: { color: GREY_TEXT },
+  disclaimer: { position: 'absolute', bottom: 36, left: 40, right: 40, fontSize: 7, color: GREY_TEXT },
+  pagination: { position: 'absolute', bottom: 22, left: 40, right: 40, fontSize: 7, color: GREY_TEXT, textAlign: 'right' },
 })
 
 export type TBudgetPdfLabels = {
@@ -124,6 +133,25 @@ function MarqueEtat({ labels }: { labels: TBudgetPdfLabels }) {
   )
 }
 
+function LineRow<T extends string>({
+  line,
+  typeLabels,
+  labels,
+}: {
+  line: TBudgetPdfLine<T>
+  typeLabels: Record<string, string>
+  labels: TBudgetPdfLabels
+}) {
+  return (
+    <View style={styles.row} wrap={false}>
+      <Text style={styles.colLabel}>{typeLabels[line.type] ?? line.type}</Text>
+      <Text style={styles.colFrequency}>{labels.frequencies[line.frequency]}</Text>
+      <Text style={styles.colAmount}>{formatPdfAmount(line.amount)}</Text>
+      <Text style={styles.colMonthly}>{formatPdfAmount(line.monthly)}</Text>
+    </View>
+  )
+}
+
 function LinesTable<T extends string>({
   title,
   lines,
@@ -139,35 +167,57 @@ function LinesTable<T extends string>({
   labels: TBudgetPdfLabels
   color: string
 }) {
-  return (
-    <View style={styles.section} wrap={false}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      {lines.length === 0 ? (
+  const sectionTitle = <Text style={styles.sectionTitle}>{title}</Text>
+  if (lines.length === 0) {
+    return (
+      <View style={styles.section} wrap={false}>
+        {sectionTitle}
         <Text style={styles.empty}>{labels.empty}</Text>
-      ) : (
-        <>
-          <View style={styles.tableHeader}>
-            <Text style={[styles.tableHeaderCell, styles.colLabel]}>{labels.columnCategory}</Text>
-            <Text style={[styles.tableHeaderCell, styles.colFrequency]}>{labels.columnFrequency}</Text>
-            <Text style={[styles.tableHeaderCell, styles.colAmount]}>{labels.columnAmount}</Text>
-            <Text style={[styles.tableHeaderCell, styles.colMonthly]}>{labels.columnMonthly}</Text>
-          </View>
-          {lines.map((line) => (
-            <View key={line.type} style={styles.row}>
-              <Text style={styles.colLabel}>{typeLabels[line.type] ?? line.type}</Text>
-              <Text style={styles.colFrequency}>{labels.frequencies[line.frequency]}</Text>
-              <Text style={styles.colAmount}>{formatPdfAmount(line.amount)}</Text>
-              <Text style={styles.colMonthly}>{formatPdfAmount(line.monthly)}</Text>
-            </View>
-          ))}
-          <View style={styles.totalRow}>
-            <Text style={[styles.colLabel, styles.bold]}>{labels.total}</Text>
-            <Text style={styles.colFrequency} />
-            <Text style={styles.colAmount} />
-            <Text style={[styles.colMonthly, styles.bold, { color }]}>{formatPdfAmount(total)}</Text>
-          </View>
-        </>
-      )}
+      </View>
+    )
+  }
+
+  const header = (
+    <View style={styles.tableHeader}>
+      <Text style={[styles.tableHeaderCell, styles.colLabel]}>{labels.columnCategory}</Text>
+      <Text style={[styles.tableHeaderCell, styles.colFrequency]}>{labels.columnFrequency}</Text>
+      <Text style={[styles.tableHeaderCell, styles.colAmount]}>{labels.columnAmount}</Text>
+      <Text style={[styles.tableHeaderCell, styles.colMonthly]}>{labels.columnMonthly}</Text>
+    </View>
+  )
+  const totalRow = (
+    <View style={styles.totalRow}>
+      <Text style={[styles.colLabel, styles.bold]}>{labels.total}</Text>
+      <Text style={styles.colFrequency} />
+      <Text style={styles.colAmount} />
+      <Text style={[styles.colMonthly, styles.bold, { color }]}>{formatPdfAmount(total)}</Text>
+    </View>
+  )
+  const row = (line: TBudgetPdfLine<T>) => <LineRow key={line.type} line={line} typeLabels={typeLabels} labels={labels} />
+
+  if (lines.length === 1) {
+    return (
+      <View style={styles.section} wrap={false}>
+        {sectionTitle}
+        {header}
+        {lines.map(row)}
+        {totalRow}
+      </View>
+    )
+  }
+
+  return (
+    <View style={styles.section}>
+      <View wrap={false}>
+        {sectionTitle}
+        {header}
+        {lines.slice(0, 1).map(row)}
+      </View>
+      {lines.slice(1, -1).map(row)}
+      <View wrap={false}>
+        {lines.slice(-1).map(row)}
+        {totalRow}
+      </View>
     </View>
   )
 }
@@ -202,6 +252,33 @@ export function BudgetPdf({ data, labels }: { data: TBudgetPdfData; labels: TBud
           </View>
         </View>
 
+        {data.expenseShares.length > 0 && (
+          <View style={styles.section} wrap={false}>
+            <Text style={styles.sectionTitle}>{labels.distributionTitle}</Text>
+            <View style={styles.chartRow}>
+              <Svg style={styles.chart} viewBox={`0 0 ${DONUT_SIZE} ${DONUT_SIZE}`}>
+                {donutSlices(
+                  data.expenseShares.map((share) => ({ key: share.type, share: share.share })),
+                  { cx: DONUT_SIZE / 2, cy: DONUT_SIZE / 2, outer: DONUT_OUTER, inner: DONUT_INNER },
+                ).map((slice) => (
+                  <Path key={slice.key} d={slice.path} fill={EXPENSE_COLORS[slice.key]} />
+                ))}
+              </Svg>
+              <View style={styles.legend}>
+                {data.expenseShares.map((share) => (
+                  <View key={share.type} style={styles.legendRow}>
+                    <View style={[styles.legendDot, { backgroundColor: EXPENSE_COLORS[share.type] }]} />
+                    <Text style={styles.legendLabel}>{labels.expenseTypes[share.type] ?? share.type}</Text>
+                    <Text style={styles.legendValue}>
+                      {formatPdfAmount(share.monthly)} <Text style={styles.legendPercent}>({formatPdfPercent(share.share)})</Text>
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </View>
+        )}
+
         <LinesTable
           title={labels.incomesTitle}
           lines={data.incomes}
@@ -218,23 +295,9 @@ export function BudgetPdf({ data, labels }: { data: TBudgetPdfData; labels: TBud
           labels={labels}
           color={EXPENSE_COLOR}
         />
-
-        {data.expenseShares.length > 0 && (
-          <View style={styles.section} wrap={false}>
-            <Text style={styles.sectionTitle}>{labels.distributionTitle}</Text>
-            {data.expenseShares.map((share) => (
-              <View key={share.type} style={styles.shareRow}>
-                <Text style={styles.shareLabel}>{labels.expenseTypes[share.type] ?? share.type}</Text>
-                <View style={styles.shareTrack}>
-                  <View style={[styles.shareBar, { width: `${Math.max(share.share * 100, 1)}%` }]} />
-                </View>
-                <Text style={styles.shareValue}>{formatPdfPercent(share.share)}</Text>
-              </View>
-            ))}
-          </View>
-        )}
-
-        <Text style={styles.disclaimer}>{labels.disclaimer}</Text>
+        <Text style={styles.disclaimer} fixed>
+          {labels.disclaimer}
+        </Text>
         <Text style={styles.pagination} render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} fixed />
       </Page>
     </Document>
