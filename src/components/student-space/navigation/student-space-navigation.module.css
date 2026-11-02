@@ -2,3 +2,11 @@
   box-shadow: none !important;
   padding: 0rem;
 }
+
+@media (max-width: 47.98em) {
+  .menuRoot.menuRoot {
+    margin-left: 0;
+    margin-right: 0;
+    box-shadow: none;
+  }
+}
