@@ -8,18 +8,12 @@ import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { NewWindowHint } from '~/components/ui/new-window'
 import { RentSearchModal } from '~/components/ui/rent-search-modal'
-import {
-  CVEC_AMOUNT,
-  DEFAULT_EXPENSE_FREQUENCIES,
-  EXPENSE_RANGES,
-  ExpenseType,
-  useBudgetSimulator,
-  YEARLY_ONLY_EXPENSE_TYPES,
-} from './budget-simulator-context'
+import { CVEC_AMOUNT, EXPENSE_RANGES, ExpenseType, useBudgetSimulator, YEARLY_ONLY_EXPENSE_TYPES } from './budget-simulator-context'
 import styles from './forms.module.css'
 
 export function ExpenseForm() {
-  const { state, updateMonthlyExpenses, updateExpenseFrequencies, addExpenseType, removeExpenseType } = useBudgetSimulator()
+  const { state, updateMonthlyExpenses, updateExpenseFrequencies, addExpenseType, removeExpenseType, replaceExpenseType } =
+    useBudgetSimulator()
   const t = useTranslations('budgetSimulator.expenses')
 
   const handleExpenseChange = (type: ExpenseType, value: number) => {
@@ -71,15 +65,7 @@ export function ExpenseForm() {
                 label={t('categoryLabel')}
                 nativeSelectProps={{
                   value: type,
-                  onChange: (e) => {
-                    const oldAmount = state.monthlyExpenses[type]
-                    removeExpenseType(type)
-                    addExpenseType(e.target.value as ExpenseType)
-                    updateMonthlyExpenses({ [e.target.value as ExpenseType]: oldAmount })
-                    updateExpenseFrequencies({
-                      [e.target.value as ExpenseType]: DEFAULT_EXPENSE_FREQUENCIES[e.target.value as ExpenseType],
-                    })
-                  },
+                  onChange: (e) => replaceExpenseType(type, e.target.value as ExpenseType),
                 }}
               >
                 {expenseTypes
