@@ -50,6 +50,14 @@ export const TypologyTabContent = (props: TypologyTabContentProps) => {
     },
   }
 
+  const rentTransform = {
+    setValueAs: (value: string | number | undefined) => {
+      if (value === '' || value === undefined || value === null) return undefined
+      const parsed = parseDecimal(value)
+      return parsed === null ? Number.NaN : Math.round(parsed)
+    },
+  }
+
   const nbTotalValue = watch(getFieldName('nbTotal'))
   const isColocation = isPerPersonTypology(typologyType)
   const usedTypes = props.usedTypes ?? []
@@ -101,9 +109,9 @@ export const TypologyTabContent = (props: TypologyTabContentProps) => {
                 state={getError('priceMin') ? 'error' : 'default'}
                 stateRelatedMessage={getError('priceMin')?.message}
                 nativeInputProps={{
-                  type: 'number',
-                  min: 0,
-                  ...register(getFieldName('priceMin'), numberTransform),
+                  type: 'text',
+                  inputMode: 'decimal',
+                  ...register(getFieldName('priceMin'), rentTransform),
                 }}
               />
             </div>
@@ -115,9 +123,9 @@ export const TypologyTabContent = (props: TypologyTabContentProps) => {
                 state={getError('priceMax') ? 'error' : 'default'}
                 stateRelatedMessage={getError('priceMax')?.message}
                 nativeInputProps={{
-                  type: 'number',
-                  min: 0,
-                  ...register(getFieldName('priceMax'), numberTransform),
+                  type: 'text',
+                  inputMode: 'decimal',
+                  ...register(getFieldName('priceMax'), rentTransform),
                 }}
               />
             </div>
