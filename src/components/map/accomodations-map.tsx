@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import L from 'leaflet'
-import { FC, RefObject, useCallback, useEffect, useMemo, useRef } from 'react'
+import { ComponentRef, FC, ReactNode, RefObject, useCallback, useEffect, useMemo, useRef } from 'react'
 import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import MarkerClusterGroup from 'react-leaflet-cluster'
 import { tss } from 'tss-react'
@@ -80,6 +80,36 @@ const BoundsHandler: FC<{
   })
 
   return null
+}
+
+const ClusteredMarkers: FC<{ appliedBbox: RefObject<string | null>; children: ReactNode }> = ({ appliedBbox, children }) => {
+  const commitBboxOnMoveEnd = useCommitBboxOnMoveEnd(appliedBbox)
+  const clusterGroup = useRef<ComponentRef<typeof MarkerClusterGroup>>(null)
+
+  useEffect(() => {
+    const group = clusterGroup.current
+    group?.on('clusterclick clusterkeypress', commitBboxOnMoveEnd)
+    return () => {
+      group?.off('clusterclick clusterkeypress', commitBboxOnMoveEnd)
+    }
+  }, [commitBboxOnMoveEnd])
+
+  return (
+    <MarkerClusterGroup ref={clusterGroup} chunkedLoading showCoverageOnHover={false} maxClusterRadius={50}>
+      {children}
+    </MarkerClusterGroup>
+  )
+}
+
+const AccommodationPopup: FC<{ id: number }> = ({ id }) => {
+  const popup = useRef<L.Popup>(null)
+  const handleLoaded = useCallback(() => popup.current?.update(), [])
+
+  return (
+    <Popup ref={popup} autoPanPadding={[20, 20]}>
+      <AccommodationMapPreview id={id} onLoaded={handleLoaded} />
+    </Popup>
+  )
 }
 
 const CustomZoomControls: FC<{ appliedBbox: RefObject<string | null> }> = ({ appliedBbox }) => {
@@ -215,9 +245,7 @@ export const AccomodationsMap: FC = () => {
         title={marker.name}
         alt={marker.name}
       >
-        <Popup>
-          <AccommodationMapPreview id={marker.id} />
-        </Popup>
+        <AccommodationPopup id={marker.id} />
       </Marker>
     ))
   }, [markersData, markerPositions, setQueryStates])
@@ -234,9 +262,7 @@ export const AccomodationsMap: FC = () => {
         />
         <BoundsHandler markerPositions={markerPositions} territoryBounds={territoryBounds} appliedBbox={appliedBbox} />
         <CustomZoomControls appliedBbox={appliedBbox} />
-        <MarkerClusterGroup chunkedLoading showCoverageOnHover={false} maxClusterRadius={50}>
-          {markers}
-        </MarkerClusterGroup>
+        <ClusteredMarkers appliedBbox={appliedBbox}>{markers}</ClusteredMarkers>
       </MapContainer>
     )
   }, [markers, markerPositions, territoryBounds, queryStates.bbox])
