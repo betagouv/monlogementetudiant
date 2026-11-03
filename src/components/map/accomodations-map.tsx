@@ -3,10 +3,11 @@
 import { useQuery } from '@tanstack/react-query'
 import L from 'leaflet'
 import { ComponentRef, FC, ReactNode, RefObject, useCallback, useEffect, useMemo, useRef } from 'react'
-import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from 'react-leaflet'
+import { MapContainer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet'
 import MarkerClusterGroup from 'react-leaflet-cluster'
 import { tss } from 'tss-react'
 import { AccommodationMapPreview } from '~/components/map/accommodation-map-preview'
+import { BaseTileLayer } from '~/components/map/base-tile-layer'
 import { MapAccessibleName } from '~/components/map/map-accessible-name'
 import 'leaflet/dist/leaflet.css'
 import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css'
@@ -256,10 +257,7 @@ export const AccomodationsMap: FC = () => {
     return (
       <MapContainer center={[46.5, 2.4]} zoom={6} className={classes.mapContainer} scrollWheelZoom={false} zoomControl={false}>
         <MapAccessibleName label={t('resultsLabel')} />
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        />
+        <BaseTileLayer />
         <BoundsHandler markerPositions={markerPositions} territoryBounds={territoryBounds} appliedBbox={appliedBbox} />
         <CustomZoomControls appliedBbox={appliedBbox} />
         <ClusteredMarkers appliedBbox={appliedBbox}>{markers}</ClusteredMarkers>

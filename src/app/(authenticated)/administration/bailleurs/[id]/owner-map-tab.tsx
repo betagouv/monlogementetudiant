@@ -4,7 +4,8 @@ import Button from '@codegouvfr/react-dsfr/Button'
 import L from 'leaflet'
 import { parseAsString, parseAsStringLiteral, useQueryStates } from 'nuqs'
 import { FC, useMemo } from 'react'
-import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
+import { MapContainer, Marker, Popup } from 'react-leaflet'
+import { BaseTileLayer } from '~/components/map/base-tile-layer'
 import 'leaflet/dist/leaflet.css'
 import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css'
 import 'leaflet-defaulticon-compatibility'
@@ -125,10 +126,7 @@ export const OwnerMapTab: FC<{ accommodations: Accommodation[] }> = ({ accommoda
             style={{ height: '100%', width: '100%' }}
             scrollWheelZoom
           >
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            />
+            <BaseTileLayer />
             {filtered.map((acc) => (
               <Marker key={acc.id} position={[acc.lat!, acc.lng!]} icon={acc.nbAvailableApartments > 0 ? greenIcon : redIcon}>
                 <Popup>

@@ -4,8 +4,9 @@ import { fr } from '@codegouvfr/react-dsfr'
 import L from 'leaflet'
 import { useTranslations } from 'next-intl'
 import { FC, useEffect } from 'react'
-import { MapContainer, Marker, TileLayer, useMap, ZoomControl } from 'react-leaflet'
+import { MapContainer, Marker, useMap, ZoomControl } from 'react-leaflet'
 import { tss } from 'tss-react'
+import { BaseTileLayer } from '~/components/map/base-tile-layer'
 import { MapAccessibleName } from '~/components/map/map-accessible-name'
 import 'leaflet/dist/leaflet.css'
 import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css'
@@ -43,10 +44,7 @@ export const AccomodationMap: FC<{ positions: Position[]; withScroll: boolean; l
     >
       <ZoomControl zoomInTitle={t('zoomIn')} zoomOutTitle={t('zoomOut')} />
       <MapAccessibleName label={label ?? t('accommodationLabel')} />
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      />
+      <BaseTileLayer />
       {positions.map((p, i) => (
         // Sans alt explicite, Leaflet applique son alternative par défaut « Marker » : un mot
         // anglais qui nomme le composant technique au lieu de ce que le marqueur désigne.
