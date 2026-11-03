@@ -133,6 +133,18 @@ describe('runStaleAvailabilityReset — bailleurs sans parcours', () => {
     expect(await runStaleAvailabilityReset()).toMatchObject({ warned: 0 })
   })
 
+  it('laisse 30 jours à compter du début du suivi, même si les disponibilités sont plus anciennes', async () => {
+    await stampAvailability(daysAgo(90))
+    await getTestDb()
+      .update(owners)
+      .set({ availabilityTrackedSince: daysAgo(10) })
+      .where(eq(owners.id, ownerId))
+
+    expect(await runStaleAvailabilityReset()).toMatchObject({ warned: 0 })
+    expect(await runStaleAvailabilityReset({ now: daysAhead(20) })).toMatchObject({ warned: 1, reset: 0 })
+    expect(await runStaleAvailabilityReset({ now: daysAhead(27) })).toMatchObject({ reset: 1 })
+  })
+
   it('est idempotent', async () => {
     await runStaleAvailabilityReset()
     expect(await runStaleAvailabilityReset()).toMatchObject({ warned: 0, reset: 0, cleared: 0 })

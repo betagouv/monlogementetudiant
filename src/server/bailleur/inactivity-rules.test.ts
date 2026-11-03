@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { DAY_MS } from '~/utils/time'
-import { type AvailabilityResetState, decideAvailabilityReset, decideInactivity, type ResidenceInactivityState } from './inactivity-rules'
+import {
+  type AvailabilityResetState,
+  availabilityClockStart,
+  decideAvailabilityReset,
+  decideInactivity,
+  type ResidenceInactivityState,
+} from './inactivity-rules'
 
 const now = new Date('2026-09-28T06:00:00Z')
 const daysAgo = (days: number) => new Date(now.getTime() - days * DAY_MS)
@@ -141,5 +147,23 @@ describe('decideAvailabilityReset', () => {
 
   it('ignore une résidence sans disponibilité renseignée', () => {
     expect(decideAvailabilityReset(resetState({ hasAvailability: false, availabilitySince: daysAgo(90) }), now)).toBeNull()
+  })
+})
+
+describe('availabilityClockStart', () => {
+  const createdAt = daysAgo(200)
+
+  it('part de la dernière mise à jour, à défaut de la création', () => {
+    expect(availabilityClockStart({ lastAvailabilityAt: daysAgo(40), createdAt, trackedSince: null })).toEqual(daysAgo(40))
+    expect(availabilityClockStart({ lastAvailabilityAt: null, createdAt, trackedSince: null })).toEqual(createdAt)
+  })
+
+  it('ne remonte jamais avant le début du suivi', () => {
+    expect(availabilityClockStart({ lastAvailabilityAt: daysAgo(90), createdAt, trackedSince: daysAgo(10) })).toEqual(daysAgo(10))
+    expect(availabilityClockStart({ lastAvailabilityAt: null, createdAt, trackedSince: daysAgo(10) })).toEqual(daysAgo(10))
+  })
+
+  it('ignore le début du suivi une fois les disponibilités mises à jour après lui', () => {
+    expect(availabilityClockStart({ lastAvailabilityAt: daysAgo(5), createdAt, trackedSince: daysAgo(10) })).toEqual(daysAgo(5))
   })
 })

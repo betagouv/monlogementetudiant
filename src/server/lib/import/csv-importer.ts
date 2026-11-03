@@ -9,7 +9,7 @@ import { db } from '~/server/db'
 import { accommodationAddresses, accommodations, externalSources } from '~/server/db/schema'
 import { env } from '~/server/env'
 import { splitDescription } from '~/server/lib/description-sections'
-import { markAvailabilityImported, resolveImportOwner } from '~/server/lib/import/resolve-owner'
+import { resolveImportOwner, restartAvailabilityTracking } from '~/server/lib/import/resolve-owner'
 import { syncTypologies, typologyAggregates, typologyDraft } from '~/server/lib/typologies'
 import { generateAccommodationKey, uploadFile } from '~/server/services/s3'
 import { generateSlug } from '~/server/trpc/utils/accommodation-helpers'
@@ -294,7 +294,7 @@ export async function executeCsvImport(
     url: toUrl(rows[0].owner_url) ?? undefined,
   })
   const { id: ownerId, name: ownerName } = owner
-  await markAvailabilityImported(ownerId)
+  await restartAvailabilityTracking(ownerId)
 
   const result = {
     created: 0,

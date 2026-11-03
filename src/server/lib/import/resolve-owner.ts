@@ -47,7 +47,12 @@ export async function resolveImportOwner({ id, slug, name, url }: ResolveImportO
   return created
 }
 
-/** Les disponibilités de ce bailleur arrivent par import : la règle de fraîcheur des dispos ne s'applique pas à lui. */
+/** Flux automatique de disponibilités (API) : la règle de fraîcheur ne s'applique pas. Jamais pour un import CSV ponctuel. */
 export async function markAvailabilityImported(ownerId: number): Promise<void> {
   await db.update(owners).set({ availabilityImported: true }).where(eq(owners.id, ownerId))
+}
+
+/** Import ponctuel (CSV) : ses disponibilités sont réputées à jour à la date de l'import. */
+export async function restartAvailabilityTracking(ownerId: number): Promise<void> {
+  await db.update(owners).set({ availabilityTrackedSince: new Date() }).where(eq(owners.id, ownerId))
 }
