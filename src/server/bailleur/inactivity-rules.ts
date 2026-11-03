@@ -67,10 +67,24 @@ export function decideInactivity(
   return { clearWarnings, warn, suspend, resume }
 }
 
+/** Point de départ du compteur de fraîcheur : dernière mise à jour, à défaut création, jamais avant le début du suivi. */
+export function availabilityClockStart({
+  lastAvailabilityAt,
+  createdAt,
+  trackedSince,
+}: {
+  lastAvailabilityAt: Date | null
+  createdAt: Date | null
+  trackedSince: Date | null
+}): Date | null {
+  const since = lastAvailabilityAt ?? createdAt
+  return trackedSince && (since === null || trackedSince > since) ? trackedSince : since
+}
+
 export type AvailabilityResetState = {
   hasAvailability: boolean
   /** Dernière mise à jour des disponibilités par un gestionnaire, à défaut création de la résidence. */
-  availabilitySince: Date
+  availabilitySince: Date | null
   warnedAt: Date | null
   /** Résidence suivie par `decideInactivity`, qui gère alors seule l'alerte. */
   inInactivityScope: boolean

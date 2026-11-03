@@ -15,6 +15,7 @@ import { logActivity } from '~/server/services/activity-logger'
 import { sendApplicationsAutoSuspendedEmail, sendApplicationsInactivityWarningEmail } from '~/server/services/brevo'
 import { maskEmail } from '~/utils/mask-email'
 import {
+  availabilityClockStart,
   decideInactivity,
   INACTIVITY_WARNING_DAYS,
   type InactivityDecision,
@@ -106,6 +107,7 @@ export async function evaluateResidences({ accommodationIds, ownerSlug }: { acco
       ownerName: owners.name,
       contactMode: owners.contactMode,
       availabilityImported: owners.availabilityImported,
+      availabilityTrackedSince: owners.availabilityTrackedSince,
       pendingContactsSince: sql`(${pendingContactsSince})`.mapWith(contactRequests.createdAt),
       pendingApplicationsSince: sql`(${pendingApplicationsSince})`.mapWith(dossierFacileApplications.createdAt),
       lastAvailabilityAt: sql`(${lastAvailabilityAt})`.mapWith(accommodationTypologies.availabilityUpdatedAt),
@@ -119,7 +121,13 @@ export function toInactivityState(residence: EvaluatedResidence): ResidenceInact
   return {
     pendingSince:
       residence.contactMode === EOwnerContactMode.DOSSIER_FACILE ? residence.pendingApplicationsSince : residence.pendingContactsSince,
-    availabilitySince: residence.availabilityImported ? null : (residence.lastAvailabilityAt ?? residence.createdAt),
+    availabilitySince: residence.availabilityImported
+      ? null
+      : availabilityClockStart({
+          lastAvailabilityAt: residence.lastAvailabilityAt,
+          createdAt: residence.createdAt,
+          trackedSince: residence.availabilityTrackedSince,
+        }),
     warnedAt: {
       unprocessed_applications: residence.unprocessedApplicationsWarnedAt,
       stale_availability: residence.staleAvailabilityWarnedAt,
