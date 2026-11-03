@@ -502,7 +502,7 @@
       "shared": "Shared flat",
       "tooltip": {
         "accessible": "Residences offering homes adapted for people with reduced mobility",
-        "crous": "Residences managed by CROUS",
+        "crous": "Residences managed by Crous",
         "nonCrous": "Public and private social residences"
       },
       "rangeLabel": "Maximum budget",
@@ -746,7 +746,7 @@
             "column3": "Where to get information?"
           },
           "row1": {
-            "column1": "CROUS scholarship",
+            "column1": "Crous scholarship",
             "column2": "Based on family income",
             "column3": "lescrous.fr"
           },
@@ -1337,7 +1337,7 @@
         "scholarshipLegend": "Do you have a scholarship?",
         "scholarships": {
           "bourseLycee": "Yes, a high school scholarship",
-          "bourseCrous": "Yes, a CROUS scholarship",
+          "bourseCrous": "Yes, a Crous scholarship",
           "allocationSpeciale": "Yes, a specific annual allowance for students in difficulty"
         }
       },
@@ -1363,7 +1363,7 @@
         "name": "Caf housing aid (APL, ALS)",
         "description": "CAF housing aid helps reduce your rent. It is calculated based on your income, the amount of your rent and your situation.",
         "reasons": {
-          "internationalStudent": "As an international student from outside the EU, you are no longer eligible for APL (decree no. 2026-552 of 27 June 2026), unless you are employed, hold a CROUS scholarship or are an apprentice/work-study student.",
+          "internationalStudent": "As an international student from outside the EU, you are no longer eligible for APL (decree no. 2026-552 of 27 June 2026), unless you are employed, hold a Crous scholarship or are an apprentice/work-study student.",
           "incomeCap": "Your income exceeds the €15,800/year ceiling for a single person"
         },
         "amountUpTo": "Up to €{amount}/month",
@@ -1410,12 +1410,12 @@
         "amount": "€500 (one-off aid)"
       },
       "crousMobiliteMaster": {
-        "name": "CROUS Master's mobility aid",
-        "description": "Are you completing your bachelor's degree (licence) this year and do you want to enrol in a first-year Master's (Master 1) in another academic region next year? If you hold a CROUS scholarship, you can receive mobility aid of €1,000. You don't need to take any specific steps to apply for the mobility aid. You will need to provide a copy of the following documents: your bachelor's degree certificate and your enrolment certificate for the first year of your Master's (Master 1). Please note: a professional bachelor's degree (licence professionnelle) does not make you eligible for this aid.",
+        "name": "Crous Master's mobility aid",
+        "description": "Are you completing your bachelor's degree (licence) this year and do you want to enrol in a first-year Master's (Master 1) in another academic region next year? If you hold a Crous scholarship, you can receive mobility aid of €1,000. You don't need to take any specific steps to apply for the mobility aid. You will need to provide a copy of the following documents: your bachelor's degree certificate and your enrolment certificate for the first year of your Master's (Master 1). Please note: a professional bachelor's degree (licence professionnelle) does not make you eligible for this aid.",
         "reasons": {
           "licence3Only": "Reserved for students in the 3rd year of their bachelor's degree (licence)",
           "professionalLicence": "A professional bachelor's degree (licence professionnelle) does not make you eligible for this aid",
-          "crousScholarshipOnly": "Reserved for CROUS scholarship holders",
+          "crousScholarshipOnly": "Reserved for Crous scholarship holders",
           "changingRegion": "You must be enrolling in another academic region next year"
         },
         "amount": "€1,000 (one-off aid)",

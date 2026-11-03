@@ -34,7 +34,7 @@ export const FeaturesSection = async () => {
             </Button>
             <div className={clsx('fr-flex fr-align-items-center fr-justify-content-center fr-flex-gap-4v', styles.featureLogos)}>
               <Image src="/images/apl.svg" width={23} height={30} alt="APL" />
-              <Image src="/images/logo-crous.svg" width={36} height={36} alt="CROUS" />
+              <Image src="/images/logo-crous.svg" width={36} height={36} alt="Crous" />
               <Image src="/images/caf.svg" width={31} height={30} alt="CAF" />
               <Image src="/images/al.svg" width={31} height={32} alt="Action Logement" />
               <Image src="/images/mobilijeune.svg" width={49} height={36} alt="Mobilijeune" />

@@ -12,7 +12,7 @@ export const PartnersSection = async () => {
   const logos = [
     { src: parcourssup, name: 'ParcoursSup' },
     { src: etudiantgouv, name: 'Etudiant.gouv.fr' },
-    { src: crous, name: 'CROUS' },
+    { src: crous, name: 'Crous' },
     { src: messervices, name: 'MesServices.etudiant.gouv.fr' },
     { src: monmaster, name: 'MonMaster' },
   ]

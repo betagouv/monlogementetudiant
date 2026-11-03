@@ -14,7 +14,7 @@ Mon Logement Étudiant est une startup d'État (beta.gouv.fr) du Ministère de l
 
 **Public cible :** Étudiants, notamment boursiers et en situation de précarité.
 
-**Types de logements référencés :** Résidences universitaires CROUS, résidences services étudiantes, logements sociaux jeunes actifs (RSJA, FJT), colocations.
+**Types de logements référencés :** Résidences universitaires Crous, résidences services étudiantes, logements sociaux jeunes actifs (RSJA, FJT), colocations.
 
 ## Fonctionnalités principales
 

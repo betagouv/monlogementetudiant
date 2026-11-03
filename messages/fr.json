@@ -502,7 +502,7 @@
       "shared": "Colocation",
       "tooltip": {
         "accessible": "Résidences proposant des logements adaptés aux personnes à mobilité réduite",
-        "crous": "Résidences gérées par le CROUS",
+        "crous": "Résidences gérées par le Crous",
         "nonCrous": "Résidences sociales publiques et privées"
       },
       "rangeLabel": "Budget maximum",
@@ -746,7 +746,7 @@
             "column3": "Où s'informer ?"
           },
           "row1": {
-            "column1": "Bourse CROUS",
+            "column1": "Bourse Crous",
             "column2": "Selon les revenus familiaux",
             "column3": "lescrous.fr"
           },
@@ -1337,7 +1337,7 @@
         "scholarshipLegend": "Êtes-vous boursier ?",
         "scholarships": {
           "bourseLycee": "Oui, bourse de lycée",
-          "bourseCrous": "Oui, bourse du CROUS",
+          "bourseCrous": "Oui, bourse du Crous",
           "allocationSpeciale": "Oui, allocation spécifique annuelle pour étudiant en difficulté"
         }
       },
@@ -1363,7 +1363,7 @@
         "name": "Aides au logement de la Caf (APL, ALS)",
         "description": "Les aides au logement de la CAF permettent de réduire votre loyer. Elles sont calculées en fonction de vos revenus, du montant de votre loyer et de votre situation.",
         "reasons": {
-          "internationalStudent": "En tant qu'étudiant international extra-communautaire, vous n'êtes plus éligible aux APL (décret n° 2026-552 du 27 juin 2026), sauf si vous êtes salarié, boursier du CROUS ou apprenti/alternant.",
+          "internationalStudent": "En tant qu'étudiant international extra-communautaire, vous n'êtes plus éligible aux APL (décret n° 2026-552 du 27 juin 2026), sauf si vous êtes salarié, boursier du Crous ou apprenti/alternant.",
           "incomeCap": "Vos revenus dépassent le plafond de 15 800€/an pour une personne seule"
         },
         "amountUpTo": "Jusqu'à {amount}€/mois",
@@ -1410,12 +1410,12 @@
         "amount": "500 € (aide ponctuelle)"
       },
       "crousMobiliteMaster": {
-        "name": "Aide à la mobilité en Master du CROUS",
-        "description": "Vous allez obtenir votre licence cette année et vous voulez vous inscrire en Master 1 dans une autre région académique l'année prochaine ? Si vous êtes boursier du CROUS, vous pouvez bénéficier d'une aide à la mobilité de 1 000 €. Vous n'avez pas de démarche particulière à faire pour demander l'aide à la mobilité. Vous devrez fournir une copie des documents suivants : attestation de réussite de licence et certificat d'inscription en 1re année de Master 1. Attention, l'obtention d'une licence professionnelle ne vous permet pas de bénéficier de l'aide.",
+        "name": "Aide à la mobilité en Master du Crous",
+        "description": "Vous allez obtenir votre licence cette année et vous voulez vous inscrire en Master 1 dans une autre région académique l'année prochaine ? Si vous êtes boursier du Crous, vous pouvez bénéficier d'une aide à la mobilité de 1 000 €. Vous n'avez pas de démarche particulière à faire pour demander l'aide à la mobilité. Vous devrez fournir une copie des documents suivants : attestation de réussite de licence et certificat d'inscription en 1re année de Master 1. Attention, l'obtention d'une licence professionnelle ne vous permet pas de bénéficier de l'aide.",
         "reasons": {
           "licence3Only": "Réservé aux étudiants en 3ème année de licence",
           "professionalLicence": "L'obtention d'une licence professionnelle ne permet pas de bénéficier de cette aide",
-          "crousScholarshipOnly": "Réservé aux boursiers du CROUS",
+          "crousScholarshipOnly": "Réservé aux boursiers du Crous",
           "changingRegion": "Vous devez vous inscrire dans une autre région académique l'année prochaine"
         },
         "amount": "1 000 € (aide ponctuelle)",
