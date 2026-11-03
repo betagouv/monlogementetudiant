@@ -9,6 +9,7 @@ import { EResidenceType } from '~/enums/residence-type'
 import { ETargetAudience } from '~/enums/target-audience'
 import { TAccomodationDetails } from '~/schemas/accommodations/accommodations'
 import { isPerPersonTypology } from '~/utils/is-per-person-typology'
+import { formatSurface } from '~/utils/parse-decimal'
 import { getSocialHousingApplicationLink } from '~/utils/social-housing-application-link'
 import styles from './accommodation-residence.module.css'
 import { FjtRsjaNotice } from './fjt-rsja-notice'
@@ -90,8 +91,11 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
                   {accommodation.superficieMin && accommodation.superficieMax && (
                     <span className="fr-text--sm fr-mb-0">
                       {accommodation.superficieMin === accommodation.superficieMax
-                        ? `${accommodation.superficieMin} m²`
-                        : t('surfaceRange', { min: accommodation.superficieMin, max: accommodation.superficieMax })}
+                        ? `${formatSurface(accommodation.superficieMin)} m²`
+                        : t('surfaceRange', {
+                            min: formatSurface(accommodation.superficieMin),
+                            max: formatSurface(accommodation.superficieMax),
+                          })}
                     </span>
                   )}
 

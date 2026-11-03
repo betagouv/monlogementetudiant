@@ -6,6 +6,7 @@ import { splitDescription } from '~/server/lib/description-sections'
 import { ensureCity, geocodeAddressVerified } from '~/server/lib/import/geocoder'
 import { markAvailabilityImported, resolveImportOwner } from '~/server/lib/import/resolve-owner'
 import { mergeTypologies, syncTypologies, type TypologyPatch, typologyAggregates, typologyDraft } from '~/server/lib/typologies'
+import { parseDecimal } from '~/utils/parse-decimal'
 import { accommodationAddresses, accommodations, externalSources, importBlocklist } from '../../src/server/db/schema'
 import { generateAccommodationKey, uploadFile } from '../../src/server/services/s3'
 import { generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
@@ -56,8 +57,8 @@ function normalizeResidence(residence: IbailResidence) {
     rentAmountTo: toInteger(residence.rent_amount_to ?? availability?.rent_amount_to),
     accommodationQuantity: residence.accommodation_quantity ?? availability?.accommodation_quantity ?? null,
     availableAccommodationQuantity: availability?.count ?? residence.available_accommodation_quantity ?? null,
-    surfaceFrom: toInteger(availability?.surface_from),
-    surfaceTo: toInteger(availability?.surface_to),
+    surfaceFrom: parseDecimal(availability?.surface_from),
+    surfaceTo: parseDecimal(availability?.surface_to),
     imageSources: residence.images ?? residence.pictures ?? [],
     externalUrl: residence.url ?? availability?.url ?? OWNER_URL,
   }

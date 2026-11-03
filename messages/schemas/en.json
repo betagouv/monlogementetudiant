@@ -13,6 +13,7 @@
     "superficieMinAtLeastOne": "The minimum floor area must be at least 1 m²",
     "superficieMaxNumber": "The maximum floor area must be a number",
     "superficieMaxAtLeastOne": "The maximum floor area must be at least 1 m²",
+    "superficieTooLarge": "The floor area cannot exceed 9,999 m²",
     "superficieMinGreaterThanMax": "The minimum floor area cannot be greater than the maximum floor area",
     "nbTotalNumber": "The total number must be a number",
     "nbTotalAtLeastOne": "The total number must be at least 1",

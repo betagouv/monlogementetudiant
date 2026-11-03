@@ -10,7 +10,7 @@ import {
   CATEGORIES,
   CATEGORY_TO_TYPE,
   type CrousResidenceRow,
-  cleanNumber,
+  cleanDecimal,
   getDuplicatedUairnes,
   getSheetRows,
   loadDbResidences,
@@ -61,7 +61,7 @@ async function loadExpectedSurfaces(filePath: string, limit?: number): Promise<E
     const current = surfacesByResidence.get(key) ?? new Map<TypoCategory, MinMaxBounds>()
     current.set(
       category,
-      mergeMinMaxBounds(current.get(category), { min: cleanNumber(row.surface_min), max: cleanNumber(row.surface_max) }),
+      mergeMinMaxBounds(current.get(category), { min: cleanDecimal(row.surface_min), max: cleanDecimal(row.surface_max) }),
     )
     surfacesByResidence.set(key, current)
   }

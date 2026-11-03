@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl'
 import { useFormContext } from 'react-hook-form'
 import { TYPOLOGY_TYPES } from '~/schemas/accommodations/create-residence'
 import { isPerPersonTypology } from '~/utils/is-per-person-typology'
+import { parseDecimal } from '~/utils/parse-decimal'
 
 type TypologyTabContentProps = {
   index: number
@@ -39,6 +40,13 @@ export const TypologyTabContent = (props: TypologyTabContentProps) => {
       if (value === '' || value === undefined || value === null) return undefined
       const num = Number(value)
       return isNaN(num) ? undefined : num
+    },
+  }
+
+  const decimalTransform = {
+    setValueAs: (value: string | number | undefined) => {
+      if (value === '' || value === undefined || value === null) return undefined
+      return parseDecimal(value) ?? Number.NaN
     },
   }
 
@@ -129,9 +137,9 @@ export const TypologyTabContent = (props: TypologyTabContentProps) => {
                 state={getError('superficieMin') ? 'error' : 'default'}
                 stateRelatedMessage={getError('superficieMin')?.message}
                 nativeInputProps={{
-                  type: 'number',
-                  min: 1,
-                  ...register(getFieldName('superficieMin'), numberTransform),
+                  type: 'text',
+                  inputMode: 'decimal',
+                  ...register(getFieldName('superficieMin'), decimalTransform),
                 }}
               />
             </div>
@@ -143,9 +151,9 @@ export const TypologyTabContent = (props: TypologyTabContentProps) => {
                 state={getError('superficieMax') ? 'error' : 'default'}
                 stateRelatedMessage={getError('superficieMax')?.message}
                 nativeInputProps={{
-                  type: 'number',
-                  min: 1,
-                  ...register(getFieldName('superficieMax'), numberTransform),
+                  type: 'text',
+                  inputMode: 'decimal',
+                  ...register(getFieldName('superficieMax'), decimalTransform),
                 }}
               />
             </div>

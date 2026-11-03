@@ -13,6 +13,7 @@ import {
   buildMatchSourceId,
   CATEGORIES,
   CATEGORY_TO_TYPE,
+  cleanDecimal,
   cleanNumber,
   getDuplicatedUairnes,
   getSheetRows,
@@ -92,8 +93,8 @@ function buildTypologyFromRows(rows: CrousTypology[]) {
     entry.count++
     entry.rentMin = minValue(entry.rentMin, cleanNumber(row.loyer_min))
     entry.rentMax = maxValue(entry.rentMax, cleanNumber(row.loyer_max))
-    entry.surfaceMin = minValue(entry.surfaceMin, cleanNumber(row.surface_min))
-    entry.surfaceMax = maxValue(entry.surfaceMax, cleanNumber(row.surface_max))
+    entry.surfaceMin = minValue(entry.surfaceMin, cleanDecimal(row.surface_min))
+    entry.surfaceMax = maxValue(entry.surfaceMax, cleanDecimal(row.surface_max))
 
     const typologie = row.typologie?.trim().toUpperCase() ?? ''
     const name = row.nom_lgt?.trim().toUpperCase() ?? ''
