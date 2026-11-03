@@ -13,6 +13,7 @@
     "superficieMinAtLeastOne": "La superficie minimum doit être au moins 1 m²",
     "superficieMaxNumber": "La superficie maximum doit être un nombre",
     "superficieMaxAtLeastOne": "La superficie maximum doit être au moins 1 m²",
+    "superficieTooLarge": "La superficie ne peut pas dépasser 9 999 m²",
     "superficieMinGreaterThanMax": "La superficie minimum ne peut pas être supérieure à la superficie maximum",
     "nbTotalNumber": "Le nombre total doit être un nombre",
     "nbTotalAtLeastOne": "Le nombre total doit être au moins 1",

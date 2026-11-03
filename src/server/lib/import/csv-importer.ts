@@ -14,7 +14,7 @@ import { syncTypologies, typologyAggregates, typologyDraft } from '~/server/lib/
 import { generateAccommodationKey, uploadFile } from '~/server/services/s3'
 import { generateSlug } from '~/server/trpc/utils/accommodation-helpers'
 import { findAvailableSlug } from '~/server/utils/slug'
-import { type CsvRow, generateSourceId, normalizeEnum, parseCsvContent, toBool, toDigit, toUrl } from './csv-parser'
+import { type CsvRow, generateSourceId, normalizeEnum, parseCsvContent, toBool, toDecimal, toDigit, toUrl } from './csv-parser'
 import { ensureCity, geocodeAddressVerified, geocodeImportRow, reverseGeocode } from './geocoder'
 
 export type ProgressLine = {
@@ -119,22 +119,22 @@ function buildValidationPayload(row: CsvRow) {
     price_max_t6: toDigit(row.t6_rent_max) ?? undefined,
     price_min_t7_more: toDigit(row.t7_more_rent_min) ?? undefined,
     price_max_t7_more: toDigit(row.t7_more_rent_max) ?? undefined,
-    superficie_min_t1: toDigit(row.superficie_min_t1) ?? undefined,
-    superficie_max_t1: toDigit(row.superficie_max_t1) ?? undefined,
-    superficie_min_t1_bis: toDigit(row.superficie_min_t1_bis) ?? undefined,
-    superficie_max_t1_bis: toDigit(row.superficie_max_t1_bis) ?? undefined,
-    superficie_min_t2: toDigit(row.superficie_min_t2) ?? undefined,
-    superficie_max_t2: toDigit(row.superficie_max_t2) ?? undefined,
-    superficie_min_t3: toDigit(row.superficie_min_t3) ?? undefined,
-    superficie_max_t3: toDigit(row.superficie_max_t3) ?? undefined,
-    superficie_min_t4: toDigit(row.superficie_min_t4) ?? undefined,
-    superficie_max_t4: toDigit(row.superficie_max_t4) ?? undefined,
-    superficie_min_t5: toDigit(row.superficie_min_t5) ?? undefined,
-    superficie_max_t5: toDigit(row.superficie_max_t5) ?? undefined,
-    superficie_min_t6: toDigit(row.superficie_min_t6) ?? undefined,
-    superficie_max_t6: toDigit(row.superficie_max_t6) ?? undefined,
-    superficie_min_t7_more: toDigit(row.superficie_min_t7_more) ?? undefined,
-    superficie_max_t7_more: toDigit(row.superficie_max_t7_more) ?? undefined,
+    superficie_min_t1: toDecimal(row.superficie_min_t1) ?? undefined,
+    superficie_max_t1: toDecimal(row.superficie_max_t1) ?? undefined,
+    superficie_min_t1_bis: toDecimal(row.superficie_min_t1_bis) ?? undefined,
+    superficie_max_t1_bis: toDecimal(row.superficie_max_t1_bis) ?? undefined,
+    superficie_min_t2: toDecimal(row.superficie_min_t2) ?? undefined,
+    superficie_max_t2: toDecimal(row.superficie_max_t2) ?? undefined,
+    superficie_min_t3: toDecimal(row.superficie_min_t3) ?? undefined,
+    superficie_max_t3: toDecimal(row.superficie_max_t3) ?? undefined,
+    superficie_min_t4: toDecimal(row.superficie_min_t4) ?? undefined,
+    superficie_max_t4: toDecimal(row.superficie_max_t4) ?? undefined,
+    superficie_min_t5: toDecimal(row.superficie_min_t5) ?? undefined,
+    superficie_max_t5: toDecimal(row.superficie_max_t5) ?? undefined,
+    superficie_min_t6: toDecimal(row.superficie_min_t6) ?? undefined,
+    superficie_max_t6: toDecimal(row.superficie_max_t6) ?? undefined,
+    superficie_min_t7_more: toDecimal(row.superficie_min_t7_more) ?? undefined,
+    superficie_max_t7_more: toDecimal(row.superficie_max_t7_more) ?? undefined,
     nbAccessibleApartments: toDigit(row.nb_accessible_apartments, true) ?? undefined,
     nbColivingApartments: toDigit(row.nb_coliving_apartments, true) ?? undefined,
     refrigerator: toBool(row.refrigerator) ?? undefined,
@@ -378,8 +378,8 @@ export async function executeCsvImport(
           nbTotal: toDigit(row[`nb_${type}`]),
           priceMin: toDigit(row[`${type}_rent_min`]),
           priceMax: toDigit(row[`${type}_rent_max`]),
-          superficieMin: toDigit(row[`superficie_min_${type}`]),
-          superficieMax: toDigit(row[`superficie_max_${type}`]),
+          superficieMin: toDecimal(row[`superficie_min_${type}`]),
+          superficieMax: toDecimal(row[`superficie_max_${type}`]),
         }),
       )
 

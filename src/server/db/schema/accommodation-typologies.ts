@@ -1,4 +1,4 @@
-import { bigint, boolean, index, integer, pgEnum, pgTable, text, timestamp, unique } from 'drizzle-orm/pg-core'
+import { bigint, boolean, index, integer, numeric, pgEnum, pgTable, text, timestamp, unique } from 'drizzle-orm/pg-core'
 import { accommodations } from './accommodations'
 import { user } from './auth'
 
@@ -16,8 +16,8 @@ export const accommodationTypologies = pgTable(
     type: typologyTypeEnum('type').notNull(),
     priceMin: integer('price_min'),
     priceMax: integer('price_max'),
-    superficieMin: integer('superficie_min'),
-    superficieMax: integer('superficie_max'),
+    superficieMin: numeric('superficie_min', { precision: 6, scale: 2, mode: 'number' }),
+    superficieMax: numeric('superficie_max', { precision: 6, scale: 2, mode: 'number' }),
     nbTotal: integer('nb_total'),
     nbAvailable: integer('nb_available'),
     colocation: boolean('colocation').notNull().default(false),

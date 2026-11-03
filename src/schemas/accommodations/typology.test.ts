@@ -29,6 +29,11 @@ describe('ZTypology', () => {
     expect(ZTypology.safeParse({ ...valid, nbTotal: 5, nbAvailable: 10 }).success).toBe(false)
   })
 
+  it('accepte une superficie décimale et refuse une superficie hors colonne', () => {
+    expect(ZTypology.safeParse({ ...valid, superficieMin: 29.7, superficieMax: 30.25 }).success).toBe(true)
+    expect(ZTypology.safeParse({ ...valid, superficieMax: 10000 }).success).toBe(false)
+  })
+
   it('enforces the minimum bounds (nbTotal >= 1, superficie >= 1)', () => {
     expect(ZTypology.safeParse({ ...valid, nbTotal: 0 }).success).toBe(false)
     expect(ZTypology.safeParse({ ...valid, superficieMin: 0 }).success).toBe(false)
