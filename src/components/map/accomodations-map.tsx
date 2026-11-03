@@ -14,6 +14,7 @@ import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility
 import 'leaflet-defaulticon-compatibility'
 import 'react-leaflet-cluster/dist/assets/MarkerCluster.css'
 import 'react-leaflet-cluster/dist/assets/MarkerCluster.Default.css'
+import '~/components/map/marker-clusters.css'
 import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { parseAsBoolean, parseAsString, useQueryState, useQueryStates } from 'nuqs'

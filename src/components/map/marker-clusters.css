@@ -1,0 +1,29 @@
+.marker-cluster div {
+  font-family: Marianne, arial, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.marker-cluster-small {
+  background-color: color-mix(in srgb, var(--blue-france-850-200) 60%, transparent);
+}
+.marker-cluster-small div {
+  background-color: var(--blue-france-850-200);
+  color: var(--blue-france-sun-113-625);
+}
+
+.marker-cluster-medium {
+  background-color: color-mix(in srgb, var(--blue-france-sun-113-625-hover) 35%, transparent);
+}
+.marker-cluster-medium div {
+  background-color: var(--blue-france-sun-113-625-hover);
+  color: #fff;
+}
+
+.marker-cluster-large {
+  background-color: color-mix(in srgb, var(--blue-france-sun-113-625) 35%, transparent);
+}
+.marker-cluster-large div {
+  background-color: var(--blue-france-sun-113-625);
+  color: #fff;
+}
