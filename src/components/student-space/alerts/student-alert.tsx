@@ -37,8 +37,8 @@ export const StudentAlert = ({ alert }: StudentAlertProps) => {
           {alert.isAccessible && <Tag small>{t('accessibleTag')}</Tag>}
         </div>
       </div>
-      <div className="fr-mt-4w fr-flex fr-justify-content-space-between">
-        <div className="fr-col-6">
+      <div className="fr-mt-4w fr-flex fr-direction-column fr-direction-md-row fr-justify-content-md-space-between fr-flex-gap-4v">
+        <div className="fr-col-12 fr-col-md-6">
           <ToggleSwitch
             label={t('notificationsLabel')}
             inputTitle={`receive-notifications-${alert.id}`}

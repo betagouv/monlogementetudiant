@@ -158,8 +158,8 @@ describe('import-arpej-ibail integration', () => {
     expect(typos.t1?.nbAvailable).toBe(1)
     expect(typos.t1?.priceMin).toBe(381)
     expect(created!.priceMin).toBe(381)
-    expect(typos.t1?.superficieMin).toBe(18)
-    expect(typos.t1?.superficieMax).toBe(48)
+    expect(typos.t1?.superficieMin).toBe(18.21)
+    expect(typos.t1?.superficieMax).toBe(47.6)
     expect(created!.imagesUrls).toEqual(['https://s3.example.com/test.jpg'])
 
     // Le point retenu est celui que la BAN confirme dans une commune du code postal.

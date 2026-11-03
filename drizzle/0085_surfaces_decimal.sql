@@ -1,0 +1,2 @@
+ALTER TABLE "accommodation_typology" ALTER COLUMN "superficie_min" SET DATA TYPE numeric(6, 2);--> statement-breakpoint
+ALTER TABLE "accommodation_typology" ALTER COLUMN "superficie_max" SET DATA TYPE numeric(6, 2);

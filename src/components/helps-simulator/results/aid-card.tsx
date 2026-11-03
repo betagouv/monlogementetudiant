@@ -81,13 +81,13 @@ export const AidCard: FC<AidCardProps> = ({ aid }) => {
 
       <p className={clsx('fr-text--sm fr-mb-0', styles.description)}>{tAids(aid.descriptionKey)}</p>
 
-      <div className="fr-flex fr-justify-content-space-between fr-align-items-center fr-mt-1w">
+      <div className="fr-flex fr-direction-column fr-direction-md-row fr-justify-content-md-space-between fr-align-items-md-center fr-flex-gap-2v fr-mt-1w">
         {aid.isEligible && aid.amountLabel ? (
           <div className={clsx('fr-px-2v fr-py-1v', styles.amountBadge)}>
             <span className={styles.amountLabel}>{tAids(aid.amountLabel.key, aid.amountLabel.values)}</span>
           </div>
         ) : (
-          <div />
+          <div className="fr-hidden fr-unhidden-md" />
         )}
         {link && (
           <Button

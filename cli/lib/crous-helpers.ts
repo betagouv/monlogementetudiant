@@ -3,6 +3,7 @@ import readXlsxFile, { type Sheet } from 'read-excel-file/node'
 import type { TypologyType } from '~/schemas/accommodations/typology'
 import { db } from '~/server/db'
 import { accommodations, externalSources, owners } from '~/server/db/schema'
+import { parseDecimal } from '~/utils/parse-decimal'
 
 export type TypoCategory = 't1' | 't1bis' | 't2' | 't3' | 't4' | 't5' | 't6' | 't7more'
 
@@ -52,6 +53,11 @@ export function cleanNumber(value: unknown): number | null {
   const parsed = Number.parseFloat(value.replace(',', '.'))
   if (!Number.isFinite(parsed) || parsed <= 0) return null
   return Math.round(parsed)
+}
+
+export function cleanDecimal(value: unknown): number | null {
+  const parsed = parseDecimal(value)
+  return parsed != null && parsed > 0 ? parsed : null
 }
 
 export function minValue(a: number | null | undefined, b: number | null): number | null {

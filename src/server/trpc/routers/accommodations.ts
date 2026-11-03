@@ -46,68 +46,98 @@ const ZPage = z.number().int().min(1).max(1000).default(1)
 const ZPageSize = z.number().int().min(1).max(MAX_PAGE_SIZE)
 const ZRadius = z.number().min(0).max(100)
 const ZPriceMax = z.number().nonnegative().max(100_000)
+const MAP_MARKERS_LIMIT = 5000
+
+const ZListFilters = z.object({
+  bbox: z.string().max(MAX_PARAM_LENGTH).optional(),
+  center: z.string().max(MAX_PARAM_LENGTH).optional(), // "lng,lat"
+  radius: ZRadius.default(10), // km
+  isAccessible: z.boolean().optional(),
+  hasColiving: z.boolean().optional(),
+  onlyWithAvailability: z.boolean().optional(),
+  priceMax: ZPriceMax.optional(),
+  viewCrous: z.boolean().default(false),
+  academyId: z.number().int().optional(),
+  ownerSlug: z.string().max(MAX_PARAM_LENGTH).optional(),
+  cityId: z.number().int().optional(),
+  departmentId: z.number().int().optional(),
+})
+
+const buildListWhere = async (input: z.infer<typeof ZListFilters>) => {
+  const { bbox, center, radius, academyId, departmentId } = input
+
+  const conditions: SQL[] = [eq(accommodations.published, true), sql`${accommodationAddresses.geom} IS NOT NULL`]
+  // On applique tous les filtres SAUF crous : les conditions résultantes servent à compter les deux buckets,
+  // puis on ajoute le filtre crous par-dessus pour les résultats paginés.
+  await applyCommonListFilters(conditions, { ...input, priceMax: undefined, skipCrous: true })
+
+  let addressOrderHint: SQL | undefined
+  if (input.cityId) {
+    conditions.push(
+      sql`ST_Within(${accommodationAddresses.geom}, (SELECT ${cities.boundary} FROM ${cities} WHERE ${cities.id} = ${input.cityId}))`,
+    )
+    // Prefer the address in the searched city
+    addressOrderHint = sql`CASE WHEN ${accommodationAddresses.cityId} = ${input.cityId} THEN 0 ELSE 1 END, ${accommodationAddresses.isMain} DESC`
+  } else if (departmentId) {
+    conditions.push(
+      sql`ST_Within(${accommodationAddresses.geom}, (SELECT ${departments.boundary} FROM ${departments} WHERE ${departments.id} = ${departmentId}))`,
+    )
+  } else if (academyId) {
+    conditions.push(
+      sql`ST_Within(${accommodationAddresses.geom}, (SELECT ${academies.boundary} FROM ${academies} WHERE ${academies.id} = ${academyId}))`,
+    )
+  } else if (bbox) {
+    const parts = bbox.split(',').map(Number)
+    if (parts.length === 4) {
+      const [xmin, ymin, xmax, ymax] = parts
+      conditions.push(sql`ST_Intersects(${accommodationAddresses.geom}, ST_MakeEnvelope(${xmin}, ${ymin}, ${xmax}, ${ymax}, 4326))`)
+    }
+  } else if (center) {
+    applyCenterRadiusFilter(conditions, center, radius)
+  }
+
+  const crousCondition = input.viewCrous ? crousExistsCondition : sql`NOT (${crousExistsCondition})`
+  const priceBoundsWhere = and(...conditions, crousCondition)
+  if (input.priceMax != null) conditions.push(priceMaxCondition(input.priceMax))
+
+  const whereWithoutCrous = and(...conditions)
+  const where = and(whereWithoutCrous, crousCondition)
+  return { where, whereWithoutCrous, priceBoundsWhere, addressOrderHint }
+}
 
 export const accommodationsRouter = createTRPCRouter({
-  list: baseProcedure
-    .input(
-      z.object({
-        bbox: z.string().max(MAX_PARAM_LENGTH).optional(),
-        center: z.string().max(MAX_PARAM_LENGTH).optional(), // "lng,lat"
-        radius: ZRadius.default(10), // km
-        page: ZPage,
-        pageSize: ZPageSize.default(12),
-        isAccessible: z.boolean().optional(),
-        hasColiving: z.boolean().optional(),
-        onlyWithAvailability: z.boolean().optional(),
-        priceMax: ZPriceMax.optional(),
-        viewCrous: z.boolean().default(false),
-        academyId: z.number().int().optional(),
-        ownerSlug: z.string().max(MAX_PARAM_LENGTH).optional(),
-        cityId: z.number().int().optional(),
-        departmentId: z.number().int().optional(),
-      }),
-    )
-    .query(async ({ input }) => {
-      const { bbox, center, radius, page, pageSize, academyId, departmentId } = input
+  list: baseProcedure.input(ZListFilters.extend({ page: ZPage, pageSize: ZPageSize.default(12) })).query(async ({ input }) => {
+    const { page, pageSize } = input
+    const conditions = await buildListWhere(input)
+    return listAccommodationsWithConditions({ page, pageSize, ...conditions })
+  }),
 
-      const conditions: SQL[] = [eq(accommodations.published, true), sql`${accommodationAddresses.geom} IS NOT NULL`]
-      // On applique tous les filtres SAUF crous : les conditions résultantes servent à compter les deux buckets,
-      // puis on ajoute le filtre crous par-dessus pour les résultats paginés.
-      await applyCommonListFilters(conditions, { ...input, priceMax: undefined, skipCrous: true })
+  mapMarkers: baseProcedure.input(ZListFilters).query(async ({ input }) => {
+    const { where, addressOrderHint } = await buildListWhere(input)
+    return db
+      .selectDistinctOn([accommodations.id], {
+        id: accommodations.id,
+        name: accommodations.name,
+        lat: sql<number>`ST_Y(${accommodationAddresses.geom}::geometry)`.mapWith(Number),
+        lng: sql<number>`ST_X(${accommodationAddresses.geom}::geometry)`.mapWith(Number),
+      })
+      .from(accommodations)
+      .innerJoin(accommodationAddresses, eq(accommodationAddresses.accommodationId, accommodations.id))
+      .innerJoin(cities, eq(cities.id, accommodationAddresses.cityId))
+      .where(where)
+      .orderBy(accommodations.id, addressOrderHint ?? sql`${accommodationAddresses.isMain} DESC`)
+      .limit(MAP_MARKERS_LIMIT)
+  }),
 
-      let addressOrderHint: SQL | undefined
-      if (input.cityId) {
-        conditions.push(
-          sql`ST_Within(${accommodationAddresses.geom}, (SELECT ${cities.boundary} FROM ${cities} WHERE ${cities.id} = ${input.cityId}))`,
-        )
-        // Prefer the address in the searched city
-        addressOrderHint = sql`CASE WHEN ${accommodationAddresses.cityId} = ${input.cityId} THEN 0 ELSE 1 END, ${accommodationAddresses.isMain} DESC`
-      } else if (departmentId) {
-        conditions.push(
-          sql`ST_Within(${accommodationAddresses.geom}, (SELECT ${departments.boundary} FROM ${departments} WHERE ${departments.id} = ${departmentId}))`,
-        )
-      } else if (academyId) {
-        conditions.push(
-          sql`ST_Within(${accommodationAddresses.geom}, (SELECT ${academies.boundary} FROM ${academies} WHERE ${academies.id} = ${academyId}))`,
-        )
-      } else if (bbox) {
-        const parts = bbox.split(',').map(Number)
-        if (parts.length === 4) {
-          const [xmin, ymin, xmax, ymax] = parts
-          conditions.push(sql`ST_Intersects(${accommodationAddresses.geom}, ST_MakeEnvelope(${xmin}, ${ymin}, ${xmax}, ${ymax}, 4326))`)
-        }
-      } else if (center) {
-        applyCenterRadiusFilter(conditions, center, radius)
-      }
-
-      const crousCondition = input.viewCrous ? crousExistsCondition : sql`NOT (${crousExistsCondition})`
-      const priceBoundsWhere = and(...conditions, crousCondition)
-      if (input.priceMax != null) conditions.push(priceMaxCondition(input.priceMax))
-
-      const whereWithoutCrous = and(...conditions)
-      const where = and(whereWithoutCrous, crousCondition)
-      return listAccommodationsWithConditions({ page, pageSize, where, whereWithoutCrous, priceBoundsWhere, addressOrderHint })
-    }),
+  mapPreview: baseProcedure.input(z.object({ id: z.number().int().positive() })).query(async ({ input }) => {
+    const { results } = await listAccommodationsWithConditions({
+      page: 1,
+      pageSize: 1,
+      where: and(eq(accommodations.published, true), eq(accommodations.id, input.id)),
+    })
+    if (!results[0]) throw new TRPCError({ code: 'NOT_FOUND' })
+    return results[0]
+  }),
 
   listExpandedByCity: baseProcedure
     .input(

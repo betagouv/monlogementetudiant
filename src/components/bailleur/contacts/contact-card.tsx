@@ -8,13 +8,14 @@ import { useLocale, useTranslations } from 'next-intl'
 import { forwardRef, type HTMLAttributes } from 'react'
 import { EContactSource } from '~/enums/contact-source'
 import { CONTACT_STATUS_CONFIG, CONTACT_STATUSES, EContactStatus } from '~/enums/contact-status'
-import { formatLocalizedDate } from '~/utils/date-helpers'
+import { computeAge, formatLocalizedDate } from '~/utils/date-helpers'
 import { buildHref } from '~/utils/preserve-query-params'
 import styles from './contact-card.module.css'
 
 export interface ContactItem {
   id: string
   studentName: string | null
+  studentBirthdate: string | null
   scholarshipStatus: string | null
   apartmentType: string | null
   status: string
@@ -36,6 +37,7 @@ export const ContactCard = forwardRef<HTMLDivElement, Props>(({ contact, slug, o
   const status = CONTACT_STATUSES.includes(contact.status as EContactStatus) ? (contact.status as EContactStatus) : EContactStatus.A_MODERER
   const config = CONTACT_STATUS_CONFIG[status]
   const studentName = contact.studentName ?? t('defaultCandidateName')
+  const age = computeAge(contact.studentBirthdate)
   const href = buildHref(`/bailleur/contacts/${slug}/${contact.id}`, searchParams)
 
   return (
@@ -66,6 +68,8 @@ export const ContactCard = forwardRef<HTMLDivElement, Props>(({ contact, slug, o
       >
         {studentName}
       </span>
+
+      {age !== null && <span className="ri-calendar-line fr-text--sm fr-text-mention--grey fr-mb-0"> {t('card.age', { count: age })}</span>}
 
       {contact.scholarshipStatus === 'yes' && (
         <span className="ri-money-euro-circle-line fr-text--sm fr-text-mention--grey fr-mb-0"> {t('card.scholarship')}</span>

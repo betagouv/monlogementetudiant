@@ -24,6 +24,9 @@ export const getTypologyLabel = (type: string): string => TYPOLOGIES.find((t) =>
 // Les colonnes numériques de `accommodation_typology` sont toutes nullables : une typologie
 // peut être incomplète (import CSV partiel, saisie en plusieurs fois). Les bornes ne
 // s'appliquent donc qu'aux valeurs effectivement renseignées, jamais à null/undefined.
+/** Plafond de la colonne `numeric(6, 2)`. */
+const SUPERFICIE_MAX = 9999
+
 export const createZTypology = (t: TSchemaTranslator = frSchemaTranslator) =>
   z
     .object({
@@ -39,10 +42,12 @@ export const createZTypology = (t: TSchemaTranslator = frSchemaTranslator) =>
       superficieMin: z
         .number({ error: t('errors.superficieMinNumber') })
         .min(1, t('errors.superficieMinAtLeastOne'))
+        .max(SUPERFICIE_MAX, t('errors.superficieTooLarge'))
         .nullish(),
       superficieMax: z
         .number({ error: t('errors.superficieMaxNumber') })
         .min(1, t('errors.superficieMaxAtLeastOne'))
+        .max(SUPERFICIE_MAX, t('errors.superficieTooLarge'))
         .nullish(),
       colocation: z.boolean(),
       nbTotal: z

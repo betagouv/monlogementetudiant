@@ -24,6 +24,8 @@ export const owners = pgTable('owner', {
   image: bytea('image'),
   contactMode: ownerContactModeEnum('contact_mode').notNull().default(EOwnerContactMode.NONE),
   availabilityImported: boolean('availability_imported').notNull().default(false),
+  /** Début du suivi des disponibilités : la règle de fraîcheur ne compte pas les jours antérieurs. */
+  availabilityTrackedSince: timestamp('availability_tracked_since', { withTimezone: true }),
 
   // Traçabilité des modifications de la *fiche* bailleur (nom, URL, logo, mode de contact).
   // Volontairement NULL sur les lignes existantes et sur les owners créés par import/CLI : NULL se lit

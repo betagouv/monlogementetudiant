@@ -7,7 +7,7 @@ import { env } from '~/server/env'
 import { recomputeAndPersistAggregates } from '~/server/lib/typologies'
 import { logActivity } from '~/server/services/activity-logger'
 import { sendAvailabilityResetWarningEmail } from '~/server/services/brevo'
-import { type AvailabilityResetAction, decideAvailabilityReset } from './inactivity-rules'
+import { type AvailabilityResetAction, availabilityClockStart, decideAvailabilityReset } from './inactivity-rules'
 import { inInactivityScope, loadMembers, sendGroupedEmails } from './inactivity-suspension'
 
 type StaleAvailabilityResetOptions = {
@@ -56,6 +56,7 @@ async function findCandidates(ownerSlug?: string) {
       ownerId: owners.id,
       ownerName: owners.name,
       contactMode: owners.contactMode,
+      availabilityTrackedSince: owners.availabilityTrackedSince,
       hasAvailability: sql<boolean>`exists (${withAvailability})`,
       lastAvailabilityAt: sql`(${lastAvailabilityAt})`.mapWith(accommodationTypologies.availabilityUpdatedAt),
     })
@@ -103,7 +104,11 @@ export async function runStaleAvailabilityReset(options: StaleAvailabilityResetO
       action: decideAvailabilityReset(
         {
           hasAvailability: residence.hasAvailability,
-          availabilitySince: residence.lastAvailabilityAt ?? residence.createdAt,
+          availabilitySince: availabilityClockStart({
+            lastAvailabilityAt: residence.lastAvailabilityAt,
+            createdAt: residence.createdAt,
+            trackedSince: residence.availabilityTrackedSince,
+          }),
           warnedAt: residence.warnedAt,
           inInactivityScope: inInactivityScope(residence),
         },

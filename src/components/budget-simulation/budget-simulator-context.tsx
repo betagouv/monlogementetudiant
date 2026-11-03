@@ -3,6 +3,7 @@
 import { createContext, type ReactNode, useContext, useEffect, useState } from 'react'
 import { trackEvent } from '~/lib/tracking'
 import type { TBudgetFrequency, TBudgetSimulation } from '~/schemas/budget-simulation'
+import { formatBudgetAmount, getMonthlyEquivalent } from '~/utils/budget-amount'
 
 export type BudgetFrequency = TBudgetFrequency
 
@@ -21,6 +22,8 @@ interface BudgetSimulatorContextType {
   removeIncomeType: (type: keyof MonthlyIncomes) => void
   addExpenseType: (type: keyof MonthlyExpenses) => void
   removeExpenseType: (type: keyof MonthlyExpenses) => void
+  replaceIncomeType: (from: IncomeType, to: IncomeType) => void
+  replaceExpenseType: (from: ExpenseType, to: ExpenseType) => void
 }
 
 export type ExpenseType = keyof MonthlyExpenses
@@ -76,9 +79,7 @@ export const EXPENSE_RANGES = {
 
 export const CVEC_AMOUNT = 105 // montant fixé par décret, 2025-2026
 
-export function getMonthlyEquivalent(amount: number, frequency: BudgetFrequency) {
-  return frequency === 'yearly' ? amount / 12 : amount
-}
+export { formatBudgetAmount, getMonthlyEquivalent }
 
 export const DEFAULT_BUDGET_SIMULATOR_STATE: BudgetSimulatorState = {
   monthlyIncomes: {
@@ -114,6 +115,26 @@ export const DEFAULT_BUDGET_SIMULATOR_STATE: BudgetSimulatorState = {
   expenseFrequencies: DEFAULT_EXPENSE_FREQUENCIES,
   activeIncomeTypes: ['salary', 'scholarships', 'familyAid'],
   activeExpenseTypes: ['housing', 'food', 'transport'],
+}
+
+export function replaceIncomeTypeInState(state: BudgetSimulatorState, from: IncomeType, to: IncomeType): BudgetSimulatorState {
+  if (from === to) return state
+  return {
+    ...state,
+    activeIncomeTypes: state.activeIncomeTypes.map((type) => (type === from ? to : type)),
+    monthlyIncomes: { ...state.monthlyIncomes, [from]: 0, [to]: state.monthlyIncomes[from] },
+    incomeFrequencies: { ...state.incomeFrequencies, [from]: DEFAULT_INCOME_FREQUENCIES[from], [to]: DEFAULT_INCOME_FREQUENCIES[to] },
+  }
+}
+
+export function replaceExpenseTypeInState(state: BudgetSimulatorState, from: ExpenseType, to: ExpenseType): BudgetSimulatorState {
+  if (from === to) return state
+  return {
+    ...state,
+    activeExpenseTypes: state.activeExpenseTypes.map((type) => (type === from ? to : type)),
+    monthlyExpenses: { ...state.monthlyExpenses, [from]: 0, [to]: state.monthlyExpenses[from] },
+    expenseFrequencies: { ...state.expenseFrequencies, [from]: DEFAULT_EXPENSE_FREQUENCIES[from], [to]: DEFAULT_EXPENSE_FREQUENCIES[to] },
+  }
 }
 
 const BudgetSimulatorContext = createContext<BudgetSimulatorContextType | undefined>(undefined)
@@ -189,6 +210,10 @@ export function BudgetSimulatorProvider({ children, initialState, trackStart = t
     }))
   }
 
+  const replaceIncomeType = (from: IncomeType, to: IncomeType) => setState((prev) => replaceIncomeTypeInState(prev, from, to))
+
+  const replaceExpenseType = (from: ExpenseType, to: ExpenseType) => setState((prev) => replaceExpenseTypeInState(prev, from, to))
+
   return (
     <BudgetSimulatorContext.Provider
       value={{
@@ -202,6 +227,8 @@ export function BudgetSimulatorProvider({ children, initialState, trackStart = t
         removeIncomeType,
         addExpenseType,
         removeExpenseType,
+        replaceIncomeType,
+        replaceExpenseType,
       }}
     >
       {children}
@@ -230,8 +257,4 @@ export function useBudgetTotals() {
   )
 
   return { totalIncomes, totalExpenses, remainingBalance: totalIncomes - totalExpenses }
-}
-
-export function formatBudgetAmount(amount: number) {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount)
 }

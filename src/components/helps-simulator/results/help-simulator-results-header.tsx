@@ -16,7 +16,7 @@ export const HelpSimulatorHeaderResults: FC = () => {
   }
 
   return (
-    <div className="boxShadow fr-py-3w fr-px-8w">
+    <div className="boxShadow fr-py-3w fr-px-2w fr-px-md-8w">
       <h2 className="fr-h3 fr-mb-3w">{t('title')}</h2>
       <AidsLocalisationInfo results={results} />
     </div>

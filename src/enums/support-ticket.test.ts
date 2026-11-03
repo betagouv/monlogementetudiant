@@ -4,6 +4,7 @@ import {
   ESupportTicketStatus,
   SUPPORT_TICKET_CATEGORIES,
   SUPPORT_TICKET_CATEGORY_LABELS,
+  SUPPORT_TICKET_SELECTABLE_CATEGORIES,
   SUPPORT_TICKET_STATUS_LABELS,
   SUPPORT_TICKET_STATUSES,
 } from './support-ticket'
@@ -12,6 +13,11 @@ describe('support ticket enums', () => {
   it('expose toutes les catégories', () => {
     expect(SUPPORT_TICKET_CATEGORIES).toEqual(Object.values(ESupportTicketCategory))
     expect(SUPPORT_TICKET_CATEGORIES).toHaveLength(6)
+  })
+
+  it('n’expose pas « Demande de contact » dans les catégories sélectionnables', () => {
+    expect(SUPPORT_TICKET_SELECTABLE_CATEGORIES).not.toContain(ESupportTicketCategory.CONTACT_REQUEST)
+    expect(SUPPORT_TICKET_SELECTABLE_CATEGORIES).toHaveLength(5)
   })
 
   it('fournit un label non vide pour chaque catégorie', () => {

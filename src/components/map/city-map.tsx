@@ -1,8 +1,9 @@
 'use client'
 
 import { FC, useEffect } from 'react'
-import { MapContainer, TileLayer, useMap } from 'react-leaflet'
+import { MapContainer, useMap } from 'react-leaflet'
 import { tss } from 'tss-react'
+import { BaseTileLayer } from '~/components/map/base-tile-layer'
 import 'leaflet/dist/leaflet.css'
 import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css'
 import 'leaflet-defaulticon-compatibility'
@@ -28,10 +29,7 @@ export const CityMap: FC<{ bbox: string }> = ({ bbox }) => {
 
   return (
     <MapContainer zoom={16} className={classes.mapContainer}>
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      />
+      <BaseTileLayer />
       <BoundsHandler bbox={bbox} />
     </MapContainer>
   )

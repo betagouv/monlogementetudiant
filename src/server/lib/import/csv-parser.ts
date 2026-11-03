@@ -1,3 +1,4 @@
+import { parseDecimal } from '~/utils/parse-decimal'
 export interface CsvRow {
   [key: string]: string
 }
@@ -10,6 +11,12 @@ export function toDigit(value: string | undefined, canBeZero = false): number | 
   if (Number.isNaN(num)) return null
   if (num === 0 && !canBeZero) return null
   return num
+}
+
+export function toDecimal(value: string | undefined): number | null {
+  if (!value) return null
+  const num = parseDecimal(value.replace(/m²|m2/gi, ''))
+  return num != null && num > 0 ? num : null
 }
 
 export function toBool(value: string | undefined): boolean | null {

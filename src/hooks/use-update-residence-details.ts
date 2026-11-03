@@ -15,7 +15,7 @@ export const useUpdateResidenceDetails = (slug: string) => {
   const t = useTranslations('toast')
 
   return useMutation({
-    mutationFn: async (data: TUpdateResidence) => {
+    mutationFn: async ({ imagesUrls: _imagesUrls, ...data }: TUpdateResidence) => {
       return trpcClient.bailleur.update.mutate({ slug, ...data })
     },
     onSuccess: async () => {

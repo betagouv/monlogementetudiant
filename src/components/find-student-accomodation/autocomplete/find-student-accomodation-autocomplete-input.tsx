@@ -8,11 +8,11 @@ import { GeolocationButton } from '~/components/find-student-accomodation/geoloc
 import { useGeolocatedSearch } from '~/hooks/use-geolocated-search'
 import { useTerritories } from '~/hooks/use-territories'
 
-export const FindStudentAccomodationAutocompleteInput: FC = () => {
+export const FindStudentAccomodationAutocompleteInput: FC<{ location?: string }> = ({ location }) => {
   const t = useTranslations('findAccomodation')
   const { classes } = useStyles()
 
-  const { data, isError, searchQuery, setSearchQuery } = useTerritories()
+  const { data, isError, searchQuery, setSearchQuery } = useTerritories(200, location)
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(event.target.value)
   const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     e.preventDefault()

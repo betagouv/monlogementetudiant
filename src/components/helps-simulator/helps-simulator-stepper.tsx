@@ -26,7 +26,7 @@ export const HelpsSimulatorStepper: FC = () => {
   return (
     <Stepper
       currentStep={currentStep}
-      className="fr-py-3w fr-px-8w fr-mb-0 boxShadow"
+      className="fr-py-3w fr-px-2w fr-px-md-8w fr-mb-0 boxShadow"
       stepCount={STEPS.length}
       title={t(step.title)}
       nextTitle={stepIndex < STEPS.length - 1 ? t(step.nextTitle) : undefined}

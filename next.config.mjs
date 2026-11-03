@@ -44,7 +44,7 @@ const buildCsp = (frameAncestors, { scriptSrc = [], fontSrc = [] } = {}) =>
     // DSFR et emotion (tss-react) injectent des styles inline.
     "style-src 'self' 'unsafe-inline'",
     // `https:` : les favicons des sites bailleurs viennent d'origines non énumérables
-    // (src/utils/get-favicon-url.ts). Couvre aussi les tuiles OSM, les marqueurs Leaflet (cdnjs,
+    // (src/utils/get-favicon-url.ts). Couvre aussi les tuiles Plan IGN (data.geopf.fr), les marqueurs Leaflet (cdnjs,
     // raw.githubusercontent) et les photos S3 ; `blob:` sert aux aperçus avant upload.
     "img-src 'self' data: blob: https:",
     ['font-src', "'self'", 'data:', ...fontSrc].join(' '),

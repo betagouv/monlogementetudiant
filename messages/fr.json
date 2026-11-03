@@ -502,7 +502,7 @@
       "shared": "Colocation",
       "tooltip": {
         "accessible": "Résidences proposant des logements adaptés aux personnes à mobilité réduite",
-        "crous": "Résidences gérées par le CROUS",
+        "crous": "Résidences gérées par le Crous",
         "nonCrous": "Résidences sociales publiques et privées"
       },
       "rangeLabel": "Budget maximum",
@@ -524,15 +524,15 @@
       "sharedDescription": "N'afficher que les résidences proposant de la colocation",
       "whereLabel": "Où souhaitez-vous étudier ?",
       "maxRentLabel": "Loyer maximum",
-      "crousTag": "Résidence CROUS",
-      "nonCrousTag": "Autre résidence",
+      "crousTag": "Résidences Crous",
+      "nonCrousTag": "Autres résidences",
       "accessibleTag": "Accessible PMR"
     },
     "filters": {
       "nonCrousAccommodations": "résidence{pluralize}",
       "nonCrousAccommodationsWithLocation": "résidence{pluralize} {locationFormatted}",
-      "crousAccommodations": "résidence{pluralize} CROUS",
-      "crousAccommodationsWithLocation": "résidence{pluralize} CROUS {locationFormatted}",
+      "crousAccommodations": "résidence{pluralize} Crous",
+      "crousAccommodationsWithLocation": "résidence{pluralize} Crous {locationFormatted}",
       "grid": "Liste",
       "map": "Carte",
       "sortByPrice": "Triés par prix",
@@ -746,7 +746,7 @@
             "column3": "Où s'informer ?"
           },
           "row1": {
-            "column1": "Bourse CROUS",
+            "column1": "Bourse Crous",
             "column2": "Selon les revenus familiaux",
             "column3": "lescrous.fr"
           },
@@ -781,7 +781,7 @@
         "title": "A la recherche d’un logement en résidence étudiante ?",
         "description": "Mon Logement Etudiant facilite l'accès au logement et aux droits pour les étudiants.",
         "cta": "Trouver un logement étudiant",
-        "ctaDisclaimer": "Plus de 1500 résidences partout en France"
+        "ctaDisclaimer": "Plus de {count, number} résidences partout en France"
       }
     }
   },
@@ -982,7 +982,7 @@
     "hero": {
       "title": "Trouvez votre prochain",
       "titleHighlight": "logement social étudiant",
-      "counter": "Plus de <strong>60 000 logements</strong> déjà référencés"
+      "counter": "Plus de <strong>{count, number} logements</strong> déjà référencés"
     },
     "cta": "Rechercher un logement",
     "title": "Plus de 1300 résidences étudiantes",
@@ -1234,7 +1234,7 @@
     "results": {
       "localisation": {
         "label": "Localisation",
-        "localAidsInfo": "<strong>{name}</strong> propose des aides complémentaires pour les étudiants"
+        "localAidsInfo": "Des aides locales complémentaires peuvent exister pour les étudiants : <strong>{name}</strong>"
       },
       "aids": {
         "eligibleCount": "Aides disponibles ({count})",
@@ -1337,7 +1337,7 @@
         "scholarshipLegend": "Êtes-vous boursier ?",
         "scholarships": {
           "bourseLycee": "Oui, bourse de lycée",
-          "bourseCrous": "Oui, bourse du CROUS",
+          "bourseCrous": "Oui, bourse du Crous",
           "allocationSpeciale": "Oui, allocation spécifique annuelle pour étudiant en difficulté"
         }
       },
@@ -1363,7 +1363,7 @@
         "name": "Aides au logement de la Caf (APL, ALS)",
         "description": "Les aides au logement de la CAF permettent de réduire votre loyer. Elles sont calculées en fonction de vos revenus, du montant de votre loyer et de votre situation.",
         "reasons": {
-          "internationalStudent": "En tant qu'étudiant international extra-communautaire, vous n'êtes plus éligible aux APL (décret n° 2026-552 du 27 juin 2026), sauf si vous êtes salarié, boursier du CROUS ou apprenti/alternant.",
+          "internationalStudent": "En tant qu'étudiant international extra-communautaire, vous n'êtes plus éligible aux APL (décret n° 2026-552 du 27 juin 2026), sauf si vous êtes salarié, boursier du Crous ou apprenti/alternant.",
           "incomeCap": "Vos revenus dépassent le plafond de 15 800€/an pour une personne seule"
         },
         "amountUpTo": "Jusqu'à {amount}€/mois",
@@ -1410,12 +1410,12 @@
         "amount": "500 € (aide ponctuelle)"
       },
       "crousMobiliteMaster": {
-        "name": "Aide à la mobilité en Master du CROUS",
-        "description": "Vous allez obtenir votre licence cette année et vous voulez vous inscrire en Master 1 dans une autre région académique l'année prochaine ? Si vous êtes boursier du CROUS, vous pouvez bénéficier d'une aide à la mobilité de 1 000 €. Vous n'avez pas de démarche particulière à faire pour demander l'aide à la mobilité. Vous devrez fournir une copie des documents suivants : attestation de réussite de licence et certificat d'inscription en 1re année de Master 1. Attention, l'obtention d'une licence professionnelle ne vous permet pas de bénéficier de l'aide.",
+        "name": "Aide à la mobilité en Master du Crous",
+        "description": "Vous allez obtenir votre licence cette année et vous voulez vous inscrire en Master 1 dans une autre région académique l'année prochaine ? Si vous êtes boursier du Crous, vous pouvez bénéficier d'une aide à la mobilité de 1 000 €. Vous n'avez pas de démarche particulière à faire pour demander l'aide à la mobilité. Vous devrez fournir une copie des documents suivants : attestation de réussite de licence et certificat d'inscription en 1re année de Master 1. Attention, l'obtention d'une licence professionnelle ne vous permet pas de bénéficier de l'aide.",
         "reasons": {
           "licence3Only": "Réservé aux étudiants en 3ème année de licence",
           "professionalLicence": "L'obtention d'une licence professionnelle ne permet pas de bénéficier de cette aide",
-          "crousScholarshipOnly": "Réservé aux boursiers du CROUS",
+          "crousScholarshipOnly": "Réservé aux boursiers du Crous",
           "changingRegion": "Vous devez vous inscrire dans une autre région académique l'année prochaine"
         },
         "amount": "1 000 € (aide ponctuelle)",
@@ -1515,6 +1515,23 @@
       "annualTotal": "Soit {amount} par an",
       "schoolYearBudgetTitle": "Budget de rentrée",
       "schoolYearBudgetDescription": "Pour la rentrée scolaire, vous devez prévoir {firstMonth}, puis {followingMonths} par mois pour les mois suivants."
+    },
+    "pdf": {
+      "republic": "RÉPUBLIQUE\nFRANÇAISE",
+      "motto": "Liberté\nÉgalité\nFraternité",
+      "title": "Mon budget étudiant",
+      "generatedOn": "Simulation générée le {date}",
+      "incomesTitle": "Revenus",
+      "expensesTitle": "Dépenses",
+      "distributionTitle": "Répartition des dépenses mensualisées",
+      "columnCategory": "Catégorie",
+      "columnFrequency": "Fréquence",
+      "columnAmount": "Montant",
+      "columnMonthly": "Équivalent mensuel",
+      "total": "Total mensualisé",
+      "empty": "Aucune ligne renseignée.",
+      "disclaimer": "Ce document est une estimation réalisée à partir des montants que vous avez saisis sur Mon Logement Étudiant. Il n'a pas de valeur contractuelle.",
+      "error": "Le PDF n'a pas pu être généré. Veuillez réessayer."
     }
   },
   "verification": {
@@ -1601,9 +1618,9 @@
     },
     "summary": {
       "title": "En résumé",
-      "favorites": "{count} favoris",
+      "favorites": "{count} favori{pluralize}",
       "applications": "{count} candidature",
-      "alerts": "{count} alertes"
+      "alerts": "{count} alerte{pluralize}"
     },
     "maximizeChances": {
       "title": "Mettez toutes les chances de votre côté",
@@ -2335,6 +2352,7 @@
       "statusChangeError": "Le changement de statut a échoué.",
       "card": {
         "postedOn": "Postée le {date}",
+        "age": "{count} ans",
         "scholarship": "Boursier",
         "viewCandidate": "Voir {name}",
         "viewCandidateFallback": "le candidat"
@@ -2531,7 +2549,10 @@
     "zoomOutLabel": "Zoom arrière sur la carte",
     "resultsLabel": "Carte des résidences correspondant à votre recherche. La liste des résultats, affichée à côté de la carte, en donne l'équivalent textuel.",
     "accommodationLabel": "Carte de localisation de la résidence. L'adresse complète figure en texte au-dessus de la carte.",
-    "markerLabel": "Emplacement de la résidence sur la carte"
+    "markerLabel": "Emplacement de la résidence sur la carte",
+    "previewLoading": "Chargement de la résidence…",
+    "previewError": "Impossible de charger cette résidence.",
+    "previewLink": "Voir la résidence"
   },
   "impersonation": {
     "title": "Mode usurpation actif",

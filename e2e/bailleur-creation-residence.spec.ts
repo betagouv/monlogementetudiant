@@ -52,8 +52,8 @@ test.describe('Créer une résidence', () => {
 
     await page.getByRole('combobox', { name: 'Type de logement' }).selectOption({ label: 'Studio T1' })
     const typology = page.getByRole('tabpanel')
-    await typology.getByRole('spinbutton', { name: 'Minimum' }).first().fill('410')
-    await typology.getByRole('spinbutton', { name: 'Maximum' }).first().fill('480')
+    await typology.getByRole('textbox', { name: 'Minimum' }).first().fill('410')
+    await typology.getByRole('textbox', { name: 'Maximum' }).first().fill('480')
     await typology.getByRole('spinbutton', { name: 'Nombre total de logements' }).fill('25')
     await typology.getByRole('spinbutton', { name: 'Logements disponibles' }).fill('6')
 

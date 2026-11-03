@@ -292,6 +292,20 @@ describe('runInactivityCheck — disponibilités', () => {
     expect(warningEmail.mock.calls.map(([email]) => email)).toEqual(['owner@test.com'])
   })
 
+  it('compte les disponibilités périmées à partir du début du suivi du bailleur', async () => {
+    await stampAvailability(daysAgo(90))
+    await getTestDb()
+      .update(owners)
+      .set({ availabilityTrackedSince: daysAgo(10) })
+      .where(eq(owners.id, ownerId))
+
+    await runInactivityCheck()
+    expect((await readResidence()).staleAvailabilityWarnedAt).toBeNull()
+
+    await runInactivityCheck({ now: daysAhead(20) })
+    expect((await readResidence()).staleAvailabilityWarnedAt).not.toBeNull()
+  })
+
   it('ne s’applique pas aux bailleurs importés, qui restent suivis sur les candidatures', async () => {
     await getTestDb().update(owners).set({ availabilityImported: true }).where(eq(owners.id, ownerId))
     await stampAvailability(daysAgo(40))

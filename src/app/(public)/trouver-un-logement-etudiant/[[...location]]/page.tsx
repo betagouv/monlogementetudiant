@@ -106,7 +106,7 @@ export default async function FindStudentAccommodationPage({
       <SearchParamsSync academie={serverAcademie} />
       <div className="fr-container">
         <FindStudentAccommodationTitle location={territory?.name} />
-        <FindStudentAccomodationHeader />
+        <FindStudentAccomodationHeader location={territory?.name} />
         <FindStudentAccomodationSortView territory={territory} />
         {awaitedSearchParams.crous === 'true' && <FindStudentAccommodationCrousAlert />}
         {!!territory && <FindStudentAccommodationBanner territory={territory} categoryKey={routeCategoryKey} />}

@@ -46,8 +46,17 @@ export async function uploadFile(input: { key: string; body: Buffer; contentType
     }),
   )
 
+  return `${publicBaseUrl()}${input.key}`
+}
+
+function publicBaseUrl(): string {
   const endpoint = env.S3_ENDPOINT.replace(/\/$/, '')
-  return `${endpoint.replace('://', `://${bucket}.`)}/${input.key}`
+  return `${endpoint.replace('://', `://${bucket}.`)}/`
+}
+
+export function keyFromPublicUrl(url: string): string | null {
+  const base = publicBaseUrl()
+  return url.startsWith(base) ? url.slice(base.length) : null
 }
 
 /**

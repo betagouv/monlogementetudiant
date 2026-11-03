@@ -11,8 +11,8 @@ import { TYPOLOGIES } from '../../src/schemas/accommodations/typology'
 import { ZUpdateResidence } from '../../src/schemas/accommodations/update-residence'
 import { accommodationAddresses, accommodations, externalSources } from '../../src/server/db/schema'
 import type { CsvRow } from '../../src/server/lib/import/csv-parser'
-import { generateSourceId, normalizeEnum, parseCsvContent, toBool, toDigit, toUrl } from '../../src/server/lib/import/csv-parser'
-import { markAvailabilityImported, resolveImportOwner } from '../../src/server/lib/import/resolve-owner'
+import { generateSourceId, normalizeEnum, parseCsvContent, toBool, toDecimal, toDigit, toUrl } from '../../src/server/lib/import/csv-parser'
+import { resolveImportOwner, restartAvailabilityTracking } from '../../src/server/lib/import/resolve-owner'
 import { syncTypologies, typologyAggregates, typologyDraft } from '../../src/server/lib/typologies'
 import { generateAccommodationKey, uploadFile } from '../../src/server/services/s3'
 import { generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
@@ -158,22 +158,22 @@ function buildValidationPayload(row: CsvRow) {
     price_max_t6: toDigit(row.t6_rent_max) ?? undefined,
     price_min_t7_more: toDigit(row.t7_more_rent_min) ?? undefined,
     price_max_t7_more: toDigit(row.t7_more_rent_max) ?? undefined,
-    superficie_min_t1: toDigit(row.superficie_min_t1) ?? undefined,
-    superficie_max_t1: toDigit(row.superficie_max_t1) ?? undefined,
-    superficie_min_t1_bis: toDigit(row.superficie_min_t1_bis) ?? undefined,
-    superficie_max_t1_bis: toDigit(row.superficie_max_t1_bis) ?? undefined,
-    superficie_min_t2: toDigit(row.superficie_min_t2) ?? undefined,
-    superficie_max_t2: toDigit(row.superficie_max_t2) ?? undefined,
-    superficie_min_t3: toDigit(row.superficie_min_t3) ?? undefined,
-    superficie_max_t3: toDigit(row.superficie_max_t3) ?? undefined,
-    superficie_min_t4: toDigit(row.superficie_min_t4) ?? undefined,
-    superficie_max_t4: toDigit(row.superficie_max_t4) ?? undefined,
-    superficie_min_t5: toDigit(row.superficie_min_t5) ?? undefined,
-    superficie_max_t5: toDigit(row.superficie_max_t5) ?? undefined,
-    superficie_min_t6: toDigit(row.superficie_min_t6) ?? undefined,
-    superficie_max_t6: toDigit(row.superficie_max_t6) ?? undefined,
-    superficie_min_t7_more: toDigit(row.superficie_min_t7_more) ?? undefined,
-    superficie_max_t7_more: toDigit(row.superficie_max_t7_more) ?? undefined,
+    superficie_min_t1: toDecimal(row.superficie_min_t1) ?? undefined,
+    superficie_max_t1: toDecimal(row.superficie_max_t1) ?? undefined,
+    superficie_min_t1_bis: toDecimal(row.superficie_min_t1_bis) ?? undefined,
+    superficie_max_t1_bis: toDecimal(row.superficie_max_t1_bis) ?? undefined,
+    superficie_min_t2: toDecimal(row.superficie_min_t2) ?? undefined,
+    superficie_max_t2: toDecimal(row.superficie_max_t2) ?? undefined,
+    superficie_min_t3: toDecimal(row.superficie_min_t3) ?? undefined,
+    superficie_max_t3: toDecimal(row.superficie_max_t3) ?? undefined,
+    superficie_min_t4: toDecimal(row.superficie_min_t4) ?? undefined,
+    superficie_max_t4: toDecimal(row.superficie_max_t4) ?? undefined,
+    superficie_min_t5: toDecimal(row.superficie_min_t5) ?? undefined,
+    superficie_max_t5: toDecimal(row.superficie_max_t5) ?? undefined,
+    superficie_min_t6: toDecimal(row.superficie_min_t6) ?? undefined,
+    superficie_max_t6: toDecimal(row.superficie_max_t6) ?? undefined,
+    superficie_min_t7_more: toDecimal(row.superficie_min_t7_more) ?? undefined,
+    superficie_max_t7_more: toDecimal(row.superficie_max_t7_more) ?? undefined,
     nbAccessibleApartments: toDigit(row.nb_accessible_apartments, true) ?? undefined,
     nbColivingApartments: toDigit(row.nb_coliving_apartments, true) ?? undefined,
     refrigerator: toBool(row.refrigerator) ?? undefined,
@@ -246,7 +246,7 @@ const command: ImportCommand = {
       const owner = await resolveImportOwner({ id: ownerIdColumn, slug: ownerSlug, name: ownerName, url: ownerUrl })
       ownerId = owner.id
       result.ownerId = owner.id
-      await markAvailabilityImported(owner.id)
+      await restartAvailabilityTracking(owner.id)
       result.ownerName = owner.name
       if (options.verbose) console.log(`  Owner "${owner.name}" id=${ownerId}`)
     } else if (ownerIdColumn != null || ownerSlug) {
@@ -337,8 +337,8 @@ const command: ImportCommand = {
             nbTotal: toDigit(row[`nb_${type}`]),
             priceMin: toDigit(row[`${type}_rent_min`]),
             priceMax: toDigit(row[`${type}_rent_max`]),
-            superficieMin: toDigit(row[`superficie_min_${type}`]),
-            superficieMax: toDigit(row[`superficie_max_${type}`]),
+            superficieMin: toDecimal(row[`superficie_min_${type}`]),
+            superficieMax: toDecimal(row[`superficie_max_${type}`]),
           }),
         )
 

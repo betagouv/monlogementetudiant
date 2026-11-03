@@ -45,7 +45,7 @@ export default async function WorkspaceLayout({
       <CommonHeader withNavigation={false} />
       <ImpersonationBanner />
       <main id={MAIN_CONTENT_ID} tabIndex={-1} className="primaryBackgroundColor">
-        <div className="fr-container fr-pb-12w">
+        <div className="fr-container-md fr-pb-12w">
           <StudentBreadcrumb />
           <div className="fr-col-md-12 fr-flex fr-direction-column fr-direction-md-row fr-background-default--grey">
             <div className="fr-border fr-col-md-4">

@@ -24,7 +24,7 @@ export const StudentBreadcrumb = () => {
       currentPageLabel={t(labelKey)}
       homeLinkProps={{ href: '/mon-espace/tableau-de-bord', className: 'fr-text-inverted--grey' }}
       segments={[{ label: t('breadcrumbs.student.title'), linkProps: { href: '/mon-espace/tableau-de-bord' } }]}
-      classes={{ root: 'fr-mt-0 fr-mb-2w fr-pt-4w breadcrumbInverted', link: 'fr-text-inverted--grey' }}
+      classes={{ root: 'fr-mt-0 fr-mb-2w fr-pt-4w fr-px-2w fr-px-md-0 breadcrumbInverted', link: 'fr-text-inverted--grey' }}
     />
   )
 }

@@ -77,7 +77,7 @@ export const ZAccommodationsListQuery = z.object({
     .default(10)
     .openapi({ description: 'Rayon en km, 100 max (utilisé avec center).', example: 10 }),
   price_max: intParam({ description: 'Loyer minimum maximal (€/mois).', example: 600, min: 0, max: 100_000 }).optional(),
-  crous: boolParam('Ne renvoyer que les résidences CROUS (true) ou exclure le CROUS (false, défaut).'),
+  crous: boolParam('Ne renvoyer que les résidences Crous (true) ou exclure le Crous (false, défaut).'),
   accessible: boolParam('Ne renvoyer que les résidences avec logements adaptés PMR.'),
   coliving: boolParam('Ne renvoyer que les résidences proposant de la colocation.'),
   available: boolParam('Ne renvoyer que les résidences avec des disponibilités.'),
@@ -95,7 +95,7 @@ export const ZNearbyQuery = z
       .optional()
       .openapi({ description: "Slug (ou nom) d'une ville : renvoie les résidences alentour.", example: 'paris' }),
     radius: z.coerce.number().positive().max(100).default(10).openapi({ description: 'Rayon en km (100 max).', example: 10 }),
-    crous: boolParam('CROUS uniquement (true) ou exclure le CROUS (false, défaut).'),
+    crous: boolParam('Crous uniquement (true) ou exclure le Crous (false, défaut).'),
     accessible: boolParam('Logements adaptés PMR uniquement.'),
     coliving: boolParam('Colocation uniquement.'),
     available: boolParam('Disponibilités uniquement.'),

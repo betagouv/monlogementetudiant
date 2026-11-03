@@ -271,3 +271,19 @@ describe('formulaire résidence — champs omis (undefined) et valeur 0', () => 
     await expect(ownerCaller.bailleur.update({ slug, typologies: [{ type: 't1', colocation: false }] as never })).resolves.toBeDefined()
   })
 })
+
+describe('formulaire résidence — superficies décimales', () => {
+  beforeEach(async () => {
+    await createUser({ id: 'test-owner-id', name: 'Test Owner', email: 'owner@test.com', role: 'owner' })
+  })
+
+  it('enregistre et restitue une superficie décimale sans l’arrondir', async () => {
+    const slug = await createResidence([{ type: 't1', ...FULL, superficieMin: 29.7, superficieMax: 30.25 }])
+
+    const typos = await loadTypologies((await accommodationBySlug(slug)).id)
+    expect(typos.t1).toMatchObject({ superficieMin: 29.7, superficieMax: 30.25 })
+
+    const [defaults] = await formDefaults(slug)
+    expect(defaults).toMatchObject({ superficieMin: 29.7, superficieMax: 30.25 })
+  })
+})

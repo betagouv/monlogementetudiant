@@ -8,18 +8,12 @@ import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { NewWindowHint } from '~/components/ui/new-window'
 import { RentSearchModal } from '~/components/ui/rent-search-modal'
-import {
-  CVEC_AMOUNT,
-  DEFAULT_EXPENSE_FREQUENCIES,
-  EXPENSE_RANGES,
-  ExpenseType,
-  useBudgetSimulator,
-  YEARLY_ONLY_EXPENSE_TYPES,
-} from './budget-simulator-context'
+import { CVEC_AMOUNT, EXPENSE_RANGES, ExpenseType, useBudgetSimulator, YEARLY_ONLY_EXPENSE_TYPES } from './budget-simulator-context'
 import styles from './forms.module.css'
 
 export function ExpenseForm() {
-  const { state, updateMonthlyExpenses, updateExpenseFrequencies, addExpenseType, removeExpenseType } = useBudgetSimulator()
+  const { state, updateMonthlyExpenses, updateExpenseFrequencies, addExpenseType, removeExpenseType, replaceExpenseType } =
+    useBudgetSimulator()
   const t = useTranslations('budgetSimulator.expenses')
 
   const handleExpenseChange = (type: ExpenseType, value: number) => {
@@ -59,11 +53,11 @@ export function ExpenseForm() {
 
   return (
     <div className="fr-flex fr-direction-column fr-flex-gap-4v">
-      {state.activeExpenseTypes.map((type) => {
+      {state.activeExpenseTypes.map((type, index) => {
         const yearlyOnly = YEARLY_ONLY_EXPENSE_TYPES.includes(type as (typeof YEARLY_ONLY_EXPENSE_TYPES)[number])
 
         return (
-          <fieldset key={type} className={clsx('fr-flex fr-flex-gap-4v', styles.formRow, styles.rowFieldset)}>
+          <fieldset key={index} className={clsx('fr-flex fr-flex-gap-4v', styles.formRow, styles.rowFieldset)}>
             <legend className="fr-sr-only">{t('expenseRowLegend', { category: t(`types.${type}`) })}</legend>
             <div className={clsx('fr-flex-basis-0 fr-flex-grow-1', styles.sourceSelect)}>
               <Select
@@ -71,15 +65,7 @@ export function ExpenseForm() {
                 label={t('categoryLabel')}
                 nativeSelectProps={{
                   value: type,
-                  onChange: (e) => {
-                    const oldAmount = state.monthlyExpenses[type]
-                    removeExpenseType(type)
-                    addExpenseType(e.target.value as ExpenseType)
-                    updateMonthlyExpenses({ [e.target.value as ExpenseType]: oldAmount })
-                    updateExpenseFrequencies({
-                      [e.target.value as ExpenseType]: DEFAULT_EXPENSE_FREQUENCIES[e.target.value as ExpenseType],
-                    })
-                  },
+                  onChange: (e) => replaceExpenseType(type, e.target.value as ExpenseType),
                 }}
               >
                 {expenseTypes

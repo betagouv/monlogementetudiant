@@ -6,8 +6,12 @@ import { useRef, useState } from 'react'
 import { Controller, useFormContext } from 'react-hook-form'
 import { AccommodationImage } from '~/components/accommodation/accommodation-image'
 import { AccommodationImages } from '~/components/accommodation/accommodation-images'
-import { useUpdateResidenceDetails } from '~/hooks/use-update-residence-details'
-import { useDeleteResidenceImage, useUploadResidenceImages, validateFiles } from '~/hooks/use-upload-residence-images'
+import {
+  useDeleteResidenceImage,
+  useReorderResidenceImages,
+  useUploadResidenceImages,
+  validateFiles,
+} from '~/hooks/use-upload-residence-images'
 import { TAccomodationMy } from '~/schemas/accommodations/accommodations'
 import { TUpdateResidence } from '~/schemas/accommodations/update-residence'
 
@@ -20,9 +24,9 @@ export const ResidencePictures = ({ accommodation }: { accommodation: TAccomodat
   const t = useTranslations('toast')
   const tPictures = useTranslations('bailleur.residences.details.pictures')
 
-  const uploadMutation = useUploadResidenceImages(accommodation.slug, accommodation.name)
-  const deleteMutation = useDeleteResidenceImage(accommodation.slug, accommodation.name)
-  const updateMutation = useUpdateResidenceDetails(accommodation.slug)
+  const uploadMutation = useUploadResidenceImages(accommodation.slug)
+  const deleteMutation = useDeleteResidenceImage(accommodation.slug)
+  const reorderMutation = useReorderResidenceImages(accommodation.slug)
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || [])
@@ -36,32 +40,28 @@ export const ResidencePictures = ({ accommodation }: { accommodation: TAccomodat
         return
       }
 
-      uploadMutation.mutate(
-        { files, currentImages: watchedImages || [] },
-        {
-          onSuccess: (data) => {
-            setValue('imagesUrls', data.imagesUrls || [])
-            setSelectedFiles([])
-            if (fileInputRef.current) {
-              fileInputRef.current.value = ''
-            }
-          },
-          onError: () => {
-            setSelectedFiles([])
-            if (fileInputRef.current) {
-              fileInputRef.current.value = ''
-            }
-          },
+      uploadMutation.mutate(files, {
+        onSuccess: (data) => {
+          setValue('imagesUrls', data.imagesUrls || [])
+          setSelectedFiles([])
+          if (fileInputRef.current) {
+            fileInputRef.current.value = ''
+          }
         },
-      )
+        onError: () => {
+          setSelectedFiles([])
+          if (fileInputRef.current) {
+            fileInputRef.current.value = ''
+          }
+        },
+      })
     }
   }
 
   const handleDeleteImage = (index: number, currentImages: string[]) => {
-    const newImages = currentImages.filter((_, i) => i !== index)
-    deleteMutation.mutate(newImages, {
-      onSuccess: () => {
-        setValue('imagesUrls', newImages)
+    deleteMutation.mutate(currentImages[index], {
+      onSuccess: (data) => {
+        setValue('imagesUrls', data.imagesUrls)
       },
     })
   }
@@ -70,16 +70,11 @@ export const ResidencePictures = ({ accommodation }: { accommodation: TAccomodat
     const newImages = [...currentImages]
     const newIndex = direction === 'left' ? index - 1 : index + 1
     ;[newImages[index], newImages[newIndex]] = [newImages[newIndex], newImages[index]]
-    updateMutation.mutate(
-      {
-        imagesUrls: newImages,
+    reorderMutation.mutate(newImages, {
+      onSuccess: (data) => {
+        setValue('imagesUrls', data.imagesUrls)
       },
-      {
-        onSuccess: () => {
-          setValue('imagesUrls', newImages)
-        },
-      },
-    )
+    })
   }
 
   const getStatusText = () => {
@@ -144,7 +139,7 @@ export const ResidencePictures = ({ accommodation }: { accommodation: TAccomodat
                             iconId="ri-arrow-left-s-line"
                             size="small"
                             title={tPictures('moveLeft')}
-                            disabled={index === 0 || updateMutation.isPending}
+                            disabled={index === 0 || reorderMutation.isPending}
                             onClick={() => {
                               if (field.value) {
                                 handleMoveImage(index, 'left', field.value)
@@ -168,7 +163,7 @@ export const ResidencePictures = ({ accommodation }: { accommodation: TAccomodat
                             iconId="ri-arrow-right-s-line"
                             size="small"
                             title={tPictures('moveRight')}
-                            disabled={index === (field.value?.length ?? 0) - 1 || updateMutation.isPending}
+                            disabled={index === (field.value?.length ?? 0) - 1 || reorderMutation.isPending}
                             onClick={() => {
                               if (field.value) {
                                 handleMoveImage(index, 'right', field.value)

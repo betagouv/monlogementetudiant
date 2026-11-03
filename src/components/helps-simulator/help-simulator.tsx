@@ -48,7 +48,7 @@ export const HelpSimulator: FC<HelpSimulatorProps> = ({ onHeightChange, ctaTarge
     <>
       <div ref={containerRef}>
         <HelpSimulatorHeader />
-        <div className="fr-py-5w fr-px-8w fr-border">
+        <div className="fr-py-5w fr-px-2w fr-px-md-8w fr-border">
           <HelpSimulatorForm onScrollToTop={scrollToTop} />
         </div>
       </div>
