@@ -37,6 +37,17 @@ const ETAT_OUVERT = '1'
 const PLACEHOLDER_DENOMINATIONS = new Set(['A COMPLETER', 'A COMPLETER PAR ACADEMIE', 'NON RENSEIGNE', 'SANS OBJET'])
 const UAI_DETAIL_REVALIDATE_S = 86_400 // référentiel stable → cache Next.js 24 h
 const DETAIL_CONCURRENCY = 8
+const EXTERNAL_TIMEOUT_MS = 3_000
+
+async function fetchWithTimeout(url: string, init: RequestInit & { next?: { revalidate: number } }): Promise<Response> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(new Error(`Délai dépassé : ${url.split('?')[0]}`)), EXTERNAL_TIMEOUT_MS)
+  try {
+    return await fetch(url, { ...init, signal: controller.signal })
+  } finally {
+    clearTimeout(timer)
+  }
+}
 
 const ramseseHeaders = {
   'Content-Type': 'application/json',
@@ -94,36 +105,42 @@ function activeCodes(codes?: TCodeHist[]): string[] {
   return codes.filter((c) => !c.DATE_FIN && c.CODE).map((c) => c.CODE as string)
 }
 
+/**
+ * Paris / Lyon / Marseille : RAMSESE code les UAI au niveau de l'arrondissement municipal
+ * (ex. 75113 pour Paris 13e), alors que geo.api ne renvoie que la commune chef-lieu (75056),
+ * qui ne correspond à aucun UAI. Le code d'arrondissement se déduit du code postal ; geo.api
+ * le fournit aussi (`type=arrondissement-municipal`) mais en plusieurs secondes.
+ */
+function arrondissementInseeCode(codePostal: string): string | null {
+  if (codePostal === '75116') return '75116'
+  const paris = /^750(0[1-9]|1\d|20)$/.exec(codePostal)
+  if (paris) return `751${paris[1]}`
+  const lyon = /^6900([1-9])$/.exec(codePostal)
+  if (lyon) return `6938${lyon[1]}`
+  const marseille = /^130(0[1-9]|1[0-6])$/.exec(codePostal)
+  if (marseille) return `132${marseille[1]}`
+  return null
+}
+
 /** Étape 1 — code postal → codes commune INSEE (arrondissements municipaux inclus). */
 async function fetchInseeCodesByPostalCode(codePostal: string): Promise<string[]> {
-  const cp = encodeURIComponent(codePostal)
-  // Paris / Lyon / Marseille : RAMSESE code les UAI au niveau arrondissement
-  // (ex. 75113 pour Paris 13e), alors que geo.api renvoie la commune chef-lieu
-  // (75056) qui ne matche aucun UAI. On interroge donc aussi les arrondissements
-  // municipaux et on fusionne les codes.
-  const urls = [
-    `https://geo.api.gouv.fr/communes?codePostal=${cp}&fields=code,nom`,
-    `https://geo.api.gouv.fr/communes?codePostal=${cp}&type=arrondissement-municipal&fields=code,nom`,
-  ]
+  const url = `https://geo.api.gouv.fr/communes?codePostal=${encodeURIComponent(codePostal)}&fields=code,nom`
+  const arrondissement = arrondissementInseeCode(codePostal)
   try {
-    const lists = await Promise.all(
-      urls.map(async (url) => {
-        const res = await fetch(url, { next: { revalidate: UAI_DETAIL_REVALIDATE_S } })
-        if (!res.ok) return []
-        const parsed = ZGeoApiCommunes.safeParse(await res.json())
-        return parsed.success ? parsed.data.map((c) => c.code) : []
-      }),
-    )
-    return [...new Set(lists.flat())]
+    const res = await fetchWithTimeout(url, { next: { revalidate: UAI_DETAIL_REVALIDATE_S } })
+    if (!res.ok) return arrondissement ? [arrondissement] : []
+    const parsed = ZGeoApiCommunes.safeParse(await res.json())
+    const communes = parsed.success ? parsed.data.map((c) => c.code) : []
+    return [...new Set(arrondissement ? [...communes, arrondissement] : communes)]
   } catch {
-    return []
+    return arrondissement ? [arrondissement] : []
   }
 }
 
 /** Étape 2 — communes INSEE → numéros UAI. */
 async function fetchUaisByCommunes(communes: string[], natures?: string[], secteurs?: string[]): Promise<string[]> {
   try {
-    const res = await fetch(ramseseUrl('/listeUai/filtres'), {
+    const res = await fetchWithTimeout(ramseseUrl('/listeUai/filtres'), {
       method: 'POST',
       headers: ramseseHeaders,
       body: JSON.stringify({
@@ -150,7 +167,7 @@ async function fetchUaiDetail(numeroUai: string): Promise<TUaiWs | null> {
     ADMINISTRATION: 'true',
   })
   try {
-    const res = await fetch(ramseseUrl(`/uai/${encodeURIComponent(numeroUai)}?${params}`), {
+    const res = await fetchWithTimeout(ramseseUrl(`/uai/${encodeURIComponent(numeroUai)}?${params}`), {
       headers: ramseseHeaders,
       next: { revalidate: UAI_DETAIL_REVALIDATE_S },
     })
@@ -247,6 +264,7 @@ export async function getEtablissementsSuperieurByCodePostal(
 
 // for tests purpose
 export const _internal = {
+  EXTERNAL_TIMEOUT_MS,
   fetchInseeCodesByPostalCode,
   fetchUaisByCommunes,
   fetchUaiDetail,
