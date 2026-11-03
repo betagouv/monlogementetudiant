@@ -304,19 +304,19 @@ describe('bailleur.update', () => {
       ownerId: owner.id,
       nbTotalApartments: 42,
       priceMin: 500,
-      imagesUrls: ['https://example.com/old.jpg'],
+      imagesUrls: ['https://example.com/old.jpg', 'https://example.com/new.jpg'],
       geom: parisPoint,
     })
 
-    await ownerCaller.bailleur.update({
+    await ownerCaller.bailleur.reorderImages({
       slug: 'image-update',
-      imagesUrls: ['https://example.com/old.jpg', 'https://example.com/new.jpg'],
+      imagesUrls: ['https://example.com/new.jpg', 'https://example.com/old.jpg'],
     })
 
     const [updated] = await db.select().from(accommodations).where(eq(accommodations.slug, 'image-update'))
     expect(updated.nbTotalApartments).toBe(42)
     expect(updated.priceMin).toBe(500)
-    expect(updated.imagesUrls).toEqual(['https://example.com/old.jpg', 'https://example.com/new.jpg'])
+    expect(updated.imagesUrls).toEqual(['https://example.com/new.jpg', 'https://example.com/old.jpg'])
   })
 
   it('rejects update of accommodation owned by another user', async () => {
