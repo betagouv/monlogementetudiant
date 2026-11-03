@@ -263,7 +263,7 @@ export const HelpSimulatorForm: FC<HelpSimulatorFormProps> = ({ onScrollToTop })
             </div>
           )}
           <div className="fr-flex fr-direction-column fr-flex-gap-4v">{renderStep()}</div>
-          <div className="fr-flex fr-align-items-center fr-pt-3w fr-mt-3w" style={{ borderTop: '1px solid var(--border-default-grey)' }}>
+          <div className="fr-flex fr-flex-gap-4v fr-pt-3w fr-mt-3w" style={{ borderTop: '1px solid var(--border-default-grey)' }}>
             {currentStep > 1 && (
               <Button type="button" priority="secondary" iconId="ri-arrow-left-line" onClick={handlePrevious}>
                 {t('previous')}

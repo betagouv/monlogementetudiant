@@ -1,29 +1,37 @@
-@media (max-width: 767px) {
+.formRow {
+  flex-wrap: wrap;
+}
+
+.sourceSelect {
+  flex: 0 0 100% !important;
+}
+
+.frequencySelect,
+.amountInput {
+  flex: 1 1 0 !important;
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
   .formRow {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
   }
 
   .sourceSelect {
-    flex: 0 0 100% !important;
+    flex: 1 1 0 !important;
   }
 
-  .frequencySelect,
+  .frequencySelect {
+    max-width: 132px;
+  }
+
   .amountInput {
-    flex: 0 0 calc(50% - 0.5rem) !important;
+    max-width: 126px;
   }
-}
 
-/* Mobile-specific form layouts */
-.frequencySelect {
-  max-width: 132px;
-}
-
-.amountInput {
-  max-width: 126px;
-}
-
-.select {
-  max-width: 300px;
+  .select {
+    max-width: 300px;
+  }
 }
 
 /* Le regroupement des lignes en <fieldset> est sémantique : il ne doit rien changer au rendu. */

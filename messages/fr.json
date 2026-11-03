@@ -1234,7 +1234,7 @@
     "results": {
       "localisation": {
         "label": "Localisation",
-        "localAidsInfo": "<strong>{name}</strong> propose des aides complémentaires pour les étudiants"
+        "localAidsInfo": "Des aides locales complémentaires peuvent exister pour les étudiants : <strong>{name}</strong>"
       },
       "aids": {
         "eligibleCount": "Aides disponibles ({count})",

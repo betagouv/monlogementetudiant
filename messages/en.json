@@ -1234,7 +1234,7 @@
     "results": {
       "localisation": {
         "label": "Location",
-        "localAidsInfo": "<strong>{name}</strong> offers additional aid for students"
+        "localAidsInfo": "Additional local aid may be available for students: <strong>{name}</strong>"
       },
       "aids": {
         "eligibleCount": "Available aid ({count})",

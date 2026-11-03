@@ -55,7 +55,7 @@ export const HelpSimulatorStep2: FC = () => {
           }}
         />
         <Checkbox
-          className="fr-mt-0"
+          className="fr-mt-3w"
           options={[
             {
               label: t('rentUnknown'),

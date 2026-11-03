@@ -31,7 +31,7 @@ export const AidsLocalisationInfo: FC<AidsLocalisationInfoProps> = ({ results })
           <span className="ri-information-line" aria-hidden="true" />
           <span>
             {t.rich('localAidsInfo', {
-              name: tResults(`localAids.${results.localAids[0]}`),
+              name: results.localAids.map((aid) => tResults(`localAids.${aid}`)).join(', '),
               strong: (chunks) => <strong className={styles.localAidName}>{chunks}</strong>,
             })}
           </span>
