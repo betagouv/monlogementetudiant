@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import { TRPCError } from '@trpc/server'
 import { and, asc, desc, eq, gt, ilike, inArray, ne, or, type SQL, sql } from 'drizzle-orm'
 import { SignJWT } from 'jose'
@@ -7,7 +8,6 @@ import { EContactSource, ZContactSource } from '~/enums/contact-source'
 import { A_RAPPELER_STATUS, EContactStatus, ZContactStatus } from '~/enums/contact-status'
 import { EOwnerContactMode, ZOwnerContactMode } from '~/enums/owner-contact-mode'
 import type { TAccommodationSelection } from '~/schemas/accommodations/accommodation-selection'
-import { ZCreateResidence } from '~/schemas/accommodations/create-residence'
 import { getTypologyLabel } from '~/schemas/accommodations/typology'
 import { DESCRIPTION_SECTION_KEYS, ZUpdateResidence } from '~/schemas/accommodations/update-residence'
 import { ZUpdateResidenceList } from '~/schemas/accommodations/update-residence-list'
@@ -42,6 +42,7 @@ import {
   readManagedResidences,
 } from '~/server/bailleur/application-notifications'
 import { confirmAvailability, listAvailabilityToConfirm } from '~/server/bailleur/availability-confirmation'
+import { createResidence, sanitizeSection, ZCreateResidenceInput } from '~/server/bailleur/create-residence'
 import { getOwnerForUser } from '~/server/bailleur/get-owner-for-user'
 import { resumeIfResolved } from '~/server/bailleur/inactivity-suspension'
 import {
@@ -70,6 +71,7 @@ import {
   visibleDossierFacileApplication,
 } from '~/server/candidatures/visibility'
 import { db } from '~/server/db'
+import { deleteFile, keyFromPublicUrl } from '~/server/services/s3'
 
 type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
 
@@ -89,10 +91,9 @@ import { logActivity } from '~/server/services/activity-logger'
 import { triggerAlertDetection } from '~/server/services/alert-detection-trigger'
 import { sendOwnerWelcomeEmail, syncBrevoDataUpdated } from '~/server/services/brevo'
 import { computeTypologyDiff } from '~/server/services/typology-diff'
-import { generateSlug, geocodeAddress } from '~/server/trpc/utils/accommodation-helpers'
+import { geocodeAddress } from '~/server/trpc/utils/accommodation-helpers'
 import { resolveCityId } from '~/server/trpc/utils/resolve-city'
 import { getJwtSecret } from '~/server/utils/jwt-secret'
-import { findAvailableSlug } from '~/server/utils/slug'
 import { isDossierFacileSelectable } from '~/utils/feature-flags'
 import { normalizeAccommodationName } from '~/utils/normalize-accommodation-name'
 import { sanitizeHTML } from '~/utils/sanitize-html'
@@ -344,6 +345,9 @@ const verifyOwnerAccess = (userId: string, accommodationSlug: string) =>
 const verifyOwnerAccessById = (userId: string, accommodationId: number) =>
   assertOwnsAccommodation(userId, eq(accommodations.id, accommodationId))
 
+const isPermutation = (current: string[], next: string[]) =>
+  current.length === next.length && new Set(next).size === next.length && next.every((url) => current.includes(url))
+
 async function verifyOwnership(slug: string, userId: string) {
   const usr = await db.query.user.findFirst({
     where: eq(user.id, userId),
@@ -389,10 +393,6 @@ async function verifyOwnership(slug: string, userId: string) {
 }
 
 const PAGE_SIZE = 20
-
-function sanitizeSection(html: string | undefined): string | null {
-  return html ? sanitizeHTML(html) || null : null
-}
 
 /** Plafond du sélecteur de périmètre ; au-delà, l'UI invite à affiner la recherche. */
 const SCOPE_RESIDENCES_LIMIT = 2000
@@ -524,128 +524,11 @@ export const bailleurRouter = createTRPCRouter({
       }
     }),
   create: bailleurProcedure('manage_residences')
-    .input(
-      ZCreateResidence.omit({ imagesFiles: true }).extend({
-        name: z.string().min(1, 'Le nom de la résidence est requis'),
-        ownerId: z.number().int().positive().optional(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id
-      const owner = await getOwnerForUser(userId, input.ownerId)
-      if (!owner) {
-        throw new TRPCError({ code: 'FORBIDDEN', message: 'No owner record for this user' })
-      }
-
-      const { typologies, name, addresses, ...fields } = input
-
-      const slug = await findAvailableSlug(generateSlug(name), db, accommodations)
-
-      // Denormalized aggregates computed from the typology array (child rows persisted below).
-      const aggregates = typologyAggregates(typologies)
-
-      const insertValues: typeof accommodations.$inferInsert = {
-        name: normalizeAccommodationName(name),
-        slug,
-        residenceType: fields.residenceType ?? null,
-        targetAudience: fields.targetAudience ?? null,
-        description: fields.description ? sanitizeHTML(fields.description) : null,
-        tagline: fields.tagline?.trim() || null,
-        locationAndProximity: sanitizeSection(fields.locationAndProximity),
-        servicesAndEquipment: sanitizeSection(fields.servicesAndEquipment),
-        receptionAndContact: sanitizeSection(fields.receptionAndContact),
-        practicalInfo: sanitizeSection(fields.practicalInfo),
-        otherInformation: sanitizeSection(fields.otherInformation),
-        rentalChargesDetails: fields.rentalChargesDetails ?? null,
-        externalUrl: fields.externalUrl || null,
-        virtualTourUrl: fields.virtualTourUrl?.trim() || null,
-        phoneNumber: fields.phoneNumber ?? null,
-        acceptWaitingList: fields.acceptWaitingList ?? false,
-        published: fields.published ?? false,
-        scholarshipHoldersPriority: fields.scholarshipHoldersPriority ?? false,
-        socialHousingRequired: fields.socialHousingRequired ?? false,
-        ownerId: owner.id,
-        nbTotalApartments: aggregates.nbTotalApartments,
-        priceMin: aggregates.priceMin,
-        priceMax: aggregates.priceMax,
-        nbAvailableApartments: aggregates.nbAvailableApartments,
-        imagesUrls: [],
-        // Independent (caller-set) aggregates, not derived from typologies
-        nbAccessibleApartments: fields.nbAccessibleApartments ?? 0,
-        nbColivingApartments: fields.nbColivingApartments ?? 0,
-        // Équipements : non renseignés = inconnus (null), comme à la mise à jour.
-        refrigerator: fields.refrigerator ?? null,
-        laundryRoom: fields.laundryRoom ?? null,
-        bathroom: fields.bathroom ?? null,
-        kitchenType: fields.kitchenType ?? null,
-        microwave: fields.microwave ?? null,
-        secureAccess: fields.secureAccess ?? null,
-        parking: fields.parking ?? null,
-        commonAreas: fields.commonAreas ?? null,
-        bikeStorage: fields.bikeStorage ?? null,
-        desk: fields.desk ?? null,
-        residenceManager: fields.residenceManager ?? null,
-        cookingPlates: fields.cookingPlates ?? null,
-        wifi: fields.wifi ?? null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }
-
-      const created = await db.transaction(async (tx) => {
-        const [row] = await tx
-          .insert(accommodations)
-          .values(insertValues)
-          .returning({ id: accommodations.id, slug: accommodations.slug, name: accommodations.name })
-        // Les champs numériques de ZTypology sont optionnels : typologyDraft normalise undefined → null.
-        await persistTypologies(
-          tx,
-          row.id,
-          typologies.map((t) => typologyDraft(t.type, t)),
-          { updatedBy: ctx.session.user.id },
-        )
-        return row
-      })
-
-      // Geocode + resolve cities in parallel, then batch insert
-      const resolved = await Promise.all(
-        addresses.map(async (addr, i) => {
-          const [coords, cityId] = await Promise.all([
-            geocodeAddress(addr.address, addr.city, addr.postalCode),
-            resolveCityId(addr.postalCode, addr.city),
-          ])
-          const values: typeof accommodationAddresses.$inferInsert = {
-            accommodationId: created.id,
-            isMain: i === 0,
-            address: addr.address,
-            postalCode: addr.postalCode,
-            cityId,
-          }
-          if (coords) {
-            ;(values as Record<string, unknown>).geom = sql`ST_SetSRID(ST_MakePoint(${coords.lon}, ${coords.lat}), 4326)`
-          }
-          return values
-        }),
-      )
-      await db.insert(accommodationAddresses).values(resolved)
-
-      await logActivity({
-        userId: ctx.session.user.id,
-        userName: ctx.session.user.name,
-        action: 'accommodation.created',
-        entityType: 'accommodation',
-        entityName: created.name,
-        ownerId: owner.id,
-        ownerName: owner.name,
-        metadata: { slug: created.slug },
-      })
-
-      await triggerAlertDetection([created.id])
-
-      return { slug: created.slug }
-    }),
+    .input(ZCreateResidenceInput)
+    .mutation(({ ctx, input }) => createResidence(ctx.session.user, input)),
 
   update: bailleurProcedure('manage_residences')
-    .input(z.object({ slug: z.string() }).merge(ZUpdateResidence))
+    .input(z.object({ slug: z.string() }).merge(ZUpdateResidence.omit({ imagesUrls: true })))
     .mutation(async ({ ctx, input }) => {
       const { slug, addresses: inputAddresses, typologies, ...fields } = input
       const { owner, accommodationId } = await verifyOwnership(slug, ctx.session.user.id)
@@ -758,6 +641,77 @@ export const bailleurRouter = createTRPCRouter({
       }
 
       return updated
+    }),
+  reorderImages: bailleurProcedure('manage_residences')
+    .input(z.object({ slug: z.string(), imagesUrls: z.array(z.string()) }))
+    .mutation(async ({ ctx, input }) => {
+      const { owner, accommodationId } = await verifyOwnership(input.slug, ctx.session.user.id)
+
+      const updated = await db.transaction(async (tx) => {
+        const [current] = await tx
+          .select({ imagesUrls: accommodations.imagesUrls, name: accommodations.name })
+          .from(accommodations)
+          .where(eq(accommodations.id, accommodationId))
+          .for('update')
+        const before = current?.imagesUrls ?? []
+        if (!isPermutation(before, input.imagesUrls)) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'La liste des photos ne correspond pas à celle de la résidence' })
+        }
+        await tx
+          .update(accommodations)
+          .set({ imagesUrls: input.imagesUrls, updatedAt: new Date() })
+          .where(eq(accommodations.id, accommodationId))
+        return { name: current.name, before }
+      })
+
+      await logActivity({
+        userId: ctx.session.user.id,
+        userName: ctx.session.user.name,
+        action: 'accommodation.updated',
+        entityType: 'accommodation',
+        entityName: updated.name,
+        ownerId: owner?.id,
+        ownerName: owner?.name,
+        metadata: { slug: input.slug, diff: { imagesUrls: { old: updated.before, new: input.imagesUrls } } },
+      })
+
+      return { imagesUrls: input.imagesUrls }
+    }),
+  removeImage: bailleurProcedure('manage_residences')
+    .input(z.object({ slug: z.string(), imageUrl: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const { owner, accommodationId } = await verifyOwnership(input.slug, ctx.session.user.id)
+
+      const updated = await db.transaction(async (tx) => {
+        const [current] = await tx
+          .select({ imagesUrls: accommodations.imagesUrls, name: accommodations.name })
+          .from(accommodations)
+          .where(eq(accommodations.id, accommodationId))
+          .for('update')
+        const before = current?.imagesUrls ?? []
+        if (!before.includes(input.imageUrl)) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: "Cette photo n'appartient pas à la résidence" })
+        }
+        const after = before.filter((url) => url !== input.imageUrl)
+        await tx.update(accommodations).set({ imagesUrls: after, updatedAt: new Date() }).where(eq(accommodations.id, accommodationId))
+        return { name: current.name, before, after }
+      })
+
+      const key = keyFromPublicUrl(input.imageUrl)
+      if (key) await deleteFile(key).catch((error) => Sentry.captureException(error, { tags: { procedure: 'removeImage' } }))
+
+      await logActivity({
+        userId: ctx.session.user.id,
+        userName: ctx.session.user.name,
+        action: 'accommodation.updated',
+        entityType: 'accommodation',
+        entityName: updated.name,
+        ownerId: owner?.id,
+        ownerName: owner?.name,
+        metadata: { slug: input.slug, diff: { imagesUrls: { old: updated.before, new: updated.after } } },
+      })
+
+      return { imagesUrls: updated.after }
     }),
 
   listAvailabilityToConfirm: bailleurProcedure('manage_residences').query(async ({ ctx }) => {

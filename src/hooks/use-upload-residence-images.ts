@@ -23,15 +23,22 @@ export const validateFiles = (files: File[], t: (key: string, params?: Record<st
   return null
 }
 
-export const useUploadResidenceImages = (slug: string, name: string) => {
+const useRefreshResidences = () => {
   const queryClient = useQueryClient()
   const router = useRouter()
   const trpc = useTRPC()
-  const trpcClient = useTRPCClient()
+  return async () => {
+    await queryClient.refetchQueries({ queryKey: trpc.bailleur.list.queryKey(), exact: false })
+    router.refresh()
+  }
+}
+
+export const useUploadResidenceImages = (slug: string) => {
+  const refresh = useRefreshResidences()
   const t = useTranslations('toast')
 
   return useMutation({
-    mutationFn: async ({ files, currentImages }: { files: File[]; currentImages: string[] }) => {
+    mutationFn: async (files: File[]) => {
       const validationError = validateFiles(files, t)
       if (validationError) {
         throw new Error(validationError)
@@ -48,70 +55,54 @@ export const useUploadResidenceImages = (slug: string, name: string) => {
       })
 
       if (!uploadResponse.ok) {
-        const errorData = await uploadResponse.json()
+        const errorData = await uploadResponse.json().catch(() => ({}))
         throw new Error(errorData.error || t('uploadFailed'))
       }
 
-      const uploadData = await uploadResponse.json()
-      const newImageUrls = uploadData.imagesUrls || []
-      const allImages = [...currentImages, ...newImageUrls]
-
-      await trpcClient.bailleur.update.mutate({
-        slug,
-        imagesUrls: allImages,
-      })
-
-      return { imagesUrls: allImages }
+      const uploadData: { imagesUrls?: string[] } = await uploadResponse.json()
+      return { imagesUrls: uploadData.imagesUrls ?? [] }
     },
     onSuccess: async () => {
       trackEvent({ category: 'Espace Gestionnaire', action: 'upload images', name: slug })
-      await queryClient.refetchQueries({
-        queryKey: trpc.bailleur.list.queryKey(),
-        exact: false,
-      })
-      createToast({
-        priority: 'success',
-        message: t('imagesUploaded'),
-      })
-      router.refresh()
+      createToast({ priority: 'success', message: t('imagesUploaded') })
+      await refresh()
     },
     onError: (error: Error) => {
-      createToast({
-        priority: 'error',
-        message: error.message || t('imagesUploadError'),
-      })
+      createToast({ priority: 'error', message: error.message || t('imagesUploadError') })
     },
   })
 }
 
-export const useDeleteResidenceImage = (slug: string, name: string) => {
-  const queryClient = useQueryClient()
-  const router = useRouter()
-  const trpc = useTRPC()
+export const useDeleteResidenceImage = (slug: string) => {
+  const refresh = useRefreshResidences()
   const trpcClient = useTRPCClient()
   const t = useTranslations('toast')
 
   return useMutation({
-    mutationFn: async (remainingImages: string[]) => {
-      return trpcClient.bailleur.update.mutate({
-        slug,
-        imagesUrls: remainingImages,
-        name,
-      })
-    },
-    onSuccess: () => {
-      queryClient.refetchQueries({ queryKey: trpc.bailleur.list.queryKey() })
-      createToast({
-        priority: 'success',
-        message: t('imageDeleted'),
-      })
-      router.refresh()
+    mutationFn: (imageUrl: string) => trpcClient.bailleur.removeImage.mutate({ slug, imageUrl }),
+    onSuccess: async () => {
+      createToast({ priority: 'success', message: t('imageDeleted') })
+      await refresh()
     },
     onError: () => {
-      createToast({
-        priority: 'error',
-        message: t('imageDeleteError'),
-      })
+      createToast({ priority: 'error', message: t('imageDeleteError') })
+    },
+  })
+}
+
+export const useReorderResidenceImages = (slug: string) => {
+  const refresh = useRefreshResidences()
+  const trpcClient = useTRPCClient()
+  const t = useTranslations('toast')
+
+  return useMutation({
+    mutationFn: (imagesUrls: string[]) => trpcClient.bailleur.reorderImages.mutate({ slug, imagesUrls }),
+    onSuccess: async () => {
+      createToast({ priority: 'success', message: t('residenceUpdated') })
+      await refresh()
+    },
+    onError: () => {
+      createToast({ priority: 'error', message: t('residenceUpdateError') })
     },
   })
 }
