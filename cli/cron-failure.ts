@@ -22,6 +22,7 @@ export const CRON_COMMANDS = new Set([
   'expire-alerts',
   'check-applications-inactivity',
   'send-contact-digest',
+  'send-goal-reminders',
   'reset-stale-availability',
   'purge-contact-requests',
   'purge-logs',
