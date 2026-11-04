@@ -1,7 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { test as base, expect, type Page } from '@playwright/test'
 import { hashPassword } from 'better-auth/crypto'
-import { createLocalAccountIssuer } from 'better-auth/db'
 import { eq } from 'drizzle-orm'
 import { createAccommodation, createOwner, createUser } from '../src/__tests__/fixtures/factories'
 import { getTestDb, teardownTestDb } from '../src/__tests__/helpers/test-db'
@@ -29,7 +28,6 @@ async function createCredentialUser(fields: Parameters<typeof createUser>[0]) {
       id: `account-${row.id}`,
       userId: row.id,
       accountId: row.id,
-      issuer: createLocalAccountIssuer('credential'),
       providerId: 'credential',
       password: await hashPassword(PASSWORD),
     })

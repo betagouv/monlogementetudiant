@@ -1,5 +1,4 @@
 import { hashPassword } from 'better-auth/crypto'
-import { createLocalAccountIssuer } from 'better-auth/db'
 import { eq, sql } from 'drizzle-orm'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { apiV1App } from '~/server/api/v1/app'
@@ -386,7 +385,6 @@ describe('API v1 — création de clés réservée au back-office', () => {
       id: 'account-student-api-key',
       userId: 'student-api-key',
       accountId: 'student-api-key',
-      issuer: createLocalAccountIssuer('credential'),
       providerId: 'credential',
       password: await hashPassword(password),
     })
