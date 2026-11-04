@@ -30,7 +30,7 @@ function parisOffsetMinutes(at: Date): number {
 }
 
 /** Minuit (heure de Paris) du jour civil parisien contenant `at`, exprimé en UTC. */
-function parisMidnightUTC(at: Date): Date {
+export function parisMidnightUTC(at: Date): Date {
   const [y, m, d] = new Intl.DateTimeFormat('en-CA', { timeZone: PARIS_TZ }).format(at).split('-').map(Number)
   // Première approximation à minuit UTC, puis correction par l'offset de Paris à cette date.
   const approx = new Date(Date.UTC(y, m - 1, d))

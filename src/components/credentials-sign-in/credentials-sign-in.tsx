@@ -19,7 +19,10 @@ import { trackEvent } from '~/lib/tracking'
 import { createZCredentialsSignInForm } from '~/schemas/credentials-sign-in/credentials-sign-in'
 import { signInCredentials } from '~/services/better-auth-client'
 
-export const CredentialsSignInForm: FC = () => {
+/** N'accepte qu'un chemin local (« /mon-espace/to-do ») pour éviter toute redirection ouverte. */
+const safeLocalPath = (path: string | undefined) => (path?.startsWith('/') && !path.startsWith('//') ? path : null)
+
+export const CredentialsSignInForm: FC<{ callbackUrl?: string }> = ({ callbackUrl }) => {
   const t = useTranslations('login')
   const tSchemas = useTranslations('schemas')
   const schema = useMemo(() => createZCredentialsSignInForm(tSchemas), [tSchemas])
@@ -65,7 +68,7 @@ export const CredentialsSignInForm: FC = () => {
           priority: 'success',
           message: t('successToast'),
         })
-        router.push(result.redirectUrl)
+        router.push((result.user?.role === 'user' && safeLocalPath(callbackUrl)) || result.redirectUrl)
         router.refresh()
       } else {
         trackEvent({ category: 'Authentification', action: 'connexion etudiant', name: 'erreur' })
