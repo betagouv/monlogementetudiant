@@ -11,7 +11,17 @@ import { useFavorites } from '~/hooks/use-favorites'
 import { trackEvent } from '~/lib/tracking'
 import { TUser } from '~/lib/types'
 
-export const SaveAccommodationFavoriteButton = ({ slug, withLabel = false, user }: { slug: string; withLabel?: boolean; user?: TUser }) => {
+export const SaveAccommodationFavoriteButton = ({
+  slug,
+  withLabel = false,
+  user,
+  priority,
+}: {
+  slug: string
+  withLabel?: boolean
+  user?: TUser
+  priority?: 'secondary' | 'tertiary' | 'tertiary no outline'
+}) => {
   const t = useTranslations('accomodation.favoriteButton')
   const { data: favorites } = useFavorites(user)
   const [announcement, setAnnouncement] = useState('')
@@ -56,7 +66,7 @@ export const SaveAccommodationFavoriteButton = ({ slug, withLabel = false, user 
   return (
     <>
       <Button
-        priority={withLabel || !isFavorite ? 'secondary' : 'tertiary'}
+        priority={priority ?? (withLabel || !isFavorite ? 'secondary' : 'tertiary')}
         title={buttonProps.title}
         iconId={buttonProps.iconId}
         size="small"

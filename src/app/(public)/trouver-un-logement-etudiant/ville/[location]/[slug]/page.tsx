@@ -58,19 +58,7 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
   const { accommodation, cityBbox, dehydratedState, latitude, longitude, nbAvailable, nearbyAccommodations, user } =
     await getAccommodationPageContext(slug)
 
-  const {
-    address,
-    city,
-    imagesUrls,
-    name,
-    nbTotalApartments,
-    owner,
-    postalCode,
-    externalUrl,
-    updatedAt,
-    acceptWaitingList,
-    virtualTourUrl,
-  } = accommodation
+  const { address, city, imagesUrls, name, owner, postalCode, externalUrl, updatedAt, acceptWaitingList, virtualTourUrl } = accommodation
 
   const citySearchUrl = `/trouver-un-logement-etudiant/ville/${encodeURIComponent(city)}?vue=carte&bbox=${cityBbox.west},${cityBbox.south},${cityBbox.east},${cityBbox.north}`
   const tags: TagProps[] = [
@@ -207,12 +195,12 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
               acceptWaitingList={acceptWaitingList}
               owner={owner}
               nbAvailable={nbAvailable}
-              nbTotalApartments={nbTotalApartments}
               externalUrl={externalUrl}
               title={name}
               location={city}
               slug={slug}
               isAuthenticated={!!user}
+              user={user}
               accommodationSlug={slug}
               availableApartmentTypes={getAvailableApartmentTypes(accommodation.typologies)}
               contactMode={owner?.contactMode ?? EOwnerContactMode.NONE}

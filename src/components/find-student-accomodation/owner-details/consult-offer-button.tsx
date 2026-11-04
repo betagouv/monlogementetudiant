@@ -1,19 +1,22 @@
 'use client'
 
 import Button from '@codegouvfr/react-dsfr/Button'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { trackEvent } from '~/lib/tracking'
 import { useTRPCClient } from '~/server/trpc/client'
+import { formatCityWithPreposition } from '~/utils/french-contraction'
 
 interface ConsultOfferButtonProps {
   href: string
   slug: string
-  priority?: 'primary' | 'tertiary'
+  priority?: 'primary' | 'secondary' | 'tertiary'
+  managerName?: string
 }
 
-export const ConsultOfferButton = ({ href, slug, priority = 'tertiary' }: ConsultOfferButtonProps) => {
+export const ConsultOfferButton = ({ href, slug, priority = 'tertiary', managerName }: ConsultOfferButtonProps) => {
   const t = useTranslations('accomodation')
   const tA11y = useTranslations('accessibility')
+  const locale = useLocale()
   const trpcClient = useTRPCClient()
 
   const handleClick = () => {
@@ -38,7 +41,11 @@ export const ConsultOfferButton = ({ href, slug, priority = 'tertiary' }: Consul
       >
         {t('sidebar.buttons.consult')}
       </Button>
-      <span className="fr-text--xs fr-mb-0"> {t('sidebar.buttons.consultDescription')}</span>
+      <span className="fr-text--xs fr-mb-0">
+        {managerName
+          ? t('sidebar.buttons.consultDescriptionManager', { managerFormatted: formatCityWithPreposition(locale, 'de', managerName) })
+          : t('sidebar.buttons.consultDescription')}
+      </span>
     </>
   )
 }
