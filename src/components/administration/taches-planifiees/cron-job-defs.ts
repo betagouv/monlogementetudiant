@@ -46,6 +46,12 @@ const CRON_JOB_DEF_MAP: Record<CronJobType, Omit<CronJobDef, 'type'>> = {
     description: 'Récapitulatif quotidien des demandes de contact confirmées la veille, envoyé aux gestionnaires concernés',
     schedule: 'Tous les jours à 7h00',
   },
+  'goal-reminders': {
+    label: 'Rappels d’objectifs étudiants',
+    description:
+      'Rappel aux étudiants des objectifs personnalisés arrivés à échéance et non terminés (listes avec rappels activés, un seul rappel par objectif)',
+    schedule: 'Tous les jours à 7h00',
+  },
   'availability-reset': {
     label: 'Péremption des disponibilités',
     description:
