@@ -12,6 +12,7 @@ import { AvailableLocales } from '~/i18n/locales'
  * - "de + Les X" → "des X"
  * - "de + La X" → "de La X" (pas de changement)
  * - "de + L'X" → "de L'X" (pas de changement)
+ * - "de + voyelle" → "d'X" (élision ; pas devant h, muet ou aspiré étant indécidable)
  */
 
 type Preposition = 'à' | 'de'
@@ -34,6 +35,10 @@ export function applyFrenchContraction(preposition: Preposition, cityName: strin
   if (/^Les\s/i.test(trimmedCity)) {
     const cityWithoutArticle = trimmedCity.replace(/^Les\s/i, '')
     return preposition === 'à' ? `aux ${cityWithoutArticle}` : `des ${cityWithoutArticle}`
+  }
+
+  if (preposition === 'de' && /^[aàâäeéèêëiîïoôöuùûüy]/i.test(trimmedCity)) {
+    return `d'${trimmedCity}`
   }
 
   // Pour "La " et "L'" on ne fait pas de contraction
