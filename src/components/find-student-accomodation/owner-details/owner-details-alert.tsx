@@ -14,11 +14,13 @@ export const OwnerDetailsAlert = async ({ isAuthenticated }: OwnerDetailsAlertPr
       <span className="fr-text--bold fr-h6 fr-mb-0 fr-text--center">{t('title')}</span>
       <p className="fr-mb-0 fr-text--xs">{t('description')}</p>
       {isAuthenticated ? (
-        <Button linkProps={{ href: '/mon-espace/alertes', target: '_self' }} priority="primary">
+        <Button linkProps={{ href: '/mon-espace/alertes', target: '_self' }} priority="secondary" iconId="ri-mail-line" iconPosition="left">
           {t('cta')}
         </Button>
       ) : (
-        <AlertsLoginRequiredButton priority="primary">{t('cta')}</AlertsLoginRequiredButton>
+        <AlertsLoginRequiredButton priority="secondary" iconId="ri-mail-line" iconPosition="left">
+          {t('cta')}
+        </AlertsLoginRequiredButton>
       )}
     </div>
   )

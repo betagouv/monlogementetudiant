@@ -290,9 +290,10 @@
     },
     "sidebar": {
       "updatedAt": "Updated on {date}",
-      "proposedBy": "offered by",
-      "accommodationsCount": "{count} accommodations",
-      "accommodationsNoCount": "Available accommodation",
+      "proposedByManager": "Student accommodation offered by <manager>{managerName}</manager>",
+      "availableCount": "{count, plural, one {# accommodation available} other {# accommodations available}}",
+      "noneAvailable": "No accommodation available",
+      "byPhone": "By phone",
       "share": "Share accommodation",
       "emailSubject": "Student accommodation {title} {locationFormatted}",
       "emailBody": "Come and discover the student accommodation {title}, located {locationFormatted}.\n\n🔗 {url}\n📍 {location}\n\nKind regards,\nMon Logement Étudiant",
@@ -313,7 +314,7 @@
         "error": "The report could not be sent. Please try again."
       },
       "buttons": {
-        "consult": "View the manager's offer",
+        "consult": "View the offer",
         "dossierFacile": "Apply with Dossier Facile",
         "dossierFacileConnect": "Sign in with DossierFacile",
         "dossierFacileConnectDescription": "DossierFacile is the French State's digital rental application. Entirely free, compliant and secure, it protects tenants and reassures landlords.",
@@ -325,7 +326,7 @@
         "dossierFacileSelectType": "Accommodation type",
         "consultDescription": "You will be redirected to the residence's website",
         "consultDescriptionCrous": "You will be redirected to https://trouverunlogement.lescrous.fr/",
-        "call": "Call {phoneNumber}",
+        "consultDescriptionManager": "You will be redirected to {managerFormatted}'s website",        "call": "Call {phoneNumber}",
         "dossierFacileDescription": "Certified digital rental file",
         "link": "Copy link",
         "email": "Send by email",
@@ -372,7 +373,7 @@
       "alert": {
         "title": "Stay alerted about availability",
         "description": "Create a personalized alert to be notified as soon as accommodation becomes available.",
-        "cta": "Set up an alert"
+        "cta": "Create a housing alert"
       },
       "copySuccess": "Copied to clipboard",
       "copyError": "Error while copying to clipboard"

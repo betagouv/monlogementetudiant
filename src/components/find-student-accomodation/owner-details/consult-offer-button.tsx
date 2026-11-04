@@ -1,22 +1,24 @@
 'use client'
 
 import Button from '@codegouvfr/react-dsfr/Button'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { trackEvent } from '~/lib/tracking'
 import { useTRPCClient } from '~/server/trpc/client'
+import { formatCityWithPreposition } from '~/utils/french-contraction'
 
 interface ConsultOfferButtonProps {
   href: string
   slug: string
   isCrous?: boolean
-  priority?: 'primary' | 'tertiary'
+  priority?: 'primary' | 'secondary' | 'tertiary'
+  managerName?: string
 }
 
-export const ConsultOfferButton = ({ href, slug, isCrous = false, priority = 'tertiary' }: ConsultOfferButtonProps) => {
+export const ConsultOfferButton = ({ href, slug, isCrous = false, priority = 'tertiary', managerName }: ConsultOfferButtonProps) => {
   const t = useTranslations('accomodation')
   const tA11y = useTranslations('accessibility')
+  const locale = useLocale()
   const trpcClient = useTRPCClient()
-  const hintKey = isCrous ? 'sidebar.buttons.consultDescriptionCrous' : 'sidebar.buttons.consultDescription'
 
   const handleClick = () => {
     trackEvent({ category: 'Logement', action: 'consulter offre', name: slug })
@@ -40,7 +42,13 @@ export const ConsultOfferButton = ({ href, slug, isCrous = false, priority = 'te
       >
         {t('sidebar.buttons.consult')}
       </Button>
-      <span className="fr-text--xs fr-mb-0"> {t(hintKey)}</span>
+      <span className="fr-text--xs fr-mb-0">
+        {isCrous
+          ? t('sidebar.buttons.consultDescriptionCrous')
+          : managerName
+            ? t('sidebar.buttons.consultDescriptionManager', { managerFormatted: formatCityWithPreposition(locale, 'de', managerName) })
+            : t('sidebar.buttons.consultDescription')}
+      </span>
     </>
   )
 }

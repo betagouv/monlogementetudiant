@@ -11,14 +11,14 @@ test.describe("Fiche d'une résidence", () => {
     await expect(page.getByRole('heading', { level: 1, name: /Résidence E2E du Centre/ })).toBeVisible()
     await expect(page.getByText('À partir de 420 €').first()).toBeVisible()
     await expect(page.getByText('Studio', { exact: true }).first()).toBeVisible()
-    await expect(page.getByRole('heading', { name: '42 logements', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: '7 logements disponibles', exact: true })).toBeVisible()
     await expect(page.getByText(/^Mis à jour le /)).toBeVisible()
   })
 
   test("ouvre l'offre du gestionnaire dans un nouvel onglet", async ({ page }) => {
     await page.goto(FICHE_CENTRE)
 
-    const offerLink = page.getByRole('link', { name: /Consulter l'offre du gestionnaire/ })
+    const offerLink = page.getByRole('link', { name: /Consulter l'offre/ })
     await expect(offerLink).toHaveAttribute('href', 'https://bailleur.example.com/residence-du-centre')
     await expect(offerLink).toHaveAttribute('target', '_blank')
   })

@@ -290,9 +290,10 @@
     },
     "sidebar": {
       "updatedAt": "Mis à jour le {date}",
-      "proposedBy": "proposé par",
-      "accommodationsCount": "{count} logements",
-      "accommodationsNoCount": "Logements disponibles",
+      "proposedByManager": "Logement étudiant proposé par <manager>{managerName}</manager>",
+      "availableCount": "{count, plural, one {# logement disponible} other {# logements disponibles}}",
+      "noneAvailable": "Aucun logement disponible",
+      "byPhone": "Par téléphone",
       "share": "Partager le logement",
       "emailSubject": "Logement étudiant {title} {locationFormatted}",
       "emailBody": "Venez découvrir le logement étudiant {title}, situé {locationFormatted}.\n\n🔗 {url}\n📍 {location}\n\nCordialement,\nMon Logement Étudiant",
@@ -313,7 +314,7 @@
         "error": "Le signalement n'a pas pu être envoyé. Veuillez réessayer."
       },
       "buttons": {
-        "consult": "Consulter l'offre du gestionnaire",
+        "consult": "Consulter l'offre",
         "dossierFacile": "Candidater avec Dossier Facile",
         "dossierFacileConnect": "Connexion DossierFacile",
         "dossierFacileConnectDescription": "DossierFacile est le dossier de location numérique de l'Etat. Entièrement gratuit, conforme et sécurisé, il protège les locataires et rassure les propriétaires.",
@@ -325,7 +326,7 @@
         "dossierFacileSelectType": "Type de logement",
         "consultDescription": "Vous serez redirigé vers le site de la résidence",
         "consultDescriptionCrous": "Vous serez redirigé vers le site https://trouverunlogement.lescrous.fr/",
-        "call": "Appeler le {phoneNumber}",
+        "consultDescriptionManager": "Vous serez redirigé vers le site {managerFormatted}",        "call": "Appeler le {phoneNumber}",
         "dossierFacileDescription": "Dossier de location numérique certifié",
         "link": "Copier le lien",
         "email": "Envoyer par email",
@@ -372,7 +373,7 @@
       "alert": {
         "title": "Restez alerté des disponibilités",
         "description": "Créez une alerte personnalisée pour être notifié dès qu'un logement se libère.",
-        "cta": "Configurer une alerte"
+        "cta": "Créer une alerte logement"
       },
       "copySuccess": "Copié dans le presse-papiers",
       "copyError": "Erreur lors de la copie dans le presse-papiers"
