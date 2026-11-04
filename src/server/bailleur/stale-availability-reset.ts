@@ -1,7 +1,9 @@
 import { and, eq, isNotNull, max, or, type SQL, sql } from 'drizzle-orm'
 import { db } from '~/server/db'
+import { accommodationAddresses } from '~/server/db/schema/accommodation-addresses'
 import { accommodationTypologies } from '~/server/db/schema/accommodation-typologies'
 import { accommodations } from '~/server/db/schema/accommodations'
+import { cities } from '~/server/db/schema/cities'
 import { owners } from '~/server/db/schema/owners'
 import { env } from '~/server/env'
 import { recomputeAndPersistAggregates } from '~/server/lib/typologies'
@@ -49,6 +51,7 @@ async function findCandidates(ownerSlug?: string) {
     .select({
       id: accommodations.id,
       name: accommodations.name,
+      cityName: cities.name,
       slug: accommodations.slug,
       createdAt: accommodations.createdAt,
       acceptsApplications: accommodations.acceptsApplications,
@@ -62,6 +65,11 @@ async function findCandidates(ownerSlug?: string) {
     })
     .from(accommodations)
     .innerJoin(owners, eq(owners.id, accommodations.ownerId))
+    .leftJoin(
+      accommodationAddresses,
+      and(eq(accommodationAddresses.accommodationId, accommodations.id), eq(accommodationAddresses.isMain, true)),
+    )
+    .leftJoin(cities, eq(accommodationAddresses.cityId, cities.id))
     .where(and(...conditions))
 }
 

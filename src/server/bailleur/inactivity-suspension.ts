@@ -3,10 +3,12 @@ import { EContactStatus } from '~/enums/contact-status'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { visibleContactRequest, visibleDossierFacileApplication } from '~/server/candidatures/visibility'
 import { db } from '~/server/db'
+import { accommodationAddresses } from '~/server/db/schema/accommodation-addresses'
 import { accommodationTypologies } from '~/server/db/schema/accommodation-typologies'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { user } from '~/server/db/schema/auth'
 import { bailleurAccommodationScopes } from '~/server/db/schema/bailleur-accommodation-scopes'
+import { cities } from '~/server/db/schema/cities'
 import { contactRequests } from '~/server/db/schema/contacts'
 import { dossierFacileApplications, dossierFacileTenants } from '~/server/db/schema/dossier-facile'
 import { owners } from '~/server/db/schema/owners'
@@ -24,6 +26,7 @@ import {
   SUSPENSION_NOTICE_DAYS,
 } from './inactivity-rules'
 import type { BailleurPermission } from './permissions'
+import { residenceLabel } from './residence-label'
 
 type EvaluatedResidence = Awaited<ReturnType<typeof evaluateResidences>>[number]
 
@@ -97,6 +100,7 @@ export async function evaluateResidences({ accommodationIds, ownerSlug }: { acco
     .select({
       id: accommodations.id,
       name: accommodations.name,
+      cityName: cities.name,
       slug: accommodations.slug,
       createdAt: accommodations.createdAt,
       suspendedAt: accommodations.applicationsSuspendedAt,
@@ -114,6 +118,11 @@ export async function evaluateResidences({ accommodationIds, ownerSlug }: { acco
     })
     .from(accommodations)
     .innerJoin(owners, eq(owners.id, accommodations.ownerId))
+    .leftJoin(
+      accommodationAddresses,
+      and(eq(accommodationAddresses.accommodationId, accommodations.id), eq(accommodationAddresses.isMain, true)),
+    )
+    .leftJoin(cities, eq(accommodationAddresses.cityId, cities.id))
     .where(and(...conditions))
 }
 
@@ -243,7 +252,10 @@ export const inactivityRecipients = (members: Member[], residence: { id: number;
     return m.scope === null || m.scope.has(residence.id)
   })
 
-type Notice = { residence: { id: number; name: string; ownerId: number; ownerName: string }; reason: InactivityReason }
+type Notice = {
+  residence: { id: number; name: string; cityName: string | null; ownerId: number; ownerName: string }
+  reason: InactivityReason
+}
 
 export async function sendGroupedEmails(
   notices: Notice[],
@@ -259,7 +271,8 @@ export async function sendGroupedEmails(
     for (const member of inactivityRecipients(members, residence, reason)) {
       const entry = byRecipient.get(member.id) ?? { member, ownerName: residence.ownerName, lines: [] }
       const detail = describe(reason)
-      entry.lines.push(detail ? `${residence.name} : ${detail}` : residence.name)
+      const label = residenceLabel(residence.name, residence.cityName)
+      entry.lines.push(detail ? `${label} : ${detail}` : label)
       byRecipient.set(member.id, entry)
     }
   }

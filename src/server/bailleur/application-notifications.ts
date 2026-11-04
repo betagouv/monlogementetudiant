@@ -1,4 +1,5 @@
 import { and, asc, eq, ne } from 'drizzle-orm'
+import { residenceLabel } from '~/server/bailleur/residence-label'
 import { db } from '~/server/db'
 import { accommodationAddresses } from '~/server/db/schema/accommodation-addresses'
 import { accommodations } from '~/server/db/schema/accommodations'
@@ -16,9 +17,11 @@ import {
   sendContactResidencesUpdatedEmail,
 } from '~/server/services/brevo'
 
-export type ManagedResidences = { mode: 'all' | 'restricted'; residences: Array<{ id: number; name: string }> }
+export type ManagedResidences = { mode: 'all' | 'restricted'; residences: Array<{ id: number; name: string; cityName: string | null }> }
 
 type OwnerRef = { id: number; name: string }
+
+const mainAddressJoin = and(eq(accommodationAddresses.accommodationId, accommodations.id), eq(accommodationAddresses.isMain, true))
 
 /** Résidences dont le gestionnaire traite les candidatures ; `null` s'il n'en traite aucune. */
 export async function readManagedResidences(userId: string): Promise<ManagedResidences | null> {
@@ -31,17 +34,21 @@ export async function readManagedResidences(userId: string): Promise<ManagedResi
 
   if (!target.applicationScopeRestricted) {
     const residences = await db
-      .select({ id: accommodations.id, name: accommodations.name })
+      .select({ id: accommodations.id, name: accommodations.name, cityName: cities.name })
       .from(accommodations)
+      .leftJoin(accommodationAddresses, mainAddressJoin)
+      .leftJoin(cities, eq(accommodationAddresses.cityId, cities.id))
       .where(and(eq(accommodations.ownerId, target.ownerId), eq(accommodations.acceptsApplications, true)))
       .orderBy(asc(accommodations.name))
     return { mode: 'all', residences }
   }
 
   const residences = await db
-    .select({ id: accommodations.id, name: accommodations.name })
+    .select({ id: accommodations.id, name: accommodations.name, cityName: cities.name })
     .from(bailleurAccommodationScopes)
     .innerJoin(accommodations, eq(accommodations.id, bailleurAccommodationScopes.accommodationId))
+    .leftJoin(accommodationAddresses, mainAddressJoin)
+    .leftJoin(cities, eq(accommodationAddresses.cityId, cities.id))
     .where(and(eq(bailleurAccommodationScopes.userId, userId), eq(accommodations.ownerId, target.ownerId)))
     .orderBy(asc(accommodations.name))
   return { mode: 'restricted', residences }
@@ -71,7 +78,7 @@ export async function notifyApplicationsManagementGranted({
     await sendApplicationsManagementGrantedEmail(target.email, {
       firstname: target.firstname,
       ownerName: owner.name,
-      residences: becameAll ? [`Toutes les résidences de ${owner.name}`] : added.map((r) => r.name),
+      residences: becameAll ? [`Toutes les résidences de ${owner.name}`] : added.map((r) => residenceLabel(r.name, r.cityName)),
       residencesCount: becameAll ? after.residences.length : added.length,
       url: `${env.BASE_URL}/bailleur/contacts`,
     })
@@ -195,11 +202,19 @@ export async function notifyApplicationsSuspended({
       columns: { email: true, firstname: true },
     })
 
+    const [residence] = await db
+      .select({ cityName: cities.name })
+      .from(accommodations)
+      .leftJoin(accommodationAddresses, mainAddressJoin)
+      .leftJoin(cities, eq(accommodationAddresses.cityId, cities.id))
+      .where(eq(accommodations.slug, accommodation.slug))
+      .limit(1)
+
     const results = await Promise.allSettled(
       administrators.map((admin) =>
         sendApplicationsSuspendedEmail(admin.email, {
           firstname: admin.firstname,
-          residenceName: accommodation.name,
+          residenceName: residenceLabel(accommodation.name, residence?.cityName),
           suspendedBy: actor.name,
           ownerName: owner.name,
           suspendedAt: suspendedAt.toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Europe/Paris' }),

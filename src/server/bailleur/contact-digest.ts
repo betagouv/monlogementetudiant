@@ -1,11 +1,14 @@
 import { and, eq, gte, isNotNull, lt } from 'drizzle-orm'
 import { db } from '~/server/db'
+import { accommodationAddresses } from '~/server/db/schema/accommodation-addresses'
 import { accommodations } from '~/server/db/schema/accommodations'
+import { cities } from '~/server/db/schema/cities'
 import { contactRequests } from '~/server/db/schema/contacts'
 import { owners } from '~/server/db/schema/owners'
 import { sendContactDailyDigestEmail } from '~/server/services/brevo'
 import { maskEmail } from '~/utils/mask-email'
 import { loadMembers, type Member } from './inactivity-suspension'
+import { residenceLabel } from './residence-label'
 
 /**
  * Récapitulatif quotidien des nouvelles demandes de contact (Trello #1044).
@@ -94,16 +97,26 @@ export async function runContactDigest(options: ContactDigestOptions = {}): Prom
   if (options.ownerSlug) conditions.push(eq(owners.slug, options.ownerSlug))
 
   const rows = await db
-    .select({ accommodationId: accommodations.id, name: accommodations.name, ownerId: accommodations.ownerId })
+    .select({ accommodationId: accommodations.id, name: accommodations.name, cityName: cities.name, ownerId: accommodations.ownerId })
     .from(contactRequests)
     .innerJoin(accommodations, eq(contactRequests.accommodationId, accommodations.id))
     .innerJoin(owners, eq(accommodations.ownerId, owners.id))
+    .leftJoin(
+      accommodationAddresses,
+      and(eq(accommodationAddresses.accommodationId, accommodations.id), eq(accommodationAddresses.isMain, true)),
+    )
+    .leftJoin(cities, eq(accommodationAddresses.cityId, cities.id))
     .where(and(...conditions))
 
   const byResidence = new Map<number, ResidenceCount>()
   for (const row of rows) {
     if (row.ownerId === null) continue
-    const entry = byResidence.get(row.accommodationId) ?? { ...row, ownerId: row.ownerId, count: 0 }
+    const entry = byResidence.get(row.accommodationId) ?? {
+      accommodationId: row.accommodationId,
+      name: residenceLabel(row.name, row.cityName),
+      ownerId: row.ownerId,
+      count: 0,
+    }
     entry.count += 1
     byResidence.set(row.accommodationId, entry)
   }

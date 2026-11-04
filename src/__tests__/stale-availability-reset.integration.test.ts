@@ -82,7 +82,7 @@ describe('runStaleAvailabilityReset — bailleurs sans parcours', () => {
     expect((await readResidence()).nbAvailableApartments).toBe(3)
     expect(resetWarningEmail).toHaveBeenCalledWith(
       'owner@test.com',
-      expect.objectContaining({ residences: ['Res A'], url: expect.stringContaining('/bailleur/residences') }),
+      expect.objectContaining({ residences: [expect.stringMatching(/^Res A – /)], url: expect.stringContaining('/bailleur/residences') }),
       { force: false },
     )
   })
