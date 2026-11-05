@@ -8,6 +8,7 @@ import { UpdateStudentAlert } from '~/components/student-space/alerts/update-stu
 import { ToggleSwitch } from '~/components/ui/toggle-switch'
 import { useUpdateAlert } from '~/hooks/use-update-alert'
 import { TAlert } from '~/schemas/alerts/get-alerts'
+import { sPluriel } from '~/utils/sPluriel'
 
 type StudentAlertProps = {
   alert: TAlert
@@ -48,8 +49,13 @@ export const StudentAlert = ({ alert }: StudentAlertProps) => {
             showCheckedHint={false}
           />
         </div>
-        <div>
+        <div className="fr-flex fr-direction-column fr-align-items-md-end fr-flex-gap-2v">
           <StudentAlertCountButton alert={alert} />
+          {alert.similarCount > 0 && (
+            <span className="fr-text--sm fr-mb-0">
+              {t('similarCountLabel', { count: alert.similarCount, pluralize: sPluriel(alert.similarCount) })}
+            </span>
+          )}
         </div>
       </div>
     </div>
