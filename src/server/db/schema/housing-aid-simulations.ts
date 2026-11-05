@@ -1,4 +1,4 @@
-import { bigint, jsonb, pgTable, text, timestamp, unique } from 'drizzle-orm/pg-core'
+import { bigint, index, jsonb, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
 import type { HelpSimulatorFormData } from '~/components/helps-simulator/help-simulator-schema'
 import { user } from './auth'
 
@@ -14,5 +14,7 @@ export const housingAidSimulations = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
   },
-  (t) => [unique('housing_aid_simulation_user_id_unique').on(t.userId)],
+  // Une ligne par version de simulation : l'étudiant ne voit que la plus récente,
+  // l'historique reste en base pour les statistiques.
+  (t) => [index('housing_aid_simulation_user_id_updated_at_idx').on(t.userId, t.updatedAt)],
 )
