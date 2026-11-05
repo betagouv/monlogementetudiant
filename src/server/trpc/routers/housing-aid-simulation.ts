@@ -1,7 +1,8 @@
-import { eq } from 'drizzle-orm'
+import { desc, eq } from 'drizzle-orm'
 import { type HelpSimulatorFormData, helpSimulatorSchema } from '~/components/helps-simulator/help-simulator-schema'
 import { db } from '~/server/db'
 import { housingAidSimulations } from '~/server/db/schema'
+import { isWithinSessionWindow } from '~/server/student/simulation-sessions'
 import { createTRPCRouter, userProcedure } from '../init'
 
 export const housingAidSimulationRouter = createTRPCRouter({
@@ -10,6 +11,8 @@ export const housingAidSimulationRouter = createTRPCRouter({
       .select({ inputs: housingAidSimulations.inputs })
       .from(housingAidSimulations)
       .where(eq(housingAidSimulations.userId, ctx.session.user.id))
+      .orderBy(desc(housingAidSimulations.updatedAt))
+      .limit(1)
 
     if (!row) return null
 
@@ -25,13 +28,19 @@ export const housingAidSimulationRouter = createTRPCRouter({
       monthlyRent: typeof input.monthlyRent === 'number' && !Number.isNaN(input.monthlyRent) ? input.monthlyRent : undefined,
     }
 
-    await db
-      .insert(housingAidSimulations)
-      .values({ userId: ctx.session.user.id, inputs })
-      .onConflictDoUpdate({
-        target: housingAidSimulations.userId,
-        set: { inputs, updatedAt: new Date() },
-      })
+    const now = new Date()
+    const [latest] = await db
+      .select({ id: housingAidSimulations.id, updatedAt: housingAidSimulations.updatedAt })
+      .from(housingAidSimulations)
+      .where(eq(housingAidSimulations.userId, ctx.session.user.id))
+      .orderBy(desc(housingAidSimulations.updatedAt))
+      .limit(1)
+
+    if (latest && isWithinSessionWindow(latest.updatedAt, now)) {
+      await db.update(housingAidSimulations).set({ inputs, updatedAt: now }).where(eq(housingAidSimulations.id, latest.id))
+    } else {
+      await db.insert(housingAidSimulations).values({ userId: ctx.session.user.id, inputs })
+    }
 
     return { success: true }
   }),

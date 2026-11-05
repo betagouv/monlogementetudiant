@@ -1,7 +1,11 @@
+import { desc, eq } from 'drizzle-orm'
 import { describe, expect, it } from 'vitest'
 import type { TBudgetSimulation } from '~/schemas/budget-simulation'
+import { budgetSimulations } from '~/server/db/schema'
+import { SIMULATION_SESSION_WINDOW_MS } from '~/server/student/simulation-sessions'
 import { createUser } from './fixtures/factories'
 import { authenticatedCaller, authenticatedCaller2, caller } from './helpers/test-caller'
+import { getTestDb } from './helpers/test-db'
 import './helpers/setup-integration'
 
 const baseInputs: TBudgetSimulation = {
@@ -93,7 +97,7 @@ describe('budgetSimulation.save', () => {
     expect(result).toEqual(baseInputs)
   })
 
-  it('upserts (a second save overwrites the first, no duplicate)', async () => {
+  it('deux saves dans la fenêtre de session mettent à jour la même version', async () => {
     await createUser({ id: 'test-user-id' })
 
     await authenticatedCaller.budgetSimulation.save(baseInputs)
@@ -104,6 +108,36 @@ describe('budgetSimulation.save', () => {
 
     const result = await authenticatedCaller.budgetSimulation.get()
     expect(result?.monthlyExpenses.housing).toBe(610)
+
+    const versions = await getTestDb().select().from(budgetSimulations).where(eq(budgetSimulations.userId, 'test-user-id'))
+    expect(versions).toHaveLength(1)
+  })
+
+  it('un save après la fenêtre de session ouvre une nouvelle version, get renvoie la plus récente', async () => {
+    await createUser({ id: 'test-user-id' })
+    const db = getTestDb()
+
+    await authenticatedCaller.budgetSimulation.save(baseInputs)
+    // Vieillit la version courante au-delà de la fenêtre, comme si la session datait d'hier.
+    const stale = new Date(Date.now() - SIMULATION_SESSION_WINDOW_MS - 60_000)
+    await db.update(budgetSimulations).set({ createdAt: stale, updatedAt: stale }).where(eq(budgetSimulations.userId, 'test-user-id'))
+
+    await authenticatedCaller.budgetSimulation.save({
+      ...baseInputs,
+      monthlyExpenses: { ...baseInputs.monthlyExpenses, housing: 700 },
+    })
+
+    const versions = await db
+      .select()
+      .from(budgetSimulations)
+      .where(eq(budgetSimulations.userId, 'test-user-id'))
+      .orderBy(desc(budgetSimulations.updatedAt))
+    expect(versions).toHaveLength(2)
+    expect(versions[0].inputs.monthlyExpenses.housing).toBe(700)
+    expect(versions[1].inputs.monthlyExpenses.housing).toBe(520)
+
+    const result = await authenticatedCaller.budgetSimulation.get()
+    expect(result?.monthlyExpenses.housing).toBe(700)
   })
 
   it('rejects a negative amount', async () => {
