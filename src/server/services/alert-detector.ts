@@ -1,7 +1,16 @@
-import { and, eq, inArray, isNotNull, or, sql } from 'drizzle-orm'
+import { and, eq, inArray, isNotNull, or, type SQL, sql } from 'drizzle-orm'
+import { EXPANDED_SEARCH_PAGE_SIZE } from '~/lib/accommodations-expanded-search'
 import { db } from '~/server/db'
-import { accommodations, alertAvailabilitySnapshots, alertJobs, favoriteAccommodations, owners, studentAlerts } from '~/server/db/schema'
-import { type AlertMatchInput, accommodationAvailableCount, buildAlertMatchConditions } from './alert-matching'
+import {
+  accommodations,
+  alertAvailabilitySnapshots,
+  alertJobs,
+  favoriteAccommodations,
+  owners,
+  studentAlerts,
+  user,
+} from '~/server/db/schema'
+import { type AlertMatchInput, accommodationAvailableCount, buildAlertMatchConditions, buildSimilarMatchConditions } from './alert-matching'
 
 export type AlertDetectorResult = {
   /** Nombre de résidences dont la dispo a augmenté ce run. */
@@ -23,6 +32,27 @@ const inScopeCondition = and(
 
 function toFavoriteJobRow(f: { userId: string; accommodationId: number }) {
   return { userId: f.userId, studentAlertId: null, accommodationId: f.accommodationId, source: 'favorite' as const }
+}
+
+type AlertForMatching = AlertMatchInput & { id: number; userId: string; similarEnabled: boolean }
+
+/**
+ * Résidences de la zone élargie d'une alerte ville (préférence « logements similaires » activée),
+ * plafonnées à EXPANDED_SEARCH_PAGE_SIZE par run — même limite que la section « Plus de
+ * résultats » du moteur de recherche, pour ne pas noyer l'e-mail de suggestions.
+ */
+async function matchSimilarJobRows(alert: AlertForMatching, scope: SQL | undefined) {
+  if (!alert.similarEnabled) return []
+  const conditions = buildSimilarMatchConditions(alert)
+  if (!conditions) return []
+
+  const matched = await db
+    .select({ id: accommodations.id })
+    .from(accommodations)
+    .where(and(scope, ...conditions))
+    .limit(EXPANDED_SEARCH_PAGE_SIZE)
+
+  return matched.map((m) => ({ userId: alert.userId, studentAlertId: alert.id, accommodationId: m.id, source: 'similar' as const }))
 }
 
 async function insertAlertJobsInBatches(rows: (typeof alertJobs.$inferInsert)[], conn: Pick<typeof db, 'insert'> = db): Promise<number> {
@@ -92,7 +122,7 @@ export async function detectAlertJobs(
   const seeded = isFirstRun ? rows.length : rows.filter((r) => !r.hasSnapshot).length
 
   // Croisement avec les alertes actives (opt-in via receiveNotifications).
-  const alertJobRows: { userId: string; studentAlertId: number; accommodationId: number; source: 'alert' }[] = []
+  const alertJobRows: { userId: string; studentAlertId: number; accommodationId: number; source: 'alert' | 'similar' }[] = []
   if (triggeredIds.length > 0) {
     const activeAlerts = await db
       .select({
@@ -104,8 +134,10 @@ export async function detectAlertJobs(
         hasColiving: studentAlerts.hasColiving,
         isAccessible: studentAlerts.isAccessible,
         maxPrice: studentAlerts.maxPrice,
+        similarEnabled: user.similarAccommodationAlertsEnabled,
       })
       .from(studentAlerts)
+      .innerJoin(user, eq(studentAlerts.userId, user.id))
       // Alertes actives ET dotées d'un territoire : une alerte sans territoire matcherait
       // tout le pays (buildTerritoryCondition renvoie null) → exclue pour éviter le spam.
       .where(
@@ -116,22 +148,16 @@ export async function detectAlertJobs(
       )
 
     for (const alert of activeAlerts) {
-      const matchInput: AlertMatchInput = {
-        cityId: alert.cityId,
-        departmentId: alert.departmentId,
-        academyId: alert.academyId,
-        hasColiving: alert.hasColiving,
-        isAccessible: alert.isAccessible,
-        maxPrice: alert.maxPrice,
-      }
       const matched = await db
         .select({ id: accommodations.id })
         .from(accommodations)
-        .where(and(inArray(accommodations.id, triggeredIds), ...buildAlertMatchConditions(matchInput)))
+        .where(and(inArray(accommodations.id, triggeredIds), ...buildAlertMatchConditions(alert)))
 
       for (const m of matched) {
         alertJobRows.push({ userId: alert.userId, studentAlertId: alert.id, accommodationId: m.id, source: 'alert' })
       }
+
+      alertJobRows.push(...(await matchSimilarJobRows(alert, inArray(accommodations.id, triggeredIds))))
     }
   }
 
@@ -233,31 +259,28 @@ export async function enqueueJobsForNewAlert(alertId: number): Promise<number> {
       isAccessible: studentAlerts.isAccessible,
       maxPrice: studentAlerts.maxPrice,
       receiveNotifications: studentAlerts.receiveNotifications,
+      similarEnabled: user.similarAccommodationAlertsEnabled,
     })
     .from(studentAlerts)
+    .innerJoin(user, eq(studentAlerts.userId, user.id))
     .where(eq(studentAlerts.id, alertId))
 
   // Alerte introuvable, opt-out, ou sans territoire (matcherait tout le pays) → on n'enfile rien.
   if (!alert || !alert.receiveNotifications) return 0
   if (alert.cityId == null && alert.departmentId == null && alert.academyId == null) return 0
 
-  const matchInput: AlertMatchInput = {
-    cityId: alert.cityId,
-    departmentId: alert.departmentId,
-    academyId: alert.academyId,
-    hasColiving: alert.hasColiving,
-    isAccessible: alert.isAccessible,
-    maxPrice: alert.maxPrice,
-  }
-
+  const available = sql`${currentAvailableCount} > 0`
   const matched = await db
     .select({ id: accommodations.id })
     .from(accommodations)
-    .where(and(sql`${currentAvailableCount} > 0`, ...buildAlertMatchConditions(matchInput)))
+    .where(and(available, ...buildAlertMatchConditions(alert)))
 
-  if (matched.length === 0) return 0
+  const jobRows = [
+    ...matched.map((m) => ({ userId: alert.userId, studentAlertId: alert.id, accommodationId: m.id, source: 'alert' as const })),
+    ...(await matchSimilarJobRows(alert, available)),
+  ]
+  if (jobRows.length === 0) return 0
 
-  const jobRows = matched.map((m) => ({ userId: alert.userId, studentAlertId: alert.id, accommodationId: m.id, source: 'alert' as const }))
   return insertAlertJobsInBatches(jobRows)
 }
 
@@ -286,8 +309,10 @@ export async function backfillAlertJobs(
       hasColiving: studentAlerts.hasColiving,
       isAccessible: studentAlerts.isAccessible,
       maxPrice: studentAlerts.maxPrice,
+      similarEnabled: user.similarAccommodationAlertsEnabled,
     })
     .from(studentAlerts)
+    .innerJoin(user, eq(studentAlerts.userId, user.id))
     // Mêmes garde-fous que le détecteur : opt-in + territoire défini (sinon match national).
     .where(
       and(
@@ -296,24 +321,19 @@ export async function backfillAlertJobs(
       ),
     )
 
-  const alertJobRows: { userId: string; studentAlertId: number; accommodationId: number; source: 'alert' }[] = []
+  const alertJobRows: { userId: string; studentAlertId: number; accommodationId: number; source: 'alert' | 'similar' }[] = []
   for (const alert of activeAlerts) {
-    const matchInput: AlertMatchInput = {
-      cityId: alert.cityId,
-      departmentId: alert.departmentId,
-      academyId: alert.academyId,
-      hasColiving: alert.hasColiving,
-      isAccessible: alert.isAccessible,
-      maxPrice: alert.maxPrice,
-    }
+    const available = sql`${currentAvailableCount} > 0`
     const matched = await db
       .select({ id: accommodations.id })
       .from(accommodations)
-      .where(and(sql`${currentAvailableCount} > 0`, ...buildAlertMatchConditions(matchInput)))
+      .where(and(available, ...buildAlertMatchConditions(alert)))
 
     for (const m of matched) {
       alertJobRows.push({ userId: alert.userId, studentAlertId: alert.id, accommodationId: m.id, source: 'alert' })
     }
+
+    alertJobRows.push(...(await matchSimilarJobRows(alert, available)))
   }
 
   // Favoris : toutes les résidences épinglées actuellement disponibles dans le périmètre.

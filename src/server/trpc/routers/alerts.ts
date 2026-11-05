@@ -6,12 +6,13 @@ import { ZUpdateAlertRequest } from '~/schemas/alerts/update-alert'
 import { db } from '~/server/db'
 import { academies } from '~/server/db/schema/academies'
 import { accommodations } from '~/server/db/schema/accommodations'
+import { user } from '~/server/db/schema/auth'
 import { cities } from '~/server/db/schema/cities'
 import { departments } from '~/server/db/schema/departments'
 import { studentAlerts } from '~/server/db/schema/student-alerts'
 import { enqueueJobsForNewAlert } from '~/server/services/alert-detector'
 import { ALERT_EXPIRY_REMINDER_DAYS, ALERT_LIFETIME_DAYS } from '~/server/services/alert-expiration'
-import { type AlertMatchInput, buildAlertMatchConditions } from '~/server/services/alert-matching'
+import { type AlertMatchInput, buildAlertMatchConditions, buildSimilarMatchConditions } from '~/server/services/alert-matching'
 import { sendAlertCreationConfirmationEmail } from '~/server/services/brevo'
 import { bboxSelect } from '~/server/trpc/utils/spatial-helpers'
 import { DAY_MS } from '~/utils/time'
@@ -22,6 +23,18 @@ function countQuery(alert: AlertMatchInput) {
     .select({ count: sql<number>`count(*)::int` })
     .from(accommodations)
     .where(and(...buildAlertMatchConditions(alert)))
+}
+
+/** Résidences de la zone élargie (+10 km / +25 %) — 0 si la préférence « similaires » est inactive. */
+async function similarCount(alert: AlertMatchInput, similarEnabled: boolean): Promise<number> {
+  if (!similarEnabled) return 0
+  const conditions = buildSimilarMatchConditions(alert)
+  if (!conditions) return 0
+  const [result] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(accommodations)
+    .where(and(...conditions))
+  return result?.count ?? 0
 }
 
 /** Batch-fetch territory lookup maps for a set of alerts. */
@@ -113,6 +126,7 @@ function formatAlert(
     expiredAt: Date | null
   },
   count: number,
+  similar: number,
   maps: Awaited<ReturnType<typeof fetchTerritoryMaps>>,
 ) {
   let city = null
@@ -137,6 +151,7 @@ function formatAlert(
   return {
     id: alert.id,
     count,
+    similarCount: similar,
     name: alert.name,
     city,
     department,
@@ -184,12 +199,17 @@ export const alertsRouter = createTRPCRouter({
       .where(eq(studentAlerts.userId, userId))
 
     const maps = await fetchTerritoryMaps(alerts)
+    const preferences = await db.query.user.findFirst({
+      where: eq(user.id, userId),
+      columns: { similarAccommodationAlertsEnabled: true },
+    })
+    const similarEnabled = preferences?.similarAccommodationAlertsEnabled ?? false
 
     const results = await Promise.all(
       alerts.map(async (alert) => {
-        const [countResult] = await countQuery(alert)
+        const [[countResult], similar] = await Promise.all([countQuery(alert), similarCount(alert, similarEnabled)])
         const count = countResult?.count ?? 0
-        return formatAlert(alert, count, maps)
+        return formatAlert(alert, count, similar, maps)
       }),
     )
 
