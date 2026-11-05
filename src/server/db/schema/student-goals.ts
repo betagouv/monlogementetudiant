@@ -36,6 +36,7 @@ export const studentGoals = pgTable(
     dueAt: timestamp('due_at', { withTimezone: true }).notNull(),
     position: integer().notNull().default(0),
     completedAt: timestamp('completed_at', { withTimezone: true }),
+    reminderSentAt: timestamp('reminder_sent_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index('student_goal_list_id_idx').on(t.listId)],
