@@ -13,10 +13,20 @@
   }
 }
 
-.sidebarTitle {
-  white-space: nowrap;
-  line-height: 3rem;
-  margin: 0;
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  width: calc(100% + 4rem);
+  margin: 0 -2rem;
+  padding: 0 2rem 1.5rem;
+  border-bottom: 1px solid var(--border-default-grey);
+}
+
+.headerLogo {
+  object-fit: scale-down;
+  flex-shrink: 0;
 }
 
 .sidebarOwner {
@@ -25,13 +35,7 @@
   align-items: center;
   text-align: center;
   margin-top: 1rem;
-}
-
-.sidebarHeader {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
+  width: 100%;
 }
 
 .sidebarOwnerButton {
@@ -45,6 +49,28 @@
   margin-top: 1.5rem;
 }
 
-.image {
-  object-fit: scale-down;
+.footerActions {
+  display: flex;
+  align-items: stretch;
+  width: calc(100% + 4rem);
+  margin: 1.5rem -2rem -2rem;
+  border-top: 1px solid var(--border-default-grey);
+}
+
+.footerAction {
+  flex: 1 1 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.75rem 0.25rem;
+}
+
+.footerAction :global(.fr-btn) {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  white-space: nowrap;
+}
+
+.footerAction + .footerAction {
+  border-left: 1px solid var(--border-default-grey);
 }
