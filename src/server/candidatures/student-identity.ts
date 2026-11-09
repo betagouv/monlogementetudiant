@@ -1,4 +1,5 @@
 import { sql } from 'drizzle-orm'
+import { type EStudyYear, ZStudyYear } from '~/enums/study-year'
 import { contactRequests, dossierFacileTenants, user } from '~/server/db/schema'
 
 /**
@@ -23,6 +24,17 @@ export const CONTACT_STUDENT_NAME_SQL = sql<string | null>`coalesce(
 export const CONTACT_SCHOLARSHIP_STATUS_SQL = sql<string | null>`coalesce(${contactRequests.scholarshipStatus}, ${user.scholarshipStatus})`
 
 export const CONTACT_BIRTHDATE_SQL = sql<string | null>`coalesce(${contactRequests.birthdate}, ${user.birthdate})`
+
+export const CONTACT_WORK_STUDY_SQL = sql<boolean | null>`coalesce(${contactRequests.isWorkStudy}, ${user.isWorkStudy})`
+
+export const CONTACT_STUDY_INSTITUTION_SQL = sql<string | null>`coalesce(${contactRequests.studyInstitution}, ${user.studyInstitution})`
+
+export const CONTACT_STUDY_YEAR_SQL = sql<string | null>`coalesce(${contactRequests.studyYear}, ${user.studyYear})`
+
+export const parseStudyYear = (value: unknown): EStudyYear | null => {
+  const result = ZStudyYear.safeParse(value)
+  return result.success ? result.data : null
+}
 
 /** Version SQL, pour les projections de liste (mode `dossier_facile`). */
 export const DOSSIER_FACILE_STUDENT_NAME_SQL = sql<string | null>`coalesce(${dossierFacileTenants.name}, ${user.name})`

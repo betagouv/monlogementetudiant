@@ -2377,13 +2377,20 @@
         "age": "{count} years old",
         "scholarship": "Scholarship student",
         "viewCandidate": "View {name}",
-        "viewCandidateFallback": "the applicant"
+        "viewCandidateFallback": "the applicant",
+        "workStudy": "Work-study",
+        "studyYearAtStart": "{year} at the start of the year"
       },
       "detail": {
         "title": "Contact from {name}",
         "aboutTitle": "About the applicant",
         "age": "{count} years old",
-        "scholarship": "Scholarship student"
+        "scholarship": "Scholarship student",
+        "workStudy": "Work-study: {value}",
+        "workStudyYes": "Yes",
+        "workStudyNo": "No",
+        "studyInstitution": "Institution at the start of the year: {value}",
+        "studyYear": "Year of study at the start of the year: {value}"
       },
       "actions": {
         "statusChangeError": "Status change failed. Please try again.",
