@@ -476,11 +476,13 @@
   "findAccomodation": {
     "banner": {
       "title": {
-        "city": "De nouveaux logements arrivent bientôt {locationFormatted}.",
-        "academy": "De nouveaux logements arrivent bientôt dans l'académie de {location}.",
-        "department": "De nouveaux logements arrivent bientôt dans le département {location}."
+        "city": "Soyez prévenu dès qu'un logement se libère {locationFormatted}",
+        "academy": "Soyez prévenu dès qu'un logement se libère dans l'académie de {location}",
+        "department": "Soyez prévenu dès qu'un logement se libère dans le département {location}"
       },
-      "description": "Nous sommes en cours d'intégration de nouvelles résidences. Activez <link>l'alerte</link> pour être notifié dès que de nouveaux logements seront disponibles."
+      "description": "Créez une alerte sur votre recherche et recevez un e-mail à chaque nouvelle disponibilité.",
+      "cta": "Activer l'alerte",
+      "close": "Masquer le bandeau d'alerte"
     },
     "faq": {
       "title": "Parmi les questions fréquentes sur les logements étudiants",

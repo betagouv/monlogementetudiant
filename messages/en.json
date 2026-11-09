@@ -476,11 +476,13 @@
   "findAccomodation": {
     "banner": {
       "title": {
-        "city": "New accommodation is coming soon {locationFormatted}.",
-        "academy": "New accommodation is coming soon in the {location} academy.",
-        "department": "New accommodation is coming soon in the {location} department."
+        "city": "Get notified as soon as accommodation becomes available {locationFormatted}",
+        "academy": "Get notified as soon as accommodation becomes available in the {location} academy",
+        "department": "Get notified as soon as accommodation becomes available in the {location} department"
       },
-      "description": "We are currently integrating new residences. Activate <link>the alert</link> to be notified as soon as new accommodation becomes available."
+      "description": "Create an alert for your search and receive an email for every new availability.",
+      "cta": "Activate the alert",
+      "close": "Hide the alert banner"
     },
     "faq": {
       "title": "Common questions about student accommodation",
