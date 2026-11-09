@@ -59,6 +59,7 @@ const navSections: NavSection[] = [
       { label: 'Tâches planifiées', icon: 'fr-icon-time-line', href: '/administration/taches-planifiees' },
       { label: 'Journaux', icon: 'fr-icon-article-line', href: '/administration/journaux' },
       { label: 'Connexions', icon: 'fr-icon-lock-line', href: '/administration/connexions' },
+      { label: 'Relances e-mail', icon: 'fr-icon-mail-send-line', href: '/administration/relances-email' },
       { label: 'Feedback', icon: 'fr-icon-questionnaire-line', href: '/administration/feedback' },
       { label: 'Tickets', icon: 'fr-icon-mail-line', href: '/administration/tickets', badgeKey: 'tickets' },
       { label: 'Changelog', icon: 'fr-icon-git-commit-line', href: '/administration/changelog' },
