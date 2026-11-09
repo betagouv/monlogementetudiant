@@ -76,6 +76,11 @@ export default async function PolitiqueDeConfidentialite() {
               l'étudiant demande d'être recontacté pour une résidence.
             </li>
             <li>
+              <strong>L'alternance, l'établissement et l'année d'études :</strong> Elles ne servent qu'à être transmises aux gestionnaires
+              lorsque l'étudiant demande à être recontacté pour une résidence. Dans la demande de contact, elles sont effacées 30 jours
+              après son dépôt.
+            </li>
+            <li>
               <strong>Les données techniques :</strong> Elles permettent d'offrir un affichage et un fonctionnement optimal des sites ainsi
               que d'établir les statistiques.
             </li>
