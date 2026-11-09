@@ -14,12 +14,12 @@ export const generateMetadata = async (): Promise<Metadata> => {
 }
 
 interface LoginPageProps {
-  searchParams: Promise<{ activated?: string }>
+  searchParams: Promise<{ activated?: string; callbackUrl?: string }>
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const t = await getTranslations('login')
-  const { activated } = await searchParams
+  const { activated, callbackUrl } = await searchParams
   return (
     <>
       <div className={authStyles.imageContainer}>
@@ -29,7 +29,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <h1>{t('studentTitle')}</h1>
         <p>{t('requiredFieldsNotice')}</p>
         {activated && <Alert severity="success" small description={t('activated')} className="fr-mb-3w" />}
-        <CredentialsSignInForm />
+        <CredentialsSignInForm callbackUrl={callbackUrl} />
         <div className={authStyles.dividerContainer}>
           <span className={authStyles.divider}>{t('labels.or')}</span>
         </div>

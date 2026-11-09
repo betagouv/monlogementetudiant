@@ -73,6 +73,7 @@ const envSchema = z.object({
   BREVO_TEMPLATE_AVAILABILITY_RESET_WARNING: z.coerce.number().int().positive(),
   BREVO_TEMPLATE_AVAILABILITY_MONTHLY_RECAP: z.coerce.number().int().positive(),
   BREVO_TEMPLATE_AVAILABILITY_RESET_DONE: z.coerce.number().int().positive(),
+  BREVO_TEMPLATE_STUDENT_GOAL_REMINDER: z.coerce.number().int().positive(),
 
   // S3
   S3_ENDPOINT: z.url(),

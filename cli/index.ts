@@ -26,6 +26,7 @@ import { seedAlertSnapshotCommand } from './commands/seed-alert-snapshot'
 import { sendAlertJobs } from './commands/send-alert-jobs'
 import { sendAvailabilityRecapCommand } from './commands/send-availability-recap'
 import { sendContactDigestCommand } from './commands/send-contact-digest'
+import { sendGoalRemindersCommand } from './commands/send-goal-reminders'
 import { splitDescriptions } from './commands/split-descriptions'
 import { auditStorage } from './commands/storage/auditStorage'
 import { uploadImages } from './commands/upload-images'
@@ -282,6 +283,14 @@ program
   .option('--verbose', 'Afficher le détail par destinataire')
   .option('--owner <slug>', 'Limiter au bailleur donné ; actif et envoie les e-mails même hors production (recette)')
   .action((opts) => sendContactDigestCommand(opts))
+
+program
+  .command('send-goal-reminders')
+  .description('Rappel aux étudiants des objectifs personnalisés arrivés à échéance et non terminés (un seul rappel par objectif)')
+  .option('--dry-run', 'Simuler sans envoyer ni modifier la BDD')
+  .option('--verbose', 'Afficher le détail par destinataire')
+  .option('--force', 'Envoyer les e-mails même hors production (recette)')
+  .action((opts) => sendGoalRemindersCommand(opts))
 
 program
   .command('reset-stale-availability')

@@ -260,6 +260,23 @@ export async function sendContactDailyDigestEmail(
   })
 }
 
+export async function sendStudentGoalReminderEmail(
+  email: string,
+  params: { goalTitle: string },
+  { force = false }: { force?: boolean } = {},
+): Promise<void> {
+  if (env.NEXT_PUBLIC_APP_ENV !== 'production' && !force) {
+    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] rappel d'objectif non envoyé à ${maskEmail(email)}`)
+    return
+  }
+
+  await sendTemplateEmail({
+    to: email,
+    templateId: env.BREVO_TEMPLATE_STUDENT_GOAL_REMINDER,
+    params: { objectif: params.goalTitle },
+  })
+}
+
 type InactivityEmailParams = { firstname: string; ownerName: string; residences: string[]; url: string }
 
 const inactivityParams = (params: InactivityEmailParams) => ({

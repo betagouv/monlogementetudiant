@@ -1,0 +1,1 @@
+ALTER TABLE "student_goal" ADD COLUMN "reminder_sent_at" timestamp with time zone;
