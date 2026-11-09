@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/nextjs'
 import { TRPCError } from '@trpc/server'
-import { and, eq, gte } from 'drizzle-orm'
+import { and, eq, gte, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { APARTMENT_TYPES } from '~/enums/apartment-type'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
@@ -137,7 +137,11 @@ export const contactsRouter = createTRPCRouter({
         if (inserted && userId) {
           await tx
             .update(user)
-            .set({ isWorkStudy: input.isWorkStudy, studyInstitution: input.studyInstitution, studyYear: input.studyYear })
+            .set({
+              isWorkStudy: sql`coalesce(${user.isWorkStudy}, ${input.isWorkStudy})`,
+              studyInstitution: sql`coalesce(${user.studyInstitution}, ${input.studyInstitution})`,
+              studyYear: sql`coalesce(${user.studyYear}, ${input.studyYear})`,
+            })
             .where(eq(user.id, userId))
         }
         return inserted

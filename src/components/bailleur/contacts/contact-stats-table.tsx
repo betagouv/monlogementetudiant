@@ -64,7 +64,6 @@ export const ContactStatsTable = ({ ownerId }: { ownerId?: number }) => {
         </div>
       </div>
       <Table
-        fixed
         noCaption
         caption={t('caption')}
         className="fr-mb-0"
