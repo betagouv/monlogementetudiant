@@ -1,10 +1,18 @@
 import { eq } from 'drizzle-orm'
 import { beforeEach, describe, expect, it } from 'vitest'
+import { EContactStatus } from '~/enums/contact-status'
 import { ELoginAttemptStatus } from '~/enums/login-attempt-status'
+import { contactRequests } from '~/server/db/schema'
 import { activityLog } from '~/server/db/schema/activity-log'
 import { session, user } from '~/server/db/schema/auth'
 import { loginAttempts } from '~/server/db/schema/login-attempts'
-import { createOwner, createUser } from './fixtures/factories'
+import {
+  createAccommodation,
+  createDossierFacileApplication,
+  createDossierFacileTenant,
+  createOwner,
+  createUser,
+} from './fixtures/factories'
 import { adminCaller } from './helpers/test-caller'
 import { getTestDb } from './helpers/test-db'
 
@@ -153,5 +161,52 @@ describe('admin.ownerUsage — gestionnaires actifs', () => {
     await logAction(owner.id, { userId: 'test-admin-id' })
 
     expect(await isActive(owner.id)).toBe(false)
+  })
+})
+
+describe('admin.ownerUsage — taux de renseignement de l’attribution', () => {
+  const inRange = new Date('2026-09-16T10:00:00Z')
+
+  it('rapporte oui + non aux demandes contactées, contacts et DossierFacile confondus', async () => {
+    const owner = await createOwner({ slug: 'bailleur-attribution' })
+    const accommodation = await createAccommodation({ ownerId: owner.id, slug: 'residence-attribution' })
+    const base = { accommodationId: accommodation.id, confirmedAt: inRange, createdAt: inRange }
+    await getTestDb()
+      .insert(contactRequests)
+      .values([
+        { ...base, email: 'oui@x.fr', status: EContactStatus.LOGEMENT_ATTRIBUE },
+        { ...base, email: 'non@x.fr', status: EContactStatus.NON_RETENU, contactedAt: inRange },
+        { ...base, email: 'refuse@x.fr', status: EContactStatus.NON_RETENU },
+        { ...base, email: 'hors-periode@x.fr', status: EContactStatus.CONTACTE, createdAt: new Date('2026-08-01T10:00:00Z') },
+        { ...base, email: 'non-confirme@x.fr', status: EContactStatus.CONTACTE, confirmedAt: null },
+      ])
+    const tenant = await createDossierFacileTenant({ userId: 'gestionnaire-id' })
+    await createDossierFacileApplication({
+      tenantId: tenant.id,
+      accommodationSlug: accommodation.slug,
+      apartmentType: 'T1',
+      status: EContactStatus.CONTACTE,
+      createdAt: inRange,
+    })
+    const tenant2 = await createDossierFacileTenant({ userId: 'test-admin-id' })
+    await createDossierFacileApplication({
+      tenantId: tenant2.id,
+      accommodationSlug: accommodation.slug,
+      apartmentType: 'T1',
+      status: EContactStatus.CONTACTE,
+      createdAt: inRange,
+    })
+
+    const rows = await adminCaller.admin.ownerUsage.list(range)
+
+    expect(rows.find((item) => item.id === owner.id)!.attributionFillRate).toBe(0.5)
+  })
+
+  it('vaut null sans demande contactée', async () => {
+    const owner = await createOwner({ slug: 'bailleur-sans-contact' })
+
+    const rows = await adminCaller.admin.ownerUsage.list(range)
+
+    expect(rows.find((item) => item.id === owner.id)!.attributionFillRate).toBeNull()
   })
 })
