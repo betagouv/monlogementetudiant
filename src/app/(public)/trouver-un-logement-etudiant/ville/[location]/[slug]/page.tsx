@@ -204,6 +204,7 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
             <OwnerDetails
               updatedAt={updatedAt}
               phoneNumber={accommodation.phoneNumber}
+              isCrous={accommodation.isCrous ?? false}
               acceptWaitingList={acceptWaitingList}
               owner={owner}
               nbAvailable={nbAvailable}

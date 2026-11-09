@@ -32,6 +32,7 @@ interface OwnerDetailsProps {
   contactMode: EOwnerContactMode
   updatedAt: Date
   phoneNumber?: string | null
+  isCrous: boolean
 }
 
 export const OwnerDetails = async ({
@@ -49,6 +50,7 @@ export const OwnerDetails = async ({
   contactMode,
   updatedAt,
   phoneNumber,
+  isCrous,
 }: OwnerDetailsProps) => {
   const [t, tA11y, locale] = await Promise.all([getTranslations('accomodation'), getTranslations('accessibility'), getLocale()])
   const ownerUrl = externalUrl || owner?.url
@@ -118,7 +120,12 @@ export const OwnerDetails = async ({
           className="fr-mb-1w fr-width-full"
         />
         {!!ownerUrl && (
-          <ConsultOfferButton href={ownerUrl} slug={slug ?? ''} priority={!isAuthenticated || !isDossierFacile ? 'primary' : 'tertiary'} />
+          <ConsultOfferButton
+            href={ownerUrl}
+            slug={slug ?? ''}
+            isCrous={isCrous}
+            priority={!isAuthenticated || !isDossierFacile ? 'primary' : 'tertiary'}
+          />
         )}
         {!!phoneNumber && (
           <Button

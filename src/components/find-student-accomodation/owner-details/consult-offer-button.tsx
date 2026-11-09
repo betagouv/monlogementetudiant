@@ -5,27 +5,18 @@ import { useTranslations } from 'next-intl'
 import { trackEvent } from '~/lib/tracking'
 import { useTRPCClient } from '~/server/trpc/client'
 
-const CROUS_HOST = 'trouverunlogement.lescrous.fr'
-
-const isCrousUrl = (href: string) => {
-  try {
-    return new URL(href).hostname === CROUS_HOST
-  } catch {
-    return false
-  }
-}
-
 interface ConsultOfferButtonProps {
   href: string
   slug: string
+  isCrous?: boolean
   priority?: 'primary' | 'tertiary'
 }
 
-export const ConsultOfferButton = ({ href, slug, priority = 'tertiary' }: ConsultOfferButtonProps) => {
+export const ConsultOfferButton = ({ href, slug, isCrous = false, priority = 'tertiary' }: ConsultOfferButtonProps) => {
   const t = useTranslations('accomodation')
   const tA11y = useTranslations('accessibility')
   const trpcClient = useTRPCClient()
-  const hintKey = isCrousUrl(href) ? 'sidebar.buttons.consultDescriptionCrous' : 'sidebar.buttons.consultDescription'
+  const hintKey = isCrous ? 'sidebar.buttons.consultDescriptionCrous' : 'sidebar.buttons.consultDescription'
 
   const handleClick = () => {
     trackEvent({ category: 'Logement', action: 'consulter offre', name: slug })
