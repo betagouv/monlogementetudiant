@@ -19,7 +19,8 @@ export const getContactsPageContext = cache(async (searchParams: SearchParams) =
   if (!isLanding) {
     if (!ctx.hasPermission('manage_applications')) redirect(buildHref('/bailleur/tableau-de-bord', searchParams))
 
-    if (!scopeHasAnyAccommodation(await getAccommodationScope(ctx.session.user.id))) {
+    const accommodationScope = await getAccommodationScope(ctx.session.user.id)
+    if (!scopeHasAnyAccommodation(accommodationScope)) {
       redirect(buildHref('/bailleur/tableau-de-bord', searchParams))
     }
   }
