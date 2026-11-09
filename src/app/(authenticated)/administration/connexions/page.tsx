@@ -9,11 +9,12 @@ import Link from 'next/link'
 import { parseAsInteger, parseAsString, parseAsStringLiteral, useQueryStates } from 'nuqs'
 import { useMemo } from 'react'
 import { useDebounce } from 'use-debounce'
+import { AdminClientPagination } from '~/components/administration/admin-client-pagination'
 import { AdminDataTable } from '~/components/administration/admin-data-table'
-import { Pagination } from '~/components/ui/pagination'
 import { ELoginOutcome, FAILED_LOGIN_OUTCOMES, LOGIN_OUTCOME_LABELS, LOGIN_OUTCOMES } from '~/enums/login-attempt-status'
 import { useAdminConnections, useAdminStrandedAccounts } from '~/hooks/use-admin-connections'
 import { getDateFrom } from '~/utils/date-helpers'
+import { formatDateTime, formatDelay } from '~/utils/format-admin'
 import styles from '../administration.module.css'
 import statStyles from '../statistiques/statistiques.module.css'
 
@@ -49,20 +50,6 @@ type StrandedAccount = {
   attempts: number
   completed: number
   lastAttemptAt: Date | string
-}
-
-const formatDateTime = (value: Date | string) =>
-  new Date(value).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-
-/** Délai d'ouverture du lien, en unités lisibles : c'est le signal qui explique un « ouvert trop tard ». */
-const formatDelay = (seconds: number | null) => {
-  if (seconds === null) return '—'
-  if (seconds < 60) return `${seconds} s`
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes} min`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours} h`
-  return `${Math.floor(hours / 24)} j`
 }
 
 const columns: ColumnDef<ConnectionRow, unknown>[] = [
@@ -297,20 +284,7 @@ export default function ConnexionsPage() {
         hidePagination
       />
 
-      {(data?.pageCount ?? 0) > 1 && (
-        <Pagination
-          className="fr-flex fr-justify-content-center fr-mt-3w"
-          count={data!.pageCount}
-          defaultPage={qs.page}
-          getPageLinkProps={(page) => ({
-            href: '#',
-            onClick: (e) => {
-              e.preventDefault()
-              setQs({ page })
-            },
-          })}
-        />
-      )}
+      <AdminClientPagination count={data?.pageCount ?? 0} page={qs.page} onPageChange={(page) => setQs({ page })} />
 
       {stranded && stranded.length > 0 && (
         <div className={clsx(styles.card, 'fr-mt-3w')}>

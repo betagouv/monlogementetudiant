@@ -6,13 +6,14 @@ import Select from '@codegouvfr/react-dsfr/SelectNext'
 import { type ColumnDef } from '@tanstack/react-table'
 import clsx from 'clsx'
 import Link from 'next/link'
+import { AdminClientPagination } from '~/components/administration/admin-client-pagination'
 import { AdminDataTable } from '~/components/administration/admin-data-table'
-import { Pagination } from '~/components/ui/pagination'
 import { EReminderType, REMINDER_TYPE_LABELS } from '~/enums/reminder-email'
 import { useAdminReminderEmails } from '~/hooks/use-admin-reminders'
 import type { TBrevoEmailStatus } from '~/server/services/brevo-reminders'
+import { formatDateTime, formatDelay } from '~/utils/format-admin'
 import styles from '../../../app/(authenticated)/administration/administration.module.css'
-import { EFFICACY_LABELS, EMAIL_STATUS_LABELS, formatDateTime, formatDelay } from './labels'
+import { EFFICACY_LABELS, EMAIL_STATUS_LABELS } from './labels'
 
 type SentEmailsData = NonNullable<ReturnType<typeof useAdminReminderEmails>['data']>
 type SentEmailRow = SentEmailsData['rows'][number]
@@ -182,20 +183,7 @@ export const SentEmailsTab = ({ from, to, page, type, search, onTypeChange, onPa
         hidePagination
       />
 
-      {(data?.pageCount ?? 0) > 1 && (
-        <Pagination
-          className="fr-flex fr-justify-content-center fr-mt-3w"
-          count={data!.pageCount}
-          defaultPage={page}
-          getPageLinkProps={(target) => ({
-            href: '#',
-            onClick: (e) => {
-              e.preventDefault()
-              onPageChange(target)
-            },
-          })}
-        />
-      )}
+      <AdminClientPagination count={data?.pageCount ?? 0} page={page} onPageChange={onPageChange} />
     </>
   )
 }
