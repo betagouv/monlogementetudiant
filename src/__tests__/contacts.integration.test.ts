@@ -7,7 +7,7 @@ import { createClaimToken, verifyClaimToken } from '~/server/contacts/claim-toke
 import { getClaimedContactRequest } from '~/server/contacts/claimed-request'
 import { linkGuestContactRequests } from '~/server/contacts/link-guest-requests'
 import { purgeContactRequests } from '~/server/contacts/purge'
-import { accommodations, contactRequests, owners, user } from '~/server/db/schema'
+import { accommodations, activityLog, contactRequests, owners, user } from '~/server/db/schema'
 import { typologyDraft } from '../server/lib/typologies'
 import { createAccommodation, createOwner, createUser } from './fixtures/factories'
 import './helpers/setup-integration'
@@ -306,6 +306,24 @@ describe('rétention côté gestionnaire', () => {
     await expect(
       ownerCaller.bailleur.updateContactStatus({ id: request!.id, status: EContactStatus.CONTACTE, source: EContactSource.CONTACT }),
     ).rejects.toThrow(/not found/i)
+  })
+
+  it('journalise la modération sans donnée personnelle de l’étudiant', async () => {
+    await setupOwnedResidence('res-moderation-log')
+    const request = await authenticatedCaller.contacts.create({ accommodationSlug: 'res-moderation-log', ...contactInput })
+
+    await ownerCaller.bailleur.updateContactStatus({ id: request!.id, status: EContactStatus.CONTACTE, source: EContactSource.CONTACT })
+    await ownerCaller.bailleur.updateContactStatus({ id: request!.id, status: EContactStatus.CONTACTE, source: EContactSource.CONTACT })
+
+    const logs = await getTestDb().select().from(activityLog).where(eq(activityLog.action, 'contact.status_updated'))
+    expect(logs).toHaveLength(1)
+    expect(logs[0]).toMatchObject({
+      userId: 'test-owner-id',
+      entityType: 'contact_request',
+      entityId: request!.id,
+      metadata: { slug: 'res-moderation-log', diff: { contactStatus: { old: EContactStatus.A_CONTACTER, new: EContactStatus.CONTACTE } } },
+    })
+    expect(JSON.stringify(logs[0])).not.toMatch(new RegExp(`${contactInput.email}|${contactInput.lastname}|${contactInput.phone}`))
   })
 
   it('refuses to mutate an unconfirmed guest request', async () => {

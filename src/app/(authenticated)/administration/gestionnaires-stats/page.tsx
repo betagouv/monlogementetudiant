@@ -28,7 +28,7 @@ type OwnerRow = {
   imageBase64: string | null
   nbLogins: number
   lastLogin: string | null
-  nbActions: number
+  isActive: boolean
   nbCreated: number
   nbUpdated: number
   nbAvailabilityUpdated: number
@@ -150,7 +150,7 @@ export default function GestionnairesStatsPage() {
 
   const totalLogins = ownersList.reduce((s, o) => s + o.nbLogins, 0)
   const totalCreated = ownersList.reduce((s, o) => s + o.nbCreated, 0)
-  const activeOwners = ownersList.filter((o) => o.nbLogins > 0 || o.nbActions > 0).length
+  const activeOwners = ownersList.filter((o) => o.isActive).length
 
   return (
     <>
