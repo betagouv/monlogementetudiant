@@ -1,2 +1,2 @@
-export const applicationsPatchOnPublishChange = (before: boolean, next: boolean | undefined): { acceptsApplications: false } | object =>
+export const applicationsPatchOnPublishChange = (before: boolean, next: boolean | undefined): Partial<{ acceptsApplications: false }> =>
   before && next === false ? { acceptsApplications: false } : {}

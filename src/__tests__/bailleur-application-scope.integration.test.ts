@@ -478,6 +478,19 @@ describe('bailleur.users — écriture du périmètre', () => {
     expect(logs).toHaveLength(1)
   })
 
+  it('ne rouvre pas une résidence dépubliée du périmètre confirmé', async () => {
+    await getTestDb().update(accommodations).set({ acceptsApplications: false, published: false }).where(eq(accommodations.id, resOut.id))
+
+    await ownerCaller.bailleur.users.update({
+      id: SCOPED.id,
+      applicationScope: { mode: 'restricted', accommodationIds: [resIn.id, resOut.id] },
+      openClosedResidences: true,
+    })
+
+    const [row] = await getTestDb().select().from(accommodations).where(eq(accommodations.id, resOut.id))
+    expect(row?.acceptsApplications).toBe(false)
+  })
+
   it('n’ouvre rien pour un gestionnaire sans la gestion des candidats', async () => {
     await getTestDb().update(accommodations).set({ acceptsApplications: false }).where(eq(accommodations.id, resOut.id))
 
