@@ -1,6 +1,6 @@
 import { and, eq, gt, inArray, isNull, lte, or, sql } from 'drizzle-orm'
 import type { InactivityReason } from '~/server/bailleur/inactivity-rules'
-import { visibleContactRequest, visibleDossierFacileApplication } from '~/server/candidatures/visibility'
+import { confirmedContactRequest, verifiedDossierFacileTenant } from '~/server/candidatures/visibility'
 import { db } from '~/server/db'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { activityLog } from '~/server/db/schema/activity-log'
@@ -90,7 +90,7 @@ export async function loadReminderEfficacy(messageIds: string[], now = new Date(
           inArray(contactRequests.accommodationId, accommodationIds),
           lte(contactRequests.createdAt, maxSentAt),
           or(isNull(contactRequests.reviewedAt), gt(contactRequests.reviewedAt, minSentAt)),
-          visibleContactRequest(),
+          confirmedContactRequest(),
         ),
       ),
     db
@@ -106,7 +106,7 @@ export async function loadReminderEfficacy(messageIds: string[], now = new Date(
           inArray(dossierFacileApplications.accommodationSlug, slugs),
           lte(dossierFacileApplications.createdAt, maxSentAt),
           or(isNull(dossierFacileApplications.reviewedAt), gt(dossierFacileApplications.reviewedAt, minSentAt)),
-          visibleDossierFacileApplication(),
+          verifiedDossierFacileTenant(),
         ),
       ),
   ])
@@ -119,12 +119,12 @@ export async function loadReminderEfficacy(messageIds: string[], now = new Date(
   const contactsByAccommodation = groupRequests(contactReviews.map((row) => ({ ...row, key: String(row.id) })))
   const dossiersBySlug = groupRequests(dossierReviews.map((row) => ({ ...row, key: row.slug })))
 
-  const resolutionOfPending = (requests: TRequest[], sentAt: Date): Date | null => {
+  const resolutionOfPending = (requests: TRequest[], sentAt: Date): Date | null | undefined => {
     const pending = requests.filter(
       (request) =>
         request.createdAt.getTime() <= sentAt.getTime() && (request.reviewedAt === null || request.reviewedAt.getTime() > sentAt.getTime()),
     )
-    if (pending.length === 0) return sentAt
+    if (pending.length === 0) return undefined
     let latest = 0
     for (const request of pending) {
       if (request.reviewedAt === null) return null
@@ -139,10 +139,10 @@ export async function loadReminderEfficacy(messageIds: string[], now = new Date(
       return { resolvedAt: firstAfter(resolvingLogs.get(key), sentAt), failedAt: firstAfter(staleFailingLogs.get(key), sentAt) }
     }
     const pending = [...(contactsByAccommodation.get(String(accommodationId)) ?? []), ...(dossiersBySlug.get(slug) ?? [])]
-    return {
-      resolvedAt: resolutionOfPending(pending, sentAt),
-      failedAt: firstAfter(suspensionLogs.get(key), sentAt),
-    }
+    const resolvedAt = resolutionOfPending(pending, sentAt)
+    const failedAt = firstAfter(suspensionLogs.get(key), sentAt)
+    if (resolvedAt === undefined) return { resolvedAt: null, failedAt, unmeasurable: true }
+    return { resolvedAt, failedAt }
   }
 
   for (const email of emails) {
