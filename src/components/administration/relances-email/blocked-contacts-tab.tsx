@@ -6,12 +6,13 @@ import Select from '@codegouvfr/react-dsfr/SelectNext'
 import { type ColumnDef } from '@tanstack/react-table'
 import clsx from 'clsx'
 import Link from 'next/link'
+import { AdminClientPagination } from '~/components/administration/admin-client-pagination'
 import { AdminDataTable } from '~/components/administration/admin-data-table'
-import { Pagination } from '~/components/ui/pagination'
 import { useAdminBlockedContacts } from '~/hooks/use-admin-reminders'
 import type { TBlockedReason } from '~/server/services/brevo-reminders'
+import { formatDateTime } from '~/utils/format-admin'
 import styles from '../../../app/(authenticated)/administration/administration.module.css'
-import { BLOCKED_REASON_CODES, BLOCKED_REASON_LABELS, formatDateTime } from './labels'
+import { BLOCKED_REASON_CODES, BLOCKED_REASON_LABELS } from './labels'
 
 type BlockedContactsData = NonNullable<ReturnType<typeof useAdminBlockedContacts>['data']>
 type BlockedContactRow = BlockedContactsData['rows'][number]
@@ -130,20 +131,7 @@ export const BlockedContactsTab = ({ from, to, page, reason, onReasonChange, onP
         hidePagination
       />
 
-      {(data?.pageCount ?? 0) > 1 && (
-        <Pagination
-          className="fr-flex fr-justify-content-center fr-mt-3w"
-          count={data!.pageCount}
-          defaultPage={page}
-          getPageLinkProps={(target) => ({
-            href: '#',
-            onClick: (e) => {
-              e.preventDefault()
-              onPageChange(target)
-            },
-          })}
-        />
-      )}
+      <AdminClientPagination count={data?.pageCount ?? 0} page={page} onPageChange={onPageChange} />
     </>
   )
 }
