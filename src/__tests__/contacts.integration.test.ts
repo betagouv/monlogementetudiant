@@ -101,6 +101,20 @@ describe('contacts.create', () => {
     expect(profile).toMatchObject({ isWorkStudy: true, studyInstitution: 'Université de Lille', studyYear: EStudyYear.BAC_3 })
   })
 
+  it('keeps the profile study values the student already has', async () => {
+    const owner = await createOwner({ name: 'Owner Keep', slug: 'owner-keep', contactMode: EOwnerContactMode.CONTACTS })
+    await createAccommodation({ slug: 'res-keep', ownerId: owner!.id }, [typologyDraft('t1', { nbAvailable: 1 })])
+    await getTestDb()
+      .update(user)
+      .set({ isWorkStudy: true, studyInstitution: 'IUT de Lyon', studyYear: EStudyYear.BAC_4 })
+      .where(eq(user.id, 'test-user-id'))
+
+    await authenticatedCaller.contacts.create({ accommodationSlug: 'res-keep', ...contactInput })
+
+    const profile = await getTestDb().query.user.findFirst({ where: eq(user.id, 'test-user-id') })
+    expect(profile).toMatchObject({ isWorkStudy: true, studyInstitution: 'IUT de Lyon', studyYear: EStudyYear.BAC_4 })
+  })
+
   it('rejects an unpublished accommodation as if it did not exist', async () => {
     const owner = await createOwner({ name: 'Owner Hidden', slug: 'owner-hidden', contactMode: EOwnerContactMode.CONTACTS })
     await createAccommodation({ slug: 'res-hidden', ownerId: owner!.id, published: false }, [typologyDraft('t1', { nbAvailable: 1 })])
@@ -306,6 +320,33 @@ describe('rétention côté gestionnaire', () => {
     expect(residences.residences.find((r) => r.slug === 'res-ret-recent')?.aRappelerCount).toBe(1)
 
     await expect(ownerCaller.bailleur.getContact({ id: request!.id })).resolves.toBeDefined()
+  })
+
+  it('keeps an unpublished residence reachable while it holds a visible request, and drops one that holds none', async () => {
+    await setupOwnedResidence('res-unpub-pending')
+    await authenticatedCaller.contacts.create({ accommodationSlug: 'res-unpub-pending', ...contactInput })
+
+    await ownerCaller.bailleur.update({ slug: 'res-unpub-pending', published: false })
+    const closed = await getTestDb().query.accommodations.findFirst({ where: eq(accommodations.slug, 'res-unpub-pending') })
+    expect(closed?.acceptsApplications).toBe(false)
+
+    const residences = await ownerCaller.bailleur.listResidencesWithContactCounts({})
+    expect(residences.residences.find((r) => r.slug === 'res-unpub-pending')?.aRappelerCount).toBe(1)
+    const board = await ownerCaller.bailleur.listContactsByResidence({ slug: 'res-unpub-pending' })
+    expect(board.items).toHaveLength(1)
+
+    const list = await ownerCaller.bailleur.list({ page: 1 })
+    expect(list.results.find((r) => r.slug === 'res-unpub-pending')?.hasVisibleContacts).toBe(true)
+  })
+
+  it('does not list a residence closed to applications that holds no visible request', async () => {
+    await setupOwnedResidence('res-closed-empty')
+    await getTestDb().update(accommodations).set({ acceptsApplications: false }).where(eq(accommodations.slug, 'res-closed-empty'))
+
+    const residences = await ownerCaller.bailleur.listResidencesWithContactCounts({})
+    expect(residences.residences.find((r) => r.slug === 'res-closed-empty')).toBeUndefined()
+    const list = await ownerCaller.bailleur.list({ page: 1 })
+    expect(list.results.find((r) => r.slug === 'res-closed-empty')?.hasVisibleContacts).toBe(false)
   })
 
   it('carries the student info of a guest request through to the manager', async () => {
