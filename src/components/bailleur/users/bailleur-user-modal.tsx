@@ -47,10 +47,12 @@ export const BailleurUserModal = ({ ownerId, ownerContactMode, canGrantAdministr
   const update = useUpdateBailleurUser()
   const [limitError, setLimitError] = useState(false)
   const [pendingOpening, setPendingOpening] = useState<PendingOpening | null>(null)
+  const [openingCount, setOpeningCount] = useState(0)
   const isOpen = useIsModalOpen(bailleurUserModal)
 
   useEffect(() => {
-    if (!isOpen) setPendingOpening(null)
+    if (isOpen) setOpeningCount((count) => count + 1)
+    else setPendingOpening(null)
   }, [isOpen])
 
   const isEditing = user !== null
@@ -181,7 +183,7 @@ export const BailleurUserModal = ({ ownerId, ownerContactMode, canGrantAdministr
           <BailleurUserForm
             ownerId={ownerId}
             formId={FORM_ID}
-            key={user?.id ?? 'new'}
+            key={`${user?.id ?? 'new'}-${openingCount}`}
             defaultValues={
               user
                 ? {
