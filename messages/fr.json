@@ -2377,13 +2377,20 @@
         "age": "{count} ans",
         "scholarship": "Boursier",
         "viewCandidate": "Voir {name}",
-        "viewCandidateFallback": "le candidat"
+        "viewCandidateFallback": "le candidat",
+        "workStudy": "Alternant",
+        "studyYearAtStart": "{year} à la rentrée"
       },
       "detail": {
         "title": "Contact de {name}",
         "aboutTitle": "À propos du candidat",
         "age": "{count} ans",
-        "scholarship": "Boursier"
+        "scholarship": "Boursier",
+        "workStudy": "Alternance : {value}",
+        "workStudyYes": "Oui",
+        "workStudyNo": "Non",
+        "studyInstitution": "Établissement à la rentrée : {value}",
+        "studyYear": "Année d'études à la rentrée : {value}"
       },
       "actions": {
         "statusChangeError": "Le changement de statut a échoué. Veuillez réessayer.",

@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { EContactSource, ZContactSource } from '~/enums/contact-source'
 import { A_RAPPELER_STATUS, EContactStatus, ZContactStatus } from '~/enums/contact-status'
 import { EOwnerContactMode, ZOwnerContactMode } from '~/enums/owner-contact-mode'
+import type { EStudyYear } from '~/enums/study-year'
 import type { TAccommodationSelection } from '~/schemas/accommodations/accommodation-selection'
 import { getTypologyLabel } from '~/schemas/accommodations/typology'
 import { DESCRIPTION_SECTION_KEYS, ZUpdateResidence } from '~/schemas/accommodations/update-residence'
@@ -61,9 +62,12 @@ import {
   CONTACT_BIRTHDATE_SQL,
   CONTACT_SCHOLARSHIP_STATUS_SQL,
   CONTACT_STUDENT_NAME_SQL,
+  CONTACT_STUDY_YEAR_SQL,
+  CONTACT_WORK_STUDY_SQL,
   contactStudentName,
   DOSSIER_FACILE_STUDENT_NAME_SQL,
   dossierFacileStudentName,
+  parseStudyYear,
 } from '~/server/candidatures/student-identity'
 import {
   findVisibleApplication,
@@ -990,6 +994,9 @@ export const bailleurRouter = createTRPCRouter({
         studentPhone: tenantUser?.phone ?? null,
         studentBirthdate: tenantUser?.birthdate ?? null,
         scholarshipStatus: tenantUser?.scholarshipStatus ?? null,
+        isWorkStudy: tenantUser?.isWorkStudy ?? null,
+        studyInstitution: tenantUser?.studyInstitution ?? null,
+        studyYear: parseStudyYear(tenantUser?.studyYear),
         dfTenantId: application.tenant.id,
         hasTenantUrl: !!application.tenant.url,
         hasPdfUrl: !!application.tenant.pdfUrl,
@@ -1472,6 +1479,8 @@ export const bailleurRouter = createTRPCRouter({
         studentName: string | null
         studentBirthdate: string | null
         scholarshipStatus: string | null
+        isWorkStudy: boolean | null
+        studyYear: EStudyYear | null
         apartmentType: string | null
         status: string
         createdAt: Date
@@ -1479,12 +1488,14 @@ export const bailleurRouter = createTRPCRouter({
       }> = []
 
       if (mode === EOwnerContactMode.DOSSIER_FACILE) {
-        items = await db
+        const rows = await db
           .select({
             id: dossierFacileApplications.id,
             studentName: DOSSIER_FACILE_STUDENT_NAME_SQL,
             studentBirthdate: user.birthdate,
             scholarshipStatus: user.scholarshipStatus,
+            isWorkStudy: user.isWorkStudy,
+            studyYear: user.studyYear,
             apartmentType: dossierFacileApplications.apartmentType,
             status: dossierFacileApplications.status,
             createdAt: dossierFacileApplications.createdAt,
@@ -1495,13 +1506,16 @@ export const bailleurRouter = createTRPCRouter({
           .leftJoin(user, eq(dossierFacileTenants.userId, user.id))
           .where(and(eq(dossierFacileApplications.accommodationSlug, input.slug), visibleDossierFacileApplication()))
           .orderBy(desc(dossierFacileApplications.createdAt))
+        items = rows.map((row) => ({ ...row, studyYear: parseStudyYear(row.studyYear) }))
       } else if (mode === EOwnerContactMode.CONTACTS) {
-        items = await db
+        const rows = await db
           .select({
             id: contactRequests.id,
             studentName: CONTACT_STUDENT_NAME_SQL,
             studentBirthdate: CONTACT_BIRTHDATE_SQL,
             scholarshipStatus: CONTACT_SCHOLARSHIP_STATUS_SQL,
+            isWorkStudy: CONTACT_WORK_STUDY_SQL,
+            studyYear: CONTACT_STUDY_YEAR_SQL,
             apartmentType: contactRequests.apartmentType,
             status: contactRequests.status,
             createdAt: contactRequests.createdAt,
@@ -1511,6 +1525,7 @@ export const bailleurRouter = createTRPCRouter({
           .leftJoin(user, eq(contactRequests.userId, user.id))
           .where(and(eq(contactRequests.accommodationId, residence.id), visibleContactRequest()))
           .orderBy(desc(contactRequests.createdAt))
+        items = rows.map((row) => ({ ...row, studyYear: parseStudyYear(row.studyYear) }))
       }
 
       return {
@@ -1549,6 +1564,9 @@ export const bailleurRouter = createTRPCRouter({
         studentPhone: request.phone ?? request.user?.phone ?? null,
         studentBirthdate: request.birthdate ?? request.user?.birthdate ?? null,
         scholarshipStatus: request.scholarshipStatus ?? request.user?.scholarshipStatus ?? null,
+        isWorkStudy: request.isWorkStudy ?? request.user?.isWorkStudy ?? null,
+        studyInstitution: request.studyInstitution ?? request.user?.studyInstitution ?? null,
+        studyYear: parseStudyYear(request.studyYear ?? request.user?.studyYear),
       }
     }),
 

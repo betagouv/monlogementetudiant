@@ -314,6 +314,37 @@ describe('rétention côté gestionnaire', () => {
     expect(board.items[0]!.studentBirthdate).toBe(contactInput.birthdate)
   })
 
+  it('exposes the study fields of a request, falling back on the linked profile', async () => {
+    await setupOwnedResidence('res-study')
+    const own = await caller.contacts.create({ accommodationSlug: 'res-study', ...contactInput })
+    await confirmContactRequest(own!.id)
+
+    const detail = await ownerCaller.bailleur.getContact({ id: own!.id })
+    expect(detail.isWorkStudy).toBe(false)
+    expect(detail.studyInstitution).toBe(contactInput.studyInstitution)
+    expect(detail.studyYear).toBe(EStudyYear.BAC_2)
+
+    const bare = await authenticatedCaller.contacts.create({ accommodationSlug: 'res-study', ...contactInput })
+    await getTestDb()
+      .update(user)
+      .set({ isWorkStudy: true, studyInstitution: 'IUT de Lyon', studyYear: EStudyYear.BAC_4 })
+      .where(eq(user.id, 'test-user-id'))
+    await getTestDb()
+      .update(contactRequests)
+      .set({ isWorkStudy: null, studyInstitution: null, studyYear: null })
+      .where(eq(contactRequests.id, bare!.id))
+
+    const fallback = await ownerCaller.bailleur.getContact({ id: bare!.id })
+    expect(fallback.isWorkStudy).toBe(true)
+    expect(fallback.studyInstitution).toBe('IUT de Lyon')
+    expect(fallback.studyYear).toBe(EStudyYear.BAC_4)
+
+    const board = await ownerCaller.bailleur.listContactsByResidence({ slug: 'res-study' })
+    const item = board.items.find((i) => i.id === bare!.id)
+    expect(item?.isWorkStudy).toBe(true)
+    expect(item?.studyYear).toBe(EStudyYear.BAC_4)
+  })
+
   it('hides a request past 30 days everywhere, including by direct URL', async () => {
     await setupOwnedResidence('res-ret-old')
     const request = await authenticatedCaller.contacts.create({ accommodationSlug: 'res-ret-old', ...contactInput })
