@@ -55,6 +55,7 @@ import {
   nextApplicationsPermissions,
   sanitizeGestionnairePermissions,
 } from '~/server/bailleur/permissions'
+import { applicationsPatchOnPublishChange } from '~/server/bailleur/publication-applications'
 import { nextManagerAssignment, type StoredScope } from '~/server/bailleur/reception-assignment'
 import {
   CONTACT_BIRTHDATE_SQL,
@@ -617,6 +618,8 @@ export const bailleurRouter = createTRPCRouter({
         await db.insert(accommodationAddresses).values(resolved)
       }
 
+      if (snapshot) Object.assign(parentSet, applicationsPatchOnPublishChange(snapshot.published, fields.published))
+
       parentSet.updatedAt = new Date()
 
       const updated = await db.transaction(async (tx) => {
@@ -1152,7 +1155,7 @@ export const bailleurRouter = createTRPCRouter({
           )
           .leftJoin(cities, eq(accommodationAddresses.cityId, cities.id))
           .leftJoin(departments, eq(cities.departmentId, departments.id))
-          .where(eq(accommodations.ownerId, owner.id))
+          .where(and(eq(accommodations.ownerId, owner.id), eq(accommodations.published, true)))
           .orderBy(asc(accommodations.name))
           .limit(SCOPE_RESIDENCES_LIMIT),
         readOwnerGestionnaires(owner.id),
@@ -1180,12 +1183,16 @@ export const bailleurRouter = createTRPCRouter({
     }
 
     const ownerResidences = await db
-      .select({ id: accommodations.id, name: accommodations.name })
+      .select({ id: accommodations.id, name: accommodations.name, published: accommodations.published })
       .from(accommodations)
       .where(eq(accommodations.ownerId, owner.id))
     const ownedIds = new Set(ownerResidences.map((r) => r.id))
     if (checkedIds.some((id) => !ownedIds.has(id))) {
       throw new TRPCError({ code: 'BAD_REQUEST', message: "Une residence selectionnee n'appartient pas a ce bailleur" })
+    }
+    const unpublishedIds = new Set(ownerResidences.filter((r) => !r.published).map((r) => r.id))
+    if (checkedIds.some((id) => unpublishedIds.has(id))) {
+      throw new TRPCError({ code: 'BAD_REQUEST', message: 'Une résidence dépubliée ne peut pas recevoir de contacts' })
     }
 
     const gestionnaires = await readOwnerGestionnaires(owner.id)
