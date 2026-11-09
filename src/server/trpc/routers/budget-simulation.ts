@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm'
+import { desc, eq } from 'drizzle-orm'
 import { type TBudgetSimulation, ZBudgetSimulation } from '~/schemas/budget-simulation'
 import { db } from '~/server/db'
 import { budgetSimulations } from '~/server/db/schema'
@@ -10,6 +10,8 @@ export const budgetSimulationRouter = createTRPCRouter({
       .select({ inputs: budgetSimulations.inputs })
       .from(budgetSimulations)
       .where(eq(budgetSimulations.userId, ctx.session.user.id))
+      .orderBy(desc(budgetSimulations.updatedAt))
+      .limit(1)
 
     if (!row) return null
 
@@ -19,15 +21,26 @@ export const budgetSimulationRouter = createTRPCRouter({
     return parsed.data
   }),
 
+  // L'autosave met à jour la version courante ; seule `reset` en ouvre une nouvelle.
   save: userProcedure.input(ZBudgetSimulation).mutation(async ({ ctx, input }) => {
-    await db
-      .insert(budgetSimulations)
-      .values({ userId: ctx.session.user.id, inputs: input })
-      .onConflictDoUpdate({
-        target: budgetSimulations.userId,
-        set: { inputs: input, updatedAt: new Date() },
-      })
+    const [latest] = await db
+      .select({ id: budgetSimulations.id })
+      .from(budgetSimulations)
+      .where(eq(budgetSimulations.userId, ctx.session.user.id))
+      .orderBy(desc(budgetSimulations.updatedAt))
+      .limit(1)
 
+    if (latest) {
+      await db.update(budgetSimulations).set({ inputs: input, updatedAt: new Date() }).where(eq(budgetSimulations.id, latest.id))
+    } else {
+      await db.insert(budgetSimulations).values({ userId: ctx.session.user.id, inputs: input })
+    }
+
+    return { success: true }
+  }),
+
+  reset: userProcedure.input(ZBudgetSimulation).mutation(async ({ ctx, input }) => {
+    await db.insert(budgetSimulations).values({ userId: ctx.session.user.id, inputs: input })
     return { success: true }
   }),
 })

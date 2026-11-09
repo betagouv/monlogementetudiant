@@ -1,7 +1,10 @@
+import { eq } from 'drizzle-orm'
 import { describe, expect, it } from 'vitest'
 import { type HelpSimulatorFormData } from '~/components/helps-simulator/help-simulator-schema'
+import { housingAidSimulations } from '~/server/db/schema'
 import { createUser } from './fixtures/factories'
 import { authenticatedCaller, authenticatedCaller2, caller } from './helpers/test-caller'
+import { getTestDb } from './helpers/test-db'
 import './helpers/setup-integration'
 
 const baseInputs: HelpSimulatorFormData = {
@@ -40,7 +43,7 @@ describe('housingAidSimulation.save', () => {
     expect(result).toMatchObject({ age: 20, city: 'Paris', monthlyRent: 500, hasGuarantor: 'no' })
   })
 
-  it('upserts (a second save overwrites the first, no duplicate)', async () => {
+  it('chaque enregistrement ouvre une nouvelle version, get renvoie la plus récente', async () => {
     await createUser({ id: 'test-user-id' })
 
     await authenticatedCaller.housingAidSimulation.save(baseInputs)
@@ -49,6 +52,10 @@ describe('housingAidSimulation.save', () => {
     const result = await authenticatedCaller.housingAidSimulation.get()
     expect(result?.city).toBe('Lyon')
     expect(result?.monthlyRent).toBe(420)
+
+    const versions = await getTestDb().select().from(housingAidSimulations).where(eq(housingAidSimulations.userId, 'test-user-id'))
+    expect(versions).toHaveLength(2)
+    expect(versions.map((v) => v.inputs.city).sort()).toEqual(['Lyon', 'Paris'])
   })
 
   it('normalizes a NaN rent (loyer non renseigné) to undefined', async () => {
