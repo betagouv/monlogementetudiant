@@ -83,10 +83,28 @@ describe('brevo service', () => {
       await expect(sendTemplateEmail({ to: 'a@b.fr', templateId: 2 })).resolves.toBe('<m1@smtp-relay.brevo.com>')
     })
 
-    it('échoue si Brevo ne renvoie pas de messageId', async () => {
+    it('renvoie null et avertit si Brevo ne renvoie pas de messageId', async () => {
+      const warn = vi.spyOn(console, 'warn').mockReturnValue(undefined)
       fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({}) })
       const { sendTemplateEmail } = await import('./brevo')
-      await expect(sendTemplateEmail({ to: 'a@b.fr', templateId: 2 })).rejects.toThrow('messageId')
+      await expect(sendTemplateEmail({ to: 'a@b.fr', templateId: 2 })).resolves.toBeNull()
+      expect(warn).toHaveBeenCalledOnce()
+      expect(warn.mock.calls[0][0]).not.toContain('a@b.fr')
+      warn.mockRestore()
+    })
+
+    it('renvoie null si le corps de la réponse n’est pas du JSON', async () => {
+      const warn = vi.spyOn(console, 'warn').mockReturnValue(undefined)
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => {
+          throw new SyntaxError('Unexpected token')
+        },
+      })
+      const { sendTemplateEmail } = await import('./brevo')
+      await expect(sendTemplateEmail({ to: 'a@b.fr', templateId: 2 })).resolves.toBeNull()
+      expect(warn).toHaveBeenCalledOnce()
+      warn.mockRestore()
     })
 
     it("étiquette l'alerte d'inactivité par type et motifs", async () => {

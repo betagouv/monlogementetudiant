@@ -36,7 +36,12 @@ const reminderTags = (type: EReminderType, reasons: InactivityReason[] = []) => 
   ...new Set([REMINDER_TAGS[type], ...reasons.map((reason) => REASON_TAGS[reason])]),
 ]
 
-export async function sendTemplateEmail({ to, templateId, params, tags }: TemplateEmailParams & { tags?: string[] }): Promise<string> {
+export async function sendTemplateEmail({
+  to,
+  templateId,
+  params,
+  tags,
+}: TemplateEmailParams & { tags?: string[] }): Promise<string | null> {
   const response = await fetch(env.BREVO_API_URL, {
     method: 'POST',
     headers: brevoHeaders,
@@ -54,8 +59,11 @@ export async function sendTemplateEmail({ to, templateId, params, tags }: Templa
     throw new Error(`Brevo email failed: ${response.status} ${error}`)
   }
 
-  const result = ZBrevoSendResponse.safeParse(await response.json())
-  if (!result.success) throw new Error('Réponse Brevo sans messageId')
+  const result = ZBrevoSendResponse.safeParse(await response.json().catch(() => null))
+  if (!result.success) {
+    console.warn(`Réponse Brevo sans messageId pour ${maskEmail(to)} (template ${templateId})`)
+    return null
+  }
   return result.data.messageId
 }
 

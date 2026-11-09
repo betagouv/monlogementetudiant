@@ -1,6 +1,6 @@
 import { addMonths } from 'date-fns'
 import { EReminderType, MEASURED_REMINDER_TYPES } from '~/enums/reminder-email'
-import { SUSPENSION_NOTICE_DAYS } from '~/server/bailleur/inactivity-rules'
+import { CRON_RUN_TOLERANCE_MS, SUSPENSION_NOTICE_DAYS } from '~/server/bailleur/inactivity-rules'
 import { DAY_MS } from '~/utils/time'
 
 export type TReminderEfficacyStatus = 'effective' | 'failed' | 'pending' | 'not_measured'
@@ -21,11 +21,11 @@ export function decideEfficacy({ type, sentAt, items, now }: { type: EReminderTy
   if (!MEASURED_REMINDER_TYPES.includes(type) || items.length === 0) return { status: 'not_measured', reactionMs: null }
 
   const deadline = reminderDeadline(type, sentAt).getTime()
-  const within = (date: Date | null): date is Date => date !== null && date.getTime() <= deadline
+  const within = (date: Date | null, tolerance = 0): date is Date => date !== null && date.getTime() <= deadline + tolerance
   const expired = now.getTime() > deadline
 
   const outcomeOf = (item: TItemFacts): TItemOutcome => {
-    if (within(item.failedAt)) return 'failed'
+    if (within(item.failedAt, CRON_RUN_TOLERANCE_MS)) return 'failed'
     if (within(item.resolvedAt)) return 'resolved'
     return expired ? 'failed' : 'pending'
   }

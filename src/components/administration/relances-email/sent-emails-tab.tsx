@@ -51,7 +51,9 @@ const columns: ColumnDef<SentEmailRow, unknown>[] = [
     cell: ({ row }) => (
       <div>
         <div className="fr-text--sm fr-text--bold">{row.original.userName ?? row.original.email}</div>
-        {row.original.userName && <div className="fr-text--xs fr-text-mention--grey fr-mb-0">{row.original.email}</div>}
+        <div className="fr-text--xs fr-text-mention--grey fr-mb-0">
+          {row.original.userName ? row.original.email : 'destinataire inconnu'}
+        </div>
         {row.original.ownerName && row.original.ownerId && (
           <Link href={`/administration/bailleurs/${row.original.ownerId}`} className="fr-link fr-text--xs">
             {row.original.ownerName}

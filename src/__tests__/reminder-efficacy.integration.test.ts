@@ -59,7 +59,10 @@ describe('loadReminderEfficacy', () => {
 
   it('alerte candidatures : effective si la demande est traitée, pending sinon', async () => {
     await record('m-apps', EReminderType.APPLICATIONS_INACTIVITY_WARNING, daysAgo(3), 'unprocessed_applications')
-    const [contact] = await getTestDb().insert(contactRequests).values({ accommodationId: resA.id, email: 'etu@a.com' }).returning()
+    const [contact] = await getTestDb()
+      .insert(contactRequests)
+      .values({ accommodationId: resA.id, email: 'etu@a.com', confirmedAt: daysAgo(5), createdAt: daysAgo(4) })
+      .returning()
 
     expect((await loadReminderEfficacy(['m-apps'])).get('m-apps')?.status).toBe('pending')
 
@@ -108,6 +111,58 @@ describe('loadReminderEfficacy', () => {
     await logAction('accommodation.availability_updated', resA.slug, daysAgo(8), { userId: 'efficacy-colleague' })
 
     expect((await loadReminderEfficacy(['m-colleague'])).get('m-colleague')?.status).toBe('effective')
+  })
+
+  describe('candidatures en attente à l’envoi', () => {
+    const addContact = (email: string, createdAt: Date, reviewedAt: Date | null = null) =>
+      getTestDb().insert(contactRequests).values({ accommodationId: resA.id, email, confirmedAt: createdAt, createdAt, reviewedAt })
+
+    it('deux demandes en attente, une seule traitée : pending puis failed après l’échéance', async () => {
+      await addContact('a@a.com', daysAgo(12), daysAgo(1))
+      await addContact('b@a.com', daysAgo(12))
+
+      await record('m-two', EReminderType.APPLICATIONS_INACTIVITY_WARNING, daysAgo(3), 'unprocessed_applications')
+      expect((await loadReminderEfficacy(['m-two'])).get('m-two')?.status).toBe('pending')
+
+      await record('m-two-old', EReminderType.APPLICATIONS_INACTIVITY_WARNING, daysAgo(10), 'unprocessed_applications')
+      expect((await loadReminderEfficacy(['m-two-old'])).get('m-two-old')?.status).toBe('failed')
+    })
+
+    it('toutes les demandes traitées : effective, réaction = dernière revue', async () => {
+      await record('m-all', EReminderType.APPLICATIONS_INACTIVITY_WARNING, daysAgo(5), 'unprocessed_applications')
+      await addContact('a@a.com', daysAgo(6), daysAgo(4))
+      await addContact('b@a.com', daysAgo(6), daysAgo(2))
+
+      expect((await loadReminderEfficacy(['m-all'])).get('m-all')).toEqual({
+        status: 'effective',
+        reactionMs: expect.closeTo(3 * DAY_MS, -3),
+        residencesCount: 1,
+      })
+    })
+
+    it('une demande créée après l’envoi et traitée ne résout pas la paire', async () => {
+      await record('m-late', EReminderType.APPLICATIONS_INACTIVITY_WARNING, daysAgo(5), 'unprocessed_applications')
+      await addContact('a@a.com', daysAgo(6))
+      await addContact('b@a.com', daysAgo(4), daysAgo(3))
+
+      expect((await loadReminderEfficacy(['m-late'])).get('m-late')?.status).toBe('pending')
+    })
+  })
+
+  it('une résidence citée pour les deux motifs compte une fois', async () => {
+    await recordReminderEmail({
+      messageId: 'm-both',
+      type: EReminderType.APPLICATIONS_INACTIVITY_WARNING,
+      userId: USER,
+      ownerId,
+      recipientEmail: 'efficacy@a.com',
+      sentAt: daysAgo(2),
+      items: [
+        { accommodationId: resA.id, reason: 'unprocessed_applications' },
+        { accommodationId: resA.id, reason: 'stale_availability' },
+      ],
+    })
+    expect((await loadReminderEfficacy(['m-both'])).get('m-both')?.residencesCount).toBe(1)
   })
 
   it('messageId inconnu : absent de la Map', async () => {
