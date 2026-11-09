@@ -2318,7 +2318,7 @@
         "confirmAllError": "La confirmation des autres résidences a échoué, veuillez réessayer.",
         "confirmAllModal": {
           "title": "Confirmer les disponibilités de toutes vos résidences ?",
-          "description": "Si les disponibilités de vos autres résidences n’ont pas changé non plus, confirmez-les toutes en une fois : leur date de confirmation sera actualisée, sans modifier les nombres.",
+          "description": "Si les disponibilités de vos autres résidences n’ont pas changé non plus, confirmez-les toutes en une fois : leur date de confirmation sera actualisée, sans modifier les nombres. Les disponibilités non renseignées passeront à 0.",
           "confirmOne": "Seulement cette résidence",
           "confirmAll": "Confirmer toutes mes résidences"
         }
@@ -2547,7 +2547,7 @@
     "emailConfirmAvailability": {
       "pageTitle": "Confirmer mes disponibilités",
       "intro": "Voici les disponibilités renseignées pour vos résidences, avec leur date de dernière mise à jour.",
-      "confirmHint": "Rien n’a changé ? Confirmez en un clic : la date de mise à jour passe à aujourd’hui, sans modifier les valeurs renseignées.",
+      "confirmHint": "Rien n’a changé ? Confirmez en un clic : la date de mise à jour passe à aujourd’hui, sans modifier les valeurs renseignées. Les disponibilités non renseignées passeront à 0.",
       "available": "{count, plural, =0 {Aucune disponibilité} one {# disponibilité} other {# disponibilités}}",
       "lastUpdate": "Dernière mise à jour : {date}",
       "neverUpdated": "Dernière mise à jour : non renseignée",

@@ -271,6 +271,28 @@ describe('confirmation des disponibilités depuis l’e-mail', () => {
     expect(await readActions()).toContain('accommodation.availability_confirmed')
   })
 
+  it('affiche et passe à zéro les typologies non renseignées d’une résidence en alerte', async () => {
+    await getTestDb().update(accommodationTypologies).set({ nbAvailable: null }).where(eq(accommodationTypologies.type, 't2'))
+
+    expect(await ownerCaller.bailleur.listAvailabilityToConfirm()).toEqual([
+      expect.objectContaining({
+        id: res.id,
+        nbAvailable: 2,
+        typologies: [
+          { type: 't1', nbAvailable: 2, nbTotal: 10 },
+          { type: 't2', nbAvailable: null, nbTotal: 5 },
+        ],
+      }),
+    ])
+    expect(await ownerCaller.bailleur.confirmAvailability()).toEqual({ confirmed: 1, skipped: 0 })
+
+    expect((await readTypologies()).map((t) => [t.type, t.nbAvailable]).sort()).toEqual([
+      ['t1', 2],
+      ['t2', 0],
+    ])
+    expect(await readResidence()).toMatchObject({ nbAvailableApartments: 2, staleAvailabilityWarnedAt: null })
+  })
+
   it('lève la suspension automatique « disponibilités »', async () => {
     await getTestDb()
       .update(accommodations)
@@ -297,7 +319,7 @@ describe('confirmation des disponibilités depuis l’e-mail', () => {
 })
 
 describe('confirmation de toutes les résidences depuis la liste', () => {
-  it('horodate aussi les résidences sans alerte et ignore celles sans disponibilité', async () => {
+  it('horodate aussi les résidences sans alerte et passe les non renseignées à zéro', async () => {
     const stampedAt = daysAgo(10)
     await stampAvailability(stampedAt)
     const empty = await createAccommodation(
@@ -306,13 +328,51 @@ describe('confirmation de toutes les résidences depuis la liste', () => {
     )
 
     expect(await ownerCaller.bailleur.confirmAvailability()).toEqual({ confirmed: 0, skipped: 0 })
-    expect(await ownerCaller.bailleur.confirmAvailability({ all: true })).toEqual({ confirmed: 1, skipped: 0 })
+    expect(await ownerCaller.bailleur.confirmAvailability({ all: true })).toEqual({ confirmed: 2, skipped: 0 })
 
     const typologies = await readTypologies()
     expect(typologies.every((t) => t.availabilityUpdatedAt !== null && t.availabilityUpdatedAt > stampedAt)).toBe(true)
     expect((await readResidence()).updatedAt?.getTime()).toBe(typologies[0].availabilityUpdatedAt?.getTime())
-    expect((await readTypologies(empty.id)).every((t) => t.availabilityUpdatedAt === null)).toBe(true)
-    expect((await readResidence(empty.id)).updatedAt?.getTime()).toBe(stampedAt.getTime())
+    expect(await readTypologies(empty.id)).toEqual([
+      expect.objectContaining({ nbAvailable: 0, availabilityUpdatedBy: 'test-owner-id', availabilityUpdatedAt: expect.any(Date) }),
+    ])
+    expect((await readResidence(empty.id)).nbAvailableApartments).toBe(0)
+  })
+
+  it('passe à zéro les typologies non renseignées d’une résidence partiellement renseignée', async () => {
+    await getTestDb()
+      .update(accommodationTypologies)
+      .set({ nbAvailable: null, availabilityUpdatedAt: null, availabilityUpdatedBy: null })
+      .where(eq(accommodationTypologies.type, 't2'))
+
+    expect(await ownerCaller.bailleur.listAvailabilityToConfirm()).toEqual([])
+    expect(await ownerCaller.bailleur.confirmAvailability({ all: true })).toEqual({ confirmed: 1, skipped: 0 })
+
+    const typologies = await readTypologies()
+    expect(typologies.map((t) => [t.type, t.nbAvailable]).sort()).toEqual([
+      ['t1', 2],
+      ['t2', 0],
+    ])
+    expect(typologies.every((t) => t.availabilityUpdatedBy === 'test-owner-id')).toBe(true)
+    expect((await readResidence()).nbAvailableApartments).toBe(2)
+  })
+
+  it('ne réhorodate pas une saisie postérieure à l’affichage mais complète les non renseignées', async () => {
+    const enteredAt = new Date()
+    await getTestDb()
+      .update(accommodationTypologies)
+      .set({ nbAvailable: null, availabilityUpdatedAt: null, availabilityUpdatedBy: null })
+      .where(eq(accommodationTypologies.type, 't2'))
+    await getTestDb()
+      .update(accommodationTypologies)
+      .set({ availabilityUpdatedAt: enteredAt })
+      .where(eq(accommodationTypologies.type, 't1'))
+
+    expect(await ownerCaller.bailleur.confirmAvailability({ all: true, since: daysAgo(1) })).toEqual({ confirmed: 1, skipped: 0 })
+
+    const byType = Object.fromEntries((await readTypologies()).map((t) => [t.type, t]))
+    expect(byType.t1).toMatchObject({ nbAvailable: 2, availabilityUpdatedAt: enteredAt })
+    expect(byType.t2).toMatchObject({ nbAvailable: 0, availabilityUpdatedBy: 'test-owner-id' })
   })
 })
 

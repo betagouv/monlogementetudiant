@@ -2318,7 +2318,7 @@
         "confirmAllError": "Confirming the other residences failed, please try again.",
         "confirmAllModal": {
           "title": "Confirm availability for all your residences?",
-          "description": "If the availability of your other residences has not changed either, confirm them all at once: their confirmation date will be refreshed without changing the numbers.",
+          "description": "If the availability of your other residences has not changed either, confirm them all at once: their confirmation date will be refreshed without changing the numbers. Availability that has not been filled in will be set to 0.",
           "confirmOne": "Only this residence",
           "confirmAll": "Confirm all my residences"
         }
@@ -2547,7 +2547,7 @@
     "emailConfirmAvailability": {
       "pageTitle": "Confirm my availability",
       "intro": "Here is the availability provided for your residences, with the date of the last update.",
-      "confirmHint": "Nothing has changed? Confirm in one click: the update date becomes today, without changing the values.",
+      "confirmHint": "Nothing has changed? Confirm in one click: the update date becomes today, without changing the values. Availability that has not been filled in will be set to 0.",
       "available": "{count, plural, =0 {No availability} one {# available} other {# available}}",
       "lastUpdate": "Last update: {date}",
       "neverUpdated": "Last update: not provided",

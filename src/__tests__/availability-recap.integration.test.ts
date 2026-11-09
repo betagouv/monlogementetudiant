@@ -31,6 +31,7 @@ const daysAgo = (n: number) => new Date(Date.now() - n * DAY_MS)
 let ownerId: number
 let resA: { id: number }
 let resB: { id: number }
+let resVide: { id: number }
 
 const stamp = (accommodationId: number, at: Date, by = ADMIN) =>
   getTestDb()
@@ -59,7 +60,9 @@ beforeEach(async () => {
     typologyDraft('t2', { nbTotal: 5, nbAvailable: 1 }),
   ])
   resB = await createAccommodation({ slug: 'res-b', name: 'Res B', ownerId }, [typologyDraft('t1', { nbTotal: 10, nbAvailable: 4 })])
-  await createAccommodation({ slug: 'res-vide', name: 'Res vide', ownerId }, [typologyDraft('t1', { nbTotal: 10, nbAvailable: null })])
+  resVide = await createAccommodation({ slug: 'res-vide', name: 'Res vide', ownerId }, [
+    typologyDraft('t1', { nbTotal: 10, nbAvailable: null }),
+  ])
   await stamp(resA.id, daysAgo(10))
   await stamp(resB.id, daysAgo(12))
 
@@ -147,7 +150,7 @@ describe('« Rien n’a changé » depuis l’e-mail', () => {
     const managerUpdate = new Date(issuedAt.getTime() + 1000)
     await stamp(resA.id, managerUpdate, GEST)
 
-    expect(await confirmFromEmail(tokenFor(ADMIN, issuedAt))).toEqual({ ok: true, confirmed: 1, skipped: 1 })
+    expect(await confirmFromEmail(tokenFor(ADMIN, issuedAt))).toEqual({ ok: true, confirmed: 2, skipped: 1 })
 
     const resATypologies = await readTypologies(resA.id)
     expect(
@@ -158,12 +161,18 @@ describe('« Rien n’a changé » depuis l’e-mail', () => {
     )
   })
 
+  it('passe à zéro les disponibilités non renseignées', async () => {
+    expect(await confirmFromEmail(tokenFor(ADMIN, new Date()))).toEqual({ ok: true, confirmed: 3, skipped: 0 })
+
+    expect(await readTypologies(resVide.id)).toEqual([expect.objectContaining({ nbAvailable: 0, availabilityUpdatedBy: ADMIN })])
+  })
+
   it('est idempotent : un second clic ne réécrit rien', async () => {
     const token = tokenFor(ADMIN, new Date(Date.now() - 1000))
     await confirmFromEmail(token)
     const [before] = await readTypologies(resA.id)
 
-    expect(await confirmFromEmail(token)).toEqual({ ok: true, confirmed: 0, skipped: 2 })
+    expect(await confirmFromEmail(token)).toEqual({ ok: true, confirmed: 0, skipped: 3 })
     expect((await readTypologies(resA.id))[0].availabilityUpdatedAt).toEqual(before.availabilityUpdatedAt)
   })
 
@@ -187,6 +196,7 @@ describe('« Rien n’a changé » depuis l’e-mail', () => {
       residences: [
         { name: 'Res A', nbAvailable: 3 },
         { name: 'Res B', nbAvailable: 4 },
+        { name: 'Res vide', nbAvailable: 0, lastUpdatedAt: null },
       ],
     })
     expect((await readTypologies(resA.id)).every((t) => t.availabilityUpdatedAt! < daysAgo(9))).toBe(true)
