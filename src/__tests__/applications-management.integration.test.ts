@@ -1,6 +1,7 @@
 import { eq, sql } from 'drizzle-orm'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
+import { EStudyYear } from '~/enums/study-year'
 import { accommodations } from '../server/db/schema/accommodations'
 import { activityLog } from '../server/db/schema/activity-log'
 import { user } from '../server/db/schema/auth'
@@ -48,6 +49,9 @@ const contactInput = {
   phone: '0102030405',
   birthdate: '2003-04-15',
   scholarshipStatus: 'yes',
+  isWorkStudy: false,
+  studyInstitution: 'Université de Lille',
+  studyYear: EStudyYear.BAC_2,
 } as const
 
 const GEST = { id: 'gest-a', email: 'gest-a@a.com' }

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { EContactSource } from '~/enums/contact-source'
 import { EContactStatus } from '~/enums/contact-status'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
+import { EStudyYear } from '~/enums/study-year'
 import { createClaimToken, verifyClaimToken } from '~/server/contacts/claim-token'
 import { getClaimedContactRequest } from '~/server/contacts/claimed-request'
 import { linkGuestContactRequests } from '~/server/contacts/link-guest-requests'
@@ -27,6 +28,9 @@ const contactInput = {
   phone: '0102030405',
   birthdate: '2003-04-15',
   scholarshipStatus: 'yes',
+  isWorkStudy: false,
+  studyInstitution: 'Université de Lille',
+  studyYear: EStudyYear.BAC_2,
 } as const
 
 /** Simule le clic sur le lien de double opt-in. */
@@ -59,6 +63,33 @@ describe('contacts.create', () => {
     // Un visiteur sans compte n'a que le formulaire pour porter ces informations.
     expect(result!.birthdate).toBe(contactInput.birthdate)
     expect(result!.scholarshipStatus).toBe(contactInput.scholarshipStatus)
+    expect(result!.isWorkStudy).toBe(false)
+    expect(result!.studyInstitution).toBe('Université de Lille')
+    expect(result!.studyYear).toBe('bac_2')
+  })
+
+  it('rejects a request without study year', async () => {
+    const owner = await createOwner({ name: 'Owner No Year', slug: 'owner-no-year', contactMode: EOwnerContactMode.CONTACTS })
+    await createAccommodation({ slug: 'res-no-year', ownerId: owner!.id }, [typologyDraft('t1', { nbAvailable: 1 })])
+    const { studyYear: _studyYear, ...withoutYear } = contactInput
+
+    // @ts-expect-error studyYear est requis
+    await expect(caller.contacts.create({ accommodationSlug: 'res-no-year', ...withoutYear })).rejects.toThrow()
+  })
+
+  it('writes the study fields back to the student profile', async () => {
+    const owner = await createOwner({ name: 'Owner Writeback', slug: 'owner-writeback', contactMode: EOwnerContactMode.CONTACTS })
+    await createAccommodation({ slug: 'res-writeback', ownerId: owner!.id }, [typologyDraft('t1', { nbAvailable: 1 })])
+
+    await authenticatedCaller.contacts.create({
+      accommodationSlug: 'res-writeback',
+      ...contactInput,
+      isWorkStudy: true,
+      studyYear: EStudyYear.BAC_3,
+    })
+
+    const profile = await getTestDb().query.user.findFirst({ where: eq(user.id, 'test-user-id') })
+    expect(profile).toMatchObject({ isWorkStudy: true, studyInstitution: 'Université de Lille', studyYear: EStudyYear.BAC_3 })
   })
 
   it('rejects an unpublished accommodation as if it did not exist', async () => {
@@ -389,7 +420,7 @@ describe('purgeContactRequests', () => {
     const request = await authenticatedCaller.contacts.create({ accommodationSlug: 'res-purge-old', ...contactInput })
     await getTestDb()
       .update(contactRequests)
-      .set({ isWorkStudy: true, studyInstitution: 'Université de Lille', studyYear: 'bac_3' })
+      .set({ isWorkStudy: true, studyInstitution: 'Université de Lille', studyYear: EStudyYear.BAC_3 })
       .where(eq(contactRequests.id, request!.id))
     await ageContactRequest(request!.id, 31)
 
