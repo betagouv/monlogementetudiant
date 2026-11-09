@@ -1,16 +1,19 @@
-import { and, eq, gt, inArray, isNotNull, sql } from 'drizzle-orm'
+import { and, eq, gt, inArray, isNull, lte, or, sql } from 'drizzle-orm'
 import type { InactivityReason } from '~/server/bailleur/inactivity-rules'
+import { visibleContactRequest, visibleDossierFacileApplication } from '~/server/candidatures/visibility'
 import { db } from '~/server/db'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { activityLog } from '~/server/db/schema/activity-log'
 import { contactRequests } from '~/server/db/schema/contacts'
-import { dossierFacileApplications } from '~/server/db/schema/dossier-facile'
+import { dossierFacileApplications, dossierFacileTenants } from '~/server/db/schema/dossier-facile'
 import { reminderEmailItems, reminderEmails } from '~/server/db/schema/reminder-emails'
 import { decideEfficacy, type TItemFacts, type TReminderEfficacyStatus } from './reminder-efficacy'
 
 type TEfficacy = { status: TReminderEfficacyStatus; reactionMs: number | null; residencesCount: number }
 
 type TEvent = { key: string; at: Date }
+
+type TRequest = { createdAt: Date; reviewedAt: Date | null }
 
 const RESOLVING_ACTIONS = ['accommodation.availability_updated', 'accommodation.availability_confirmed']
 const SUSPENSION_ACTION = 'accommodation.applications_auto_suspended'
@@ -56,6 +59,7 @@ export async function loadReminderEfficacy(messageIds: string[], now = new Date(
     )
 
   const minSentAt = new Date(Math.min(...emails.map((email) => email.sentAt.getTime())))
+  const maxSentAt = new Date(Math.max(...emails.map((email) => email.sentAt.getTime())))
   const slugs = [...new Set(rows.map((row) => row.slug))]
   const accommodationIds = [...new Set(rows.map((row) => row.accommodationId))]
 
@@ -79,35 +83,54 @@ export async function loadReminderEfficacy(messageIds: string[], now = new Date(
     loadLogs(FAILING_STALE_ACTIONS),
     loadLogs([SUSPENSION_ACTION]),
     db
-      .select({ id: contactRequests.accommodationId, reviewedAt: contactRequests.reviewedAt })
+      .select({ id: contactRequests.accommodationId, createdAt: contactRequests.createdAt, reviewedAt: contactRequests.reviewedAt })
       .from(contactRequests)
       .where(
         and(
           inArray(contactRequests.accommodationId, accommodationIds),
-          isNotNull(contactRequests.reviewedAt),
-          gt(contactRequests.reviewedAt, minSentAt),
+          lte(contactRequests.createdAt, maxSentAt),
+          or(isNull(contactRequests.reviewedAt), gt(contactRequests.reviewedAt, minSentAt)),
+          visibleContactRequest(),
         ),
       ),
     db
-      .select({ slug: dossierFacileApplications.accommodationSlug, reviewedAt: dossierFacileApplications.reviewedAt })
+      .select({
+        slug: dossierFacileApplications.accommodationSlug,
+        createdAt: dossierFacileApplications.createdAt,
+        reviewedAt: dossierFacileApplications.reviewedAt,
+      })
       .from(dossierFacileApplications)
+      .innerJoin(dossierFacileTenants, eq(dossierFacileTenants.id, dossierFacileApplications.tenantId))
       .where(
         and(
           inArray(dossierFacileApplications.accommodationSlug, slugs),
-          isNotNull(dossierFacileApplications.reviewedAt),
-          gt(dossierFacileApplications.reviewedAt, minSentAt),
+          lte(dossierFacileApplications.createdAt, maxSentAt),
+          or(isNull(dossierFacileApplications.reviewedAt), gt(dossierFacileApplications.reviewedAt, minSentAt)),
+          visibleDossierFacileApplication(),
         ),
       ),
   ])
 
-  const contactsByAccommodation = groupByKey(
-    contactReviews.flatMap((row) => (row.reviewedAt ? [{ key: String(row.id), at: row.reviewedAt }] : [])),
-  )
-  const dossiersBySlug = groupByKey(dossierReviews.flatMap((row) => (row.reviewedAt ? [{ key: row.slug, at: row.reviewedAt }] : [])))
+  const groupRequests = (rows: (TRequest & { key: string })[]) => {
+    const grouped = new Map<string, TRequest[]>()
+    for (const row of rows) grouped.set(row.key, [...(grouped.get(row.key) ?? []), row])
+    return grouped
+  }
+  const contactsByAccommodation = groupRequests(contactReviews.map((row) => ({ ...row, key: String(row.id) })))
+  const dossiersBySlug = groupRequests(dossierReviews.map((row) => ({ ...row, key: row.slug })))
 
-  const earliest = (...dates: (Date | null)[]) => {
-    const present = dates.filter((date): date is Date => date !== null)
-    return present.length === 0 ? null : new Date(Math.min(...present.map((date) => date.getTime())))
+  const resolutionOfPending = (requests: TRequest[], sentAt: Date): Date | null => {
+    const pending = requests.filter(
+      (request) =>
+        request.createdAt.getTime() <= sentAt.getTime() && (request.reviewedAt === null || request.reviewedAt.getTime() > sentAt.getTime()),
+    )
+    if (pending.length === 0) return sentAt
+    let latest = 0
+    for (const request of pending) {
+      if (request.reviewedAt === null) return null
+      latest = Math.max(latest, request.reviewedAt.getTime())
+    }
+    return new Date(latest)
   }
 
   const factsFor = (reason: InactivityReason, slug: string, accommodationId: number, ownerId: number | null, sentAt: Date): TItemFacts => {
@@ -115,21 +138,18 @@ export async function loadReminderEfficacy(messageIds: string[], now = new Date(
     if (reason === 'stale_availability') {
       return { resolvedAt: firstAfter(resolvingLogs.get(key), sentAt), failedAt: firstAfter(staleFailingLogs.get(key), sentAt) }
     }
+    const pending = [...(contactsByAccommodation.get(String(accommodationId)) ?? []), ...(dossiersBySlug.get(slug) ?? [])]
     return {
-      resolvedAt: earliest(
-        firstAfter(contactsByAccommodation.get(String(accommodationId)), sentAt),
-        firstAfter(dossiersBySlug.get(slug), sentAt),
-      ),
+      resolvedAt: resolutionOfPending(pending, sentAt),
       failedAt: firstAfter(suspensionLogs.get(key), sentAt),
     }
   }
 
   for (const email of emails) {
-    const items = rows
-      .filter((row) => row.reminderEmailId === email.id)
-      .map((row) => factsFor(row.reason, row.slug, row.accommodationId, email.ownerId, email.sentAt))
+    const emailRows = rows.filter((row) => row.reminderEmailId === email.id)
+    const items = emailRows.map((row) => factsFor(row.reason, row.slug, row.accommodationId, email.ownerId, email.sentAt))
     const { status, reactionMs } = decideEfficacy({ type: email.type, sentAt: email.sentAt, items, now })
-    result.set(email.messageId, { status, reactionMs, residencesCount: items.length })
+    result.set(email.messageId, { status, reactionMs, residencesCount: new Set(emailRows.map((row) => row.accommodationId)).size })
   }
   return result
 }

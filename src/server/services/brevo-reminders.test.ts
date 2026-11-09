@@ -109,6 +109,15 @@ describe('brevo-reminders', () => {
       expect(urlOf(fetchMock.mock.calls[1]).searchParams.get('templateId')).toBe('6')
     })
 
+    it('retombe sur le template interrogé quand templateId est null', async () => {
+      fetchMock.mockResolvedValueOnce(ok({ events: [{ ...ev('requests'), templateId: null }] }))
+      const { fetchReminderMessages } = await import('./brevo-reminders')
+
+      const result = await fetchReminderMessages({ templateIds: [5], from: '2026-03-01', to: '2026-03-31' })
+
+      expect(result.map((m) => m.templateId)).toEqual([5])
+    })
+
     it('pagine tant que la page est pleine', async () => {
       const full = Array.from({ length: 2500 }, (_, i) => ev('requests', `m${i}`))
       const rest = [ev('requests', 'z1'), ev('requests', 'z2'), ev('requests', 'z3')]
@@ -183,6 +192,22 @@ describe('brevo-reminders', () => {
 
     it('mappe une raison inconnue ou absente vers null', async () => {
       fetchMock.mockResolvedValueOnce(ok({ contacts: [contact(1, 'weird'), { ...contact(2), reason: {} }] }))
+      const { fetchBlockedContacts } = await import('./brevo-reminders')
+
+      const result = await fetchBlockedContacts()
+
+      expect(result.map((c) => c.reason)).toEqual([null, null])
+    })
+
+    it('accepte une raison nulle', async () => {
+      fetchMock.mockResolvedValueOnce(
+        ok({
+          contacts: [
+            { ...contact(1), reason: null },
+            { ...contact(2), reason: { code: null } },
+          ],
+        }),
+      )
       const { fetchBlockedContacts } = await import('./brevo-reminders')
 
       const result = await fetchBlockedContacts()

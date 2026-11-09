@@ -23,7 +23,7 @@ const ZBrevoEvent = z.object({
   email: z.string(),
   event: z.string(),
   messageId: z.string(),
-  templateId: z.number().optional(),
+  templateId: z.number().nullish(),
 })
 
 const ZBrevoEventsResponse = z.object({ events: z.array(ZBrevoEvent).optional() })
@@ -49,7 +49,7 @@ const ZBlockedContactsResponse = z.object({
       z.object({
         email: z.string(),
         blockedAt: z.string(),
-        reason: z.object({ code: z.string().optional() }).optional(),
+        reason: z.object({ code: z.string().nullish() }).nullish(),
       }),
     )
     .optional(),
@@ -168,7 +168,7 @@ export const fetchReminderMessages = async ({
   })
 }
 
-const isBlockedReason = (code: string | undefined): code is TBlockedReason => BLOCKED_REASONS.some((reason) => reason === code)
+const isBlockedReason = (code: string | null | undefined): code is TBlockedReason => BLOCKED_REASONS.some((reason) => reason === code)
 
 export const fetchBlockedContacts = async (): Promise<TBlockedContact[]> => {
   const contacts: TBlockedContact[] = []

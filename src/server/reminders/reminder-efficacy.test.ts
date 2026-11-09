@@ -47,6 +47,26 @@ describe('decideEfficacy', () => {
     expect(result.status).toBe('failed')
   })
 
+  describe('tolérance sur l’heure du cron', () => {
+    const type = EReminderType.APPLICATIONS_INACTIVITY_WARNING
+    const hours = (h: number) => new Date(sentAt.getTime() + 7 * DAY_MS + h * 3_600_000)
+
+    it('suspension 1 h après l’échéance : failed', () => {
+      const result = decideEfficacy({ type, sentAt, items: [{ resolvedAt: null, failedAt: hours(1) }], now: hours(2) })
+      expect(result.status).toBe('failed')
+    })
+
+    it('suspension 13 h après l’échéance sans résolution : failed par l’échéance', () => {
+      const result = decideEfficacy({ type, sentAt, items: [{ resolvedAt: null, failedAt: hours(13) }], now: hours(14) })
+      expect(result.status).toBe('failed')
+    })
+
+    it('résolu avant l’échéance, suspension 13 h après : effective', () => {
+      const result = decideEfficacy({ type, sentAt, items: [{ resolvedAt: after(3), failedAt: hours(13) }], now: hours(14) })
+      expect(result.status).toBe('effective')
+    })
+  })
+
   it('type non mesuré ou sans item : not_measured', () => {
     const items = [{ resolvedAt: after(1), failedAt: null }]
     expect(decideEfficacy({ type: EReminderType.AVAILABILITY_RESET_DONE, sentAt, items, now: after(2) }).status).toBe('not_measured')
