@@ -2,7 +2,8 @@ import { and, asc, eq, gte, inArray, sql } from 'drizzle-orm'
 import type { PgColumn } from 'drizzle-orm/pg-core'
 import { EContactStatus } from '~/enums/contact-status'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
-import { type AccommodationScope, scopeAccommodationIdCondition } from '~/server/bailleur/accommodation-scope'
+import { type AccommodationScope, getAccommodationScope, scopeAccommodationIdCondition } from '~/server/bailleur/accommodation-scope'
+import { getOwnerForUser } from '~/server/bailleur/get-owner-for-user'
 import { confirmedContactRequest, verifiedDossierFacileTenant } from '~/server/candidatures/visibility'
 import { db } from '~/server/db'
 import { accommodationAddresses } from '~/server/db/schema/accommodation-addresses'
@@ -133,4 +134,14 @@ export async function listContactStats({ ownerId, contactMode, scope, period }: 
     .map(({ acceptsApplications: _, ...r }) => r)
 
   return { rows, total: sumCounts(rows), from, to }
+}
+
+export async function getContactStatsForUser({ userId, ownerId, period }: { userId: string; ownerId?: number; period: TStatisticsPeriod }) {
+  const owner = await getOwnerForUser(userId, ownerId)
+  if (!owner) return null
+  if (owner.contactMode === EOwnerContactMode.NONE) return { rows: [], total: emptyContactStats(), owner }
+
+  const scope = await getAccommodationScope(userId)
+  const { rows, total } = await listContactStats({ ownerId: owner.id, contactMode: owner.contactMode, scope, period })
+  return { rows, total, owner }
 }

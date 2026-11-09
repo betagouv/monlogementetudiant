@@ -13,6 +13,7 @@ import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { useTRPC } from '~/server/trpc/client'
 import { buildHref } from '~/utils/preserve-query-params'
 import { ContactModeSettingsModal, contactModeSettingsModal } from './contact-mode-settings-modal'
+import { ContactStatsTable } from './contact-stats-table'
 import { ResidenceContactCard } from './residence-contact-card'
 
 interface Props {
@@ -100,6 +101,8 @@ export const ResidencesGrid = ({ mode, isAdministrator, resolvedOwnerId }: Props
           }
         />
       )}
+
+      <ContactStatsTable ownerId={ownerId} />
 
       {residences.length === 0 ? (
         <p className="fr-py-8w fr-text--center fr-text-mention--grey">{t('noResidence')}</p>

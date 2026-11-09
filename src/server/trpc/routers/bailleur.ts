@@ -79,7 +79,7 @@ import {
 import { db } from '~/server/db'
 import { deleteFile, keyFromPublicUrl } from '~/server/services/s3'
 import { ZStatisticsPeriod } from '~/server/statistics/accommodation-stats'
-import { emptyContactStats, listContactStats } from '~/server/statistics/contact-stats'
+import { emptyContactStats, getContactStatsForUser } from '~/server/statistics/contact-stats'
 
 type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
 
@@ -1365,17 +1365,8 @@ export const bailleurRouter = createTRPCRouter({
   contactStats: bailleurProcedure('manage_applications')
     .input(z.object({ period: ZStatisticsPeriod, ownerId: z.number().optional() }))
     .query(async ({ ctx, input }) => {
-      const owner = await getOwnerForUser(ctx.session.user.id, input.ownerId)
-      if (!owner || owner.contactMode === EOwnerContactMode.NONE) return { rows: [], total: emptyContactStats() }
-
-      const scope = await getAccommodationScope(ctx.session.user.id)
-      const { rows, total } = await listContactStats({
-        ownerId: owner.id,
-        contactMode: owner.contactMode,
-        scope,
-        period: input.period,
-      })
-      return { rows, total }
+      const stats = await getContactStatsForUser({ userId: ctx.session.user.id, ownerId: input.ownerId, period: input.period })
+      return { rows: stats?.rows ?? [], total: stats?.total ?? emptyContactStats() }
     }),
 
   // Grille de résidences avec le nombre de contacts « à rappeler » (statut a_contacter).
