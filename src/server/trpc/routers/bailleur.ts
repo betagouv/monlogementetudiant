@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/nextjs'
 import { TRPCError } from '@trpc/server'
 import { and, asc, desc, eq, gt, ilike, inArray, ne, or, type SQL, sql } from 'drizzle-orm'
+import type { PgColumn } from 'drizzle-orm/pg-core'
 import { SignJWT } from 'jose'
 
 import { z } from 'zod'
@@ -464,6 +465,11 @@ const accommodationSelectFields = {
   lat: sql<number>`ST_Y(${accommodationAddresses.geom}::geometry)`,
   lng: sql<number>`ST_X(${accommodationAddresses.geom}::geometry)`,
 } as const
+
+const CONTACTED_STATUSES: readonly EContactStatus[] = [EContactStatus.CONTACTE, EContactStatus.LOGEMENT_ATTRIBUE]
+
+const contactedAtPatch = (status: EContactStatus, column: PgColumn, now: Date) =>
+  CONTACTED_STATUSES.includes(status) ? { contactedAt: sql`coalesce(${column}, ${now.toISOString()}::timestamptz)` } : {}
 
 export const bailleurRouter = createTRPCRouter({
   list: ownerProcedure
@@ -1641,6 +1647,7 @@ export const bailleurRouter = createTRPCRouter({
   updateContactStatus: bailleurProcedure('manage_applications')
     .input(z.object({ id: z.string().uuid(), status: ZContactStatus, source: ZContactSource }))
     .mutation(async ({ ctx, input }) => {
+      const now = new Date()
       if (input.source === EContactSource.DOSSIER_FACILE) {
         // Même porte que la lecture : une candidature hors rétention ou au dossier non validé n'est
         // pas plus mutable qu'elle n'est consultable.
@@ -1651,7 +1658,12 @@ export const bailleurRouter = createTRPCRouter({
 
         const [updated] = await db
           .update(dossierFacileApplications)
-          .set({ status: input.status, reviewedAt: new Date(), updatedAt: new Date() })
+          .set({
+            status: input.status,
+            reviewedAt: now,
+            updatedAt: now,
+            ...contactedAtPatch(input.status, dossierFacileApplications.contactedAt, now),
+          })
           .where(eq(dossierFacileApplications.id, input.id))
           .returning()
         const [residence] = await db
@@ -1675,7 +1687,7 @@ export const bailleurRouter = createTRPCRouter({
 
       const [updated] = await db
         .update(contactRequests)
-        .set({ status: input.status, reviewedAt: new Date(), updatedAt: new Date() })
+        .set({ status: input.status, reviewedAt: now, updatedAt: now, ...contactedAtPatch(input.status, contactRequests.contactedAt, now) })
         .where(eq(contactRequests.id, input.id))
         .returning()
       await resumeIfResolved(request.accommodationId)

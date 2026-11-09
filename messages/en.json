@@ -2396,6 +2396,8 @@
         "statusChangeError": "Status change failed. Please try again.",
         "contactedTitle": "Contact with the student completed",
         "contactedRetention": "Contact details will remain available for {days} day{s}.",
+        "assignedTitle": "Housing assigned to the student",
+        "assignedDescription": "This housing has been assigned to this student.",
         "rejectedTitle": "Contact not retained",
         "rejectedDescription": "You will not follow up on this contact request.",
         "moderateTitle": "Would you like to know more about the request?",
@@ -2512,7 +2514,8 @@
         "a_moderer": "To review",
         "non_retenu": "Not selected",
         "a_contacter": "To contact",
-        "contacte": "Contacted"
+        "contacte": "Contacted",
+        "logement_attribue": "Housing assigned"
       },
       "applicationsSuspendedBadge": "Applications paused",
       "autoSuspendedBadge": {
