@@ -111,35 +111,41 @@ export const contactsRouter = createTRPCRouter({
       // Connecté : seule l'adresse du compte fait foi, celle du formulaire est ignorée.
       const verifiedEmail = userId ? ctx.session!.user.email.trim().toLowerCase() : input.email
 
-      const [request] = await db
-        .insert(contactRequests)
-        .values({
-          userId,
-          accommodationId: accommodation.id,
-          firstname: input.firstname,
-          lastname: input.lastname,
-          email: verifiedEmail,
-          phone: input.phone || null,
-          birthdate: input.birthdate,
-          scholarshipStatus: input.scholarshipStatus,
-          isWorkStudy: input.isWorkStudy,
-          studyInstitution: input.studyInstitution,
-          studyYear: input.studyYear,
-          apartmentType: input.apartmentType ?? null,
-          ipHash,
-          // Étudiant connecté : Better Auth a déjà prouvé l'adresse, pas de double opt-in à demander.
-          confirmedAt: userId ? new Date() : null,
-        })
-        .onConflictDoNothing()
-        .returning()
+      const request = await db.transaction(async (tx) => {
+        const [inserted] = await tx
+          .insert(contactRequests)
+          .values({
+            userId,
+            accommodationId: accommodation.id,
+            firstname: input.firstname,
+            lastname: input.lastname,
+            email: verifiedEmail,
+            phone: input.phone || null,
+            birthdate: input.birthdate,
+            scholarshipStatus: input.scholarshipStatus,
+            isWorkStudy: input.isWorkStudy,
+            studyInstitution: input.studyInstitution,
+            studyYear: input.studyYear,
+            apartmentType: input.apartmentType ?? null,
+            ipHash,
+            // Étudiant connecté : Better Auth a déjà prouvé l'adresse, pas de double opt-in à demander.
+            confirmedAt: userId ? new Date() : null,
+          })
+          .onConflictDoNothing()
+          .returning()
+
+        if (inserted && userId) {
+          await tx
+            .update(user)
+            .set({ isWorkStudy: input.isWorkStudy, studyInstitution: input.studyInstitution, studyYear: input.studyYear })
+            .where(eq(user.id, userId))
+        }
+        return inserted
+      })
 
       if (!request) return null
 
       if (request.userId) {
-        await db
-          .update(user)
-          .set({ isWorkStudy: input.isWorkStudy, studyInstitution: input.studyInstitution, studyYear: input.studyYear })
-          .where(eq(user.id, request.userId))
         // Candidater vaut suivi : la résidence rejoint les favoris, où la candidature est restituée.
         await ensureFavorite(request.userId, accommodation.id)
         return { ...request, claimToken: null }
