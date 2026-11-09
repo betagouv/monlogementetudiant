@@ -48,6 +48,8 @@ const envSchema = z.object({
   // de la QA (voir `src/utils/redirect-email.ts`). Aucun mail ne part vers une vraie adresse.
   BREVO_REDIRECT_DOMAIN: z.string().min(1).default('qa-mail.monlogementetudiant.beta.gouv.fr'),
   BREVO_CONTACTS_API_URL: z.url(),
+  BREVO_EVENTS_API_URL: z.url().default('https://api.brevo.com/v3/smtp/statistics/events'),
+  BREVO_BLOCKED_CONTACTS_API_URL: z.url().default('https://api.brevo.com/v3/smtp/blockedContacts'),
   // accepts only entire positive numbers for the brevo templates.
   BREVO_TEMPLATE_MAGIC_LINK: z.coerce.number().int().positive(),
   BREVO_TEMPLATE_VALIDATION: z.coerce.number().int().positive(),

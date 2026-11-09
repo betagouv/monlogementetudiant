@@ -1,7 +1,6 @@
 import { z } from 'zod'
 import { env } from '~/server/env'
 
-const BREVO_API_URL = 'https://api.brevo.com/v3'
 const EVENTS_PAGE_SIZE = 2500
 const BLOCKED_PAGE_SIZE = 100
 const MAX_CHUNK_DAYS = 90
@@ -114,14 +113,14 @@ const splitRange = (from: string, to: string): { start: string; end: string }[] 
 }
 
 const brevoGet = async (endpoint: string, params: Record<string, string | number>) => {
-  const url = new URL(`${BREVO_API_URL}${endpoint}`)
+  const url = new URL(endpoint)
   for (const [key, value] of Object.entries(params)) url.searchParams.set(key, String(value))
 
   const response = await fetch(url.toString(), {
     headers: { 'api-key': env.BREVO_API_KEY, accept: 'application/json' },
     next: { revalidate: 300 },
   })
-  if (!response.ok) throw new Error(`Brevo ${endpoint} failed: ${response.status}`)
+  if (!response.ok) throw new Error(`Brevo ${url.pathname} failed: ${response.status}`)
   return response.json()
 }
 
@@ -130,7 +129,7 @@ const fetchTemplateEvents = async (templateId: number, from: string, to: string)
   for (const { start, end } of splitRange(from, to)) {
     let offset = 0
     while (true) {
-      const json = await brevoGet('/smtp/statistics/events', {
+      const json = await brevoGet(env.BREVO_EVENTS_API_URL, {
         templateId,
         startDate: start,
         endDate: end,
@@ -174,7 +173,7 @@ export const fetchBlockedContacts = async (): Promise<TBlockedContact[]> => {
   const contacts: TBlockedContact[] = []
   let offset = 0
   while (true) {
-    const json = await brevoGet('/smtp/blockedContacts', { limit: BLOCKED_PAGE_SIZE, offset })
+    const json = await brevoGet(env.BREVO_BLOCKED_CONTACTS_API_URL, { limit: BLOCKED_PAGE_SIZE, offset })
     const parsed = ZBlockedContactsResponse.safeParse(json)
     if (!parsed.success) throw new Error('Réponse Brevo invalide')
     const page = parsed.data.contacts ?? []
