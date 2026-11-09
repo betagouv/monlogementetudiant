@@ -500,13 +500,23 @@ export async function sendAlertDeactivationEmail(email: string, params: { alertN
 
 export async function sendStudentAlertEmail(
   email: string,
-  params: { firstName: string; alertName?: string; accommodations: { nom: string; url: string }[] },
+  params: {
+    firstName: string
+    alertName?: string
+    accommodations: { nom: string; url: string }[]
+    suggestions?: { nom: string; url: string }[]
+  },
 ): Promise<void> {
   // On n'envoie réellement les alertes qu'en production, jamais en dev ni en staging.
   if (env.NEXT_PUBLIC_APP_ENV !== 'production') {
     console.info(`[${env.NEXT_PUBLIC_APP_ENV}] email d'alerte non envoyé à ${maskEmail(email)}`)
     return
   }
+
+  // Une liste vide doit disparaître du payload : le template masque la section
+  // « Suggestions » sur l'absence du paramètre.
+  const { suggestions, ...rest } = params
+  const templateParams = suggestions && suggestions.length > 0 ? { ...rest, suggestions } : rest
 
   const response = await fetch(env.BREVO_API_URL, {
     method: 'POST',
@@ -515,7 +525,7 @@ export async function sendStudentAlertEmail(
       to: [recipient(email)],
       templateId: env.BREVO_TEMPLATE_STUDENT_ALERT,
       replyTo: { email: SENDER_EMAIL },
-      params,
+      params: templateParams,
     }),
   })
 
