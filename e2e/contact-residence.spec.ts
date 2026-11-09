@@ -24,7 +24,10 @@ test.describe('Être recontacté par le gestionnaire', () => {
     await expect(modal.getByLabel('Prénom')).toHaveValue('Camille')
     await expect(modal.getByLabel('Prénom')).toBeDisabled()
 
-    await modal.getByRole('group', { name: /Êtes-vous alternant/ }).getByText('Non').click()
+    await modal
+      .getByRole('group', { name: /Êtes-vous alternant/ })
+      .getByText('Non')
+      .click()
     await modal.getByLabel(/Établissement d'études à la rentrée/).fill('Université Clermont Auvergne')
     await modal.getByLabel(/Année d'études à la rentrée/).selectOption({ label: '1re année (Bac+1)' })
 
