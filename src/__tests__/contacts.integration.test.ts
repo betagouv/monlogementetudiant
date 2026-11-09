@@ -387,12 +387,19 @@ describe('purgeContactRequests', () => {
       typologyDraft('t1', { nbAvailable: 1 }),
     ])
     const request = await authenticatedCaller.contacts.create({ accommodationSlug: 'res-purge-old', ...contactInput })
+    await getTestDb()
+      .update(contactRequests)
+      .set({ isWorkStudy: true, studyInstitution: 'Université de Lille', studyYear: 'bac_3' })
+      .where(eq(contactRequests.id, request!.id))
     await ageContactRequest(request!.id, 31)
 
     const result = await purgeContactRequests()
 
     expect(result.anonymized).toBe(1)
     const row = await reload(request!.id)
+    expect(row!.isWorkStudy).toBeNull()
+    expect(row!.studyInstitution).toBeNull()
+    expect(row!.studyYear).toBeNull()
     expect(row!.email).toBeNull()
     expect(row!.firstname).toBeNull()
     expect(row!.phone).toBeNull()

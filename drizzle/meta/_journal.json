@@ -652,6 +652,13 @@
       "when": 1794240169660,
       "tag": "0092_unpublished_stop_contacts",
       "breakpoints": true
+    },
+    {
+      "idx": 93,
+      "version": "7",
+      "when": 1794240201728,
+      "tag": "0093_student_study_fields",
+      "breakpoints": true
     }
   ]
 }

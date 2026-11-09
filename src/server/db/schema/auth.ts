@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm'
 import { bigint, boolean, date, index, integer, pgEnum, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
 
 export const scholarshipStatusEnum = pgEnum('scholarship_status', ['yes', 'no', 'unknown'])
+export const studyYearEnum = pgEnum('study_year', ['bac_1', 'bac_2', 'bac_3', 'bac_4', 'bac_5_plus'])
 export const scholarshipTypeEnum = pgEnum('scholarship_type', [
   'crous_social',
   'crous_annual_specific',
@@ -38,6 +39,9 @@ export const user = pgTable(
     birthdate: date('birthdate', { mode: 'string' }), // 'YYYY-MM-DD'
     scholarshipStatus: scholarshipStatusEnum('scholarship_status'),
     scholarshipType: scholarshipTypeEnum('scholarship_type'),
+    isWorkStudy: boolean('is_work_study'),
+    studyInstitution: text('study_institution'),
+    studyYear: studyYearEnum('study_year'),
     applicationScopeRestricted: boolean('application_scope_restricted').notNull().default(false),
     banned: boolean('banned').notNull().default(false),
     banReason: text('ban_reason'),
