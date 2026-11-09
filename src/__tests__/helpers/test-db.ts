@@ -61,6 +61,7 @@ export async function cleanTables() {
   const db = getTestDb()
   await db.execute(drizzleSql`
     TRUNCATE TABLE
+      activity_log,
       academy,
       department,
       city,

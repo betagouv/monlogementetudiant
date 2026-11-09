@@ -1,3 +1,4 @@
+import { EContactStatus } from '~/enums/contact-status'
 import { EOwnerContactMode, OWNER_CONTACT_MODE_LABELS } from '~/enums/owner-contact-mode'
 import { getTypologyLabel, TYPOLOGIES, type TypologyType } from '~/schemas/accommodations/typology'
 
@@ -101,6 +102,14 @@ const OWNER_FIELD_LABELS: Record<string, string> = {
   moderationManagers: 'Gestionnaires pouvant modérer les candidatures',
   applicationScope: 'Périmètre des candidatures',
   applicationResidences: 'Résidences ouvertes aux candidatures',
+  contactStatus: 'Statut du contact',
+}
+
+const CONTACT_STATUS_LABELS: Record<EContactStatus, string> = {
+  [EContactStatus.A_MODERER]: 'À modérer',
+  [EContactStatus.A_CONTACTER]: 'À contacter',
+  [EContactStatus.CONTACTE]: 'Contacté',
+  [EContactStatus.NON_RETENU]: 'Non retenu',
 }
 
 export type ParsedDiffField = { typology: TypologyType; field: TypologyField } | null
@@ -134,6 +143,9 @@ export function formatDiffFieldLabel(key: string): string {
 export function formatDiffValue(value: unknown, key?: string): string {
   if (key === 'contactMode' && typeof value === 'string' && value in OWNER_CONTACT_MODE_LABELS) {
     return OWNER_CONTACT_MODE_LABELS[value as EOwnerContactMode]
+  }
+  if (key === 'contactStatus' && typeof value === 'string' && value in CONTACT_STATUS_LABELS) {
+    return CONTACT_STATUS_LABELS[value as EContactStatus]
   }
   if (value == null || value === '') return '—'
   if (typeof value === 'boolean') return value ? 'Oui' : 'Non'

@@ -1081,6 +1081,28 @@ function ownerLoginsSql(ownerId: SQL) {
   )`
 }
 
+const OWNER_ACTIVITY_ACTIONS = [
+  'accommodation.created',
+  'accommodation.updated',
+  'accommodation.availability_updated',
+  'accommodation.availability_confirmed',
+  'contact.status_updated',
+]
+
+function ownerIsActiveSql(ownerId: SQL, range: { from: string; to: string }) {
+  return sql`EXISTS (
+    SELECT 1 FROM activity_log al
+    WHERE al.owner_id = ${ownerId}
+    AND al.action IN (${sql.join(
+      OWNER_ACTIVITY_ACTIONS.map((action) => sql`${action}`),
+      sql`, `,
+    )})
+    AND al.created_at >= ${range.from}::date
+    AND al.created_at < (${range.to}::date + 1)
+    AND NOT EXISTS (SELECT 1 FROM "user" u WHERE u.id = al.user_id AND u.role = 'admin')
+  )`
+}
+
 const ownerUsageRouter = createTRPCRouter({
   list: adminProcedure.input(dateRangeInput).query(async ({ input }) => {
     const ownerRows = await db
@@ -1100,12 +1122,7 @@ const ownerUsageRouter = createTRPCRouter({
         lastLogin: sql<string | null>`(
           SELECT max(logins.at)::text FROM ${ownerLoginsSql(sql`"owner"."id"`)} logins
         )`,
-        nbActions: sql<number>`(
-          SELECT count(*)::int FROM activity_log
-          WHERE owner_id = "owner"."id"
-          AND created_at >= ${input.from}::date
-          AND created_at < (${input.to}::date + 1)
-        )`,
+        isActive: sql<boolean>`${ownerIsActiveSql(sql`"owner"."id"`, input)}`,
         nbCreated: sql<number>`(
           SELECT count(*)::int FROM activity_log
           WHERE owner_id = "owner"."id" AND action = 'accommodation.created'

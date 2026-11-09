@@ -345,6 +345,32 @@ const verifyOwnerAccess = (userId: string, accommodationSlug: string) =>
 const verifyOwnerAccessById = (userId: string, accommodationId: number) =>
   assertOwnsAccommodation(userId, eq(accommodations.id, accommodationId))
 
+async function logContactModeration(
+  actor: { id: string; name: string },
+  accommodationWhere: SQL,
+  entity: { type: 'contact_request' | 'dossier_facile_application'; id: string },
+  status: { old: EContactStatus; new: EContactStatus },
+) {
+  if (status.old === status.new) return
+  const [residence] = await db
+    .select({ name: accommodations.name, slug: accommodations.slug, ownerId: owners.id, ownerName: owners.name })
+    .from(accommodations)
+    .leftJoin(owners, eq(owners.id, accommodations.ownerId))
+    .where(accommodationWhere)
+  if (!residence) return
+  await logActivity({
+    userId: actor.id,
+    userName: actor.name,
+    action: 'contact.status_updated',
+    entityType: entity.type,
+    entityId: entity.id,
+    entityName: residence.name,
+    ownerId: residence.ownerId ?? undefined,
+    ownerName: residence.ownerName ?? undefined,
+    metadata: { slug: residence.slug, diff: { contactStatus: status } },
+  })
+}
+
 const isPermutation = (current: string[], next: string[]) =>
   current.length === next.length && new Set(next).size === next.length && next.every((url) => current.includes(url))
 
@@ -1604,6 +1630,12 @@ export const bailleurRouter = createTRPCRouter({
           .from(accommodations)
           .where(eq(accommodations.slug, application.accommodationSlug))
         if (residence) await resumeIfResolved(residence.id)
+        await logContactModeration(
+          ctx.session.user,
+          eq(accommodations.slug, application.accommodationSlug),
+          { type: 'dossier_facile_application', id: input.id },
+          { old: application.status, new: input.status },
+        )
         return updated
       }
 
@@ -1618,6 +1650,12 @@ export const bailleurRouter = createTRPCRouter({
         .where(eq(contactRequests.id, input.id))
         .returning()
       await resumeIfResolved(request.accommodationId)
+      await logContactModeration(
+        ctx.session.user,
+        eq(accommodations.id, request.accommodationId),
+        { type: 'contact_request', id: input.id },
+        { old: request.status, new: input.status },
+      )
 
       // L'étudiant est prévenu du refus — uniquement au passage vers « non retenu » (pas si la
       // fiche y était déjà), et si ses coordonnées sont encore présentes (non anonymisées).
