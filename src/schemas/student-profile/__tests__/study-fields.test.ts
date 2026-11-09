@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { createZStudyInstitution, createZStudyYear, createZWorkStudy } from '~/schemas/student-profile/student-profile'
+import {
+  createZStudyInstitution,
+  createZStudyYear,
+  createZWorkStudy,
+  createZWorkStudyChoice,
+} from '~/schemas/student-profile/student-profile'
 
 const ZStudyInstitution = createZStudyInstitution()
 const ZStudyYear = createZStudyYear()
@@ -39,5 +44,20 @@ describe('createZWorkStudy', () => {
   it('exige un booléen', () => {
     expect(ZWorkStudy.safeParse(false).success).toBe(true)
     expect(ZWorkStudy.safeParse(undefined).success).toBe(false)
+  })
+})
+
+describe('createZWorkStudyChoice', () => {
+  const ZWorkStudyChoice = createZWorkStudyChoice()
+
+  it('convertit la réponse du radio en booléen', () => {
+    expect(ZWorkStudyChoice.parse('true')).toBe(true)
+    expect(ZWorkStudyChoice.parse('false')).toBe(false)
+  })
+
+  it('refuse une réponse vide avec le message français', () => {
+    const result = ZWorkStudyChoice.safeParse('')
+    expect(result.success).toBe(false)
+    expect(result.error?.issues[0]?.message).toBe('Veuillez indiquer si vous êtes alternant')
   })
 })

@@ -50,6 +50,10 @@ export const createZWorkStudy = (t: TSchemaTranslator = frSchemaTranslator) => z
 
 export const ZWorkStudy = createZWorkStudy()
 
+/** Version formulaire : un radio HTML ne porte que des chaînes, converties en booléen à la validation. */
+export const createZWorkStudyChoice = (t: TSchemaTranslator = frSchemaTranslator) =>
+  z.enum(['true', 'false'], { error: t('errors.workStudyRequired') }).transform((value) => value === 'true')
+
 export const createZStudyInstitution = (t: TSchemaTranslator = frSchemaTranslator) =>
   z
     .string({ error: t('errors.studyInstitutionRequired') })

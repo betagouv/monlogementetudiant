@@ -30,7 +30,7 @@ import {
   createZScholarshipStatus,
   createZStudyInstitution,
   createZStudyYear,
-  createZWorkStudy,
+  createZWorkStudyChoice,
 } from '~/schemas/student-profile/student-profile'
 import { acceptsContactRequests } from '~/server/bailleur/applications-open'
 import { useTRPC, useTRPCClient } from '~/server/trpc/client'
@@ -121,13 +121,15 @@ const buildZContactRequestForm = (t: TContactRequestErrorsTranslator, tSchemas: 
     phone: z.string().trim(),
     birthdate: createZBirthDate(tSchemas),
     scholarshipStatus: createZScholarshipStatus(tSchemas),
-    isWorkStudy: createZWorkStudy(tSchemas),
+    isWorkStudy: createZWorkStudyChoice(tSchemas),
     studyInstitution: createZStudyInstitution(tSchemas),
     studyYear: createZStudyYear(tSchemas),
     consent: z.boolean().refine((value) => value, t('consentRequired')),
   })
 
-type TContactRequestForm = z.infer<ReturnType<typeof buildZContactRequestForm>>
+type TContactRequestFormValues = z.input<ReturnType<typeof buildZContactRequestForm>>
+type TContactRequestForm = z.output<ReturnType<typeof buildZContactRequestForm>>
+type TContactRequestFormApi = UseFormReturn<TContactRequestFormValues, unknown, TContactRequestForm>
 
 type TContactRequestField = 'firstname' | 'lastname' | 'email' | 'phone' | 'birthdate' | 'studyInstitution'
 
@@ -153,7 +155,7 @@ const LockableInput = ({
   autoComplete: string
   required?: boolean
   lockedValue: string
-  form: UseFormReturn<TContactRequestForm>
+  form: TContactRequestFormApi
 }) => {
   if (lockedValue) {
     return <Input label={label} disabled nativeInputProps={{ type, autoComplete, value: lockedValue, readOnly: true }} />
@@ -178,7 +180,7 @@ const LockableScholarshipStatus = ({
   form,
 }: {
   lockedValue: TContactRequestForm['scholarshipStatus'] | ''
-  form: UseFormReturn<TContactRequestForm>
+  form: TContactRequestFormApi
 }) => {
   const t = useTranslations('accomodation.sidebar.contactRequestModal')
   const options = [
@@ -209,21 +211,26 @@ const LockableScholarshipStatus = ({
 }
 
 /** Pendant de `LockableInput` pour l'alternance : une valeur connue s'affiche verrouillée. */
-const LockableWorkStudy = ({ lockedValue, form }: { lockedValue: boolean | undefined; form: UseFormReturn<TContactRequestForm> }) => {
+const LockableWorkStudy = ({
+  lockedValue,
+  form,
+}: {
+  lockedValue: TContactRequestFormValues['isWorkStudy'] | ''
+  form: TContactRequestFormApi
+}) => {
   const t = useTranslations('accomodation.sidebar.contactRequestModal')
 
-  if (lockedValue !== undefined) {
+  if (lockedValue) {
     return (
       <Input
         label={t('workStudy')}
         disabled
-        nativeInputProps={{ type: 'text', value: lockedValue ? t('workStudyYes') : t('workStudyNo'), readOnly: true }}
+        nativeInputProps={{ type: 'text', value: lockedValue === 'true' ? t('workStudyYes') : t('workStudyNo'), readOnly: true }}
       />
     )
   }
 
   const error = form.formState.errors.isWorkStudy?.message
-  const toBoolean = (value: string) => (value === 'true' ? true : value === 'false' ? false : undefined)
 
   return (
     <RadioButtons
@@ -236,20 +243,14 @@ const LockableWorkStudy = ({ lockedValue, form }: { lockedValue: boolean | undef
         { label: t('workStudyNo'), value: 'false' },
       ].map((option) => ({
         label: option.label,
-        nativeInputProps: { ...form.register('isWorkStudy', { setValueAs: toBoolean }), value: option.value, 'aria-required': true },
+        nativeInputProps: { ...form.register('isWorkStudy'), value: option.value, 'aria-required': true },
       }))}
     />
   )
 }
 
 /** Pendant de `LockableInput` pour l'année d'études : une valeur connue s'affiche verrouillée. */
-const LockableStudyYear = ({
-  lockedValue,
-  form,
-}: {
-  lockedValue: TContactRequestForm['studyYear'] | ''
-  form: UseFormReturn<TContactRequestForm>
-}) => {
+const LockableStudyYear = ({ lockedValue, form }: { lockedValue: TContactRequestForm['studyYear'] | ''; form: TContactRequestFormApi }) => {
   const t = useTranslations('accomodation.sidebar.contactRequestModal')
   const tSchemas = useTranslations('schemas')
 
@@ -310,15 +311,15 @@ const ContactRequestModal = ({ accommodationSlug }: { accommodationSlug: string 
     // Le cast couvre le cas « pas encore renseigné » : la chaîne vide ne coche aucun radio et
     // échoue à la validation, comme pour un visiteur qui n'aurait rien saisi.
     scholarshipStatus: (account?.scholarshipStatus || '') as TContactRequestForm['scholarshipStatus'],
-    isWorkStudy: account?.isWorkStudy ?? undefined,
+    isWorkStudy: (account?.isWorkStudy == null ? '' : String(account.isWorkStudy)) as TContactRequestFormValues['isWorkStudy'],
     studyInstitution: account?.studyInstitution || '',
     studyYear: (account?.studyYear || '') as TContactRequestForm['studyYear'],
   }
   const hasKnownFields = Object.values(known).some((value) => value !== undefined && value !== '')
 
-  const form = useForm<TContactRequestForm>({
+  const form = useForm<TContactRequestFormValues, unknown, TContactRequestForm>({
     resolver: zodResolver(ZContactRequestForm),
-    values: { ...known, isWorkStudy: known.isWorkStudy as boolean, consent: false },
+    values: { ...known, consent: false },
     resetOptions: { keepDirtyValues: true },
   })
 
