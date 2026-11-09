@@ -14,15 +14,19 @@ type SearchParams = {
 
 export const getContactsPageContext = cache(async (searchParams: SearchParams) => {
   const ctx = await getBailleurContext(searchParams.ownerId)
-  if (!ctx.hasPermission('manage_applications')) redirect(buildHref('/bailleur/tableau-de-bord', searchParams))
+  const isLanding = ctx.owner.contactMode === EOwnerContactMode.NONE
 
-  if (!scopeHasAnyAccommodation(await getAccommodationScope(ctx.session.user.id))) {
-    redirect(buildHref('/bailleur/tableau-de-bord', searchParams))
+  if (!isLanding) {
+    if (!ctx.hasPermission('manage_applications')) redirect(buildHref('/bailleur/tableau-de-bord', searchParams))
+
+    if (!scopeHasAnyAccommodation(await getAccommodationScope(ctx.session.user.id))) {
+      redirect(buildHref('/bailleur/tableau-de-bord', searchParams))
+    }
   }
 
   const queryClient = getQueryClient()
 
-  if (ctx.owner.contactMode !== EOwnerContactMode.NONE) {
+  if (!isLanding) {
     const search = searchParams.recherche || undefined
     await queryClient.prefetchQuery(
       trpc.bailleur.listResidencesWithContactCounts.queryOptions({
