@@ -11,8 +11,15 @@ import { useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { createToast } from '~/components/ui/createToast'
 import { RequiredFieldsNotice, RequiredLabel } from '~/components/ui/required-mark'
+import { STUDY_YEARS, ZStudyYear } from '~/enums/study-year'
 import { useUpdateStudentProfile } from '~/hooks/use-update-student-profile'
-import { createZUpdateStudentProfileForm, SCHOLARSHIP_TYPES, type TUpdateStudentProfileForm } from '~/schemas/student/update-profile'
+import {
+  createZUpdateStudentProfileForm,
+  SCHOLARSHIP_TYPES,
+  type TUpdateStudentProfileForm,
+  type TUpdateStudentProfileFormInput,
+} from '~/schemas/student/update-profile'
+import { STUDY_INSTITUTION_MAX_LENGTH } from '~/schemas/student-profile/student-profile'
 import { authClient } from '~/services/better-auth-client'
 
 type StudentProfileFormProps = {
@@ -24,6 +31,9 @@ type StudentProfileFormProps = {
     birthdate: string | null
     scholarshipStatus: 'yes' | 'no' | 'unknown' | null
     scholarshipType: (typeof SCHOLARSHIP_TYPES)[number] | null
+    isWorkStudy: boolean | null
+    studyInstitution: string | null
+    studyYear: string | null
   }
 }
 
@@ -39,7 +49,7 @@ export const StudentProfileForm = ({ initialValues }: StudentProfileFormProps) =
     watch,
     setValue,
     formState: { errors },
-  } = useForm<TUpdateStudentProfileForm>({
+  } = useForm<TUpdateStudentProfileFormInput, unknown, TUpdateStudentProfileForm>({
     resolver: zodResolver(schema),
     defaultValues: {
       firstname: initialValues.firstname,
@@ -48,6 +58,9 @@ export const StudentProfileForm = ({ initialValues }: StudentProfileFormProps) =
       birthdate: initialValues.birthdate ?? '',
       scholarshipStatus: initialValues.scholarshipStatus ?? undefined,
       scholarshipType: initialValues.scholarshipType ?? undefined,
+      isWorkStudy: initialValues.isWorkStudy == null ? undefined : initialValues.isWorkStudy ? 'true' : 'false',
+      studyInstitution: initialValues.studyInstitution ?? '',
+      studyYear: ZStudyYear.safeParse(initialValues.studyYear).data,
       currentPassword: '',
       newPassword: '',
       confirmPassword: '',
@@ -76,6 +89,9 @@ export const StudentProfileForm = ({ initialValues }: StudentProfileFormProps) =
       birthdate: data.birthdate || null,
       scholarshipStatus: data.scholarshipStatus ?? null,
       scholarshipType: data.scholarshipStatus === 'yes' ? (data.scholarshipType ?? null) : null,
+      isWorkStudy: data.isWorkStudy ?? null,
+      studyInstitution: data.studyInstitution || null,
+      studyYear: data.studyYear ?? null,
     })
   }
 
@@ -188,6 +204,49 @@ export const StudentProfileForm = ({ initialValues }: StudentProfileFormProps) =
             </Select>
           </div>
         )}
+      </div>
+
+      <div className="fr-grid-row fr-grid-row--gutters">
+        <div className="fr-col-12 fr-col-md-6">
+          <Input
+            label={t('studyInstitution')}
+            hintText={t('studyInstitutionHint')}
+            state={errors.studyInstitution ? 'error' : undefined}
+            stateRelatedMessage={errors.studyInstitution?.message}
+            nativeInputProps={{ ...register('studyInstitution'), maxLength: STUDY_INSTITUTION_MAX_LENGTH }}
+          />
+        </div>
+        <div className="fr-col-12 fr-col-md-6">
+          <Select
+            label={t('studyYear')}
+            hint={t('studyYearHint')}
+            state={errors.studyYear ? 'error' : undefined}
+            stateRelatedMessage={errors.studyYear?.message}
+            nativeSelectProps={register('studyYear', { setValueAs: (value) => value || null })}
+          >
+            <option value="">{t('studyYearPlaceholder')}</option>
+            {STUDY_YEARS.map((year) => (
+              <option key={year} value={year}>
+                {tSchemas(`studyYear.${year}`)}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <div className="fr-col-12">
+          <RadioButtons
+            legend={t('workStudy')}
+            orientation="horizontal"
+            state={errors.isWorkStudy ? 'error' : 'default'}
+            stateRelatedMessage={errors.isWorkStudy?.message}
+            options={[
+              { label: t('workStudyYes'), value: 'true' },
+              { label: t('workStudyNo'), value: 'false' },
+            ].map((option) => ({
+              label: option.label,
+              nativeInputProps: { ...register('isWorkStudy'), value: option.value },
+            }))}
+          />
+        </div>
       </div>
 
       <div className="fr-border-top fr-pt-4w fr-mt-2w fr-grid-row fr-grid-row--gutters">
