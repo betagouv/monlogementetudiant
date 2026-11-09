@@ -144,7 +144,10 @@ async function writeEligibleResidences(tx: DbTransaction, ownerId: number, scope
   const inScope = and(eq(accommodations.ownerId, ownerId), scopeAccommodationIdCondition(scope))
 
   if (selection.mode === 'all') {
-    await tx.update(accommodations).set({ acceptsApplications: true }).where(inScope)
+    await tx
+      .update(accommodations)
+      .set({ acceptsApplications: true })
+      .where(and(inScope, eq(accommodations.published, true)))
     return
   }
 
@@ -228,6 +231,7 @@ async function openScopeResidences(tx: DbTransaction, ownerId: number, scope: TB
       and(
         eq(accommodations.ownerId, ownerId),
         inArray(accommodations.id, scope.accommodationIds),
+        eq(accommodations.published, true),
         eq(accommodations.acceptsApplications, false),
       ),
     )
