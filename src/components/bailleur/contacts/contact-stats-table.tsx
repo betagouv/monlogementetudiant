@@ -4,10 +4,9 @@ import Button from '@codegouvfr/react-dsfr/Button'
 import { SegmentedControl } from '@codegouvfr/react-dsfr/SegmentedControl'
 import { Table } from '@codegouvfr/react-dsfr/Table'
 import { useQuery } from '@tanstack/react-query'
-import { useSearchParams } from 'next/navigation'
 import { useFormatter, useTranslations } from 'next-intl'
 import { parseAsStringLiteral, useQueryState } from 'nuqs'
-import { ZStatisticsPeriod } from '~/server/statistics/accommodation-stats'
+import { ZStatisticsPeriod } from '~/schemas/statistics/period'
 import { useTRPC } from '~/server/trpc/client'
 import { contactStatsShare } from '~/utils/contact-stats-share'
 
@@ -19,14 +18,12 @@ export const ContactStatsTable = ({ ownerId }: { ownerId?: number }) => {
   const t = useTranslations('bailleur.contacts.stats')
   const format = useFormatter()
   const trpc = useTRPC()
-  const searchParams = useSearchParams()
   const [period, setPeriod] = useQueryState('period', parseAsStringLiteral(PERIODS).withDefault('30d'))
 
   const { data } = useQuery(trpc.bailleur.contactStats.queryOptions({ period, ownerId }))
 
   const exportParams = new URLSearchParams({ period })
-  const exportOwnerId = searchParams.get('ownerId')
-  if (exportOwnerId) exportParams.set('ownerId', exportOwnerId)
+  if (ownerId) exportParams.set('ownerId', String(ownerId))
 
   const counts = (c: TCounts) =>
     [
@@ -76,23 +73,28 @@ export const ContactStatsTable = ({ ownerId }: { ownerId?: number }) => {
           t('city'),
           t('received'),
           t('nonModere'),
-          '%',
+          t('share', { label: t('nonModere') }),
           t('nonRetenu'),
-          '%',
+          t('share', { label: t('nonRetenu') }),
           t('contacte'),
-          '%',
+          t('share', { label: t('contacte') }),
           t('logementAttribue'),
-          '%',
+          t('share', { label: t('logementAttribue') }),
         ]}
         data={[
           ...rows.map((row) => [row.residence, row.city ?? '', ...counts(row)]),
-          [
-            <strong key="total">{t('total')}</strong>,
-            '',
-            ...(data ? counts(data.total) : []).map((cell, i) => <strong key={`total-${i}`}>{cell}</strong>),
-          ],
+          ...(data
+            ? [
+                [
+                  <strong key="total">{t('total')}</strong>,
+                  '',
+                  ...counts(data.total).map((cell, i) => <strong key={`total-${i}`}>{cell}</strong>),
+                ],
+              ]
+            : []),
         ]}
       />
+      {data && rows.length === 0 && <p className="fr-text--sm fr-text-mention--grey fr-mt-2w fr-mb-0">{t('empty')}</p>}
     </section>
   )
 }

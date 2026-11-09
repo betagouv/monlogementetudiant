@@ -2373,6 +2373,7 @@
         "nonRetenu": "Not selected",
         "contacte": "Contacted",
         "logementAttribue": "Housing assigned",
+        "share": "{label} (%)",
         "total": "Total",
         "empty": "No request over the period."
       },
