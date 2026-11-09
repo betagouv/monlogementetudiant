@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/nextjs'
 import { TRPCError } from '@trpc/server'
-import { and, asc, desc, eq, gt, ilike, inArray, ne, or, type SQL, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, exists, gt, ilike, inArray, ne, or, type SQL, sql } from 'drizzle-orm'
 import type { PgColumn } from 'drizzle-orm/pg-core'
 import { SignJWT } from 'jose'
 
@@ -114,6 +114,27 @@ const DISPONIBILITES_SQL = sql<number>`coalesce(${accommodations.nbAvailableApar
 
 // La règle « dossier validé » et la fenêtre de rétention sont réunies dans
 // `visibleDossierFacileApplication` (src/server/candidatures/visibility.ts).
+
+const hasVisibleRequestSql = (contactMode: EOwnerContactMode): SQL => {
+  if (contactMode === EOwnerContactMode.CONTACTS) {
+    return exists(
+      db
+        .select({ one: sql`1` })
+        .from(contactRequests)
+        .where(and(eq(contactRequests.accommodationId, accommodations.id), visibleContactRequest())),
+    )
+  }
+  if (contactMode === EOwnerContactMode.DOSSIER_FACILE) {
+    return exists(
+      db
+        .select({ one: sql`1` })
+        .from(dossierFacileApplications)
+        .innerJoin(dossierFacileTenants, eq(dossierFacileApplications.tenantId, dossierFacileTenants.id))
+        .where(and(eq(dossierFacileApplications.accommodationSlug, accommodations.slug), visibleDossierFacileApplication())),
+    )
+  }
+  return sql`false`
+}
 
 function assertPermissionsMatchContactMode(permissions: BailleurPermission[], contactMode: EOwnerContactMode) {
   if (permissions.includes('manage_applications') && !canGrantApplicationsPermission(contactMode)) {
@@ -536,7 +557,7 @@ export const bailleurRouter = createTRPCRouter({
           .innerJoin(cities, eq(accommodationAddresses.cityId, cities.id))
           .where(where),
         db
-          .select(accommodationSelectFields)
+          .select({ ...accommodationSelectFields, hasVisibleContacts: sql<boolean>`${hasVisibleRequestSql(owner.contactMode)}` })
           .from(accommodations)
           .innerJoin(
             accommodationAddresses,
@@ -563,6 +584,7 @@ export const bailleurRouter = createTRPCRouter({
         results: (await rowsToAccommodationDTOs(results)).map((dto, index) => ({
           ...dto,
           acceptsApplications: results[index]?.acceptsApplications ?? false,
+          hasVisibleContacts: results[index]?.hasVisibleContacts ?? false,
         })),
       }
     }),
@@ -1377,10 +1399,10 @@ export const bailleurRouter = createTRPCRouter({
       if (!owner) return { mode: EOwnerContactMode.NONE, residences: [] }
 
       const scope = await getAccommodationScope(ctx.session.user.id)
-      // Une résidence fermée aux candidatures n'a aucun contact à présenter.
+      // Une résidence fermée aux candidatures reste présentée tant qu'elle porte des demandes encore visibles.
       const conditions = [
         eq(accommodations.ownerId, owner.id),
-        eq(accommodations.acceptsApplications, true),
+        or(eq(accommodations.acceptsApplications, true), hasVisibleRequestSql(owner.contactMode)),
         scopeAccommodationIdCondition(scope),
       ].filter(Boolean) as SQL[]
       if (input.search && input.search.length >= 2) {
