@@ -8,9 +8,16 @@ import { useEffect, useState } from 'react'
 import { AlertsLoginRequiredButton } from '~/components/auth/login-required-button'
 import { TTerritory } from '~/schemas/territories'
 import { formatCityWithPreposition } from '~/utils/french-contraction'
+import { DAY_MS } from '~/utils/time'
 import styles from './find-student-accommodation-alert-banner.module.css'
 
-const STORAGE_KEY = 'mle:search-alert-banner-dismissed'
+const STORAGE_KEY_PREFIX = 'mle:search-alert-banner-dismissed'
+const DISMISS_DURATION_MS = 30 * DAY_MS
+
+const isDismissed = (storageKey: string) => {
+  const dismissedAt = Date.parse(localStorage.getItem(storageKey) ?? '')
+  return !Number.isNaN(dismissedAt) && Date.now() - dismissedAt < DISMISS_DURATION_MS
+}
 
 type FindStudentAccommodationAlertBannerProps = {
   territory: TTerritory
@@ -30,14 +37,15 @@ export const FindStudentAccommodationAlertBanner = ({
   const t = useTranslations('findAccomodation.banner')
   const locale = useLocale()
   const [visible, setVisible] = useState(false)
+  const storageKey = `${STORAGE_KEY_PREFIX}:${categoryKey ?? 'departement'}:${territory.slug}`
 
   useEffect(() => {
     try {
-      setVisible(localStorage.getItem(STORAGE_KEY) === null)
+      setVisible(!isDismissed(storageKey))
     } catch {
       setVisible(true)
     }
-  }, [])
+  }, [storageKey])
 
   if (!visible) return null
 
@@ -51,7 +59,7 @@ export const FindStudentAccommodationAlertBanner = ({
   const onClose = () => {
     setVisible(false)
     try {
-      localStorage.setItem(STORAGE_KEY, new Date().toISOString())
+      localStorage.setItem(storageKey, new Date().toISOString())
     } catch (error) {
       console.warn('Fermeture du bandeau non mémorisée', error)
     }
