@@ -17,8 +17,10 @@ let ownerId: number
 let resA: { id: number; slug: string }
 let resB: { id: number; slug: string }
 
-const logAction = (action: string, slug: string, createdAt: Date) =>
-  getTestDb().insert(activityLog).values({ action, entityType: 'accommodation', entityName: slug, ownerId, metadata: { slug }, createdAt })
+const logAction = (action: string, slug: string, createdAt: Date, overrides: { ownerId?: number; userId?: string } = {}) =>
+  getTestDb()
+    .insert(activityLog)
+    .values({ action, entityType: 'accommodation', entityName: slug, ownerId, metadata: { slug }, createdAt, ...overrides })
 
 const record = (
   messageId: string,
@@ -80,6 +82,32 @@ describe('loadReminderEfficacy', () => {
     await logAction('accommodation.availability_updated', resB.slug, daysAgo(8))
 
     expect((await loadReminderEfficacy(['m-other'])).get('m-other')?.status).toBe('failed')
+  })
+
+  it('un événement entre deux envois ne compte que pour le premier e-mail', async () => {
+    await record('m-first', EReminderType.AVAILABILITY_RESET_WARNING, daysAgo(10), 'stale_availability')
+    await record('m-second', EReminderType.AVAILABILITY_RESET_WARNING, daysAgo(3), 'stale_availability')
+    await logAction('accommodation.availability_confirmed', resA.slug, daysAgo(6))
+
+    const result = await loadReminderEfficacy(['m-first', 'm-second'])
+    expect(result.get('m-first')?.status).toBe('effective')
+    expect(result.get('m-second')?.status).toBe('pending')
+  })
+
+  it('un événement du même slug sur un autre bailleur est ignoré', async () => {
+    const other = await createOwner({ name: 'Autre bailleur', slug: 'autre-bailleur' })
+    await record('m-owner', EReminderType.AVAILABILITY_RESET_WARNING, daysAgo(10), 'stale_availability')
+    await logAction('accommodation.availability_confirmed', resA.slug, daysAgo(8), { ownerId: other.id })
+
+    expect((await loadReminderEfficacy(['m-owner'])).get('m-owner')?.status).toBe('failed')
+  })
+
+  it('un événement d’un autre utilisateur du même bailleur compte', async () => {
+    await createUser({ id: 'efficacy-colleague', name: 'Col Lègue', firstname: 'Col', email: 'colleague@a.com', role: 'owner' })
+    await record('m-colleague', EReminderType.AVAILABILITY_RESET_WARNING, daysAgo(10), 'stale_availability')
+    await logAction('accommodation.availability_updated', resA.slug, daysAgo(8), { userId: 'efficacy-colleague' })
+
+    expect((await loadReminderEfficacy(['m-colleague'])).get('m-colleague')?.status).toBe('effective')
   })
 
   it('messageId inconnu : absent de la Map', async () => {
