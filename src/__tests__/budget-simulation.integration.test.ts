@@ -1,7 +1,10 @@
+import { desc, eq } from 'drizzle-orm'
 import { describe, expect, it } from 'vitest'
 import type { TBudgetSimulation } from '~/schemas/budget-simulation'
+import { budgetSimulations } from '~/server/db/schema'
 import { createUser } from './fixtures/factories'
 import { authenticatedCaller, authenticatedCaller2, caller } from './helpers/test-caller'
+import { getTestDb } from './helpers/test-db'
 import './helpers/setup-integration'
 
 const baseInputs: TBudgetSimulation = {
@@ -93,7 +96,7 @@ describe('budgetSimulation.save', () => {
     expect(result).toEqual(baseInputs)
   })
 
-  it('upserts (a second save overwrites the first, no duplicate)', async () => {
+  it('deux saves successifs mettent à jour la même version (autosave)', async () => {
     await createUser({ id: 'test-user-id' })
 
     await authenticatedCaller.budgetSimulation.save(baseInputs)
@@ -104,6 +107,41 @@ describe('budgetSimulation.save', () => {
 
     const result = await authenticatedCaller.budgetSimulation.get()
     expect(result?.monthlyExpenses.housing).toBe(610)
+
+    const versions = await getTestDb().select().from(budgetSimulations).where(eq(budgetSimulations.userId, 'test-user-id'))
+    expect(versions).toHaveLength(1)
+  })
+
+  it('reset ouvre une nouvelle version, la précédente reste en historique', async () => {
+    await createUser({ id: 'test-user-id' })
+    const db = getTestDb()
+
+    await authenticatedCaller.budgetSimulation.save({
+      ...baseInputs,
+      monthlyExpenses: { ...baseInputs.monthlyExpenses, housing: 610 },
+    })
+    await authenticatedCaller.budgetSimulation.reset(baseInputs)
+
+    const versions = await db
+      .select()
+      .from(budgetSimulations)
+      .where(eq(budgetSimulations.userId, 'test-user-id'))
+      .orderBy(desc(budgetSimulations.updatedAt))
+    expect(versions).toHaveLength(2)
+
+    // Le get renvoie la nouvelle version (vierge) ; l'ancienne valeur est conservée en base.
+    const result = await authenticatedCaller.budgetSimulation.get()
+    expect(result?.monthlyExpenses.housing).toBe(baseInputs.monthlyExpenses.housing)
+    expect(versions.some((v) => v.inputs.monthlyExpenses.housing === 610)).toBe(true)
+
+    // L'autosave qui suit met à jour la nouvelle version, pas l'ancienne.
+    await authenticatedCaller.budgetSimulation.save({
+      ...baseInputs,
+      monthlyExpenses: { ...baseInputs.monthlyExpenses, housing: 700 },
+    })
+    const after = await db.select().from(budgetSimulations).where(eq(budgetSimulations.userId, 'test-user-id'))
+    expect(after).toHaveLength(2)
+    expect((await authenticatedCaller.budgetSimulation.get())?.monthlyExpenses.housing).toBe(700)
   })
 
   it('rejects a negative amount', async () => {
