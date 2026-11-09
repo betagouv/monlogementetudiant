@@ -2515,7 +2515,7 @@
       "noManagerAlert": {
         "title": "No manager can access student applications",
         "description": "By default, only administrators can see applications. To let a manager view and handle them, click the <icon></icon> \"Reception settings\" button.",
-        "action": "Grant rights"
+        "action": "Reception settings"
       }
     },
     "ownerForm": {
