@@ -72,6 +72,8 @@ export async function cleanTables() {
       external_source,
       import_blocklist,
       login_attempt,
+      reminder_email_item,
+      reminder_email,
       favorite_accommodation,
       housing_aid_simulation,
       newsletter_subscription,
