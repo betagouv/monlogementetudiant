@@ -47,12 +47,10 @@ export const BailleurUserModal = ({ ownerId, ownerContactMode, canGrantAdministr
   const update = useUpdateBailleurUser()
   const [limitError, setLimitError] = useState(false)
   const [pendingOpening, setPendingOpening] = useState<PendingOpening | null>(null)
-  const [openingCount, setOpeningCount] = useState(0)
   const isOpen = useIsModalOpen(bailleurUserModal)
 
   useEffect(() => {
-    if (isOpen) setOpeningCount((count) => count + 1)
-    else setPendingOpening(null)
+    if (!isOpen) setPendingOpening(null)
   }, [isOpen])
 
   const isEditing = user !== null
@@ -175,15 +173,15 @@ export const BailleurUserModal = ({ ownerId, ownerContactMode, canGrantAdministr
         <Alert className="fr-mb-2w" severity="warning" small description={t('adminLimit.body', { max: MAX_BAILLEUR_ADMINISTRATORS })} />
       )}
 
-      {isLoadingDetail ? (
-        <p className="fr-text-mention--grey">{t('loading')}</p>
-      ) : (
+      {isOpen && isLoadingDetail && <p className="fr-text-mention--grey">{t('loading')}</p>}
+
+      {isOpen && !isLoadingDetail && (
         // Masqué et non démonté pendant la confirmation : « Retour » retrouve la saisie intacte.
         <div className={pendingOpening ? 'fr-hidden' : undefined}>
           <BailleurUserForm
             ownerId={ownerId}
             formId={FORM_ID}
-            key={`${user?.id ?? 'new'}-${openingCount}`}
+            key={user?.id ?? 'new'}
             defaultValues={
               user
                 ? {
