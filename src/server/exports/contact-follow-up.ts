@@ -44,7 +44,7 @@ export const CONTACT_FOLLOW_UP_COLUMNS: TCsvColumn<TContactFollowUpRow>[] = [
   { key: 'nb_expirees_non_traitees', header: 'Expirées sans traitement' },
 ]
 
-const TREATED_STATUSES = sql`(${EContactStatus.CONTACTE}, ${EContactStatus.NON_RETENU})`
+const TREATED_STATUSES = sql`(${EContactStatus.CONTACTE}, ${EContactStatus.NON_RETENU}, ${EContactStatus.LOGEMENT_ATTRIBUE})`
 const RETENTION = sql`make_interval(days => ${CONTACT_RETENTION_DAYS}::int)`
 
 const formatDate = (column: string) => sql.raw(`to_char(${column} AT TIME ZONE 'Europe/Paris', 'DD/MM/YYYY')`)

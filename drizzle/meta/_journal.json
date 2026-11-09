@@ -659,6 +659,20 @@
       "when": 1794240201728,
       "tag": "0093_student_study_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 94,
+      "version": "7",
+      "when": 1794240219275,
+      "tag": "0094_contact_contacted_at",
+      "breakpoints": true
+    },
+    {
+      "idx": 95,
+      "version": "7",
+      "when": 1794240220275,
+      "tag": "0095_backfill_contacted_at",
+      "breakpoints": true
     }
   ]
 }

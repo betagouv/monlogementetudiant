@@ -38,6 +38,7 @@ export const contactRequests = pgTable(
     anonymizedAt: timestamp('anonymized_at', { withTimezone: true }),
     status: text('status').$type<EContactStatus>().notNull().default(EContactStatus.A_CONTACTER),
     reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
+    contactedAt: timestamp('contacted_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

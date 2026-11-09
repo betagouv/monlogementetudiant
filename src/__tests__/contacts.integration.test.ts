@@ -21,6 +21,14 @@ vi.mock('~/server/services/brevo', async () => {
   return { ...actual, sendContactRequestConfirmationEmail: (...args: unknown[]) => sendConfirmationEmail(...args) }
 })
 
+const notifyNotRetained = vi.fn().mockResolvedValue(undefined)
+vi.mock('~/server/bailleur/application-notifications', async () => {
+  const actual = await vi.importActual<typeof import('~/server/bailleur/application-notifications')>(
+    '~/server/bailleur/application-notifications',
+  )
+  return { ...actual, notifyContactRequestNotRetained: (...args: unknown[]) => notifyNotRetained(...args) }
+})
+
 const contactInput = {
   firstname: 'Toto',
   lastname: 'Tutu',
@@ -46,6 +54,7 @@ const ageContactRequest = (id: string, days: number) =>
 
 beforeEach(async () => {
   sendConfirmationEmail.mockClear()
+  notifyNotRetained.mockClear()
   await createUser({ id: 'test-user-id', name: 'Test User', email: 'test@test.com', role: 'user' })
   await createUser({ id: 'test-owner-id', name: 'Test Owner', email: 'owner@test.com', role: 'owner' })
 })
@@ -386,6 +395,47 @@ describe('rétention côté gestionnaire', () => {
       metadata: { slug: 'res-moderation-log', diff: { contactStatus: { old: EContactStatus.A_CONTACTER, new: EContactStatus.CONTACTE } } },
     })
     expect(JSON.stringify(logs[0])).not.toMatch(new RegExp(`${contactInput.email}|${contactInput.lastname}|${contactInput.phone}`))
+  })
+
+  describe('contactedAt', () => {
+    const move = (id: string, status: EContactStatus) =>
+      ownerCaller.bailleur.updateContactStatus({ id, status, source: EContactSource.CONTACT })
+    const contactedAtOf = async (id: string) =>
+      (await getTestDb().select({ at: contactRequests.contactedAt }).from(contactRequests).where(eq(contactRequests.id, id)))[0]!.at
+
+    it('is set on the first move to contacte and kept afterwards', async () => {
+      await setupOwnedResidence('res-contacted-at')
+      const request = await authenticatedCaller.contacts.create({ accommodationSlug: 'res-contacted-at', ...contactInput })
+      expect(await contactedAtOf(request!.id)).toBeNull()
+
+      await move(request!.id, EContactStatus.CONTACTE)
+      const first = await contactedAtOf(request!.id)
+      expect(first).toBeInstanceOf(Date)
+
+      await move(request!.id, EContactStatus.LOGEMENT_ATTRIBUE)
+      expect(await contactedAtOf(request!.id)).toEqual(first)
+      expect(notifyNotRetained).not.toHaveBeenCalled()
+
+      await move(request!.id, EContactStatus.NON_RETENU)
+      expect(await contactedAtOf(request!.id)).toEqual(first)
+      expect(notifyNotRetained).toHaveBeenCalledTimes(1)
+    })
+
+    it('is set when going straight to logement_attribue', async () => {
+      await setupOwnedResidence('res-contacted-at-direct')
+      const request = await authenticatedCaller.contacts.create({ accommodationSlug: 'res-contacted-at-direct', ...contactInput })
+
+      await move(request!.id, EContactStatus.LOGEMENT_ATTRIBUE)
+      expect(await contactedAtOf(request!.id)).toBeInstanceOf(Date)
+    })
+
+    it('stays null when refused without prior contact', async () => {
+      await setupOwnedResidence('res-contacted-at-refused')
+      const request = await authenticatedCaller.contacts.create({ accommodationSlug: 'res-contacted-at-refused', ...contactInput })
+
+      await move(request!.id, EContactStatus.NON_RETENU)
+      expect(await contactedAtOf(request!.id)).toBeNull()
+    })
   })
 
   it('refuses to mutate an unconfirmed guest request', async () => {

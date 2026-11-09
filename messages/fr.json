@@ -2396,6 +2396,8 @@
         "statusChangeError": "Le changement de statut a échoué. Veuillez réessayer.",
         "contactedTitle": "Contact avec l'étudiant réalisé",
         "contactedRetention": "Les détails du contact seront encore disponibles pendant {days} jour{s}.",
+        "assignedTitle": "Logement attribué à l'étudiant",
+        "assignedDescription": "Ce logement a été attribué à cet étudiant.",
         "rejectedTitle": "Contact non retenu",
         "rejectedDescription": "Vous ne donnerez pas suite à cette demande de contact.",
         "moderateTitle": "Souhaitez-vous en savoir plus sur la demande ?",
@@ -2512,7 +2514,8 @@
         "a_moderer": "À modérer",
         "non_retenu": "Non retenu",
         "a_contacter": "À contacter",
-        "contacte": "Contacté"
+        "contacte": "Contacté",
+        "logement_attribue": "Logement attribué"
       },
       "applicationsSuspendedBadge": "Candidatures suspendues",
       "autoSuspendedBadge": {

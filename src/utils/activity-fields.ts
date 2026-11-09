@@ -110,6 +110,7 @@ const CONTACT_STATUS_LABELS: Record<EContactStatus, string> = {
   [EContactStatus.A_CONTACTER]: 'À contacter',
   [EContactStatus.CONTACTE]: 'Contacté',
   [EContactStatus.NON_RETENU]: 'Non retenu',
+  [EContactStatus.LOGEMENT_ATTRIBUE]: 'Logement attribué',
 }
 
 export type ParsedDiffField = { typology: TypologyType; field: TypologyField } | null
