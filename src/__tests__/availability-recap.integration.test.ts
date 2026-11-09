@@ -4,6 +4,7 @@ import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { createAvailabilityConfirmToken } from '~/server/bailleur/availability-confirm-token'
 import { confirmFromEmail, readEmailConfirmation } from '~/server/bailleur/availability-email-confirmation'
 import { runAvailabilityMonthlyRecap } from '~/server/bailleur/availability-recap'
+import { reminderEmailItems, reminderEmails } from '~/server/db/schema/reminder-emails'
 import { DAY_MS } from '~/utils/time'
 import { accommodationTypologies } from '../server/db/schema/accommodation-typologies'
 import { accommodations } from '../server/db/schema/accommodations'
@@ -92,6 +93,33 @@ describe('runAvailabilityMonthlyRecap', () => {
     })
     expect(byEmail['gest@a.com'].residences.map((r: { name: string }) => r.name)).toEqual(['Res B'])
     expect(byEmail['admin@a.com'].confirmUrl).not.toBe(byEmail['gest@a.com'].confirmUrl)
+  })
+
+  it('enregistre le récap envoyé avec ses résidences', async () => {
+    monthlyRecapEmail.mockResolvedValueOnce('msg-1').mockResolvedValueOnce('msg-2')
+
+    await runAvailabilityMonthlyRecap()
+
+    const emails = await getTestDb().select().from(reminderEmails)
+    expect(emails).toHaveLength(2)
+    const adminEmail = emails.find((e) => e.userId === ADMIN)
+    expect(adminEmail).toMatchObject({ type: 'availability_monthly_recap', messageId: 'msg-1', ownerId, recipientEmail: 'admin@a.com' })
+    const items = await getTestDb().select().from(reminderEmailItems).where(eq(reminderEmailItems.reminderEmailId, adminEmail!.id))
+    expect(items.map((i) => [i.accommodationId, i.reason]).sort()).toEqual(
+      [
+        [resA.id, 'stale_availability'],
+        [resB.id, 'stale_availability'],
+      ].sort(),
+    )
+  })
+
+  it('n’enregistre rien quand l’envoi est sauté', async () => {
+    monthlyRecapEmail.mockResolvedValue(null)
+
+    expect(await runAvailabilityMonthlyRecap()).toMatchObject({ emails: 2 })
+
+    expect(await getTestDb().select().from(reminderEmails)).toHaveLength(0)
+    monthlyRecapEmail.mockResolvedValue(undefined)
   })
 
   it('--dry-run n’envoie rien', async () => {

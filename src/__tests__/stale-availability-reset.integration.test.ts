@@ -5,6 +5,7 @@ import { confirmFromEmail } from '~/server/bailleur/availability-email-confirmat
 import { runAvailabilityMonthlyRecap } from '~/server/bailleur/availability-recap'
 import { runInactivityCheck } from '~/server/bailleur/inactivity-suspension'
 import { runStaleAvailabilityReset } from '~/server/bailleur/stale-availability-reset'
+import { reminderEmails } from '~/server/db/schema/reminder-emails'
 import { DAY_MS } from '~/utils/time'
 import { accommodationTypologies } from '../server/db/schema/accommodation-typologies'
 import { accommodations } from '../server/db/schema/accommodations'
@@ -101,6 +102,21 @@ describe('runStaleAvailabilityReset — bailleurs sans parcours', () => {
       { force: false },
     )
     expect(resetDoneEmail).not.toHaveBeenCalled()
+  })
+
+  it('enregistre l’alerte et la remise à zéro', async () => {
+    resetWarningEmail.mockResolvedValueOnce('msg-warn')
+    resetDoneEmail.mockResolvedValueOnce('msg-done')
+    await stampAvailability(daysAgo(30))
+
+    await runStaleAvailabilityReset()
+    await runStaleAvailabilityReset({ now: daysAhead(7) })
+
+    const emails = await getTestDb().select().from(reminderEmails)
+    expect(emails.map((e) => [e.type, e.messageId]).sort()).toEqual([
+      ['availability_reset_done', 'msg-done'],
+      ['availability_reset_warning', 'msg-warn'],
+    ])
   })
 
   it('repasse en « non communiquée » 7 jours après l’alerte, sans toucher au reste des typologies', async () => {
