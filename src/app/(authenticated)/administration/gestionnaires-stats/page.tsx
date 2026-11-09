@@ -34,6 +34,7 @@ type OwnerRow = {
   nbAvailabilityUpdated: number
   nbAccommodations: number
   nbDepublished: number
+  attributionFillRate: number | null
 }
 
 function OwnerAvatarCell({ owner }: { owner: OwnerRow }) {
@@ -76,6 +77,15 @@ const ownerColumns: ColumnDef<OwnerRow, unknown>[] = [
   { accessorKey: 'nbCreated', header: 'Créations', size: 80 },
   { accessorKey: 'nbAccommodations', header: 'Résidences', size: 90 },
   { accessorKey: 'nbDepublished', header: 'Dépubliées', size: 90 },
+  {
+    accessorKey: 'attributionFillRate',
+    header: 'Attribution renseignée',
+    cell: ({ getValue }) => {
+      const v = getValue() as number | null
+      return v === null ? '—' : `${Math.round(v * 100)} %`
+    },
+    size: 130,
+  },
 ]
 
 type AccommodationRow = {
