@@ -47,6 +47,7 @@ export {
   studentAlertsRelations,
   userRelations,
 } from './relations'
+export { reminderEmailItems, reminderEmails } from './reminder-emails'
 export { stats } from './stats'
 export { studentAlerts } from './student-alerts'
 export { studentGoalDueDelayEnum, studentGoalLists, studentGoals } from './student-goals'
