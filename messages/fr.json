@@ -2373,6 +2373,7 @@
         "nonRetenu": "Non retenu",
         "contacte": "Contacté",
         "logementAttribue": "Logement attribué",
+        "share": "{label} (%)",
         "total": "Total",
         "empty": "Aucune demande sur la période."
       },

@@ -6,6 +6,7 @@ import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { user } from '../server/db/schema/auth'
 import { bailleurAccommodationScopes } from '../server/db/schema/bailleur-accommodation-scopes'
 import { contactRequests } from '../server/db/schema/contacts'
+import { owners } from '../server/db/schema/owners'
 import { createAccommodation, createAdminOwnerLink, createOwner, createUser } from './fixtures/factories'
 import { getTestDb } from './helpers/test-db'
 import './helpers/setup-integration'
@@ -155,9 +156,7 @@ describe('GET /api/bailleur/contacts/statistiques/export', () => {
   })
 
   it('ne renvoie que l’en-tête et le total en mode aucun', async () => {
-    await getTestDb()
-      .update((await import('../server/db/schema/owners')).owners)
-      .set({ contactMode: EOwnerContactMode.NONE })
+    await getTestDb().update(owners).set({ contactMode: EOwnerContactMode.NONE }).where(eq(owners.id, ownerId))
     const { rows } = await readCsv(await GET(request()))
     expect(rows.map((row) => row.Résidence)).toEqual(['Total'])
   })
