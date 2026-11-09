@@ -149,6 +149,42 @@ describe('loadReminderEfficacy', () => {
     })
   })
 
+  describe('candidatures plus anciennes que la fenêtre de rétention', () => {
+    const addContact = (email: string, createdAt: Date, reviewedAt: Date | null = null) =>
+      getTestDb().insert(contactRequests).values({ accommodationId: resA.id, email, confirmedAt: createdAt, createdAt, reviewedAt })
+
+    it('demande de 34 jours non traitée, alerte envoyée il y a 20 jours : failed', async () => {
+      await addContact('old@a.com', daysAgo(34))
+      await record('m-old', EReminderType.APPLICATIONS_INACTIVITY_WARNING, daysAgo(20), 'unprocessed_applications')
+
+      expect((await loadReminderEfficacy(['m-old'])).get('m-old')?.status).toBe('failed')
+    })
+
+    it('même demande traitée 2 jours après l’envoi : effective', async () => {
+      await addContact('old@a.com', daysAgo(34), daysAgo(18))
+      await record('m-old-ok', EReminderType.APPLICATIONS_INACTIVITY_WARNING, daysAgo(20), 'unprocessed_applications')
+
+      expect((await loadReminderEfficacy(['m-old-ok'])).get('m-old-ok')).toEqual({
+        status: 'effective',
+        reactionMs: expect.closeTo(2 * DAY_MS, -3),
+        residencesCount: 1,
+      })
+    })
+
+    it('aucune demande sur la résidence : not_measured', async () => {
+      await record('m-none', EReminderType.APPLICATIONS_INACTIVITY_WARNING, daysAgo(20), 'unprocessed_applications')
+
+      expect((await loadReminderEfficacy(['m-none'])).get('m-none')?.status).toBe('not_measured')
+    })
+
+    it('aucune demande mais suspension dans le délai : failed', async () => {
+      await record('m-none-susp', EReminderType.APPLICATIONS_INACTIVITY_WARNING, daysAgo(20), 'unprocessed_applications')
+      await logAction('accommodation.applications_auto_suspended', resA.slug, daysAgo(14))
+
+      expect((await loadReminderEfficacy(['m-none-susp'])).get('m-none-susp')?.status).toBe('failed')
+    })
+  })
+
   it('une résidence citée pour les deux motifs compte une fois', async () => {
     await recordReminderEmail({
       messageId: 'm-both',

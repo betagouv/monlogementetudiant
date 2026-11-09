@@ -5,14 +5,14 @@ import { DAY_MS } from '~/utils/time'
 
 export type TReminderEfficacyStatus = 'effective' | 'failed' | 'pending' | 'not_measured'
 
-export type TItemFacts = { resolvedAt: Date | null; failedAt: Date | null }
+export type TItemFacts = { resolvedAt: Date | null; failedAt: Date | null; unmeasurable?: boolean }
 
 export function reminderDeadline(type: EReminderType, sentAt: Date): Date {
   if (type === EReminderType.AVAILABILITY_MONTHLY_RECAP) return addMonths(sentAt, 1)
   return new Date(sentAt.getTime() + SUSPENSION_NOTICE_DAYS * DAY_MS)
 }
 
-type TItemOutcome = 'resolved' | 'failed' | 'pending'
+type TItemOutcome = 'resolved' | 'failed' | 'pending' | 'unmeasurable'
 
 export function decideEfficacy({ type, sentAt, items, now }: { type: EReminderType; sentAt: Date; items: TItemFacts[]; now: Date }): {
   status: TReminderEfficacyStatus
@@ -26,12 +26,14 @@ export function decideEfficacy({ type, sentAt, items, now }: { type: EReminderTy
 
   const outcomeOf = (item: TItemFacts): TItemOutcome => {
     if (within(item.failedAt, CRON_RUN_TOLERANCE_MS)) return 'failed'
+    if (item.unmeasurable) return 'unmeasurable'
     if (within(item.resolvedAt)) return 'resolved'
     return expired ? 'failed' : 'pending'
   }
 
   const outcomes = items.map(outcomeOf)
   if (outcomes.includes('failed')) return { status: 'failed', reactionMs: null }
+  if (outcomes.includes('unmeasurable')) return { status: 'not_measured', reactionMs: null }
   if (outcomes.some((outcome) => outcome === 'pending')) return { status: 'pending', reactionMs: null }
 
   const lastResolved = Math.max(...items.map((item) => item.resolvedAt?.getTime() ?? 0))

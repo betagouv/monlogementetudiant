@@ -72,4 +72,20 @@ describe('decideEfficacy', () => {
     expect(decideEfficacy({ type: EReminderType.AVAILABILITY_RESET_DONE, sentAt, items, now: after(2) }).status).toBe('not_measured')
     expect(decideEfficacy({ type: EReminderType.AVAILABILITY_RESET_WARNING, sentAt, items: [], now: after(2) }).status).toBe('not_measured')
   })
+
+  describe('item non mesurable', () => {
+    const type = EReminderType.APPLICATIONS_INACTIVITY_WARNING
+    const unmeasurable = { resolvedAt: null, failedAt: null, unmeasurable: true }
+
+    it('un item non mesurable rend l’e-mail not_measured', () => {
+      const items = [{ resolvedAt: after(1), failedAt: null }, unmeasurable]
+      expect(decideEfficacy({ type, sentAt, items, now: after(2) })).toEqual({ status: 'not_measured', reactionMs: null })
+      expect(decideEfficacy({ type, sentAt, items, now: after(9) }).status).toBe('not_measured')
+    })
+
+    it('un échec constaté sur l’item reste failed', () => {
+      const items = [{ ...unmeasurable, failedAt: after(7) }]
+      expect(decideEfficacy({ type, sentAt, items, now: after(8) }).status).toBe('failed')
+    })
+  })
 })
