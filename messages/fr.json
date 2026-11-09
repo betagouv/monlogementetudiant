@@ -324,6 +324,7 @@
         "dossierFacileApplied": "Candidature envoyée",
         "dossierFacileSelectType": "Type de logement",
         "consultDescription": "Vous serez redirigé vers le site de la résidence",
+        "consultDescriptionCrous": "Vous serez redirigé vers le site https://trouverunlogement.lescrous.fr/",
         "call": "Appeler le {phoneNumber}",
         "dossierFacileDescription": "Dossier de location numérique certifié",
         "link": "Copier le lien",
