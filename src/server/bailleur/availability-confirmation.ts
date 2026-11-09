@@ -4,17 +4,20 @@ import { accommodationAddresses } from '~/server/db/schema/accommodation-address
 import { accommodationTypologies } from '~/server/db/schema/accommodation-typologies'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { cities } from '~/server/db/schema/cities'
+import { recomputeAndPersistAggregates } from '~/server/lib/typologies'
 import { logActivity } from '~/server/services/activity-logger'
 import { type AccommodationScope, scopeAccommodationIdCondition } from './accommodation-scope'
 import { resumeIfResolved } from './inactivity-suspension'
 
 export const withAvailabilityCondition = sql`exists (select 1 from ${accommodationTypologies} where ${accommodationTypologies.accommodationId} = ${accommodations.id} and ${accommodationTypologies.nbAvailable} is not null)`
 
+const withTypologyCondition = sql`exists (select 1 from ${accommodationTypologies} where ${accommodationTypologies.accommodationId} = ${accommodations.id})`
+
 /** Adresse principale, unique par résidence : la jointure ne duplique pas les lignes. */
 export const mainAddressJoin = and(eq(accommodationAddresses.accommodationId, accommodations.id), eq(accommodationAddresses.isMain, true))
 
-/** Typologies renseignées des résidences, avec le total disponible et la dernière mise à jour par résidence. */
-export async function loadAvailabilitySummaries(accommodationIds: number[]) {
+/** Typologies des résidences (renseignées seulement, sauf `includeUnset`), avec le total disponible et la dernière mise à jour par résidence. */
+export async function loadAvailabilitySummaries(accommodationIds: number[], { includeUnset = false } = {}) {
   if (accommodationIds.length === 0) return new Map<number, AvailabilitySummary>()
   const rows = await db
     .select({
@@ -25,7 +28,12 @@ export async function loadAvailabilitySummaries(accommodationIds: number[]) {
       availabilityUpdatedAt: accommodationTypologies.availabilityUpdatedAt,
     })
     .from(accommodationTypologies)
-    .where(and(inArray(accommodationTypologies.accommodationId, accommodationIds), isNotNull(accommodationTypologies.nbAvailable)))
+    .where(
+      and(
+        inArray(accommodationTypologies.accommodationId, accommodationIds),
+        includeUnset ? undefined : isNotNull(accommodationTypologies.nbAvailable),
+      ),
+    )
     .orderBy(asc(accommodationTypologies.type))
 
   const summaries = new Map<number, AvailabilitySummary>()
@@ -48,7 +56,7 @@ type AvailabilitySummary = {
 }
 
 /**
- * Résidences du bailleur, dans le périmètre de l'appelant, ayant des disponibilités renseignées :
+ * Résidences du bailleur, dans le périmètre de l'appelant, ayant au moins une typologie :
  * par défaut seulement celles qui font l'objet d'une alerte, toutes avec `onlyWarned: false`.
  */
 export async function listAvailabilityToConfirm(ownerId: number, scope: AccommodationScope, { onlyWarned = true } = {}) {
@@ -62,13 +70,16 @@ export async function listAvailabilityToConfirm(ownerId: number, scope: Accommod
         eq(accommodations.ownerId, ownerId),
         onlyWarned ? isNotNull(accommodations.staleAvailabilityWarnedAt) : undefined,
         scopeAccommodationIdCondition(scope),
-        withAvailabilityCondition,
+        withTypologyCondition,
       ),
     )
     .orderBy(asc(accommodations.name))
   if (residences.length === 0) return []
 
-  const summaries = await loadAvailabilitySummaries(residences.map((r) => r.id))
+  const summaries = await loadAvailabilitySummaries(
+    residences.map((r) => r.id),
+    { includeUnset: true },
+  )
   return residences.map((residence) => {
     const summary = summaries.get(residence.id)
     return {
@@ -90,7 +101,7 @@ type ConfirmAvailabilityInput = {
   via?: 'email'
 }
 
-/** « Rien n'a changé » : horodate les disponibilités renseignées et lève l'alerte, comme un enregistrement sans modification. */
+/** « Rien n'a changé » : horodate les disponibilités, passe les non renseignées à zéro et lève l'alerte. */
 export async function confirmAvailability({ owner, scope, user, onlyWarned = true, notUpdatedSince, via }: ConfirmAvailabilityInput) {
   const residences = await listAvailabilityToConfirm(owner.id, scope, { onlyWarned })
   if (residences.length === 0) return { confirmed: 0, skipped: 0 }
@@ -98,21 +109,26 @@ export async function confirmAvailability({ owner, scope, user, onlyWarned = tru
   const now = new Date()
   const bound = notUpdatedSince && notUpdatedSince < now ? notUpdatedSince : now
   const confirmedIds = await db.transaction(async (tx) => {
+    const residenceIds = residences.map((r) => r.id)
     const stamped = await tx
       .update(accommodationTypologies)
       .set({ availabilityUpdatedAt: now, availabilityUpdatedBy: user.id })
       .where(
         and(
-          inArray(
-            accommodationTypologies.accommodationId,
-            residences.map((r) => r.id),
-          ),
+          inArray(accommodationTypologies.accommodationId, residenceIds),
           isNotNull(accommodationTypologies.nbAvailable),
           or(isNull(accommodationTypologies.availabilityUpdatedAt), lte(accommodationTypologies.availabilityUpdatedAt, bound)),
         ),
       )
       .returning({ accommodationId: accommodationTypologies.accommodationId })
-    const ids = [...new Set(stamped.map((row) => row.accommodationId))]
+    const filled = await tx
+      .update(accommodationTypologies)
+      .set({ nbAvailable: 0, availabilityUpdatedAt: now, availabilityUpdatedBy: user.id })
+      .where(and(inArray(accommodationTypologies.accommodationId, residenceIds), isNull(accommodationTypologies.nbAvailable)))
+      .returning({ accommodationId: accommodationTypologies.accommodationId })
+    const filledIds = new Set(filled.map((row) => row.accommodationId))
+    for (const id of filledIds) await recomputeAndPersistAggregates(tx, id)
+    const ids = [...new Set([...filledIds, ...stamped.map((row) => row.accommodationId)])]
     if (ids.length > 0) {
       await tx.update(accommodations).set({ staleAvailabilityWarnedAt: null, updatedAt: now }).where(inArray(accommodations.id, ids))
     }
