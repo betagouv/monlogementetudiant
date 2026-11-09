@@ -72,7 +72,7 @@ async function groupByRecipient<R extends { ownerId: number; ownerName: string; 
 
 async function sendToEach<R>(
   groups: { recipient: RecapRecipient; residences: R[] }[],
-  send: (group: { recipient: RecapRecipient; residences: R[] }) => Promise<void>,
+  send: (group: { recipient: RecapRecipient; residences: R[] }) => Promise<unknown>,
   failures: string[],
 ) {
   let sent = 0

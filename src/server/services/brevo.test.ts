@@ -12,10 +12,18 @@ const mockEnv = (overrides: Record<string, unknown>) => {
   })
 }
 
+const RECAP_PARAMS = {
+  firstname: 'A',
+  ownerName: 'B',
+  residences: [{ name: 'R', city: null, nbAvailable: 1, lastUpdatedAt: null }],
+  confirmUrl: 'c',
+  updateUrl: 'u',
+}
+
 describe('brevo service', () => {
   beforeEach(() => {
     fetchMock.mockReset()
-    fetchMock.mockResolvedValue({ ok: true })
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ messageId: '<m1@smtp-relay.brevo.com>' }) })
     vi.resetModules()
     vi.stubEnv('BREVO_API_KEY', 'test-api-key')
     vi.stubEnv('BREVO_TEMPLATE_MAGIC_LINK', '2')
@@ -70,6 +78,35 @@ describe('brevo service', () => {
   })
 
   describe('sendTemplateEmail', () => {
+    it('renvoie le messageId Brevo', async () => {
+      const { sendTemplateEmail } = await import('./brevo')
+      await expect(sendTemplateEmail({ to: 'a@b.fr', templateId: 2 })).resolves.toBe('<m1@smtp-relay.brevo.com>')
+    })
+
+    it('échoue si Brevo ne renvoie pas de messageId', async () => {
+      fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({}) })
+      const { sendTemplateEmail } = await import('./brevo')
+      await expect(sendTemplateEmail({ to: 'a@b.fr', templateId: 2 })).rejects.toThrow('messageId')
+    })
+
+    it("étiquette l'alerte d'inactivité par type et motifs", async () => {
+      vi.stubEnv('BREVO_TEMPLATE_APPLICATIONS_INACTIVITY_WARNING', '77')
+      const { sendApplicationsInactivityWarningEmail } = await import('./brevo')
+      await sendApplicationsInactivityWarningEmail(
+        'a@b.fr',
+        { firstname: 'A', ownerName: 'B', residences: ['R'], url: 'u' },
+        { reasons: ['unprocessed_applications', 'stale_availability', 'unprocessed_applications'] },
+      )
+      expect(JSON.parse(fetchMock.mock.calls[0][1].body).tags).toEqual(['relance-alerte-inactivite', 'motif-candidatures', 'motif-dispos'])
+    })
+
+    it('renvoie null sans appeler Brevo hors production', async () => {
+      mockEnv({ NEXT_PUBLIC_APP_ENV: 'staging' })
+      const { sendAvailabilityMonthlyRecapEmail } = await import('./brevo')
+      await expect(sendAvailabilityMonthlyRecapEmail('a@b.fr', RECAP_PARAMS)).resolves.toBeNull()
+      expect(fetchMock).not.toHaveBeenCalled()
+    })
+
     it('sends request with templateId and params', async () => {
       const { sendTemplateEmail } = await import('./brevo')
 
