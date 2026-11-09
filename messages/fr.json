@@ -2515,7 +2515,7 @@
       "noManagerAlert": {
         "title": "Aucun gestionnaire n'a accès aux dossiers des étudiants",
         "description": "Par défaut, seuls les administrateurs voient les candidatures. Pour autoriser un gestionnaire à les consulter et à les traiter, cliquez sur le bouton <icon></icon> « Paramètres de réception ».",
-        "action": "Attribuer les droits"
+        "action": "Paramètres de réception"
       }
     },
     "ownerForm": {
