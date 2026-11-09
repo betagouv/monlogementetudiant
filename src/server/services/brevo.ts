@@ -1,3 +1,6 @@
+import { z } from 'zod'
+import { EReminderType, REASON_TAGS, REMINDER_TAGS } from '~/enums/reminder-email'
+import type { InactivityReason } from '~/server/bailleur/inactivity-rules'
 import { env } from '~/server/env'
 import { formatLongDay } from '~/utils/formatDate'
 import { maskEmail } from '~/utils/mask-email'
@@ -27,7 +30,13 @@ interface TemplateEmailParams {
   params?: Record<string, string | string[] | Array<Record<string, string | number>>>
 }
 
-export async function sendTemplateEmail({ to, templateId, params }: TemplateEmailParams): Promise<void> {
+const ZBrevoSendResponse = z.object({ messageId: z.string() })
+
+const reminderTags = (type: EReminderType, reasons: InactivityReason[] = []) => [
+  ...new Set([REMINDER_TAGS[type], ...reasons.map((reason) => REASON_TAGS[reason])]),
+]
+
+export async function sendTemplateEmail({ to, templateId, params, tags }: TemplateEmailParams & { tags?: string[] }): Promise<string> {
   const response = await fetch(env.BREVO_API_URL, {
     method: 'POST',
     headers: brevoHeaders,
@@ -36,6 +45,7 @@ export async function sendTemplateEmail({ to, templateId, params }: TemplateEmai
       templateId,
       replyTo: { email: SENDER_EMAIL },
       ...(params && { params }),
+      ...(tags?.length && { tags }),
     }),
   })
 
@@ -43,6 +53,10 @@ export async function sendTemplateEmail({ to, templateId, params }: TemplateEmai
     const error = await response.text()
     throw new Error(`Brevo email failed: ${response.status} ${error}`)
   }
+
+  const result = ZBrevoSendResponse.safeParse(await response.json())
+  if (!result.success) throw new Error('Réponse Brevo sans messageId')
+  return result.data.messageId
 }
 
 interface RawEmailParams {
@@ -251,34 +265,36 @@ const inactivityParams = (params: InactivityEmailParams) => ({
 export async function sendApplicationsInactivityWarningEmail(
   email: string,
   params: InactivityEmailParams,
-  { force = false }: { force?: boolean } = {},
-): Promise<void> {
+  { force = false, reasons }: { force?: boolean; reasons?: InactivityReason[] } = {},
+): Promise<string | null> {
   if (env.NEXT_PUBLIC_APP_ENV !== 'production' && !force) {
     console.info(`[${env.NEXT_PUBLIC_APP_ENV}] alerte d'inactivité non envoyée à ${maskEmail(email)}`)
-    return
+    return null
   }
 
-  await sendTemplateEmail({
+  return sendTemplateEmail({
     to: email,
     templateId: env.BREVO_TEMPLATE_APPLICATIONS_INACTIVITY_WARNING,
     params: inactivityParams(params),
+    tags: reminderTags(EReminderType.APPLICATIONS_INACTIVITY_WARNING, reasons),
   })
 }
 
 export async function sendApplicationsAutoSuspendedEmail(
   email: string,
   params: InactivityEmailParams,
-  { force = false }: { force?: boolean } = {},
-): Promise<void> {
+  { force = false, reasons }: { force?: boolean; reasons?: InactivityReason[] } = {},
+): Promise<string | null> {
   if (env.NEXT_PUBLIC_APP_ENV !== 'production' && !force) {
     console.info(`[${env.NEXT_PUBLIC_APP_ENV}] suspension automatique non envoyée à ${maskEmail(email)}`)
-    return
+    return null
   }
 
-  await sendTemplateEmail({
+  return sendTemplateEmail({
     to: email,
     templateId: env.BREVO_TEMPLATE_APPLICATIONS_AUTO_SUSPENDED,
     params: inactivityParams(params),
+    tags: reminderTags(EReminderType.APPLICATIONS_AUTO_SUSPENDED, reasons),
   })
 }
 
@@ -318,31 +334,33 @@ export type SendAvailabilityRecapEmail = (
   email: string,
   params: AvailabilityRecapEmailParams,
   options?: { force?: boolean },
-) => Promise<void>
+) => Promise<string | null>
 
 export const sendAvailabilityResetWarningEmail: SendAvailabilityRecapEmail = async (email, params, { force = false } = {}) => {
   if (env.NEXT_PUBLIC_APP_ENV !== 'production' && !force) {
     console.info(`[${env.NEXT_PUBLIC_APP_ENV}] alerte de disponibilités périmées non envoyée à ${maskEmail(email)}`)
-    return
+    return null
   }
 
-  await sendTemplateEmail({
+  return sendTemplateEmail({
     to: email,
     templateId: env.BREVO_TEMPLATE_AVAILABILITY_RESET_WARNING,
     params: availabilityRecapParams(params),
+    tags: reminderTags(EReminderType.AVAILABILITY_RESET_WARNING),
   })
 }
 
 export const sendAvailabilityMonthlyRecapEmail: SendAvailabilityRecapEmail = async (email, params, { force = false } = {}) => {
   if (env.NEXT_PUBLIC_APP_ENV !== 'production' && !force) {
     console.info(`[${env.NEXT_PUBLIC_APP_ENV}] récap mensuel des disponibilités non envoyé à ${maskEmail(email)}`)
-    return
+    return null
   }
 
-  await sendTemplateEmail({
+  return sendTemplateEmail({
     to: email,
     templateId: env.BREVO_TEMPLATE_AVAILABILITY_MONTHLY_RECAP,
     params: availabilityRecapParams(params),
+    tags: reminderTags(EReminderType.AVAILABILITY_MONTHLY_RECAP),
   })
 }
 
@@ -357,15 +375,16 @@ export async function sendAvailabilityResetDoneEmail(
   email: string,
   params: AvailabilityResetDoneEmailParams,
   { force = false }: { force?: boolean } = {},
-): Promise<void> {
+): Promise<string | null> {
   if (env.NEXT_PUBLIC_APP_ENV !== 'production' && !force) {
     console.info(`[${env.NEXT_PUBLIC_APP_ENV}] avis de disponibilités effacées non envoyé à ${maskEmail(email)}`)
-    return
+    return null
   }
 
-  await sendTemplateEmail({
+  return sendTemplateEmail({
     to: email,
     templateId: env.BREVO_TEMPLATE_AVAILABILITY_RESET_DONE,
+    tags: reminderTags(EReminderType.AVAILABILITY_RESET_DONE),
     params: {
       FIRSTNAME: params.firstname,
       OWNER_NAME: params.ownerName,
