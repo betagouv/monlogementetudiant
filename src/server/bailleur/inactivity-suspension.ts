@@ -1,6 +1,7 @@
 import { and, eq, inArray, max, min, ne, type SQL, sql } from 'drizzle-orm'
 import { EContactStatus } from '~/enums/contact-status'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
+import { EReminderType } from '~/enums/reminder-email'
 import { visibleContactRequest, visibleDossierFacileApplication } from '~/server/candidatures/visibility'
 import { db } from '~/server/db'
 import { accommodationTypologies } from '~/server/db/schema/accommodation-typologies'
@@ -11,6 +12,8 @@ import { contactRequests } from '~/server/db/schema/contacts'
 import { dossierFacileApplications, dossierFacileTenants } from '~/server/db/schema/dossier-facile'
 import { owners } from '~/server/db/schema/owners'
 import { env } from '~/server/env'
+import type { TReminderRecord } from '~/server/reminders/record-reminder-email'
+import { recordReminderEmail } from '~/server/reminders/record-reminder-email'
 import { logActivity } from '~/server/services/activity-logger'
 import { sendApplicationsAutoSuspendedEmail, sendApplicationsInactivityWarningEmail } from '~/server/services/brevo'
 import { maskEmail } from '~/utils/mask-email'
@@ -245,6 +248,8 @@ export const inactivityRecipients = (members: Member[], residence: { id: number;
 
 type Notice = { residence: { id: number; name: string; ownerId: number; ownerName: string }; reason: InactivityReason }
 
+type ReminderItem = TReminderRecord['items'][number]
+
 export async function sendGroupedEmails(
   notices: Notice[],
   members: Member[],
@@ -252,21 +257,40 @@ export async function sendGroupedEmails(
   describe: (reason: InactivityReason) => string,
   failures: string[],
   force: boolean,
+  type: EReminderType,
   url = CONTACTS_URL,
 ) {
-  const byRecipient = new Map<string, { member: Member; ownerName: string; lines: string[] }>()
+  const byRecipient = new Map<string, { member: Member; ownerName: string; lines: string[]; items: Map<string, ReminderItem> }>()
   for (const { residence, reason } of notices) {
     for (const member of inactivityRecipients(members, residence, reason)) {
-      const entry = byRecipient.get(member.id) ?? { member, ownerName: residence.ownerName, lines: [] }
+      const entry = byRecipient.get(member.id) ?? {
+        member,
+        ownerName: residence.ownerName,
+        lines: [],
+        items: new Map<string, ReminderItem>(),
+      }
       const detail = describe(reason)
       entry.lines.push(detail ? `${residence.name} : ${detail}` : residence.name)
+      entry.items.set(`${residence.id}:${reason}`, { accommodationId: residence.id, reason })
       byRecipient.set(member.id, entry)
     }
   }
 
-  for (const { member, ownerName, lines } of byRecipient.values()) {
+  for (const { member, ownerName, lines, items } of byRecipient.values()) {
     try {
-      await send(member.email, { firstname: member.firstname, ownerName, residences: lines, url }, { force })
+      const reasons = [...new Set([...items.values()].map((item) => item.reason))]
+      const messageId = await send(member.email, { firstname: member.firstname, ownerName, residences: lines, url }, { force, reasons })
+      if (messageId) {
+        await recordReminderEmail({
+          messageId,
+          type,
+          userId: member.id,
+          ownerId: member.ownerId,
+          recipientEmail: member.email,
+          sentAt: new Date(),
+          items: [...items.values()],
+        })
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       failures.push(`e-mail ${maskEmail(member.email)} : ${message}`)
@@ -313,8 +337,24 @@ export async function runInactivityCheck(options: InactivityCheckOptions = {}): 
 
   const members = await loadMembers([...new Set([...warnings, ...suspensions].map((n) => n.residence.ownerId))])
   const force = options.sendOutsideProduction ?? false
-  await sendGroupedEmails(warnings, members, sendApplicationsInactivityWarningEmail, warningLine, result.failures, force)
-  await sendGroupedEmails(suspensions, members, sendApplicationsAutoSuspendedEmail, suspensionLine, result.failures, force)
+  await sendGroupedEmails(
+    warnings,
+    members,
+    sendApplicationsInactivityWarningEmail,
+    warningLine,
+    result.failures,
+    force,
+    EReminderType.APPLICATIONS_INACTIVITY_WARNING,
+  )
+  await sendGroupedEmails(
+    suspensions,
+    members,
+    sendApplicationsAutoSuspendedEmail,
+    suspensionLine,
+    result.failures,
+    force,
+    EReminderType.APPLICATIONS_AUTO_SUSPENDED,
+  )
 
   return result
 }

@@ -1,10 +1,12 @@
 import { and, eq, inArray, type SQL } from 'drizzle-orm'
+import { EReminderType } from '~/enums/reminder-email'
 import { db } from '~/server/db'
 import { accommodationAddresses } from '~/server/db/schema/accommodation-addresses'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { cities } from '~/server/db/schema/cities'
 import { owners } from '~/server/db/schema/owners'
 import { env } from '~/server/env'
+import { recordReminderEmail } from '~/server/reminders/record-reminder-email'
 import { type SendAvailabilityRecapEmail, sendAvailabilityMonthlyRecapEmail, sendAvailabilityResetDoneEmail } from '~/server/services/brevo'
 import { maskEmail } from '~/utils/mask-email'
 import { createAvailabilityConfirmToken } from './availability-confirm-token'
@@ -70,16 +72,28 @@ async function groupByRecipient<R extends { ownerId: number; ownerName: string; 
   return [...byRecipient.values()]
 }
 
-async function sendToEach<R>(
+async function sendToEach<R extends { id: number }>(
   groups: { recipient: RecapRecipient; residences: R[] }[],
-  send: (group: { recipient: RecapRecipient; residences: R[] }) => Promise<unknown>,
+  type: EReminderType,
+  send: (group: { recipient: RecapRecipient; residences: R[] }) => Promise<string | null>,
   failures: string[],
 ) {
   let sent = 0
   for (const group of groups) {
     try {
-      await send(group)
+      const messageId = await send(group)
       sent++
+      if (messageId) {
+        await recordReminderEmail({
+          messageId,
+          type,
+          userId: group.recipient.userId,
+          ownerId: group.recipient.ownerId,
+          recipientEmail: group.recipient.email,
+          sentAt: new Date(),
+          items: group.residences.map((residence) => ({ accommodationId: residence.id, reason: 'stale_availability' })),
+        })
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       failures.push(`e-mail ${maskEmail(group.recipient.email)} : ${message}`)
@@ -89,6 +103,7 @@ async function sendToEach<R>(
 }
 
 type SendRecapOptions = {
+  type: EReminderType.AVAILABILITY_MONTHLY_RECAP | EReminderType.AVAILABILITY_RESET_WARNING
   residences: RecapResidence[]
   send: SendAvailabilityRecapEmail
   /** L'alerte ne porte que sur les résidences en alerte : son lien ne confirme qu'elles. */
@@ -100,12 +115,22 @@ type SendRecapOptions = {
 }
 
 /** Un e-mail par destinataire, chacun avec son propre lien « Rien n'a changé ». */
-export async function sendAvailabilityRecapEmails({ residences, send, onlyWarned, issuedAt, deadline, force, failures }: SendRecapOptions) {
+export async function sendAvailabilityRecapEmails({
+  type,
+  residences,
+  send,
+  onlyWarned,
+  issuedAt,
+  deadline,
+  force,
+  failures,
+}: SendRecapOptions) {
   return sendToEach(
     await groupByRecipient(residences),
+    type,
     async ({ recipient, residences: recipientResidences }) => {
       const token = createAvailabilityConfirmToken({ userId: recipient.userId, ownerId: recipient.ownerId, onlyWarned }, issuedAt)
-      await send(
+      return send(
         recipient.email,
         {
           firstname: recipient.firstname,
@@ -134,6 +159,7 @@ export async function sendAvailabilityResetDoneEmails({
 }) {
   return sendToEach(
     await groupByRecipient(residences),
+    EReminderType.AVAILABILITY_RESET_DONE,
     ({ recipient, residences: recipientResidences }) =>
       sendAvailabilityResetDoneEmail(
         recipient.email,
@@ -165,6 +191,7 @@ export async function runAvailabilityMonthlyRecap(options: MonthlyRecapOptions =
   if (options.dryRun) return result
 
   result.emails = await sendAvailabilityRecapEmails({
+    type: EReminderType.AVAILABILITY_MONTHLY_RECAP,
     residences,
     send: sendAvailabilityMonthlyRecapEmail,
     onlyWarned: false,

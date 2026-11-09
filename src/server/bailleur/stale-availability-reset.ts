@@ -1,4 +1,5 @@
 import { and, eq, isNotNull, max, or, type SQL, sql } from 'drizzle-orm'
+import { EReminderType } from '~/enums/reminder-email'
 import { db } from '~/server/db'
 import { accommodationTypologies } from '~/server/db/schema/accommodation-typologies'
 import { accommodations } from '~/server/db/schema/accommodations'
@@ -142,6 +143,7 @@ export async function runStaleAvailabilityReset(options: StaleAvailabilityResetO
   }
 
   await sendAvailabilityRecapEmails({
+    type: EReminderType.AVAILABILITY_RESET_WARNING,
     residences: await recapResidencesByIds(warned.map((r) => r.id)),
     send: sendAvailabilityResetWarningEmail,
     onlyWarned: true,
