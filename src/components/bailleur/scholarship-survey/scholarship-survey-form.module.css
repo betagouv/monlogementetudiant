@@ -1,0 +1,28 @@
+.card {
+  background-color: var(--background-default-grey);
+  border: 1px solid var(--border-default-grey);
+}
+
+.separator {
+  border-bottom: 1px solid var(--border-default-grey);
+}
+
+.row {
+  margin: 0;
+  padding-left: 0;
+  padding-right: 0;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  min-width: 0;
+}
+
+.row legend {
+  float: left;
+  width: 100%;
+  padding: 0;
+}
+
+.row legend + * {
+  clear: both;
+}
