@@ -30,3 +30,11 @@ export type TScholarshipSurveySaveInput = z.infer<typeof ZScholarshipSurveySaveI
 
 export const isAnswerFilled = (a: Pick<TScholarshipSurveyAnswer, 'scholarshipCount' | 'scholarshipRate' | 'notMeasured'>): boolean =>
   a.notMeasured || a.scholarshipCount !== null || a.scholarshipRate !== null
+
+const answerKey = (a: TScholarshipSurveyAnswer | null): string =>
+  a && isAnswerFilled(a) ? `${a.scholarshipCount ?? ''}|${a.scholarshipRate ?? ''}|${a.notMeasured}` : ''
+
+export const getChangedAnswers = (
+  current: TScholarshipSurveyAnswer[],
+  saved: ReadonlyMap<number, TScholarshipSurveyAnswer | null>,
+): TScholarshipSurveyAnswer[] => current.filter((a) => answerKey(a) !== answerKey(saved.get(a.accommodationId) ?? null))

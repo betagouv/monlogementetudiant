@@ -7,15 +7,22 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import clsx from 'clsx'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createToast } from '~/components/ui/createToast'
-import { createZScholarshipSurveyAnswer, isAnswerFilled, type TScholarshipSurveyAnswer } from '~/schemas/scholarship-survey'
+import {
+  createZScholarshipSurveyAnswer,
+  getChangedAnswers,
+  isAnswerFilled,
+  type TScholarshipSurveyAnswer,
+} from '~/schemas/scholarship-survey'
 import { useTRPC, useTRPCClient } from '~/server/trpc/client'
 import { buildHref } from '~/utils/preserve-query-params'
 import styles from './scholarship-survey-form.module.css'
 import { ScholarshipSurveyMissingModal, scholarshipSurveyMissingModal } from './scholarship-survey-missing-modal'
 
 type RowDraft = { accommodationId: number; name: string; count: string; rate: string; notMeasured: boolean }
+
+const AUTOSAVE_DELAY_MS = 800
 
 const toNumber = (value: string): number | null => (value.trim() === '' ? null : Number(value))
 
@@ -40,9 +47,13 @@ export function ScholarshipSurveyForm({ ownerId, schoolYear }: { ownerId?: numbe
   const { data } = useQuery(trpc.scholarshipSurvey.getForm.queryOptions({ ownerId }))
   const [rows, setRows] = useState<RowDraft[] | null>(null)
   const [missing, setMissing] = useState<{ id: number; name: string }[]>([])
+  const savedRef = useRef(new Map<number, TScholarshipSurveyAnswer | null>())
+  const rowsRef = useRef<RowDraft[] | null>(null)
+  rowsRef.current = rows
 
   useEffect(() => {
     if (!data || rows) return
+    savedRef.current = new Map(data.residences.map((r) => [r.id, r.answer]))
     setRows(
       data.residences.map((r) => ({
         accommodationId: r.id,
@@ -71,8 +82,40 @@ export function ScholarshipSurveyForm({ ownerId, schoolYear }: { ownerId?: numbe
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: trpc.scholarshipSurvey.getForm.queryKey() })
 
+  const changedAnswers = useCallback(
+    () =>
+      getChangedAnswers(
+        (rowsRef.current ?? []).map(toAnswer).filter((a) => answerSchema.safeParse(a).success),
+        savedRef.current,
+      ),
+    [answerSchema],
+  )
+
+  const markSaved = (answers: TScholarshipSurveyAnswer[]) => {
+    for (const a of answers) savedRef.current.set(a.accommodationId, a)
+  }
+
+  const persist = useCallback(
+    async (answers: TScholarshipSurveyAnswer[]) => {
+      if (answers.length === 0) return
+      await trpcClient.scholarshipSurvey.save.mutate({ ownerId, answers })
+      for (const a of answers) savedRef.current.set(a.accommodationId, a)
+    },
+    [trpcClient, ownerId],
+  )
+
+  useEffect(() => {
+    if (!rows) return
+    const timer = setTimeout(() => {
+      persist(changedAnswers()).catch(() => createToast({ priority: 'error', message: t('errorToast') }))
+    }, AUTOSAVE_DELAY_MS)
+    return () => clearTimeout(timer)
+  }, [rows, persist, changedAnswers, t])
+
+  useEffect(() => () => void persist(changedAnswers()).catch(() => undefined), [persist, changedAnswers])
+
   const saveMutation = useMutation({
-    mutationFn: (answers: TScholarshipSurveyAnswer[]) => trpcClient.scholarshipSurvey.save.mutate({ ownerId, answers }),
+    mutationFn: () => persist(changedAnswers()),
     onSuccess: async () => {
       await invalidate()
       createToast({ priority: 'info', message: t('draftSavedToast') })
@@ -82,7 +125,12 @@ export function ScholarshipSurveyForm({ ownerId, schoolYear }: { ownerId?: numbe
   })
 
   const submitMutation = useMutation({
-    mutationFn: (answers: TScholarshipSurveyAnswer[]) => trpcClient.scholarshipSurvey.submit.mutate({ ownerId, answers }),
+    mutationFn: async () => {
+      const answers = changedAnswers()
+      const result = await trpcClient.scholarshipSurvey.submit.mutate({ ownerId, answers })
+      markSaved(answers)
+      return result
+    },
     onSuccess: async (result) => {
       await invalidate()
       router.refresh()
@@ -113,7 +161,6 @@ export function ScholarshipSurveyForm({ ownerId, schoolYear }: { ownerId?: numbe
   const filledCount = rows.filter((row) => isAnswerFilled(toAnswer(row))).length
   const hasErrors = errors.size > 0
   const isBusy = saveMutation.isPending || submitMutation.isPending
-  const answers = () => rows.map(toAnswer)
 
   return (
     <div className={clsx('fr-p-3w fr-p-md-6w', styles.card)}>
@@ -209,14 +256,14 @@ export function ScholarshipSurveyForm({ ownerId, schoolYear }: { ownerId?: numbe
       })}
 
       <div className="fr-flex fr-justify-content-space-between fr-flex-wrap fr-flex-gap-4v fr-pt-3w">
-        <Button priority="secondary" disabled={isBusy || hasErrors} onClick={() => saveMutation.mutate(answers())}>
+        <Button priority="secondary" disabled={isBusy || hasErrors} onClick={() => saveMutation.mutate()}>
           {t('later')}
         </Button>
         <Button
           iconId="fr-icon-arrow-right-line"
           iconPosition="right"
           disabled={isBusy || hasErrors}
-          onClick={() => submitMutation.mutate(answers())}
+          onClick={() => submitMutation.mutate()}
         >
           {t('submit')}
         </Button>
