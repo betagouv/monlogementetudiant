@@ -1,10 +1,12 @@
 'use client'
 
 import Button from '@codegouvfr/react-dsfr/Button'
+import clsx from 'clsx'
 import { useLocale, useTranslations } from 'next-intl'
 import { trackEvent } from '~/lib/tracking'
 import { useTRPCClient } from '~/server/trpc/client'
 import { formatCityWithPreposition } from '~/utils/french-contraction'
+import styles from './consult-offer-button.module.css'
 
 interface ConsultOfferButtonProps {
   href: string
@@ -42,7 +44,7 @@ export const ConsultOfferButton = ({ href, slug, isCrous = false, priority = 'te
       >
         {t('sidebar.buttons.consult')}
       </Button>
-      <span className="fr-text--xs fr-mb-0">
+      <span className={clsx('fr-text--xs fr-mt-1w fr-mb-0', styles.description)}>
         {isCrous
           ? t('sidebar.buttons.consultDescriptionCrous')
           : managerName

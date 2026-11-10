@@ -325,7 +325,7 @@
         "dossierFacileApplied": "Application sent",
         "dossierFacileSelectType": "Accommodation type",
         "consultDescription": "You will be redirected to the residence's website",
-        "consultDescriptionCrous": "You will be redirected to https://trouverunlogement.lescrous.fr/",
+        "consultDescriptionCrous": "You will be redirected to trouverunlogement.lescrous.fr",
         "consultDescriptionManager": "You will be redirected to {managerFormatted}'s website",        "call": "Call {phoneNumber}",
         "dossierFacileDescription": "Certified digital rental file",
         "link": "Copy link",
