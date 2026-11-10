@@ -28,6 +28,11 @@
 
 - retire la résidence de la recherche puis l’y remet
 
+## Enquête flash boursiers — 2 scénarios
+
+- invite à répondre, garde le brouillon et ne relance plus une fois complétée
+- ne propose plus l’enquête à un bailleur qui l’a complétée, mais la laisse modifiable
+
 ## Connexion étudiant — 3 scénarios
 
 - connecte l'étudiant et l'amène sur son espace
