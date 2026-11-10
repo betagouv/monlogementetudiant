@@ -70,7 +70,10 @@
     "goalTitleMaxLength": "The goal must not exceed {max} characters",
     "goalsRequired": "Please add at least one goal",
     "goalsTooMany": "A list cannot contain more than {max} goals",
-    "otpInvalid": "Please enter the 6 digits of the code"
+    "otpInvalid": "Please enter the 6 digits of the code",
+    "scholarshipCountInvalid": "The number of scholarship students must be a positive whole number",
+    "scholarshipRateInvalid": "The share of scholarship students must be between 0 and 100",
+    "scholarshipNotMeasuredConflict": "A residence marked as not measured cannot have a value"
   },
   "studyYear": {
     "bac_1": "1st year (Bac+1)",

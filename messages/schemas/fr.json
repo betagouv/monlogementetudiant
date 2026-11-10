@@ -70,7 +70,10 @@
     "goalTitleMaxLength": "L'objectif ne doit pas dépasser {max} caractères",
     "goalsRequired": "Veuillez ajouter au moins un objectif",
     "goalsTooMany": "Une liste ne peut pas contenir plus de {max} objectifs",
-    "otpInvalid": "Veuillez saisir les 6 chiffres du code"
+    "otpInvalid": "Veuillez saisir les 6 chiffres du code",
+    "scholarshipCountInvalid": "Le nombre d'étudiants boursiers doit être un entier positif",
+    "scholarshipRateInvalid": "La part d'étudiants boursiers doit être comprise entre 0 et 100",
+    "scholarshipNotMeasuredConflict": "Une résidence « non mesurée » ne peut pas avoir de valeur"
   },
   "studyYear": {
     "bac_1": "1re année (Bac+1)",
