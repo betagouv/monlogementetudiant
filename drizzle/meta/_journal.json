@@ -673,6 +673,13 @@
       "when": 1794240220275,
       "tag": "0095_backfill_contacted_at",
       "breakpoints": true
+    },
+    {
+      "idx": 96,
+      "version": "7",
+      "when": 1794306938215,
+      "tag": "0096_scholarship_survey",
+      "breakpoints": true
     }
   ]
 }
