@@ -170,6 +170,9 @@ const envSchema = z.object({
   // Rate-limit par défaut appliqué à chaque clé d'API (surchargable par clé).
   API_V1_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(120),
   API_V1_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60_000),
+
+  // Enquête flash boursiers : dernier jour d'ouverture (AAAA-MM-JJ, heure de Paris). Vide = enquête fermée.
+  SCHOLARSHIP_SURVEY_END_DATE: z.preprocess((v) => (v === '' ? undefined : v), z.iso.date().optional()),
 })
 
 export const env = envSchema.parse(process.env)
