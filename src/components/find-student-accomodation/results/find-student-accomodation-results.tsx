@@ -58,6 +58,7 @@ export const FindStudentAccomodationResultsContent: FC<FindStudentAccomodationRe
   const pathname = usePathname()
   const [queryStates] = useQueryStates({
     academie: parseAsString,
+    alerte: parseAsBoolean,
     vue: parseAsString,
     page: parseAsInteger,
     bbox: parseAsString,
@@ -82,15 +83,16 @@ export const FindStudentAccomodationResultsContent: FC<FindStudentAccomodationRe
   const isMapView = queryStates.vue === 'carte'
   const results = accommodations?.results || []
   const alertBannerIndex = Math.min(isMapView ? ALERT_BANNER_POSITION.carte : ALERT_BANNER_POSITION.grille, results.length) - 1
-  const alertBanner = territory ? (
-    <FindStudentAccommodationAlertBanner
-      territory={territory}
-      categoryKey={categoryKey}
-      isAuthenticated={!!user}
-      compact={isMapView}
-      className={classes.fullRow}
-    />
-  ) : null
+  const alertBanner =
+    territory && !queryStates.alerte ? (
+      <FindStudentAccommodationAlertBanner
+        territory={territory}
+        categoryKey={categoryKey}
+        isAuthenticated={!!user}
+        compact={isMapView}
+        className={classes.fullRow}
+      />
+    ) : null
 
   const AccomodationsMap = useMemo(
     () =>
@@ -175,6 +177,9 @@ export const FindStudentAccomodationResultsContent: FC<FindStudentAccomodationRe
                 }
                 if (queryStates.disponible) {
                   params.set('disponible', 'true')
+                }
+                if (queryStates.alerte) {
+                  params.set('alerte', 'true')
                 }
                 params.set('page', page.toString())
                 return {
