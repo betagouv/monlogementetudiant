@@ -1,4 +1,4 @@
-import { createBailleur, createResidence, expect, gotoHydrated, signIn, test } from './fixtures'
+import { createAdmin, createBailleur, createResidence, expect, gotoHydrated, signIn, test } from './fixtures'
 
 // Parcours : enquête flash sur la part d'étudiants boursiers, résidence par résidence.
 
@@ -57,5 +57,19 @@ test.describe('Enquête flash boursiers', () => {
     await expect(page.getByRole('link', { name: ACTION_TITLE })).toHaveCount(0)
     await page.getByRole('navigation').getByRole('link', { name: 'Enquête flash' }).click()
     await expect(page.getByRole('heading', { level: 1, name: SURVEY_TITLE })).toBeVisible()
+  })
+
+  test('liste les réponses côté administration et propose l’export', async ({ page }) => {
+    const admin = await createAdmin()
+    const { owner } = await createBailleur({ scholarshipSurveyPending: true })
+    const residence = await createResidence({ ownerId: owner.id })
+
+    await signIn(page, admin.email)
+    await gotoHydrated(page, '/administration/enquete-boursiers?status=unanswered&search=' + encodeURIComponent(residence.name))
+
+    await expect(page.getByRole('heading', { level: 1, name: SURVEY_TITLE })).toBeVisible()
+    await expect(page.getByText('Les logements CROUS ne sont pas pris en compte dans cette enquête.')).toBeVisible()
+    await expect(page.getByRole('cell', { name: residence.name })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Exporter en CSV' })).toHaveAttribute('href', /status=unanswered/)
   })
 })
