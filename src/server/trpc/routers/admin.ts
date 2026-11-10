@@ -48,6 +48,7 @@ import { adminChangelogRouter } from './admin-changelog'
 import { adminConnectionsRouter } from './admin-connections'
 import { consumersRouter } from './admin-consumers'
 import { adminRemindersRouter } from './admin-reminders'
+import { adminScholarshipSurveyRouter } from './admin-scholarship-survey'
 
 const PAGE_SIZE = 20
 
@@ -1480,6 +1481,7 @@ export const adminRouter = createTRPCRouter({
   ownerUsage: ownerUsageRouter,
   imports: importsRouter,
   feedback: feedbackRouter,
+  scholarshipSurvey: adminScholarshipSurveyRouter,
   consumers: consumersRouter,
   candidatures: adminCandidaturesRouter,
   connections: adminConnectionsRouter,
