@@ -51,6 +51,12 @@ export function createStudent(overrides: Partial<Parameters<typeof createUser>[0
   })
 }
 
+/** Administrateur de la plateforme. */
+export function createAdmin() {
+  const id = `e2e-admin-${uniqueId()}`
+  return createCredentialUser({ id, email: `${id}@e2e.test`, name: 'Alex Admin', firstname: 'Alex', lastname: 'Admin', role: 'admin' })
+}
+
 /**
  * Compte gestionnaire rattaché à un bailleur qui lui est propre. L'enquête flash boursiers est marquée
  * complétée par défaut, sinon sa modale s'ouvre à la connexion.

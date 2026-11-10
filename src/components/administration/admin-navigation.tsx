@@ -49,6 +49,7 @@ const navSections: NavSection[] = [
     items: [
       { label: 'Résidences', icon: 'fr-icon-home-4-line', href: '/administration/residences' },
       { label: 'Candidatures', icon: 'fr-icon-file-text-line', href: '/administration/candidatures' },
+      { label: 'Enquête boursiers', icon: 'fr-icon-survey-line', href: '/administration/enquete-boursiers' },
       ...(FEATURES.csvImport ? [{ label: 'Imports', icon: 'fr-icon-upload-2-line', href: '/administration/imports' }] : []),
     ],
   },
