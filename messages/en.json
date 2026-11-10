@@ -224,6 +224,7 @@
     "byAcademies": "By academies",
     "faq": "Frequently asked questions",
     "workspace": {
+      "scholarshipSurvey": "Flash survey",
       "dashboard": "Dashboard",
       "helpCenter": "Help center",
       "residences": "Residences",
@@ -1964,6 +1965,41 @@
     }
   },
   "bailleur": {
+    "scholarshipSurvey": {
+      "breadcrumbDashboard": "Dashboard",
+      "breadcrumbCurrent": "Flash survey: scholarship students rate",
+      "title": "Flash survey: share of scholarship students",
+      "subtitle": "For the {year} school year, please provide the share of scholarship students housed in each of your residences.",
+      "whyTitle": "Why this survey?",
+      "whyDescription": "It helps us measure scholarship students' access to student social housing. Your answers will not be shared.",
+      "residencesTitle": "Your residences",
+      "progress": "{filled} of {total} {total, plural, one {residence} other {residences}} completed",
+      "notMeasuredAll": "We do not measure the share of scholarship students in our residences",
+      "countLabel": "Number of scholarship students",
+      "countHint": "For the {year} year",
+      "rateLabel": "Or share of scholarship students (%)",
+      "rateHint": "Between 0 and 100",
+      "notMeasured": "Not measured in this residence",
+      "later": "Answer later",
+      "submit": "Send my answers",
+      "noResidences": "No published residence is concerned by this survey.",
+      "successToast": "Thank you, your answers have been saved.",
+      "draftSavedToast": "Your answers have been saved as a draft.",
+      "errorToast": "An error occurred, please try again.",
+      "missingModal": {
+        "title": "Some residences remain to be completed",
+        "description": "Your answers have been saved. {count, plural, one {# residence remains} other {# residences remain}} to be completed:",
+        "hint": "You can come back at any time to finish the survey from the “Flash survey” menu.",
+        "continue": "Keep completing",
+        "dashboard": "Back to dashboard"
+      },
+      "loginModal": {
+        "title": "A flash survey is available",
+        "description": "For the {year} school year, please provide the share of scholarship students housed in each of your residences. It only takes a few minutes.",
+        "answer": "Answer the survey",
+        "later": "Later"
+      }
+    },
     "users": {
       "pageTitle": "User management",
       "newUser": "New user",
@@ -2089,6 +2125,10 @@
       "priorityActions": {
         "title": "Priority actions",
         "actions": {
+          "scholarshipSurvey": {
+            "title": "Answer the flash survey on scholarship students",
+            "badge": "FLASH SURVEY"
+          },
           "charter": {
             "title": "Validate the landlord charter",
             "badge": "PROPER OPERATION",

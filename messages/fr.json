@@ -224,6 +224,7 @@
     "byAcademies": "Par académies",
     "faq": "Foire aux questions",
     "workspace": {
+      "scholarshipSurvey": "Enquête flash",
       "dashboard": "Tableau de bord",
       "helpCenter": "Centre d'aide",
       "residences": "Résidences",
@@ -1964,6 +1965,41 @@
     }
   },
   "bailleur": {
+    "scholarshipSurvey": {
+      "breadcrumbDashboard": "Tableau de bord",
+      "breadcrumbCurrent": "Enquête flash : taux de boursiers",
+      "title": "Enquête flash : part d'étudiants boursiers",
+      "subtitle": "Pour l'année scolaire {year}, indiquez la part d'étudiants boursiers logés dans chacune de vos résidences.",
+      "whyTitle": "Pourquoi cette enquête ?",
+      "whyDescription": "Elle nous aide à mesurer l'accès des étudiants boursiers au logement social étudiant. Vos réponses ne seront pas communiquées.",
+      "residencesTitle": "Vos résidences",
+      "progress": "{filled} {filled, plural, one {résidence} other {résidences}} sur {total} {filled, plural, one {renseignée} other {renseignées}}",
+      "notMeasuredAll": "Nous ne mesurons pas le taux de boursiers dans nos résidences",
+      "countLabel": "Nombre d'étudiants boursiers",
+      "countHint": "Pour l'année {year}",
+      "rateLabel": "Ou part d'étudiants boursiers (%)",
+      "rateHint": "Entre 0 et 100",
+      "notMeasured": "Non mesuré dans cette résidence",
+      "later": "Répondre plus tard",
+      "submit": "Envoyer mes réponses",
+      "noResidences": "Aucune résidence publiée n'est concernée par cette enquête.",
+      "successToast": "Merci, vos réponses ont bien été enregistrées.",
+      "draftSavedToast": "Vos réponses ont été enregistrées en brouillon.",
+      "errorToast": "Une erreur est survenue, veuillez réessayer.",
+      "missingModal": {
+        "title": "Il reste des résidences à compléter",
+        "description": "Vos réponses ont été enregistrées. Il reste {count, plural, one {# résidence} other {# résidences}} à compléter :",
+        "hint": "Vous pouvez revenir à tout moment pour terminer l'enquête depuis le menu « Enquête flash ».",
+        "continue": "Continuer à compléter",
+        "dashboard": "Retour au tableau de bord"
+      },
+      "loginModal": {
+        "title": "Une enquête flash est disponible",
+        "description": "Pour l'année scolaire {year}, nous vous demandons d'indiquer la part d'étudiants boursiers logés dans chacune de vos résidences. Cela ne prend que quelques minutes.",
+        "answer": "Répondre à l'enquête",
+        "later": "Plus tard"
+      }
+    },
     "users": {
       "pageTitle": "Gestion des utilisateurs",
       "newUser": "Nouvel utilisateur",
@@ -2089,6 +2125,10 @@
       "priorityActions": {
         "title": "Actions prioritaires",
         "actions": {
+          "scholarshipSurvey": {
+            "title": "Répondre à l'enquête flash sur les boursiers",
+            "badge": "ENQUÊTE FLASH"
+          },
           "charter": {
             "title": "Valider la charte des bailleurs",
             "badge": "BON FONCTIONNEMENT",
