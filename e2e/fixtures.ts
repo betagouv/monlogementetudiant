@@ -8,6 +8,7 @@ import { EOwnerContactMode } from '../src/enums/owner-contact-mode'
 import { accommodationTypologies } from '../src/server/db/schema/accommodation-typologies'
 import { account } from '../src/server/db/schema/auth'
 import { cities } from '../src/server/db/schema/cities'
+import { scholarshipSurveyOwners } from '../src/server/db/schema/scholarship-survey'
 
 /**
  * Données propres à chaque test (tests parallèles) : chaque compte ou résidence créé ici porte un
@@ -50,15 +51,20 @@ export function createStudent(overrides: Partial<Parameters<typeof createUser>[0
   })
 }
 
-/** Compte gestionnaire rattaché à un bailleur qui lui est propre. */
+/**
+ * Compte gestionnaire rattaché à un bailleur qui lui est propre. L'enquête flash boursiers est marquée
+ * complétée par défaut, sinon sa modale s'ouvre à la connexion.
+ */
 export async function createBailleur({
   permissions = ['manage_residences', 'manage_applications'],
   bailleurRole = 'administrator',
   contactMode = EOwnerContactMode.NONE,
+  scholarshipSurveyPending = false,
 }: {
   permissions?: BailleurPermission[]
   bailleurRole?: 'administrator' | 'gestionnaire'
   contactMode?: EOwnerContactMode
+  scholarshipSurveyPending?: boolean
 } = {}) {
   const id = `e2e-bailleur-${uniqueId()}`
   const user = await createCredentialUser({
@@ -72,6 +78,9 @@ export async function createBailleur({
     bailleurPermissions: permissions,
   })
   const owner = await createOwner({ userId: user.id, name: `Bailleur ${id}`, slug: id, contactMode })
+  if (!scholarshipSurveyPending) {
+    await getTestDb().insert(scholarshipSurveyOwners).values({ ownerId: owner.id })
+  }
   return { user, owner }
 }
 

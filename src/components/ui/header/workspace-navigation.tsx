@@ -13,6 +13,7 @@ export const WorkspaceHeaderNavigation: FC<{
   contactMode: EOwnerContactMode
   canManageUsers?: boolean
   canManageResidences?: boolean
+  showScholarshipSurvey?: boolean
   canManageApplications?: boolean
   hasApplicationScope?: boolean
   isAdmin?: boolean
@@ -20,6 +21,7 @@ export const WorkspaceHeaderNavigation: FC<{
   contactMode,
   canManageUsers = false,
   canManageResidences = false,
+  showScholarshipSurvey = false,
   canManageApplications = false,
   hasApplicationScope = true,
   isAdmin = false,
@@ -47,6 +49,18 @@ export const WorkspaceHeaderNavigation: FC<{
               target: '_self' as const,
             },
             text: t('residences'),
+          },
+        ]
+      : []),
+    ...(showScholarshipSurvey
+      ? [
+          {
+            isActive: pathname === '/bailleur/enquete-boursiers',
+            linkProps: {
+              href: buildHref('/bailleur/enquete-boursiers', searchParams),
+              target: '_self' as const,
+            },
+            text: t('scholarshipSurvey'),
           },
         ]
       : []),
