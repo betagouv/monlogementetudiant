@@ -9,9 +9,9 @@ import { FEATURES } from '~/lib/features'
 import { GESTIONNAIRE_PERMISSIONS_REQUIRED, gestionnairePermissionsAreUsable } from '~/schemas/bailleur-users/bailleur-user-form'
 import { zNormalizedEmail } from '~/schemas/email'
 import { IMPORT_JOB_TYPES, ZImportJobType } from '~/schemas/import-jobs'
+import { loadAvailabilityFollowUp } from '~/server/admin/availability-follow-up'
 import { assertAdministratorSlotAvailable } from '~/server/bailleur/administrator-limit'
 import { notifyContactModeActivated, notifyContactModeDeactivated } from '~/server/bailleur/application-notifications'
-import { INACTIVITY_WARNING_DAYS } from '~/server/bailleur/inactivity-rules'
 import {
   BAILLEUR_PERMISSIONS,
   BAILLEUR_ROLES,
@@ -41,8 +41,8 @@ import { logActivity } from '~/server/services/activity-logger'
 import { sendAdminResetPasswordEmail, sendOwnerWelcomeEmail } from '~/server/services/brevo'
 import { generateSlug } from '~/server/trpc/utils/accommodation-helpers'
 import { findAvailableSlug } from '~/server/utils/slug'
-import { DAY_MS } from '~/utils/time'
 import { adminProcedure, createTRPCRouter } from '../init'
+import { adminAvailabilityRouter } from './admin-availability'
 import { adminCandidaturesRouter } from './admin-candidatures'
 import { adminChangelogRouter } from './admin-changelog'
 import { adminConnectionsRouter } from './admin-connections'
@@ -805,49 +805,6 @@ const residencesRouter = createTRPCRouter({
     }),
 })
 
-const AVAILABILITY_API_SOURCES = ['arpej', 'fac-habitat', 'initiall']
-
-// Les imports API n'horodatent pas les typologies : pour leurs résidences, la date du dernier import fait foi.
-async function getAvailabilityFollowUp() {
-  const recentSince = new Date(Date.now() - INACTIVITY_WARNING_DAYS.stale_availability * DAY_MS).toISOString()
-  const isCrous = sql`exists (select 1 from external_source where accommodation_id = ${accommodations.id} and source = 'crous')`
-  const isApi = sql`exists (select 1 from external_source where accommodation_id = ${accommodations.id} and source in (${sql.join(
-    AVAILABILITY_API_SOURCES.map((source) => sql`${source}`),
-    sql`, `,
-  )}))`
-  const hasAvailability = sql`exists (select 1 from ${accommodationTypologies} where ${accommodationTypologies.accommodationId} = ${accommodations.id} and ${accommodationTypologies.nbAvailable} is not null)`
-  const lastUpdate = sql`greatest(
-    (select max(${accommodationTypologies.availabilityUpdatedAt}) from ${accommodationTypologies} where ${accommodationTypologies.accommodationId} = ${accommodations.id}),
-    case when ${isApi} then ${accommodations.updatedAt} end
-  )`
-  const isRecent = sql`(${hasAvailability} and ${lastUpdate} >= ${recentSince}::timestamptz)`
-  const isNonRenseignee = sql`(not ${hasAvailability})`
-  const isAncienne = sql`(${hasAvailability} and not ${isRecent})`
-
-  const [row] = await db
-    .select({
-      total: count(),
-      totalApi: sql<number>`count(*) filter (where ${isApi})`.mapWith(Number),
-      recent: sql<number>`count(*) filter (where ${isRecent})`.mapWith(Number),
-      recentApi: sql<number>`count(*) filter (where ${isRecent} and ${isApi})`.mapWith(Number),
-      nonRenseignee: sql<number>`count(*) filter (where ${isNonRenseignee})`.mapWith(Number),
-      nonRenseigneeApi: sql<number>`count(*) filter (where ${isNonRenseignee} and ${isApi})`.mapWith(Number),
-      ancienne: sql<number>`count(*) filter (where ${isAncienne})`.mapWith(Number),
-      ancienneApi: sql<number>`count(*) filter (where ${isAncienne} and ${isApi})`.mapWith(Number),
-    })
-    .from(accommodations)
-    .where(and(eq(accommodations.published, true), sql`not ${isCrous}`))
-
-  const situation = (value: number, api: number) => ({ count: value, manual: value - api, api })
-  return {
-    recentDays: INACTIVITY_WARNING_DAYS.stale_availability,
-    total: situation(row?.total ?? 0, row?.totalApi ?? 0),
-    recent: situation(row?.recent ?? 0, row?.recentApi ?? 0),
-    nonRenseignee: situation(row?.nonRenseignee ?? 0, row?.nonRenseigneeApi ?? 0),
-    ancienne: situation(row?.ancienne ?? 0, row?.ancienneApi ?? 0),
-  }
-}
-
 const statsRouter = createTRPCRouter({
   overview: adminProcedure.query(async () => {
     const isCrous = sql`exists (select 1 from external_source where accommodation_id = ${accommodations.id} and source = 'crous')`
@@ -910,7 +867,7 @@ const statsRouter = createTRPCRouter({
           ),
         })
         .from(accommodations),
-      getAvailabilityFollowUp(),
+      loadAvailabilityFollowUp(),
     ])
 
     const totalApartments = apartmentsStats[0]?.totalApartments ?? 0
@@ -1491,4 +1448,5 @@ export const adminRouter = createTRPCRouter({
   simulations: adminSimulationsRouter,
   changelog: adminChangelogRouter,
   metrics: adminMetricsRouter,
+  availability: adminAvailabilityRouter,
 })
