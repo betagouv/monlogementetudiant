@@ -69,6 +69,11 @@ const CRON_JOB_DEF_MAP: Record<CronJobType, Omit<CronJobDef, 'type'>> = {
     description: 'Candidatures recopiées sans donnée personnelle, compteurs du mois figés et états courants photographiés',
     schedule: 'Chaque nuit à 3h30, avant la purge des contacts',
   },
+  'availability-snapshot': {
+    label: 'Relevé suivi disponibilités',
+    description: 'Fige la photo mensuelle du suivi des disponibilités par gestionnaire (page « Suivi disponibilités »)',
+    schedule: 'Le 1er de chaque mois à 1h30',
+  },
   'purge-contacts': {
     label: 'Purge RGPD candidatures',
     description: 'Demandes non confirmées supprimées, expirées anonymisées',

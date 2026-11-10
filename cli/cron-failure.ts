@@ -26,6 +26,7 @@ export const CRON_COMMANDS = new Set([
   'reset-stale-availability',
   'send-availability-recap',
   'capture-monthly-metrics',
+  'capture-availability-snapshot',
   'purge-contact-requests',
   'purge-logs',
   'backup-db',

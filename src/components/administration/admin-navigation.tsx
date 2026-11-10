@@ -32,6 +32,7 @@ const navSections: NavSection[] = [
       { label: 'Usage étudiants', icon: 'fr-icon-user-line', href: '/administration/usage-etudiants' },
       { label: 'Territoires', icon: 'fr-icon-map-pin-2-line', href: '/administration/territoires' },
       { label: 'Simulations', icon: 'fr-icon-calculator-line', href: '/administration/simulations' },
+      { label: 'Suivi disponibilités', icon: 'fr-icon-refresh-line', href: '/administration/suivi-disponibilites' },
     ],
   },
   {
