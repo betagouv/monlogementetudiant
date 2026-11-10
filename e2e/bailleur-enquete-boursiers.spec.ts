@@ -59,6 +59,45 @@ test.describe('Enquête flash boursiers', () => {
     await expect(page.getByRole('heading', { level: 1, name: SURVEY_TITLE })).toBeVisible()
   })
 
+  test('enregistre la saisie en brouillon quand on quitte par le menu', async ({ page }) => {
+    const { user, owner } = await createBailleur({ scholarshipSurveyPending: true })
+    const residence = await createResidence({ ownerId: owner.id })
+
+    await signIn(page, user.email)
+    await gotoHydrated(page, '/bailleur/enquete-boursiers')
+    const saved = page.waitForResponse((r) => r.url().includes('scholarshipSurvey.save') && r.ok())
+    await page.getByRole('group', { name: residence.name }).getByLabel("Nombre d'étudiants boursiers").fill('7')
+    await saved
+
+    await page.getByRole('navigation', { name: 'Menu principal' }).getByRole('link', { name: 'Tableau de bord' }).click()
+    await expect(page).toHaveURL(/\/bailleur\/tableau-de-bord/)
+    await gotoHydrated(page, '/bailleur/enquete-boursiers')
+    await expect(page.getByRole('group', { name: residence.name }).getByLabel("Nombre d'étudiants boursiers")).toHaveValue('7')
+  })
+
+  test('n’efface pas la réponse saisie entre-temps dans un autre onglet', async ({ page, context }) => {
+    const { user, owner } = await createBailleur({ scholarshipSurveyPending: true })
+    const first = await createResidence({ ownerId: owner.id, name: 'Résidence A onglets' })
+    const second = await createResidence({ ownerId: owner.id, name: 'Résidence B onglets' })
+
+    await signIn(page, user.email)
+    await gotoHydrated(page, '/bailleur/enquete-boursiers')
+
+    const other = await context.newPage()
+    await gotoHydrated(other, '/bailleur/enquete-boursiers')
+    const saved = other.waitForResponse((r) => r.url().includes('scholarshipSurvey.save') && r.ok())
+    await other.getByRole('group', { name: second.name }).getByLabel("Nombre d'étudiants boursiers").fill('18')
+    await saved
+    await other.close()
+
+    await page.getByRole('group', { name: first.name }).getByLabel("Nombre d'étudiants boursiers").fill('42')
+    await page.getByRole('button', { name: 'Envoyer mes réponses' }).click()
+    await expect(page).toHaveURL(/\/bailleur\/tableau-de-bord/)
+
+    await gotoHydrated(page, '/bailleur/enquete-boursiers')
+    await expect(page.getByRole('group', { name: second.name }).getByLabel("Nombre d'étudiants boursiers")).toHaveValue('18')
+  })
+
   test('liste les réponses côté administration et propose l’export', async ({ page }) => {
     const admin = await createAdmin()
     const { owner } = await createBailleur({ scholarshipSurveyPending: true })

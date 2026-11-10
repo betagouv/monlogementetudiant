@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isAnswerFilled, ZScholarshipSurveyAnswer } from '.'
+import { getChangedAnswers, isAnswerFilled, ZScholarshipSurveyAnswer } from '.'
 
 const base = { accommodationId: 1, scholarshipCount: null, scholarshipRate: null, notMeasured: false }
 
@@ -31,5 +31,28 @@ describe('isAnswerFilled', () => {
 
   it('est faux sans aucune valeur', () => {
     expect(isAnswerFilled(base)).toBe(false)
+  })
+})
+
+describe('getChangedAnswers', () => {
+  const saved = new Map([
+    [1, { ...base, accommodationId: 1, scholarshipCount: 18 }],
+    [2, null],
+  ])
+
+  it('ne renvoie que les lignes modifiées depuis le dernier enregistrement', () => {
+    const current = [
+      { ...base, accommodationId: 1, scholarshipCount: 18 },
+      { ...base, accommodationId: 2 },
+    ]
+    expect(getChangedAnswers(current, saved)).toEqual([])
+  })
+
+  it('renvoie une ligne saisie ou vidée par l’utilisateur', () => {
+    const current = [
+      { ...base, accommodationId: 1 },
+      { ...base, accommodationId: 2, notMeasured: true },
+    ]
+    expect(getChangedAnswers(current, saved).map((a) => a.accommodationId)).toEqual([1, 2])
   })
 })

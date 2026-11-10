@@ -28,10 +28,12 @@
 
 - retire la résidence de la recherche puis l’y remet
 
-## Enquête flash boursiers — 3 scénarios
+## Enquête flash boursiers — 5 scénarios
 
 - invite à répondre, garde le brouillon et ne relance plus une fois complétée
 - ne propose plus l’enquête à un bailleur qui l’a complétée, mais la laisse modifiable
+- enregistre la saisie en brouillon quand on quitte par le menu
+- n’efface pas la réponse saisie entre-temps dans un autre onglet
 - liste les réponses côté administration et propose l’export
 
 ## Connexion étudiant — 3 scénarios
