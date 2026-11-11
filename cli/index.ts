@@ -7,6 +7,7 @@ import { backfillBrevoOwners } from './commands/backfill-brevo-owners'
 import { backfillCacheControl } from './commands/backfill-cache-control'
 import { backfillGeocoding } from './commands/backfill-geocoding'
 import { backupDb } from './commands/backup-db'
+import { captureMonthlyMetrics } from './commands/capture-monthly-metrics'
 import { checkApplicationsInactivityCommand } from './commands/check-applications-inactivity'
 import { compareCrous } from './commands/compare-crous'
 import { cronSelftest } from './commands/cron-selftest'
@@ -309,6 +310,12 @@ program
   .option('--verbose', 'Afficher chaque résidence récapitulée')
   .option('--owner <slug>', 'Limiter au bailleur donné ; actif et envoie les e-mails même hors production (recette)')
   .action((opts) => sendAvailabilityRecapCommand(opts))
+
+program
+  .command('capture-monthly-metrics')
+  .description('Relevé nocturne : recopie les candidatures dans application_fact et fige les métriques du mois courant')
+  .option('--backfill-months <n>', 'Reconstituer aussi les compteurs des N mois précédents', (value: string) => Number(value))
+  .action((opts) => captureMonthlyMetrics(opts))
 
 program
   .command('purge-contact-requests')

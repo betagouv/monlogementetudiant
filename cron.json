@@ -13,7 +13,7 @@
     { "command": "30 6 * * * npx tsx cli/index.ts reset-stale-availability" },
     { "command": "*/30 * * * * npx tsx cli/index.ts send-alert-jobs" },
     { "command": "0 8 * * * npx tsx cli/index.ts detect-alert-jobs" },
-    { "command": "30 3 * * * npx tsx cli/index.ts purge-contact-requests" },
+    { "command": "30 3 * * * npx tsx cli/index.ts capture-monthly-metrics; npx tsx cli/index.ts purge-contact-requests" },
     { "command": "0 5 * * * npx tsx cli/index.ts backup-db" }
   ]
 }
