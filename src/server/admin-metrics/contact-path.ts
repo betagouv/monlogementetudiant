@@ -1,4 +1,5 @@
 import { and, desc, eq, gt, sql } from 'drizzle-orm'
+import { CONTACT_PATH_TARGET } from '~/enums/contact-path-target'
 import { EMonthlyMetric } from '~/enums/monthly-metric'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import type { TMonthRange } from '~/schemas/admin-metrics/month-range'
@@ -8,7 +9,7 @@ import { snapshotsOf } from '~/server/admin-metrics/series'
 import { db } from '~/server/db'
 import { accommodations, owners } from '~/server/db/schema'
 
-export const CONTACT_PATH_TARGET = 0.2
+export { CONTACT_PATH_TARGET }
 
 export type TContactPathMonth = {
   month: TMonth
