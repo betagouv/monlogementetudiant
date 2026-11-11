@@ -68,6 +68,7 @@ export default function TerritoiresPage() {
   const [month, setMonth] = useMonth()
   const { data, isLoading, isError } = useAdminCityMetrics(month)
   const rows = data ?? []
+  const tensionRows = rows.filter((row) => !(row.recherches === 0 && !row.totalPublie))
   const relaxedRows = rows
     .filter((row) => (row.residencesOuvertes ?? 0) > 0)
     .sort((a, b) => (b.partSansContact ?? -1) - (a.partSansContact ?? -1) || b.recherches - a.recherches)
@@ -108,7 +109,7 @@ export default function TerritoiresPage() {
         <div className="fr-px-2w">
           <AdminDataTable
             columns={tensionColumns}
-            data={rows}
+            data={tensionRows}
             pageCount={1}
             page={1}
             isLoading={isLoading}
