@@ -13,6 +13,7 @@ vi.mock('~/services/better-auth', () => ({
 
 import { NextRequest } from 'next/server'
 import { GET } from '~/app/api/admin/metriques/export/route'
+import { moderationCsvRow } from '~/server/admin-metrics/exports'
 
 const range = { from: '2026-01', to: '2026-03' }
 
@@ -97,5 +98,28 @@ describe('GET /api/admin/metriques/export', () => {
     expect((await path.text()).replace(/^﻿/, '').split('\n')[0]).toBe(
       'mois;logements_publies_hors_crous;logements_parcours_active;part;residences_sans_total;gestionnaires_actives;gestionnaires_avec_dispo',
     )
+  })
+})
+
+describe('moderationCsvRow', () => {
+  it('calcule les parts sur les contacts reçus', () => {
+    const row = moderationCsvRow({
+      ownerId: 1,
+      ownerName: 'Bailleur',
+      month: '2026-02',
+      recus: 10,
+      recusBoursiers: 4,
+      aTraiter: 5,
+      traites: 2,
+      jamaisTraites: 3,
+      contactes: 1,
+      delaiMoyenHeures: null,
+      alertes: 0,
+      suspensions: 0,
+      segment: 'irregulier',
+    })
+    expect(row.part_jamais_traites).toBe(30)
+    expect(row.part_contactes).toBe(10)
+    expect(row.delai_moyen_heures).toBe('')
   })
 })
