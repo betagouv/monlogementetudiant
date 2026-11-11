@@ -194,7 +194,7 @@ export function ScholarshipSurveyForm({ ownerId, schoolYear }: { ownerId?: numbe
           <fieldset key={row.accommodationId} className={clsx('fr-py-3w', styles.separator, styles.row)}>
             <legend className="fr-text--bold fr-mb-2w">{row.name}</legend>
             <div className="fr-grid-row fr-grid-row--gutters fr-grid-row--bottom">
-              <div className="fr-col-12 fr-col-md-5">
+              <div className="fr-col-12 fr-col-md-4">
                 <Input
                   className="fr-mb-0"
                   label={t('countLabel')}
@@ -212,7 +212,7 @@ export function ScholarshipSurveyForm({ ownerId, schoolYear }: { ownerId?: numbe
                   }}
                 />
               </div>
-              <div className="fr-col-12 fr-col-md-5">
+              <div className="fr-col-12 fr-col-md-4">
                 <Input
                   className="fr-mb-0"
                   label={t('rateLabel')}
@@ -231,7 +231,7 @@ export function ScholarshipSurveyForm({ ownerId, schoolYear }: { ownerId?: numbe
                   }}
                 />
               </div>
-              <div className="fr-col-12 fr-col-md-2">
+              <div className="fr-col-12 fr-col-md-4">
                 <Checkbox
                   className="fr-mb-0"
                   options={[
