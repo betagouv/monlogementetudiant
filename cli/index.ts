@@ -314,7 +314,11 @@ program
 program
   .command('capture-monthly-metrics')
   .description('Relevé nocturne : recopie les candidatures dans application_fact et fige les métriques du mois courant')
-  .option('--backfill-months <n>', 'Reconstituer aussi les compteurs des N mois précédents', (value: string) => Number(value))
+  .option(
+    '--backfill-months <n>',
+    'Reconstituer aussi les compteurs des N mois précédents (fiable sur 6 mois au plus : les événements sont conservés 7 mois)',
+    (value: string) => Number(value),
+  )
   .action((opts) => captureMonthlyMetrics(opts))
 
 program

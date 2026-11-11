@@ -13,4 +13,6 @@ export enum EMonthlyMetric {
   OWNERS_CONTACT_ACTIVATED = 'owners_contact_activated',
   OWNERS_WITH_AVAILABILITY = 'owners_with_availability',
   STUDENTS_TOTAL = 'students_total',
+  STUDENTS_NON_BOURSIERS = 'students_non_boursiers',
+  STUDENTS_NON_RENSEIGNE = 'students_non_renseigne',
 }

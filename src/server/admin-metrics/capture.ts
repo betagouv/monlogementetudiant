@@ -39,6 +39,8 @@ const STATE_METRICS = [
   EMonthlyMetric.OWNERS_CONTACT_ACTIVATED,
   EMonthlyMetric.OWNERS_WITH_AVAILABILITY,
   EMonthlyMetric.STUDENTS_TOTAL,
+  EMonthlyMetric.STUDENTS_NON_BOURSIERS,
+  EMonthlyMetric.STUDENTS_NON_RENSEIGNE,
 ]
 
 const shiftMonth = (month: TMonth, delta: number): TMonth => format(addMonths(new Date(`${month}-01T00:00:00`), delta), 'yyyy-MM')
@@ -96,7 +98,7 @@ const syncContactFacts = async () => {
           scholarshipStatus: sql`${contactScholarshipStatus}`.as('scholarship_status'),
           status: contactRequests.status,
           firstTreatedAt:
-            sql<Date | null>`coalesce(${moderation.firstAt}, ${contactRequests.contactedAt}, ${contactRequests.reviewedAt})`.as(
+            sql<Date | null>`coalesce(${moderation.firstAt}, ${contactRequests.contactedAt}, case when ${contactRequests.status} <> ${EContactStatus.A_CONTACTER} then ${contactRequests.reviewedAt} end)`.as(
               'first_treated_at',
             ),
           contactedAt: contactRequests.contactedAt,
@@ -135,7 +137,7 @@ const syncDossierFacileFacts = async () => {
           scholarshipStatus: user.scholarshipStatus,
           status: dossierFacileApplications.status,
           firstTreatedAt:
-            sql<Date | null>`coalesce(${moderation.firstAt}, ${dossierFacileApplications.contactedAt}, ${dossierFacileApplications.reviewedAt})`.as(
+            sql<Date | null>`coalesce(${moderation.firstAt}, ${dossierFacileApplications.contactedAt}, case when ${dossierFacileApplications.status} <> ${EContactStatus.A_MODERER} then ${dossierFacileApplications.reviewedAt} end)`.as(
               'first_treated_at',
             ),
           contactedAt: dossierFacileApplications.contactedAt,
@@ -209,7 +211,7 @@ const countStates = async (month: TMonth): Promise<TMetricRow[]> => {
   const cityRows = await db
     .select({
       cityId: accommodationAddresses.cityId,
-      available: sumInt(sql`${accommodations.nbAvailableApartments}`),
+      available: sumInt(sql`${accommodations.nbAvailableApartments}`, sql`${accommodations.nbTotalApartments} is not null`),
       knownTotal: sumInt(sql`${accommodations.nbTotalApartments}`, sql`${accommodations.nbAvailableApartments} is not null`),
       publishedTotal: sumInt(sql`${accommodations.nbTotalApartments}`),
       openResidences: countIf(isOpen),
@@ -240,10 +242,15 @@ const countStates = async (month: TMonth): Promise<TMetricRow[]> => {
   const [ownersWithAvailability] = await db
     .select({ value: sql<number>`count(distinct ${accommodations.ownerId})::int` })
     .from(accommodations)
-    .where(and(eq(accommodations.published, true), sql`${accommodations.nbAvailableApartments} > 0`))
+    .where(and(eq(accommodations.published, true), sql`${accommodations.nbAvailableApartments} > 0`, sql`not ${crousExistsCondition}`))
 
   const [students] = await db
-    .select({ value: count(), boursiers: countIf(sql`${user.scholarshipStatus} = 'yes'`) })
+    .select({
+      value: count(),
+      boursiers: countIf(sql`${user.scholarshipStatus} = 'yes'`),
+      nonBoursiers: countIf(sql`${user.scholarshipStatus} = 'no'`),
+      nonRenseigne: countIf(sql`${user.scholarshipStatus} is null or ${user.scholarshipStatus} = 'unknown'`),
+    })
     .from(user)
     .where(eq(user.role, 'user'))
 
@@ -278,6 +285,8 @@ const countStates = async (month: TMonth): Promise<TMetricRow[]> => {
     global(EMonthlyMetric.OWNERS_CONTACT_ACTIVATED, ownersActivated.value),
     global(EMonthlyMetric.OWNERS_WITH_AVAILABILITY, ownersWithAvailability.value),
     global(EMonthlyMetric.STUDENTS_TOTAL, students.value, students.boursiers),
+    global(EMonthlyMetric.STUDENTS_NON_BOURSIERS, students.nonBoursiers),
+    global(EMonthlyMetric.STUDENTS_NON_RENSEIGNE, students.nonRenseigne),
   ]
 }
 
@@ -302,7 +311,8 @@ const insertMetrics = async (executor: Pick<typeof db, 'insert'>, month: TMonth,
 }
 
 export const captureMonth = async (month: TMonth, now: Date = new Date()): Promise<void> => {
-  await insertMetrics(db, month, await countCounters(month), true)
+  const counters = (await countCounters(month)).filter((row) => row.value > 0)
+  await insertMetrics(db, month, counters, true)
 
   if (month !== defaultMonthRange(now).to) return
 
