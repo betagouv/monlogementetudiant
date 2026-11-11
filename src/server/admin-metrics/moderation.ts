@@ -1,5 +1,5 @@
 import { addMonths, format } from 'date-fns'
-import { type AnyColumn, and, eq, gte, isNotNull, lt, sql } from 'drizzle-orm'
+import { type AnyColumn, and, eq, gte, inArray, isNotNull, lt, sql } from 'drizzle-orm'
 import { EReminderType } from '~/enums/reminder-email'
 import { monthStart, type TMonth } from '~/server/admin-metrics/months'
 import { segmentOwner, type TOwnerSegment } from '~/server/admin-metrics/segment'
@@ -92,12 +92,22 @@ export const getOwnerModeration = async (month: TMonth): Promise<TOwnerModeratio
   const suspensions = new Map(suspensionRows.map((row) => [row.ownerId, row.suspensions]))
 
   const ownerIds = new Set<number>()
-  for (const id of [...facts.keys(), ...alerts.keys(), ...suspensions.keys(), ...publishedRows.map((r) => r.ownerId)]) {
+  for (const [id, f] of facts) {
+    if (id !== null && f.recus + f.aTraiter + f.traites > 0) ownerIds.add(id)
+  }
+  for (const id of [...alerts.keys(), ...suspensions.keys(), ...publishedRows.map((r) => r.ownerId)]) {
     if (id !== null) ownerIds.add(id)
   }
   if (ownerIds.size === 0) return []
 
-  const names = new Map((await db.select({ id: owners.id, name: owners.name }).from(owners)).map((o) => [o.id, o.name]))
+  const names = new Map(
+    (
+      await db
+        .select({ id: owners.id, name: owners.name })
+        .from(owners)
+        .where(inArray(owners.id, [...ownerIds]))
+    ).map((o) => [o.id, o.name]),
+  )
 
   return [...ownerIds]
     .flatMap((ownerId) => {

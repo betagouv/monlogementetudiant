@@ -27,6 +27,7 @@ describe('getOwnerModeration', () => {
     const c = await createOwner({ slug: 'bailleur-c', name: 'C' })
     const d = await createOwner({ slug: 'bailleur-d', name: 'D' })
     await createOwner({ slug: 'bailleur-e', name: 'E' })
+    const f = await createOwner({ slug: 'bailleur-f', name: 'F' })
     const residenceB = await createAccommodation({ slug: 'residence-b', ownerId: b.id, cityId: city.id })
     await createAccommodation({ slug: 'residence-d', ownerId: d.id, cityId: city.id, published: true })
 
@@ -42,6 +43,11 @@ describe('getOwnerModeration', () => {
       fact('contact:c1', { ownerId: c.id }),
       fact('contact:c2', { ownerId: c.id }),
       fact('contact:old', { ownerId: d.id, createdAt: new Date('2026-09-01T10:00:00Z'), firstTreatedAt: new Date('2026-09-05T10:00:00Z') }),
+      fact('contact:oldf', {
+        ownerId: f.id,
+        createdAt: new Date('2026-08-01T10:00:00Z'),
+        firstTreatedAt: new Date('2026-08-03T10:00:00Z'),
+      }),
       fact('contact:none', { ownerId: null }),
     ])
 
