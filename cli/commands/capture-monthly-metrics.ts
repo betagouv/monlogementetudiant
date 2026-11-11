@@ -23,7 +23,7 @@ export async function captureMonthlyMetrics(options: CaptureMonthlyMetricsOption
   try {
     const { facts } = await runCapture({ backfillMonths })
     console.log(`  ${facts} candidature(s) recopiée(s) dans application_fact`)
-    console.log(`  Mois relevés : mois courant${backfillMonths ? ` + ${backfillMonths} mois précédent(s)` : ''}`)
+    console.log(`  Mois relevés : mois courant + compteurs des ${Math.max(backfillMonths, 1)} mois précédent(s)`)
 
     await db
       .update(importJobs)
