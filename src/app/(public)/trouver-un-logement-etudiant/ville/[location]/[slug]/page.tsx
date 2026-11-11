@@ -20,8 +20,8 @@ import { AccommodationImages } from '~/components/accommodation/accommodation-im
 import { NearbyAccommodations } from '~/components/accommodation/nearby-accommodations'
 import { SaveAccommodationFavoriteButton } from '~/components/favorites/save-accommodation-favorite-button'
 import { OwnerDetails } from '~/components/find-student-accomodation/owner-details/owner-details'
+import { OwnerLandingLink } from '~/components/find-student-accomodation/owner-landing-link'
 import { JsonLd } from '~/components/seo/json-ld'
-import { NewWindowHint } from '~/components/ui/new-window'
 import { getAvailableApartmentTypes } from '~/enums/apartment-type'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { EResidenceType, RESIDENCE_TYPE_MESSAGE_KEYS } from '~/enums/residence-type'
@@ -160,10 +160,9 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
                   {t.rich('managedBy', {
                     managerName: owner.name,
                     manager: (chunks) => (
-                      <a href={ownerLandingUrl} target="_blank" rel="noopener noreferrer">
+                      <OwnerLandingLink href={ownerLandingUrl} accommodationSlug={slug}>
                         {chunks}
-                        <NewWindowHint />
-                      </a>
+                      </OwnerLandingLink>
                     ),
                   })}
                 </p>

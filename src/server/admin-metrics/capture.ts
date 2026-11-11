@@ -170,6 +170,11 @@ const countCounters = async (month: TMonth): Promise<TMetricRow[]> => {
     .leftJoin(user, eq(user.id, trackingEvents.userId))
     .where(and(eq(trackingEvents.type, 'accommodation.consult_offer'), inMonth(trackingEvents.createdAt, month)))
 
+  const [landing] = await db
+    .select({ value: count() })
+    .from(trackingEvents)
+    .where(and(eq(trackingEvents.type, 'owner.landing_click'), inMonth(trackingEvents.createdAt, month)))
+
   const searches = await db
     .select({ cityId: trackingEvents.cityId, value: count() })
     .from(trackingEvents)
@@ -178,6 +183,7 @@ const countCounters = async (month: TMonth): Promise<TMetricRow[]> => {
 
   return [
     { metric: EMonthlyMetric.CONSULT_OFFER, scope: 'global', scopeId: 0, value: consult.value, boursiers: consult.boursiers },
+    { metric: EMonthlyMetric.OWNER_LANDING_CLICK, scope: 'global', scopeId: 0, value: landing.value, boursiers: null },
     ...searches.map(
       (row): TMetricRow => ({
         metric: EMonthlyMetric.SEARCH_CITY,

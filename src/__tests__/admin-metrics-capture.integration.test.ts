@@ -182,6 +182,22 @@ describe('captureMonthlyMetrics', () => {
     expect(await readMetric('2026-10', EMonthlyMetric.CONSULT_OFFER)).toMatchObject({ value: 3, boursiers: 1 })
   })
 
+  it('relève les clics sur le lien du gestionnaire sans part de boursiers', async () => {
+    const residence = await createAccommodation({ slug: 'residence-lien-gestionnaire' })
+    await createTrackingEvent({ type: 'owner.landing_click', accommodationId: residence.id, createdAt: new Date('2026-10-31T22:30:00Z') })
+    await createTrackingEvent({ type: 'owner.landing_click', accommodationId: residence.id, createdAt: new Date('2026-11-02T10:00:00Z') })
+    await createTrackingEvent({
+      type: 'accommodation.consult_offer',
+      accommodationId: residence.id,
+      createdAt: new Date('2026-11-02T10:00:00Z'),
+    })
+
+    await captureMonthlyMetrics({ backfillMonths: 1, now: NOW })
+
+    expect(await readMetric('2026-10', EMonthlyMetric.OWNER_LANDING_CLICK)).toMatchObject({ scope: 'global', value: 1, boursiers: null })
+    expect(await readMetric('2026-11', EMonthlyMetric.OWNER_LANDING_CLICK)).toMatchObject({ value: 1, boursiers: null })
+  })
+
   it('fige toujours la fin du mois précédent', async () => {
     const residence = await createAccommodation({ slug: 'residence-fin-de-mois' })
     await createTrackingEvent({
