@@ -2,11 +2,13 @@
 
 import Button from '@codegouvfr/react-dsfr/Button'
 import { Tooltip } from '@codegouvfr/react-dsfr/Tooltip'
+import { useEffect, useRef } from 'react'
 import { METRIC_ITEM_META } from '~/enums/metric-item'
 import type { TMonthRange } from '~/schemas/admin-metrics/month-range'
 import { share } from '~/server/admin-metrics/months'
 import type { TMetricSeries } from '~/server/admin-metrics/series'
 import { MetricSourceBadge } from './metric-source-badge'
+import styles from './monthly-metrics-table.module.css'
 
 const monthHeader = (month: string) => new Date(`${month}-01T00:00:00`).toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' })
 
@@ -32,12 +34,18 @@ const MetricCell = ({ total, boursiers }: { total: number | null; boursiers: num
 
 export const MonthlyMetricsTable = ({ series, range }: { series: TMetricSeries[]; range: TMonthRange }) => {
   const months = series[0]?.values.map((value) => value.month) ?? []
+  const contentRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const content = contentRef.current
+    if (content) content.scrollLeft = content.scrollWidth
+  }, [months.length, range.from, range.to])
 
   return (
-    <div className="fr-table fr-table--no-caption">
+    <div className={`fr-table fr-table--no-caption ${styles.table}`}>
       <div className="fr-table__wrapper">
         <div className="fr-table__container">
-          <div className="fr-table__content">
+          <div className="fr-table__content" ref={contentRef}>
             <table>
               <caption>Évolution mensuelle</caption>
               <thead>
