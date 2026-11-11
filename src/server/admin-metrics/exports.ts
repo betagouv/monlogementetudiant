@@ -2,7 +2,7 @@ import { EMetricItem, METRIC_ITEM_META } from '~/enums/metric-item'
 import { ZMonth, ZMonthRange } from '~/schemas/admin-metrics/month-range'
 import { getCandidaturesSeries } from '~/server/admin-metrics/candidatures'
 import { getContactPathSeries, getOwnersToTarget } from '~/server/admin-metrics/contact-path'
-import { getOwnerModeration } from '~/server/admin-metrics/moderation'
+import { getOwnerModeration, type TOwnerModerationRow } from '~/server/admin-metrics/moderation'
 import { share } from '~/server/admin-metrics/months'
 import { SEGMENT_LABELS } from '~/server/admin-metrics/segment'
 import { getStudentSeries } from '~/server/admin-metrics/students'
@@ -151,26 +151,25 @@ const moderationColumns: TCsvColumn<TModerationCsvRow>[] = [
   { key: 'suspensions', header: 'suspensions' },
 ]
 
+export const moderationCsvRow = (o: TOwnerModerationRow): TModerationCsvRow => ({
+  gestionnaire: o.ownerName,
+  segment: SEGMENT_LABELS[o.segment],
+  recus: o.recus,
+  boursiers: o.recusBoursiers,
+  a_traiter: o.aTraiter,
+  traites: o.traites,
+  jamais_traites: o.jamaisTraites,
+  part_jamais_traites: percent(share(o.jamaisTraites, o.recus)),
+  contactes: o.contactes,
+  part_contactes: percent(share(o.contactes, o.recus)),
+  delai_moyen_heures: cell(o.delaiMoyenHeures),
+  alertes: o.alertes,
+  suspensions: o.suspensions,
+})
+
 const exportModeration = async ({ item, month }: Extract<TExportRequest, { kind: 'month' }>): Promise<TExportResult> => {
   const owners = await getOwnerModeration(month)
-  const rows = owners.map(
-    (o): TModerationCsvRow => ({
-      gestionnaire: o.ownerName,
-      segment: SEGMENT_LABELS[o.segment],
-      recus: o.recus,
-      boursiers: o.recusBoursiers,
-      a_traiter: o.aTraiter,
-      traites: o.traites,
-      jamais_traites: o.jamaisTraites,
-      part_jamais_traites: percent(share(o.jamaisTraites, o.aTraiter)),
-      contactes: o.contactes,
-      part_contactes: percent(share(o.contactes, o.recus)),
-      delai_moyen_heures: cell(o.delaiMoyenHeures),
-      alertes: o.alertes,
-      suspensions: o.suspensions,
-    }),
-  )
-  return { filename: `metriques-${item}-${month}.csv`, csv: toCsv(moderationColumns, rows) }
+  return { filename: `metriques-${item}-${month}.csv`, csv: toCsv(moderationColumns, owners.map(moderationCsvRow)) }
 }
 
 type TTensionCsvRow = {
