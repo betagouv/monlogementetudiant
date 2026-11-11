@@ -225,7 +225,11 @@ const countStates = async (month: TMonth): Promise<TMetricRow[]> => {
     .leftJoin(owners, eq(owners.id, accommodations.ownerId))
     .where(and(eq(accommodations.published, true), sql`not ${crousExistsCondition}`))
 
-  const [ownersActivated] = await db.select({ value: count() }).from(owners).where(isContactActivated)
+  const [ownersActivated] = await db
+    .select({ value: sql<number>`count(distinct ${owners.id})::int` })
+    .from(owners)
+    .innerJoin(accommodations, eq(accommodations.ownerId, owners.id))
+    .where(and(isContactActivated, eq(accommodations.published, true), sql`not ${crousExistsCondition}`))
 
   const [ownersWithAvailability] = await db
     .select({ value: sql<number>`count(distinct ${accommodations.ownerId})::int` })
@@ -306,7 +310,7 @@ export const captureMonth = async (month: TMonth, now: Date = new Date()): Promi
 export const captureMonthlyMetrics = async ({ backfillMonths = 0, now = new Date() }: { backfillMonths?: number; now?: Date } = {}) => {
   const facts = await syncApplicationFacts()
   const current = defaultMonthRange(now).to
-  for (let offset = 0; offset <= backfillMonths; offset++) {
+  for (let offset = 0; offset <= Math.max(backfillMonths, 1); offset++) {
     await captureMonth(shiftMonth(current, -offset), now)
   }
   return { facts }

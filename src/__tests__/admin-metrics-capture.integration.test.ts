@@ -182,6 +182,27 @@ describe('captureMonthlyMetrics', () => {
     expect(await readMetric('2026-10', EMonthlyMetric.CONSULT_OFFER)).toMatchObject({ value: 3, boursiers: 1 })
   })
 
+  it('fige toujours la fin du mois précédent', async () => {
+    const residence = await createAccommodation({ slug: 'residence-fin-de-mois' })
+    await createTrackingEvent({
+      type: 'accommodation.consult_offer',
+      accommodationId: residence.id,
+      createdAt: new Date('2026-10-30T10:00:00Z'),
+    })
+    await captureMonthlyMetrics({ now: new Date('2026-10-31T02:30:00Z') })
+    expect(await readMetric('2026-10', EMonthlyMetric.CONSULT_OFFER)).toMatchObject({ value: 1 })
+
+    await createTrackingEvent({
+      type: 'accommodation.consult_offer',
+      accommodationId: residence.id,
+      createdAt: new Date('2026-10-31T21:00:00Z'),
+    })
+    await captureMonthlyMetrics({ now: new Date('2026-11-01T02:30:00Z') })
+
+    expect(await readMetric('2026-10', EMonthlyMetric.CONSULT_OFFER)).toMatchObject({ value: 2 })
+    expect(await readMetrics('2026-10', [EMonthlyMetric.STUDENTS_TOTAL])).toHaveLength(1)
+  })
+
   it('compte les recherches par ville au mois de Paris', async () => {
     const city = await createTestCity()
     await createTrackingEvent({ type: 'search.city', cityId: city.id, createdAt: new Date('2026-10-31T23:30:00Z') })
@@ -274,7 +295,10 @@ describe('captureMonthlyMetrics', () => {
   it('relève le parcours contact hors CROUS, les gestionnaires et les étudiants', async () => {
     const activated = await createOwner({ slug: 'bailleur-active', contactMode: EOwnerContactMode.DOSSIER_FACILE })
     const inactive = await createOwner({ slug: 'bailleur-inactif' })
-    const crous = await createOwner({ slug: 'crous' })
+    const crous = await createOwner({ slug: 'crous', contactMode: EOwnerContactMode.CONTACTS })
+    await createOwner({ slug: 'bailleur-active-sans-residence', contactMode: EOwnerContactMode.CONTACTS })
+    const unpublished = await createOwner({ slug: 'bailleur-active-non-publie', contactMode: EOwnerContactMode.CONTACTS })
+    await createAccommodation({ slug: 'residence-non-publiee', ownerId: unpublished.id, published: false })
     await createAccommodation({ slug: 'residence-activee', ownerId: activated.id, nbTotalApartments: 20, nbAvailableApartments: 3 })
     await createAccommodation({ slug: 'residence-inactive', ownerId: inactive.id, nbTotalApartments: 60, nbAvailableApartments: 0 })
     await createAccommodation({ slug: 'residence-sans-total', ownerId: inactive.id, nbTotalApartments: null })
