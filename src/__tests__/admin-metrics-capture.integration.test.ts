@@ -1,8 +1,10 @@
 import { and, eq, inArray } from 'drizzle-orm'
 import { describe, expect, it } from 'vitest'
 import { EContactStatus } from '~/enums/contact-status'
+import { EMetricItem } from '~/enums/metric-item'
 import { EMonthlyMetric } from '~/enums/monthly-metric'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
+import { getCandidaturesSeries } from '~/server/admin-metrics/candidatures'
 import { captureMonthlyMetrics, syncApplicationFacts } from '~/server/admin-metrics/capture'
 import { activityLog, applicationFacts, contactRequests, dossierFacileTenants, monthlyMetrics, trackingEvents } from '~/server/db/schema'
 import {
@@ -124,6 +126,54 @@ describe('syncApplicationFacts', () => {
     expect(fact.status).toBe(EContactStatus.LOGEMENT_ATTRIBUE)
   })
 
+  it('ne prend reviewedAt comme firstTreatedAt que si le statut a changé', async () => {
+    const db = getTestDb()
+    const residence = await createAccommodation({ slug: 'residence-reviewed' })
+    const createdAt = new Date('2026-10-01T10:00:00Z')
+    const reviewedAt = new Date(createdAt.getTime() + 3 * DAY_MS)
+    const [untouched, rejected] = await db
+      .insert(contactRequests)
+      .values([
+        {
+          accommodationId: residence.id,
+          email: 'meme-statut@test.fr',
+          confirmedAt: createdAt,
+          status: EContactStatus.A_CONTACTER,
+          reviewedAt,
+          createdAt,
+        },
+        {
+          accommodationId: residence.id,
+          email: 'non-retenu@test.fr',
+          confirmedAt: createdAt,
+          status: EContactStatus.NON_RETENU,
+          reviewedAt,
+          createdAt,
+        },
+      ])
+      .returning()
+    await createUser({ id: 'student-reviewed' })
+    const tenant = await createDossierFacileTenant({ userId: 'student-reviewed' })
+    const application = await createDossierFacileApplication({
+      tenantId: tenant.id,
+      accommodationSlug: residence.slug,
+      apartmentType: 't1',
+      status: EContactStatus.A_MODERER,
+      reviewedAt,
+    })
+
+    await syncApplicationFacts()
+
+    const facts = await db
+      .select({ id: applicationFacts.id, firstTreatedAt: applicationFacts.firstTreatedAt })
+      .from(applicationFacts)
+      .where(inArray(applicationFacts.id, [`contact:${untouched.id}`, `contact:${rejected.id}`, `df:${application.id}`]))
+    const byId = Object.fromEntries(facts.map((fact) => [fact.id, fact.firstTreatedAt]))
+    expect(byId[`contact:${untouched.id}`]).toBeNull()
+    expect(byId[`contact:${rejected.id}`]).toEqual(reviewedAt)
+    expect(byId[`df:${application.id}`]).toBeNull()
+  })
+
   it('ignore les demandes visiteur non confirmées et les dossiers non vérifiés', async () => {
     const db = getTestDb()
     const residence = await createAccommodation({ slug: 'residence-filtres' })
@@ -219,6 +269,24 @@ describe('captureMonthlyMetrics', () => {
     expect(await readMetrics('2026-10', [EMonthlyMetric.STUDENTS_TOTAL])).toHaveLength(1)
   })
 
+  it('ne crée pas de compteur à zéro pour un mois sans événement', async () => {
+    const residence = await createAccommodation({ slug: 'residence-sans-clic' })
+    await createTrackingEvent({
+      type: 'accommodation.consult_offer',
+      accommodationId: residence.id,
+      createdAt: new Date('2026-11-02T10:00:00Z'),
+    })
+
+    await captureMonthlyMetrics({ backfillMonths: 1, now: NOW })
+
+    expect(await readMetric('2026-10', EMonthlyMetric.CONSULT_OFFER)).toBeNull()
+    expect(await readMetric('2026-10', EMonthlyMetric.OWNER_LANDING_CLICK)).toBeNull()
+    const series = await getCandidaturesSeries({ from: '2026-10', to: '2026-11' })
+    const consult = series.find((s) => s.key === EMetricItem.CONSULT_OFFER_BASE)
+    expect(consult?.values[0]).toMatchObject({ month: '2026-10', total: null })
+    expect(consult?.values[1]).toMatchObject({ month: '2026-11', total: 1 })
+  })
+
   it('compte les recherches par ville au mois de Paris', async () => {
     const city = await createTestCity()
     await createTrackingEvent({ type: 'search.city', cityId: city.id, createdAt: new Date('2026-10-31T23:30:00Z') })
@@ -278,6 +346,7 @@ describe('captureMonthlyMetrics', () => {
       nbTotalApartments: 50,
       nbAvailableApartments: 5,
     })
+    await createAccommodation({ slug: 'residence-d', cityId: city.id, nbTotalApartments: null, nbAvailableApartments: 7 })
 
     await captureMonthlyMetrics({ now: NOW })
 
@@ -327,7 +396,9 @@ describe('captureMonthlyMetrics', () => {
     await createExternalSource({ accommodationId: crousResidence.id, source: 'crous' })
     await createUser({ id: 'student-yes', scholarshipStatus: 'yes' })
     await createUser({ id: 'student-no', scholarshipStatus: 'no' })
-    await createUser({ id: 'owner-user', role: 'owner' })
+    await createUser({ id: 'student-unknown', scholarshipStatus: 'unknown' })
+    await createUser({ id: 'student-null', scholarshipStatus: null })
+    await createUser({ id: 'owner-user', role: 'owner', scholarshipStatus: 'no' })
 
     await captureMonthlyMetrics({ now: NOW })
 
@@ -335,7 +406,9 @@ describe('captureMonthlyMetrics', () => {
     expect(await readMetric('2026-11', EMonthlyMetric.APARTMENTS_CONTACT_ACTIVATED_HORS_CROUS)).toMatchObject({ value: 20 })
     expect(await readMetric('2026-11', EMonthlyMetric.RESIDENCES_NULL_TOTAL_HORS_CROUS)).toMatchObject({ value: 1 })
     expect(await readMetric('2026-11', EMonthlyMetric.OWNERS_CONTACT_ACTIVATED)).toMatchObject({ value: 1 })
-    expect(await readMetric('2026-11', EMonthlyMetric.OWNERS_WITH_AVAILABILITY)).toMatchObject({ value: 2 })
-    expect(await readMetric('2026-11', EMonthlyMetric.STUDENTS_TOTAL)).toMatchObject({ value: 2, boursiers: 1 })
+    expect(await readMetric('2026-11', EMonthlyMetric.OWNERS_WITH_AVAILABILITY)).toMatchObject({ value: 1 })
+    expect(await readMetric('2026-11', EMonthlyMetric.STUDENTS_TOTAL)).toMatchObject({ value: 4, boursiers: 1 })
+    expect(await readMetric('2026-11', EMonthlyMetric.STUDENTS_NON_BOURSIERS)).toMatchObject({ value: 1, boursiers: null })
+    expect(await readMetric('2026-11', EMonthlyMetric.STUDENTS_NON_RENSEIGNE)).toMatchObject({ value: 2, boursiers: null })
   })
 })
