@@ -64,6 +64,11 @@ const CRON_JOB_DEF_MAP: Record<CronJobType, Omit<CronJobDef, 'type'>> = {
       'Rappel des disponibilités renseignées et de leur date de mise à jour, avec confirmation « Rien n’a changé » (hors bailleurs importés)',
     schedule: 'Le 1er de chaque mois à 5h00',
   },
+  'monthly-metrics': {
+    label: 'Relevé des métriques mensuelles',
+    description: 'Candidatures recopiées sans donnée personnelle, compteurs du mois figés et états courants photographiés',
+    schedule: 'Chaque nuit à 3h30, avant la purge des contacts',
+  },
   'purge-contacts': {
     label: 'Purge RGPD candidatures',
     description: 'Demandes non confirmées supprimées, expirées anonymisées',
