@@ -47,6 +47,7 @@ import { adminCandidaturesRouter } from './admin-candidatures'
 import { adminChangelogRouter } from './admin-changelog'
 import { adminConnectionsRouter } from './admin-connections'
 import { consumersRouter } from './admin-consumers'
+import { adminMetricsRouter } from './admin-metrics'
 import { adminRemindersRouter } from './admin-reminders'
 import { adminScholarshipSurveyRouter } from './admin-scholarship-survey'
 
@@ -1487,4 +1488,5 @@ export const adminRouter = createTRPCRouter({
   connections: adminConnectionsRouter,
   reminders: adminRemindersRouter,
   changelog: adminChangelogRouter,
+  metrics: adminMetricsRouter,
 })
