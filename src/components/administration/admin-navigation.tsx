@@ -29,6 +29,8 @@ const navSections: NavSection[] = [
       { label: 'Tableau de bord', icon: 'fr-icon-dashboard-3-line', href: '/administration/tableau-de-bord' },
       { label: 'Statistiques', icon: 'fr-icon-line-chart-line', href: '/administration/statistiques' },
       { label: 'Usage gestionnaires', icon: 'fr-icon-bar-chart-box-line', href: '/administration/gestionnaires-stats' },
+      { label: 'Usage étudiants', icon: 'fr-icon-user-line', href: '/administration/usage-etudiants' },
+      { label: 'Territoires', icon: 'fr-icon-map-pin-2-line', href: '/administration/territoires' },
     ],
   },
   {
