@@ -1,0 +1,16 @@
+export enum EMonthlyMetric {
+  CONSULT_OFFER = 'consult_offer',
+  OWNER_LANDING_CLICK = 'owner_landing_click',
+  SEARCH_CITY = 'search_city',
+  CITY_AVAILABLE = 'city_available',
+  CITY_KNOWN_TOTAL = 'city_known_total',
+  CITY_PUBLISHED_TOTAL = 'city_published_total',
+  CITY_OPEN_RESIDENCES = 'city_open_residences',
+  CITY_OPEN_RESIDENCES_WITHOUT_CONTACT = 'city_open_residences_without_contact',
+  APARTMENTS_PUBLISHED_HORS_CROUS = 'apartments_published_hors_crous',
+  APARTMENTS_CONTACT_ACTIVATED_HORS_CROUS = 'apartments_contact_activated_hors_crous',
+  RESIDENCES_NULL_TOTAL_HORS_CROUS = 'residences_null_total_hors_crous',
+  OWNERS_CONTACT_ACTIVATED = 'owners_contact_activated',
+  OWNERS_WITH_AVAILABILITY = 'owners_with_availability',
+  STUDENTS_TOTAL = 'students_total',
+}
