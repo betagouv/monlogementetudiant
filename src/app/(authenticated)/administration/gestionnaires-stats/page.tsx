@@ -1,5 +1,6 @@
 'use client'
 
+import { Tabs } from '@codegouvfr/react-dsfr/Tabs'
 import { type ColumnDef } from '@tanstack/react-table'
 import clsx from 'clsx'
 import Image from 'next/image'
@@ -8,6 +9,8 @@ import { useMemo } from 'react'
 import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { ActivityItem } from '~/components/administration/activity-item'
 import { AdminDataTable } from '~/components/administration/admin-data-table'
+import { ContactPathTab } from '~/components/administration/metrics/contact-path-tab'
+import { OwnerModerationTab } from '~/components/administration/metrics/owner-moderation-tab'
 import { useOwnerUsage, useOwnerUsageDetail } from '~/hooks/use-owner-usage'
 import { getAvatarColor, getInitials } from '~/utils/avatar'
 import { formatChartDate, getDateFrom } from '~/utils/date-helpers'
@@ -18,6 +21,10 @@ import statStyles from '../statistiques/statistiques.module.css'
 import pageStyles from './gestionnaires-stats.module.css'
 
 const PRESETS = ['7', '30', '90'] as const
+const TAB_ACTIVITY = 'activite'
+const TAB_MODERATION = 'moderation'
+const TAB_CONTACT_PATH = 'parcours-contact'
+const TABS = [TAB_ACTIVITY, TAB_MODERATION, TAB_CONTACT_PATH] as const
 type Preset = (typeof PRESETS)[number]
 
 type OwnerRow = {
@@ -132,6 +139,7 @@ const accommodationColumns: ColumnDef<AccommodationRow, unknown>[] = [
 
 export default function GestionnairesStatsPage() {
   const [qs, setQs] = useQueryStates({
+    onglet: parseAsStringLiteral(TABS).withDefault(TAB_ACTIVITY),
     preset: parseAsStringLiteral(PRESETS).withDefault('30'),
     from: parseAsString.withDefault(''),
     to: parseAsString.withDefault(''),
@@ -174,113 +182,131 @@ export default function GestionnairesStatsPage() {
         <p className="fr-text--sm fr-text-mention--grey fr-mt-1v">Suivi de l&apos;activite de l&apos;Espace Gestionnaire</p>
       </div>
 
-      <div className={clsx(styles.card, 'fr-mb-3w')}>
-        <div className="fr-p-2w">
-          <div className={statStyles.dateRangeBar}>
-            <input
-              type="text"
-              placeholder="Filtrer par gestionnaire..."
-              value={searchFilter}
-              onChange={(e) => setQs({ search: e.target.value || '' })}
-              className={statStyles.dateInput}
-              style={{ width: '220px' }}
-            />
-            <div className={statStyles.dateRangePresets}>
-              {PRESETS.map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  className={qs.preset === p && !qs.from ? statStyles.dateRangePresetActive : statStyles.dateRangePreset}
-                  onClick={() => handlePreset(p)}
-                >
-                  {p} jours
-                </button>
-              ))}
+      <Tabs
+        selectedTabId={qs.onglet}
+        onTabChange={(tabId) => setQs({ onglet: tabId as (typeof TABS)[number] })}
+        tabs={[
+          { tabId: TAB_ACTIVITY, label: 'Activité' },
+          { tabId: TAB_MODERATION, label: 'Modération des contacts' },
+          { tabId: TAB_CONTACT_PATH, label: 'Parcours contact' },
+        ]}
+      >
+        {qs.onglet === TAB_ACTIVITY && (
+          <>
+            <div className={clsx(styles.card, 'fr-mb-3w')}>
+              <div className="fr-p-2w">
+                <div className={statStyles.dateRangeBar}>
+                  <input
+                    type="text"
+                    placeholder="Filtrer par gestionnaire..."
+                    value={searchFilter}
+                    onChange={(e) => setQs({ search: e.target.value || '' })}
+                    className={statStyles.dateInput}
+                    style={{ width: '220px' }}
+                  />
+                  <div className={statStyles.dateRangePresets}>
+                    {PRESETS.map((p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        className={qs.preset === p && !qs.from ? statStyles.dateRangePresetActive : statStyles.dateRangePreset}
+                        onClick={() => handlePreset(p)}
+                      >
+                        {p} jours
+                      </button>
+                    ))}
+                  </div>
+                  <div className={statStyles.dateInputs}>
+                    <input
+                      type="date"
+                      className={statStyles.dateInput}
+                      value={qs.from || range.from}
+                      onChange={(e) => {
+                        setQs({ from: e.target.value, to: qs.to || range.to })
+                      }}
+                    />
+                    <span className="fr-text--sm fr-mb-0">—</span>
+                    <input
+                      type="date"
+                      className={statStyles.dateInput}
+                      value={qs.to || range.to}
+                      onChange={(e) => setQs({ to: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className={statStyles.dateInputs}>
-              <input
-                type="date"
-                className={statStyles.dateInput}
-                value={qs.from || range.from}
-                onChange={(e) => {
-                  setQs({ from: e.target.value, to: qs.to || range.to })
-                }}
-              />
-              <span className="fr-text--sm fr-mb-0">—</span>
-              <input
-                type="date"
-                className={statStyles.dateInput}
-                value={qs.to || range.to}
-                onChange={(e) => setQs({ to: e.target.value })}
-              />
+
+            <div className={clsx(styles.statsGrid, 'fr-mb-3w')}>
+              <div className={clsx(styles.statCard, styles.statCardBlue)}>
+                <div className={styles.statLabel}>Gestionnaires actifs</div>
+                <div className={clsx(styles.statValue, 'fr-mt-1v')}>{list.isLoading ? '-' : activeOwners}</div>
+                <span className={clsx('fr-icon-building-line', styles.statIcon)} aria-hidden="true" />
+              </div>
+              <div className={clsx(styles.statCard, styles.statCardGreen)}>
+                <div className={styles.statLabel}>Total connexions</div>
+                <div className={clsx(styles.statValue, 'fr-mt-1v')}>{list.isLoading ? '-' : totalLogins}</div>
+                <span className={clsx('fr-icon-login-box-line', styles.statIcon)} aria-hidden="true" />
+              </div>
+              <div className={clsx(styles.statCard, styles.statCardOrange)}>
+                <div className={styles.statLabel}>Résidences créées</div>
+                <div className={clsx(styles.statValue, 'fr-mt-1v')}>{list.isLoading ? '-' : totalCreated}</div>
+                <span className={clsx('fr-icon-home-4-line', styles.statIcon)} aria-hidden="true" />
+              </div>
+              <div className={clsx(styles.statCard, styles.statCardPurple)}>
+                <div className={styles.statLabel}>Demandes d&apos;aide</div>
+                <div className={clsx(styles.statValue, 'fr-mt-1v')}>
+                  {globalEvents.isLoading ? '-' : (globalEvents.data?.contactEquipe ?? 0)}
+                </div>
+                <span className={clsx('fr-icon-question-line', styles.statIcon)} aria-hidden="true" />
+              </div>
             </div>
-          </div>
-        </div>
-      </div>
 
-      <div className={clsx(styles.statsGrid, 'fr-mb-3w')}>
-        <div className={clsx(styles.statCard, styles.statCardBlue)}>
-          <div className={styles.statLabel}>Gestionnaires actifs</div>
-          <div className={clsx(styles.statValue, 'fr-mt-1v')}>{list.isLoading ? '-' : activeOwners}</div>
-          <span className={clsx('fr-icon-building-line', styles.statIcon)} aria-hidden="true" />
-        </div>
-        <div className={clsx(styles.statCard, styles.statCardGreen)}>
-          <div className={styles.statLabel}>Total connexions</div>
-          <div className={clsx(styles.statValue, 'fr-mt-1v')}>{list.isLoading ? '-' : totalLogins}</div>
-          <span className={clsx('fr-icon-login-box-line', styles.statIcon)} aria-hidden="true" />
-        </div>
-        <div className={clsx(styles.statCard, styles.statCardOrange)}>
-          <div className={styles.statLabel}>Résidences créées</div>
-          <div className={clsx(styles.statValue, 'fr-mt-1v')}>{list.isLoading ? '-' : totalCreated}</div>
-          <span className={clsx('fr-icon-home-4-line', styles.statIcon)} aria-hidden="true" />
-        </div>
-        <div className={clsx(styles.statCard, styles.statCardPurple)}>
-          <div className={styles.statLabel}>Demandes d&apos;aide</div>
-          <div className={clsx(styles.statValue, 'fr-mt-1v')}>{globalEvents.isLoading ? '-' : (globalEvents.data?.contactEquipe ?? 0)}</div>
-          <span className={clsx('fr-icon-question-line', styles.statIcon)} aria-hidden="true" />
-        </div>
-      </div>
+            <div className={clsx(styles.card, 'fr-mb-3w')}>
+              <div className={styles.cardHeader}>
+                <span className={styles.cardTitle}>Gestionnaires ({ownersList.length})</span>
+              </div>
+              <div className="fr-px-2w">
+                <AdminDataTable
+                  columns={ownerColumns}
+                  data={ownersList}
+                  pageCount={1}
+                  page={1}
+                  isLoading={list.isLoading}
+                  hidePagination
+                  onRowClick={(row) => setSelectedOwnerId(selectedOwnerId === row.id ? null : row.id)}
+                  isRowSelected={(row) => row.id === selectedOwnerId}
+                />
+              </div>
+            </div>
 
-      <div className={clsx(styles.card, 'fr-mb-3w')}>
-        <div className={styles.cardHeader}>
-          <span className={styles.cardTitle}>Gestionnaires ({ownersList.length})</span>
-        </div>
-        <div className="fr-px-2w">
-          <AdminDataTable
-            columns={ownerColumns}
-            data={ownersList}
-            pageCount={1}
-            page={1}
-            isLoading={list.isLoading}
-            hidePagination
-            onRowClick={(row) => setSelectedOwnerId(selectedOwnerId === row.id ? null : row.id)}
-            isRowSelected={(row) => row.id === selectedOwnerId}
-          />
-        </div>
-      </div>
+            {selectedOwnerId && selectedOwner && <OwnerDetail ownerId={selectedOwnerId} ownerName={selectedOwner.name} range={range} />}
 
-      {selectedOwnerId && selectedOwner && <OwnerDetail ownerId={selectedOwnerId} ownerName={selectedOwner.name} range={range} />}
-
-      {globalEvents.data && globalEvents.data.gestEvents.length > 0 && (
-        <div className={clsx(styles.card, 'fr-mb-3w')}>
-          <div className={styles.cardHeader}>
-            <span className={styles.cardTitle}>
-              Events Espace Gestionnaire (global) — {globalEvents.data.consulterOffre}&nbsp;clics &quot;découvrir l&apos;offre&quot;
-            </span>
-          </div>
-          <div className={statStyles.chartContainerTall}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={globalEvents.data.gestEvents}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-default-grey)" />
-                <XAxis dataKey="action" fontSize={10} angle={-20} textAnchor="end" height={60} interval={0} />
-                <YAxis fontSize={11} />
-                <Tooltip />
-                <Bar dataKey="nbEvents" name="Events" fill="#000091" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      )}
+            {globalEvents.data && globalEvents.data.gestEvents.length > 0 && (
+              <div className={clsx(styles.card, 'fr-mb-3w')}>
+                <div className={styles.cardHeader}>
+                  <span className={styles.cardTitle}>
+                    Events Espace Gestionnaire (global) — {globalEvents.data.consulterOffre}&nbsp;clics &quot;découvrir l&apos;offre&quot;
+                  </span>
+                </div>
+                <div className={statStyles.chartContainerTall}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={globalEvents.data.gestEvents}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border-default-grey)" />
+                      <XAxis dataKey="action" fontSize={10} angle={-20} textAnchor="end" height={60} interval={0} />
+                      <YAxis fontSize={11} />
+                      <Tooltip />
+                      <Bar dataKey="nbEvents" name="Events" fill="#000091" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+        {qs.onglet === TAB_MODERATION && <OwnerModerationTab />}
+        {qs.onglet === TAB_CONTACT_PATH && <ContactPathTab />}
+      </Tabs>
     </>
   )
 }

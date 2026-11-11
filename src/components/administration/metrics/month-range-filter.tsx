@@ -20,12 +20,15 @@ export const useMonthRange = (): [TMonthRange, (range: Partial<TMonthRange>) => 
   return [{ from: qs.from, to: qs.to }, (range) => setQs(range)]
 }
 
-export const MonthRangeFilter = ({ range, onChange }: { range: TMonthRange; onChange: (range: Partial<TMonthRange>) => void }) => {
-  const options = useMemo(() => {
+export const useMonthOptions = () =>
+  useMemo(() => {
     const current = new Date(`${defaultMonthRange().to}-01T00:00:00`)
     const months = listMonths({ from: format(addMonths(current, -(AVAILABLE_MONTHS - 1)), 'yyyy-MM'), to: format(current, 'yyyy-MM') })
     return months.reverse().map((month) => ({ value: month, label: monthLabel(month) }))
   }, [])
+
+export const MonthRangeFilter = ({ range, onChange }: { range: TMonthRange; onChange: (range: Partial<TMonthRange>) => void }) => {
+  const options = useMonthOptions()
 
   return (
     <div className="fr-grid-row fr-grid-row--gutters">
