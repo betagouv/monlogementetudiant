@@ -41,6 +41,7 @@ const tensionColumns: ColumnDef<TCityMonthRow, unknown>[] = [
 const relaxedColumns: ColumnDef<TCityMonthRow, unknown>[] = [
   { accessorKey: 'cityName', header: 'Ville', size: 200 },
   { accessorKey: 'recherches', header: 'Recherches', size: 110 },
+  { accessorKey: 'tension', header: 'Tension', cell: ({ getValue }) => formatPercent(getValue() as number | null), size: 110 },
   {
     accessorKey: 'residencesOuvertes',
     header: 'Résidences ouvertes',
@@ -67,6 +68,9 @@ export default function TerritoiresPage() {
   const [month, setMonth] = useMonth()
   const { data, isLoading, isError } = useAdminCityMetrics(month)
   const rows = data ?? []
+  const relaxedRows = rows
+    .filter((row) => (row.residencesOuvertes ?? 0) > 0)
+    .sort((a, b) => (b.partSansContact ?? -1) - (a.partSansContact ?? -1) || b.recherches - a.recherches)
 
   return (
     <>
@@ -134,7 +138,7 @@ export default function TerritoiresPage() {
         <div className="fr-px-2w">
           <AdminDataTable
             columns={relaxedColumns}
-            data={rows}
+            data={relaxedRows}
             pageCount={1}
             page={1}
             isLoading={isLoading}
