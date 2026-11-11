@@ -13,6 +13,7 @@ import { useAdminReminderEmails } from '~/hooks/use-admin-reminders'
 import type { TBrevoEmailStatus } from '~/server/services/brevo-reminders'
 import { formatDateTime, formatDelay } from '~/utils/format-admin'
 import styles from '../../../app/(authenticated)/administration/administration.module.css'
+import { EfficacyHelpModal } from './efficacy-help-modal'
 import { EFFICACY_LABELS, EMAIL_STATUS_LABELS } from './labels'
 
 type SentEmailsData = NonNullable<ReturnType<typeof useAdminReminderEmails>['data']>
@@ -155,9 +156,12 @@ export const SentEmailsTab = ({ from, to, page, type, search, onTypeChange, onPa
           <span className={clsx('fr-icon-percent-line', styles.statIcon)} aria-hidden="true" />
         </div>
       </div>
-      <p className="fr-text--sm fr-text-mention--grey fr-mb-3w">
-        L&apos;efficacité n&apos;est mesurée que pour les relances envoyées depuis la mise en ligne de cet écran.
-      </p>
+      <div className="fr-mb-3w">
+        <p className="fr-text--sm fr-text-mention--grey fr-mb-1v">
+          L&apos;efficacité n&apos;est mesurée que pour les relances envoyées depuis la mise en ligne de cet écran.
+        </p>
+        <EfficacyHelpModal />
+      </div>
 
       <div className="fr-grid-row fr-grid-row--gutters fr-mb-2w fr-align-items-end">
         <div className="fr-col-12 fr-col-md-4">
