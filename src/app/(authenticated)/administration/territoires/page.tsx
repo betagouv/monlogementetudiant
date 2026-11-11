@@ -85,6 +85,7 @@ export default function TerritoiresPage() {
       </div>
 
       <MonthFilter month={month} onChange={setMonth} />
+      <p className="fr-text--sm fr-text-mention--grey fr-mb-0">Données mises à jour chaque nuit</p>
 
       <div className={clsx(styles.card, 'fr-my-3w')}>
         <div className={styles.cardHeader}>

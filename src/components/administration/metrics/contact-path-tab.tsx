@@ -3,19 +3,15 @@
 import Button from '@codegouvfr/react-dsfr/Button'
 import type { ColumnDef } from '@tanstack/react-table'
 import clsx from 'clsx'
-import { parseAsString, useQueryStates } from 'nuqs'
-import { useMemo } from 'react'
 import { CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { AdminDataTable } from '~/components/administration/admin-data-table'
 import { CONTACT_PATH_TARGET } from '~/enums/contact-path-target'
 import { useAdminMetricsContactPath, useAdminOwnersToTarget } from '~/hooks/use-admin-metrics'
-import type { TMonthRange } from '~/schemas/admin-metrics/month-range'
 import type { TOwnerToTarget } from '~/server/admin-metrics/contact-path'
-import { defaultMonthRange } from '~/server/admin-metrics/months'
 import styles from '../../../app/(authenticated)/administration/administration.module.css'
 import statStyles from '../../../app/(authenticated)/administration/statistiques/statistiques.module.css'
 import { MetricSourceBadge } from './metric-source-badge'
-import { MonthRangeFilter } from './month-range-filter'
+import { MonthRangeFilter, useMonthRange } from './month-range-filter'
 
 const monthLabel = (month: string) => new Date(`${month}-01T00:00:00`).toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' })
 
@@ -27,20 +23,8 @@ const ownerColumns: ColumnDef<TOwnerToTarget, unknown>[] = [
   { accessorKey: 'logementsDisponibles', header: 'Places disponibles', size: 130 },
 ]
 
-const useContactPathRange = (): [TMonthRange, (range: Partial<TMonthRange>) => void] => {
-  const defaults = useMemo(() => defaultMonthRange(), [])
-  const [qs, setQs] = useQueryStates({
-    moisDe: parseAsString.withDefault(defaults.from),
-    moisA: parseAsString.withDefault(defaults.to),
-  })
-  return [
-    { from: qs.moisDe, to: qs.moisA },
-    (range) => setQs({ ...(range.from && { moisDe: range.from }), ...(range.to && { moisA: range.to }) }),
-  ]
-}
-
 export const ContactPathTab = () => {
-  const [range, setRange] = useContactPathRange()
+  const [range, setRange] = useMonthRange()
   const series = useAdminMetricsContactPath(range)
   const owners = useAdminOwnersToTarget()
 
@@ -57,6 +41,7 @@ export const ContactPathTab = () => {
   return (
     <>
       <MonthRangeFilter range={range} onChange={setRange} />
+      <p className="fr-text--sm fr-text-mention--grey fr-mb-0">Données mises à jour chaque nuit</p>
 
       <div className={clsx(styles.card, 'fr-my-3w')}>
         <div className={styles.cardHeader}>

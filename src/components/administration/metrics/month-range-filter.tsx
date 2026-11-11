@@ -14,10 +14,13 @@ const monthLabel = (month: string) => new Date(`${month}-01T00:00:00`).toLocaleD
 export const useMonthRange = (): [TMonthRange, (range: Partial<TMonthRange>) => void] => {
   const defaults = useMemo(() => defaultMonthRange(), [])
   const [qs, setQs] = useQueryStates({
-    from: parseAsString.withDefault(defaults.from),
-    to: parseAsString.withDefault(defaults.to),
+    moisDe: parseAsString.withDefault(defaults.from),
+    moisA: parseAsString.withDefault(defaults.to),
   })
-  return [{ from: qs.from, to: qs.to }, (range) => setQs(range)]
+  return [
+    { from: qs.moisDe, to: qs.moisA },
+    (range) => setQs({ ...(range.from && { moisDe: range.from }), ...(range.to && { moisA: range.to }) }),
+  ]
 }
 
 export const useMonthOptions = () =>

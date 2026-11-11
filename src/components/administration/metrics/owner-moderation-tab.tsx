@@ -9,6 +9,7 @@ import { useAdminModeration } from '~/hooks/use-admin-metrics'
 import type { TOwnerModerationRow } from '~/server/admin-metrics/moderation'
 import { SEGMENT_LABELS, type TOwnerSegment } from '~/server/admin-metrics/segment'
 import styles from '../../../app/(authenticated)/administration/administration.module.css'
+import { MetricSourceBadge } from './metric-source-badge'
 import { MonthFilter, useMonth } from './month-filter'
 
 const SEGMENTS = Object.keys(SEGMENT_LABELS) as TOwnerSegment[]
@@ -96,6 +97,7 @@ export const OwnerModerationTab = () => {
       </p>
 
       <MonthFilter month={month} onChange={setMonth} />
+      <p className="fr-text--sm fr-text-mention--grey fr-mb-0">Données mises à jour chaque nuit</p>
 
       <div className={clsx(styles.statsGrid, 'fr-my-3w')}>
         {SEGMENTS.map((segment) => (
@@ -110,7 +112,9 @@ export const OwnerModerationTab = () => {
 
       <div className={clsx(styles.card, 'fr-mb-3w')}>
         <div className={styles.cardHeader}>
-          <span className={styles.cardTitle}>Modération des contacts ({rows.length})</span>
+          <span className={styles.cardTitle}>
+            Modération des contacts ({rows.length}) <MetricSourceBadge source="Relevé mensuel" />
+          </span>
           <Button
             size="small"
             priority="secondary"
