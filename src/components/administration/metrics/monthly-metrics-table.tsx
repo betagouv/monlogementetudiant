@@ -34,18 +34,18 @@ const MetricCell = ({ total, boursiers }: { total: number | null; boursiers: num
 
 export const MonthlyMetricsTable = ({ series, range }: { series: TMetricSeries[]; range: TMonthRange }) => {
   const months = series[0]?.values.map((value) => value.month) ?? []
-  const contentRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const content = contentRef.current
+    const content = containerRef.current
     if (content) content.scrollLeft = content.scrollWidth
   }, [months.length, range.from, range.to])
 
   return (
     <div className={`fr-table fr-table--no-caption ${styles.table}`}>
       <div className="fr-table__wrapper">
-        <div className="fr-table__container">
-          <div className="fr-table__content" ref={contentRef}>
+        <div className="fr-table__container" ref={containerRef}>
+          <div className="fr-table__content">
             <table>
               <caption>Évolution mensuelle</caption>
               <thead>
