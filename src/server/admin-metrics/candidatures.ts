@@ -1,28 +1,25 @@
-import { addMonths, format } from 'date-fns'
-import { type AnyColumn, and, between, eq, gte, lt, sql } from 'drizzle-orm'
+import { type AnyColumn, and, gte, lt, sql } from 'drizzle-orm'
 import { EMetricItem } from '~/enums/metric-item'
 import { EMonthlyMetric } from '~/enums/monthly-metric'
 import type { TMonthRange } from '~/schemas/admin-metrics/month-range'
-import { listMonths, monthOf, monthStart, type TMonth } from '~/server/admin-metrics/months'
+import { listMonths, monthOf } from '~/server/admin-metrics/months'
+import {
+  fillMonths,
+  matomoEvents,
+  monthBounds,
+  snapshotsOf,
+  type TMetricSeries,
+  type TMonthlyValue,
+  type TRow,
+} from '~/server/admin-metrics/series'
 import { db } from '~/server/db'
-import { applicationFacts, eventStats, monthlyMetrics } from '~/server/db/schema'
+import { applicationFacts } from '~/server/db/schema'
 
-export type TMonthlyValue = { month: TMonth; total: number; boursiers: number | null }
-export type TMetricSeries = { key: EMetricItem; values: TMonthlyValue[] }
-
-type TRow = { month: string; total: number; boursiers: number | null }
-
-const fillMonths = (months: TMonth[], rows: TRow[], emptyBoursiers: number | null): TMonthlyValue[] => {
-  const byMonth = new Map(rows.map((row) => [row.month, row]))
-  return months.map((month) => {
-    const row = byMonth.get(month)
-    return { month, total: row?.total ?? 0, boursiers: row ? row.boursiers : emptyBoursiers }
-  })
-}
+export type { TMetricSeries, TMonthlyValue }
 
 const factsBy = async (column: AnyColumn, range: TMonthRange): Promise<TRow[]> => {
   const month = monthOf(column)
-  const end = monthStart(format(addMonths(new Date(`${range.to}-01T00:00:00`), 1), 'yyyy-MM'))
+  const { start, end } = monthBounds(range)
   return db
     .select({
       month,
@@ -30,37 +27,7 @@ const factsBy = async (column: AnyColumn, range: TMonthRange): Promise<TRow[]> =
       boursiers: sql<number>`count(*) filter (where ${applicationFacts.scholarshipStatus} = 'yes')::int`,
     })
     .from(applicationFacts)
-    .where(and(gte(column, monthStart(range.from)), lt(column, end)))
-    .groupBy(month)
-}
-
-const snapshotsOf = async (metric: EMonthlyMetric, range: TMonthRange): Promise<TRow[]> => {
-  const rows = await db
-    .select({ month: monthlyMetrics.month, total: monthlyMetrics.value, boursiers: monthlyMetrics.boursiers })
-    .from(monthlyMetrics)
-    .where(
-      and(
-        eq(monthlyMetrics.metric, metric),
-        eq(monthlyMetrics.scope, 'global'),
-        eq(monthlyMetrics.scopeId, 0),
-        between(monthlyMetrics.month, range.from, range.to),
-      ),
-    )
-  return rows
-}
-
-const matomoConsultOffer = async (range: TMonthRange): Promise<TRow[]> => {
-  const month = sql<string>`to_char(${eventStats.date}, 'YYYY-MM')`
-  return db
-    .select({ month, total: sql<number>`coalesce(sum(${eventStats.nbEvents}), 0)::int`, boursiers: sql<number | null>`null` })
-    .from(eventStats)
-    .where(
-      and(
-        eq(eventStats.category, 'Logement'),
-        eq(eventStats.action, 'consulter offre'),
-        sql`${month} between ${range.from} and ${range.to}`,
-      ),
-    )
+    .where(and(gte(column, start), lt(column, end)))
     .groupBy(month)
 }
 
@@ -71,7 +38,7 @@ export const getCandidaturesSeries = async (range: TMonthRange): Promise<TMetric
     factsBy(applicationFacts.contactedAt, range),
     factsBy(applicationFacts.attributedAt, range),
     snapshotsOf(EMonthlyMetric.CONSULT_OFFER, range),
-    matomoConsultOffer(range),
+    matomoEvents('Logement', 'consulter offre', range),
     snapshotsOf(EMonthlyMetric.OWNER_LANDING_CLICK, range),
   ])
 
