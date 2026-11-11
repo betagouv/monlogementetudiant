@@ -67,7 +67,7 @@ describe('getStudentSeries', () => {
     const series = await byKey()
 
     expect(series.etudiants_boursiers).toEqual([
-      { month: '2026-10', total: 0, boursiers: null },
+      { month: '2026-10', total: null, boursiers: null },
       { month: '2026-11', total: 40, boursiers: 12 },
     ])
   })

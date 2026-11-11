@@ -57,14 +57,14 @@ describe('getCandidaturesSeries', () => {
     expect(byKey.logements_attribues[1]).toEqual({ month: '2026-11', total: 1, boursiers: 1 })
     expect(byKey.consult_offer_base).toEqual([
       { month: '2026-10', total: 40, boursiers: 8 },
-      { month: '2026-11', total: 0, boursiers: null },
+      { month: '2026-11', total: null, boursiers: null },
     ])
     expect(byKey.consult_offer_matomo).toEqual([
       { month: '2026-10', total: 10, boursiers: null },
       { month: '2026-11', total: 0, boursiers: null },
     ])
     expect(byKey.owner_landing_click).toEqual([
-      { month: '2026-10', total: 0, boursiers: null },
+      { month: '2026-10', total: null, boursiers: null },
       { month: '2026-11', total: 5, boursiers: null },
     ])
   })
