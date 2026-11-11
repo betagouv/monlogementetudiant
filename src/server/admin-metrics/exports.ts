@@ -37,13 +37,13 @@ export const parseExportRequest = (
   if (isOneOf(EXPORT_STATIC_ITEMS, item)) return { success: true, data: { kind: 'static', item } }
 
   if (isOneOf(EXPORT_MONTH_ITEMS, item)) {
-    const month = ZMonth.safeParse(params.month)
+    const month = ZMonth.safeParse(params.month ?? '')
     if (!month.success) return { success: false, message: month.error.issues[0]?.message ?? 'Mois invalide' }
     return { success: true, data: { kind: 'month', item, month: month.data } }
   }
 
   if (isOneOf(EXPORT_RANGE_ITEMS, item) || isMetricItem(item)) {
-    const range = ZMonthRange.safeParse({ from: params.from, to: params.to })
+    const range = ZMonthRange.safeParse({ from: params.from ?? '', to: params.to ?? '' })
     if (!range.success) return { success: false, message: range.error.issues[0]?.message ?? 'Période invalide' }
     return isMetricItem(item)
       ? { success: true, data: { kind: 'series', item, ...range.data } }

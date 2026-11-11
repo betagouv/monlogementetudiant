@@ -63,6 +63,14 @@ describe('GET /api/admin/metriques/export', () => {
     mockSession.current = { user: { role: 'admin' } }
     const response = await GET(exportRequest({ item: 'moderation' }))
     expect(response.status).toBe(400)
+    expect(await response.text()).toBe('Mois invalide')
+  })
+
+  it('refuse une période manquante avec le message français', async () => {
+    mockSession.current = { user: { role: 'admin' } }
+    const response = await GET(exportRequest({ item: EMetricItem.CONTACTS_TRANSMIS }))
+    expect(response.status).toBe(400)
+    expect(await response.text()).toBe('Mois invalide')
   })
 
   it('exporte une série mensuelle', async () => {
