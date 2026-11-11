@@ -19,6 +19,7 @@ export const CandidaturesMonthlySection = () => {
       </div>
       <div className="fr-p-2w">
         <MonthRangeFilter range={range} onChange={setRange} />
+        <p className="fr-text--sm fr-text-mention--grey">Données mises à jour chaque nuit</p>
         {isLoading && <p>Chargement...</p>}
         {isError && <p className="fr-error-text">Période invalide ou données indisponibles</p>}
         {data && <MonthlyMetricsTable series={data} range={range} />}
