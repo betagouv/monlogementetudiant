@@ -8,17 +8,22 @@ import { monthOf, monthStart, type TMonth } from '~/server/admin-metrics/months'
 import { db } from '~/server/db'
 import { eventStats, monthlyMetrics, user } from '~/server/db/schema'
 
-export type TMonthlyValue = { month: TMonth; total: number; boursiers: number | null }
+export type TMonthlyValue = { month: TMonth; total: number | null; boursiers: number | null }
 
 export type TMetricSeries = { key: EMetricItem; values: TMonthlyValue[] }
 
-export type TRow = { month: string; total: number; boursiers: number | null }
+export type TRow = { month: string; total: number | null; boursiers: number | null }
 
-export const fillMonths = (months: TMonth[], rows: TRow[], emptyBoursiers: number | null): TMonthlyValue[] => {
+export const fillMonths = (
+  months: TMonth[],
+  rows: TRow[],
+  emptyBoursiers: number | null,
+  emptyTotal: number | null = 0,
+): TMonthlyValue[] => {
   const byMonth = new Map(rows.map((row) => [row.month, row]))
   return months.map((month) => {
     const row = byMonth.get(month)
-    return { month, total: row?.total ?? 0, boursiers: row ? row.boursiers : emptyBoursiers }
+    return { month, total: row ? row.total : emptyTotal, boursiers: row ? row.boursiers : emptyBoursiers }
   })
 }
 

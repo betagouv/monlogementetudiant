@@ -31,6 +31,6 @@ export const getStudentSeries = async (range: TMonthRange): Promise<TMetricSerie
     { key: EMetricItem.SIMULATIONS_AIDES_MATOMO, values: fillMonths(months, aidsMatomo, null) },
     { key: EMetricItem.SIMULATIONS_BUDGET_BASE, values: fillMonths(months, budgets, 0) },
     { key: EMetricItem.SIMULATIONS_BUDGET_MATOMO, values: fillMonths(months, budgetsMatomo, null) },
-    { key: EMetricItem.ETUDIANTS_BOURSIERS, values: fillMonths(months, totals, null) },
+    { key: EMetricItem.ETUDIANTS_BOURSIERS, values: fillMonths(months, totals, null, null) },
   ]
 }

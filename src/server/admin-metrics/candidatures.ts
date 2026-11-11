@@ -46,8 +46,8 @@ export const getCandidaturesSeries = async (range: TMonthRange): Promise<TMetric
     { key: EMetricItem.CONTACTS_TRANSMIS, values: fillMonths(months, transmis, 0) },
     { key: EMetricItem.ETUDIANTS_CONTACTES, values: fillMonths(months, contactes, 0) },
     { key: EMetricItem.LOGEMENTS_ATTRIBUES, values: fillMonths(months, attribues, 0) },
-    { key: EMetricItem.CONSULT_OFFER_BASE, values: fillMonths(months, consultBase, null) },
+    { key: EMetricItem.CONSULT_OFFER_BASE, values: fillMonths(months, consultBase, null, null) },
     { key: EMetricItem.CONSULT_OFFER_MATOMO, values: fillMonths(months, consultMatomo, null) },
-    { key: EMetricItem.OWNER_LANDING_CLICK, values: fillMonths(months, landing, null) },
+    { key: EMetricItem.OWNER_LANDING_CLICK, values: fillMonths(months, landing, null, null) },
   ]
 }
