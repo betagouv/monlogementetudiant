@@ -4,7 +4,7 @@
   "private": true,
   "packageManager": "pnpm@12.15.0+sha512.b3951d6d6ff4a9f13dc7cf56cd28d2b8eb37dbcc9c68e52e1e1191873ea9f82a017287ab50baadc5ccc494f036c67c0e47eb13608c2fa36f47711b61ea128e61",
   "engines": {
-    "node": ">=24.22.1 <25"
+    "node": ">=24.22.3 <25"
   },
   "scripts": {
     "predev": "react-dsfr update-icons && cp node_modules/@codegouvfr/react-dsfr/dsfr/favicon/favicon.svg public/favicon.svg && cp node_modules/@codegouvfr/react-dsfr/dsfr/favicon/favicon.ico public/favicon.ico",
