@@ -1,10 +1,13 @@
 import * as Sentry from '@sentry/nextjs'
+import { eq } from 'drizzle-orm'
 import type { MiddlewareHandler } from 'hono'
+import { db } from '~/server/db'
+import { apiKeyOwners } from '~/server/db/schema/api-key-owner'
 import { env } from '~/server/env'
 import { auth } from '~/services/better-auth'
 import { recordApiKeyUsage } from './usage'
 
-export type ApiV1Env = { Variables: { apiKey: { id: string; name: string | null } } }
+export type ApiV1Env = { Variables: { apiKey: { id: string; name: string | null; ownerId: number | null } } }
 
 /** Bloque l'API v1 quand elle est désactivée par le flag d'environnement. */
 export const requireFeatureEnabled: MiddlewareHandler<ApiV1Env> = async (c, next) => {
@@ -42,8 +45,17 @@ export const apiKeyMiddleware: MiddlewareHandler<ApiV1Env> = async (c, next) => 
   }
 
   const apiKeyId = String(result.key.id)
-  c.set('apiKey', { id: apiKeyId, name: (result.key.name as string | null) ?? null })
+  const [link] = await db.select({ ownerId: apiKeyOwners.ownerId }).from(apiKeyOwners).where(eq(apiKeyOwners.apiKeyId, apiKeyId)).limit(1)
+  c.set('apiKey', { id: apiKeyId, name: (result.key.name as string | null) ?? null, ownerId: link?.ownerId ?? null })
   // Comptage du trafic par jour et par consommateur (stats de consommation).
   await recordApiKeyUsage(apiKeyId)
+  await next()
+}
+
+/** Réserve la route aux clés rattachées à un bailleur (à placer après `apiKeyMiddleware`). */
+export const requireOwnerKey: MiddlewareHandler<ApiV1Env> = async (c, next) => {
+  if (c.get('apiKey').ownerId === null) {
+    return c.json({ error: "Cette clé d'API n'est rattachée à aucun bailleur." }, 403)
+  }
   await next()
 }

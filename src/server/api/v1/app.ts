@@ -3,7 +3,7 @@ import * as Sentry from '@sentry/nextjs'
 import { cors } from 'hono/cors'
 import { HTTPException } from 'hono/http-exception'
 import { env } from '~/server/env'
-import { apiKeyMiddleware, requireFeatureEnabled } from './middlewares'
+import { apiKeyMiddleware, requireFeatureEnabled, requireOwnerKey } from './middlewares'
 import { accommodationsApp } from './routes/accommodations'
 import { territoriesApp } from './routes/territories'
 import { createApiHono } from './shared'
@@ -15,6 +15,9 @@ app.use('*', requireFeatureEnabled)
 app.use('*', cors({ origin: '*', allowMethods: ['GET', 'OPTIONS'], allowHeaders: ['x-api-key', 'content-type'] }))
 for (const path of ['/accommodations', '/accommodations/*', '/cities', '/departments', '/academies', '/territories/*']) {
   app.use(path, apiKeyMiddleware)
+}
+for (const path of ['/contacts', '/contacts/*']) {
+  app.use(path, apiKeyMiddleware, requireOwnerKey)
 }
 
 // --- Routes (une sous-app OpenAPI par domaine) ---
