@@ -16,6 +16,19 @@ export const CONTACT_STUDENT_NAME_SQL = sql<string | null>`coalesce(
   ${user.name}
 )`
 
+const CONTACT_HAS_OWN_NAME_SQL = sql`coalesce(nullif(${contactRequests.firstname}, ''), nullif(${contactRequests.lastname}, '')) is not null`
+
+/** Prénom et nom séparés : sans nom propre à la demande, le nom complet du compte va dans `lastname`, sans découpage. */
+export const CONTACT_FIRSTNAME_SQL = sql<string | null>`nullif(${contactRequests.firstname}, '')`
+
+export const CONTACT_LASTNAME_SQL = sql<
+  string | null
+>`case when ${CONTACT_HAS_OWN_NAME_SQL} then nullif(${contactRequests.lastname}, '') else ${user.name} end`
+
+export const CONTACT_EMAIL_SQL = sql<string | null>`coalesce(${contactRequests.email}, ${user.email})`
+
+export const CONTACT_PHONE_SQL = sql<string | null>`coalesce(${contactRequests.phone}, ${user.phone})`
+
 /**
  * Statut boursier d'une demande de contact, même règle de repli que le nom : la valeur saisie dans
  * le formulaire prime — c'est la seule dont dispose un visiteur sans compte — et le profil du compte
