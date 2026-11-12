@@ -415,6 +415,8 @@ Options :
 
 Variables d'env requises : `SCALINGO_API_TOKEN`, `SCALINGO_APP`
 
+Nécessite Docker : `pg_restore` tourne dans un conteneur `postgres:18-alpine` (même version majeure que Scalingo) et restaure dans la base pointée par `DATABASE_URL`.
+
 #### `backup-db` — Externaliser le backup de la base vers S3
 
 ```bash
