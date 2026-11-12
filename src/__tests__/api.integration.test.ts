@@ -99,6 +99,13 @@ describe('API v1 — rate limit', () => {
     expect(r3.body.error).toBeTruthy()
   })
 
+  it("ne facture qu'une fois la clé par appel à /accommodations", async () => {
+    const { key } = await makeKey({ rateLimitMax: 2, rateLimitTimeWindow: 60_000 })
+    const r1 = await req('/accommodations', key)
+    const r2 = await req('/accommodations', key)
+    expect([r1.status, r2.status]).toEqual([200, 200])
+  })
+
   it("incrémente le compteur d'usage de la clé (attribution)", async () => {
     const { key, id } = await makeKey()
     await req('/cities', key)

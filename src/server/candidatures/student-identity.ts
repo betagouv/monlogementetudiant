@@ -16,14 +16,14 @@ export const CONTACT_STUDENT_NAME_SQL = sql<string | null>`coalesce(
   ${user.name}
 )`
 
-const CONTACT_HAS_OWN_NAME_SQL = sql`coalesce(nullif(${contactRequests.firstname}, ''), nullif(${contactRequests.lastname}, '')) is not null`
+/** Prénom et nom séparés : la demande prime, puis le compte ; le nom complet du compte ne sert que si ni son prénom ni son nom ne sont renseignés. */
+export const CONTACT_FIRSTNAME_SQL = sql<string | null>`coalesce(nullif(${contactRequests.firstname}, ''), nullif(${user.firstname}, ''))`
 
-/** Prénom et nom séparés : sans nom propre à la demande, le nom complet du compte va dans `lastname`, sans découpage. */
-export const CONTACT_FIRSTNAME_SQL = sql<string | null>`nullif(${contactRequests.firstname}, '')`
-
-export const CONTACT_LASTNAME_SQL = sql<
-  string | null
->`case when ${CONTACT_HAS_OWN_NAME_SQL} then nullif(${contactRequests.lastname}, '') else ${user.name} end`
+export const CONTACT_LASTNAME_SQL = sql<string | null>`coalesce(
+  nullif(${contactRequests.lastname}, ''),
+  nullif(${user.lastname}, ''),
+  case when nullif(${user.firstname}, '') is null and nullif(${user.lastname}, '') is null then ${user.name} end
+)`
 
 export const CONTACT_EMAIL_SQL = sql<string | null>`coalesce(${contactRequests.email}, ${user.email})`
 

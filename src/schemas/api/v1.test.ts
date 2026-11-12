@@ -50,6 +50,8 @@ describe('ZApiContactsListQuery', () => {
   it('rejette page_size > 100 et une date invalide', () => {
     expect(ZApiContactsListQuery.safeParse({ page_size: '101' }).success).toBe(false)
     expect(ZApiContactsListQuery.safeParse({ created_since: 'hier' }).success).toBe(false)
+    expect(ZApiContactsListQuery.safeParse({ created_since: '2026-11-01T00:00:00+01:00' }).success).toBe(true)
+    expect(ZApiContactsListQuery.safeParse({ created_since: '2026-11-01T00:00:00Z' }).success).toBe(true)
   })
 
   it('convertit les dates ISO en Date', () => {

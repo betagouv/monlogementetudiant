@@ -136,10 +136,15 @@ export const ZSlugParam = z.object({
 
 const isoDateParam = (description: string, example: string) =>
   z.iso
-    .datetime({ message: 'Date invalide (format ISO 8601 attendu)' })
+    .datetime({ offset: true, message: 'Date invalide (format ISO 8601 attendu)' })
     .optional()
     .transform((v) => (v === undefined ? undefined : new Date(v)))
-    .openapi({ description, example, type: 'string', format: 'date-time' })
+    .openapi({
+      description: `${description} Un « + » de décalage horaire doit être encodé dans l'URL (%2B).`,
+      example,
+      type: 'string',
+      format: 'date-time',
+    })
 
 export const ZApiContactsListQuery = z.object({
   created_since: isoDateParam('Demandes déposées à partir de cette date (incluse, ISO 8601).', '2026-11-01T00:00:00Z'),
