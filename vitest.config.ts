@@ -98,6 +98,7 @@ export default defineConfig({
           include: ['src/**/*.integration.test.ts', 'cli/**/*.integration.test.ts'],
           testTimeout: 30_000,
           hookTimeout: 60_000,
+          globalSetup: ['src/__tests__/helpers/global-setup-integration.ts'],
           setupFiles: ['src/__tests__/helpers/setup-integration.ts'],
           fileParallelism: false,
           env: {
