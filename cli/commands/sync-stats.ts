@@ -22,6 +22,8 @@ function generateDateRange(from: string, to: string): string[] {
   return dates
 }
 
+const BETWEEN_DATES_DELAY_MS = process.env.VITEST ? 0 : 2000
+
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
@@ -106,12 +108,12 @@ const command: SyncCommand = {
       try {
         const status = await syncSingleDate(date, options)
         result[status === 'updated' ? 'updated' : 'skipped']++
-        await sleep(2000)
+        await sleep(BETWEEN_DATES_DELAY_MS)
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error)
         console.error(`  ❌ Erreur pour le ${date}: ${msg}`)
         result.errors.push(`${date}: ${msg}`)
-        await sleep(2000)
+        await sleep(BETWEEN_DATES_DELAY_MS)
       }
     }
 
