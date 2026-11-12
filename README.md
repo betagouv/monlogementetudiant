@@ -109,6 +109,7 @@ cli/
     check-applications-inactivity.ts # Alerte puis suspend les résidences inactives (candidatures, dispos)
     send-contact-digest.ts  # Récap quotidien des demandes de contact de la veille aux gestionnaires
     reset-stale-availability.ts # Alerte puis repasse en « non communiquée » les dispos non mises à jour
+    capture-monthly-metrics.ts  # Relevé nocturne des métriques mensuelles de l'administration
 ```
 
 ---
@@ -933,7 +934,7 @@ Les migrations Drizzle sont appliquées au déploiement via le hook `postdeploy`
 | `10 4 1 * *` | `sync students` | 1er du mois à 4h10 |
 | `0 5 1 * *` | `purge-logs ; send-availability-recap` | 1er du mois à 5h |
 | `0 3 * * *` | `sync stats` | Tous les jours à 3h |
-| `30 3 * * *` | `purge-contact-requests` | Tous les jours à 3h30 |
+| `30 3 * * *` | `capture-monthly-metrics ; purge-contact-requests` | Tous les jours à 3h30 (le relevé doit passer **avant** la purge) |
 | `*/30 * * * *` | `send-alert-jobs` | Toutes les 30 min |
 | `0 7 * * *` | `expire-alerts` | Tous les jours à 7h |
 | `0 8 * * *` | `detect-alert-jobs` | Tous les jours à 8h |
@@ -943,6 +944,30 @@ Les migrations Drizzle sont appliquées au déploiement via le hook `postdeploy`
 
 Pour vérifier les crons actifs : `scalingo --app <app> cron-tasks`
 Pour voir les logs d'exécution : `scalingo --app <app> logs` (les crons tournent dans des conteneurs `one-off-*`, pas `cron-*`)
+
+#### Relevé mensuel des métriques (`capture-monthly-metrics`)
+
+Alimente les métriques mensuelles de l'administration (Candidatures, Usage étudiants, Usage gestionnaires, Territoires). Les compteurs qui se recalculent depuis leurs tables (comptes, alertes, favoris, simulations) sont calculés en direct ; le relevé ne conserve que ce que la base perdrait :
+
+- **`application_fact`** : copie sans données personnelles de chaque demande de contact confirmée et de chaque candidature DossierFacile (canal, gestionnaire, résidence, ville, date, statut boursier, dates de traitement). Jamais purgée. Indispensable parce que `purge-contact-requests` vide le statut boursier des demandes de plus de 30 jours et supprime les candidatures DossierFacile.
+- **`monthly_metric`** : compteurs figés du mois (clics issus de `tracking_event`, purgé à 7 mois) et photo des états que la base ne garde qu'au présent (étudiants boursiers, parcours contact activés, places disponibles, tension par ville).
+
+Chaque passage recalcule le mois courant et le mois précédent. Idempotente : la relancer ne crée pas de doublon.
+
+```bash
+npx tsx cli/index.ts capture-monthly-metrics
+npx tsx cli/index.ts capture-monthly-metrics --backfill-months 6
+```
+
+- `--backfill-months <n>` : reconstitue aussi les compteurs des N mois précédents. Fiable sur 6 mois au plus (les événements sont conservés 7 mois).
+
+**Premier déploiement** : la migration crée les tables via `postdeploy`, mais lancer une fois le backfill à la main sans attendre la nuit, sinon chaque purge nocturne fait disparaître des candidatures avant qu'elles soient recopiées :
+
+```bash
+scalingo --app mle-prod --region osc-secnum-fr1 run "npx tsx cli/index.ts capture-monthly-metrics --backfill-months 6"
+```
+
+Limites connues du rattrapage : les demandes de contact déjà anonymisées sont comptées avec un statut boursier « non renseigné », les candidatures DossierFacile de plus de 30 jours sont perdues, et les relevés d'état (boursiers, parcours activés, places, tension) commencent au mois du déploiement — les mois antérieurs s'affichent « — ».
 
 #### Alerte mail en cas d'échec
 
