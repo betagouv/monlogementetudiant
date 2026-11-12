@@ -1,5 +1,6 @@
 'use client'
 
+import Alert from '@codegouvfr/react-dsfr/Alert'
 import Button from '@codegouvfr/react-dsfr/Button'
 import Input from '@codegouvfr/react-dsfr/Input'
 import { createModal } from '@codegouvfr/react-dsfr/Modal'
@@ -10,7 +11,9 @@ import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
 import { useState } from 'react'
 import { useDebounce } from 'use-debounce'
 import { AdminDataTable } from '~/components/administration/admin-data-table'
+import { OwnerPicker, type TPickedOwner } from '~/components/administration/owner-picker'
 import { createToast } from '~/components/ui/createToast'
+import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { useAdminConsumerUsage } from '~/hooks/use-admin-consumer-usage'
 import { useAdminConsumers } from '~/hooks/use-admin-consumers'
 import { useAdminCreateConsumer } from '~/hooks/use-admin-create-consumer'
@@ -35,6 +38,7 @@ type ConsumerRow = {
   createdAt: Date | string
   metadata: { contact?: string; description?: string }
   usage30d: number
+  owner: { id: number; name: string; contactMode: EOwnerContactMode } | null
 }
 
 type FormState = {
@@ -45,6 +49,7 @@ type FormState = {
   rateLimitWindowSeconds: string
   enabled: boolean
   rateLimitEnabled: boolean
+  owner: TPickedOwner | null
 }
 
 const emptyForm: FormState = {
@@ -55,6 +60,7 @@ const emptyForm: FormState = {
   rateLimitWindowSeconds: '',
   enabled: true,
   rateLimitEnabled: true,
+  owner: null,
 }
 
 const createConsumerModal = createModal({ id: 'create-consumer-modal', isOpenedByDefault: false })
@@ -115,6 +121,7 @@ export function ConsumersList() {
       rateLimitWindowSeconds: row.rateLimitTimeWindow != null ? String(Math.round(row.rateLimitTimeWindow / 1000)) : '',
       enabled: row.enabled,
       rateLimitEnabled: row.rateLimitEnabled,
+      owner: row.owner,
     })
     editConsumerModal.open()
   }
@@ -136,6 +143,7 @@ export function ConsumersList() {
       description: form.description.trim() || undefined,
       rateLimitMax: toNumberOrUndefined(form.rateLimitMax),
       rateLimitWindowSeconds: toNumberOrUndefined(form.rateLimitWindowSeconds),
+      ownerId: form.owner?.id,
     })
     createConsumerModal.close()
     setRevealedKey(result.key)
@@ -153,6 +161,7 @@ export function ConsumersList() {
       rateLimitEnabled: form.rateLimitEnabled,
       rateLimitMax: toNumberOrUndefined(form.rateLimitMax),
       rateLimitWindowSeconds: toNumberOrUndefined(form.rateLimitWindowSeconds),
+      ownerId: form.owner?.id ?? null,
     })
     editConsumerModal.close()
   }
@@ -174,6 +183,12 @@ export function ConsumersList() {
           {row.original.metadata.contact && <div className="fr-text--xs fr-text-mention--grey">{row.original.metadata.contact}</div>}
         </div>
       ),
+    },
+    {
+      id: 'owner',
+      header: 'Bailleur',
+      enableSorting: false,
+      cell: ({ row }) => row.original.owner?.name ?? '—',
     },
     {
       id: 'key',
@@ -417,6 +432,20 @@ function ConsumerFormFields({
           onChange: (e) => setForm((prev) => ({ ...prev, description: e.target.value })),
         }}
       />
+      <OwnerPicker
+        label="Bailleur (facultatif)"
+        hintText="Cette clé donne accès aux coordonnées des demandes de contact de toutes les résidences du bailleur."
+        value={form.owner}
+        onChange={(owner) => setForm((prev) => ({ ...prev, owner }))}
+      />
+      {form.owner?.contactMode !== undefined && form.owner.contactMode !== EOwnerContactMode.CONTACTS && (
+        <Alert
+          severity="warning"
+          small
+          className="fr-mb-2w"
+          description="Ce bailleur n'est pas en mode contacts : l'API renverra une liste vide."
+        />
+      )}
       <div className="fr-grid-row fr-grid-row--gutters">
         <div className="fr-col-6">
           <Input
