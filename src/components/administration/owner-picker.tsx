@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useDebounce } from 'use-debounce'
 import type { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { useTRPC } from '~/server/trpc/client'
+import styles from './owner-picker.module.css'
 
 export type TPickedOwner = { id: number; name: string; contactMode?: EOwnerContactMode }
 
@@ -75,7 +76,7 @@ export const OwnerPicker = ({ value, onChange, label, hintText, clearLabel }: Ow
   }
 
   return (
-    <div ref={containerRef} style={{ position: 'relative', marginBottom: '1rem' }}>
+    <div ref={containerRef} className={`${styles.container} fr-mb-2w`}>
       <Input
         label={label}
         hintText={hintText}
@@ -88,36 +89,9 @@ export const OwnerPicker = ({ value, onChange, label, hintText, clearLabel }: Ow
         }}
       />
       {isOpen && debouncedSearch.length >= 2 && (
-        <div
-          style={{
-            position: 'absolute',
-            left: 0,
-            right: 0,
-            zIndex: 1000,
-            background: 'white',
-            border: '1px solid var(--border-default-grey)',
-            borderRadius: '0 0 4px 4px',
-            maxHeight: '200px',
-            overflowY: 'auto',
-            boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-          }}
-        >
+        <div className={styles.dropdown}>
           {clearLabel && (
-            <button
-              type="button"
-              onClick={handleSelectNone}
-              style={{
-                display: 'block',
-                width: '100%',
-                padding: '0.5rem 1rem',
-                border: 'none',
-                background: 'none',
-                textAlign: 'left',
-                cursor: 'pointer',
-                fontStyle: 'italic',
-                color: 'var(--text-mention-grey)',
-              }}
-            >
+            <button type="button" onClick={handleSelectNone} className={`${styles.option} ${styles.clearOption}`}>
               {clearLabel}
             </button>
           )}
@@ -126,23 +100,13 @@ export const OwnerPicker = ({ value, onChange, label, hintText, clearLabel }: Ow
               type="button"
               key={owner.id}
               onClick={() => handleSelectOwner({ id: owner.id, name: owner.name, contactMode: owner.contactMode })}
-              style={{
-                display: 'block',
-                width: '100%',
-                padding: '0.5rem 1rem',
-                border: 'none',
-                background: 'none',
-                textAlign: 'left',
-                cursor: 'pointer',
-              }}
+              className={styles.option}
             >
               <span>{owner.name}</span>
-              <span style={{ marginLeft: '0.5rem', color: 'var(--text-mention-grey)', fontSize: '0.85rem' }}>{owner.slug}</span>
+              <span className={styles.slug}>{owner.slug}</span>
             </button>
           ))}
-          {ownersList?.items.length === 0 && (
-            <div style={{ padding: '0.5rem 1rem', color: 'var(--text-mention-grey)' }}>Aucun résultat</div>
-          )}
+          {ownersList?.items.length === 0 && <div className={styles.empty}>Aucun résultat</div>}
         </div>
       )}
     </div>
