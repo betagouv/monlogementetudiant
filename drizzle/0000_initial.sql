@@ -4,7 +4,7 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 CREATE EXTENSION IF NOT EXISTS postgis;
 
 CREATE OR REPLACE FUNCTION immutable_unaccent(text)
-RETURNS text AS $$ SELECT unaccent($1) $$ LANGUAGE sql IMMUTABLE PARALLEL SAFE;
+RETURNS text AS $$ SELECT public.unaccent('public.unaccent'::regdictionary, $1) $$ LANGUAGE sql IMMUTABLE PARALLEL SAFE;
 
 -- Territories
 CREATE TABLE IF NOT EXISTS "territories_academy" (
