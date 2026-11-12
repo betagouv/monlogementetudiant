@@ -143,6 +143,15 @@ describe('listOwnerContacts', () => {
     })
   })
 
+  it('demande récente liée à un compte sans noms propres → prénom et nom du compte', async () => {
+    const { owner, residence } = await seedOwner()
+    await createUser({ id: 'student-names', email: 'ada@test.fr', name: 'Ada Lovelace', firstname: 'Ada', lastname: 'Lovelace' })
+    await insertContact({ accommodationId: residence.id, userId: 'student-names', createdAt: daysAgo(1) })
+
+    const { results } = await listOwnerContacts(owner.id, filters())
+    expect(results[0].student).toMatchObject({ firstname: 'Ada', lastname: 'Lovelace' })
+  })
+
   it('bailleur en mode dossier_facile → count 0', async () => {
     const { owner, residence } = await seedOwner({ contactMode: EOwnerContactMode.DOSSIER_FACILE })
     await insertContact(guestContact(residence.id))

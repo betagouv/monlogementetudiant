@@ -14,12 +14,10 @@ const app = createApiHono().basePath('/api/v1')
 // --- Middlewares ---
 app.use('*', requireFeatureEnabled)
 app.use('*', cors({ origin: '*', allowMethods: ['GET', 'OPTIONS'], allowHeaders: ['x-api-key', 'content-type'] }))
-for (const path of ['/accommodations', '/accommodations/*', '/cities', '/departments', '/academies', '/territories/*']) {
+for (const path of ['/accommodations/*', '/cities', '/departments', '/academies', '/territories/*']) {
   app.use(path, apiKeyMiddleware)
 }
-for (const path of ['/contacts', '/contacts/*']) {
-  app.use(path, apiKeyMiddleware, requireOwnerKey)
-}
+app.use('/contacts/*', apiKeyMiddleware, requireOwnerKey)
 
 // --- Routes (une sous-app OpenAPI par domaine) ---
 app.route('/', accommodationsApp)

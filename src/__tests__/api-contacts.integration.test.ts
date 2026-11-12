@@ -15,11 +15,16 @@ const BASE = '/api/v1'
 let keyUserSeq = 0
 
 /** Crée un utilisateur + une clé d'API de test, éventuellement rattachée à un bailleur. */
-async function makeKey(opts: { ownerId?: number } = {}) {
+async function makeKey(opts: { ownerId?: number; rateLimitMax?: number } = {}) {
   const id = `key-user-${++keyUserSeq}`
   await createUser({ id, email: `${id}@test.com` })
   const created = await auth.api.createApiKey({
-    body: { name: `consumer-${id}`, prefix: 'mle_', userId: id },
+    body: {
+      name: `consumer-${id}`,
+      prefix: 'mle_',
+      userId: id,
+      ...(opts.rateLimitMax != null ? { rateLimitMax: opts.rateLimitMax, rateLimitTimeWindow: 60_000 } : {}),
+    },
   })
   if (opts.ownerId != null) {
     await db.insert(apiKeyOwners).values({ apiKeyId: created.id, ownerId: opts.ownerId })
@@ -40,6 +45,15 @@ async function req(path: string, key?: string) {
 
 beforeEach(() => {
   keyUserSeq = 0
+})
+
+describe('API v1 contacts — middleware', () => {
+  it("ne facture qu'une seule fois la clé par appel à /contacts", async () => {
+    const { owner } = await seedOwner()
+    const { key } = await makeKey({ ownerId: owner.id, rateLimitMax: 2 })
+    const statuses = [(await req('/contacts', key)).status, (await req('/contacts', key)).status]
+    expect(statuses).toEqual([200, 200])
+  })
 })
 
 describe('API v1 contacts — résolution du bailleur', () => {
@@ -145,7 +159,13 @@ describe('GET /contacts', () => {
   it("réduit une demande ancienne liée à un compte, sans fuite du nom ni de l'e-mail du compte", async () => {
     const { owner, residence } = await seedOwner()
     const { key } = await makeKey({ ownerId: owner.id })
-    await createUser({ id: 'account-leak', email: 'zorglub.secret@test.com', firstname: 'Zorglub', lastname: 'Secretnom' })
+    await createUser({
+      id: 'account-leak',
+      email: 'zorglub.secret@test.com',
+      name: 'Zorglub Secretnom',
+      firstname: 'Zorglub',
+      lastname: 'Secretnom',
+    })
     const row = await insertContact({
       accommodationId: residence.id,
       userId: 'account-leak',
