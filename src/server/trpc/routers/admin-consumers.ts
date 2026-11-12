@@ -3,7 +3,9 @@ import { and, count, desc, eq, gte, ilike, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { db } from '~/server/db'
 import { apikey } from '~/server/db/schema/api-key'
+import { apiKeyOwners } from '~/server/db/schema/api-key-owner'
 import { apiKeyUsageDaily } from '~/server/db/schema/api-key-usage'
+import { owners } from '~/server/db/schema/owners'
 import { auth } from '~/services/better-auth'
 import { getDateFrom } from '~/utils/date-helpers'
 import { adminProcedure, createTRPCRouter } from '../init'
@@ -26,6 +28,13 @@ const parseMetadata = (raw: string | null): ConsumerMetadata => {
     return typeof parsed === 'object' && parsed !== null ? (parsed as ConsumerMetadata) : {}
   } catch {
     return {}
+  }
+}
+
+const assertOwnerExists = async (ownerId: number) => {
+  const [found] = await db.select({ id: owners.id }).from(owners).where(eq(owners.id, ownerId)).limit(1)
+  if (!found) {
+    throw new TRPCError({ code: 'BAD_REQUEST', message: 'Bailleur introuvable' })
   }
 }
 
@@ -58,9 +67,14 @@ export const consumersRouter = createTRPCRouter({
             lastRequest: apikey.lastRequest,
             createdAt: apikey.createdAt,
             metadata: apikey.metadata,
+            ownerId: owners.id,
+            ownerName: owners.name,
+            ownerContactMode: owners.contactMode,
             usage30d: sql<number>`COALESCE((SELECT SUM(u.count) FROM api_key_usage_daily u WHERE u.api_key_id = ${apikey.id} AND u.day >= CURRENT_DATE - 30), 0)::int`,
           })
           .from(apikey)
+          .leftJoin(apiKeyOwners, eq(apiKeyOwners.apiKeyId, apikey.id))
+          .leftJoin(owners, eq(owners.id, apiKeyOwners.ownerId))
           .where(where)
           .orderBy(desc(apikey.createdAt))
           .limit(PAGE_SIZE)
@@ -70,7 +84,14 @@ export const consumersRouter = createTRPCRouter({
       const total = countResult[0]?.count ?? 0
 
       return {
-        items: rows.map(({ metadata, ...row }) => ({ ...row, metadata: parseMetadata(metadata) })),
+        items: rows.map(({ metadata, ownerId, ownerName, ownerContactMode, ...row }) => ({
+          ...row,
+          metadata: parseMetadata(metadata),
+          owner:
+            ownerId != null && ownerName != null && ownerContactMode != null
+              ? { id: ownerId, name: ownerName, contactMode: ownerContactMode }
+              : null,
+        })),
         total,
         pageCount: Math.ceil(total / PAGE_SIZE),
         page: input.page,
@@ -85,9 +106,12 @@ export const consumersRouter = createTRPCRouter({
         description: z.string().max(500).optional(),
         rateLimitMax: z.number().int().positive().optional(),
         rateLimitWindowSeconds: z.number().int().positive().optional(),
+        ownerId: z.number().int().positive().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      if (input.ownerId != null) await assertOwnerExists(input.ownerId)
+
       const metadata: ConsumerMetadata = {}
       if (input.contact) metadata.contact = input.contact
       if (input.description) metadata.description = input.description
@@ -104,6 +128,10 @@ export const consumersRouter = createTRPCRouter({
         },
       })
 
+      if (input.ownerId != null) {
+        await db.insert(apiKeyOwners).values({ apiKeyId: created.id, ownerId: input.ownerId })
+      }
+
       // `key` (en clair) n'est renvoyé qu'ici, une seule fois.
       return { id: created.id, key: created.key, name: created.name }
     }),
@@ -119,6 +147,7 @@ export const consumersRouter = createTRPCRouter({
         rateLimitEnabled: z.boolean().optional(),
         rateLimitMax: z.number().int().positive().optional(),
         rateLimitWindowSeconds: z.number().int().positive().optional(),
+        ownerId: z.number().int().positive().nullable().optional(),
       }),
     )
     .mutation(async ({ input }) => {
@@ -126,6 +155,8 @@ export const consumersRouter = createTRPCRouter({
       if (!existing) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Consommateur introuvable' })
       }
+
+      if (input.ownerId != null) await assertOwnerExists(input.ownerId)
 
       // Métadonnées : fusion partielle, réécrites uniquement si contact/description sont fournis.
       let metadata: string | undefined
@@ -149,6 +180,15 @@ export const consumersRouter = createTRPCRouter({
           metadata,
         })
         .where(eq(apikey.id, input.keyId))
+
+      if (input.ownerId === null) {
+        await db.delete(apiKeyOwners).where(eq(apiKeyOwners.apiKeyId, input.keyId))
+      } else if (input.ownerId !== undefined) {
+        await db
+          .insert(apiKeyOwners)
+          .values({ apiKeyId: input.keyId, ownerId: input.ownerId })
+          .onConflictDoUpdate({ target: apiKeyOwners.apiKeyId, set: { ownerId: input.ownerId } })
+      }
       return { success: true }
     }),
 
