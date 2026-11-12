@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ZAccommodationsListQuery } from '~/schemas/api/v1'
+import { ZAccommodationsListQuery, ZApiContactsListQuery } from '~/schemas/api/v1'
 
 describe('ZAccommodationsListQuery', () => {
   it('applique les valeurs par défaut', () => {
@@ -27,5 +27,32 @@ describe('ZAccommodationsListQuery', () => {
     expect(ZAccommodationsListQuery.parse({ page: '3', page_size: '50' }).page_size).toBe(50)
     expect(ZAccommodationsListQuery.safeParse({ page_size: '500' }).success).toBe(false)
     expect(ZAccommodationsListQuery.safeParse({ page: '0' }).success).toBe(false)
+  })
+})
+
+describe('ZApiContactsListQuery', () => {
+  it('applique les valeurs par défaut', () => {
+    const parsed = ZApiContactsListQuery.parse({})
+    expect(parsed).toMatchObject({ page: 1, page_size: 20, order: 'desc' })
+    expect(parsed.status).toBeUndefined()
+  })
+
+  it('découpe les statuts CSV en tableau', () => {
+    expect(ZApiContactsListQuery.parse({ status: 'a_contacter,contacte' }).status).toEqual(['a_contacter', 'contacte'])
+  })
+
+  it('rejette un statut inconnu avec un message français', () => {
+    const r = ZApiContactsListQuery.safeParse({ status: 'foo' })
+    expect(r.success).toBe(false)
+    expect(r.error?.issues[0].message).toBe('Statut inconnu')
+  })
+
+  it('rejette page_size > 100 et une date invalide', () => {
+    expect(ZApiContactsListQuery.safeParse({ page_size: '101' }).success).toBe(false)
+    expect(ZApiContactsListQuery.safeParse({ created_since: 'hier' }).success).toBe(false)
+  })
+
+  it('convertit les dates ISO en Date', () => {
+    expect(ZApiContactsListQuery.parse({ created_since: '2026-11-01T00:00:00Z' }).created_since).toEqual(new Date('2026-11-01T00:00:00Z'))
   })
 })

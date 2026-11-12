@@ -1,4 +1,5 @@
 import { z } from '@hono/zod-openapi'
+import { ZContactStatus } from '~/enums/contact-status'
 import { ZAccomodation, ZAccomodationDetails } from '~/schemas/accommodations/accommodations'
 import { ZBbox, ZTerritories } from '~/schemas/territories'
 
@@ -133,6 +134,64 @@ export const ZSlugParam = z.object({
     .openapi({ param: { name: 'slug', in: 'path' }, description: 'Slug de la résidence.', example: 'les-estudines-paris-est' }),
 })
 
+const isoDateParam = (description: string, example: string) =>
+  z.iso
+    .datetime({ message: 'Date invalide (format ISO 8601 attendu)' })
+    .optional()
+    .transform((v) => (v === undefined ? undefined : new Date(v)))
+    .openapi({ description, example, type: 'string', format: 'date-time' })
+
+export const ZApiContactsListQuery = z.object({
+  created_since: isoDateParam('Demandes déposées à partir de cette date (incluse, ISO 8601).', '2026-11-01T00:00:00Z'),
+  created_until: isoDateParam('Demandes déposées avant cette date (exclue, ISO 8601).', '2026-11-30T00:00:00Z'),
+  updated_since: isoDateParam('Demandes modifiées à partir de cette date (incluse, ISO 8601).', '2026-11-10T00:00:00Z'),
+  residence: z.string().max(200).optional().openapi({ description: 'Slug de la résidence.', example: 'les-estudines-paris-est' }),
+  external_reference: z
+    .string()
+    .max(255)
+    .optional()
+    .openapi({ description: 'Référence externe de la résidence (celle de votre système).', example: 'RES-0042' }),
+  status: z
+    .string()
+    .max(200)
+    .optional()
+    .transform((value, ctx) => {
+      if (!value) return undefined
+      const statuses = value
+        .split(',')
+        .map((v) => v.trim())
+        .filter(Boolean)
+      const parsed = z.array(ZContactStatus).safeParse(statuses)
+      if (!parsed.success) {
+        ctx.addIssue({ code: 'custom', message: 'Statut inconnu' })
+        return z.NEVER
+      }
+      return parsed.data
+    })
+    .openapi({
+      description: 'Statuts séparés par des virgules : a_contacter, contacte, non_retenu, logement_attribue.',
+      example: 'a_contacter,contacte',
+      type: 'string',
+    }),
+  include_purged: boolParam(
+    'Renvoyer aussi les demandes de plus de 30 jours, sans données personnelles (`purged: true`, `student: null`).',
+  ),
+  page: intParam({ description: 'Numéro de page (à partir de 1).', example: 1, min: 1, max: 100_000 }).default(1),
+  page_size: intParam({ description: 'Taille de page (max 100).', example: 20, min: 1, max: 100 }).default(20),
+  order: z
+    .enum(['asc', 'desc'])
+    .default('desc')
+    .openapi({ description: "Tri par date de dépôt : desc (défaut, plus récentes d'abord) ou asc.", example: 'desc' }),
+})
+
+export const ZApiContactIdParam = z.object({
+  id: z.uuid({ message: 'Identifiant de demande invalide' }).openapi({
+    param: { name: 'id', in: 'path' },
+    description: 'Identifiant (UUID) de la demande de contact.',
+    example: '0b6f3c1e-8d2a-4c1b-9a57-3f1d2e4a5b6c',
+  }),
+})
+
 // --- Réponses ---
 
 /** Résidence (objet plat camelCase, `updatedAt` en string ISO pour le JSON). */
@@ -195,3 +254,49 @@ export const ZApiAcademy = z
 export const ZApiTerritorySearch = ZTerritories.openapi('TerritorySearchResult')
 
 export const ZApiError = z.object({ error: z.string() }).openapi('Error')
+
+const isoDate = (description: string) => z.string().openapi({ description, format: 'date-time' })
+
+export const ZApiContact = z
+  .object({
+    id: z.string().openapi({ description: 'Identifiant (UUID) de la demande.' }),
+    residence: z.object({
+      slug: z.string(),
+      name: z.string(),
+      externalReference: z.string().nullable().openapi({ description: 'Référence externe de la résidence, si renseignée.' }),
+    }),
+    status: ZContactStatus,
+    apartmentType: z.string().nullable().openapi({ description: 'Type de logement demandé.' }),
+    createdAt: isoDate('Date de dépôt de la demande (ISO 8601).'),
+    updatedAt: isoDate('Date de dernière modification (ISO 8601).'),
+    contactedAt: isoDate('Date de prise de contact (ISO 8601).').nullable(),
+    purged: z
+      .boolean()
+      .openapi({ description: 'true si les données personnelles ne sont plus exposées (plus de 30 jours ou anonymisée).' }),
+    purgedAt: isoDate("Date d'anonymisation (ISO 8601), si la demande a été anonymisée.").nullable(),
+    student: z
+      .object({
+        firstname: z.string().nullable(),
+        lastname: z.string().nullable(),
+        email: z.string().nullable(),
+        phone: z.string().nullable(),
+        birthdate: z.string().nullable(),
+        scholarshipStatus: z.string().nullable(),
+        isWorkStudy: z.boolean().nullable(),
+        studyInstitution: z.string().nullable(),
+        studyYear: z.string().nullable(),
+      })
+      .nullable()
+      .openapi({ description: 'Coordonnées du demandeur ; null si la demande est purgée.' }),
+  })
+  .openapi('Contact')
+
+export const ZApiContactsResponse = z
+  .object({
+    count: z.number().openapi({ description: 'Nombre total de demandes correspondant aux filtres.' }),
+    next: z.string().nullable().openapi({ description: 'Numéro de page suivant, ou null.' }),
+    previous: z.string().nullable().openapi({ description: 'Numéro de page précédent, ou null.' }),
+    pageSize: z.number(),
+    results: z.array(ZApiContact),
+  })
+  .openapi('ContactsResponse')
