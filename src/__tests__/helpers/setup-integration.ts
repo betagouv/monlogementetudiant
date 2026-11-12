@@ -1,9 +1,5 @@
-import { afterAll, beforeAll, beforeEach } from 'vitest'
-import { cleanTables, setupTestDb, teardownTestDb } from './test-db'
-
-beforeAll(async () => {
-  await setupTestDb()
-})
+import { afterAll, beforeEach } from 'vitest'
+import { cleanTables, teardownTestDb } from './test-db'
 
 beforeEach(async () => {
   await cleanTables()
