@@ -1,39 +1,24 @@
 import { randomUUID } from 'node:crypto'
 import { test as base, expect, type Page } from '@playwright/test'
-import { hashPassword } from 'better-auth/crypto'
 import { eq } from 'drizzle-orm'
-import { createAccommodation, createOwner, createUser } from '../src/__tests__/fixtures/factories'
+import { createAccommodation, createOwner, type createUser } from '../src/__tests__/fixtures/factories'
 import { getTestDb, teardownTestDb } from '../src/__tests__/helpers/test-db'
+import { createCredentialUser, SEED_PASSWORD } from '../src/__tests__/seed/accounts'
 import { EOwnerContactMode } from '../src/enums/owner-contact-mode'
 import { accommodationTypologies } from '../src/server/db/schema/accommodation-typologies'
-import { account } from '../src/server/db/schema/auth'
 import { cities } from '../src/server/db/schema/cities'
 import { scholarshipSurveyOwners } from '../src/server/db/schema/scholarship-survey'
 
 /**
  * Données propres à chaque test (tests parallèles) : chaque compte ou résidence créé ici porte un
- * identifiant unique, en plus du socle commun en lecture seule posé par e2e/seed.ts.
+ * identifiant unique, en plus du socle commun en lecture seule posé par le seed (src/__tests__/seed/dataset.ts).
  */
 
-export const PASSWORD = 'Mot-de-passe-e2e-123'
+export const PASSWORD = SEED_PASSWORD
 
 type BailleurPermission = 'manage_residences' | 'manage_applications'
 
 export const uniqueId = () => randomUUID().slice(0, 8)
-
-async function createCredentialUser(fields: Parameters<typeof createUser>[0]) {
-  const row = await createUser(fields)
-  await getTestDb()
-    .insert(account)
-    .values({
-      id: `account-${row.id}`,
-      userId: row.id,
-      accountId: row.id,
-      providerId: 'credential',
-      password: await hashPassword(PASSWORD),
-    })
-  return row
-}
 
 /** Étudiant au profil complet (sinon la modale « Complétez votre profil » s'ouvre à la connexion). */
 export function createStudent(overrides: Partial<Parameters<typeof createUser>[0]> = {}) {

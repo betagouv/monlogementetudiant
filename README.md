@@ -44,6 +44,52 @@ DATABASE_URL_TEST=postgres://test:test@localhost:5491/mle_test
 cp .env.dist .env
 ```
 
+### Jeu de données de dev (seed)
+
+```bash
+pnpm db:seed
+```
+
+Remplit la base de dev avec le **même jeu de données que les tests e2e** (`src/__tests__/seed/`), en quelques
+secondes. Aucune donnée réelle, aucun accès distant, **aucun `.env` personnel** : la commande ne charge que
+`.env.dist` (valeurs factices versionnées, qui pointent sur la base `mle_dev` de docker-compose).
+
+| Couche | Contenu |
+|---|---|
+| Socle e2e (`dataset.ts`) | Saint-Étienne et villes voisines : résidences dont les specs vérifient noms, ordre et pagination |
+| Démonstration (`demo/referential.ts`) | Lyon, Villeurbanne, Grenoble, Bordeaux, Dijon ; 3 bailleurs (modes contact, DossierFacile, aucun) + CROUS ; résidences publiées, non publiée, suspendues (manuellement / automatiquement), disponibilités fraîches ou périmées, sans total ; admins et gestionnaires |
+| Activité (`demo/activity.ts`) | ~6 mois : 40 étudiants, ~90 demandes de contact, candidatures DossierFacile, ~3 500 événements de suivi, stats Matomo, alertes, favoris, simulations, objectifs, tickets, signalements, avis bailleurs, connexions, jobs, usage de l'API |
+| Jobs de production (`demo/jobs.ts`) | Calcul des métriques mensuelles puis purge RGPD, par le **code de production** |
+
+Principes, pour que le seed tienne dans le temps :
+
+- **Fictif et anonyme** : identités génériques, e-mails `@example.com` (domaine réservé), téléphones `06 00 00 xx xx`.
+  Les contacts de plus de 30 jours sont anonymisés par la vraie purge (`purgeContactRequests`), pas par le seed.
+- **Déterministe** : graine fixe, deux lancements produisent les mêmes données.
+- **Dates relatives** au jour du lancement : les écrans « 30 derniers jours » / « 6 derniers mois » restent peuplés.
+- **Typé** : uniquement les factories et les tables du schéma Drizzle ; un changement de schéma qui casse le seed
+  échoue à la compilation ou en CI (le job e2e lance le seed).
+
+⚠️ La commande **vide toutes les tables** avant d'insérer. Elle refuse de tourner si la base n'est pas locale
+**et** nommée `*_dev`, `*_e2e` ou `*_test` (une base distante peut être exposée en local : le nom de la base sert
+de second verrou), ou si `DATABASE_URL` et `DATABASE_URL_TEST` ne désignent pas la même base.
+
+Comptes créés (mot de passe `Mot-de-passe-e2e-123`) :
+
+| Rôle | E-mail | Connexion |
+|---|---|---|
+| Admin | `admin@seed.mle.local` | lien magique (affiché dans la console de `pnpm dev`) |
+| Admin référent (suit 2 bailleurs) | `admin-referent@seed.mle.local` | lien magique |
+| Bailleur « Habitat Démo » (mode contact) | `bailleur@seed.mle.local` | lien magique |
+| Gestionnaire Habitat Démo (limité à Villeurbanne) | `gestionnaire@seed.mle.local` | lien magique |
+| Bailleur « Études & Logis Démo » (DossierFacile) | `bailleur-dossierfacile@seed.mle.local` | lien magique |
+| Bailleur « Campus Horizon Démo » (sans contact) | `bailleur-sans-contact@seed.mle.local` | lien magique |
+| Étudiant (favoris, alerte, simulations, objectifs) | `etudiant@seed.mle.local` | e-mail + mot de passe |
+
+Le seed e2e (`pnpm e2e:seed`, lancé par `pnpm test:e2e`) utilise le même jeu de données sur la base `mle_e2e`.
+Toute modification du seed doit donc passer `pnpm test:e2e`. Les données propres à un test restent créées dans
+le test (`e2e/fixtures.ts`).
+
 ## Commandes
 
 ```bash
