@@ -1508,6 +1508,11 @@
       },
       "rangesSource": "* Ces informations sont issues des données déclarées par les étudiants dans le cadre de l’enquête <link>Repère 2023 de OVE</link> et retravaillées en fonction des profils “décohabitants” (n’habitant pas chez leurs parents) et “indépendants” (n'étant pas ou peu aidés par leurs parents) des étudiants afin de donner des estimations de budget."
     },
+    "reset": {
+      "button": "Réinitialiser",
+      "successToast": "Nouvelle simulation démarrée.",
+      "errorToast": "La réinitialisation a échoué. Veuillez réessayer."
+    },
     "summary": {
       "chartShareHeader": "Part du budget",
       "announcement": "Revenus mensuels : {incomes}. Dépenses mensuelles : {expenses}. Reste à vivre : {balance}.",
