@@ -48,6 +48,8 @@ const envSchema = z.object({
   // de la QA (voir `src/utils/redirect-email.ts`). Aucun mail ne part vers une vraie adresse.
   BREVO_REDIRECT_DOMAIN: z.string().min(1).default('qa-mail.monlogementetudiant.beta.gouv.fr'),
   BREVO_CONTACTS_API_URL: z.url(),
+  BREVO_EVENTS_API_URL: z.url().default('https://api.brevo.com/v3/smtp/statistics/events'),
+  BREVO_BLOCKED_CONTACTS_API_URL: z.url().default('https://api.brevo.com/v3/smtp/blockedContacts'),
   // accepts only entire positive numbers for the brevo templates.
   BREVO_TEMPLATE_MAGIC_LINK: z.coerce.number().int().positive(),
   BREVO_TEMPLATE_VALIDATION: z.coerce.number().int().positive(),
@@ -69,6 +71,9 @@ const envSchema = z.object({
   BREVO_TEMPLATE_CONTACT_DAILY_DIGEST: z.coerce.number().int().positive(),
   BREVO_TEMPLATE_CONTACT_NOT_RETAINED: z.coerce.number().int().positive(),
   BREVO_TEMPLATE_AVAILABILITY_RESET_WARNING: z.coerce.number().int().positive(),
+  BREVO_TEMPLATE_AVAILABILITY_MONTHLY_RECAP: z.coerce.number().int().positive(),
+  BREVO_TEMPLATE_AVAILABILITY_RESET_DONE: z.coerce.number().int().positive(),
+  BREVO_TEMPLATE_STUDENT_GOAL_REMINDER: z.coerce.number().int().positive(),
 
   // S3
   S3_ENDPOINT: z.url(),
@@ -165,6 +170,9 @@ const envSchema = z.object({
   // Rate-limit par défaut appliqué à chaque clé d'API (surchargable par clé).
   API_V1_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(120),
   API_V1_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60_000),
+
+  // Enquête flash boursiers : dernier jour d'ouverture (AAAA-MM-JJ, heure de Paris). Vide = enquête fermée.
+  SCHOLARSHIP_SURVEY_END_DATE: z.preprocess((v) => (v === '' ? undefined : v), z.iso.date().optional()),
 })
 
 export const env = envSchema.parse(process.env)

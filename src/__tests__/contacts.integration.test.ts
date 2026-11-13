@@ -3,11 +3,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { EContactSource } from '~/enums/contact-source'
 import { EContactStatus } from '~/enums/contact-status'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
+import { EStudyYear } from '~/enums/study-year'
 import { createClaimToken, verifyClaimToken } from '~/server/contacts/claim-token'
 import { getClaimedContactRequest } from '~/server/contacts/claimed-request'
 import { linkGuestContactRequests } from '~/server/contacts/link-guest-requests'
 import { purgeContactRequests } from '~/server/contacts/purge'
-import { accommodations, contactRequests, owners, user } from '~/server/db/schema'
+import { accommodations, activityLog, contactRequests, owners, user } from '~/server/db/schema'
 import { typologyDraft } from '../server/lib/typologies'
 import { createAccommodation, createOwner, createUser } from './fixtures/factories'
 import './helpers/setup-integration'
@@ -20,6 +21,14 @@ vi.mock('~/server/services/brevo', async () => {
   return { ...actual, sendContactRequestConfirmationEmail: (...args: unknown[]) => sendConfirmationEmail(...args) }
 })
 
+const notifyNotRetained = vi.fn().mockResolvedValue(undefined)
+vi.mock('~/server/bailleur/application-notifications', async () => {
+  const actual = await vi.importActual<typeof import('~/server/bailleur/application-notifications')>(
+    '~/server/bailleur/application-notifications',
+  )
+  return { ...actual, notifyContactRequestNotRetained: (...args: unknown[]) => notifyNotRetained(...args) }
+})
+
 const contactInput = {
   firstname: 'Toto',
   lastname: 'Tutu',
@@ -27,6 +36,9 @@ const contactInput = {
   phone: '0102030405',
   birthdate: '2003-04-15',
   scholarshipStatus: 'yes',
+  isWorkStudy: false,
+  studyInstitution: 'Université de Lille',
+  studyYear: EStudyYear.BAC_2,
 } as const
 
 /** Simule le clic sur le lien de double opt-in. */
@@ -42,6 +54,7 @@ const ageContactRequest = (id: string, days: number) =>
 
 beforeEach(async () => {
   sendConfirmationEmail.mockClear()
+  notifyNotRetained.mockClear()
   await createUser({ id: 'test-user-id', name: 'Test User', email: 'test@test.com', role: 'user' })
   await createUser({ id: 'test-owner-id', name: 'Test Owner', email: 'owner@test.com', role: 'owner' })
 })
@@ -59,6 +72,47 @@ describe('contacts.create', () => {
     // Un visiteur sans compte n'a que le formulaire pour porter ces informations.
     expect(result!.birthdate).toBe(contactInput.birthdate)
     expect(result!.scholarshipStatus).toBe(contactInput.scholarshipStatus)
+    expect(result!.isWorkStudy).toBe(false)
+    expect(result!.studyInstitution).toBe('Université de Lille')
+    expect(result!.studyYear).toBe('bac_2')
+  })
+
+  it('rejects a request without study year', async () => {
+    const owner = await createOwner({ name: 'Owner No Year', slug: 'owner-no-year', contactMode: EOwnerContactMode.CONTACTS })
+    await createAccommodation({ slug: 'res-no-year', ownerId: owner!.id }, [typologyDraft('t1', { nbAvailable: 1 })])
+    const { studyYear: _studyYear, ...withoutYear } = contactInput
+
+    // @ts-expect-error studyYear est requis
+    await expect(caller.contacts.create({ accommodationSlug: 'res-no-year', ...withoutYear })).rejects.toThrow()
+  })
+
+  it('writes the study fields back to the student profile', async () => {
+    const owner = await createOwner({ name: 'Owner Writeback', slug: 'owner-writeback', contactMode: EOwnerContactMode.CONTACTS })
+    await createAccommodation({ slug: 'res-writeback', ownerId: owner!.id }, [typologyDraft('t1', { nbAvailable: 1 })])
+
+    await authenticatedCaller.contacts.create({
+      accommodationSlug: 'res-writeback',
+      ...contactInput,
+      isWorkStudy: true,
+      studyYear: EStudyYear.BAC_3,
+    })
+
+    const profile = await getTestDb().query.user.findFirst({ where: eq(user.id, 'test-user-id') })
+    expect(profile).toMatchObject({ isWorkStudy: true, studyInstitution: 'Université de Lille', studyYear: EStudyYear.BAC_3 })
+  })
+
+  it('keeps the profile study values the student already has', async () => {
+    const owner = await createOwner({ name: 'Owner Keep', slug: 'owner-keep', contactMode: EOwnerContactMode.CONTACTS })
+    await createAccommodation({ slug: 'res-keep', ownerId: owner!.id }, [typologyDraft('t1', { nbAvailable: 1 })])
+    await getTestDb()
+      .update(user)
+      .set({ isWorkStudy: true, studyInstitution: 'IUT de Lyon', studyYear: EStudyYear.BAC_4 })
+      .where(eq(user.id, 'test-user-id'))
+
+    await authenticatedCaller.contacts.create({ accommodationSlug: 'res-keep', ...contactInput })
+
+    const profile = await getTestDb().query.user.findFirst({ where: eq(user.id, 'test-user-id') })
+    expect(profile).toMatchObject({ isWorkStudy: true, studyInstitution: 'IUT de Lyon', studyYear: EStudyYear.BAC_4 })
   })
 
   it('rejects an unpublished accommodation as if it did not exist', async () => {
@@ -268,6 +322,33 @@ describe('rétention côté gestionnaire', () => {
     await expect(ownerCaller.bailleur.getContact({ id: request!.id })).resolves.toBeDefined()
   })
 
+  it('keeps an unpublished residence reachable while it holds a visible request, and drops one that holds none', async () => {
+    await setupOwnedResidence('res-unpub-pending')
+    await authenticatedCaller.contacts.create({ accommodationSlug: 'res-unpub-pending', ...contactInput })
+
+    await ownerCaller.bailleur.update({ slug: 'res-unpub-pending', published: false })
+    const closed = await getTestDb().query.accommodations.findFirst({ where: eq(accommodations.slug, 'res-unpub-pending') })
+    expect(closed?.acceptsApplications).toBe(false)
+
+    const residences = await ownerCaller.bailleur.listResidencesWithContactCounts({})
+    expect(residences.residences.find((r) => r.slug === 'res-unpub-pending')?.aRappelerCount).toBe(1)
+    const board = await ownerCaller.bailleur.listContactsByResidence({ slug: 'res-unpub-pending' })
+    expect(board.items).toHaveLength(1)
+
+    const list = await ownerCaller.bailleur.list({ page: 1 })
+    expect(list.results.find((r) => r.slug === 'res-unpub-pending')?.hasVisibleContacts).toBe(true)
+  })
+
+  it('does not list a residence closed to applications that holds no visible request', async () => {
+    await setupOwnedResidence('res-closed-empty')
+    await getTestDb().update(accommodations).set({ acceptsApplications: false }).where(eq(accommodations.slug, 'res-closed-empty'))
+
+    const residences = await ownerCaller.bailleur.listResidencesWithContactCounts({})
+    expect(residences.residences.find((r) => r.slug === 'res-closed-empty')).toBeUndefined()
+    const list = await ownerCaller.bailleur.list({ page: 1 })
+    expect(list.results.find((r) => r.slug === 'res-closed-empty')?.hasVisibleContacts).toBe(false)
+  })
+
   it('carries the student info of a guest request through to the manager', async () => {
     await setupOwnedResidence('res-info-guest')
     const request = await caller.contacts.create({ accommodationSlug: 'res-info-guest', ...contactInput })
@@ -281,6 +362,37 @@ describe('rétention côté gestionnaire', () => {
     const board = await ownerCaller.bailleur.listContactsByResidence({ slug: 'res-info-guest' })
     expect(board.items[0]!.scholarshipStatus).toBe(contactInput.scholarshipStatus)
     expect(board.items[0]!.studentBirthdate).toBe(contactInput.birthdate)
+  })
+
+  it('exposes the study fields of a request, falling back on the linked profile', async () => {
+    await setupOwnedResidence('res-study')
+    const own = await caller.contacts.create({ accommodationSlug: 'res-study', ...contactInput })
+    await confirmContactRequest(own!.id)
+
+    const detail = await ownerCaller.bailleur.getContact({ id: own!.id })
+    expect(detail.isWorkStudy).toBe(false)
+    expect(detail.studyInstitution).toBe(contactInput.studyInstitution)
+    expect(detail.studyYear).toBe(EStudyYear.BAC_2)
+
+    const bare = await authenticatedCaller.contacts.create({ accommodationSlug: 'res-study', ...contactInput })
+    await getTestDb()
+      .update(user)
+      .set({ isWorkStudy: true, studyInstitution: 'IUT de Lyon', studyYear: EStudyYear.BAC_4 })
+      .where(eq(user.id, 'test-user-id'))
+    await getTestDb()
+      .update(contactRequests)
+      .set({ isWorkStudy: null, studyInstitution: null, studyYear: null })
+      .where(eq(contactRequests.id, bare!.id))
+
+    const fallback = await ownerCaller.bailleur.getContact({ id: bare!.id })
+    expect(fallback.isWorkStudy).toBe(true)
+    expect(fallback.studyInstitution).toBe('IUT de Lyon')
+    expect(fallback.studyYear).toBe(EStudyYear.BAC_4)
+
+    const board = await ownerCaller.bailleur.listContactsByResidence({ slug: 'res-study' })
+    const item = board.items.find((i) => i.id === bare!.id)
+    expect(item?.isWorkStudy).toBe(true)
+    expect(item?.studyYear).toBe(EStudyYear.BAC_4)
   })
 
   it('hides a request past 30 days everywhere, including by direct URL', async () => {
@@ -306,6 +418,65 @@ describe('rétention côté gestionnaire', () => {
     await expect(
       ownerCaller.bailleur.updateContactStatus({ id: request!.id, status: EContactStatus.CONTACTE, source: EContactSource.CONTACT }),
     ).rejects.toThrow(/not found/i)
+  })
+
+  it('journalise la modération sans donnée personnelle de l’étudiant', async () => {
+    await setupOwnedResidence('res-moderation-log')
+    const request = await authenticatedCaller.contacts.create({ accommodationSlug: 'res-moderation-log', ...contactInput })
+
+    await ownerCaller.bailleur.updateContactStatus({ id: request!.id, status: EContactStatus.CONTACTE, source: EContactSource.CONTACT })
+    await ownerCaller.bailleur.updateContactStatus({ id: request!.id, status: EContactStatus.CONTACTE, source: EContactSource.CONTACT })
+
+    const logs = await getTestDb().select().from(activityLog).where(eq(activityLog.action, 'contact.status_updated'))
+    expect(logs).toHaveLength(1)
+    expect(logs[0]).toMatchObject({
+      userId: 'test-owner-id',
+      entityType: 'contact_request',
+      entityId: request!.id,
+      metadata: { slug: 'res-moderation-log', diff: { contactStatus: { old: EContactStatus.A_CONTACTER, new: EContactStatus.CONTACTE } } },
+    })
+    expect(JSON.stringify(logs[0])).not.toMatch(new RegExp(`${contactInput.email}|${contactInput.lastname}|${contactInput.phone}`))
+  })
+
+  describe('contactedAt', () => {
+    const move = (id: string, status: EContactStatus) =>
+      ownerCaller.bailleur.updateContactStatus({ id, status, source: EContactSource.CONTACT })
+    const contactedAtOf = async (id: string) =>
+      (await getTestDb().select({ at: contactRequests.contactedAt }).from(contactRequests).where(eq(contactRequests.id, id)))[0]!.at
+
+    it('is set on the first move to contacte and kept afterwards', async () => {
+      await setupOwnedResidence('res-contacted-at')
+      const request = await authenticatedCaller.contacts.create({ accommodationSlug: 'res-contacted-at', ...contactInput })
+      expect(await contactedAtOf(request!.id)).toBeNull()
+
+      await move(request!.id, EContactStatus.CONTACTE)
+      const first = await contactedAtOf(request!.id)
+      expect(first).toBeInstanceOf(Date)
+
+      await move(request!.id, EContactStatus.LOGEMENT_ATTRIBUE)
+      expect(await contactedAtOf(request!.id)).toEqual(first)
+      expect(notifyNotRetained).not.toHaveBeenCalled()
+
+      await move(request!.id, EContactStatus.NON_RETENU)
+      expect(await contactedAtOf(request!.id)).toEqual(first)
+      expect(notifyNotRetained).toHaveBeenCalledTimes(1)
+    })
+
+    it('is set when going straight to logement_attribue', async () => {
+      await setupOwnedResidence('res-contacted-at-direct')
+      const request = await authenticatedCaller.contacts.create({ accommodationSlug: 'res-contacted-at-direct', ...contactInput })
+
+      await move(request!.id, EContactStatus.LOGEMENT_ATTRIBUE)
+      expect(await contactedAtOf(request!.id)).toBeInstanceOf(Date)
+    })
+
+    it('stays null when refused without prior contact', async () => {
+      await setupOwnedResidence('res-contacted-at-refused')
+      const request = await authenticatedCaller.contacts.create({ accommodationSlug: 'res-contacted-at-refused', ...contactInput })
+
+      await move(request!.id, EContactStatus.NON_RETENU)
+      expect(await contactedAtOf(request!.id)).toBeNull()
+    })
   })
 
   it('refuses to mutate an unconfirmed guest request', async () => {
@@ -369,12 +540,19 @@ describe('purgeContactRequests', () => {
       typologyDraft('t1', { nbAvailable: 1 }),
     ])
     const request = await authenticatedCaller.contacts.create({ accommodationSlug: 'res-purge-old', ...contactInput })
+    await getTestDb()
+      .update(contactRequests)
+      .set({ isWorkStudy: true, studyInstitution: 'Université de Lille', studyYear: EStudyYear.BAC_3 })
+      .where(eq(contactRequests.id, request!.id))
     await ageContactRequest(request!.id, 31)
 
     const result = await purgeContactRequests()
 
     expect(result.anonymized).toBe(1)
     const row = await reload(request!.id)
+    expect(row!.isWorkStudy).toBeNull()
+    expect(row!.studyInstitution).toBeNull()
+    expect(row!.studyYear).toBeNull()
     expect(row!.email).toBeNull()
     expect(row!.firstname).toBeNull()
     expect(row!.phone).toBeNull()

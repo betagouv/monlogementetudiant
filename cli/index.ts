@@ -7,6 +7,7 @@ import { backfillBrevoOwners } from './commands/backfill-brevo-owners'
 import { backfillCacheControl } from './commands/backfill-cache-control'
 import { backfillGeocoding } from './commands/backfill-geocoding'
 import { backupDb } from './commands/backup-db'
+import { captureMonthlyMetrics } from './commands/capture-monthly-metrics'
 import { checkApplicationsInactivityCommand } from './commands/check-applications-inactivity'
 import { compareCrous } from './commands/compare-crous'
 import { cronSelftest } from './commands/cron-selftest'
@@ -24,7 +25,9 @@ import { purgeLogs } from './commands/purge-logs'
 import { resetStaleAvailabilityCommand } from './commands/reset-stale-availability'
 import { seedAlertSnapshotCommand } from './commands/seed-alert-snapshot'
 import { sendAlertJobs } from './commands/send-alert-jobs'
+import { sendAvailabilityRecapCommand } from './commands/send-availability-recap'
 import { sendContactDigestCommand } from './commands/send-contact-digest'
+import { sendGoalRemindersCommand } from './commands/send-goal-reminders'
 import { splitDescriptions } from './commands/split-descriptions'
 import { auditStorage } from './commands/storage/auditStorage'
 import { uploadImages } from './commands/upload-images'
@@ -283,6 +286,14 @@ program
   .action((opts) => sendContactDigestCommand(opts))
 
 program
+  .command('send-goal-reminders')
+  .description('Rappel aux étudiants des objectifs personnalisés arrivés à échéance et non terminés (un seul rappel par objectif)')
+  .option('--dry-run', 'Simuler sans envoyer ni modifier la BDD')
+  .option('--verbose', 'Afficher le détail par destinataire')
+  .option('--force', 'Envoyer les e-mails même hors production (recette)')
+  .action((opts) => sendGoalRemindersCommand(opts))
+
+program
   .command('reset-stale-availability')
   .description(
     'Repasse en « non communiquée » les disponibilités non mises à jour depuis 30 jours, 7 jours après l’alerte (hors bailleurs importés)',
@@ -291,6 +302,24 @@ program
   .option('--verbose', 'Afficher la décision prise pour chaque résidence')
   .option('--owner <slug>', 'Limiter au bailleur donné ; actif et envoie les e-mails même hors production (recette)')
   .action((opts) => resetStaleAvailabilityCommand(opts))
+
+program
+  .command('send-availability-recap')
+  .description('Récap mensuel des disponibilités renseignées, avec lien « Rien n’a changé » (hors bailleurs importés)')
+  .option('--dry-run', 'Simuler sans envoyer')
+  .option('--verbose', 'Afficher chaque résidence récapitulée')
+  .option('--owner <slug>', 'Limiter au bailleur donné ; actif et envoie les e-mails même hors production (recette)')
+  .action((opts) => sendAvailabilityRecapCommand(opts))
+
+program
+  .command('capture-monthly-metrics')
+  .description('Relevé nocturne : recopie les candidatures dans application_fact et fige les métriques du mois courant')
+  .option(
+    '--backfill-months <n>',
+    'Reconstituer aussi les compteurs des N mois précédents (fiable sur 6 mois au plus : les événements sont conservés 7 mois)',
+    (value: string) => Number(value),
+  )
+  .action((opts) => captureMonthlyMetrics(opts))
 
 program
   .command('purge-contact-requests')

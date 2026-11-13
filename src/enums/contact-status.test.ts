@@ -11,11 +11,12 @@ import {
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 
 describe('contact statuses', () => {
-  it('valide les 4 statuts', () => {
+  it('valide les 5 statuts', () => {
     expect(ZContactStatus.safeParse('a_moderer').success).toBe(true)
     expect(ZContactStatus.safeParse('a_contacter').success).toBe(true)
     expect(ZContactStatus.safeParse('contacte').success).toBe(true)
     expect(ZContactStatus.safeParse('non_retenu').success).toBe(true)
+    expect(ZContactStatus.safeParse('logement_attribue').success).toBe(true)
   })
 
   it('rejette un statut inconnu (ancien vocabulaire)', () => {
@@ -36,15 +37,20 @@ describe('contact statuses', () => {
 })
 
 describe('columnsForMode', () => {
-  it('DossierFacile : 4 colonnes avec à modérer', () => {
+  it('place « Logement attribué » après « Contacté » dans les deux modes', () => {
+    expect(CONTACTS_COLUMNS).toEqual(['a_contacter', 'non_retenu', 'contacte', 'logement_attribue'])
+    expect(DF_COLUMNS).toEqual(['a_moderer', 'non_retenu', 'a_contacter', 'contacte', 'logement_attribue'])
+  })
+
+  it('DossierFacile : 5 colonnes avec à modérer', () => {
     expect(columnsForMode(EOwnerContactMode.DOSSIER_FACILE)).toEqual(DF_COLUMNS)
-    expect(DF_COLUMNS).toHaveLength(4)
+    expect(DF_COLUMNS).toHaveLength(5)
     expect(DF_COLUMNS).toContain('a_moderer')
   })
 
-  it('Contacts : 3 colonnes sans à modérer', () => {
+  it('Contacts : 4 colonnes sans à modérer', () => {
     expect(columnsForMode(EOwnerContactMode.CONTACTS)).toEqual(CONTACTS_COLUMNS)
-    expect(CONTACTS_COLUMNS).toHaveLength(3)
+    expect(CONTACTS_COLUMNS).toHaveLength(4)
     expect(CONTACTS_COLUMNS).not.toContain('a_moderer')
   })
 

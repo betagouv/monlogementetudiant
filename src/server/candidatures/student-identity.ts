@@ -1,4 +1,5 @@
 import { sql } from 'drizzle-orm'
+import { type EStudyYear, ZStudyYear } from '~/enums/study-year'
 import { contactRequests, dossierFacileTenants, user } from '~/server/db/schema'
 
 /**
@@ -15,6 +16,19 @@ export const CONTACT_STUDENT_NAME_SQL = sql<string | null>`coalesce(
   ${user.name}
 )`
 
+const CONTACT_HAS_OWN_NAME_SQL = sql`coalesce(nullif(${contactRequests.firstname}, ''), nullif(${contactRequests.lastname}, '')) is not null`
+
+/** Prénom et nom séparés : sans nom propre à la demande, le nom complet du compte va dans `lastname`, sans découpage. */
+export const CONTACT_FIRSTNAME_SQL = sql<string | null>`nullif(${contactRequests.firstname}, '')`
+
+export const CONTACT_LASTNAME_SQL = sql<
+  string | null
+>`case when ${CONTACT_HAS_OWN_NAME_SQL} then nullif(${contactRequests.lastname}, '') else ${user.name} end`
+
+export const CONTACT_EMAIL_SQL = sql<string | null>`coalesce(${contactRequests.email}, ${user.email})`
+
+export const CONTACT_PHONE_SQL = sql<string | null>`coalesce(${contactRequests.phone}, ${user.phone})`
+
 /**
  * Statut boursier d'une demande de contact, même règle de repli que le nom : la valeur saisie dans
  * le formulaire prime — c'est la seule dont dispose un visiteur sans compte — et le profil du compte
@@ -23,6 +37,17 @@ export const CONTACT_STUDENT_NAME_SQL = sql<string | null>`coalesce(
 export const CONTACT_SCHOLARSHIP_STATUS_SQL = sql<string | null>`coalesce(${contactRequests.scholarshipStatus}, ${user.scholarshipStatus})`
 
 export const CONTACT_BIRTHDATE_SQL = sql<string | null>`coalesce(${contactRequests.birthdate}, ${user.birthdate})`
+
+export const CONTACT_WORK_STUDY_SQL = sql<boolean | null>`coalesce(${contactRequests.isWorkStudy}, ${user.isWorkStudy})`
+
+export const CONTACT_STUDY_INSTITUTION_SQL = sql<string | null>`coalesce(${contactRequests.studyInstitution}, ${user.studyInstitution})`
+
+export const CONTACT_STUDY_YEAR_SQL = sql<string | null>`coalesce(${contactRequests.studyYear}, ${user.studyYear})`
+
+export const parseStudyYear = (value: unknown): EStudyYear | null => {
+  const result = ZStudyYear.safeParse(value)
+  return result.success ? result.data : null
+}
 
 /** Version SQL, pour les projections de liste (mode `dossier_facile`). */
 export const DOSSIER_FACILE_STUDENT_NAME_SQL = sql<string | null>`coalesce(${dossierFacileTenants.name}, ${user.name})`

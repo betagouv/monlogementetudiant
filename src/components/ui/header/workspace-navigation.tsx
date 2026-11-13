@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { FC } from 'react'
 import type { EOwnerContactMode } from '~/enums/owner-contact-mode'
+import { shouldShowContactsTab } from '~/utils/contacts-tab-visibility'
 import { buildHref } from '~/utils/preserve-query-params'
 import styles from './navigation.module.css'
 
@@ -12,6 +13,7 @@ export const WorkspaceHeaderNavigation: FC<{
   contactMode: EOwnerContactMode
   canManageUsers?: boolean
   canManageResidences?: boolean
+  showScholarshipSurvey?: boolean
   canManageApplications?: boolean
   hasApplicationScope?: boolean
   isAdmin?: boolean
@@ -19,6 +21,7 @@ export const WorkspaceHeaderNavigation: FC<{
   contactMode,
   canManageUsers = false,
   canManageResidences = false,
+  showScholarshipSurvey = false,
   canManageApplications = false,
   hasApplicationScope = true,
   isAdmin = false,
@@ -49,8 +52,20 @@ export const WorkspaceHeaderNavigation: FC<{
           },
         ]
       : []),
-    // Les admins plateforme accèdent toujours aux Contacts (même si l'owner n'a pas encore choisi de mode).
-    ...((contactMode !== 'none' || isAdmin) && canManageApplications && hasApplicationScope
+    ...(showScholarshipSurvey
+      ? [
+          {
+            isActive: pathname === '/bailleur/enquete-boursiers',
+            linkProps: {
+              href: buildHref('/bailleur/enquete-boursiers', searchParams),
+              target: '_self' as const,
+            },
+            text: t('scholarshipSurvey'),
+          },
+        ]
+      : []),
+    // En mode `none`, l'onglet présente le choix du mode de réception à tous les profils.
+    ...(shouldShowContactsTab({ contactMode, isAdmin, canManageApplications, hasApplicationScope })
       ? [
           {
             isActive: pathname.startsWith('/bailleur/contacts'),

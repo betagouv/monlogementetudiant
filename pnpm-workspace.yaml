@@ -2,6 +2,17 @@ packages:
   - "."
 
 minimumReleaseAge: 10080
+minimumReleaseAgeExclude:
+  - better-auth@1.7.16
+  - better-call@1.4.5
+  - '@better-auth/api-key@1.7.16'
+  - '@better-auth/core@1.7.16'
+  - '@better-auth/drizzle-adapter@1.7.16'
+  - '@better-auth/kysely-adapter@1.7.16'
+  - '@better-auth/memory-adapter@1.7.16'
+  - '@better-auth/mongo-adapter@1.7.16'
+  - '@better-auth/prisma-adapter@1.7.16'
+  - '@better-auth/telemetry@1.7.16'
 
 overrides:
   esbuild: 0.25.0

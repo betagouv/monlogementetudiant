@@ -1,7 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { test as base, expect, type Page } from '@playwright/test'
 import { hashPassword } from 'better-auth/crypto'
-import { createLocalAccountIssuer } from 'better-auth/db'
 import { eq } from 'drizzle-orm'
 import { createAccommodation, createOwner, createUser } from '../src/__tests__/fixtures/factories'
 import { getTestDb, teardownTestDb } from '../src/__tests__/helpers/test-db'
@@ -9,6 +8,7 @@ import { EOwnerContactMode } from '../src/enums/owner-contact-mode'
 import { accommodationTypologies } from '../src/server/db/schema/accommodation-typologies'
 import { account } from '../src/server/db/schema/auth'
 import { cities } from '../src/server/db/schema/cities'
+import { scholarshipSurveyOwners } from '../src/server/db/schema/scholarship-survey'
 
 /**
  * Données propres à chaque test (tests parallèles) : chaque compte ou résidence créé ici porte un
@@ -29,7 +29,6 @@ async function createCredentialUser(fields: Parameters<typeof createUser>[0]) {
       id: `account-${row.id}`,
       userId: row.id,
       accountId: row.id,
-      issuer: createLocalAccountIssuer('credential'),
       providerId: 'credential',
       password: await hashPassword(PASSWORD),
     })
@@ -52,15 +51,26 @@ export function createStudent(overrides: Partial<Parameters<typeof createUser>[0
   })
 }
 
-/** Compte gestionnaire rattaché à un bailleur qui lui est propre. */
+/** Administrateur de la plateforme. */
+export function createAdmin() {
+  const id = `e2e-admin-${uniqueId()}`
+  return createCredentialUser({ id, email: `${id}@e2e.test`, name: 'Alex Admin', firstname: 'Alex', lastname: 'Admin', role: 'admin' })
+}
+
+/**
+ * Compte gestionnaire rattaché à un bailleur qui lui est propre. L'enquête flash boursiers est marquée
+ * complétée par défaut, sinon sa modale s'ouvre à la connexion.
+ */
 export async function createBailleur({
   permissions = ['manage_residences', 'manage_applications'],
   bailleurRole = 'administrator',
   contactMode = EOwnerContactMode.NONE,
+  scholarshipSurveyPending = false,
 }: {
   permissions?: BailleurPermission[]
   bailleurRole?: 'administrator' | 'gestionnaire'
   contactMode?: EOwnerContactMode
+  scholarshipSurveyPending?: boolean
 } = {}) {
   const id = `e2e-bailleur-${uniqueId()}`
   const user = await createCredentialUser({
@@ -74,6 +84,9 @@ export async function createBailleur({
     bailleurPermissions: permissions,
   })
   const owner = await createOwner({ userId: user.id, name: `Bailleur ${id}`, slug: id, contactMode })
+  if (!scholarshipSurveyPending) {
+    await getTestDb().insert(scholarshipSurveyOwners).values({ ownerId: owner.id })
+  }
   return { user, owner }
 }
 

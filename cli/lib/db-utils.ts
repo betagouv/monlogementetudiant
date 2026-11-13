@@ -1,4 +1,5 @@
-import { execSync } from 'child_process'
+import { spawnSync } from 'child_process'
+import { openSync } from 'fs'
 import postgres from 'postgres'
 
 export async function cleanDatabase(databaseUrl: string): Promise<void> {
@@ -121,11 +122,40 @@ export async function repairUnaccentIndexes(databaseUrl: string): Promise<void> 
   await sql.end()
 }
 
+const PG_CLIENT_IMAGE = 'postgres:18-alpine'
+const LOCAL_HOSTNAMES = new Set(['localhost', '127.0.0.1', '[::1]'])
+
+export function toDockerReachableUrl(databaseUrl: string): string {
+  const url = new URL(databaseUrl)
+  if (!LOCAL_HOSTNAMES.has(url.hostname)) return databaseUrl
+  url.hostname = 'host.docker.internal'
+  return url.toString()
+}
+
 export function restoreBackup(databaseUrl: string, dumpPath: string): void {
-  try {
-    execSync(`pg_restore --no-owner --no-privileges -d "${databaseUrl}" "${dumpPath}"`, { stdio: 'inherit' })
-  } catch {
-    // pg_restore often exits with non-zero even on success (warnings about pre-existing objects)
+  const result = spawnSync(
+    'docker',
+    [
+      'run',
+      '--rm',
+      '-i',
+      '--add-host=host.docker.internal:host-gateway',
+      PG_CLIENT_IMAGE,
+      'pg_restore',
+      '--no-owner',
+      '--no-privileges',
+      '-d',
+      toDockerReachableUrl(databaseUrl),
+    ],
+    { stdio: [openSync(dumpPath, 'r'), 'inherit', 'pipe'], encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 },
+  )
+
+  if (result.error) throw new Error(`Impossible de lancer docker : ${result.error.message}`)
+  if (result.stderr) process.stderr.write(result.stderr)
+  if (result.status === 0) return
+  if (result.status === 1 && /errors ignored on restore: \d+/.test(result.stderr)) {
     console.log('  ⚠ Avertissements pg_restore ignorés (normal)')
+    return
   }
+  throw new Error(`pg_restore interrompu ou en échec (code ${result.status ?? result.signal})`)
 }

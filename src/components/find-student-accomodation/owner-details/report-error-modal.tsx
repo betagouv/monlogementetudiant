@@ -29,7 +29,7 @@ const FIELD_OPTIONS = [
   { value: EAccommodationReportField.OTHER, labelKey: 'fields.other' },
 ] as const
 
-export const ReportErrorButton = ({ accommodationSlug }: { accommodationSlug: string }) => {
+export const ReportErrorButton = ({ accommodationSlug, variant = 'link' }: { accommodationSlug: string; variant?: 'link' | 'action' }) => {
   const t = useTranslations('accomodation.sidebar.report')
   const trpc = useTRPC()
   const modal = useMemo(() => createModal({ id: `report-error-modal-${accommodationSlug}`, isOpenedByDefault: false }), [accommodationSlug])
@@ -62,9 +62,21 @@ export const ReportErrorButton = ({ accommodationSlug }: { accommodationSlug: st
 
   return (
     <>
-      <button type="button" className="fr-link fr-text--xs fr-mb-0" {...modal.buttonProps}>
-        {t('trigger')}
-      </button>
+      {variant === 'action' ? (
+        <Button
+          priority="tertiary no outline"
+          size="small"
+          iconId="fr-icon-error-warning-line"
+          iconPosition="left"
+          nativeButtonProps={modal.buttonProps}
+        >
+          {t('trigger')}
+        </Button>
+      ) : (
+        <button type="button" className="fr-link fr-text--xs fr-mb-0" {...modal.buttonProps}>
+          {t('trigger')}
+        </button>
+      )}
       <ModalPortal>
         <modal.Component title={t('title')}>
           {step === 'form' ? (

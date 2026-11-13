@@ -1,16 +1,16 @@
 import * as Sentry from '@sentry/nextjs'
 import { TRPCError } from '@trpc/server'
-import { and, eq, gte } from 'drizzle-orm'
+import { and, eq, gte, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { APARTMENT_TYPES } from '~/enums/apartment-type'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
-import { ZBirthDate, ZScholarshipStatus } from '~/schemas/student-profile/student-profile'
+import { createZStudyYear, ZBirthDate, ZScholarshipStatus, ZStudyInstitution, ZWorkStudy } from '~/schemas/student-profile/student-profile'
 import { acceptsContactRequests, isOpenToApplications } from '~/server/bailleur/applications-open'
 import { contactRetentionCutoff } from '~/server/candidatures/visibility'
 import { createClaimToken } from '~/server/contacts/claim-token'
 import { assertContactRequestRateLimit, hashIp } from '~/server/contacts/rate-limit'
 import { db } from '~/server/db'
-import { accommodations, contactRequests, owners } from '~/server/db/schema'
+import { accommodations, contactRequests, owners, user } from '~/server/db/schema'
 import { env } from '~/server/env'
 import { ensureFavorite } from '~/server/favorites/ensure-favorite'
 import { sendContactRequestConfirmationEmail } from '~/server/services/brevo'
@@ -75,6 +75,9 @@ export const contactsRouter = createTRPCRouter({
         phone: z.string().trim().optional(),
         birthdate: ZBirthDate,
         scholarshipStatus: ZScholarshipStatus,
+        isWorkStudy: ZWorkStudy,
+        studyInstitution: ZStudyInstitution,
+        studyYear: createZStudyYear(),
         apartmentType: z.enum(APARTMENT_TYPES).optional(),
       }),
     )
@@ -108,24 +111,41 @@ export const contactsRouter = createTRPCRouter({
       // Connecté : seule l'adresse du compte fait foi, celle du formulaire est ignorée.
       const verifiedEmail = userId ? ctx.session!.user.email.trim().toLowerCase() : input.email
 
-      const [request] = await db
-        .insert(contactRequests)
-        .values({
-          userId,
-          accommodationId: accommodation.id,
-          firstname: input.firstname,
-          lastname: input.lastname,
-          email: verifiedEmail,
-          phone: input.phone || null,
-          birthdate: input.birthdate,
-          scholarshipStatus: input.scholarshipStatus,
-          apartmentType: input.apartmentType ?? null,
-          ipHash,
-          // Étudiant connecté : Better Auth a déjà prouvé l'adresse, pas de double opt-in à demander.
-          confirmedAt: userId ? new Date() : null,
-        })
-        .onConflictDoNothing()
-        .returning()
+      const request = await db.transaction(async (tx) => {
+        const [inserted] = await tx
+          .insert(contactRequests)
+          .values({
+            userId,
+            accommodationId: accommodation.id,
+            firstname: input.firstname,
+            lastname: input.lastname,
+            email: verifiedEmail,
+            phone: input.phone || null,
+            birthdate: input.birthdate,
+            scholarshipStatus: input.scholarshipStatus,
+            isWorkStudy: input.isWorkStudy,
+            studyInstitution: input.studyInstitution,
+            studyYear: input.studyYear,
+            apartmentType: input.apartmentType ?? null,
+            ipHash,
+            // Étudiant connecté : Better Auth a déjà prouvé l'adresse, pas de double opt-in à demander.
+            confirmedAt: userId ? new Date() : null,
+          })
+          .onConflictDoNothing()
+          .returning()
+
+        if (inserted && userId) {
+          await tx
+            .update(user)
+            .set({
+              isWorkStudy: sql`coalesce(${user.isWorkStudy}, ${input.isWorkStudy})`,
+              studyInstitution: sql`coalesce(${user.studyInstitution}, ${input.studyInstitution})`,
+              studyYear: sql`coalesce(${user.studyYear}, ${input.studyYear})`,
+            })
+            .where(eq(user.id, userId))
+        }
+        return inserted
+      })
 
       if (!request) return null
 

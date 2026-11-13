@@ -57,3 +57,7 @@ cli/local/
 /test-results
 /playwright-report
 /.next-e2e
+
+# superpowers
+docs/superpowers/
+.superpowers/

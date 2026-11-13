@@ -1,5 +1,4 @@
 import { hashPassword } from 'better-auth/crypto'
-import { createLocalAccountIssuer } from 'better-auth/db'
 import { eq } from 'drizzle-orm'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { account, user } from '~/server/db/schema/auth'
@@ -27,7 +26,6 @@ beforeEach(async () => {
     id: 'account-gest-email-change',
     userId: 'gest-email-change',
     accountId: 'gest-email-change',
-    issuer: createLocalAccountIssuer('credential'),
     providerId: 'credential',
     password: await hashPassword(PASSWORD),
   })

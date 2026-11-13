@@ -20,8 +20,8 @@ import { AccommodationImages } from '~/components/accommodation/accommodation-im
 import { NearbyAccommodations } from '~/components/accommodation/nearby-accommodations'
 import { SaveAccommodationFavoriteButton } from '~/components/favorites/save-accommodation-favorite-button'
 import { OwnerDetails } from '~/components/find-student-accomodation/owner-details/owner-details'
+import { OwnerLandingLink } from '~/components/find-student-accomodation/owner-landing-link'
 import { JsonLd } from '~/components/seo/json-ld'
-import { NewWindowHint } from '~/components/ui/new-window'
 import { getAvailableApartmentTypes } from '~/enums/apartment-type'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { EResidenceType, RESIDENCE_TYPE_MESSAGE_KEYS } from '~/enums/residence-type'
@@ -58,19 +58,7 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
   const { accommodation, cityBbox, dehydratedState, latitude, longitude, nbAvailable, nearbyAccommodations, user } =
     await getAccommodationPageContext(slug)
 
-  const {
-    address,
-    city,
-    imagesUrls,
-    name,
-    nbTotalApartments,
-    owner,
-    postalCode,
-    externalUrl,
-    updatedAt,
-    acceptWaitingList,
-    virtualTourUrl,
-  } = accommodation
+  const { address, city, imagesUrls, name, owner, postalCode, externalUrl, updatedAt, acceptWaitingList, virtualTourUrl } = accommodation
 
   const citySearchUrl = `/trouver-un-logement-etudiant/ville/${encodeURIComponent(city)}?vue=carte&bbox=${cityBbox.west},${cityBbox.south},${cityBbox.east},${cityBbox.north}`
   const tags: TagProps[] = [
@@ -172,10 +160,9 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
                   {t.rich('managedBy', {
                     managerName: owner.name,
                     manager: (chunks) => (
-                      <a href={ownerLandingUrl} target="_blank" rel="noopener noreferrer">
+                      <OwnerLandingLink href={ownerLandingUrl} accommodationSlug={slug}>
                         {chunks}
-                        <NewWindowHint />
-                      </a>
+                      </OwnerLandingLink>
                     ),
                   })}
                 </p>
@@ -204,15 +191,16 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
             <OwnerDetails
               updatedAt={updatedAt}
               phoneNumber={accommodation.phoneNumber}
+              isCrous={accommodation.isCrous ?? false}
               acceptWaitingList={acceptWaitingList}
               owner={owner}
               nbAvailable={nbAvailable}
-              nbTotalApartments={nbTotalApartments}
               externalUrl={externalUrl}
               title={name}
               location={city}
               slug={slug}
               isAuthenticated={!!user}
+              user={user}
               accommodationSlug={slug}
               availableApartmentTypes={getAvailableApartmentTypes(accommodation.typologies)}
               contactMode={owner?.contactMode ?? EOwnerContactMode.NONE}

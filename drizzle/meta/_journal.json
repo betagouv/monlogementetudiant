@@ -610,6 +610,90 @@
       "when": 1793712239336,
       "tag": "0086_owner_availability_tracked_since",
       "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1793785570876,
+      "tag": "0087_account_issuer_relax",
+      "breakpoints": true
+    },
+    {
+      "idx": 88,
+      "version": "7",
+      "when": 1794209577980,
+      "tag": "0088_backfill_contact_moderation_activity",
+      "breakpoints": true
+    },
+    {
+      "idx": 89,
+      "version": "7",
+      "when": 1794220235139,
+      "tag": "0089_reminder_emails",
+      "breakpoints": true
+    },
+    {
+      "idx": 90,
+      "version": "7",
+      "when": 1794231314846,
+      "tag": "0090_student_goal_reminder_sent_at",
+      "breakpoints": true
+    },
+    {
+      "idx": 91,
+      "version": "7",
+      "when": 1794231369023,
+      "tag": "0091_alert_job_similar_source",
+      "breakpoints": true
+    },
+    {
+      "idx": 92,
+      "version": "7",
+      "when": 1794240169660,
+      "tag": "0092_unpublished_stop_contacts",
+      "breakpoints": true
+    },
+    {
+      "idx": 93,
+      "version": "7",
+      "when": 1794240201728,
+      "tag": "0093_student_study_fields",
+      "breakpoints": true
+    },
+    {
+      "idx": 94,
+      "version": "7",
+      "when": 1794240219275,
+      "tag": "0094_contact_contacted_at",
+      "breakpoints": true
+    },
+    {
+      "idx": 95,
+      "version": "7",
+      "when": 1794240220275,
+      "tag": "0095_backfill_contacted_at",
+      "breakpoints": true
+    },
+    {
+      "idx": 96,
+      "version": "7",
+      "when": 1794306938215,
+      "tag": "0096_scholarship_survey",
+      "breakpoints": true
+    },
+    {
+      "idx": 97,
+      "version": "7",
+      "when": 1794403464384,
+      "tag": "0097_admin_metrics",
+      "breakpoints": true
+    },
+    {
+      "idx": 98,
+      "version": "7",
+      "when": 1794490612803,
+      "tag": "0098_api_key_owner",
+      "breakpoints": true
     }
   ]
 }

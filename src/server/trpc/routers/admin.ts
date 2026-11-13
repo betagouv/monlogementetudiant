@@ -2,6 +2,7 @@ import { TRPCError } from '@trpc/server'
 import { and, between, count, desc, eq, ilike, inArray, isNotNull, isNull, ne, or, type SQL, sql } from 'drizzle-orm'
 import { getTranslations } from 'next-intl/server'
 import { z } from 'zod'
+import { DF_TENANT_STATUS_VERIFIED } from '~/enums/dossier-facile-tenant-status'
 import { ELoginAttemptStatus } from '~/enums/login-attempt-status'
 import { EOwnerContactMode, OWNER_CONTACT_MODES, ZOwnerContactMode } from '~/enums/owner-contact-mode'
 import { FEATURES } from '~/lib/features'
@@ -19,6 +20,8 @@ import {
   hasUsableGestionnairePermissions,
   sanitizeGestionnairePermissions,
 } from '~/server/bailleur/permissions'
+import { confirmedContactRequest } from '~/server/candidatures/visibility'
+import { attributionCounts } from '~/server/contacts/attribution'
 import { db } from '~/server/db'
 import { accommodationAddresses } from '~/server/db/schema/accommodation-addresses'
 import { accommodationTypologies } from '~/server/db/schema/accommodation-typologies'
@@ -27,6 +30,8 @@ import { activityLog } from '~/server/db/schema/activity-log'
 import { adminOwnerLinks } from '~/server/db/schema/admin-owner-links'
 import { account, session, user } from '~/server/db/schema/auth'
 import { cities } from '~/server/db/schema/cities'
+import { contactRequests } from '~/server/db/schema/contacts'
+import { dossierFacileApplications } from '~/server/db/schema/dossier-facile'
 import { eventStats } from '~/server/db/schema/event-stats'
 import { importJobs } from '~/server/db/schema/import-jobs'
 import { ownerFeedback } from '~/server/db/schema/owner-feedback'
@@ -42,6 +47,9 @@ import { adminCandidaturesRouter } from './admin-candidatures'
 import { adminChangelogRouter } from './admin-changelog'
 import { adminConnectionsRouter } from './admin-connections'
 import { consumersRouter } from './admin-consumers'
+import { adminMetricsRouter } from './admin-metrics'
+import { adminRemindersRouter } from './admin-reminders'
+import { adminScholarshipSurveyRouter } from './admin-scholarship-survey'
 
 const PAGE_SIZE = 20
 
@@ -1081,6 +1089,55 @@ function ownerLoginsSql(ownerId: SQL) {
   )`
 }
 
+const OWNER_ACTIVITY_ACTIONS = [
+  'accommodation.created',
+  'accommodation.updated',
+  'accommodation.availability_updated',
+  'accommodation.availability_confirmed',
+  'contact.status_updated',
+]
+
+function ownerIsActiveSql(ownerId: SQL, range: { from: string; to: string }) {
+  return sql`EXISTS (
+    SELECT 1 FROM activity_log al
+    WHERE al.owner_id = ${ownerId}
+    AND al.action IN (${sql.join(
+      OWNER_ACTIVITY_ACTIONS.map((action) => sql`${action}`),
+      sql`, `,
+    )})
+    AND al.created_at >= ${range.from}::date
+    AND al.created_at < (${range.to}::date + 1)
+    AND NOT EXISTS (SELECT 1 FROM "user" u WHERE u.id = al.user_id AND u.role = 'admin')
+  )`
+}
+
+function attributionFillRateSql(ownerId: SQL, range: { from: string; to: string }) {
+  const contacts = attributionCounts(contactRequests)
+  const applications = attributionCounts(dossierFacileApplications)
+  return sql<number | null>`(
+    SELECT CASE WHEN cr.total + df.total = 0 THEN NULL ELSE (cr.answered + df.answered)::float / (cr.total + df.total) END
+    FROM (
+      SELECT ${contacts.oui} + ${contacts.non} AS answered, ${contacts.oui} + ${contacts.non} + ${contacts.nonRenseigne} AS total
+      FROM contact_request
+      JOIN accommodation a ON a.id = contact_request.accommodation_id
+      WHERE a.owner_id = ${ownerId}
+      AND ${confirmedContactRequest()}
+      AND contact_request.created_at >= ${range.from}::date
+      AND contact_request.created_at < (${range.to}::date + 1)
+    ) cr,
+    (
+      SELECT ${applications.oui} + ${applications.non} AS answered, ${applications.oui} + ${applications.non} + ${applications.nonRenseigne} AS total
+      FROM dossier_facile_application
+      JOIN dossier_facile_tenant dft ON dft.id = dossier_facile_application.tenant_id
+      JOIN accommodation a ON a.slug = dossier_facile_application.accommodation_slug
+      WHERE a.owner_id = ${ownerId}
+      AND dft.status = ${DF_TENANT_STATUS_VERIFIED}
+      AND dossier_facile_application.created_at >= ${range.from}::date
+      AND dossier_facile_application.created_at < (${range.to}::date + 1)
+    ) df
+  )`
+}
+
 const ownerUsageRouter = createTRPCRouter({
   list: adminProcedure.input(dateRangeInput).query(async ({ input }) => {
     const ownerRows = await db
@@ -1100,12 +1157,7 @@ const ownerUsageRouter = createTRPCRouter({
         lastLogin: sql<string | null>`(
           SELECT max(logins.at)::text FROM ${ownerLoginsSql(sql`"owner"."id"`)} logins
         )`,
-        nbActions: sql<number>`(
-          SELECT count(*)::int FROM activity_log
-          WHERE owner_id = "owner"."id"
-          AND created_at >= ${input.from}::date
-          AND created_at < (${input.to}::date + 1)
-        )`,
+        isActive: sql<boolean>`${ownerIsActiveSql(sql`"owner"."id"`, input)}`,
         nbCreated: sql<number>`(
           SELECT count(*)::int FROM activity_log
           WHERE owner_id = "owner"."id" AND action = 'accommodation.created'
@@ -1124,6 +1176,7 @@ const ownerUsageRouter = createTRPCRouter({
           AND created_at >= ${input.from}::date
           AND created_at < (${input.to}::date + 1)
         )`,
+        attributionFillRate: attributionFillRateSql(sql`"owner"."id"`, input),
         nbAccommodations: sql<number>`(
           SELECT count(*)::int FROM accommodation WHERE owner_id = "owner"."id"
         )`,
@@ -1429,8 +1482,11 @@ export const adminRouter = createTRPCRouter({
   ownerUsage: ownerUsageRouter,
   imports: importsRouter,
   feedback: feedbackRouter,
+  scholarshipSurvey: adminScholarshipSurveyRouter,
   consumers: consumersRouter,
   candidatures: adminCandidaturesRouter,
   connections: adminConnectionsRouter,
+  reminders: adminRemindersRouter,
   changelog: adminChangelogRouter,
+  metrics: adminMetricsRouter,
 })

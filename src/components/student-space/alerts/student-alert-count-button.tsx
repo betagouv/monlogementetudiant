@@ -12,7 +12,7 @@ export const StudentAlertCountButton = ({ alert }: { alert: TAlert }) => {
   const t = useTranslations('student.alerts')
   const tA11y = useTranslations('accessibility')
   const getHref = () => {
-    const searchParams = new URLSearchParams()
+    const searchParams = new URLSearchParams({ alerte: 'true' })
 
     if (alert.hasColiving) {
       searchParams.set('colocation', 'true')
@@ -47,7 +47,7 @@ export const StudentAlertCountButton = ({ alert }: { alert: TAlert }) => {
       return `/trouver-un-logement-etudiant/departement/${alert.department.slug}?${searchParams.toString()}`
     }
 
-    return '/trouver-un-logement-etudiant'
+    return `/trouver-un-logement-etudiant?${searchParams.toString()}`
   }
 
   return (

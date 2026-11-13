@@ -5,7 +5,7 @@ import { user } from './auth'
 import { studentAlerts } from './student-alerts'
 
 export const alertJobStatusEnum = pgEnum('alert_job_status', ['pending', 'sent', 'failed'])
-export const alertJobSourceEnum = pgEnum('alert_job_source', ['alert', 'favorite'])
+export const alertJobSourceEnum = pgEnum('alert_job_source', ['alert', 'favorite', 'similar'])
 
 export const alertJobs = pgTable(
   'alert_job',
@@ -34,6 +34,9 @@ export const alertJobs = pgTable(
     uniqueIndex('alert_job_alert_active_unique')
       .on(t.userId, t.studentAlertId, t.accommodationId)
       .where(sql`${t.source} = 'alert' AND (${t.status} = 'pending' OR (${t.status} = 'failed' AND ${t.attempts} < 3))`),
+    uniqueIndex('alert_job_similar_active_unique')
+      .on(t.userId, t.studentAlertId, t.accommodationId)
+      .where(sql`${t.source} = 'similar' AND (${t.status} = 'pending' OR (${t.status} = 'failed' AND ${t.attempts} < 3))`),
     uniqueIndex('alert_job_favorite_active_unique')
       .on(t.userId, t.accommodationId)
       .where(sql`${t.source} = 'favorite' AND (${t.status} = 'pending' OR (${t.status} = 'failed' AND ${t.attempts} < 3))`),

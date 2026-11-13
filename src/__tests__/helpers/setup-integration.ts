@@ -1,9 +1,8 @@
-import { afterAll, beforeAll, beforeEach } from 'vitest'
-import { cleanTables, setupTestDb, teardownTestDb } from './test-db'
+import { afterAll, beforeEach } from 'vitest'
+import { installExternalFetchStub } from './external-fetch-stub'
+import { cleanTables, teardownTestDb } from './test-db'
 
-beforeAll(async () => {
-  await setupTestDb()
-})
+installExternalFetchStub()
 
 beforeEach(async () => {
   await cleanTables()

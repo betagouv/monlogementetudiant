@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { EContactSource } from '~/enums/contact-source'
 import { EContactStatus } from '~/enums/contact-status'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
+import { EStudyYear } from '~/enums/study-year'
 import { getAccommodationScope, scopeHasAnyAccommodation } from '~/server/bailleur/accommodation-scope'
 import { accommodations } from '../server/db/schema/accommodations'
 import { activityLog } from '../server/db/schema/activity-log'
@@ -40,6 +41,9 @@ const contactInput = {
   phone: '0102030405',
   birthdate: '2003-04-15',
   scholarshipStatus: 'yes',
+  isWorkStudy: false,
+  studyInstitution: 'Université de Lille',
+  studyYear: EStudyYear.BAC_2,
 } as const
 
 const SCOPED = { id: 'gest-scoped', email: 'scoped@a.com' }
@@ -476,6 +480,19 @@ describe('bailleur.users — écriture du périmètre', () => {
       .from(activityLog)
       .where(and(eq(activityLog.action, 'owner.application_residences_updated'), eq(activityLog.ownerId, ownerAId)))
     expect(logs).toHaveLength(1)
+  })
+
+  it('ne rouvre pas une résidence dépubliée du périmètre confirmé', async () => {
+    await getTestDb().update(accommodations).set({ acceptsApplications: false, published: false }).where(eq(accommodations.id, resOut.id))
+
+    await ownerCaller.bailleur.users.update({
+      id: SCOPED.id,
+      applicationScope: { mode: 'restricted', accommodationIds: [resIn.id, resOut.id] },
+      openClosedResidences: true,
+    })
+
+    const [row] = await getTestDb().select().from(accommodations).where(eq(accommodations.id, resOut.id))
+    expect(row?.acceptsApplications).toBe(false)
   })
 
   it('n’ouvre rien pour un gestionnaire sans la gestion des candidats', async () => {

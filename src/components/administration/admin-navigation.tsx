@@ -29,6 +29,8 @@ const navSections: NavSection[] = [
       { label: 'Tableau de bord', icon: 'fr-icon-dashboard-3-line', href: '/administration/tableau-de-bord' },
       { label: 'Statistiques', icon: 'fr-icon-line-chart-line', href: '/administration/statistiques' },
       { label: 'Usage gestionnaires', icon: 'fr-icon-bar-chart-box-line', href: '/administration/gestionnaires-stats' },
+      { label: 'Usage étudiants', icon: 'fr-icon-user-line', href: '/administration/usage-etudiants' },
+      { label: 'Territoires', icon: 'fr-icon-map-pin-2-line', href: '/administration/territoires' },
     ],
   },
   {
@@ -49,6 +51,7 @@ const navSections: NavSection[] = [
     items: [
       { label: 'Résidences', icon: 'fr-icon-home-4-line', href: '/administration/residences' },
       { label: 'Candidatures', icon: 'fr-icon-file-text-line', href: '/administration/candidatures' },
+      { label: 'Enquête boursiers', icon: 'fr-icon-survey-line', href: '/administration/enquete-boursiers' },
       ...(FEATURES.csvImport ? [{ label: 'Imports', icon: 'fr-icon-upload-2-line', href: '/administration/imports' }] : []),
     ],
   },
@@ -59,6 +62,7 @@ const navSections: NavSection[] = [
       { label: 'Tâches planifiées', icon: 'fr-icon-time-line', href: '/administration/taches-planifiees' },
       { label: 'Journaux', icon: 'fr-icon-article-line', href: '/administration/journaux' },
       { label: 'Connexions', icon: 'fr-icon-lock-line', href: '/administration/connexions' },
+      { label: 'Relances e-mail', icon: 'fr-icon-mail-send-line', href: '/administration/relances-email' },
       { label: 'Feedback', icon: 'fr-icon-questionnaire-line', href: '/administration/feedback' },
       { label: 'Tickets', icon: 'fr-icon-mail-line', href: '/administration/tickets', badgeKey: 'tickets' },
       { label: 'Changelog', icon: 'fr-icon-git-commit-line', href: '/administration/changelog' },

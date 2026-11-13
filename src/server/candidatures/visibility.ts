@@ -29,11 +29,10 @@ export const dossierFacileRetentionCutoff = () => new Date(Date.now() - DF_RETEN
  * - **récente** — au-delà de `CONTACT_RETENTION_DAYS` elle disparaît, conformément à ce que
  *   l'interface annonce au gestionnaire. Le cron de purge vide les coordonnées peu après.
  */
+export const confirmedContactRequest = (): SQL | undefined => or(isNotNull(contactRequests.userId), isNotNull(contactRequests.confirmedAt))
+
 export const visibleContactRequest = (): SQL | undefined =>
-  and(
-    or(isNotNull(contactRequests.userId), isNotNull(contactRequests.confirmedAt)),
-    gte(contactRequests.createdAt, contactRetentionCutoff()),
-  )
+  and(confirmedContactRequest(), gte(contactRequests.createdAt, contactRetentionCutoff()))
 
 /**
  * Candidature DossierFacile visible : même fenêtre de rétention, **et** dossier validé.
@@ -41,8 +40,10 @@ export const visibleContactRequest = (): SQL | undefined =>
  * Les deux moitiés sont volontairement inséparables, pour qu'aucun lecteur n'ait à penser à
  * combiner le statut du locataire. Suppose que `dossier_facile_tenant` est joint à la requête.
  */
+export const verifiedDossierFacileTenant = (): SQL | undefined => eq(dossierFacileTenants.status, DF_TENANT_STATUS_VERIFIED)
+
 export const visibleDossierFacileApplication = (): SQL | undefined =>
-  and(gte(dossierFacileApplications.createdAt, dossierFacileRetentionCutoff()), eq(dossierFacileTenants.status, DF_TENANT_STATUS_VERIFIED))
+  and(gte(dossierFacileApplications.createdAt, dossierFacileRetentionCutoff()), verifiedDossierFacileTenant())
 
 /** La demande de contact désignée, si elle est visible du gestionnaire — `null` sinon. */
 export const findVisibleContactRequest = async (id: string) => {

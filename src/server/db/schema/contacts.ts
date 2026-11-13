@@ -1,8 +1,8 @@
 import { sql } from 'drizzle-orm'
-import { bigint, date, index, pgTable, text, timestamp, unique, uniqueIndex, uuid } from 'drizzle-orm/pg-core'
+import { bigint, boolean, date, index, pgTable, text, timestamp, unique, uniqueIndex, uuid } from 'drizzle-orm/pg-core'
 import { EContactStatus } from '~/enums/contact-status'
 import { accommodations } from './accommodations'
-import { scholarshipStatusEnum, user } from './auth'
+import { scholarshipStatusEnum, studyYearEnum, user } from './auth'
 
 export const contactRequests = pgTable(
   'contact_request',
@@ -23,6 +23,9 @@ export const contactRequests = pgTable(
      */
     birthdate: date('birthdate', { mode: 'string' }),
     scholarshipStatus: scholarshipStatusEnum('scholarship_status'),
+    isWorkStudy: boolean('is_work_study'),
+    studyInstitution: text('study_institution'),
+    studyYear: studyYearEnum('study_year'),
     apartmentType: text('apartment_type'),
     /** HMAC de l'IP émettrice (jamais l'IP en clair) — sert au rate-limit anti-spam des demandes visiteur. */
     ipHash: text('ip_hash'),
@@ -35,6 +38,7 @@ export const contactRequests = pgTable(
     anonymizedAt: timestamp('anonymized_at', { withTimezone: true }),
     status: text('status').$type<EContactStatus>().notNull().default(EContactStatus.A_CONTACTER),
     reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
+    contactedAt: timestamp('contacted_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

@@ -224,6 +224,7 @@
     "byAcademies": "By academies",
     "faq": "Frequently asked questions",
     "workspace": {
+      "scholarshipSurvey": "Flash survey",
       "dashboard": "Dashboard",
       "helpCenter": "Help center",
       "residences": "Residences",
@@ -290,9 +291,10 @@
     },
     "sidebar": {
       "updatedAt": "Updated on {date}",
-      "proposedBy": "offered by",
-      "accommodationsCount": "{count} accommodations",
-      "accommodationsNoCount": "Available accommodation",
+      "proposedByManager": "Student accommodation offered by <manager>{managerName}</manager>",
+      "availableCount": "{count, plural, one {# accommodation available} other {# accommodations available}}",
+      "noneAvailable": "No accommodation available",
+      "byPhone": "By phone",
       "share": "Share accommodation",
       "emailSubject": "Student accommodation {title} {locationFormatted}",
       "emailBody": "Come and discover the student accommodation {title}, located {locationFormatted}.\n\n🔗 {url}\n📍 {location}\n\nKind regards,\nMon Logement Étudiant",
@@ -313,7 +315,7 @@
         "error": "The report could not be sent. Please try again."
       },
       "buttons": {
-        "consult": "View the manager's offer",
+        "consult": "View the offer",
         "dossierFacile": "Apply with Dossier Facile",
         "dossierFacileConnect": "Sign in with DossierFacile",
         "dossierFacileConnectDescription": "DossierFacile is the French State's digital rental application. Entirely free, compliant and secure, it protects tenants and reassures landlords.",
@@ -324,7 +326,8 @@
         "dossierFacileApplied": "Application sent",
         "dossierFacileSelectType": "Accommodation type",
         "consultDescription": "You will be redirected to the residence's website",
-        "call": "Call {phoneNumber}",
+        "consultDescriptionCrous": "You will be redirected to trouverunlogement.lescrous.fr",
+        "consultDescriptionManager": "You will be redirected to {managerFormatted}'s website",        "call": "Call {phoneNumber}",
         "dossierFacileDescription": "Certified digital rental file",
         "link": "Copy link",
         "email": "Send by email",
@@ -350,6 +353,14 @@
         "scholarshipYes": "Yes",
         "scholarshipNo": "No",
         "scholarshipUnknown": "I don't know",
+        "workStudy": "Are you a work-study student?",
+        "workStudyYes": "Yes",
+        "workStudyNo": "No",
+        "studyInstitution": "Institution at the start of the school year",
+        "studyInstitutionHint": "If you do not know yet, enter the one you are aiming for",
+        "studyYear": "Year of study at the start of the school year",
+        "studyYearHint": "The year you will be in when you move in",
+        "studyYearPlaceholder": "Select a year",
         "consentStart": "I agree to share this information so I can be contacted according to the",
         "privacyPolicy": "privacy policy",
         "consentEnd": "of Mon Logement Étudiant",
@@ -371,7 +382,7 @@
       "alert": {
         "title": "Stay alerted about availability",
         "description": "Create a personalized alert to be notified as soon as accommodation becomes available.",
-        "cta": "Set up an alert"
+        "cta": "Create a housing alert"
       },
       "copySuccess": "Copied to clipboard",
       "copyError": "Error while copying to clipboard"
@@ -476,11 +487,13 @@
   "findAccomodation": {
     "banner": {
       "title": {
-        "city": "New accommodation is coming soon {locationFormatted}.",
-        "academy": "New accommodation is coming soon in the {location} academy.",
-        "department": "New accommodation is coming soon in the {location} department."
+        "city": "Get notified as soon as accommodation becomes available {locationFormatted}",
+        "academy": "Get notified as soon as accommodation becomes available in the {location} academy",
+        "department": "Get notified as soon as accommodation becomes available in the {location} department"
       },
-      "description": "We are currently integrating new residences. Activate <link>the alert</link> to be notified as soon as new accommodation becomes available."
+      "description": "Create an alert for your search and receive an email for every new availability.",
+      "cta": "Activate the alert",
+      "close": "Hide the alert banner"
     },
     "faq": {
       "title": "Common questions about student accommodation",
@@ -1608,6 +1621,8 @@
       "housingAid": "Housing aid",
       "favorites": "Favorites and applications",
       "alerts": "Housing alerts",
+      "search": "My search",
+      "installation": "Prepare my move-in",
       "personalInformations": "Personal information",
       "menuTitle": "My area",
       "reportProblem": "Report a problem"
@@ -1744,6 +1759,14 @@
         "scholarshipYes": "Yes",
         "scholarshipNo": "No",
         "scholarshipUnknown": "I do not know",
+        "workStudy": "Are you a work-study student?",
+        "workStudyYes": "Yes",
+        "workStudyNo": "No",
+        "studyInstitution": "Study institution at the start of the year",
+        "studyInstitutionHint": "If you do not know it yet, enter the one you are aiming for",
+        "studyYear": "Study year at the start of the year",
+        "studyYearHint": "The year you will be in when you occupy the housing",
+        "studyYearPlaceholder": "Select a year",
         "currentPassword": "Current password",
         "newPassword": "New password",
         "confirmPassword": "Confirm new password",
@@ -1942,6 +1965,41 @@
     }
   },
   "bailleur": {
+    "scholarshipSurvey": {
+      "breadcrumbDashboard": "Dashboard",
+      "breadcrumbCurrent": "Flash survey: scholarship students rate",
+      "title": "Flash survey: share of scholarship students",
+      "subtitle": "For the {year} school year, please provide the share of scholarship students housed in each of your residences.",
+      "whyTitle": "Why this survey?",
+      "whyDescription": "It helps us measure scholarship students' access to student social housing. Your answers will not be shared.",
+      "residencesTitle": "Your residences",
+      "progress": "{filled} of {total} {total, plural, one {residence} other {residences}} completed",
+      "notMeasuredAll": "We do not measure the share of scholarship students in our residences",
+      "countLabel": "Number of scholarship students",
+      "countHint": "For the {year} year",
+      "rateLabel": "Or share of scholarship students (%)",
+      "rateHint": "Between 0 and 100",
+      "notMeasured": "Not measured in this residence",
+      "later": "Answer later",
+      "submit": "Send my answers",
+      "noResidences": "No published residence is concerned by this survey.",
+      "successToast": "Thank you, your answers have been saved.",
+      "draftSavedToast": "Your answers have been saved as a draft.",
+      "errorToast": "An error occurred, please try again.",
+      "missingModal": {
+        "title": "Some residences remain to be completed",
+        "description": "Your answers have been saved. {count, plural, one {# residence remains} other {# residences remain}} to be completed:",
+        "hint": "You can come back at any time to finish the survey from the “Flash survey” menu.",
+        "continue": "Keep completing",
+        "dashboard": "Back to dashboard"
+      },
+      "loginModal": {
+        "title": "A flash survey is available",
+        "description": "For the {year} school year, please provide the share of scholarship students housed in each of your residences. It only takes a few minutes.",
+        "answer": "Answer the survey",
+        "later": "Later"
+      }
+    },
     "users": {
       "pageTitle": "User management",
       "newUser": "New user",
@@ -2067,6 +2125,10 @@
       "priorityActions": {
         "title": "Priority actions",
         "actions": {
+          "scholarshipSurvey": {
+            "title": "Answer the flash survey on scholarship students",
+            "badge": "FLASH SURVEY"
+          },
           "charter": {
             "title": "Validate the landlord charter",
             "badge": "PROPER OPERATION",
@@ -2315,7 +2377,7 @@
         "confirmAllError": "Confirming the other residences failed, please try again.",
         "confirmAllModal": {
           "title": "Confirm availability for all your residences?",
-          "description": "If the availability of your other residences has not changed either, confirm them all at once: their confirmation date will be refreshed without changing the numbers.",
+          "description": "If the availability of your other residences has not changed either, confirm them all at once: their confirmation date will be refreshed without changing the numbers. Availability that has not been filled in will be set to 0.",
           "confirmOne": "Only this residence",
           "confirmAll": "Confirm all my residences"
         }
@@ -2338,6 +2400,23 @@
       "breadcrumbContacts": "Contacts",
       "breadcrumbContactsDossierFacile": "Contacts with DossierFacile",
       "title": "Contacts",
+      "stats": {
+        "title": "Contact statistics",
+        "periodLegend": "Period",
+        "period": { "7d": "7 days", "30d": "30 days", "90d": "90 days" },
+        "export": "Export",
+        "caption": "Contact statistics by residence",
+        "residence": "Residence",
+        "city": "City",
+        "received": "Requests received",
+        "nonModere": "Not moderated",
+        "nonRetenu": "Not selected",
+        "contacte": "Contacted",
+        "logementAttribue": "Housing assigned",
+        "share": "{label} (%)",
+        "total": "Total",
+        "empty": "No request over the period."
+      },
       "titleDossierFacile": "Contacts with DossierFacile",
       "loading": "Loading...",
       "defaultCandidateName": "Applicant",
@@ -2355,18 +2434,27 @@
         "age": "{count} years old",
         "scholarship": "Scholarship student",
         "viewCandidate": "View {name}",
-        "viewCandidateFallback": "the applicant"
+        "viewCandidateFallback": "the applicant",
+        "workStudy": "Work-study",
+        "studyYearAtStart": "{year} at the start of the year"
       },
       "detail": {
         "title": "Contact from {name}",
         "aboutTitle": "About the applicant",
         "age": "{count} years old",
-        "scholarship": "Scholarship student"
+        "scholarship": "Scholarship student",
+        "workStudy": "Work-study: {value}",
+        "workStudyYes": "Yes",
+        "workStudyNo": "No",
+        "studyInstitution": "Institution at the start of the year: {value}",
+        "studyYear": "Year of study at the start of the year: {value}"
       },
       "actions": {
         "statusChangeError": "Status change failed. Please try again.",
         "contactedTitle": "Contact with the student completed",
         "contactedRetention": "Contact details will remain available for {days} day{s}.",
+        "assignedTitle": "Housing assigned to the student",
+        "assignedDescription": "This housing has been assigned to this student.",
         "rejectedTitle": "Contact not retained",
         "rejectedDescription": "You will not follow up on this contact request.",
         "moderateTitle": "Would you like to know more about the request?",
@@ -2483,7 +2571,8 @@
         "a_moderer": "To review",
         "non_retenu": "Not selected",
         "a_contacter": "To contact",
-        "contacte": "Contacted"
+        "contacte": "Contacted",
+        "logement_attribue": "Housing assigned"
       },
       "applicationsSuspendedBadge": "Applications paused",
       "autoSuspendedBadge": {
@@ -2509,7 +2598,7 @@
       "noManagerAlert": {
         "title": "No manager can access student applications",
         "description": "By default, only administrators can see applications. To let a manager view and handle them, click the <icon></icon> \"Reception settings\" button.",
-        "action": "Grant rights"
+        "action": "Reception settings"
       }
     },
     "ownerForm": {
@@ -2539,6 +2628,26 @@
       "emptyTitle": "No availability to confirm",
       "emptyDescription": "The availability of your residences is up to date.",
       "backToResidences": "See my residences",
+      "error": "Confirmation failed, please try again."
+    },
+    "emailConfirmAvailability": {
+      "pageTitle": "Confirm my availability",
+      "intro": "Here is the availability provided for your residences, with the date of the last update.",
+      "confirmHint": "Nothing has changed? Confirm in one click: the update date becomes today, without changing the values. Availability that has not been filled in will be set to 0.",
+      "available": "{count, plural, =0 {No availability} one {# available} other {# available}}",
+      "lastUpdate": "Last update: {date}",
+      "neverUpdated": "Last update: not provided",
+      "confirm": "Nothing has changed",
+      "update": "Update availability",
+      "successTitle": "{count, plural, one {Availability confirmed for # residence} other {Availability confirmed for # residences}}",
+      "successDescription": "The update date has been refreshed. Thank you!",
+      "skippedDescription": "{count, plural, one {# residence was updated in the meantime from the manager area: its data was kept.} other {# residences were updated in the meantime from the manager area: their data was kept.}}",
+      "upToDateTitle": "Your availability is already up to date",
+      "upToDateDescription": "It has been confirmed or updated since this email was sent. Nothing else to do.",
+      "expiredTitle": "This link has expired",
+      "invalidTitle": "This link is no longer valid",
+      "loginDescription": "Log in to your manager area to confirm or update your availability.",
+      "login": "Log in to confirm",
       "error": "Confirmation failed, please try again."
     }
   },

@@ -80,6 +80,7 @@ export async function createResidence(
           phoneNumber: fields.phoneNumber ?? null,
           acceptWaitingList: fields.acceptWaitingList ?? false,
           published: fields.published ?? false,
+          acceptsApplications: fields.published ?? false,
           scholarshipHoldersPriority: fields.scholarshipHoldersPriority ?? false,
           socialHousingRequired: fields.socialHousingRequired ?? false,
           ownerId: owner.id,

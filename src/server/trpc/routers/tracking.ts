@@ -7,6 +7,38 @@ import { logAccommodationView, logTrackingEvent, TRACKING_DEDUPE } from '~/serve
 import { getOrCreateTrackingSessionId } from '~/server/services/tracking-session'
 import { baseProcedure, createTRPCRouter } from '../init'
 
+const logAccommodationClick = async (
+  type: 'accommodation.consult_offer' | 'owner.landing_click',
+  slug: string,
+  userId: string | undefined,
+) => {
+  const [accom] = await db
+    .select({
+      id: accommodations.id,
+      ownerId: accommodations.ownerId,
+      cityId: accommodationAddresses.cityId,
+    })
+    .from(accommodations)
+    .leftJoin(
+      accommodationAddresses,
+      and(eq(accommodationAddresses.accommodationId, accommodations.id), eq(accommodationAddresses.isMain, true)),
+    )
+    .where(and(eq(accommodations.slug, slug), eq(accommodations.published, true)))
+    .limit(1)
+  if (!accom) return
+
+  const sessionId = await getOrCreateTrackingSessionId()
+  await logTrackingEvent({
+    type,
+    accommodationId: accom.id,
+    ownerId: accom.ownerId ?? undefined,
+    cityId: accom.cityId ?? undefined,
+    userId,
+    sessionId,
+    dedupeSeconds: TRACKING_DEDUPE.CONSULT_OFFER_SECONDS,
+  })
+}
+
 export const trackingRouter = createTRPCRouter({
   logSearch: baseProcedure
     .input(
@@ -43,31 +75,11 @@ export const trackingRouter = createTRPCRouter({
       })
     }),
 
-  logConsultOffer: baseProcedure.input(z.object({ accommodationSlug: z.string().min(1) })).mutation(async ({ ctx, input }) => {
-    const [accom] = await db
-      .select({
-        id: accommodations.id,
-        ownerId: accommodations.ownerId,
-        cityId: accommodationAddresses.cityId,
-      })
-      .from(accommodations)
-      .leftJoin(
-        accommodationAddresses,
-        and(eq(accommodationAddresses.accommodationId, accommodations.id), eq(accommodationAddresses.isMain, true)),
-      )
-      .where(and(eq(accommodations.slug, input.accommodationSlug), eq(accommodations.published, true)))
-      .limit(1)
-    if (!accom) return
+  logConsultOffer: baseProcedure
+    .input(z.object({ accommodationSlug: z.string().min(1) }))
+    .mutation(({ ctx, input }) => logAccommodationClick('accommodation.consult_offer', input.accommodationSlug, ctx.session?.user.id)),
 
-    const sessionId = await getOrCreateTrackingSessionId()
-    await logTrackingEvent({
-      type: 'accommodation.consult_offer',
-      accommodationId: accom.id,
-      ownerId: accom.ownerId ?? undefined,
-      cityId: accom.cityId ?? undefined,
-      userId: ctx.session?.user.id,
-      sessionId,
-      dedupeSeconds: TRACKING_DEDUPE.CONSULT_OFFER_SECONDS,
-    })
-  }),
+  logOwnerLandingClick: baseProcedure
+    .input(z.object({ accommodationSlug: z.string().min(1) }))
+    .mutation(({ ctx, input }) => logAccommodationClick('owner.landing_click', input.accommodationSlug, ctx.session?.user.id)),
 })

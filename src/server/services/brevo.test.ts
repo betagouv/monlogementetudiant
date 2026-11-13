@@ -12,10 +12,18 @@ const mockEnv = (overrides: Record<string, unknown>) => {
   })
 }
 
+const RECAP_PARAMS = {
+  firstname: 'A',
+  ownerName: 'B',
+  residences: [{ name: 'R', city: null, nbAvailable: 1, lastUpdatedAt: null }],
+  confirmUrl: 'c',
+  updateUrl: 'u',
+}
+
 describe('brevo service', () => {
   beforeEach(() => {
     fetchMock.mockReset()
-    fetchMock.mockResolvedValue({ ok: true })
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ messageId: '<m1@smtp-relay.brevo.com>' }) })
     vi.resetModules()
     vi.stubEnv('BREVO_API_KEY', 'test-api-key')
     vi.stubEnv('BREVO_TEMPLATE_MAGIC_LINK', '2')
@@ -70,6 +78,53 @@ describe('brevo service', () => {
   })
 
   describe('sendTemplateEmail', () => {
+    it('renvoie le messageId Brevo', async () => {
+      const { sendTemplateEmail } = await import('./brevo')
+      await expect(sendTemplateEmail({ to: 'a@b.fr', templateId: 2 })).resolves.toBe('<m1@smtp-relay.brevo.com>')
+    })
+
+    it('renvoie null et avertit si Brevo ne renvoie pas de messageId', async () => {
+      const warn = vi.spyOn(console, 'warn').mockReturnValue(undefined)
+      fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({}) })
+      const { sendTemplateEmail } = await import('./brevo')
+      await expect(sendTemplateEmail({ to: 'a@b.fr', templateId: 2 })).resolves.toBeNull()
+      expect(warn).toHaveBeenCalledOnce()
+      expect(warn.mock.calls[0][0]).not.toContain('a@b.fr')
+      warn.mockRestore()
+    })
+
+    it('renvoie null si le corps de la réponse n’est pas du JSON', async () => {
+      const warn = vi.spyOn(console, 'warn').mockReturnValue(undefined)
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => {
+          throw new SyntaxError('Unexpected token')
+        },
+      })
+      const { sendTemplateEmail } = await import('./brevo')
+      await expect(sendTemplateEmail({ to: 'a@b.fr', templateId: 2 })).resolves.toBeNull()
+      expect(warn).toHaveBeenCalledOnce()
+      warn.mockRestore()
+    })
+
+    it("étiquette l'alerte d'inactivité par type et motifs", async () => {
+      vi.stubEnv('BREVO_TEMPLATE_APPLICATIONS_INACTIVITY_WARNING', '77')
+      const { sendApplicationsInactivityWarningEmail } = await import('./brevo')
+      await sendApplicationsInactivityWarningEmail(
+        'a@b.fr',
+        { firstname: 'A', ownerName: 'B', residences: ['R'], url: 'u' },
+        { reasons: ['unprocessed_applications', 'stale_availability', 'unprocessed_applications'] },
+      )
+      expect(JSON.parse(fetchMock.mock.calls[0][1].body).tags).toEqual(['relance-alerte-inactivite', 'motif-candidatures', 'motif-dispos'])
+    })
+
+    it('renvoie null sans appeler Brevo hors production', async () => {
+      mockEnv({ NEXT_PUBLIC_APP_ENV: 'staging' })
+      const { sendAvailabilityMonthlyRecapEmail } = await import('./brevo')
+      await expect(sendAvailabilityMonthlyRecapEmail('a@b.fr', RECAP_PARAMS)).resolves.toBeNull()
+      expect(fetchMock).not.toHaveBeenCalled()
+    })
+
     it('sends request with templateId and params', async () => {
       const { sendTemplateEmail } = await import('./brevo')
 
@@ -395,5 +450,52 @@ describe('brevo service', () => {
       expect(body.attributes.DATE_DERNIERE_MAJ_DONNEES).toMatch(/^\d{4}-\d{2}-\d{2}$/)
       expect(body.updateEnabled).toBe(true)
     })
+  })
+})
+
+describe('availabilityRecapParams', () => {
+  it('formate les résidences pour le template Brevo', async () => {
+    const { availabilityRecapParams } = await import('./brevo')
+
+    expect(
+      availabilityRecapParams({
+        firstname: 'Alice',
+        ownerName: 'Bailleur A',
+        residences: [
+          { name: 'Res A', city: 'Lyon', nbAvailable: 3, lastUpdatedAt: new Date('2026-03-12T23:30:00Z') },
+          { name: 'Res B', city: null, nbAvailable: 1, lastUpdatedAt: null },
+          { name: 'Res C', city: 'Lille', nbAvailable: 0, lastUpdatedAt: new Date('2026-03-08T10:00:00Z') },
+        ],
+        confirmUrl: 'https://exemple.fr/confirmer',
+        updateUrl: 'https://exemple.fr/residences',
+      }),
+    ).toEqual({
+      FIRSTNAME: 'Alice',
+      OWNER_NAME: 'Bailleur A',
+      RESIDENCES: [
+        { NAME: 'Res A', CITY: 'Lyon', AVAILABLE: 3, AVAILABLE_LABEL: '3 disponibilités', UPDATED_AT: '13 mars 2026' },
+        { NAME: 'Res B', CITY: '', AVAILABLE: 1, AVAILABLE_LABEL: '1 disponibilité', UPDATED_AT: 'non renseignée' },
+        { NAME: 'Res C', CITY: 'Lille', AVAILABLE: 0, AVAILABLE_LABEL: 'Aucune disponibilité', UPDATED_AT: '8 mars 2026' },
+      ],
+      RESIDENCES_COUNT: '3',
+      CONFIRM_LINK: 'https://exemple.fr/confirmer',
+      UPDATE_LINK: 'https://exemple.fr/residences',
+      DEADLINE: '',
+    })
+  })
+
+  it('ajoute la date limite de l’alerte', async () => {
+    const { availabilityRecapParams } = await import('./brevo')
+
+    expect(
+      availabilityRecapParams({
+        firstname: 'Alice',
+        ownerName: 'Bailleur A',
+        residences: [],
+        confirmUrl: 'https://exemple.fr/confirmer',
+        updateUrl: 'https://exemple.fr/residences',
+        deadline: new Date('2026-11-13T05:30:00Z'),
+      }).DEADLINE,
+    ).toBe('13 novembre 2026')
   })
 })

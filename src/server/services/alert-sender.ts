@@ -1,4 +1,5 @@
 import { and, count, eq, inArray, lt, or, sql } from 'drizzle-orm'
+import { EXPANDED_SEARCH_PAGE_SIZE } from '~/lib/accommodations-expanded-search'
 import { db } from '~/server/db'
 import { accommodationAddresses, accommodations, alertJobs, cities, studentAlerts, user } from '~/server/db/schema'
 import { env } from '~/server/env'
@@ -35,6 +36,10 @@ type AlertBatch = {
   alertName: string
   jobIds: number[]
   accommodations: { nom: string; url: string }[]
+  // Zone élargie (+10 km / +25 % budget) : section « Suggestions » du même e-mail,
+  // plafonnée à EXPANDED_SEARCH_PAGE_SIZE — les jobs excédentaires sont tout de même
+  // soldés avec le batch (les suggestions sont un bonus, pas un engagement d'exhaustivité).
+  suggestions: { nom: string; url: string }[]
 }
 
 export async function sendPendingAlertJobs(options: { dryRun?: boolean; verbose?: boolean } = {}): Promise<AlertSenderResult> {
@@ -104,16 +109,19 @@ export async function sendPendingAlertJobs(options: { dryRun?: boolean; verbose?
         alertName: batchAlertName,
         jobIds: [],
         accommodations: [],
+        suggestions: [],
       })
     }
     const batch = byBatch.get(key)!
     batch.jobIds.push(job.jobId)
     // Sans ville résolue, on retombe sur la page de recherche plutôt qu'un lien cassé.
     const path = job.cityName ? getAccommodationPath(job.cityName, job.accommodationSlug) : '/trouver-un-logement-etudiant'
-    batch.accommodations.push({
-      nom: job.accommodationName,
-      url: `${env.BASE_URL}${path}`,
-    })
+    const line = { nom: job.accommodationName, url: `${env.BASE_URL}${path}` }
+    if (job.source === 'similar') {
+      if (batch.suggestions.length < EXPANDED_SEARCH_PAGE_SIZE) batch.suggestions.push(line)
+    } else {
+      batch.accommodations.push(line)
+    }
   }
 
   let sent = 0
@@ -134,6 +142,7 @@ export async function sendPendingAlertJobs(options: { dryRun?: boolean; verbose?
         firstName: batch.firstname ?? '',
         alertName: batch.alertName,
         accommodations: batch.accommodations,
+        suggestions: batch.suggestions,
       })
       await db
         .update(alertJobs)

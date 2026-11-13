@@ -224,6 +224,7 @@
     "byAcademies": "Par académies",
     "faq": "Foire aux questions",
     "workspace": {
+      "scholarshipSurvey": "Enquête flash",
       "dashboard": "Tableau de bord",
       "helpCenter": "Centre d'aide",
       "residences": "Résidences",
@@ -290,9 +291,10 @@
     },
     "sidebar": {
       "updatedAt": "Mis à jour le {date}",
-      "proposedBy": "proposé par",
-      "accommodationsCount": "{count} logements",
-      "accommodationsNoCount": "Logements disponibles",
+      "proposedByManager": "Logement étudiant proposé par <manager>{managerName}</manager>",
+      "availableCount": "{count, plural, one {# logement disponible} other {# logements disponibles}}",
+      "noneAvailable": "Aucun logement disponible",
+      "byPhone": "Par téléphone",
       "share": "Partager le logement",
       "emailSubject": "Logement étudiant {title} {locationFormatted}",
       "emailBody": "Venez découvrir le logement étudiant {title}, situé {locationFormatted}.\n\n🔗 {url}\n📍 {location}\n\nCordialement,\nMon Logement Étudiant",
@@ -313,7 +315,7 @@
         "error": "Le signalement n'a pas pu être envoyé. Veuillez réessayer."
       },
       "buttons": {
-        "consult": "Consulter l'offre du gestionnaire",
+        "consult": "Consulter l'offre",
         "dossierFacile": "Candidater avec Dossier Facile",
         "dossierFacileConnect": "Connexion DossierFacile",
         "dossierFacileConnectDescription": "DossierFacile est le dossier de location numérique de l'Etat. Entièrement gratuit, conforme et sécurisé, il protège les locataires et rassure les propriétaires.",
@@ -324,7 +326,8 @@
         "dossierFacileApplied": "Candidature envoyée",
         "dossierFacileSelectType": "Type de logement",
         "consultDescription": "Vous serez redirigé vers le site de la résidence",
-        "call": "Appeler le {phoneNumber}",
+        "consultDescriptionCrous": "Vous serez redirigé vers trouverunlogement.lescrous.fr",
+        "consultDescriptionManager": "Vous serez redirigé vers le site {managerFormatted}",        "call": "Appeler le {phoneNumber}",
         "dossierFacileDescription": "Dossier de location numérique certifié",
         "link": "Copier le lien",
         "email": "Envoyer par email",
@@ -351,6 +354,14 @@
         "scholarshipYes": "Oui",
         "scholarshipNo": "Non",
         "scholarshipUnknown": "Je ne sais pas",
+        "workStudy": "Êtes-vous alternant ?",
+        "workStudyYes": "Oui",
+        "workStudyNo": "Non",
+        "studyInstitution": "Établissement d'études à la rentrée",
+        "studyInstitutionHint": "Si vous ne le connaissez pas encore, indiquez celui que vous visez",
+        "studyYear": "Année d'études à la rentrée",
+        "studyYearHint": "L'année que vous suivrez quand vous occuperez le logement",
+        "studyYearPlaceholder": "Sélectionner une année",
         "consentStart": "J’accepte de partager ces informations afin d’être recontacté selon la",
         "privacyPolicy": "politique de confidentialité",
         "consentEnd": "de Mon Logement Étudiant",
@@ -371,7 +382,7 @@
       "alert": {
         "title": "Restez alerté des disponibilités",
         "description": "Créez une alerte personnalisée pour être notifié dès qu'un logement se libère.",
-        "cta": "Configurer une alerte"
+        "cta": "Créer une alerte logement"
       },
       "copySuccess": "Copié dans le presse-papiers",
       "copyError": "Erreur lors de la copie dans le presse-papiers"
@@ -476,11 +487,13 @@
   "findAccomodation": {
     "banner": {
       "title": {
-        "city": "De nouveaux logements arrivent bientôt {locationFormatted}.",
-        "academy": "De nouveaux logements arrivent bientôt dans l'académie de {location}.",
-        "department": "De nouveaux logements arrivent bientôt dans le département {location}."
+        "city": "Soyez prévenu dès qu'un logement se libère {locationFormatted}",
+        "academy": "Soyez prévenu dès qu'un logement se libère dans l'académie de {location}",
+        "department": "Soyez prévenu dès qu'un logement se libère dans le département {location}"
       },
-      "description": "Nous sommes en cours d'intégration de nouvelles résidences. Activez <link>l'alerte</link> pour être notifié dès que de nouveaux logements seront disponibles."
+      "description": "Créez une alerte sur votre recherche et recevez un e-mail à chaque nouvelle disponibilité.",
+      "cta": "Activer l'alerte",
+      "close": "Masquer le bandeau d'alerte"
     },
     "faq": {
       "title": "Parmi les questions fréquentes sur les logements étudiants",
@@ -1608,6 +1621,8 @@
       "housingAid": "Aides au logement",
       "favorites": "Favoris et candidatures",
       "alerts": "Alertes logements",
+      "search": "Ma recherche",
+      "installation": "Préparer mon installation",
       "personalInformations": "Informations personnelles",
       "menuTitle": "Mon espace",
       "reportProblem": "Signaler un problème"
@@ -1744,6 +1759,14 @@
         "scholarshipYes": "Oui",
         "scholarshipNo": "Non",
         "scholarshipUnknown": "Je ne sais pas",
+        "workStudy": "Êtes-vous alternant ?",
+        "workStudyYes": "Oui",
+        "workStudyNo": "Non",
+        "studyInstitution": "Établissement d'études à la rentrée",
+        "studyInstitutionHint": "Si vous ne le connaissez pas encore, indiquez celui que vous visez",
+        "studyYear": "Année d'études à la rentrée",
+        "studyYearHint": "L'année que vous suivrez quand vous occuperez le logement",
+        "studyYearPlaceholder": "Sélectionner une année",
         "currentPassword": "Mot de passe actuel",
         "newPassword": "Nouveau mot de passe",
         "confirmPassword": "Confirmation du nouveau mot de passe",
@@ -1942,6 +1965,41 @@
     }
   },
   "bailleur": {
+    "scholarshipSurvey": {
+      "breadcrumbDashboard": "Tableau de bord",
+      "breadcrumbCurrent": "Enquête flash : taux de boursiers",
+      "title": "Enquête flash : part d'étudiants boursiers",
+      "subtitle": "Pour l'année scolaire {year}, indiquez la part d'étudiants boursiers logés dans chacune de vos résidences.",
+      "whyTitle": "Pourquoi cette enquête ?",
+      "whyDescription": "Elle nous aide à mesurer l'accès des étudiants boursiers au logement social étudiant. Vos réponses ne seront pas communiquées.",
+      "residencesTitle": "Vos résidences",
+      "progress": "{filled} {filled, plural, one {résidence} other {résidences}} sur {total} {filled, plural, one {renseignée} other {renseignées}}",
+      "notMeasuredAll": "Nous ne mesurons pas le taux de boursiers dans nos résidences",
+      "countLabel": "Nombre d'étudiants boursiers",
+      "countHint": "Pour l'année {year}",
+      "rateLabel": "Ou part d'étudiants boursiers (%)",
+      "rateHint": "Entre 0 et 100",
+      "notMeasured": "Non mesuré dans cette résidence",
+      "later": "Répondre plus tard",
+      "submit": "Envoyer mes réponses",
+      "noResidences": "Aucune résidence publiée n'est concernée par cette enquête.",
+      "successToast": "Merci, vos réponses ont bien été enregistrées.",
+      "draftSavedToast": "Vos réponses ont été enregistrées en brouillon.",
+      "errorToast": "Une erreur est survenue, veuillez réessayer.",
+      "missingModal": {
+        "title": "Il reste des résidences à compléter",
+        "description": "Vos réponses ont été enregistrées. Il reste {count, plural, one {# résidence} other {# résidences}} à compléter :",
+        "hint": "Vous pouvez revenir à tout moment pour terminer l'enquête depuis le menu « Enquête flash ».",
+        "continue": "Continuer à compléter",
+        "dashboard": "Retour au tableau de bord"
+      },
+      "loginModal": {
+        "title": "Une enquête flash est disponible",
+        "description": "Pour l'année scolaire {year}, nous vous demandons d'indiquer la part d'étudiants boursiers logés dans chacune de vos résidences. Cela ne prend que quelques minutes.",
+        "answer": "Répondre à l'enquête",
+        "later": "Plus tard"
+      }
+    },
     "users": {
       "pageTitle": "Gestion des utilisateurs",
       "newUser": "Nouvel utilisateur",
@@ -2067,6 +2125,10 @@
       "priorityActions": {
         "title": "Actions prioritaires",
         "actions": {
+          "scholarshipSurvey": {
+            "title": "Répondre à l'enquête flash sur les boursiers",
+            "badge": "ENQUÊTE FLASH"
+          },
           "charter": {
             "title": "Valider la charte des bailleurs",
             "badge": "BON FONCTIONNEMENT",
@@ -2315,7 +2377,7 @@
         "confirmAllError": "La confirmation des autres résidences a échoué, veuillez réessayer.",
         "confirmAllModal": {
           "title": "Confirmer les disponibilités de toutes vos résidences ?",
-          "description": "Si les disponibilités de vos autres résidences n’ont pas changé non plus, confirmez-les toutes en une fois : leur date de confirmation sera actualisée, sans modifier les nombres.",
+          "description": "Si les disponibilités de vos autres résidences n’ont pas changé non plus, confirmez-les toutes en une fois : leur date de confirmation sera actualisée, sans modifier les nombres. Les disponibilités non renseignées passeront à 0.",
           "confirmOne": "Seulement cette résidence",
           "confirmAll": "Confirmer toutes mes résidences"
         }
@@ -2338,6 +2400,23 @@
       "breadcrumbContacts": "Contacts",
       "breadcrumbContactsDossierFacile": "Contacts avec DossierFacile",
       "title": "Contacts",
+      "stats": {
+        "title": "Statistiques des contacts",
+        "periodLegend": "Période",
+        "period": { "7d": "7 jours", "30d": "30 jours", "90d": "90 jours" },
+        "export": "Exporter",
+        "caption": "Statistiques des contacts par résidence",
+        "residence": "Résidence",
+        "city": "Ville",
+        "received": "Demandes reçues",
+        "nonModere": "Non modéré",
+        "nonRetenu": "Non retenu",
+        "contacte": "Contacté",
+        "logementAttribue": "Logement attribué",
+        "share": "{label} (%)",
+        "total": "Total",
+        "empty": "Aucune demande sur la période."
+      },
       "titleDossierFacile": "Contacts avec DossierFacile",
       "loading": "Chargement...",
       "defaultCandidateName": "Candidat",
@@ -2355,18 +2434,27 @@
         "age": "{count} ans",
         "scholarship": "Boursier",
         "viewCandidate": "Voir {name}",
-        "viewCandidateFallback": "le candidat"
+        "viewCandidateFallback": "le candidat",
+        "workStudy": "Alternant",
+        "studyYearAtStart": "{year} à la rentrée"
       },
       "detail": {
         "title": "Contact de {name}",
         "aboutTitle": "À propos du candidat",
         "age": "{count} ans",
-        "scholarship": "Boursier"
+        "scholarship": "Boursier",
+        "workStudy": "Alternance : {value}",
+        "workStudyYes": "Oui",
+        "workStudyNo": "Non",
+        "studyInstitution": "Établissement à la rentrée : {value}",
+        "studyYear": "Année d'études à la rentrée : {value}"
       },
       "actions": {
         "statusChangeError": "Le changement de statut a échoué. Veuillez réessayer.",
         "contactedTitle": "Contact avec l'étudiant réalisé",
         "contactedRetention": "Les détails du contact seront encore disponibles pendant {days} jour{s}.",
+        "assignedTitle": "Logement attribué à l'étudiant",
+        "assignedDescription": "Ce logement a été attribué à cet étudiant.",
         "rejectedTitle": "Contact non retenu",
         "rejectedDescription": "Vous ne donnerez pas suite à cette demande de contact.",
         "moderateTitle": "Souhaitez-vous en savoir plus sur la demande ?",
@@ -2483,7 +2571,8 @@
         "a_moderer": "À modérer",
         "non_retenu": "Non retenu",
         "a_contacter": "À contacter",
-        "contacte": "Contacté"
+        "contacte": "Contacté",
+        "logement_attribue": "Logement attribué"
       },
       "applicationsSuspendedBadge": "Candidatures suspendues",
       "autoSuspendedBadge": {
@@ -2509,7 +2598,7 @@
       "noManagerAlert": {
         "title": "Aucun gestionnaire n'a accès aux dossiers des étudiants",
         "description": "Par défaut, seuls les administrateurs voient les candidatures. Pour autoriser un gestionnaire à les consulter et à les traiter, cliquez sur le bouton <icon></icon> « Paramètres de réception ».",
-        "action": "Attribuer les droits"
+        "action": "Paramètres de réception"
       }
     },
     "ownerForm": {
@@ -2539,6 +2628,26 @@
       "emptyTitle": "Aucune disponibilité à confirmer",
       "emptyDescription": "Les disponibilités de vos résidences sont à jour.",
       "backToResidences": "Voir mes résidences",
+      "error": "La confirmation a échoué, veuillez réessayer."
+    },
+    "emailConfirmAvailability": {
+      "pageTitle": "Confirmer mes disponibilités",
+      "intro": "Voici les disponibilités renseignées pour vos résidences, avec leur date de dernière mise à jour.",
+      "confirmHint": "Rien n’a changé ? Confirmez en un clic : la date de mise à jour passe à aujourd’hui, sans modifier les valeurs renseignées. Les disponibilités non renseignées passeront à 0.",
+      "available": "{count, plural, =0 {Aucune disponibilité} one {# disponibilité} other {# disponibilités}}",
+      "lastUpdate": "Dernière mise à jour : {date}",
+      "neverUpdated": "Dernière mise à jour : non renseignée",
+      "confirm": "Rien n’a changé",
+      "update": "Mettre à jour les disponibilités",
+      "successTitle": "{count, plural, one {Disponibilités confirmées pour # résidence} other {Disponibilités confirmées pour # résidences}}",
+      "successDescription": "La date de mise à jour a été actualisée. Merci !",
+      "skippedDescription": "{count, plural, one {# résidence a été mise à jour entre-temps depuis l’espace gestionnaire : sa saisie a été conservée.} other {# résidences ont été mises à jour entre-temps depuis l’espace gestionnaire : leur saisie a été conservée.}}",
+      "upToDateTitle": "Vos disponibilités sont déjà à jour",
+      "upToDateDescription": "Elles ont été confirmées ou mises à jour depuis l’envoi de cet e-mail. Il n’y a rien d’autre à faire.",
+      "expiredTitle": "Ce lien a expiré",
+      "invalidTitle": "Ce lien n’est plus valide",
+      "loginDescription": "Connectez-vous à votre espace gestionnaire pour confirmer ou mettre à jour vos disponibilités.",
+      "login": "Me connecter pour confirmer",
       "error": "La confirmation a échoué, veuillez réessayer."
     }
   },
