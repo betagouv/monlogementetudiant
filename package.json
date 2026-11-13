@@ -18,6 +18,7 @@
     "test:unit": "vitest --project unit",
     "test:integration": "vitest --project integration --run",
     "test:coverage": "vitest --run --coverage",
+    "db:seed": "tsx --env-file=.env.dist src/__tests__/seed/dev.ts",
     "e2e:seed": "tsx --env-file=.env.e2e e2e/seed.ts",
     "test:e2e": "pnpm e2e:seed && playwright test",
     "test:e2e:ui": "pnpm e2e:seed && playwright test --ui",
