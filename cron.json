@@ -1,5 +1,6 @@
 {
   "jobs": [
+    { "command": "30 1 1 * * npx tsx cli/index.ts capture-availability-snapshot" },
     { "command": "0 2 * * * npx tsx cli/index.ts import arpej-ibail --owner-slug arpej" },
     { "command": "*/30 5-19 * * * npx tsx cli/index.ts import fac-habitat --owner-slug fac-habitat" },
     { "command": "0 1 * * 0 npx tsx cli/index.ts sync cities" },

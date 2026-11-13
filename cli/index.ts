@@ -7,6 +7,7 @@ import { backfillBrevoOwners } from './commands/backfill-brevo-owners'
 import { backfillCacheControl } from './commands/backfill-cache-control'
 import { backfillGeocoding } from './commands/backfill-geocoding'
 import { backupDb } from './commands/backup-db'
+import { captureAvailabilitySnapshotCommand } from './commands/capture-availability-snapshot'
 import { captureMonthlyMetrics } from './commands/capture-monthly-metrics'
 import { checkApplicationsInactivityCommand } from './commands/check-applications-inactivity'
 import { compareCrous } from './commands/compare-crous'
@@ -320,6 +321,10 @@ program
     (value: string) => Number(value),
   )
   .action((opts) => captureMonthlyMetrics(opts))
+  .command('capture-availability-snapshot')
+  .description('Fige le relevé mensuel du suivi des disponibilités par gestionnaire (progression dans le temps)')
+  .option('--dry-run', 'Compter sans écrire en BDD')
+  .action((opts) => captureAvailabilitySnapshotCommand(opts))
 
 program
   .command('purge-contact-requests')
