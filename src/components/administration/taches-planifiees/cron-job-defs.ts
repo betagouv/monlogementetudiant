@@ -23,8 +23,15 @@ const JOB_DEFS: Record<string, TJobDef> = {
     label: 'Déblocage Brevo des gestionnaires',
     description: 'Débloque dans Brevo les gestionnaires désabonnés des e-mails, qui ne pourraient plus recevoir leur lien de connexion',
   },
-  'send-alert-batch': { label: 'Envoi d’alerte étudiante', description: 'Un e-mail par alerte ou par groupe de favoris' },
-  'detect-alerts': { label: 'Détection alertes (événementielle)', description: 'Hausses de disponibilité des résidences modifiées' },
+  'graphile-cleanup': {
+    label: 'Nettoyage de la file des tâches',
+    description: 'Supprime les tâches en échec définitif ainsi que les files et identifiants de tâches inutilisés',
+  },
+  'send-alert-batch': { label: 'Envoi des alertes', description: 'Un e-mail par alerte ou par groupe de favoris' },
+  'detect-alerts': {
+    label: 'Détection des hausses de disponibilité',
+    description: 'Hausses de disponibilité des résidences modifiées → jobs d’alerte',
+  },
   'expire-alerts': {
     label: 'Péremption alertes',
     description: 'Relance à 3 mois (template 46) puis désactivation après 7 jours (template 48)',

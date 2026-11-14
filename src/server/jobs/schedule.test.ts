@@ -1,7 +1,9 @@
 import { parseCrontab } from 'graphile-worker'
 import { describe, expect, it } from 'vitest'
 import { CRON_COMMANDS, jobNameFromArgv } from '../../../cli/cron-failure'
+import { JOB_IDENTIFIERS } from './enqueue'
 import { buildCrontab, SCHEDULED_COMMANDS, SCHEDULED_IN_PROCESS } from './schedule'
+import { taskList } from './tasks'
 
 const EXPECTED: [string, string, string][] = [
   ['import-arpej-ibail', '0 2 * * *', 'import arpej-ibail --owner-slug arpej'],
@@ -44,12 +46,19 @@ describe('SCHEDULED_COMMANDS', () => {
 })
 
 describe('SCHEDULED_IN_PROCESS', () => {
-  it('planifie la reprise, le signalement des alertes et le déblocage Brevo', () => {
+  it('planifie la reprise, le signalement des alertes, le déblocage Brevo et le nettoyage graphile', () => {
     expect(SCHEDULED_IN_PROCESS).toEqual([
       { identifier: 'requeue-pending-alerts', cron: '5 * * * *' },
       { identifier: 'report-alert-failures', cron: '15 * * * *' },
       { identifier: 'brevo-unblock-managers', cron: '20 * * * *' },
+      { identifier: 'graphile-cleanup', cron: '0 4 * * *' },
     ])
+  })
+})
+
+describe('taskList', () => {
+  it('enregistre un handler pour chaque identifiant de tâche', () => {
+    expect(Object.keys(taskList).sort()).toEqual([...JOB_IDENTIFIERS].sort())
   })
 })
 
