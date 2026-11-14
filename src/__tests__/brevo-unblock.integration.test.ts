@@ -148,6 +148,32 @@ describe('syncAndUnblockManagers', () => {
   })
 })
 
+describe('syncAndUnblockManagers, erreur base de données', () => {
+  it('continue la boucle quand un enregistrement échoue après un DELETE réussi', async () => {
+    await seedManagers()
+    await createUser({ id: 'm-unsub2', name: 'Unsub2', email: 'unsub2@bailleur.fr', role: 'owner' })
+    const deleted = stubBrevo([
+      { email: 'unsub@bailleur.fr', reason: 'unsubscribedViaEmail' },
+      { email: 'unsub2@bailleur.fr', reason: 'unsubscribedViaApi' },
+    ])
+    const original = db.insert.bind(db)
+    let failed = false
+    const spy = vi.spyOn(db, 'insert').mockImplementation(((table: Parameters<typeof db.insert>[0]) => {
+      if (table === brevoUnblockEvents && !failed) {
+        failed = true
+        throw new Error('db down')
+      }
+      return original(table)
+    }) as typeof db.insert)
+
+    const result = await syncAndUnblockManagers()
+    spy.mockRestore()
+
+    expect(deleted).toHaveLength(2)
+    expect(result).toMatchObject({ unblocked: 1, errors: 1 })
+  })
+})
+
 describe('unblockOwnerOnLogin', () => {
   const seedCopy = async (email: string, userId: string, reason: string) => {
     await db.insert(brevoBlockedContacts).values({ email, userId, reason, blockedAt: new Date(), syncedAt: new Date() })
@@ -211,6 +237,48 @@ describe('sendMagicLink', () => {
 
     expect(result).toEqual({ success: true })
     expect(calls).toEqual(['DELETE unsub@bailleur.fr', 'signInMagicLink'])
+  })
+
+  it('ne tente aucun déblocage pour une demande côté administration', async () => {
+    await createUser({ id: 'adm', name: 'Admin', email: 'adm@bailleur.fr', role: 'admin' })
+    await db.insert(brevoBlockedContacts).values({
+      email: 'adm@bailleur.fr',
+      userId: 'adm',
+      reason: 'unsubscribedViaEmail',
+      blockedAt: new Date(),
+      syncedAt: new Date(),
+    })
+    stubBrevo([])
+
+    await sendMagicLink('adm@bailleur.fr', 'admin')
+
+    expect(calls).toEqual(['signInMagicLink'])
+  })
+
+  it('envoie le lien malgré un appel Brevo qui ne répond pas, et journalise une erreur', async () => {
+    await seedManagers()
+    await db.insert(brevoBlockedContacts).values({
+      email: 'unsub@bailleur.fr',
+      userId: 'm-unsub',
+      reason: 'unsubscribedViaEmail',
+      blockedAt: new Date(),
+      syncedAt: new Date(),
+    })
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        (_input: string | URL, init?: RequestInit) =>
+          new Promise((_resolve, reject) => {
+            init?.signal?.addEventListener('abort', () => reject(init.signal?.reason))
+          }),
+      ),
+    )
+
+    await sendMagicLink('unsub@bailleur.fr', 'owner')
+
+    expect(calls).toEqual(['signInMagicLink'])
+    const [event] = await db.select().from(brevoUnblockEvents)
+    expect(event).toMatchObject({ trigger: 'login', status: 'error' })
   })
 
   it('envoie quand même le lien si le déblocage échoue', async () => {
