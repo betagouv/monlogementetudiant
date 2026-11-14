@@ -2,14 +2,13 @@ import { TRPCError } from '@trpc/server'
 import { and, between, count, desc, eq, ilike, inArray, isNotNull, isNull, ne, or, type SQL, sql } from 'drizzle-orm'
 import { getTranslations } from 'next-intl/server'
 import { z } from 'zod'
-import { IMPORT_JOB_TYPE_BY_IDENTIFIER, SCHEDULED_JOBS } from '~/components/administration/taches-planifiees/cron-job-defs'
 import { DF_TENANT_STATUS_VERIFIED } from '~/enums/dossier-facile-tenant-status'
 import { ELoginAttemptStatus } from '~/enums/login-attempt-status'
 import { EOwnerContactMode, OWNER_CONTACT_MODES, ZOwnerContactMode } from '~/enums/owner-contact-mode'
 import { FEATURES } from '~/lib/features'
 import { GESTIONNAIRE_PERMISSIONS_REQUIRED, gestionnairePermissionsAreUsable } from '~/schemas/bailleur-users/bailleur-user-form'
 import { zNormalizedEmail } from '~/schemas/email'
-import { IMPORT_JOB_TYPES, type TImportJobSummary, ZImportJobType } from '~/schemas/import-jobs'
+import { IMPORT_JOB_TYPES, type TImportJobSummary } from '~/schemas/import-jobs'
 import { assertAdministratorSlotAvailable } from '~/server/bailleur/administrator-limit'
 import { notifyContactModeActivated, notifyContactModeDeactivated } from '~/server/bailleur/application-notifications'
 import { INACTIVITY_WARNING_DAYS } from '~/server/bailleur/inactivity-rules'
@@ -39,6 +38,7 @@ import { jobRuns } from '~/server/db/schema/job-run'
 import { ownerFeedback } from '~/server/db/schema/owner-feedback'
 import { owners } from '~/server/db/schema/owners'
 import { stats } from '~/server/db/schema/stats'
+import { IMPORT_JOB_TYPE_BY_IDENTIFIER, SCHEDULED_JOBS } from '~/server/jobs/job-defs'
 import { nextRunAt } from '~/server/jobs/next-run'
 import { logActivity } from '~/server/services/activity-logger'
 import { sendAdminResetPasswordEmail, sendOwnerWelcomeEmail } from '~/server/services/brevo'
@@ -1343,8 +1343,6 @@ const ownerUsageRouter = createTRPCRouter({
     }),
 })
 
-const CRON_JOB_TYPES = ZImportJobType.options.filter((t) => t !== 'csv')
-
 const importsRouter = createTRPCRouter({
   list: adminProcedure.query(async () => {
     if (!FEATURES.csvImport) throw new TRPCError({ code: 'NOT_FOUND' })
@@ -1357,15 +1355,6 @@ const importsRouter = createTRPCRouter({
     const [job] = await db.select().from(importJobs).where(eq(importJobs.id, input.id)).limit(1)
     if (!job) throw new TRPCError({ code: 'NOT_FOUND' })
     return job
-  }),
-
-  lastByType: adminProcedure.query(async () => {
-    // DISTINCT ON (type) : une seule ligne par type, la plus récente
-    return db
-      .selectDistinctOn([importJobs.type])
-      .from(importJobs)
-      .where(inArray(importJobs.type, CRON_JOB_TYPES))
-      .orderBy(importJobs.type, desc(importJobs.createdAt))
   }),
 })
 

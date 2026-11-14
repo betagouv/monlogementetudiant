@@ -3,15 +3,13 @@
 import Button from '@codegouvfr/react-dsfr/Button'
 import { useQuery } from '@tanstack/react-query'
 import clsx from 'clsx'
-import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
-import Link from 'next/link'
 import { useState } from 'react'
 import styles from '~/app/(authenticated)/administration/administration.module.css'
 import { Pagination } from '~/components/ui/pagination'
+import { SCHEDULED_JOBS } from '~/server/jobs/job-defs'
 import { useTRPC } from '~/server/trpc/client'
 import { JobDuration } from '../shared/job-duration'
-import { describeCron, getJobDef, SCHEDULED_JOBS } from './cron-job-defs'
+import { describeCron, formatParisDateTime, getJobDef } from './cron-job-defs'
 import { formatMetrics, JobRunStatusBadge } from './job-run-status-badge'
 
 const TRIGGER_LABELS = { scheduled: 'Planifiée', event: 'Événement', manual: 'Manuelle' } as const
@@ -27,11 +25,14 @@ export function JobRunHistory({ identifier }: { identifier: string }) {
     <>
       <div className="fr-mb-3w">
         <div className="fr-mb-2v">
-          <Link href="/administration/taches-planifiees">
-            <Button priority="tertiary" size="small" iconId="fr-icon-arrow-left-line">
-              Tâches planifiées
-            </Button>
-          </Link>
+          <Button
+            priority="tertiary"
+            size="small"
+            iconId="fr-icon-arrow-left-line"
+            linkProps={{ href: '/administration/taches-planifiees' }}
+          >
+            Tâches planifiées
+          </Button>
         </div>
         <div className="fr-flex fr-align-items-center fr-flex-gap-2v">
           <div className={styles.pageIcon}>
@@ -78,13 +79,13 @@ export function JobRunHistory({ identifier }: { identifier: string }) {
               )}
               {data?.items.map((run) => (
                 <tr key={run.id}>
-                  <td className="fr-text--sm">{format(new Date(run.startedAt), 'd MMM yyyy HH:mm:ss', { locale: fr })}</td>
+                  <td className="fr-text--sm">{formatParisDateTime(run.startedAt)}</td>
                   <td className="fr-text--sm">{TRIGGER_LABELS[run.trigger]}</td>
                   <td className="fr-text--sm fr-text-mention--grey">
                     <JobDuration startedAt={run.startedAt} endedAt={run.endedAt} />
                   </td>
                   <td>
-                    <JobRunStatusBadge status={run.status} />
+                    <JobRunStatusBadge status={run.status} errorCount={run.metrics.errors ?? 0} />
                   </td>
                   <td className="fr-text--sm">{formatMetrics(run.metrics) || '—'}</td>
                   <td className="fr-text--sm fr-text-default-error">{run.error}</td>

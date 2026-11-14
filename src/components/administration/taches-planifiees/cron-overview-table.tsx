@@ -3,15 +3,13 @@
 import Button from '@codegouvfr/react-dsfr/Button'
 import { useQuery } from '@tanstack/react-query'
 import clsx from 'clsx'
-import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
 import styles from '~/app/(authenticated)/administration/administration.module.css'
 import { useTRPC } from '~/server/trpc/client'
 import { JobDuration } from '../shared/job-duration'
-import { describeCron, getJobDef } from './cron-job-defs'
+import { describeCron, formatParisDateTime, getJobDef } from './cron-job-defs'
 import { formatMetrics, JobRunStatusBadge } from './job-run-status-badge'
 
-const formatDate = (date: Date | string) => format(new Date(date), 'd MMM yyyy HH:mm', { locale: fr })
+const formatDate = formatParisDateTime
 
 export function CronOverviewTable() {
   const trpc = useTRPC()
@@ -62,7 +60,13 @@ export function CronOverviewTable() {
                   <td className="fr-text--sm fr-text-mention--grey">
                     {last ? <JobDuration startedAt={last.startedAt} endedAt={last.endedAt} /> : '—'}
                   </td>
-                  <td>{last ? <JobRunStatusBadge status={last.status} /> : <span className="fr-text-mention--grey">—</span>}</td>
+                  <td>
+                    {last ? (
+                      <JobRunStatusBadge status={last.status} errorCount={last.metrics.errors ?? 0} />
+                    ) : (
+                      <span className="fr-text-mention--grey">—</span>
+                    )}
+                  </td>
                   <td className="fr-text--sm">{metrics || <span className="fr-text-mention--grey">—</span>}</td>
                   <td className="fr-text--sm fr-text-mention--grey">{formatDate(nextRunAt)}</td>
                   <td>

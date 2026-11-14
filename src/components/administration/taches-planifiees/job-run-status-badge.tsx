@@ -7,7 +7,14 @@ const STATUS_BADGES = {
   interrupted: { severity: 'warning', label: 'Interrompu' },
 } as const
 
-export function JobRunStatusBadge({ status }: { status: string }) {
+export function JobRunStatusBadge({ status, errorCount = 0 }: { status: string; errorCount?: number }) {
+  if (status === 'done' && errorCount > 0) {
+    return (
+      <Badge severity="warning" small>
+        Terminé avec erreurs
+      </Badge>
+    )
+  }
   const badge = STATUS_BADGES[status as keyof typeof STATUS_BADGES] ?? { severity: 'info', label: status }
   return (
     <Badge severity={badge.severity} small>

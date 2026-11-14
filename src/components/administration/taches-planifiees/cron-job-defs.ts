@@ -1,5 +1,4 @@
-import type { TImportJobType } from '~/schemas/import-jobs'
-import { SCHEDULED_COMMANDS, SCHEDULED_IN_PROCESS } from '~/server/jobs/schedule'
+import { IMPORT_JOB_TYPE_BY_IDENTIFIER } from '~/server/jobs/job-defs'
 
 type TJobDef = { label: string; description: string }
 
@@ -56,32 +55,6 @@ const JOB_DEFS: Record<string, TJobDef> = {
   },
 }
 
-// Tâches qui journalisent encore dans `import_job` : sert de repli tant qu'aucune ligne `job_run` n'existe.
-export const IMPORT_JOB_TYPE_BY_IDENTIFIER: Record<string, TImportJobType> = {
-  'import-arpej-ibail': 'arpej-ibail',
-  'import-fac-habitat': 'fac-habitat',
-  'import-initiall': 'initiall',
-  'sync-cities': 'sync-cities',
-  'sync-rents': 'sync-rents',
-  'sync-students': 'sync-students',
-  'sync-stats': 'sync-stats',
-  'detect-alert-jobs': 'alert-detection',
-  'expire-alerts': 'alert-expiration',
-  'check-applications-inactivity': 'applications-inactivity',
-  'send-contact-digest': 'contact-digest',
-  'send-goal-reminders': 'goal-reminders',
-  'reset-stale-availability': 'availability-reset',
-  'send-availability-recap': 'availability-recap',
-  'capture-monthly-metrics': 'monthly-metrics',
-  'purge-contact-requests': 'purge-contacts',
-  'purge-logs': 'purge-logs',
-  'backup-db': 'backup-db',
-}
-
-export const SCHEDULED_JOBS: { identifier: string; cron: string }[] = [...SCHEDULED_COMMANDS, ...SCHEDULED_IN_PROCESS].map(
-  ({ identifier, cron }) => ({ identifier, cron }),
-)
-
 export function getJobDef(identifier: string): TJobDef {
   return JOB_DEFS[identifier] ?? { label: identifier, description: '' }
 }
@@ -93,20 +66,32 @@ export const JOB_LABELS: Record<string, string> = Object.fromEntries(
 
 const WEEKDAYS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi']
 
-function formatTime(hour: string, minute: string): string {
-  return `${Number(hour)}h${minute.padStart(2, '0')}`
+const PARIS_TIME_ZONE = 'Europe/Paris'
+
+function parisOffsetHours(at: Date): number {
+  const hourIn = (timeZone: string) => Number(new Intl.DateTimeFormat('en-GB', { timeZone, hour: '2-digit', hourCycle: 'h23' }).format(at))
+  return (hourIn(PARIS_TIME_ZONE) - hourIn('UTC') + 24) % 24
 }
 
-// Horaires en UTC. Retourne l'expression brute si le motif n'est pas géré.
-export function describeCron(cron: string): string {
+export function formatParisDateTime(date: Date | string): string {
+  return new Intl.DateTimeFormat('fr-FR', { timeZone: PARIS_TIME_ZONE, dateStyle: 'medium', timeStyle: 'short' }).format(new Date(date))
+}
+
+// Les crons sont en UTC ; le libellé est affiché en heure de Paris (décalage à la date `now`).
+// Retourne l'expression brute si le motif n'est pas géré.
+export function describeCron(cron: string, now: Date = new Date()): string {
   const parts = cron.trim().split(/\s+/)
   if (parts.length !== 5) return cron
   const [minute, hour, dayOfMonth, month, dayOfWeek] = parts as [string, string, string, string, string]
   const isNumber = (value: string) => /^\d+$/.test(value)
+  const offset = parisOffsetHours(now)
+  const toParis = (utcHour: string) => Number(utcHour) + offset
 
   if (isNumber(minute) && isNumber(hour)) {
-    const time = `${formatTime(hour, minute)} UTC`
+    const parisHour = toParis(hour)
+    const time = `${parisHour % 24}h${minute.padStart(2, '0')}`
     if (dayOfMonth === '*' && month === '*' && dayOfWeek === '*') return `Tous les jours à ${time}`
+    if (parisHour >= 24) return cron
     if (dayOfMonth === '*' && month === '*' && /^[0-6]$/.test(dayOfWeek)) return `Tous les ${WEEKDAYS[Number(dayOfWeek)]}s à ${time}`
     if (dayOfMonth === '1' && month === '*' && dayOfWeek === '*') return `Le 1er de chaque mois à ${time}`
     if (dayOfMonth === '1' && month === '*/3' && dayOfWeek === '*') return `Le 1er de chaque trimestre à ${time}`
@@ -117,7 +102,7 @@ export function describeCron(cron: string): string {
     const step = `Toutes les ${everyMinutes[1]} min`
     if (hour === '*') return step
     const range = hour.match(/^(\d+)-(\d+)$/)
-    if (range) return `${step} de ${Number(range[1])}h à ${Number(range[2]) + 1}h UTC`
+    if (range && toParis(range[2]!) + 1 <= 24) return `${step} de ${toParis(range[1]!)}h à ${toParis(range[2]!) + 1}h`
   }
 
   return cron
