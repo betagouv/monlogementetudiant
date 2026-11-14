@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { closeDb, db } from '~/server/db'
 import { importJobs } from '~/server/db/schema'
+import { recordJobMetrics } from '~/server/jobs/job-run'
 import { detectAlertJobs } from '~/server/services/alert-detector'
 
 interface DetectAlertJobsOptions {
@@ -34,6 +35,7 @@ export async function detectAlertJobsCommand(options: DetectAlertJobsOptions): P
     console.log(`\n  Résidences enregistrées (baseline) : ${result.seeded}`)
     console.log(`  Hausses détectées : ${result.triggered}`)
     console.log(`  Jobs créés : ${result.jobsCreated}`)
+    await recordJobMetrics({ triggered: result.triggered, jobsCreated: result.jobsCreated, seeded: result.seeded })
 
     if (jobId !== null) {
       await db

@@ -7,7 +7,7 @@ export type TJobRunTrigger = (typeof jobRuns.$inferInsert)['trigger']
 
 const jobRunContext = new AsyncLocalStorage<{ id: number }>()
 
-function currentJobRunId(): number | null {
+export function currentJobRunId(): number | null {
   const contextId = jobRunContext.getStore()?.id
   if (contextId !== undefined) return contextId
   const envId = Number(process.env.JOB_RUN_ID)

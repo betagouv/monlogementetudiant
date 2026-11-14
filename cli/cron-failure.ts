@@ -2,10 +2,10 @@ import { env } from '~/server/env'
 import { sendRawEmail } from '~/server/services/brevo'
 
 /**
- * Commandes exécutées par un planificateur (`cron.json`) : ce sont les seules dont l'échec
+ * Commandes exécutées par un planificateur (`SCHEDULED_COMMANDS`) : ce sont les seules dont l'échec
  * déclenche un mail, un one-off lancé à la main affichant déjà son erreur dans le terminal.
  *
- * Cette liste doit rester synchronisée avec `cron.json` — `cron-failure.test.ts` échoue si
+ * Cette liste doit rester synchronisée avec `SCHEDULED_COMMANDS` — `cron-failure.test.ts` échoue si
  * une commande planifiée n'y figure pas. L'inverse est autorisé : `cron-selftest` est traitée
  * comme un cron pour pouvoir valider la chaîne d'alerte, sans être planifiée.
  */

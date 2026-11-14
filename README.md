@@ -424,7 +424,7 @@ pnpm cli backup-db --dry-run --verbose   # en local : montre le backup retenu et
 ```
 
 Copie le dernier backup PostgreSQL produit par Scalingo dans le bucket `S3_BACKUP_BUCKET`. Piloté par
-un cron quotidien à 5h00 UTC, **en production uniquement** (`cron.json` est commun à toutes les apps
+un cron quotidien à 5h00 UTC, **en production uniquement** (le planificateur est commun à toutes les apps
 déployées depuis ce repo : la garde est dans le code, pas dans le planificateur).
 
 On ne produit pas le dump nous-mêmes : `pg_dump` n'existe pas dans un conteneur Node Scalingo, et
@@ -751,7 +751,7 @@ Options communes :
 Résolution du bailleur : `--owner-id`, puis `--owner-slug`, puis le nom codé en dur dans la commande.
 Les deux premiers sont des identifiants stables — si aucun bailleur ne correspond, la commande échoue
 sans rien écrire. Le nom, lui, est éditable depuis l'admin : il ne sert que de dernier recours et crée
-le bailleur s'il n'existe pas. Les crons (`cron.json`) passent par `--owner-slug`, le slug étant
+le bailleur s'il n'existe pas. Les crons (`SCHEDULED_COMMANDS`) passent par `--owner-slug`, le slug étant
 identique d'un environnement à l'autre contrairement à l'id.
 
 #### `import arpej-ibail` — Import résidences ARPEJ via API iBAIL
@@ -923,7 +923,7 @@ Variables d'env requises : `MATOMO_URL`, `MATOMO_TOKEN`, `MATOMO_ID_SITE`
 
 ### Cron jobs (Scalingo)
 
-Les tâches planifiées sont définies dans `cron.json` à la racine. Scalingo lit ce fichier au déploiement.
+Les tâches planifiées sont définies dans `src/server/jobs/schedule.ts` (`SCHEDULED_COMMANDS`) et exécutées par le worker Graphile (`worker` du `Procfile`, `cli/worker.ts`). Les horaires sont en UTC.
 Les migrations Drizzle sont appliquées au déploiement via le hook `postdeploy` défini dans `Procfile`.
 
 | Cron | Commande | Fréquence |
@@ -944,8 +944,7 @@ Les migrations Drizzle sont appliquées au déploiement via le hook `postdeploy`
 | `30 6 * * *` | `reset-stale-availability` | Tous les jours à 6h30 |
 | `0 5 * * *` | `backup-db` | Tous les jours à 5h (production uniquement) |
 
-Pour vérifier les crons actifs : `scalingo --app <app> cron-tasks`
-Pour voir les logs d'exécution : `scalingo --app <app> logs` (les crons tournent dans des conteneurs `one-off-*`, pas `cron-*`)
+Pour voir les logs d'exécution : `scalingo --app <app> logs --filter worker`
 
 #### Relevé mensuel des métriques (`capture-monthly-metrics`)
 
@@ -994,7 +993,7 @@ autant de mails qu'il a d'exécutions (jusqu'à 48/jour pour `send-alert-jobs`).
 
 Seules les commandes listées dans `CRON_COMMANDS` (`cli/cron-failure.ts`) notifient — un one-off
 lancé à la main affiche déjà son erreur dans le terminal. `cron-failure.test.ts` échoue si une
-commande de `cron.json` manque à cette liste.
+commande de `SCHEDULED_COMMANDS` manque à cette liste.
 
 **Ce qui n'est pas couvert** — le mail suppose que le process JS vit assez longtemps pour
 l'envoyer :
