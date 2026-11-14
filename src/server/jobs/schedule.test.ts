@@ -1,7 +1,7 @@
 import { parseCrontab } from 'graphile-worker'
 import { describe, expect, it } from 'vitest'
 import { CRON_COMMANDS, jobNameFromArgv } from '../../../cli/cron-failure'
-import { buildCrontab, SCHEDULED_COMMANDS } from './schedule'
+import { buildCrontab, SCHEDULED_COMMANDS, SCHEDULED_IN_PROCESS } from './schedule'
 
 const EXPECTED: [string, string, string][] = [
   ['import-arpej-ibail', '0 2 * * *', 'import arpej-ibail --owner-slug arpej'],
@@ -22,7 +22,6 @@ const EXPECTED: [string, string, string][] = [
   ['capture-monthly-metrics', '30 3 * * *', 'capture-monthly-metrics'],
   ['purge-contact-requests', '45 3 * * *', 'purge-contact-requests'],
   ['backup-db', '0 5 * * *', 'backup-db'],
-  ['send-alert-jobs', '*/30 * * * *', 'send-alert-jobs'],
 ]
 
 describe('SCHEDULED_COMMANDS', () => {
@@ -44,18 +43,33 @@ describe('SCHEDULED_COMMANDS', () => {
   })
 })
 
+describe('SCHEDULED_IN_PROCESS', () => {
+  it('planifie la reprise et le signalement des alertes', () => {
+    expect(SCHEDULED_IN_PROCESS).toEqual([
+      { identifier: 'requeue-pending-alerts', cron: '5 * * * *' },
+      { identifier: 'report-alert-failures', cron: '15 * * * *' },
+    ])
+  })
+})
+
 describe('buildCrontab', () => {
   it('produit une ligne par entrée, parseable par graphile-worker', () => {
     const crontab = buildCrontab()
-    expect(crontab.split('\n')).toHaveLength(SCHEDULED_COMMANDS.length)
+    expect(crontab.split('\n')).toHaveLength(SCHEDULED_COMMANDS.length + SCHEDULED_IN_PROCESS.length)
 
     const items = parseCrontab(crontab)
-    expect(items.map((i) => i.identifier).sort()).toEqual(SCHEDULED_COMMANDS.map((c) => c.identifier).sort())
-    for (const item of items) {
+    expect(items.map((i) => i.identifier).sort()).toEqual([...SCHEDULED_COMMANDS, ...SCHEDULED_IN_PROCESS].map((c) => c.identifier).sort())
+    for (const item of items.filter((i) => i.task === 'run-cli-command')) {
       expect(item.task).toBe('run-cli-command')
       expect(item.options).toMatchObject({ maxAttempts: 1, backfillPeriod: 0 })
       expect(item.options.queueName).toBe(item.identifier)
     }
+    for (const { identifier } of SCHEDULED_IN_PROCESS) {
+      const item = items.find((i) => i.identifier === identifier)
+      expect(item?.task).toBe(identifier)
+      expect(item?.options).toMatchObject({ maxAttempts: 1, backfillPeriod: 0, queueName: identifier })
+    }
+    expect(items.filter((i) => i.task === 'run-cli-command')).toHaveLength(SCHEDULED_COMMANDS.length)
     const arpej = items.find((i) => i.identifier === 'import-arpej-ibail')
     expect(arpej?.payload).toEqual({ args: ['import', 'arpej-ibail', '--owner-slug', 'arpej'] })
   })

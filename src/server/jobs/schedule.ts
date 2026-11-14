@@ -18,14 +18,16 @@ export const SCHEDULED_COMMANDS: TScheduledCommand[] = [
   { identifier: 'send-contact-digest', cron: '0 7 * * *', args: ['send-contact-digest'] },
   { identifier: 'send-goal-reminders', cron: '0 7 * * *', args: ['send-goal-reminders'] },
   { identifier: 'reset-stale-availability', cron: '30 6 * * *', args: ['reset-stale-availability'] },
-  { identifier: 'send-alert-jobs', cron: '*/30 * * * *', args: ['send-alert-jobs'] },
   { identifier: 'detect-alert-jobs', cron: '0 8 * * *', args: ['detect-alert-jobs'] },
   { identifier: 'capture-monthly-metrics', cron: '30 3 * * *', args: ['capture-monthly-metrics'] },
   { identifier: 'purge-contact-requests', cron: '45 3 * * *', args: ['purge-contact-requests'] },
   { identifier: 'backup-db', cron: '0 5 * * *', args: ['backup-db'] },
 ]
 
-export const SCHEDULED_IN_PROCESS: TScheduledInProcess[] = []
+export const SCHEDULED_IN_PROCESS: TScheduledInProcess[] = [
+  { identifier: 'requeue-pending-alerts', cron: '5 * * * *' },
+  { identifier: 'report-alert-failures', cron: '15 * * * *' },
+]
 
 export function buildCrontab(): string {
   const commandLines = SCHEDULED_COMMANDS.map(({ identifier, cron, args }) => {

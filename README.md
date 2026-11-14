@@ -104,7 +104,6 @@ cli/
     seed-alert-snapshot.ts  # Amorce la baseline du snapshot de dispo (silencieux)
     backfill-alert-jobs.ts  # Vague initiale : jobs pour le stock dispo × alertes existantes
     detect-alert-jobs.ts    # Détecte les hausses de dispo et crée les jobs (réconciliation)
-    send-alert-jobs.ts      # Draine la file de jobs et envoie les emails d'alerte
     expire-alerts.ts        # Relance à 3 mois puis désactive les alertes sans réaction
     check-applications-inactivity.ts # Alerte puis suspend les résidences inactives (candidatures, dispos)
     send-contact-digest.ts  # Récap quotidien des demandes de contact de la veille aux gestionnaires
@@ -604,9 +603,9 @@ Options :
 
 ### Alertes étudiants (disponibilité)
 
-Pipeline événementiel de notification des étudiants quand un logement correspondant à leur alerte devient disponible (voir `docs/adr/0001-alert-sender.md` et `0002-alert-detection.md`). Les producteurs créent des `alert_job` ; le sender les draine. Ces commandes sont les opérations **hors-ligne** du système (la détection instantanée, elle, est branchée sur les écritures via les mutations bailleur et les imports).
+Pipeline événementiel de notification des étudiants quand un logement correspondant à leur alerte devient disponible (voir `docs/adr/0001-alert-sender.md` et `0002-alert-detection.md`). Les producteurs créent des `alert_job` et mettent en file, dans la même transaction, une tâche Graphile `send-alert-batch` par lot (une alerte, ou les favoris d'un étudiant) ; le worker envoie un mail par lot. Ces commandes sont les opérations **hors-ligne** du système (la détection instantanée, elle, est branchée sur les écritures via les mutations bailleur et les imports).
 
-> **Ordre de mise en route** : `seed-alert-snapshot` une fois → (optionnel) `backfill-alert-jobs` une fois → puis `detect-alert-jobs` (réconciliation, espacée) et `send-alert-jobs` (drain, court) en cron.
+> **Ordre de mise en route** : `seed-alert-snapshot` une fois → (optionnel) `backfill-alert-jobs` une fois → puis `detect-alert-jobs` (réconciliation, espacée) en cron ; l'envoi est assuré par le worker.
 
 #### `seed-alert-snapshot` — Amorcer la baseline du snapshot
 
@@ -624,7 +623,7 @@ pnpm cli backfill-alert-jobs --dry-run --verbose   # chiffrer le volume sans rie
 pnpm cli backfill-alert-jobs                        # enfiler les jobs
 ```
 
-Enfile les jobs pour le **stock déjà disponible** qui matche les **alertes existantes** (flux « pull » de masse). Sans elle, ces alertes ne seraient jamais averties du stock présent au démarrage (ni delta côté push, ni création côté pull). À jouer **une seule fois**, explicitement : c'est un envoi de masse. Ne touche pas le snapshot ; idempotente (l'index unique partiel d'`alert_job` empêche les doublons). **N'envoie rien elle-même** — c'est `send-alert-jobs` qui draine ensuite la file.
+Enfile les jobs pour le **stock déjà disponible** qui matche les **alertes existantes** (flux « pull » de masse). Sans elle, ces alertes ne seraient jamais averties du stock présent au démarrage (ni delta côté push, ni création côté pull). À jouer **une seule fois**, explicitement : c'est un envoi de masse. Ne touche pas le snapshot ; idempotente (l'index unique partiel d'`alert_job` empêche les doublons). **N'envoie rien elle-même** — chaque lot créé est mis en file pour le worker.
 
 | Option | Description |
 |--------|-------------|
@@ -640,16 +639,16 @@ pnpm cli detect-alert-jobs
 
 Compare la dispo courante au snapshot et crée un job pour chaque hausse (`dispo > 0` ET `dispo > dispo_précédente`) croisée avec une alerte active. Sert de **filet de réconciliation** : la détection instantanée est déjà branchée sur les écritures, cette commande rattrape les chemins non hookés (toggles `published`, hooks best-effort échoués). À espacer en cron (ex. 1×/nuit). Verrou single-flight en mode réel (pas de scan concurrent).
 
-#### `send-alert-jobs` — Envoyer les emails d'alerte
+#### Envoi des e-mails d'alerte (worker)
 
-```bash
-pnpm cli send-alert-jobs --dry-run --verbose
-pnpm cli send-alert-jobs
-```
+Tâches Graphile du worker (`src/server/jobs/tasks/`) :
 
-Draine la file des jobs `pending`, regroupe par étudiant (un mail listant ses résidences) et envoie via Brevo. À jouer en cron **court** (ex. `*/5 * * * *`) pour le quasi-instantané. Verrou single-flight en mode réel (pas de double-envoi si deux runs se chevauchent).
+- `detect-alerts` : détection déclenchée par les écritures bailleur (`triggerAlertDetection`, best effort).
+- `send-alert-batch` : un mail par lot, lancé 60 s après la première ligne créée (les détections suivantes s'y regroupent), file `alert-send` sérielle (100 ms entre deux envois Brevo), 3 tentatives. Les lignes envoyées passent en `sent` avec un `send_id` commun.
+- `requeue-pending-alerts` (`5 * * * *`) : remet en file les lots ayant des lignes `pending` depuis plus de 10 minutes.
+- `report-alert-failures` (`15 * * * *`) : un seul mail récapitulatif (`CRON_FAILURE_EMAILS`) pour les lignes définitivement en échec, chacune signalée une fois (`failure_reported_at`).
 
-> **Garde-fou anti-spam** : `sendStudentAlertEmail` n'envoie réellement qu'en `NEXT_PUBLIC_APP_ENV === 'production'`. En dev/staging, les jobs sont traités mais aucun mail ne part.
+> **Garde-fou anti-spam** : hors `NEXT_PUBLIC_APP_ENV === 'production'`, `send-alert-batch` n'envoie rien et laisse les lignes `pending`.
 
 #### `expire-alerts` — Péremption des alertes
 
@@ -665,7 +664,7 @@ Cycle de vie d'une alerte, piloté par la date de référence `renewed_at` (init
 
 À jouer en cron **quotidien** (`0 6 * * *`). Suivi dans `import_job` (type `alert-expiration`, visible dans l'admin « Tâches planifiées »).
 
-> **Garde-fou anti-spam** : double verrou. La commande `return` hors production (comme `send-alert-jobs`), et `sendAlertExpiryReminderEmail` / `sendAlertDeactivationEmail` refusent aussi d'envoyer hors `NEXT_PUBLIC_APP_ENV === 'production'`. En dev/staging : aucune relance, aucune désactivation, aucun mail.
+> **Garde-fou anti-spam** : double verrou. La commande `return` hors production (comme `send-alert-batch`), et `sendAlertExpiryReminderEmail` / `sendAlertDeactivationEmail` refusent aussi d'envoyer hors `NEXT_PUBLIC_APP_ENV === 'production'`. En dev/staging : aucune relance, aucune désactivation, aucun mail.
 
 Variables d'env requises : `DATABASE_URL`, `BREVO_API_KEY`, `BREVO_TEMPLATE_ALERT_EXPIRY_REMINDER`, `BREVO_TEMPLATE_ALERT_DEACTIVATION`.
 
@@ -923,7 +922,7 @@ Variables d'env requises : `MATOMO_URL`, `MATOMO_TOKEN`, `MATOMO_ID_SITE`
 
 ### Tâches planifiées (worker Graphile)
 
-Les tâches planifiées sont définies dans `src/server/jobs/schedule.ts` (`SCHEDULED_COMMANDS`) et exécutées par le worker Graphile (`worker` du `Procfile`, `cli/worker.ts`). Les horaires sont en UTC.
+Les tâches planifiées sont définies dans `src/server/jobs/schedule.ts` (`SCHEDULED_COMMANDS`, plus `SCHEDULED_IN_PROCESS` pour `requeue-pending-alerts` et `report-alert-failures`, voir « Envoi des e-mails d'alerte ») et exécutées par le worker Graphile (`worker` du `Procfile`, `cli/worker.ts`). Les horaires sont en UTC.
 Les migrations Drizzle sont appliquées au déploiement via le hook `postdeploy` défini dans `Procfile`.
 
 | Cron | Commande | Fréquence |
@@ -939,7 +938,6 @@ Les migrations Drizzle sont appliquées au déploiement via le hook `postdeploy`
 | `0 3 * * *` | `sync stats` | Tous les jours à 3h |
 | `30 3 * * *` | `capture-monthly-metrics` | Tous les jours à 3h30 |
 | `45 3 * * *` | `purge-contact-requests` | Tous les jours à 3h45 (la purge doit passer **après** le relevé) |
-| `*/30 * * * *` | `send-alert-jobs` | Toutes les 30 min |
 | `0 7 * * *` | `expire-alerts` | Tous les jours à 7h |
 | `0 7 * * *` | `send-contact-digest` | Tous les jours à 7h |
 | `0 7 * * *` | `send-goal-reminders` | Tous les jours à 7h |
@@ -989,10 +987,10 @@ Deux natures d'échec déclenchent l'alerte :
 - **Crash net** — toute exception non rattrapée qui remonte jusqu'à `cli/index.ts`.
 - **Échec partiel** — le job termine mais des éléments sont passés à la trappe : `result.errors`
   non vide pour les imports et syncs, alertes étudiantes ayant épuisé leurs `MAX_ATTEMPTS`
-  tentatives pour `send-alert-jobs`. Le job sort alors en code 1 et apparaît en erreur dans l'admin « Tâches planifiées » et dans les logs du conteneur `worker`, même si sa ligne `import_job` reste en `done` avec son résumé détaillé.
+  tentatives (signalées par `report-alert-failures`, un mail agrégé par passage horaire). Le job sort alors en code 1 et apparaît en erreur dans l'admin « Tâches planifiées » et dans les logs du conteneur `worker`, même si sa ligne `import_job` reste en `done` avec son résumé détaillé.
 
 Il n'y a **pas d'anti-flood** : un échec = un mail. Un job qui casse durablement enverra donc
-autant de mails qu'il a d'exécutions (jusqu'à 48/jour pour `send-alert-jobs`).
+autant de mails qu'il a d'exécutions.
 
 Seules les commandes listées dans `CRON_COMMANDS` (`cli/cron-failure.ts`) notifient — un one-off
 lancé à la main affiche déjà son erreur dans le terminal. `cron-failure.test.ts` échoue si une

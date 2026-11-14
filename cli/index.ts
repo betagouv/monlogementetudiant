@@ -24,7 +24,6 @@ import { purgeContactRequests } from './commands/purge-contact-requests'
 import { purgeLogs } from './commands/purge-logs'
 import { resetStaleAvailabilityCommand } from './commands/reset-stale-availability'
 import { seedAlertSnapshotCommand } from './commands/seed-alert-snapshot'
-import { sendAlertJobs } from './commands/send-alert-jobs'
 import { sendAvailabilityRecapCommand } from './commands/send-availability-recap'
 import { sendContactDigestCommand } from './commands/send-contact-digest'
 import { sendGoalRemindersCommand } from './commands/send-goal-reminders'
@@ -252,13 +251,6 @@ program
   .option('--dry-run', 'Simuler sans créer de jobs ni modifier le snapshot')
   .option('--verbose', 'Afficher le détail des hausses détectées')
   .action((opts) => detectAlertJobsCommand(opts))
-
-program
-  .command('send-alert-jobs')
-  .description("Batcher envoyant les emails d'alertes aux étudiants")
-  .option('--dry-run', 'Simuler sans envoyer ni modifier la BDD')
-  .option('--verbose', 'Afficher le détail par utilisateur')
-  .action((opts) => sendAlertJobs(opts))
 
 program
   .command('expire-alerts')

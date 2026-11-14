@@ -701,6 +701,13 @@
       "when": 1794653511681,
       "tag": "0099_job_run",
       "breakpoints": true
+    },
+    {
+      "idx": 100,
+      "version": "7",
+      "when": 1794654824253,
+      "tag": "0100_alert_job_send_tracking",
+      "breakpoints": true
     }
   ]
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { SCHEDULED_COMMANDS } from '~/server/jobs/schedule'
+import { SCHEDULED_JOBS } from '~/server/jobs/job-defs'
 import { describeCron, getJobDef } from './cron-job-defs'
 
 const WINTER = new Date('2026-01-15T12:00:00Z')
@@ -27,6 +27,6 @@ describe('describeCron (heure de Paris)', () => {
 
 describe('getJobDef', () => {
   it('fournit un libellé pour chaque tâche planifiée', () => {
-    for (const { identifier } of SCHEDULED_COMMANDS) expect(getJobDef(identifier).label).not.toBe(identifier)
+    for (const { identifier } of SCHEDULED_JOBS) expect(getJobDef(identifier).label).not.toBe(identifier)
   })
 })
