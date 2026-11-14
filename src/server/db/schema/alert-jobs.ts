@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm'
-import { bigint, index, integer, pgEnum, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core'
+import { bigint, index, integer, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core'
 import { accommodations } from './accommodations'
 import { user } from './auth'
 import { studentAlerts } from './student-alerts'
@@ -26,6 +26,8 @@ export const alertJobs = pgTable(
     attempts: integer().notNull().default(0),
     sentAt: timestamp('sent_at', { withTimezone: true }),
     error: text(),
+    sendId: uuid('send_id'),
+    failureReportedAt: timestamp('failure_reported_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [

@@ -11,7 +11,16 @@ const JOB_DEFS: Record<string, TJobDef> = {
   'sync-students': { label: 'Sync Étudiants', description: 'Effectifs depuis data.enseignementsup' },
   'sync-stats': { label: 'Sync Statistiques', description: 'Statistiques Matomo' },
   'detect-alert-jobs': { label: 'Détection alertes', description: 'Hausses de disponibilité → jobs d’alerte' },
-  'send-alert-jobs': { label: 'Envoi des alertes (ancien)', description: 'Envoi des alertes en attente aux étudiants' },
+  'requeue-pending-alerts': {
+    label: 'Reprise des alertes en attente',
+    description: 'Remet en file les envois d’alertes étudiantes en attente depuis plus de 10 minutes',
+  },
+  'report-alert-failures': {
+    label: 'Signalement des alertes en échec',
+    description: 'Un mail récapitulatif des alertes étudiantes définitivement non envoyées après 3 tentatives',
+  },
+  'send-alert-batch': { label: 'Envoi d’alerte étudiante', description: 'Un e-mail par alerte ou par groupe de favoris' },
+  'detect-alerts': { label: 'Détection alertes (événementielle)', description: 'Hausses de disponibilité des résidences modifiées' },
   'expire-alerts': {
     label: 'Péremption alertes',
     description: 'Relance à 3 mois (template 46) puis désactivation après 7 jours (template 48)',
