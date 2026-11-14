@@ -59,6 +59,7 @@
     "dompurify": "^3.4.17",
     "drizzle-orm": "^0.45.2",
     "fflate": "^0.8.3",
+    "graphile-worker": "0.18.0",
     "hono": "4.13.13",
     "isomorphic-dompurify": "^3.19.0",
     "jose": "^6.2.9",
