@@ -12,6 +12,7 @@ import {
   accommodationAddresses,
   accommodations,
   activityLog,
+  alertJobs,
   applicationFacts,
   contactRequests,
   dossierFacileApplications,
@@ -183,9 +184,34 @@ const countCounters = async (month: TMonth): Promise<TMetricRow[]> => {
     .where(and(eq(trackingEvents.type, 'search.city'), isNotNull(trackingEvents.cityId), inMonth(trackingEvents.createdAt, month)))
     .groupBy(trackingEvents.cityId)
 
+  const sentInMonth = and(eq(alertJobs.status, 'sent'), inMonth(alertJobs.sentAt, month))
+  const [sent] = await db
+    .select({
+      emails: sql<number>`count(distinct ${alertJobs.sendId})::int`,
+      alert: countIf(sql`${alertJobs.source} = 'alert'`),
+      favorite: countIf(sql`${alertJobs.source} = 'favorite'`),
+      similar: countIf(sql`${alertJobs.source} = 'similar'`),
+      students: sql<number>`count(distinct ${alertJobs.userId})::int`,
+    })
+    .from(alertJobs)
+    .where(sentInMonth)
+
+  const [failed] = await db
+    .select({ emails: sql<number>`count(distinct ${alertJobs.sendId})::int` })
+    .from(alertJobs)
+    .where(and(eq(alertJobs.status, 'failed'), gte(alertJobs.attempts, 3), inMonth(alertJobs.createdAt, month)))
+
+  const global = (metric: EMonthlyMetric, value: number): TMetricRow => ({ metric, scope: 'global', scopeId: 0, value, boursiers: null })
+
   return [
     { metric: EMonthlyMetric.CONSULT_OFFER, scope: 'global', scopeId: 0, value: consult.value, boursiers: consult.boursiers },
     { metric: EMonthlyMetric.OWNER_LANDING_CLICK, scope: 'global', scopeId: 0, value: landing.value, boursiers: null },
+    global(EMonthlyMetric.ALERT_EMAILS_SENT, sent.emails),
+    global(EMonthlyMetric.ALERT_HOUSINGS_ALERT, sent.alert),
+    global(EMonthlyMetric.ALERT_HOUSINGS_FAVORITE, sent.favorite),
+    global(EMonthlyMetric.ALERT_HOUSINGS_SIMILAR, sent.similar),
+    global(EMonthlyMetric.ALERT_STUDENTS_NOTIFIED, sent.students),
+    global(EMonthlyMetric.ALERT_EMAILS_FAILED, failed.emails),
     ...searches.map(
       (row): TMetricRow => ({
         metric: EMonthlyMetric.SEARCH_CITY,
