@@ -25,7 +25,7 @@ const isWorkerProcess = !process.env.NEXT_RUNTIME && /cli[\\/]worker\.ts$/.test(
  * `DATABASE_POOL_MAX` permet de réajuster sans redéploiement si la mesure dit le contraire :
  * `SELECT application_name, state, count(*) FROM pg_stat_activity GROUP BY 1, 2`.
  */
-const max = env.DATABASE_POOL_MAX ?? (isCliProcess ? 2 : 5)
+const max = env.DATABASE_POOL_MAX ?? (isCliProcess ? 2 : isWorkerProcess ? 3 : 5)
 
 /** Sans ça, toutes les connexions s'affichent sous `postgres.js` dans `pg_stat_activity`. */
 function applicationName(): string {

@@ -60,5 +60,9 @@ export const METRIC_ITEM_META: Record<EMetricItem, { label: string; source: TMet
   [EMetricItem.ALERT_HOUSINGS_FAVORITE]: { label: 'Logements signalés — favoris', source: BASE },
   [EMetricItem.ALERT_HOUSINGS_SIMILAR]: { label: 'Logements signalés — similaires', source: BASE },
   [EMetricItem.ALERT_STUDENTS_NOTIFIED]: { label: 'Étudiants prévenus', source: BASE },
-  [EMetricItem.ALERT_EMAILS_FAILED]: { label: "Mails d'alerte en échec définitif", source: BASE },
+  [EMetricItem.ALERT_EMAILS_FAILED]: {
+    label: "Mails d'alerte en échec définitif",
+    source: BASE,
+    help: 'Comptés selon le mois où l’envoi a été programmé ; les échecs antérieurs à novembre 2026 ne sont pas comptés',
+  },
 }
