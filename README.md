@@ -921,7 +921,7 @@ Variables d'env requises : `MATOMO_URL`, `MATOMO_TOKEN`, `MATOMO_ID_SITE`
 
 ---
 
-### Cron jobs (Scalingo)
+### Tâches planifiées (worker Graphile)
 
 Les tâches planifiées sont définies dans `src/server/jobs/schedule.ts` (`SCHEDULED_COMMANDS`) et exécutées par le worker Graphile (`worker` du `Procfile`, `cli/worker.ts`). Les horaires sont en UTC.
 Les migrations Drizzle sont appliquées au déploiement via le hook `postdeploy` défini dans `Procfile`.
@@ -934,11 +934,15 @@ Les migrations Drizzle sont appliquées au déploiement via le hook `postdeploy`
 | `0 1 * * 0` | `sync cities` | Dimanche à 1h |
 | `0 4 1 */3 *` | `sync rents` | 1er du trimestre à 4h |
 | `10 4 1 * *` | `sync students` | 1er du mois à 4h10 |
-| `0 5 1 * *` | `purge-logs ; send-availability-recap` | 1er du mois à 5h |
+| `0 5 1 * *` | `purge-logs` | 1er du mois à 5h |
+| `0 5 1 * *` | `send-availability-recap` | 1er du mois à 5h |
 | `0 3 * * *` | `sync stats` | Tous les jours à 3h |
-| `30 3 * * *` | `capture-monthly-metrics ; purge-contact-requests` | Tous les jours à 3h30 (le relevé doit passer **avant** la purge) |
+| `30 3 * * *` | `capture-monthly-metrics` | Tous les jours à 3h30 |
+| `45 3 * * *` | `purge-contact-requests` | Tous les jours à 3h45 (la purge doit passer **après** le relevé) |
 | `*/30 * * * *` | `send-alert-jobs` | Toutes les 30 min |
 | `0 7 * * *` | `expire-alerts` | Tous les jours à 7h |
+| `0 7 * * *` | `send-contact-digest` | Tous les jours à 7h |
+| `0 7 * * *` | `send-goal-reminders` | Tous les jours à 7h |
 | `0 8 * * *` | `detect-alert-jobs` | Tous les jours à 8h |
 | `0 6 * * *` | `check-applications-inactivity` | Tous les jours à 6h |
 | `30 6 * * *` | `reset-stale-availability` | Tous les jours à 6h30 |
@@ -985,8 +989,7 @@ Deux natures d'échec déclenchent l'alerte :
 - **Crash net** — toute exception non rattrapée qui remonte jusqu'à `cli/index.ts`.
 - **Échec partiel** — le job termine mais des éléments sont passés à la trappe : `result.errors`
   non vide pour les imports et syncs, alertes étudiantes ayant épuisé leurs `MAX_ATTEMPTS`
-  tentatives pour `send-alert-jobs`. Le job sort alors en code 1 et apparaît en échec sur
-  Scalingo, même si sa ligne `import_job` reste en `done` avec son résumé détaillé.
+  tentatives pour `send-alert-jobs`. Le job sort alors en code 1 et apparaît en erreur dans l'admin « Tâches planifiées » et dans les logs du conteneur `worker`, même si sa ligne `import_job` reste en `done` avec son résumé détaillé.
 
 Il n'y a **pas d'anti-flood** : un échec = un mail. Un job qui casse durablement enverra donc
 autant de mails qu'il a d'exécutions (jusqu'à 48/jour pour `send-alert-jobs`).

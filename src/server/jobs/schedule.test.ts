@@ -20,7 +20,7 @@ const EXPECTED: [string, string, string][] = [
   ['reset-stale-availability', '30 6 * * *', 'reset-stale-availability'],
   ['detect-alert-jobs', '0 8 * * *', 'detect-alert-jobs'],
   ['capture-monthly-metrics', '30 3 * * *', 'capture-monthly-metrics'],
-  ['purge-contact-requests', '30 3 * * *', 'purge-contact-requests'],
+  ['purge-contact-requests', '45 3 * * *', 'purge-contact-requests'],
   ['backup-db', '0 5 * * *', 'backup-db'],
   ['send-alert-jobs', '*/30 * * * *', 'send-alert-jobs'],
 ]

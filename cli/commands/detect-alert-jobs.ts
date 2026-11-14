@@ -35,7 +35,11 @@ export async function detectAlertJobsCommand(options: DetectAlertJobsOptions): P
     console.log(`\n  Résidences enregistrées (baseline) : ${result.seeded}`)
     console.log(`  Hausses détectées : ${result.triggered}`)
     console.log(`  Jobs créés : ${result.jobsCreated}`)
-    await recordJobMetrics({ triggered: result.triggered, jobsCreated: result.jobsCreated, seeded: result.seeded })
+    try {
+      await recordJobMetrics({ triggered: result.triggered, jobsCreated: result.jobsCreated, seeded: result.seeded })
+    } catch (error) {
+      console.error('  ⚠️ Enregistrement des métriques impossible :', error instanceof Error ? error.message : String(error))
+    }
 
     if (jobId !== null) {
       await db
