@@ -11,6 +11,7 @@ import {
   user,
 } from '~/server/db/schema'
 import { type AlertMatchInput, accommodationAvailableCount, buildAlertMatchConditions, buildSimilarMatchConditions } from './alert-matching'
+import { alertBatchJobKey, alertBatchKeyOf, enqueueAlertBatch } from './alert-sender'
 
 export type AlertDetectorResult = {
   /** Nombre de résidences dont la dispo a augmenté ce run. */
@@ -55,24 +56,33 @@ async function matchSimilarJobRows(alert: AlertForMatching, scope: SQL | undefin
   return matched.map((m) => ({ userId: alert.userId, studentAlertId: alert.id, accommodationId: m.id, source: 'similar' as const }))
 }
 
-async function insertAlertJobsInBatches(rows: (typeof alertJobs.$inferInsert)[], conn: Pick<typeof db, 'insert'> = db): Promise<number> {
+async function insertAlertJobsInBatches(
+  rows: (typeof alertJobs.$inferInsert)[],
+  conn: Pick<typeof db, 'insert' | 'execute'>,
+): Promise<number> {
   const BATCH_SIZE = 1000
   let total = 0
+  const enqueued = new Set<string>()
   for (let i = 0; i < rows.length; i += BATCH_SIZE) {
     const inserted = await conn
       .insert(alertJobs)
       .values(rows.slice(i, i + BATCH_SIZE))
       .onConflictDoNothing()
-      .returning({ id: alertJobs.id })
+      .returning({ id: alertJobs.id, userId: alertJobs.userId, studentAlertId: alertJobs.studentAlertId, source: alertJobs.source })
     total += inserted.length
+    for (const row of inserted) {
+      const key = alertBatchKeyOf(row)
+      if (!key || enqueued.has(alertBatchJobKey(key))) continue
+      enqueued.add(alertBatchJobKey(key))
+      await enqueueAlertBatch(conn, key)
+    }
   }
   return total
 }
 
 /**
  * Détecte les hausses de disponibilité et crée les jobs d'alerte (status `pending`)
- * pour les étudiants concernés. Produit uniquement des jobs ; l'envoi est assuré par
- * `sendPendingAlertJobs`.
+ * pour les étudiants concernés, et met en file une tâche `send-alert-batch` par lot créé.
  *
  * Une hausse déclenche si `dispo_courante > 0` ET `dispo_courante > dispo_précédente`
  * (le « non-renseigné » et l'absence de snapshot comptant comme une base inférieure à 0).
@@ -281,7 +291,7 @@ export async function enqueueJobsForNewAlert(alertId: number): Promise<number> {
   ]
   if (jobRows.length === 0) return 0
 
-  return insertAlertJobsInBatches(jobRows)
+  return db.transaction((tx) => insertAlertJobsInBatches(jobRows, tx))
 }
 
 /**
@@ -357,6 +367,6 @@ export async function backfillAlertJobs(
     return { alertsProcessed: activeAlerts.length, jobsCreated: allJobRows.length }
   }
 
-  const jobsCreated = await insertAlertJobsInBatches(allJobRows)
+  const jobsCreated = await db.transaction((tx) => insertAlertJobsInBatches(allJobRows, tx))
   return { alertsProcessed: activeAlerts.length, jobsCreated }
 }
