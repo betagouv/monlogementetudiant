@@ -15,6 +15,7 @@ import {
 import { budgetSimulations, favoriteAccommodations, housingAidSimulations, studentAlerts, user } from '~/server/db/schema'
 
 const ALERT_ITEMS = [
+  [EMetricItem.ALERT_EMAILS_SENT, EMonthlyMetric.ALERT_EMAILS_SENT],
   [EMetricItem.ALERT_HOUSINGS_ALERT, EMonthlyMetric.ALERT_HOUSINGS_ALERT],
   [EMetricItem.ALERT_HOUSINGS_FAVORITE, EMonthlyMetric.ALERT_HOUSINGS_FAVORITE],
   [EMetricItem.ALERT_HOUSINGS_SIMILAR, EMonthlyMetric.ALERT_HOUSINGS_SIMILAR],
@@ -22,12 +23,30 @@ const ALERT_ITEMS = [
   [EMetricItem.ALERT_EMAILS_FAILED, EMonthlyMetric.ALERT_EMAILS_FAILED],
 ] as const
 
-const emailsSentSeries = (months: string[], emails: TRow[], housings: TRow[]): TMonthlyValue[] => {
-  const withHousings = new Set(housings.map((row) => row.month))
-  return months.map((month, index) => {
-    const value = fillMonths(months, emails, null)[index]
-    const hasEmails = emails.some((row) => row.month === month)
-    return { ...value, total: hasEmails || !withHousings.has(month) ? (value.total ?? 0) : null }
+const HOUSING_METRICS = [EMonthlyMetric.ALERT_HOUSINGS_ALERT, EMonthlyMetric.ALERT_HOUSINGS_FAVORITE, EMonthlyMetric.ALERT_HOUSINGS_SIMILAR]
+
+const alertSeries = (months: string[], snapshots: Map<EMonthlyMetric, TRow[]>): TMetricSeries[] => {
+  const rowsOf = (metric: EMonthlyMetric) => snapshots.get(metric) ?? []
+  const captured = new Set([...snapshots.values()].flat().map((row) => row.month))
+  const withHousings = new Set(HOUSING_METRICS.flatMap(rowsOf).map((row) => row.month))
+  const emails = rowsOf(EMonthlyMetric.ALERT_EMAILS_SENT)
+  const withEmails = new Set(emails.map((row) => row.month))
+  const emailValues = fillMonths(months, emails, null)
+
+  return ALERT_ITEMS.map(([key, metric]): TMetricSeries => {
+    if (metric === EMonthlyMetric.ALERT_EMAILS_SENT) {
+      const values = emailValues.map(
+        (value): TMonthlyValue => ({
+          ...value,
+          total: withEmails.has(value.month) || !withHousings.has(value.month) ? (value.total ?? 0) : null,
+        }),
+      )
+      return { key, values }
+    }
+    const values = fillMonths(months, rowsOf(metric), null, null).map(
+      (value): TMonthlyValue => ({ ...value, total: captured.has(value.month) ? (value.total ?? 0) : null }),
+    )
+    return { key, values }
   })
 }
 
@@ -45,10 +64,9 @@ export const getStudentSeries = async (range: TMonthRange): Promise<TMetricSerie
     matomoEvents('Simulateur', 'completion simulateur budget', range),
     snapshotsOf(EMonthlyMetric.STUDENTS_TOTAL, range),
   ])
-  const [emailsSent, ...alertSnapshots] = await Promise.all([
-    snapshotsOf(EMonthlyMetric.ALERT_EMAILS_SENT, range),
-    ...ALERT_ITEMS.map(([, metric]) => snapshotsOf(metric, range)),
-  ])
+  const alertSnapshots = new Map(
+    await Promise.all(ALERT_ITEMS.map(async ([, metric]) => [metric, await snapshotsOf(metric, range)] as const)),
+  )
 
   return [
     { key: EMetricItem.COMPTES_CREES, values: fillMonths(months, accounts, 0) },
@@ -61,7 +79,6 @@ export const getStudentSeries = async (range: TMonthRange): Promise<TMetricSerie
     { key: EMetricItem.SIMULATIONS_BUDGET_BASE, values: fillMonths(months, budgets, 0) },
     { key: EMetricItem.SIMULATIONS_BUDGET_MATOMO, values: fillMonths(months, budgetsMatomo, null) },
     { key: EMetricItem.ETUDIANTS_BOURSIERS, values: fillMonths(months, totals, null, null) },
-    { key: EMetricItem.ALERT_EMAILS_SENT, values: emailsSentSeries(months, emailsSent, alertSnapshots.slice(0, 3).flat()) },
-    ...ALERT_ITEMS.map(([key], index) => ({ key, values: fillMonths(months, alertSnapshots[index], null) })),
+    ...alertSeries(months, alertSnapshots),
   ]
 }
