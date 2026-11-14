@@ -1,76 +1,69 @@
-import { and, count, eq, inArray, lt, or, sql } from 'drizzle-orm'
+import { and, eq, inArray, type SQL, sql } from 'drizzle-orm'
 import { EXPANDED_SEARCH_PAGE_SIZE } from '~/lib/accommodations-expanded-search'
 import { db } from '~/server/db'
 import { accommodationAddresses, accommodations, alertJobs, cities, studentAlerts, user } from '~/server/db/schema'
 import { env } from '~/server/env'
+import { enqueueJob } from '~/server/jobs/enqueue'
 import { getAccommodationPath } from '~/utils/get-accommodation-url'
 import { maskEmail } from '~/utils/mask-email'
 import { sendStudentAlertEmail } from './brevo'
 
-// Nombre maximal de tentatives d'envoi par job (1 envoi initial + retries).
-// Au-delà, un job `failed` n'est plus replanifié et reste en échec définitif.
 export const MAX_ATTEMPTS = 3
 
-// Délai entre deux appels Brevo pour rester sous la limite de débit de l'API.
 const BREVO_DELAY_MS = 100
+const ALERT_BATCH_DELAY_MS = 60_000
+const ALERT_RETRY_DELAY_MS = 30 * 60_000
+export const ALERT_SEND_QUEUE = 'alert-send'
 
-export type AlertSenderResult = {
-  sent: number
-  failed: number
-  requeued: number
-  /**
-   * Jobs qui viennent d'atteindre `MAX_ATTEMPTS` pendant ce run : ils ne seront plus
-   * replanifiés, l'email étudiant est définitivement perdu. C'est le seul compteur qui
-   * justifie d'alerter — un `failed` sous le plafond sera retenté au run suivant.
-   */
-  exhausted: number
+// Un lot = un e-mail : une alerte (alert + similar), ou tous les favoris d'un étudiant.
+export type TAlertBatchKey = { kind: 'alert'; studentAlertId: number } | { kind: 'favorite'; userId: string }
+
+export function alertBatchJobKey(key: TAlertBatchKey): string {
+  return key.kind === 'alert' ? `alert:${key.studentAlertId}` : `favorite:${key.userId}`
 }
 
-// Un envoi = une alerte ou un groupe de favoris par utilisateur.
-// Pour les alertes : un mail par alerte, pour éviter que la même résidence apparaisse
-// dans deux emails (si elle matche deux alertes du même étudiant).
-// Pour les favoris : un mail par utilisateur, regroupant tous ses favoris devenus disponibles.
-type AlertBatch = {
-  email: string
-  firstname: string | null
-  alertName: string
-  jobIds: number[]
-  accommodations: { nom: string; url: string }[]
-  // Zone élargie (+10 km / +25 % budget) : section « Suggestions » du même e-mail,
-  // plafonnée à EXPANDED_SEARCH_PAGE_SIZE — les jobs excédentaires sont tout de même
-  // soldés avec le batch (les suggestions sont un bonus, pas un engagement d'exhaustivité).
-  suggestions: { nom: string; url: string }[]
+export function alertBatchKeyOf(row: {
+  source: 'alert' | 'favorite' | 'similar'
+  userId: string
+  studentAlertId: number | null
+}): TAlertBatchKey | null {
+  if (row.source === 'favorite') return { kind: 'favorite', userId: row.userId }
+  if (row.studentAlertId == null) return null
+  return { kind: 'alert', studentAlertId: row.studentAlertId }
 }
 
-export async function sendPendingAlertJobs(options: { dryRun?: boolean; verbose?: boolean } = {}): Promise<AlertSenderResult> {
-  // Jobs en échec encore éligibles à une nouvelle tentative (sous le plafond).
-  const retryableFailed = and(eq(alertJobs.status, 'failed'), lt(alertJobs.attempts, MAX_ATTEMPTS))
+export async function enqueueAlertBatch(
+  conn: Pick<typeof db, 'execute'>,
+  key: TAlertBatchKey,
+  options: { runAt?: Date } = {},
+): Promise<void> {
+  await enqueueJob(conn, 'send-alert-batch', key, {
+    jobKey: alertBatchJobKey(key),
+    jobKeyMode: 'preserve_run_at',
+    runAt: options.runAt ?? new Date(Date.now() + ALERT_BATCH_DELAY_MS),
+    maxAttempts: MAX_ATTEMPTS,
+    queueName: ALERT_SEND_QUEUE,
+  })
+}
 
-  // Replanification : on repasse ces jobs en `pending` (et on efface l'erreur précédente)
-  // afin qu'ils soient repris par le traitement ci-dessous. En dry-run on ne touche pas
-  // à la BDD : on se contente de les compter et de les inclure dans la sélection.
-  let requeued = 0
-  if (options.dryRun) {
-    const [result] = await db.select({ value: count() }).from(alertJobs).where(retryableFailed)
-    requeued = result?.value ?? 0
-  } else {
-    const rows = await db.update(alertJobs).set({ status: 'pending', error: null }).where(retryableFailed).returning({ id: alertJobs.id })
-    requeued = rows.length
+function batchCondition(key: TAlertBatchKey): SQL | undefined {
+  return key.kind === 'alert'
+    ? and(eq(alertJobs.studentAlertId, key.studentAlertId), inArray(alertJobs.source, ['alert', 'similar']))
+    : and(eq(alertJobs.userId, key.userId), eq(alertJobs.source, 'favorite'))
+}
+
+export type TAlertBatchResult = { sent: boolean; housings: number; failed: boolean }
+
+export async function sendAlertBatch(key: TAlertBatchKey, attempt: { number: number; max: number }): Promise<TAlertBatchResult> {
+  if (env.NEXT_PUBLIC_APP_ENV !== 'production') {
+    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] lot ${alertBatchJobKey(key)} non envoyé hors production`)
+    return { sent: false, housings: 0, failed: false }
   }
-  if (options.verbose && requeued > 0) {
-    console.log(`  ↺ ${requeued} job(s) en échec replanifié(s) pour nouvelle tentative`)
-  }
 
-  // En exécution réelle, les jobs replanifiés sont déjà `pending`. En dry-run rien n'a été
-  // écrit, donc on ajoute explicitement les `failed` éligibles à la sélection simulée.
-  const selection = options.dryRun ? or(eq(alertJobs.status, 'pending'), retryableFailed) : eq(alertJobs.status, 'pending')
-
-  const pendingJobs = await db
+  const rows = await db
     .select({
       jobId: alertJobs.id,
       source: alertJobs.source,
-      userId: alertJobs.userId,
-      studentAlertId: alertJobs.studentAlertId,
       alertName: studentAlerts.name,
       userEmail: user.email,
       userFirstname: user.firstname,
@@ -80,92 +73,79 @@ export async function sendPendingAlertJobs(options: { dryRun?: boolean; verbose?
     })
     .from(alertJobs)
     .innerJoin(user, eq(alertJobs.userId, user.id))
-    // leftJoin : les jobs favoris n'ont pas de studentAlertId (null).
     .leftJoin(studentAlerts, eq(alertJobs.studentAlertId, studentAlerts.id))
     .innerJoin(accommodations, eq(alertJobs.accommodationId, accommodations.id))
-    // Ville pour construire l'URL de détail. En `leftJoin` (+ adresse principale) pour ne
-    // jamais écarter un job d'une résidence sans adresse principale/ville renseignée.
     .leftJoin(
       accommodationAddresses,
       and(eq(accommodationAddresses.accommodationId, accommodations.id), eq(accommodationAddresses.isMain, true)),
     )
     .leftJoin(cities, eq(accommodationAddresses.cityId, cities.id))
-    .where(selection)
+    .where(and(eq(alertJobs.status, 'pending'), batchCondition(key)))
+    .orderBy(alertJobs.id)
 
-  if (pendingJobs.length === 0) return { sent: 0, failed: 0, requeued, exhausted: 0 }
+  if (rows.length === 0) return { sent: false, housings: 0, failed: false }
 
-  // Clé de regroupement :
-  // - alerte → 'alert:<studentAlertId>' (un email par alerte)
-  // - favori  → 'favorite:<userId>'     (un email par utilisateur, tous favoris groupés)
-  const byBatch = new Map<string, AlertBatch>()
-  for (const job of pendingJobs) {
-    const key = job.source === 'favorite' ? `favorite:${job.userId}` : `alert:${job.studentAlertId}`
-    const batchAlertName = job.source === 'favorite' ? 'Mes favoris' : (job.alertName ?? 'Mon alerte')
-
-    if (!byBatch.has(key)) {
-      byBatch.set(key, {
-        email: job.userEmail,
-        firstname: job.userFirstname,
-        alertName: batchAlertName,
-        jobIds: [],
-        accommodations: [],
-        suggestions: [],
-      })
-    }
-    const batch = byBatch.get(key)!
-    batch.jobIds.push(job.jobId)
-    // Sans ville résolue, on retombe sur la page de recherche plutôt qu'un lien cassé.
-    const path = job.cityName ? getAccommodationPath(job.cityName, job.accommodationSlug) : '/trouver-un-logement-etudiant'
-    const line = { nom: job.accommodationName, url: `${env.BASE_URL}${path}` }
-    if (job.source === 'similar') {
-      if (batch.suggestions.length < EXPANDED_SEARCH_PAGE_SIZE) batch.suggestions.push(line)
+  const [first] = rows
+  const alertName = key.kind === 'favorite' ? 'Mes favoris' : (first.alertName ?? 'Mon alerte')
+  const housings: { nom: string; url: string }[] = []
+  // Les suggestions sont plafonnées ; les lignes excédentaires sont soldées avec le lot.
+  const suggestions: { nom: string; url: string }[] = []
+  for (const row of rows) {
+    const path = row.cityName ? getAccommodationPath(row.cityName, row.accommodationSlug) : '/trouver-un-logement-etudiant'
+    const line = { nom: row.accommodationName, url: `${env.BASE_URL}${path}` }
+    if (row.source === 'similar') {
+      if (suggestions.length < EXPANDED_SEARCH_PAGE_SIZE) suggestions.push(line)
     } else {
-      batch.accommodations.push(line)
+      housings.push(line)
     }
   }
 
-  let sent = 0
-  let failed = 0
-  let exhausted = 0
+  const jobIds = rows.map((row) => row.jobId)
+  const sendId = crypto.randomUUID()
 
-  for (const batch of byBatch.values()) {
-    if (options.dryRun) {
-      if (options.verbose) {
-        console.log(`  [dry-run] ${maskEmail(batch.email)} — alerte « ${batch.alertName} » — ${batch.accommodations.length} logement(s)`)
+  let sendFailed = false
+  let sendError: unknown
+  try {
+    await sendStudentAlertEmail(first.userEmail, {
+      firstName: first.userFirstname ?? '',
+      alertName,
+      accommodations: housings,
+      suggestions,
+    })
+  } catch (error) {
+    sendFailed = true
+    sendError = error
+  } finally {
+    await new Promise((resolve) => setTimeout(resolve, BREVO_DELAY_MS))
+  }
+
+  if (sendFailed) {
+    const message = sendError instanceof Error ? sendError.message : 'Erreur inconnue'
+    // Une ligne ne passe en échec définitif qu'à sa propre dernière tentative ; les autres sont
+    // relancées dans 30 min.
+    await db.transaction(async (tx) => {
+      const updated = await tx
+        .update(alertJobs)
+        .set({
+          attempts: sql`${alertJobs.attempts} + 1`,
+          error: message,
+          sendId,
+          status: sql`case when ${alertJobs.attempts} + 1 >= ${MAX_ATTEMPTS} then 'failed' else 'pending' end::alert_job_status`,
+        })
+        .where(inArray(alertJobs.id, jobIds))
+        .returning({ status: alertJobs.status })
+      if (updated.some((row) => row.status === 'pending')) {
+        await enqueueAlertBatch(tx, key, { runAt: new Date(Date.now() + ALERT_RETRY_DELAY_MS) })
       }
-      sent++
-      continue
-    }
-
-    try {
-      await sendStudentAlertEmail(batch.email, {
-        firstName: batch.firstname ?? '',
-        alertName: batch.alertName,
-        accommodations: batch.accommodations,
-        suggestions: batch.suggestions,
-      })
-      await db
-        .update(alertJobs)
-        .set({ status: 'sent', sentAt: new Date(), attempts: sql`${alertJobs.attempts} + 1` })
-        .where(inArray(alertJobs.id, batch.jobIds))
-      if (options.verbose) console.log(`  ✓ ${maskEmail(batch.email)} — ${batch.accommodations.length} logement(s)`)
-      sent++
-      await new Promise((resolve) => setTimeout(resolve, BREVO_DELAY_MS))
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue'
-      // `returning` renvoie le compteur après incrément : on repère ainsi les jobs qui
-      // franchissent le plafond sur ce run précis (un job ne peut le franchir qu'une fois,
-      // puisqu'au-delà il n'est plus replanifié — donc pas de ré-alerte à chaque passage).
-      const updated = await db
-        .update(alertJobs)
-        .set({ status: 'failed', error: errorMessage, attempts: sql`${alertJobs.attempts} + 1` })
-        .where(inArray(alertJobs.id, batch.jobIds))
-        .returning({ attempts: alertJobs.attempts })
-      exhausted += updated.filter((job) => job.attempts >= MAX_ATTEMPTS).length
-      console.error(`  ✗ ${maskEmail(batch.email)} — ${errorMessage}`)
-      failed++
-    }
+    })
+    console.error(`  ✗ ${maskEmail(first.userEmail)} — tentative ${attempt.number}/${attempt.max} — ${message}`)
+    return { sent: false, housings: 0, failed: true }
   }
 
-  return { sent, failed, requeued, exhausted }
+  await db
+    .update(alertJobs)
+    .set({ status: 'sent', sentAt: new Date(), sendId, attempts: sql`${alertJobs.attempts} + 1` })
+    .where(inArray(alertJobs.id, jobIds))
+
+  return { sent: true, housings: housings.length + suggestions.length, failed: false }
 }

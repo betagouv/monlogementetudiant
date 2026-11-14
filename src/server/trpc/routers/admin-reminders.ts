@@ -1,14 +1,21 @@
 import { TRPCError } from '@trpc/server'
-import { and, eq, inArray, sql } from 'drizzle-orm'
+import { and, desc, eq, inArray, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { EReminderType, ZReminderType } from '~/enums/reminder-email'
 import { db } from '~/server/db'
 import { user } from '~/server/db/schema/auth'
+import { brevoUnblockEvents } from '~/server/db/schema/brevo-unblock'
 import { owners } from '~/server/db/schema/owners'
 import { env } from '~/server/env'
 import { loadReminderEfficacy } from '~/server/reminders/load-reminder-efficacy'
 import type { TReminderEfficacyStatus } from '~/server/reminders/reminder-efficacy'
-import { BLOCKED_REASONS, fetchBlockedContacts, fetchReminderMessages, type TBrevoEmailStatus } from '~/server/services/brevo-reminders'
+import {
+  BLOCKED_REASONS,
+  fetchBlockedContacts,
+  fetchReminderMessages,
+  isBlockedReason,
+  type TBrevoEmailStatus,
+} from '~/server/services/brevo-reminders'
 import { adminProcedure, createTRPCRouter } from '../init'
 
 const PAGE_SIZE = 25
@@ -67,6 +74,8 @@ const paginate = <T>(items: T[], page: number) => ({
   total: items.length,
   pageCount: Math.ceil(items.length / PAGE_SIZE),
 })
+
+const UNBLOCK_PAGE_SIZE = 20
 
 const EMPTY_RECIPIENT: TRecipient = { userName: null, ownerId: null, ownerName: null }
 
@@ -175,4 +184,36 @@ export const adminRemindersRouter = createTRPCRouter({
         },
       }
     }),
+
+  unblockHistory: adminProcedure.input(z.object({ page: z.number().int().min(1).default(1) })).query(async ({ input }) => {
+    const [{ total }] = await db.select({ total: sql<number>`count(*)::int` }).from(brevoUnblockEvents)
+    const events = await db
+      .select({
+        id: brevoUnblockEvents.id,
+        createdAt: brevoUnblockEvents.createdAt,
+        email: brevoUnblockEvents.email,
+        reason: brevoUnblockEvents.reason,
+        trigger: brevoUnblockEvents.trigger,
+        status: brevoUnblockEvents.status,
+        firstname: user.firstname,
+        lastname: user.lastname,
+        accountName: user.name,
+      })
+      .from(brevoUnblockEvents)
+      .leftJoin(user, eq(user.id, brevoUnblockEvents.userId))
+      .orderBy(desc(brevoUnblockEvents.createdAt), desc(brevoUnblockEvents.id))
+      .limit(UNBLOCK_PAGE_SIZE)
+      .offset((input.page - 1) * UNBLOCK_PAGE_SIZE)
+
+    const rows = events.map((event) => ({
+      id: event.id,
+      createdAt: event.createdAt,
+      email: event.email,
+      userName: [event.firstname, event.lastname].filter(Boolean).join(' ').trim() || event.accountName || null,
+      reason: isBlockedReason(event.reason) ? event.reason : null,
+      trigger: event.trigger,
+      status: event.status,
+    }))
+    return { rows, total, pageCount: Math.ceil(total / UNBLOCK_PAGE_SIZE) }
+  }),
 })

@@ -1,5 +1,7 @@
 # ADR 0001 — Alert sender (envoi par batch des alertes logement)
 
+> Remplacé par l'envoi via Graphile Worker (2026-11) : tâches `send-alert-batch`, `requeue-pending-alerts` et `report-alert-failures` (`src/server/jobs/tasks/`).
+
 Statut : accepté · Domaine : notifications étudiants · Lié à [ADR 0002](./0002-alert-detection.md)
 
 ## Contexte

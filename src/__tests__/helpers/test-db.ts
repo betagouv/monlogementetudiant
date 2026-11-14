@@ -47,6 +47,11 @@ export async function setupTestDb() {
     cwd: process.cwd(),
     stdio: 'pipe',
   })
+
+  execSync(`./node_modules/.bin/graphile-worker --schema-only -c "${DATABASE_URL_TEST}"`, {
+    cwd: process.cwd(),
+    stdio: 'pipe',
+  })
 }
 
 export async function teardownTestDb() {
@@ -62,6 +67,7 @@ export async function cleanTables() {
   await db.execute(drizzleSql`
     TRUNCATE TABLE
       activity_log,
+      job_run,
       application_fact,
       monthly_metric,
       academy,
@@ -91,4 +97,5 @@ export async function cleanTables() {
       "verification"
     RESTART IDENTITY CASCADE
   `)
+  await db.execute(drizzleSql`TRUNCATE TABLE graphile_worker._private_jobs, graphile_worker._private_job_queues RESTART IDENTITY CASCADE`)
 }

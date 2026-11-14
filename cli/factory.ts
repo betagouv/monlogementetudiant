@@ -2,6 +2,7 @@ import { eq, inArray } from 'drizzle-orm'
 import type { TImportJobType } from '~/schemas/import-jobs'
 import { closeDb, db } from '~/server/db'
 import { accommodations, importJobs } from '~/server/db/schema'
+import { recordJobMetrics } from '~/server/jobs/job-run'
 import { detectAlertJobs } from '~/server/services/alert-detector'
 import { CronPartialFailure } from './cron-failure'
 import { captureCliException } from './sentry'
@@ -37,6 +38,14 @@ registerSync('rents', () => import('./commands/sync-rents'))
 registerSync('students', () => import('./commands/sync-students'))
 registerSync('stats', () => import('./commands/sync-stats'))
 
+async function recordMetricsSafely(metrics: Record<string, number>): Promise<void> {
+  try {
+    await recordJobMetrics(metrics)
+  } catch (error) {
+    console.error('  ⚠️ Enregistrement des métriques impossible :', error instanceof Error ? error.message : String(error))
+  }
+}
+
 export async function runImport(type: string, options: ImportOptions): Promise<void> {
   const loader = importRegistry.get(type)
   if (!loader) {
@@ -63,6 +72,9 @@ export async function runImport(type: string, options: ImportOptions): Promise<v
 
   try {
     const result: ImportResult = await command.execute(options)
+    if (!options.dryRun) {
+      await recordMetricsSafely({ created: result.created, updated: result.updated, skipped: result.skipped, errors: result.errors.length })
+    }
     console.log(`\n✅ Import terminé :`)
     console.log(`  📦 Créés : ${result.created}`)
     console.log(`  🔄 Mis à jour : ${result.updated}`)
@@ -152,6 +164,9 @@ export async function runSync(type: string, options: SyncOptions): Promise<void>
 
   try {
     const result: SyncResult = await command.execute(options)
+    if (!options.dryRun) {
+      await recordMetricsSafely({ updated: result.updated, skipped: result.skipped, errors: result.errors.length })
+    }
     console.log(`\n✅ Sync terminée :`)
     console.log(`  🔄 Mis à jour : ${result.updated}`)
     console.log(`  ⏭️ Ignorés : ${result.skipped}`)

@@ -2,10 +2,10 @@ import { env } from '~/server/env'
 import { sendRawEmail } from '~/server/services/brevo'
 
 /**
- * Commandes exécutées par un planificateur (`cron.json`) : ce sont les seules dont l'échec
+ * Commandes exécutées par un planificateur (`SCHEDULED_COMMANDS`) : ce sont les seules dont l'échec
  * déclenche un mail, un one-off lancé à la main affichant déjà son erreur dans le terminal.
  *
- * Cette liste doit rester synchronisée avec `cron.json` — `cron-failure.test.ts` échoue si
+ * Cette liste doit rester synchronisée avec `SCHEDULED_COMMANDS` — `cron-failure.test.ts` échoue si
  * une commande planifiée n'y figure pas. L'inverse est autorisé : `cron-selftest` est traitée
  * comme un cron pour pouvoir valider la chaîne d'alerte, sans être planifiée.
  */
@@ -17,7 +17,6 @@ export const CRON_COMMANDS = new Set([
   'sync rents',
   'sync students',
   'sync stats',
-  'send-alert-jobs',
   'detect-alert-jobs',
   'expire-alerts',
   'check-applications-inactivity',
@@ -139,11 +138,11 @@ export function formatCronFailure({ job, error, startedAt, endedAt = new Date() 
  * Prévient par mail qu'un job planifié a échoué. Ne relance jamais : un souci d'envoi ne doit
  * ni masquer l'erreur d'origine ni changer le code de sortie du job.
  */
-export async function notifyCronFailure(failure: CronFailure): Promise<void> {
+export async function notifyCronFailure(failure: CronFailure): Promise<boolean> {
   const recipients = env.CRON_FAILURE_EMAILS
   if (recipients.length === 0) {
     console.error('⚠️ CRON_FAILURE_EMAILS non renseignée : aucune alerte mail envoyée pour cet échec.')
-    return
+    return false
   }
 
   const { subject, textContent } = formatCronFailure(failure)
@@ -151,7 +150,9 @@ export async function notifyCronFailure(failure: CronFailure): Promise<void> {
   try {
     await sendRawEmail({ to: recipients, subject, textContent })
     console.error(`✉️ Alerte d'échec envoyée à ${recipients.join(', ')}`)
+    return true
   } catch (error) {
     console.error("⚠️ Envoi de l'alerte d'échec impossible :", error instanceof Error ? error.message : String(error))
+    return false
   }
 }

@@ -8,7 +8,7 @@ import { EOwnerContactMode, OWNER_CONTACT_MODES, ZOwnerContactMode } from '~/enu
 import { FEATURES } from '~/lib/features'
 import { GESTIONNAIRE_PERMISSIONS_REQUIRED, gestionnairePermissionsAreUsable } from '~/schemas/bailleur-users/bailleur-user-form'
 import { zNormalizedEmail } from '~/schemas/email'
-import { IMPORT_JOB_TYPES, ZImportJobType } from '~/schemas/import-jobs'
+import { IMPORT_JOB_TYPES, type TImportJobSummary } from '~/schemas/import-jobs'
 import { assertAdministratorSlotAvailable } from '~/server/bailleur/administrator-limit'
 import { notifyContactModeActivated, notifyContactModeDeactivated } from '~/server/bailleur/application-notifications'
 import { INACTIVITY_WARNING_DAYS } from '~/server/bailleur/inactivity-rules'
@@ -34,9 +34,12 @@ import { contactRequests } from '~/server/db/schema/contacts'
 import { dossierFacileApplications } from '~/server/db/schema/dossier-facile'
 import { eventStats } from '~/server/db/schema/event-stats'
 import { importJobs } from '~/server/db/schema/import-jobs'
+import { jobRuns } from '~/server/db/schema/job-run'
 import { ownerFeedback } from '~/server/db/schema/owner-feedback'
 import { owners } from '~/server/db/schema/owners'
 import { stats } from '~/server/db/schema/stats'
+import { EVENT_JOBS, IMPORT_JOB_TYPE_BY_IDENTIFIER, SCHEDULED_JOBS } from '~/server/jobs/job-defs'
+import { nextRunAt } from '~/server/jobs/next-run'
 import { logActivity } from '~/server/services/activity-logger'
 import { sendAdminResetPasswordEmail, sendOwnerWelcomeEmail } from '~/server/services/brevo'
 import { generateSlug } from '~/server/trpc/utils/accommodation-helpers'
@@ -1340,8 +1343,6 @@ const ownerUsageRouter = createTRPCRouter({
     }),
 })
 
-const CRON_JOB_TYPES = ZImportJobType.options.filter((t) => t !== 'csv')
-
 const importsRouter = createTRPCRouter({
   list: adminProcedure.query(async () => {
     if (!FEATURES.csvImport) throw new TRPCError({ code: 'NOT_FOUND' })
@@ -1355,16 +1356,149 @@ const importsRouter = createTRPCRouter({
     if (!job) throw new TRPCError({ code: 'NOT_FOUND' })
     return job
   }),
-
-  lastByType: adminProcedure.query(async () => {
-    // DISTINCT ON (type) : une seule ligne par type, la plus récente
-    return db
-      .selectDistinctOn([importJobs.type])
-      .from(importJobs)
-      .where(inArray(importJobs.type, CRON_JOB_TYPES))
-      .orderBy(importJobs.type, desc(importJobs.createdAt))
-  }),
 })
+
+const JOB_RUN_HISTORY_PAGE_SIZE = 20
+const JOB_RUN_DAILY_PAGE_SIZE = 30
+
+const OVERVIEW_IDENTIFIERS = [...SCHEDULED_JOBS, ...EVENT_JOBS].map(({ identifier }) => identifier)
+
+const parisDay = sql<string>`to_char(${jobRuns.startedAt} at time zone 'Europe/Paris', 'YYYY-MM-DD')`
+
+const toLastRun = (run: typeof jobRuns.$inferSelect) => ({
+  status: run.status,
+  startedAt: run.startedAt,
+  endedAt: run.endedAt,
+  metrics: run.metrics,
+  source: 'job_run' as const,
+})
+
+const jobRunsRouter = createTRPCRouter({
+  overview: adminProcedure.query(async () => {
+    const now = new Date()
+    const lastRuns = await db
+      .selectDistinctOn([jobRuns.task])
+      .from(jobRuns)
+      .where(inArray(jobRuns.task, OVERVIEW_IDENTIFIERS))
+      .orderBy(jobRuns.task, desc(jobRuns.startedAt))
+    const lastRunByTask = new Map(lastRuns.map((run) => [run.task, run]))
+
+    const fallbackTypes = [
+      ...new Set(
+        SCHEDULED_JOBS.filter(({ identifier }) => !lastRunByTask.has(identifier)).flatMap(({ identifier }) => {
+          const type = IMPORT_JOB_TYPE_BY_IDENTIFIER[identifier]
+          return type ? [type] : []
+        }),
+      ),
+    ]
+    const lastImports = fallbackTypes.length
+      ? await db
+          .selectDistinctOn([importJobs.type])
+          .from(importJobs)
+          .where(inArray(importJobs.type, fallbackTypes))
+          .orderBy(importJobs.type, desc(importJobs.createdAt))
+      : []
+    const lastImportByType = new Map(lastImports.map((job) => [job.type, job]))
+
+    const scheduled = SCHEDULED_JOBS.map(({ identifier, cron }) => {
+      const run = lastRunByTask.get(identifier)
+      const importType = IMPORT_JOB_TYPE_BY_IDENTIFIER[identifier]
+      const importJob = !run && importType ? lastImportByType.get(importType) : undefined
+
+      const last = run
+        ? toLastRun(run)
+        : importJob
+          ? {
+              status: importJob.status,
+              startedAt: importJob.startedAt ?? importJob.createdAt,
+              endedAt: importJob.endedAt,
+              metrics: importJobMetrics(importJob.summary),
+              source: 'import_job' as const,
+              importJobId: importJob.id,
+            }
+          : null
+
+      return { identifier, trigger: 'scheduled' as const, cron, nextRunAt: nextRunAt(cron, now), last }
+    })
+
+    const events = EVENT_JOBS.map(({ identifier }) => {
+      const run = lastRunByTask.get(identifier)
+      return { identifier, trigger: 'event' as const, cron: null, nextRunAt: null, last: run ? toLastRun(run) : null }
+    })
+
+    return [...scheduled, ...events]
+  }),
+
+  history: adminProcedure
+    .input(z.object({ identifier: z.string().min(1), page: z.number().int().min(1).default(1) }))
+    .query(async ({ input }) => {
+      const where = eq(jobRuns.task, input.identifier)
+      const [items, [totals]] = await Promise.all([
+        db
+          .select()
+          .from(jobRuns)
+          .where(where)
+          .orderBy(desc(jobRuns.startedAt), desc(jobRuns.id))
+          .limit(JOB_RUN_HISTORY_PAGE_SIZE)
+          .offset((input.page - 1) * JOB_RUN_HISTORY_PAGE_SIZE),
+        db.select({ total: count() }).from(jobRuns).where(where),
+      ])
+      const total = totals?.total ?? 0
+      return { items, total, page: input.page, pageCount: Math.ceil(total / JOB_RUN_HISTORY_PAGE_SIZE) }
+    }),
+
+  dailyTotals: adminProcedure
+    .input(z.object({ identifier: z.string().min(1), page: z.number().int().min(1).default(1) }))
+    .query(async ({ input }) => {
+      const where = eq(jobRuns.task, input.identifier)
+      const [days, [totals]] = await Promise.all([
+        db
+          .select({
+            day: parisDay,
+            runs: sql<number>`count(*)::int`,
+            errors: sql<number>`(count(*) filter (where ${jobRuns.status} = 'error'))::int`,
+          })
+          .from(jobRuns)
+          .where(where)
+          .groupBy(parisDay)
+          .orderBy(desc(parisDay))
+          .limit(JOB_RUN_DAILY_PAGE_SIZE)
+          .offset((input.page - 1) * JOB_RUN_DAILY_PAGE_SIZE),
+        db
+          .select({ total: sql<number>`count(distinct ${parisDay})::int` })
+          .from(jobRuns)
+          .where(where),
+      ])
+      const total = totals?.total ?? 0
+      const pageInfo = { total, page: input.page, pageCount: Math.ceil(total / JOB_RUN_DAILY_PAGE_SIZE) }
+      if (days.length === 0) return { items: [], ...pageInfo }
+
+      const sums = await db.execute<{ day: string; key: string; value: string }>(sql`
+        select ${parisDay} as day, m.key, sum(m.value::numeric) as value
+        from ${jobRuns}, jsonb_each_text(${jobRuns.metrics}) as m(key, value)
+        where ${jobRuns.task} = ${input.identifier}
+          and jsonb_typeof(${jobRuns.metrics} -> m.key) = 'number'
+          and ${parisDay} between ${days.at(-1)!.day} and ${days[0]!.day}
+        group by 1, 2
+      `)
+      const metricsByDay = new Map<string, Record<string, number>>()
+      for (const { day, key, value } of sums) {
+        metricsByDay.set(day, { ...metricsByDay.get(day), [key]: Number(value) })
+      }
+
+      return { items: days.map((day) => ({ ...day, metrics: metricsByDay.get(day.day) ?? {} })), ...pageInfo }
+    }),
+})
+
+function importJobMetrics(summary: TImportJobSummary | null): Record<string, number> {
+  const metrics: Record<string, number> = {}
+  for (const key of ['created', 'updated', 'skipped', 'deleted', 'anonymized', 'dossiersPurged'] as const) {
+    const value = summary?.[key]
+    if (typeof value === 'number') metrics[key] = value
+  }
+  if (summary?.errors?.length) metrics.errors = summary.errors.length
+  return metrics
+}
 
 const feedbackRouter = createTRPCRouter({
   stats: adminProcedure
@@ -1481,6 +1615,7 @@ export const adminRouter = createTRPCRouter({
   matomoStats: matomoStatsRouter,
   ownerUsage: ownerUsageRouter,
   imports: importsRouter,
+  jobRuns: jobRunsRouter,
   feedback: feedbackRouter,
   scholarshipSurvey: adminScholarshipSurveyRouter,
   consumers: consumersRouter,

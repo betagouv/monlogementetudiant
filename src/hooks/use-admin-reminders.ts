@@ -29,3 +29,8 @@ export const useAdminBlockedContacts = (filters: BlockedContactsFilters) => {
   const trpc = useTRPC()
   return useQuery(trpc.admin.reminders.blockedContacts.queryOptions(filters))
 }
+
+export const useAdminUnblockHistory = (page: number) => {
+  const trpc = useTRPC()
+  return useQuery(trpc.admin.reminders.unblockHistory.queryOptions({ page }))
+}

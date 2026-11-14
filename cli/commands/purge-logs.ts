@@ -7,6 +7,7 @@ import { activityLog } from '~/server/db/schema/activity-log'
 import { alertJobs } from '~/server/db/schema/alert-jobs'
 import { session, verification } from '~/server/db/schema/auth'
 import { importJobs } from '~/server/db/schema/import-jobs'
+import { jobRuns } from '~/server/db/schema/job-run'
 import { loginAttempts } from '~/server/db/schema/login-attempts'
 import { trackingEvents } from '~/server/db/schema/tracking-events'
 import { captureCliException } from '../sentry'
@@ -62,6 +63,13 @@ const ACTIVITY_LOG_RETENTION_MONTHS = 36
  * exécuté. À 0,2 Mo/mois, deux ans écartent le cas sans rien coûter.
  */
 const IMPORT_JOB_RETENTION_MONTHS = 24
+
+/**
+ * Les tâches événementielles (`send-alert-batch`, `detect-alerts`) écrivent une ligne `job_run` par
+ * exécution, au rythme des envois d'alertes. L'admin n'en montre que des totaux journaliers et le
+ * dernier run : trois mois suffisent.
+ */
+const EVENT_JOB_RUN_RETENTION_MONTHS = 3
 
 /**
  * `tracking_event` alimente le tableau de bord bailleur (`owner-statistics.ts`) : en période `90d`,
@@ -177,6 +185,16 @@ export const EXPIRED_TARGETS: ExpiredTarget[] = [
     table: verification,
     where: () => lt(verification.expiresAt, new Date()),
     detail: 'jetons de vérification (liens de connexion, activation, réinitialisation) expirés',
+  },
+  {
+    label: 'job_run',
+    table: jobRuns,
+    where: () =>
+      or(
+        lt(jobRuns.startedAt, subMonths(new Date(), IMPORT_JOB_RETENTION_MONTHS)),
+        and(eq(jobRuns.trigger, 'event'), lt(jobRuns.startedAt, subMonths(new Date(), EVENT_JOB_RUN_RETENTION_MONTHS))),
+      ) as SQL,
+    detail: `exécutions planifiées de plus de ${IMPORT_JOB_RETENTION_MONTHS} mois, événementielles de plus de ${EVENT_JOB_RUN_RETENTION_MONTHS} mois`,
   },
 ]
 
@@ -305,7 +323,7 @@ async function purgeTarget(
 /**
  * Purge les tables append-only au-delà de leur rétention, pour éviter qu'elles ne grossissent
  * indéfiniment. Chaque lot supprimé est d'abord archivé dans S3 en NDJSON gzippé, pour pouvoir
- * être relu ou réinjecté en cas de besoin. Pilotée par un cron mensuel (voir `cron.json`).
+ * être relu ou réinjecté en cas de besoin. Pilotée par un cron mensuel (voir `SCHEDULED_COMMANDS`).
  * Idempotente : ré-exécutable sans risque.
  */
 async function purgeExpiredTarget(target: ExpiredTarget, options: PurgeLogsOptions): Promise<TargetOutcome> {

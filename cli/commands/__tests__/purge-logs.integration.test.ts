@@ -6,6 +6,7 @@ import { getTestDb } from '../../../src/__tests__/helpers/test-db'
 import { ELoginAttemptStatus } from '../../../src/enums/login-attempt-status'
 import { trackingEvents } from '../../../src/server/db/schema'
 import { session, verification } from '../../../src/server/db/schema/auth'
+import { jobRuns } from '../../../src/server/db/schema/job-run'
 import { loginAttempts } from '../../../src/server/db/schema/login-attempts'
 
 interface CapturedUpload {
@@ -210,5 +211,38 @@ describe('purge-logs — sessions et jetons expirés', () => {
     await purgeLogs({ table: 'session', dryRun: true })
 
     expect(await db.select().from(session)).toHaveLength(1)
+  })
+})
+
+describe('purge-logs — job_run', () => {
+  beforeEach(() => {
+    uploads.length = 0
+    vi.spyOn(console, 'log').mockImplementation(vi.fn())
+  })
+
+  it('supprime les exécutions plus vieilles que la rétention d’import_job', async () => {
+    await db.insert(jobRuns).values([
+      { task: 'ancienne', trigger: 'manual', startedAt: subMonths(new Date(), 25) },
+      { task: 'recente', trigger: 'manual', startedAt: subMonths(new Date(), 1) },
+    ])
+
+    await purgeLogs({ table: 'job_run' })
+
+    const rows = await db.select({ task: jobRuns.task }).from(jobRuns)
+    expect(rows.map((row) => row.task)).toEqual(['recente'])
+    expect(uploads).toHaveLength(0)
+  })
+
+  it('purge les exécutions événementielles au-delà de 3 mois, sans toucher aux planifiées du même âge', async () => {
+    await db.insert(jobRuns).values([
+      { task: 'evenement-ancien', trigger: 'event', startedAt: subMonths(new Date(), 4) },
+      { task: 'evenement-recent', trigger: 'event', startedAt: subMonths(new Date(), 2) },
+      { task: 'planifiee', trigger: 'scheduled', startedAt: subMonths(new Date(), 4) },
+    ])
+
+    await purgeLogs({ table: 'job_run' })
+
+    const rows = await db.select({ task: jobRuns.task }).from(jobRuns).orderBy(jobRuns.task)
+    expect(rows.map((row) => row.task)).toEqual(['evenement-recent', 'planifiee'])
   })
 })

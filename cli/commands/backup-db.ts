@@ -47,7 +47,7 @@ function formatBytes(bytes: number): string {
 export async function backupDb(options: BackupDbOptions = {}): Promise<void> {
   const { dryRun = false, verbose = false } = options
 
-  // `cron.json` est commun à toutes les apps déployées depuis ce repo : la garde est ici, pas
+  // le planificateur est commun à toutes les apps déployées depuis ce repo : la garde est ici, pas
   // dans le planificateur. On ne sauvegarde pas la base de staging.
   if (env.NEXT_PUBLIC_APP_ENV !== 'production' && !dryRun) {
     console.info(`[${env.NEXT_PUBLIC_APP_ENV}] backup-db ignoré hors production (utilisez --dry-run pour simuler)`)

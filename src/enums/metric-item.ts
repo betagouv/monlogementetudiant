@@ -15,6 +15,12 @@ export enum EMetricItem {
   SIMULATIONS_BUDGET_BASE = 'simulations_budget_base',
   SIMULATIONS_BUDGET_MATOMO = 'simulations_budget_matomo',
   ETUDIANTS_BOURSIERS = 'etudiants_boursiers',
+  ALERT_EMAILS_SENT = 'alert_emails_sent',
+  ALERT_HOUSINGS_ALERT = 'alert_housings_alert',
+  ALERT_HOUSINGS_FAVORITE = 'alert_housings_favorite',
+  ALERT_HOUSINGS_SIMILAR = 'alert_housings_similar',
+  ALERT_STUDENTS_NOTIFIED = 'alert_students_notified',
+  ALERT_EMAILS_FAILED = 'alert_emails_failed',
 }
 
 export type TMetricSource = 'Base — étudiants connectés' | 'Matomo — toutes visites' | 'Relevé mensuel'
@@ -48,5 +54,15 @@ export const METRIC_ITEM_META: Record<EMetricItem, { label: string; source: TMet
     label: 'Étudiants boursiers',
     source: RELEVE,
     help: "Nombre d'étudiants inscrits selon leur statut boursier actuel, relevé chaque nuit",
+  },
+  [EMetricItem.ALERT_EMAILS_SENT]: { label: "Mails d'alerte envoyés", source: BASE },
+  [EMetricItem.ALERT_HOUSINGS_ALERT]: { label: 'Logements signalés — alertes', source: BASE },
+  [EMetricItem.ALERT_HOUSINGS_FAVORITE]: { label: 'Logements signalés — favoris', source: BASE },
+  [EMetricItem.ALERT_HOUSINGS_SIMILAR]: { label: 'Logements signalés — similaires', source: BASE },
+  [EMetricItem.ALERT_STUDENTS_NOTIFIED]: { label: 'Étudiants prévenus', source: BASE },
+  [EMetricItem.ALERT_EMAILS_FAILED]: {
+    label: "Mails d'alerte en échec définitif",
+    source: BASE,
+    help: 'Comptés selon le mois où l’envoi a été programmé ; les échecs antérieurs à novembre 2026 ne sont pas comptés',
   },
 }
