@@ -11,12 +11,15 @@ export const UNBLOCKABLE_REASONS: readonly TBlockedReason[] = ['unsubscribedViaE
 type TUnblockTrigger = (typeof brevoUnblockEvents.$inferInsert)['trigger']
 type TBlockedRow = typeof brevoBlockedContacts.$inferSelect
 
+const UNBLOCK_TIMEOUT_MS = 3000
+
 const isUnblockable = (reason: string | null) => UNBLOCKABLE_REASONS.some((r) => r === reason)
 
 export const deleteBrevoBlockedContact = async (email: string): Promise<void> => {
   const response = await fetch(`${env.BREVO_BLOCKED_CONTACTS_API_URL}/${encodeURIComponent(email)}`, {
     method: 'DELETE',
     headers: { 'api-key': env.BREVO_API_KEY, accept: 'application/json' },
+    signal: AbortSignal.timeout(UNBLOCK_TIMEOUT_MS),
   })
   if (response.status === 204 || response.status === 404) return
   throw new Error(`Brevo unblock failed: ${response.status}`)
@@ -71,8 +74,13 @@ export const syncAndUnblockManagers = async (): Promise<{ blocked: number; unblo
   let unblocked = 0
   let errors = 0
   for (const row of rows.filter((r) => isUnblockable(r.reason))) {
-    if (await unblock(row, 'scheduled')) unblocked++
-    else errors++
+    try {
+      if (await unblock(row, 'scheduled')) unblocked++
+      else errors++
+    } catch (error) {
+      Sentry.captureException(error, { tags: { task: 'brevo-unblock' } })
+      errors++
+    }
   }
   return { blocked: rows.length, unblocked, errors }
 }

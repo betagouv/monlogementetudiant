@@ -167,7 +167,8 @@ export const fetchReminderMessages = async ({
   })
 }
 
-const isBlockedReason = (code: string | null | undefined): code is TBlockedReason => BLOCKED_REASONS.some((reason) => reason === code)
+export const isBlockedReason = (code: string | null | undefined): code is TBlockedReason =>
+  BLOCKED_REASONS.some((reason) => reason === code)
 
 export const fetchBlockedContacts = async (): Promise<TBlockedContact[]> => {
   const contacts: TBlockedContact[] = []
