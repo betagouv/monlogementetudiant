@@ -13,7 +13,7 @@ import {
   BLOCKED_REASONS,
   fetchBlockedContacts,
   fetchReminderMessages,
-  type TBlockedReason,
+  isBlockedReason,
   type TBrevoEmailStatus,
 } from '~/server/services/brevo-reminders'
 import { adminProcedure, createTRPCRouter } from '../init'
@@ -188,19 +188,29 @@ export const adminRemindersRouter = createTRPCRouter({
   unblockHistory: adminProcedure.input(z.object({ page: z.number().int().min(1).default(1) })).query(async ({ input }) => {
     const [{ total }] = await db.select({ total: sql<number>`count(*)::int` }).from(brevoUnblockEvents)
     const events = await db
-      .select()
+      .select({
+        id: brevoUnblockEvents.id,
+        createdAt: brevoUnblockEvents.createdAt,
+        email: brevoUnblockEvents.email,
+        reason: brevoUnblockEvents.reason,
+        trigger: brevoUnblockEvents.trigger,
+        status: brevoUnblockEvents.status,
+        firstname: user.firstname,
+        lastname: user.lastname,
+        accountName: user.name,
+      })
       .from(brevoUnblockEvents)
+      .leftJoin(user, eq(user.id, brevoUnblockEvents.userId))
       .orderBy(desc(brevoUnblockEvents.createdAt), desc(brevoUnblockEvents.id))
       .limit(UNBLOCK_PAGE_SIZE)
       .offset((input.page - 1) * UNBLOCK_PAGE_SIZE)
 
-    const recipients = await loadRecipients(events.map((e) => e.email))
     const rows = events.map((event) => ({
       id: event.id,
       createdAt: event.createdAt,
       email: event.email,
-      userName: recipients.get(event.email)?.userName ?? null,
-      reason: event.reason as TBlockedReason | null,
+      userName: [event.firstname, event.lastname].filter(Boolean).join(' ').trim() || event.accountName || null,
+      reason: isBlockedReason(event.reason) ? event.reason : null,
       trigger: event.trigger,
       status: event.status,
     }))
