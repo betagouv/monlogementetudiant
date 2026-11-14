@@ -67,6 +67,7 @@ export async function cleanTables() {
   await db.execute(drizzleSql`
     TRUNCATE TABLE
       activity_log,
+      job_run,
       application_fact,
       monthly_metric,
       academy,

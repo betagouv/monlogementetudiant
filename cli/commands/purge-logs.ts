@@ -7,6 +7,7 @@ import { activityLog } from '~/server/db/schema/activity-log'
 import { alertJobs } from '~/server/db/schema/alert-jobs'
 import { session, verification } from '~/server/db/schema/auth'
 import { importJobs } from '~/server/db/schema/import-jobs'
+import { jobRuns } from '~/server/db/schema/job-run'
 import { loginAttempts } from '~/server/db/schema/login-attempts'
 import { trackingEvents } from '~/server/db/schema/tracking-events'
 import { captureCliException } from '../sentry'
@@ -177,6 +178,12 @@ export const EXPIRED_TARGETS: ExpiredTarget[] = [
     table: verification,
     where: () => lt(verification.expiresAt, new Date()),
     detail: 'jetons de vérification (liens de connexion, activation, réinitialisation) expirés',
+  },
+  {
+    label: 'job_run',
+    table: jobRuns,
+    where: () => lt(jobRuns.startedAt, subMonths(new Date(), IMPORT_JOB_RETENTION_MONTHS)),
+    detail: `exécutions de tâches terminées depuis plus de ${IMPORT_JOB_RETENTION_MONTHS} mois`,
   },
 ]
 
