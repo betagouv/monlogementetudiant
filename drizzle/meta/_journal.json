@@ -708,6 +708,13 @@
       "when": 1794654824253,
       "tag": "0100_alert_job_send_tracking",
       "breakpoints": true
+    },
+    {
+      "idx": 101,
+      "version": "7",
+      "when": 1794655974574,
+      "tag": "0101_brevo_unblock",
+      "breakpoints": true
     }
   ]
 }

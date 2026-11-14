@@ -5,6 +5,7 @@ import { headers } from 'next/headers'
 import { getClientIp, hashIp } from '~/server/contacts/rate-limit'
 import { db } from '~/server/db'
 import { user } from '~/server/db/schema'
+import { unblockOwnerOnLogin } from '~/server/services/brevo-unblock'
 import { isLoginSendRateLimited } from '~/server/services/login-attempts'
 import { auth } from '~/services/better-auth'
 import { safeCallbackPath } from '~/utils/safe-callback-path'
@@ -34,6 +35,7 @@ export async function sendMagicLink(rawEmail: string, role: 'owner' | 'admin', c
     if (await isLoginSendRateLimited({ email, ipHash: hashIp(getClientIp({ headers: requestHeaders })) })) {
       return { success: true }
     }
+    if (role === 'owner') await unblockOwnerOnLogin(email)
     const errorCallbackURL = ERROR_CALLBACK_URL_BY_ROLE[role]
     await auth.api.signInMagicLink({
       body: { email, callbackURL: safeCallbackPath(callbackURL) ?? undefined, errorCallbackURL },

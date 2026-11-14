@@ -6,16 +6,57 @@ import Select from '@codegouvfr/react-dsfr/SelectNext'
 import { type ColumnDef } from '@tanstack/react-table'
 import clsx from 'clsx'
 import Link from 'next/link'
+import { useState } from 'react'
 import { AdminClientPagination } from '~/components/administration/admin-client-pagination'
 import { AdminDataTable } from '~/components/administration/admin-data-table'
-import { useAdminBlockedContacts } from '~/hooks/use-admin-reminders'
+import { useAdminBlockedContacts, useAdminUnblockHistory } from '~/hooks/use-admin-reminders'
 import type { TBlockedReason } from '~/server/services/brevo-reminders'
 import { formatDateTime } from '~/utils/format-admin'
 import styles from '../../../app/(authenticated)/administration/administration.module.css'
-import { BLOCKED_REASON_CODES, BLOCKED_REASON_LABELS } from './labels'
+import { BLOCKED_REASON_CODES, BLOCKED_REASON_LABELS, UNBLOCK_STATUS_LABELS, UNBLOCK_TRIGGER_LABELS } from './labels'
 
 type BlockedContactsData = NonNullable<ReturnType<typeof useAdminBlockedContacts>['data']>
 type BlockedContactRow = BlockedContactsData['rows'][number]
+
+type UnblockHistoryData = NonNullable<ReturnType<typeof useAdminUnblockHistory>['data']>
+type UnblockEventRow = UnblockHistoryData['rows'][number]
+
+const historyColumns: ColumnDef<UnblockEventRow, unknown>[] = [
+  {
+    accessorKey: 'createdAt',
+    header: 'Date',
+    cell: ({ row }) => <span className="fr-text--sm">{formatDateTime(row.original.createdAt)}</span>,
+  },
+  {
+    accessorKey: 'email',
+    header: 'Adresse',
+    cell: ({ row }) => <span className="fr-text--sm">{row.original.email}</span>,
+  },
+  {
+    accessorKey: 'userName',
+    header: 'Gestionnaire',
+    cell: ({ row }) => <span className="fr-text--sm">{row.original.userName ?? '—'}</span>,
+  },
+  {
+    accessorKey: 'reason',
+    header: "Motif d'origine",
+    cell: ({ row }) => <span className="fr-text--sm">{row.original.reason ? BLOCKED_REASON_LABELS[row.original.reason] : '—'}</span>,
+  },
+  {
+    accessorKey: 'trigger',
+    header: 'Déclencheur',
+    cell: ({ row }) => <span className="fr-text--sm">{UNBLOCK_TRIGGER_LABELS[row.original.trigger]}</span>,
+  },
+  {
+    accessorKey: 'status',
+    header: 'Résultat',
+    cell: ({ row }) => (
+      <Badge as="span" noIcon small severity={row.original.status === 'success' ? 'success' : 'error'}>
+        {UNBLOCK_STATUS_LABELS[row.original.status]}
+      </Badge>
+    ),
+  },
+]
 
 const REASON_OPTIONS = [
   { label: 'Tous les motifs', value: '' },
@@ -77,6 +118,8 @@ type BlockedContactsTabProps = {
 
 export const BlockedContactsTab = ({ from, to, page, reason, onReasonChange, onPageChange }: BlockedContactsTabProps) => {
   const { data, isLoading, isError, error } = useAdminBlockedContacts({ from, to, page, reason: reason ?? undefined })
+  const [historyPage, setHistoryPage] = useState(1)
+  const history = useAdminUnblockHistory(historyPage)
 
   const summary = data?.summary
   const value = (count: number | undefined) => (isLoading || count === undefined ? '-' : count)
@@ -132,6 +175,23 @@ export const BlockedContactsTab = ({ from, to, page, reason, onReasonChange, onP
       />
 
       <AdminClientPagination count={data?.pageCount ?? 0} page={page} onPageChange={onPageChange} />
+
+      <h2 className="fr-h5 fr-mt-5w">Historique des déblocages</h2>
+      <p className="fr-text--sm fr-text-mention--grey fr-mb-2w">
+        Les gestionnaires désabonnés sont débloqués automatiquement chaque heure, ou dès leur demande de lien de connexion.
+      </p>
+      {history.isError && <Alert severity="error" title="Erreur de chargement" description={history.error.message} className="fr-mb-3w" />}
+      <AdminDataTable
+        columns={historyColumns}
+        data={history.data?.rows ?? []}
+        pageCount={history.data?.pageCount ?? 0}
+        page={historyPage}
+        onPageChange={setHistoryPage}
+        isLoading={history.isLoading}
+        isError={history.isError}
+        hidePagination
+      />
+      <AdminClientPagination count={history.data?.pageCount ?? 0} page={historyPage} onPageChange={setHistoryPage} />
     </>
   )
 }

@@ -647,6 +647,7 @@ Tâches Graphile du worker (`src/server/jobs/tasks/`) :
 - `send-alert-batch` : un mail par lot, lancé 60 s après la première ligne créée (les détections suivantes s'y regroupent), file `alert-send` sérielle (100 ms entre deux envois Brevo). Un envoi en échec est replanifié 30 min plus tard, 3 tentatives par ligne. Les lignes envoyées passent en `sent` avec un `send_id` commun.
 - `requeue-pending-alerts` (`5 * * * *`) : remet en file les lots ayant des lignes `pending` depuis plus de 10 minutes.
 - `report-alert-failures` (`15 * * * *`) : un seul mail récapitulatif (`CRON_FAILURE_EMAILS`) pour les lignes définitivement en échec, chacune signalée une fois (`failure_reported_at`).
+- `brevo-unblock-managers` (`20 * * * *`) : copie la liste des contacts bloqués Brevo restreinte aux gestionnaires et débloque ceux désabonnés (`unsubscribedVia*`) ; un gestionnaire désabonné est aussi débloqué à sa demande de lien de connexion. Historique dans `brevo_unblock_event` (onglet « Contacts bloqués » de l'administration).
 
 > **Garde-fou anti-spam** : hors `NEXT_PUBLIC_APP_ENV === 'production'`, `send-alert-batch` n'envoie rien et laisse les lignes `pending`.
 
