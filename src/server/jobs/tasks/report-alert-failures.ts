@@ -2,11 +2,14 @@ import { and, eq, gte, inArray, isNull } from 'drizzle-orm'
 import type { Task } from 'graphile-worker'
 import { db } from '~/server/db'
 import { alertJobs } from '~/server/db/schema'
+import { env } from '~/server/env'
 import { recordJobMetrics, withJobRun } from '~/server/jobs/job-run'
 import { MAX_ATTEMPTS } from '~/server/services/alert-sender'
 import { CronPartialFailure, notifyCronFailure } from '../../../../cli/cron-failure'
 
 export async function reportAlertFailures(startedAt: Date = new Date()): Promise<number> {
+  if (env.NEXT_PUBLIC_APP_ENV !== 'production') return 0
+
   const rows = await db
     .select({ id: alertJobs.id, source: alertJobs.source, studentAlertId: alertJobs.studentAlertId, error: alertJobs.error })
     .from(alertJobs)

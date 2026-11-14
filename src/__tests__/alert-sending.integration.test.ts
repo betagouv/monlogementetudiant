@@ -395,6 +395,18 @@ describe('report-alert-failures', () => {
   })
 })
 
+describe('report-alert-failures hors production', () => {
+  it('ne signale rien et ne marque rien', async () => {
+    mocks.env.NEXT_PUBLIC_APP_ENV = 'staging'
+    const { alert } = await createAlertWithJobs(['alert'])
+    await getTestDb().update(alertJobs).set({ status: 'failed', attempts: 3 }).where(eq(alertJobs.studentAlertId, alert.id))
+
+    expect(await reportAlertFailures()).toBe(0)
+    expect(mocks.notifyCronFailure).not.toHaveBeenCalled()
+    expect((await jobsOf(alert.id))[0].failureReportedAt).toBeNull()
+  })
+})
+
 describe('requeue-pending-alerts', () => {
   it('remet en file les lots pending depuis plus de 10 min', async () => {
     const { alert } = await createAlertWithJobs(['alert', 'similar'])

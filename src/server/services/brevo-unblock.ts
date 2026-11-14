@@ -15,6 +15,8 @@ const UNBLOCK_TIMEOUT_MS = 3000
 
 const isUnblockable = (reason: string | null) => UNBLOCKABLE_REASONS.some((r) => r === reason)
 
+const isProduction = () => env.NEXT_PUBLIC_APP_ENV === 'production'
+
 export const deleteBrevoBlockedContact = async (email: string): Promise<void> => {
   const response = await fetch(`${env.BREVO_BLOCKED_CONTACTS_API_URL}/${encodeURIComponent(email)}`, {
     method: 'DELETE',
@@ -44,6 +46,8 @@ const unblock = async (row: TBlockedRow, trigger: TUnblockTrigger): Promise<bool
 }
 
 export const syncAndUnblockManagers = async (): Promise<{ blocked: number; unblocked: number; errors: number }> => {
+  if (!isProduction()) return { blocked: 0, unblocked: 0, errors: 0 }
+
   const contacts = await fetchBlockedContacts()
   const emails = [...new Set(contacts.map((c) => c.email))]
 
@@ -86,6 +90,7 @@ export const syncAndUnblockManagers = async (): Promise<{ blocked: number; unblo
 }
 
 export const unblockOwnerOnLogin = async (email: string): Promise<void> => {
+  if (!isProduction()) return
   try {
     const [row] = await db.select().from(brevoBlockedContacts).where(eq(brevoBlockedContacts.email, email.trim().toLowerCase())).limit(1)
     if (!row || !isUnblockable(row.reason)) return

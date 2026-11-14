@@ -11,6 +11,13 @@ vi.mock('next/headers', async () => {
 })
 
 const calls = vi.hoisted(() => [] as string[])
+const mockedEnv = vi.hoisted(() => ({}) as Record<string, unknown>)
+
+vi.mock('~/server/env', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('~/server/env')>()
+  Object.assign(mockedEnv, actual.env, { NEXT_PUBLIC_APP_ENV: 'production' })
+  return { env: mockedEnv }
+})
 
 vi.mock('~/services/better-auth', () => ({
   auth: {
@@ -72,6 +79,7 @@ const brevoList: TContact[] = [
 
 beforeEach(() => {
   calls.length = 0
+  mockedEnv.NEXT_PUBLIC_APP_ENV = 'production'
 })
 
 afterEach(() => {
@@ -145,6 +153,39 @@ describe('syncAndUnblockManagers', () => {
     const copy = await db.select().from(brevoBlockedContacts)
     expect(copy.map((c) => c.email)).toContain('unsub@bailleur.fr')
     expect(copy.map((c) => c.email)).not.toContain('unsub2@bailleur.fr')
+  })
+})
+
+describe('hors production', () => {
+  it('syncAndUnblockManagers ne contacte pas Brevo', async () => {
+    mockedEnv.NEXT_PUBLIC_APP_ENV = 'staging'
+    await seedManagers()
+    const deleted = stubBrevo(brevoList)
+
+    expect(await syncAndUnblockManagers()).toEqual({ blocked: 0, unblocked: 0, errors: 0 })
+
+    expect(deleted).toEqual([])
+    expect(fetch).not.toHaveBeenCalled()
+    expect(await db.select().from(brevoUnblockEvents)).toHaveLength(0)
+  })
+
+  it('unblockOwnerOnLogin ne contacte pas Brevo', async () => {
+    mockedEnv.NEXT_PUBLIC_APP_ENV = 'staging'
+    await seedManagers()
+    await db.insert(brevoBlockedContacts).values({
+      email: 'unsub@bailleur.fr',
+      userId: 'm-unsub',
+      reason: 'unsubscribedViaEmail',
+      blockedAt: new Date(),
+      syncedAt: new Date(),
+    })
+    stubBrevo([])
+
+    await unblockOwnerOnLogin('unsub@bailleur.fr')
+
+    expect(fetch).not.toHaveBeenCalled()
+    expect(await db.select().from(brevoUnblockEvents)).toHaveLength(0)
+    expect(await db.select().from(brevoBlockedContacts)).toHaveLength(1)
   })
 })
 

@@ -1,13 +1,17 @@
 import { sql } from 'drizzle-orm'
 import type { db } from '~/server/db'
 
-export type TJobIdentifier =
-  | 'run-cli-command'
-  | 'send-alert-batch'
-  | 'detect-alerts'
-  | 'requeue-pending-alerts'
-  | 'report-alert-failures'
-  | 'brevo-unblock-managers'
+export const JOB_IDENTIFIERS = [
+  'run-cli-command',
+  'send-alert-batch',
+  'detect-alerts',
+  'requeue-pending-alerts',
+  'report-alert-failures',
+  'brevo-unblock-managers',
+  'graphile-cleanup',
+] as const
+
+export type TJobIdentifier = (typeof JOB_IDENTIFIERS)[number]
 
 export type TEnqueueOptions = {
   jobKey?: string
