@@ -15,4 +15,10 @@ export enum EMonthlyMetric {
   STUDENTS_TOTAL = 'students_total',
   STUDENTS_NON_BOURSIERS = 'students_non_boursiers',
   STUDENTS_NON_RENSEIGNE = 'students_non_renseigne',
+  ALERT_EMAILS_SENT = 'alert_emails_sent',
+  ALERT_HOUSINGS_ALERT = 'alert_housings_alert',
+  ALERT_HOUSINGS_FAVORITE = 'alert_housings_favorite',
+  ALERT_HOUSINGS_SIMILAR = 'alert_housings_similar',
+  ALERT_STUDENTS_NOTIFIED = 'alert_students_notified',
+  ALERT_EMAILS_FAILED = 'alert_emails_failed',
 }
