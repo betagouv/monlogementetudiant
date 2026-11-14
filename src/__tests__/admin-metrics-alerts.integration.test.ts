@@ -97,4 +97,24 @@ describe('métriques d envoi des alertes', () => {
     ])
     expect(series.alert_housings_alert[0].total).toBe(2)
   })
+
+  it('affiche 0 pour une série absente d un mois relevé', async () => {
+    const db = getTestDb()
+    await createUser({ id: 'a' })
+    const [a1] = await accommodationIds(1)
+    await db.insert(alertJobs).values({
+      userId: 'a',
+      accommodationId: a1,
+      source: 'alert',
+      status: 'sent',
+      sentAt: new Date('2026-11-10T10:00:00Z'),
+      sendId: SEND_A,
+    })
+
+    await captureMonthlyMetrics({ now: NOW })
+
+    const series = Object.fromEntries((await getStudentSeries({ from: '2026-10', to: '2026-11' })).map((s) => [s.key, s.values]))
+    expect(series.alert_emails_failed.map((v) => v.total)).toEqual([null, 0])
+    expect(series.alert_housings_favorite.map((v) => v.total)).toEqual([null, 0])
+  })
 })
