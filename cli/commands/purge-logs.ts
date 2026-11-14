@@ -312,7 +312,7 @@ async function purgeTarget(
 /**
  * Purge les tables append-only au-delà de leur rétention, pour éviter qu'elles ne grossissent
  * indéfiniment. Chaque lot supprimé est d'abord archivé dans S3 en NDJSON gzippé, pour pouvoir
- * être relu ou réinjecté en cas de besoin. Pilotée par un cron mensuel (voir `cron.json`).
+ * être relu ou réinjecté en cas de besoin. Pilotée par un cron mensuel (voir `SCHEDULED_COMMANDS`).
  * Idempotente : ré-exécutable sans risque.
  */
 async function purgeExpiredTarget(target: ExpiredTarget, options: PurgeLogsOptions): Promise<TargetOutcome> {

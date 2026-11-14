@@ -1,41 +1,22 @@
-import { readFileSync } from 'node:fs'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { SCHEDULED_COMMANDS } from '~/server/jobs/schedule'
 import { CRON_COMMANDS, jobNameFromArgv } from '../cron-failure'
 
 const fetchMock = vi.fn()
 vi.stubGlobal('fetch', fetchMock)
 
-/**
- * Extrait le nom des commandes planifiées depuis `cron.json` : on retire l'expression cron et
- * le préfixe `npx tsx cli/index.ts`, on coupe aux options, et on gère les lignes composées
- * qui enchaînent deux commandes avec `;`.
- */
 function scheduledCommands(): string[] {
-  const cronConfig = JSON.parse(readFileSync(new URL('../../cron.json', import.meta.url), 'utf-8')) as {
-    jobs: { command: string }[]
-  }
-
-  return cronConfig.jobs.flatMap((job) =>
-    job.command.split(';').map((segment) => {
-      const [, args = ''] = segment.split('cli/index.ts')
-      const parts: string[] = []
-      for (const arg of args.trim().split(/\s+/).filter(Boolean)) {
-        if (arg.startsWith('-')) break
-        parts.push(arg)
-      }
-      return parts.join(' ')
-    }),
-  )
+  return SCHEDULED_COMMANDS.map(({ args }) => jobNameFromArgv(['node', 'cli/index.ts', ...args]))
 }
 
 describe('CRON_COMMANDS', () => {
-  it('couvre toutes les commandes planifiées dans cron.json', () => {
+  it('couvre toutes les commandes planifiées dans SCHEDULED_COMMANDS', () => {
     const missing = scheduledCommands().filter((command) => !CRON_COMMANDS.has(command))
 
     expect(missing, `Commandes planifiées absentes de CRON_COMMANDS : ${missing.join(', ')}`).toEqual([])
   })
 
-  it('lit bien des commandes dans cron.json (garde-fou contre un parsing silencieusement cassé)', () => {
+  it('lit bien des commandes dans SCHEDULED_COMMANDS (garde-fou contre un parsing silencieusement cassé)', () => {
     expect(scheduledCommands().length).toBeGreaterThanOrEqual(10)
   })
 })

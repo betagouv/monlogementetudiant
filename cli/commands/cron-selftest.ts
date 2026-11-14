@@ -4,7 +4,7 @@
  *
  *   scalingo -a mle-prod --region osc-secnum-fr1 run npx tsx cli/index.ts cron-selftest
  *
- * Ne touche ni la base ni aucune API métier. Absente de `cron.json`, mais listée dans
+ * Ne touche ni la base ni aucune API métier. Absente de `SCHEDULED_COMMANDS`, mais listée dans
  * `CRON_COMMANDS` pour être traitée comme un job planifié.
  */
 export async function cronSelftest(): Promise<void> {
