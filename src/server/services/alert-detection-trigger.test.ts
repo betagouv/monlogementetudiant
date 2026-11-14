@@ -18,7 +18,7 @@ describe('triggerAlertDetection', () => {
   it('met en file une tâche detect-alerts', async () => {
     await triggerAlertDetection([1, 2])
 
-    expect(mocks.enqueueJob).toHaveBeenCalledWith(expect.anything(), 'detect-alerts', { accommodationIds: [1, 2] })
+    expect(mocks.enqueueJob).toHaveBeenCalledWith(expect.anything(), 'detect-alerts', { accommodationIds: [1, 2] }, { maxAttempts: 3 })
   })
 
   it('ne met rien en file sans résidence', async () => {

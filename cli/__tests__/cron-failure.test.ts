@@ -112,13 +112,13 @@ describe('notifyCronFailure', () => {
 
   async function notify() {
     const { notifyCronFailure } = await import('../cron-failure')
-    await notifyCronFailure({ job: 'send-alert-jobs', error: new Error('boom'), startedAt: new Date() })
+    return notifyCronFailure({ job: 'send-alert-jobs', error: new Error('boom'), startedAt: new Date() })
   }
 
   it('envoie le mail à tous les destinataires configurés', async () => {
     vi.stubEnv('CRON_FAILURE_EMAILS', 'ops@example.fr, dev@example.fr')
 
-    await notify()
+    expect(await notify()).toBe(true)
 
     expect(fetchMock).toHaveBeenCalledOnce()
     const body = JSON.parse(fetchMock.mock.calls[0][1].body)
@@ -131,7 +131,7 @@ describe('notifyCronFailure', () => {
   it("n'envoie rien quand la variable est vide", async () => {
     vi.stubEnv('CRON_FAILURE_EMAILS', '')
 
-    await notify()
+    expect(await notify()).toBe(false)
 
     expect(fetchMock).not.toHaveBeenCalled()
   })
@@ -140,13 +140,13 @@ describe('notifyCronFailure', () => {
     vi.stubEnv('CRON_FAILURE_EMAILS', 'ops@example.fr')
     fetchMock.mockResolvedValue({ ok: false, status: 400, text: async () => 'sender not validated' })
 
-    await expect(notify()).resolves.toBeUndefined()
+    await expect(notify()).resolves.toBe(false)
   })
 
   it("n'échoue pas quand l'appel Brevo lève", async () => {
     vi.stubEnv('CRON_FAILURE_EMAILS', 'ops@example.fr')
     fetchMock.mockRejectedValue(new Error('timeout'))
 
-    await expect(notify()).resolves.toBeUndefined()
+    await expect(notify()).resolves.toBe(false)
   })
 })

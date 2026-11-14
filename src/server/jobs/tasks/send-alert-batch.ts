@@ -11,7 +11,7 @@ const ZSendAlertBatchPayload = z.discriminatedUnion('kind', [
 export const sendAlertBatchTask: Task = async (payload, helpers) => {
   const key = ZSendAlertBatchPayload.parse(payload)
   await withJobRun('send-alert-batch', 'event', async () => {
-    const { sent, housings } = await sendAlertBatch(key, { number: helpers.job.attempts, max: helpers.job.max_attempts })
-    await recordJobMetrics({ emails: sent ? 1 : 0, housings })
+    const { sent, housings, failed } = await sendAlertBatch(key, { number: helpers.job.attempts, max: helpers.job.max_attempts })
+    await recordJobMetrics({ emails: sent ? 1 : 0, housings, failed: failed ? 1 : 0 })
   })
 }
