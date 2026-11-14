@@ -29,3 +29,6 @@ export const BLOCKED_REASON_LABELS: Record<TBlockedReason, string> = {
 }
 
 export const BLOCKED_REASON_CODES = Object.keys(BLOCKED_REASON_LABELS) as TBlockedReason[]
+
+export const UNBLOCK_TRIGGER_LABELS = { login: 'Demande de connexion', scheduled: 'Synchronisation horaire' } as const
+export const UNBLOCK_STATUS_LABELS = { success: 'Débloqué', error: 'Échec' } as const

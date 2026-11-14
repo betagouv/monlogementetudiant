@@ -44,10 +44,11 @@ describe('SCHEDULED_COMMANDS', () => {
 })
 
 describe('SCHEDULED_IN_PROCESS', () => {
-  it('planifie la reprise et le signalement des alertes', () => {
+  it('planifie la reprise, le signalement des alertes et le déblocage Brevo', () => {
     expect(SCHEDULED_IN_PROCESS).toEqual([
       { identifier: 'requeue-pending-alerts', cron: '5 * * * *' },
       { identifier: 'report-alert-failures', cron: '15 * * * *' },
+      { identifier: 'brevo-unblock-managers', cron: '20 * * * *' },
     ])
   })
 })
