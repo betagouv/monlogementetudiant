@@ -218,6 +218,7 @@ sont jamais mises à jour et grossissent donc indéfiniment (ex. aout 2026):
 | `alert_job` | 12 mois | 11 Mo | ~8,8 Mo/mois | **jobs terminés uniquement** (`sent`, `failed`) ; les `pending` restent actionnables par le sender |
 | `activity_log` | 36 mois | 5 Mo | ~0,5 Mo/mois, en décroissance | journal d'actions admin/bailleurs |
 | `import_job` | 24 mois | 1,9 Mo | ~0,2 Mo/mois | audit trail des imports et des crons |
+| `job_run` | 24 mois (3 mois pour les tâches événementielles) | — | — | exécutions du worker ; l'admin n'affiche que des totaux journaliers des tâches événementielles ; **sans archive** |
 | `login_attempt` | 12 mois | — | — | suivi des liens de connexion (écran « Connexions ») ; les jetons inconnus orphelins sont retirés quel que soit leur âge |
 | `session` | expirées depuis 7 jours | — | — | sessions Better Auth (IP, user-agent) ; **sans archive** |
 | `verification` | dès expiration | — | — | jetons de connexion, d'activation et de réinitialisation ; **sans archive** |
@@ -650,6 +651,7 @@ Tâches Graphile du worker (`src/server/jobs/tasks/`) :
 - `brevo-unblock-managers` (`20 * * * *`) : copie la liste des contacts bloqués Brevo restreinte aux gestionnaires et débloque ceux désabonnés (`unsubscribedVia*`) ; un gestionnaire désabonné est aussi débloqué à sa demande de lien de connexion. Historique dans `brevo_unblock_event` (onglet « Contacts bloqués » de l'administration).
 
 > **Garde-fou anti-spam** : hors `NEXT_PUBLIC_APP_ENV === 'production'`, `send-alert-batch` n'envoie rien et laisse les lignes `pending`.
+> De même, hors production, `report-alert-failures` ne signale rien et le déblocage Brevo des gestionnaires (tâche planifiée et demande de lien) n'appelle jamais Brevo : la base de staging est une copie de la production.
 
 #### `expire-alerts` — Péremption des alertes
 
@@ -923,8 +925,12 @@ Variables d'env requises : `MATOMO_URL`, `MATOMO_TOKEN`, `MATOMO_ID_SITE`
 
 ### Tâches planifiées (worker Graphile)
 
-Les tâches planifiées sont définies dans `src/server/jobs/schedule.ts` (`SCHEDULED_COMMANDS`, plus `SCHEDULED_IN_PROCESS` pour `requeue-pending-alerts` et `report-alert-failures`, voir « Envoi des e-mails d'alerte ») et exécutées par le worker Graphile (`worker` du `Procfile`, `cli/worker.ts`). Les horaires sont en UTC.
-Les migrations Drizzle sont appliquées au déploiement via le hook `postdeploy` défini dans `Procfile`.
+Les tâches planifiées sont définies dans `src/server/jobs/schedule.ts` (`SCHEDULED_COMMANDS`, plus `SCHEDULED_IN_PROCESS` pour les tâches exécutées dans le process du worker : `requeue-pending-alerts`, `report-alert-failures`, `brevo-unblock-managers` — voir « Envoi des e-mails d'alerte » — et `graphile-cleanup`) et exécutées par le worker Graphile (`worker` du `Procfile`, `cli/worker.ts`). Les horaires sont en UTC.
+Les migrations Drizzle, puis celles du schéma `graphile_worker`, sont appliquées au déploiement via le hook `postdeploy` défini dans `Procfile`.
+
+- `graphile-cleanup` (`0 4 * * *`) : supprime les jobs Graphile en échec définitif et les files et identifiants de tâches devenus inutiles.
+- Un échec de tâche du worker remonte dans Sentry ; les tâches planifiées exécutées dans le process (`SCHEDULED_IN_PROCESS`) déclenchent aussi le mail `CRON_FAILURE_EMAILS`, les commandes (`run-cli-command`) l'envoyant déjà elles-mêmes.
+- Éviter de déployer pendant les exécutions planifiées (notamment entre 01:00 et 08:00 UTC) : un déploiement arrête les commandes en cours, qui ne sont pas relancées.
 
 | Cron | Commande | Fréquence |
 |------|----------|-----------|
