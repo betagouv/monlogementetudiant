@@ -106,7 +106,7 @@ export default defineConfig({
             SENTRY_CSP_REPORT_URI: 'https://sentry.example.com/api/1/security/?sentry_key=test',
             AUTH_SECRET: 'test-secret-for-integration-tests',
             SCHOLARSHIP_SURVEY_END_DATE: '2099-12-31',
-            DATABASE_URL: 'postgres://test:test@localhost:5491/mle_test',
+            DATABASE_URL: process.env.DATABASE_URL_TEST ?? 'postgres://test:test@localhost:5491/mle_test',
             BREVO_API_KEY: 'test-brevo-api-key',
             ACCOMMODATION_REPORT_EMAIL: 'signalements@test.local',
             SUPPORT_TICKET_EMAIL: 'tickets@test.local',
