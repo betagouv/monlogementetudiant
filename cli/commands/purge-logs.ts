@@ -65,6 +65,13 @@ const ACTIVITY_LOG_RETENTION_MONTHS = 36
 const IMPORT_JOB_RETENTION_MONTHS = 24
 
 /**
+ * Les tâches événementielles (`send-alert-batch`, `detect-alerts`) écrivent une ligne `job_run` par
+ * exécution, au rythme des envois d'alertes. L'admin n'en montre que des totaux journaliers et le
+ * dernier run : trois mois suffisent.
+ */
+const EVENT_JOB_RUN_RETENTION_MONTHS = 3
+
+/**
  * `tracking_event` alimente le tableau de bord bailleur (`owner-statistics.ts`) : en période `90d`,
  * `countConsultOffer` relit aussi la période précédente (badge d'évolution), soit 180 jours. Sept
  * mois les couvrent avec ~1 mois de marge (purge mensuelle : 7 à 8 mois de données en pratique).
@@ -182,8 +189,12 @@ export const EXPIRED_TARGETS: ExpiredTarget[] = [
   {
     label: 'job_run',
     table: jobRuns,
-    where: () => lt(jobRuns.startedAt, subMonths(new Date(), IMPORT_JOB_RETENTION_MONTHS)),
-    detail: `exécutions de tâches terminées depuis plus de ${IMPORT_JOB_RETENTION_MONTHS} mois`,
+    where: () =>
+      or(
+        lt(jobRuns.startedAt, subMonths(new Date(), IMPORT_JOB_RETENTION_MONTHS)),
+        and(eq(jobRuns.trigger, 'event'), lt(jobRuns.startedAt, subMonths(new Date(), EVENT_JOB_RUN_RETENTION_MONTHS))),
+      ) as SQL,
+    detail: `exécutions planifiées de plus de ${IMPORT_JOB_RETENTION_MONTHS} mois, événementielles de plus de ${EVENT_JOB_RUN_RETENTION_MONTHS} mois`,
   },
 ]
 
