@@ -19,6 +19,10 @@ const JOB_DEFS: Record<string, TJobDef> = {
     label: 'Signalement des alertes en échec',
     description: 'Un mail récapitulatif des alertes étudiantes définitivement non envoyées après 3 tentatives',
   },
+  'brevo-unblock-managers': {
+    label: 'Déblocage Brevo des gestionnaires',
+    description: 'Débloque dans Brevo les gestionnaires désabonnés des e-mails, qui ne pourraient plus recevoir leur lien de connexion',
+  },
   'send-alert-batch': { label: 'Envoi d’alerte étudiante', description: 'Un e-mail par alerte ou par groupe de favoris' },
   'detect-alerts': { label: 'Détection alertes (événementielle)', description: 'Hausses de disponibilité des résidences modifiées' },
   'expire-alerts': {
