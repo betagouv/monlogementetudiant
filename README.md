@@ -644,7 +644,7 @@ Compare la dispo courante au snapshot et crée un job pour chaque hausse (`dispo
 Tâches Graphile du worker (`src/server/jobs/tasks/`) :
 
 - `detect-alerts` : détection déclenchée par les écritures bailleur (`triggerAlertDetection`, best effort).
-- `send-alert-batch` : un mail par lot, lancé 60 s après la première ligne créée (les détections suivantes s'y regroupent), file `alert-send` sérielle (100 ms entre deux envois Brevo), 3 tentatives. Les lignes envoyées passent en `sent` avec un `send_id` commun.
+- `send-alert-batch` : un mail par lot, lancé 60 s après la première ligne créée (les détections suivantes s'y regroupent), file `alert-send` sérielle (100 ms entre deux envois Brevo). Un envoi en échec est replanifié 30 min plus tard, 3 tentatives par ligne. Les lignes envoyées passent en `sent` avec un `send_id` commun.
 - `requeue-pending-alerts` (`5 * * * *`) : remet en file les lots ayant des lignes `pending` depuis plus de 10 minutes.
 - `report-alert-failures` (`15 * * * *`) : un seul mail récapitulatif (`CRON_FAILURE_EMAILS`) pour les lignes définitivement en échec, chacune signalée une fois (`failure_reported_at`).
 
@@ -985,9 +985,10 @@ message d'erreur et une stack tronquée. L'erreur est en parallèle envoyée à 
 Deux natures d'échec déclenchent l'alerte :
 
 - **Crash net** — toute exception non rattrapée qui remonte jusqu'à `cli/index.ts`.
-- **Échec partiel** — le job termine mais des éléments sont passés à la trappe : `result.errors`
-  non vide pour les imports et syncs, alertes étudiantes ayant épuisé leurs `MAX_ATTEMPTS`
-  tentatives (signalées par `report-alert-failures`, un mail agrégé par passage horaire). Le job sort alors en code 1 et apparaît en erreur dans l'admin « Tâches planifiées » et dans les logs du conteneur `worker`, même si sa ligne `import_job` reste en `done` avec son résumé détaillé.
+- **Échec partiel** — le job termine mais des éléments sont passés à la trappe (`result.errors`
+  non vide pour les imports et syncs). Le job sort alors en code 1 et apparaît en erreur dans l'admin « Tâches planifiées » et dans les logs du conteneur `worker`, même si sa ligne `import_job` reste en `done` avec son résumé détaillé.
+
+Les alertes étudiantes suivent leur propre circuit : un envoi Brevo en échec est retenté 30 min plus tard, jusqu'à `MAX_ATTEMPTS` tentatives. Les lignes définitivement en échec sont signalées par `report-alert-failures`, en un seul mail récapitulatif par passage horaire ; chaque ligne n'est signalée qu'une fois, et seulement si ce mail est bien parti.
 
 Il n'y a **pas d'anti-flood** : un échec = un mail. Un job qui casse durablement enverra donc
 autant de mails qu'il a d'exécutions.

@@ -4,7 +4,7 @@ import { accommodations, alertJobs, jobRuns } from '~/server/db/schema'
 import { reportAlertFailures } from '~/server/jobs/tasks/report-alert-failures'
 import { requeuePendingAlerts } from '~/server/jobs/tasks/requeue-pending-alerts'
 import { sendAlertBatchTask } from '~/server/jobs/tasks/send-alert-batch'
-import { detectAlertJobs } from '~/server/services/alert-detector'
+import { backfillAlertJobs, detectAlertJobs, enqueueJobsForNewAlert } from '~/server/services/alert-detector'
 import { sendAlertBatch } from '~/server/services/alert-sender'
 import {
   createAcademy,
@@ -77,6 +77,10 @@ async function listGraphileJobs() {
   return [...rows]
 }
 
+async function clearGraphileJobs() {
+  await getTestDb().execute(sql`delete from graphile_worker._private_jobs`)
+}
+
 async function setupCity() {
   const academy = await createAcademy({ name: 'Académie Test' })
   const department = await createDepartment({ academyId: academy.id, code: '75', name: 'Paris' })
@@ -123,7 +127,7 @@ beforeEach(() => {
   mocks.sendStudentAlertEmail.mockReset()
   mocks.sendStudentAlertEmail.mockResolvedValue(undefined)
   mocks.notifyCronFailure.mockReset()
-  mocks.notifyCronFailure.mockResolvedValue(undefined)
+  mocks.notifyCronFailure.mockResolvedValue(true)
 })
 
 describe('détection → tâche send-alert-batch', () => {
@@ -190,7 +194,7 @@ describe('sendAlertBatch', () => {
 
     const result = await sendAlertBatch({ kind: 'alert', studentAlertId: alert.id }, { number: 1, max: 3 })
 
-    expect(result).toEqual({ sent: true, housings: 3 })
+    expect(result).toEqual({ sent: true, housings: 3, failed: false })
     expect(mocks.sendStudentAlertEmail).toHaveBeenCalledTimes(1)
     const [email, params] = mocks.sendStudentAlertEmail.mock.calls[0]
     expect(email).toBe('student-1@test.com')
@@ -227,7 +231,7 @@ describe('sendAlertBatch', () => {
 
     const result = await sendAlertBatch({ kind: 'favorite', userId: 'student-3' }, { number: 1, max: 3 })
 
-    expect(result).toEqual({ sent: true, housings: 2 })
+    expect(result).toEqual({ sent: true, housings: 2, failed: false })
     const [, params] = mocks.sendStudentAlertEmail.mock.calls[0]
     expect(params.alertName).toBe('Mes favoris')
     expect(params.accommodations).toHaveLength(2)
@@ -239,7 +243,7 @@ describe('sendAlertBatch', () => {
 
     await sendAlertBatch(key, { number: 1, max: 3 })
     const again = await sendAlertBatch(key, { number: 1, max: 3 })
-    expect(again).toEqual({ sent: false, housings: 0 })
+    expect(again).toEqual({ sent: false, housings: 0, failed: false })
     expect(mocks.sendStudentAlertEmail).toHaveBeenCalledTimes(1)
 
     const added = await createAccommodation({ cityId: city.id, geom: POINT_INSIDE, published: true, name: 'Nouvelle' })
@@ -253,42 +257,67 @@ describe('sendAlertBatch', () => {
   })
 
   it('lot vide : rien envoyé', async () => {
-    expect(await sendAlertBatch({ kind: 'favorite', userId: 'nobody' }, { number: 1, max: 3 })).toEqual({ sent: false, housings: 0 })
+    expect(await sendAlertBatch({ kind: 'favorite', userId: 'nobody' }, { number: 1, max: 3 })).toEqual({
+      sent: false,
+      housings: 0,
+      failed: false,
+    })
     expect(mocks.sendStudentAlertEmail).not.toHaveBeenCalled()
   })
 
-  it('échec Brevo : pending tant que des tentatives restent, failed à la dernière', async () => {
+  it('échec Brevo : pending et relance dans 30 min tant que des tentatives restent, failed à la dernière', async () => {
     const { alert } = await createAlertWithJobs(['alert', 'similar'])
     const key = { kind: 'alert', studentAlertId: alert.id } as const
     mocks.sendStudentAlertEmail.mockRejectedValue(new Error('Brevo HS'))
 
-    await expect(sendAlertBatch(key, { number: 1, max: 3 })).rejects.toThrow('Brevo HS')
+    const before = Date.now()
+    expect(await sendAlertBatch(key, { number: 1, max: 3 })).toEqual({ sent: false, housings: 0, failed: true })
     let jobs = await jobsOf(alert.id)
     expect(jobs.every((j) => j.status === 'pending' && j.attempts === 1 && j.error === 'Brevo HS')).toBe(true)
     expect(jobs[0].sendId).not.toBeNull()
+    const queued = await listGraphileJobs()
+    expect(queued).toHaveLength(1)
+    expect(queued[0]).toMatchObject({ task_identifier: 'send-alert-batch', key: `alert:${alert.id}`, queue_name: 'alert-send' })
+    const delay = new Date(queued[0].run_at).getTime() - before
+    expect(delay).toBeGreaterThanOrEqual(30 * 60_000)
+    expect(delay).toBeLessThan(31 * 60_000)
 
-    await expect(sendAlertBatch(key, { number: 2, max: 3 })).rejects.toThrow('Brevo HS')
-    await expect(sendAlertBatch(key, { number: 3, max: 3 })).rejects.toThrow('Brevo HS')
+    await sendAlertBatch(key, { number: 1, max: 3 })
+    await clearGraphileJobs()
+    expect(await sendAlertBatch(key, { number: 1, max: 3 })).toEqual({ sent: false, housings: 0, failed: true })
     jobs = await jobsOf(alert.id)
     expect(jobs.every((j) => j.status === 'failed' && j.attempts === 3)).toBe(true)
+    expect(await listGraphileJobs()).toHaveLength(0)
   })
 
-  it('dernière tentative de la tâche : une ligne arrivée en cours de route reste pending', async () => {
+  it('une ligne arrivée en cours de route garde ses propres tentatives', async () => {
     const { alert, city } = await createAlertWithJobs(['alert'])
     const key = { kind: 'alert', studentAlertId: alert.id } as const
     mocks.sendStudentAlertEmail.mockRejectedValue(new Error('Brevo HS'))
-    await expect(sendAlertBatch(key, { number: 1, max: 3 })).rejects.toThrow()
-    await expect(sendAlertBatch(key, { number: 2, max: 3 })).rejects.toThrow()
+    await sendAlertBatch(key, { number: 1, max: 3 })
+    await sendAlertBatch(key, { number: 1, max: 3 })
     const late = await createAccommodation({ cityId: city.id, geom: POINT_INSIDE, published: true, name: 'Tardive' })
     await getTestDb().insert(alertJobs).values({ userId: 'student-1', studentAlertId: alert.id, accommodationId: late.id, source: 'alert' })
+    await clearGraphileJobs()
 
-    await expect(sendAlertBatch(key, { number: 3, max: 3 })).rejects.toThrow()
+    await sendAlertBatch(key, { number: 1, max: 3 })
 
     const jobs = await jobsOf(alert.id)
     expect(jobs.map((j) => [j.status, j.attempts])).toEqual([
       ['failed', 3],
       ['pending', 1],
     ])
+    expect(await listGraphileJobs()).toHaveLength(1)
+  })
+
+  it('erreur inattendue (hors Brevo) : relancée pour les retries Graphile', async () => {
+    const { alert } = await createAlertWithJobs(['alert'])
+    await getTestDb().execute(sql`alter table alert_job add constraint test_block_send check (send_id is null) not valid`)
+    try {
+      await expect(sendAlertBatch({ kind: 'alert', studentAlertId: alert.id }, { number: 1, max: 3 })).rejects.toThrow()
+    } finally {
+      await getTestDb().execute(sql`alter table alert_job drop constraint test_block_send`)
+    }
   })
 
   it('hors production : aucun appel Brevo, lignes inchangées', async () => {
@@ -297,7 +326,7 @@ describe('sendAlertBatch', () => {
 
     const result = await sendAlertBatch({ kind: 'alert', studentAlertId: alert.id }, { number: 1, max: 3 })
 
-    expect(result).toEqual({ sent: false, housings: 0 })
+    expect(result).toEqual({ sent: false, housings: 0, failed: false })
     expect(mocks.sendStudentAlertEmail).not.toHaveBeenCalled()
     const [job] = await jobsOf(alert.id)
     expect(job).toMatchObject({ status: 'pending', attempts: 0, sendId: null })
@@ -312,7 +341,23 @@ describe('tâche send-alert-batch', () => {
     await sendAlertBatchTask({ kind: 'alert', studentAlertId: alert.id }, helpers)
 
     const [run] = await getTestDb().select().from(jobRuns)
-    expect(run).toMatchObject({ task: 'send-alert-batch', trigger: 'event', status: 'done', metrics: { emails: 1, housings: 2 } })
+    expect(run).toMatchObject({
+      task: 'send-alert-batch',
+      trigger: 'event',
+      status: 'done',
+      metrics: { emails: 1, housings: 2, failed: 0 },
+    })
+  })
+
+  it('échec Brevo : la tâche se termine sans lever et compte l’échec', async () => {
+    const { alert } = await createAlertWithJobs(['alert'])
+    mocks.sendStudentAlertEmail.mockRejectedValue(new Error('Brevo HS'))
+    const helpers = { job: { attempts: 1, max_attempts: 3 } } as Parameters<typeof sendAlertBatchTask>[1]
+
+    await expect(sendAlertBatchTask({ kind: 'alert', studentAlertId: alert.id }, helpers)).resolves.toBeUndefined()
+
+    const [run] = await getTestDb().select().from(jobRuns)
+    expect(run).toMatchObject({ status: 'done', metrics: { emails: 0, housings: 0, failed: 1 } })
   })
 })
 
@@ -336,6 +381,18 @@ describe('report-alert-failures', () => {
     expect(await reportAlertFailures()).toBe(0)
     expect(mocks.notifyCronFailure).toHaveBeenCalledTimes(1)
   })
+
+  it('ne marque rien comme signalé si le mail récapitulatif ne part pas', async () => {
+    const { alert } = await createAlertWithJobs(['alert'])
+    await getTestDb().update(alertJobs).set({ status: 'failed', attempts: 3 }).where(eq(alertJobs.studentAlertId, alert.id))
+    mocks.notifyCronFailure.mockResolvedValueOnce(false)
+
+    expect(await reportAlertFailures()).toBe(0)
+    expect((await jobsOf(alert.id))[0].failureReportedAt).toBeNull()
+
+    expect(await reportAlertFailures()).toBe(1)
+    expect(mocks.notifyCronFailure).toHaveBeenCalledTimes(2)
+  })
 })
 
 describe('requeue-pending-alerts', () => {
@@ -356,5 +413,50 @@ describe('requeue-pending-alerts', () => {
 
     expect(await requeuePendingAlerts()).toBe(1)
     expect(await listGraphileJobs()).toHaveLength(1)
+  })
+
+  it('ne fait rien hors production', async () => {
+    mocks.env.NEXT_PUBLIC_APP_ENV = 'staging'
+    const { alert } = await createAlertWithJobs(['alert'])
+    await getTestDb()
+      .update(alertJobs)
+      .set({ createdAt: new Date(Date.now() - 15 * 60_000) })
+      .where(eq(alertJobs.studentAlertId, alert.id))
+
+    expect(await requeuePendingAlerts()).toBe(0)
+    expect(await listGraphileJobs()).toHaveLength(0)
+  })
+})
+
+describe('flux pull : création d’alerte et backfill', () => {
+  it('enqueueJobsForNewAlert met en file le lot de l’alerte', async () => {
+    const city = await setupCity()
+    await createAccommodation({ cityId: city.id, geom: POINT_INSIDE, published: true, priceMin: 400, nbAvailableApartments: 3 })
+    const alert = await createAlert({ userId: 'student-1', cityId: city.id, maxPrice: 500, receiveNotifications: true })
+
+    expect(await enqueueJobsForNewAlert(alert.id)).toBe(1)
+
+    const queued = await listGraphileJobs()
+    expect(queued).toHaveLength(1)
+    expect(queued[0]).toMatchObject({ task_identifier: 'send-alert-batch', key: `alert:${alert.id}` })
+  })
+
+  it('backfillAlertJobs met en file un lot par alerte et par étudiant favori', async () => {
+    const city = await setupCity()
+    const accom = await createAccommodation({
+      cityId: city.id,
+      geom: POINT_INSIDE,
+      published: true,
+      priceMin: 400,
+      nbAvailableApartments: 3,
+    })
+    const alert = await createAlert({ userId: 'student-1', cityId: city.id, maxPrice: 500, receiveNotifications: true })
+    await createFavoriteAccommodation({ userId: 'student-2', accommodationId: accom.id })
+
+    expect((await backfillAlertJobs()).jobsCreated).toBe(2)
+
+    const queued = await listGraphileJobs()
+    expect(queued.map((j) => j.key).sort()).toEqual([`alert:${alert.id}`, 'favorite:student-2'])
+    expect(queued.every((j) => j.task_identifier === 'send-alert-batch')).toBe(true)
   })
 })

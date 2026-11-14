@@ -19,11 +19,12 @@ export async function reportAlertFailures(startedAt: Date = new Date()): Promise
     const batch = row.source === 'favorite' ? 'favoris' : `alerte ${row.studentAlertId}`
     return `alert_job ${row.id} (${batch}) : ${row.error ?? 'erreur inconnue'}`
   })
-  await notifyCronFailure({
+  const notified = await notifyCronFailure({
     job: 'send-alert-batch',
     error: new CronPartialFailure(`${rows.length} alerte(s) définitivement non envoyée(s) après ${MAX_ATTEMPTS} tentatives`, details),
     startedAt,
   })
+  if (!notified) return 0
   await db
     .update(alertJobs)
     .set({ failureReportedAt: new Date() })

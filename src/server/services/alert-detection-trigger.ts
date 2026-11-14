@@ -6,7 +6,7 @@ import { enqueueJob } from '~/server/jobs/enqueue'
 export async function triggerAlertDetection(accommodationIds: number[]): Promise<void> {
   if (accommodationIds.length === 0) return
   try {
-    await enqueueJob(db, 'detect-alerts', { accommodationIds })
+    await enqueueJob(db, 'detect-alerts', { accommodationIds }, { maxAttempts: 3 })
   } catch (error) {
     console.error('[alert-detection] échec de la mise en file de la détection:', error)
     Sentry.captureException(error)
