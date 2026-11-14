@@ -16,7 +16,7 @@ export default function TachesPlanifieesPage() {
           </div>
           <div>
             <h1 className="fr-h3 fr-mb-0">Tâches planifiées</h1>
-            <p className="fr-text-mention--grey fr-text--sm fr-mb-0">Monitoring des jobs cron — imports et synchronisations</p>
+            <p className="fr-text-mention--grey fr-text--sm fr-mb-0">Suivi des exécutions planifiées</p>
           </div>
         </div>
       </div>
