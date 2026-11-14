@@ -19,7 +19,7 @@ export function CronOverviewTable() {
     <div className={styles.card}>
       <div className={styles.cardHeader}>
         <span className={styles.cardTitle}>Vue d'ensemble</span>
-        <span className="fr-text-mention--grey fr-text--sm">{rows?.length ?? 0} tâches planifiées</span>
+        <span className="fr-text-mention--grey fr-text--sm">{rows?.length ?? 0} tâches</span>
       </div>
       <div className={clsx('fr-table', styles.tableWrapper)}>
         <table>
@@ -53,7 +53,7 @@ export function CronOverviewTable() {
                     <div className="fr-text--bold">{def.label}</div>
                     <div className="fr-text-mention--grey fr-text--sm">{def.description}</div>
                   </td>
-                  <td className="fr-text--sm fr-text-mention--grey">{describeCron(cron)}</td>
+                  <td className="fr-text--sm fr-text-mention--grey">{cron ? describeCron(cron) : 'Déclenchée par événement'}</td>
                   <td className="fr-text--sm">
                     {last ? formatDate(last.startedAt) : <span className="fr-text-mention--grey">Jamais</span>}
                   </td>
@@ -68,7 +68,7 @@ export function CronOverviewTable() {
                     )}
                   </td>
                   <td className="fr-text--sm">{metrics || <span className="fr-text-mention--grey">—</span>}</td>
-                  <td className="fr-text--sm fr-text-mention--grey">{formatDate(nextRunAt)}</td>
+                  <td className="fr-text--sm fr-text-mention--grey">{nextRunAt ? formatDate(nextRunAt) : '—'}</td>
                   <td>
                     <div className="fr-flex fr-flex-gap-2v">
                       <Button

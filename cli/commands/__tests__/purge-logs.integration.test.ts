@@ -232,4 +232,17 @@ describe('purge-logs — job_run', () => {
     expect(rows.map((row) => row.task)).toEqual(['recente'])
     expect(uploads).toHaveLength(0)
   })
+
+  it('purge les exécutions événementielles au-delà de 3 mois, sans toucher aux planifiées du même âge', async () => {
+    await db.insert(jobRuns).values([
+      { task: 'evenement-ancien', trigger: 'event', startedAt: subMonths(new Date(), 4) },
+      { task: 'evenement-recent', trigger: 'event', startedAt: subMonths(new Date(), 2) },
+      { task: 'planifiee', trigger: 'scheduled', startedAt: subMonths(new Date(), 4) },
+    ])
+
+    await purgeLogs({ table: 'job_run' })
+
+    const rows = await db.select({ task: jobRuns.task }).from(jobRuns).orderBy(jobRuns.task)
+    expect(rows.map((row) => row.task)).toEqual(['evenement-recent', 'planifiee'])
+  })
 })

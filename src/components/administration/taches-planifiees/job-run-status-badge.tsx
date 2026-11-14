@@ -31,6 +31,11 @@ const METRIC_LABELS: Record<string, string> = {
   anonymized: 'anonymisées',
   dossiersPurged: 'dossiers purgés',
   errors: 'erreurs',
+  emails: 'e-mails',
+  housings: 'logements',
+  failed: 'en échec',
+  triggered: 'hausses détectées',
+  jobsCreated: 'envois créés',
 }
 
 export function formatMetrics(metrics: Record<string, number>): string {

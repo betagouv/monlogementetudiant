@@ -1,4 +1,5 @@
 import type { TImportJobType } from '~/schemas/import-jobs'
+import type { TJobIdentifier } from '~/server/jobs/enqueue'
 import { SCHEDULED_COMMANDS, SCHEDULED_IN_PROCESS } from '~/server/jobs/schedule'
 
 // Tâches qui journalisent encore dans `import_job` : sert de repli tant qu'aucune ligne `job_run` n'existe.
@@ -26,3 +27,7 @@ export const IMPORT_JOB_TYPE_BY_IDENTIFIER: Record<string, TImportJobType> = {
 export const SCHEDULED_JOBS: { identifier: string; cron: string }[] = [...SCHEDULED_COMMANDS, ...SCHEDULED_IN_PROCESS].map(
   ({ identifier, cron }) => ({ identifier, cron }),
 )
+
+export const EVENT_JOBS: { identifier: TJobIdentifier }[] = [{ identifier: 'send-alert-batch' }, { identifier: 'detect-alerts' }]
+
+export const isEventJob = (identifier: string) => EVENT_JOBS.some((job) => job.identifier === identifier)
