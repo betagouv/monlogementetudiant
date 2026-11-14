@@ -12,6 +12,7 @@ export const MAX_ATTEMPTS = 3
 
 const BREVO_DELAY_MS = 100
 const ALERT_BATCH_DELAY_MS = 60_000
+const ALERT_RETRY_DELAY_MS = 30 * 60_000
 export const ALERT_SEND_QUEUE = 'alert-send'
 
 // Un lot = un e-mail : une alerte (alert + similar), ou tous les favoris d'un étudiant.
@@ -31,11 +32,15 @@ export function alertBatchKeyOf(row: {
   return { kind: 'alert', studentAlertId: row.studentAlertId }
 }
 
-export async function enqueueAlertBatch(conn: Pick<typeof db, 'execute'>, key: TAlertBatchKey): Promise<void> {
+export async function enqueueAlertBatch(
+  conn: Pick<typeof db, 'execute'>,
+  key: TAlertBatchKey,
+  options: { runAt?: Date } = {},
+): Promise<void> {
   await enqueueJob(conn, 'send-alert-batch', key, {
     jobKey: alertBatchJobKey(key),
     jobKeyMode: 'preserve_run_at',
-    runAt: new Date(Date.now() + ALERT_BATCH_DELAY_MS),
+    runAt: options.runAt ?? new Date(Date.now() + ALERT_BATCH_DELAY_MS),
     maxAttempts: MAX_ATTEMPTS,
     queueName: ALERT_SEND_QUEUE,
   })
@@ -47,13 +52,12 @@ function batchCondition(key: TAlertBatchKey): SQL | undefined {
     : and(eq(alertJobs.userId, key.userId), eq(alertJobs.source, 'favorite'))
 }
 
-export async function sendAlertBatch(
-  key: TAlertBatchKey,
-  attempt: { number: number; max: number },
-): Promise<{ sent: boolean; housings: number }> {
+export type TAlertBatchResult = { sent: boolean; housings: number; failed: boolean }
+
+export async function sendAlertBatch(key: TAlertBatchKey, attempt: { number: number; max: number }): Promise<TAlertBatchResult> {
   if (env.NEXT_PUBLIC_APP_ENV !== 'production') {
     console.info(`[${env.NEXT_PUBLIC_APP_ENV}] lot ${alertBatchJobKey(key)} non envoyé hors production`)
-    return { sent: false, housings: 0 }
+    return { sent: false, housings: 0, failed: false }
   }
 
   const rows = await db
@@ -79,7 +83,7 @@ export async function sendAlertBatch(
     .where(and(eq(alertJobs.status, 'pending'), batchCondition(key)))
     .orderBy(alertJobs.id)
 
-  if (rows.length === 0) return { sent: false, housings: 0 }
+  if (rows.length === 0) return { sent: false, housings: 0, failed: false }
 
   const [first] = rows
   const alertName = key.kind === 'favorite' ? 'Mes favoris' : (first.alertName ?? 'Mon alerte')
@@ -99,6 +103,8 @@ export async function sendAlertBatch(
   const jobIds = rows.map((row) => row.jobId)
   const sendId = crypto.randomUUID()
 
+  let sendFailed = false
+  let sendError: unknown
   try {
     await sendStudentAlertEmail(first.userEmail, {
       firstName: first.userFirstname ?? '',
@@ -107,27 +113,39 @@ export async function sendAlertBatch(
       suggestions,
     })
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Erreur inconnue'
-    // Une ligne ne passe en échec définitif qu'à sa propre dernière tentative : une ligne arrivée
-    // pendant les relances reste `pending` et sera reprise par `requeue-pending-alerts`.
-    await db
-      .update(alertJobs)
-      .set({
-        attempts: sql`${alertJobs.attempts} + 1`,
-        error: message,
-        sendId,
-        status: sql`case when ${alertJobs.attempts} + 1 >= ${MAX_ATTEMPTS} then 'failed' else 'pending' end::alert_job_status`,
-      })
-      .where(inArray(alertJobs.id, jobIds))
+    sendFailed = true
+    sendError = error
+  } finally {
+    await new Promise((resolve) => setTimeout(resolve, BREVO_DELAY_MS))
+  }
+
+  if (sendFailed) {
+    const message = sendError instanceof Error ? sendError.message : 'Erreur inconnue'
+    // Une ligne ne passe en échec définitif qu'à sa propre dernière tentative ; les autres sont
+    // relancées dans 30 min.
+    await db.transaction(async (tx) => {
+      const updated = await tx
+        .update(alertJobs)
+        .set({
+          attempts: sql`${alertJobs.attempts} + 1`,
+          error: message,
+          sendId,
+          status: sql`case when ${alertJobs.attempts} + 1 >= ${MAX_ATTEMPTS} then 'failed' else 'pending' end::alert_job_status`,
+        })
+        .where(inArray(alertJobs.id, jobIds))
+        .returning({ status: alertJobs.status })
+      if (updated.some((row) => row.status === 'pending')) {
+        await enqueueAlertBatch(tx, key, { runAt: new Date(Date.now() + ALERT_RETRY_DELAY_MS) })
+      }
+    })
     console.error(`  ✗ ${maskEmail(first.userEmail)} — tentative ${attempt.number}/${attempt.max} — ${message}`)
-    throw error
+    return { sent: false, housings: 0, failed: true }
   }
 
   await db
     .update(alertJobs)
     .set({ status: 'sent', sentAt: new Date(), sendId, attempts: sql`${alertJobs.attempts} + 1` })
     .where(inArray(alertJobs.id, jobIds))
-  await new Promise((resolve) => setTimeout(resolve, BREVO_DELAY_MS))
 
-  return { sent: true, housings: housings.length + suggestions.length }
+  return { sent: true, housings: housings.length + suggestions.length, failed: false }
 }
