@@ -31,7 +31,7 @@ vi.mock('~/services/better-auth', () => ({
 }))
 
 import { sendMagicLink } from '~/components/magic-link-sign-in/actions'
-import { deleteBrevoBlockedContact, syncAndUnblockManagers, unblockOwnerOnLogin } from '~/server/services/brevo-unblock'
+import { deleteBrevoBlockedContact, syncBlockedManagers, unblockOwnerOnLogin } from '~/server/services/brevo-unblock'
 
 type TContact = { email: string; reason: string }
 
@@ -95,78 +95,53 @@ describe('deleteBrevoBlockedContact', () => {
   })
 })
 
-describe('syncAndUnblockManagers', () => {
-  it('ne débloque que le gestionnaire désabonné et conserve la copie des autres', async () => {
+describe('syncBlockedManagers', () => {
+  it('copie les gestionnaires bloqués sans débloquer personne', async () => {
     await seedManagers()
     const deleted = stubBrevo(brevoList)
 
-    const result = await syncAndUnblockManagers()
+    const result = await syncBlockedManagers()
 
-    expect(deleted).toEqual(['unsub@bailleur.fr'])
-    expect(result).toEqual({ blocked: 4, unblocked: 1, errors: 0 })
+    expect(deleted).toEqual([])
+    expect(result).toEqual({ blocked: 4 })
     const copy = await db.select().from(brevoBlockedContacts)
-    expect(copy.map((c) => c.email).sort()).toEqual(['blocked@bailleur.fr', 'bounce@bailleur.fr', 'spam@bailleur.fr'])
-    const events = await db.select().from(brevoUnblockEvents)
-    expect(events).toHaveLength(1)
-    expect(events[0]).toMatchObject({
-      email: 'unsub@bailleur.fr',
-      userId: 'm-unsub',
-      reason: 'unsubscribedViaEmail',
-      trigger: 'scheduled',
-      status: 'success',
-    })
+    expect(copy.map((c) => c.email).sort()).toEqual(['blocked@bailleur.fr', 'bounce@bailleur.fr', 'spam@bailleur.fr', 'unsub@bailleur.fr'])
+    expect(await db.select().from(brevoUnblockEvents)).toHaveLength(0)
   })
 
   it('remplace entièrement la copie à chaque synchro', async () => {
     await seedManagers()
     stubBrevo(brevoList)
-    await syncAndUnblockManagers()
+    await syncBlockedManagers()
     stubBrevo([{ email: 'bounce@bailleur.fr', reason: 'hardBounce' }])
-    await syncAndUnblockManagers()
+    await syncBlockedManagers()
     const copy = await db.select().from(brevoBlockedContacts)
     expect(copy.map((c) => c.email)).toEqual(['bounce@bailleur.fr'])
   })
 
-  it('enregistre un succès quand Brevo répond 404', async () => {
+  it('alimente la copie utilisée par le déblocage à la demande de lien', async () => {
     await seedManagers()
-    stubBrevo(brevoList, () => 404)
-    const result = await syncAndUnblockManagers()
-    expect(result.unblocked).toBe(1)
-    const [event] = await db.select().from(brevoUnblockEvents)
-    expect(event.status).toBe('success')
-  })
+    stubBrevo(brevoList)
+    await syncBlockedManagers()
+    const deleted = stubBrevo([])
 
-  it('enregistre une erreur sur 500 et poursuit avec les suivants', async () => {
-    await seedManagers()
-    await createUser({ id: 'm-unsub2', name: 'Unsub2', email: 'unsub2@bailleur.fr', role: 'owner' })
-    const deleted = stubBrevo([...brevoList, { email: 'unsub2@bailleur.fr', reason: 'unsubscribedViaApi' }], (email) =>
-      email === 'unsub@bailleur.fr' ? 500 : 204,
-    )
+    await unblockOwnerOnLogin('unsub@bailleur.fr')
 
-    const result = await syncAndUnblockManagers()
-
-    expect(deleted).toEqual(['unsub@bailleur.fr', 'unsub2@bailleur.fr'])
-    expect(result).toMatchObject({ unblocked: 1, errors: 1 })
-    const events = await db.select().from(brevoUnblockEvents)
-    expect(events.find((e) => e.email === 'unsub@bailleur.fr')).toMatchObject({ status: 'error', error: 'Brevo unblock failed: 500' })
-    expect(events.find((e) => e.email === 'unsub2@bailleur.fr')?.status).toBe('success')
-    const copy = await db.select().from(brevoBlockedContacts)
-    expect(copy.map((c) => c.email)).toContain('unsub@bailleur.fr')
-    expect(copy.map((c) => c.email)).not.toContain('unsub2@bailleur.fr')
+    expect(deleted).toEqual(['unsub@bailleur.fr'])
+    expect((await db.select().from(brevoBlockedContacts)).map((c) => c.email)).not.toContain('unsub@bailleur.fr')
   })
 })
 
 describe('hors production', () => {
-  it('syncAndUnblockManagers ne contacte pas Brevo', async () => {
+  it('syncBlockedManagers ne contacte pas Brevo', async () => {
     mockedEnv.NEXT_PUBLIC_APP_ENV = 'staging'
     await seedManagers()
-    const deleted = stubBrevo(brevoList)
+    stubBrevo(brevoList)
 
-    expect(await syncAndUnblockManagers()).toEqual({ blocked: 0, unblocked: 0, errors: 0 })
+    expect(await syncBlockedManagers()).toEqual({ blocked: 0 })
 
-    expect(deleted).toEqual([])
     expect(fetch).not.toHaveBeenCalled()
-    expect(await db.select().from(brevoUnblockEvents)).toHaveLength(0)
+    expect(await db.select().from(brevoBlockedContacts)).toHaveLength(0)
   })
 
   it('unblockOwnerOnLogin ne contacte pas Brevo', async () => {
@@ -186,32 +161,6 @@ describe('hors production', () => {
     expect(fetch).not.toHaveBeenCalled()
     expect(await db.select().from(brevoUnblockEvents)).toHaveLength(0)
     expect(await db.select().from(brevoBlockedContacts)).toHaveLength(1)
-  })
-})
-
-describe('syncAndUnblockManagers, erreur base de données', () => {
-  it('continue la boucle quand un enregistrement échoue après un DELETE réussi', async () => {
-    await seedManagers()
-    await createUser({ id: 'm-unsub2', name: 'Unsub2', email: 'unsub2@bailleur.fr', role: 'owner' })
-    const deleted = stubBrevo([
-      { email: 'unsub@bailleur.fr', reason: 'unsubscribedViaEmail' },
-      { email: 'unsub2@bailleur.fr', reason: 'unsubscribedViaApi' },
-    ])
-    const original = db.insert.bind(db)
-    let failed = false
-    const spy = vi.spyOn(db, 'insert').mockImplementation(((table: Parameters<typeof db.insert>[0]) => {
-      if (table === brevoUnblockEvents && !failed) {
-        failed = true
-        throw new Error('db down')
-      }
-      return original(table)
-    }) as typeof db.insert)
-
-    const result = await syncAndUnblockManagers()
-    spy.mockRestore()
-
-    expect(deleted).toHaveLength(2)
-    expect(result).toMatchObject({ unblocked: 1, errors: 1 })
   })
 })
 
@@ -348,7 +297,7 @@ describe('admin.reminders.unblockHistory', () => {
         email: 'marie@bailleur.fr',
         userId: 'm1',
         reason: 'unsubscribedViaEmail',
-        trigger: 'scheduled' as const,
+        trigger: 'login' as const,
         status: 'success' as const,
         createdAt: new Date(Date.UTC(2026, 10, 1, 0, i)),
       })),
@@ -360,7 +309,7 @@ describe('admin.reminders.unblockHistory', () => {
     expect(first).toMatchObject({ total: 25, pageCount: 2 })
     expect(first.rows).toHaveLength(20)
     expect(second.rows).toHaveLength(5)
-    expect(first.rows[0]).toMatchObject({ userName: 'Marie Gestionnaire', reason: 'unsubscribedViaEmail', trigger: 'scheduled' })
+    expect(first.rows[0]).toMatchObject({ userName: 'Marie Gestionnaire', reason: 'unsubscribedViaEmail' })
     expect(first.rows[0].createdAt.getTime()).toBeGreaterThan(first.rows[1].createdAt.getTime())
   })
 })

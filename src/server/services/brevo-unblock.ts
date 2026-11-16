@@ -8,7 +8,6 @@ import { fetchBlockedContacts, type TBlockedReason } from '~/server/services/bre
 
 export const UNBLOCKABLE_REASONS: readonly TBlockedReason[] = ['unsubscribedViaEmail', 'unsubscribedViaMA', 'unsubscribedViaApi']
 
-type TUnblockTrigger = (typeof brevoUnblockEvents.$inferInsert)['trigger']
 type TBlockedRow = typeof brevoBlockedContacts.$inferSelect
 
 const UNBLOCK_TIMEOUT_MS = 3000
@@ -27,8 +26,8 @@ export const deleteBrevoBlockedContact = async (email: string): Promise<void> =>
   throw new Error(`Brevo unblock failed: ${response.status}`)
 }
 
-const unblock = async (row: TBlockedRow, trigger: TUnblockTrigger): Promise<boolean> => {
-  const event = { email: row.email, userId: row.userId, reason: row.reason, blockedAt: row.blockedAt, trigger }
+const unblock = async (row: TBlockedRow): Promise<void> => {
+  const event = { email: row.email, userId: row.userId, reason: row.reason, blockedAt: row.blockedAt, trigger: 'login' as const }
   try {
     await deleteBrevoBlockedContact(row.email)
   } catch (error) {
@@ -38,15 +37,19 @@ const unblock = async (row: TBlockedRow, trigger: TUnblockTrigger): Promise<bool
       status: 'error',
       error: error instanceof Error ? error.message : String(error),
     })
-    return false
+    return
   }
   await db.insert(brevoUnblockEvents).values({ ...event, status: 'success' })
   await db.delete(brevoBlockedContacts).where(eq(brevoBlockedContacts.email, row.email))
-  return true
 }
 
-export const syncAndUnblockManagers = async (): Promise<{ blocked: number; unblocked: number; errors: number }> => {
-  if (!isProduction()) return { blocked: 0, unblocked: 0, errors: 0 }
+/**
+ * Copie locale des contacts bloqués Brevo, restreinte aux gestionnaires. Ne débloque personne :
+ * un désabonnement est respecté tant que le gestionnaire ne redemande pas lui-même un lien de
+ * connexion (voir `unblockOwnerOnLogin`, qui s'appuie sur cette copie).
+ */
+export const syncBlockedManagers = async (): Promise<{ blocked: number }> => {
+  if (!isProduction()) return { blocked: 0 }
 
   const contacts = await fetchBlockedContacts()
   const emails = [...new Set(contacts.map((c) => c.email))]
@@ -75,18 +78,7 @@ export const syncAndUnblockManagers = async (): Promise<{ blocked: number; unblo
     if (rows.length > 0) await tx.insert(brevoBlockedContacts).values(rows)
   })
 
-  let unblocked = 0
-  let errors = 0
-  for (const row of rows.filter((r) => isUnblockable(r.reason))) {
-    try {
-      if (await unblock(row, 'scheduled')) unblocked++
-      else errors++
-    } catch (error) {
-      Sentry.captureException(error, { tags: { task: 'brevo-unblock' } })
-      errors++
-    }
-  }
-  return { blocked: rows.length, unblocked, errors }
+  return { blocked: rows.length }
 }
 
 export const unblockOwnerOnLogin = async (email: string): Promise<void> => {
@@ -94,7 +86,7 @@ export const unblockOwnerOnLogin = async (email: string): Promise<void> => {
   try {
     const [row] = await db.select().from(brevoBlockedContacts).where(eq(brevoBlockedContacts.email, email.trim().toLowerCase())).limit(1)
     if (!row || !isUnblockable(row.reason)) return
-    await unblock(row, 'login')
+    await unblock(row)
   } catch (error) {
     Sentry.captureException(error, { tags: { task: 'brevo-unblock' } })
   }

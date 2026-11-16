@@ -1,5 +1,5 @@
 CREATE TYPE "public"."brevo_unblock_status" AS ENUM('success', 'error');--> statement-breakpoint
-CREATE TYPE "public"."brevo_unblock_trigger" AS ENUM('login', 'scheduled');--> statement-breakpoint
+CREATE TYPE "public"."brevo_unblock_trigger" AS ENUM('login');--> statement-breakpoint
 CREATE TABLE "brevo_blocked_contact" (
 	"email" text PRIMARY KEY NOT NULL,
 	"user_id" text NOT NULL,

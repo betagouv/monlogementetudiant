@@ -1,7 +1,7 @@
 import { index, integer, pgEnum, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core'
 import { user } from './auth'
 
-export const brevoUnblockTriggerEnum = pgEnum('brevo_unblock_trigger', ['login', 'scheduled'])
+export const brevoUnblockTriggerEnum = pgEnum('brevo_unblock_trigger', ['login'])
 export const brevoUnblockStatusEnum = pgEnum('brevo_unblock_status', ['success', 'error'])
 
 export const brevoBlockedContacts = pgTable('brevo_blocked_contact', {
