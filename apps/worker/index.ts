@@ -21,7 +21,7 @@ import { importBackup } from './commands/import-backup'
 import { importCrousRents } from './commands/import-crous-rents'
 import { importCrousSurfaces } from './commands/import-crous-surfaces'
 import { importCrousTypologies } from './commands/import-crous-typologies'
-import { migrate } from './commands/migrate'
+import { migrate, postdeploy } from './commands/migrate'
 import { purgeContactRequests } from './commands/purge-contact-requests'
 import { purgeLogs } from './commands/purge-logs'
 import { resetStaleAvailabilityCommand } from './commands/reset-stale-availability'
@@ -92,6 +92,8 @@ program
   .action((opts) => demoteBailleurAdmins({ ...opts, dryRun: !opts.apply }))
 
 program.command('migrate').description('Apply Drizzle migrations').action(migrate)
+
+program.command('postdeploy').description('Hook postdeploy Scalingo : migrations, sauf si SKIP_POSTDEPLOY_MIGRATE').action(postdeploy)
 
 program
   .command('purge-logs')

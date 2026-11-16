@@ -17,3 +17,11 @@ export async function migrate() {
     await closeDb()
   }
 }
+
+export async function postdeploy() {
+  if (env.SKIP_POSTDEPLOY_MIGRATE) {
+    console.log('→ Migrations ignorées (SKIP_POSTDEPLOY_MIGRATE)')
+    return
+  }
+  await migrate()
+}
