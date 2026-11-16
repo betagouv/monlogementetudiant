@@ -3,9 +3,9 @@ import type { Task } from 'graphile-worker'
 import { db } from '~/server/db'
 import { alertJobs } from '~/server/db/schema'
 import { env } from '~/server/env'
+import { CronPartialFailure, notifyCronFailure } from '~/server/jobs/cron-failure'
 import { recordJobMetrics, withJobRun } from '~/server/jobs/job-run'
 import { MAX_ATTEMPTS } from '~/server/services/alert-sender'
-import { CronPartialFailure, notifyCronFailure } from '../../../../cli/cron-failure'
 
 export async function reportAlertFailures(startedAt: Date = new Date()): Promise<number> {
   if (env.NEXT_PUBLIC_APP_ENV !== 'production') return 0

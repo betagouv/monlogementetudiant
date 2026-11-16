@@ -3,6 +3,7 @@ import path from 'node:path'
 import type { Task } from 'graphile-worker'
 import { z } from 'zod'
 import { currentJobRunId, type TJobRunTrigger, withJobRun } from '~/server/jobs/job-run'
+import { CLI_ENTRY, REPO_ROOT } from '~/server/jobs/repo-root'
 
 const ZRunCliCommandPayload = z.object({ args: z.array(z.string()).min(1) })
 
@@ -46,11 +47,6 @@ export async function spawnAndRecord(
 
 export const runCliCommand: Task = async (payload, helpers) => {
   const { args } = ZRunCliCommandPayload.parse(payload)
-  const tsx = path.resolve(process.cwd(), 'node_modules/.bin/tsx')
-  await spawnAndRecord(
-    jobIdentifierFromArgs(args),
-    [tsx, path.resolve(process.cwd(), 'cli/index.ts'), ...args],
-    'scheduled',
-    helpers.abortSignal,
-  )
+  const tsx = path.join(REPO_ROOT, 'node_modules/.bin/tsx')
+  await spawnAndRecord(jobIdentifierFromArgs(args), [tsx, CLI_ENTRY, ...args], 'scheduled', helpers.abortSignal)
 }

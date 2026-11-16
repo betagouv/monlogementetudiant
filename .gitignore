@@ -51,7 +51,7 @@ docs/audit-rgaa/
 
 # Audit RGAA : outillage local, non versionné
 cli/commands/audit-rgaa/
-cli/local/
+apps/worker/local/
 
 # Playwright
 /test-results

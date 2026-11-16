@@ -1,16 +1,18 @@
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import { env } from '~/server/env'
+import { processKindFromArgv } from './process-kind'
 import * as schema from './schema'
 
 const globalForDb = globalThis as unknown as {
   conn: postgres.Sql | undefined
 }
 
-// Toutes les commandes CLI (imports, syncs, purges, crons one-off) passent par `cli/index.ts`.
+// Toutes les commandes CLI (imports, syncs, purges, crons one-off) passent par `apps/worker/index.ts`.
 // En cas de doute on considère le process comme un serveur web : c'est le réglage le plus large.
-const isCliProcess = !process.env.NEXT_RUNTIME && /cli[\\/]index\.ts$/.test(process.argv[1] ?? '')
-const isWorkerProcess = !process.env.NEXT_RUNTIME && /cli[\\/]worker\.ts$/.test(process.argv[1] ?? '')
+const processKind = process.env.NEXT_RUNTIME ? 'web' : processKindFromArgv(process.argv[1])
+const isCliProcess = processKind === 'cli'
+const isWorkerProcess = processKind === 'worker'
 
 /**
  * Le plafond de connexions de la base (140 en prod) est partagé par TOUS les process : chaque

@@ -1,6 +1,6 @@
 import { parseCrontab } from 'graphile-worker'
 import { describe, expect, it } from 'vitest'
-import { CRON_COMMANDS, jobNameFromArgv } from '../../../cli/cron-failure'
+import { CRON_COMMANDS, jobNameFromArgv } from '~/server/jobs/cron-failure'
 import { JOB_IDENTIFIERS } from './enqueue'
 import { buildCrontab, SCHEDULED_COMMANDS, SCHEDULED_IN_PROCESS } from './schedule'
 import { taskList } from './tasks'
@@ -40,7 +40,7 @@ describe('SCHEDULED_COMMANDS', () => {
 
   it('ne planifie que des commandes notifiant leurs échecs', () => {
     for (const { args } of SCHEDULED_COMMANDS) {
-      expect(CRON_COMMANDS.has(jobNameFromArgv(['node', 'cli/index.ts', ...args]))).toBe(true)
+      expect(CRON_COMMANDS.has(jobNameFromArgv(['node', 'apps/worker/index.ts', ...args]))).toBe(true)
     }
   })
 })
