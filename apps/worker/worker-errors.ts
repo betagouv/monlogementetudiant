@@ -12,6 +12,9 @@ export async function reportWorkerJobError({ identifier, error, startedAt }: TWo
   await Promise.allSettled(reports)
 }
 
-export async function reportWorkerFatalError(error: unknown): Promise<void> {
-  await captureCliException(error, { tags: { task: 'worker' } })
+export async function reportWorkerFatalError(error: unknown, startedAt: Date): Promise<void> {
+  await Promise.allSettled([
+    captureCliException(error, { tags: { task: 'worker' } }),
+    notifyCronFailure({ job: 'worker', error, startedAt }),
+  ])
 }

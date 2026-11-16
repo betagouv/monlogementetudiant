@@ -993,7 +993,7 @@ Les deux apps déploient **tout le repo** (même branche, auto-deploy) et partag
 
 **Synchronisation des variables d'env** : toute variable ajoutée ou modifiée sur l'app web l'est aussi sur l'app worker, sinon le worker refuse de démarrer (validation de `src/server/env.ts`). Si les identifiants de l'addon PostgreSQL changent, mettre à jour `DATABASE_URL` sur l'app worker.
 
-Au démarrage, le worker attend que toutes les migrations Drizzle du dépôt soient appliquées (il déploie plus vite que le web, qui migre) ; au-delà de 15 min il s'arrête en erreur et Scalingo le relance.
+Au démarrage, le worker attend que toutes les migrations Drizzle du dépôt soient appliquées (il déploie plus vite que le web, qui migre) ; au-delà de 15 min il s’arrête en erreur (Sentry et mail `CRON_FAILURE_EMAILS`, comme tout arrêt fatal du worker) et Scalingo le relance.
 
 - `graphile-cleanup` (`0 4 * * *`) : supprime les jobs Graphile en échec définitif et les files et identifiants de tâches devenus inutiles.
 - Un échec de tâche du worker remonte dans Sentry ; les tâches planifiées exécutées dans le process (`SCHEDULED_IN_PROCESS`) déclenchent aussi le mail `CRON_FAILURE_EMAILS`, les commandes (`run-cli-command`) l'envoyant déjà elles-mêmes.

@@ -44,10 +44,17 @@ describe('reportWorkerJobError', () => {
 })
 
 describe('reportWorkerFatalError', () => {
-  it('envoie l’arrêt du worker à Sentry, sans mail (Scalingo le relance en boucle)', async () => {
-    await reportWorkerFatalError(error)
+  it('envoie l’arrêt du worker à Sentry et prévient par mail', async () => {
+    await reportWorkerFatalError(error, startedAt)
 
     expect(mocks.captureCliException).toHaveBeenCalledWith(error, { tags: { task: 'worker' } })
-    expect(mocks.notifyCronFailure).not.toHaveBeenCalled()
+    expect(mocks.notifyCronFailure).toHaveBeenCalledWith({ job: 'worker', error, startedAt })
+  })
+
+  it('ne lève jamais, même si le reporting échoue', async () => {
+    mocks.captureCliException.mockRejectedValueOnce(new Error('sentry down'))
+    mocks.notifyCronFailure.mockRejectedValueOnce(new Error('brevo down'))
+
+    await expect(reportWorkerFatalError(error, startedAt)).resolves.toBeUndefined()
   })
 })
