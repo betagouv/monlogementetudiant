@@ -1,3 +1,3 @@
 postdeploy: npx tsx apps/worker/index.ts postdeploy
-web: npm start
+web: pnpm start
 worker: npx tsx apps/worker/worker.ts

@@ -42,8 +42,10 @@ async function main() {
   await closeDb()
 }
 
+const startedAt = new Date()
+
 main().catch(async (error) => {
   console.error('Worker : arrêt sur erreur', error)
-  await reportWorkerFatalError(error)
+  await reportWorkerFatalError(error, startedAt)
   process.exit(1)
 })
