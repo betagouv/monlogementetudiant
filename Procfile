@@ -1,2 +1,2 @@
-postdeploy: npx tsx cli/index.ts migrate
-worker: npx tsx cli/worker.ts
+postdeploy: npx tsx apps/worker/index.ts migrate
+worker: npx tsx apps/worker/worker.ts

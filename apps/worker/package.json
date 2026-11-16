@@ -1,0 +1,13 @@
+{
+  "name": "worker",
+  "private": true,
+  "dependencies": {
+    "commander": "^14.0.3",
+    "ssh2-sftp-client": "^12.1.1",
+    "read-excel-file": "^9.3.10",
+    "@aws-sdk/lib-storage": "^3.1112.0"
+  },
+  "devDependencies": {
+    "@types/ssh2-sftp-client": "^9.0.6"
+  }
+}

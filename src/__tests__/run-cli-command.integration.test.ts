@@ -4,6 +4,7 @@ import path from 'node:path'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { db } from '~/server/db'
 import { jobRuns } from '~/server/db/schema'
+import { CLI_ENTRY, REPO_ROOT } from '~/server/jobs/repo-root'
 import { jobIdentifierFromArgs, spawnAndRecord } from '~/server/jobs/tasks/run-cli-command'
 import { cleanTables } from './helpers/test-db'
 
@@ -40,6 +41,14 @@ describe('spawnAndRecord', () => {
     expect(fs.readFileSync(file, 'utf-8')).toBe(String(row.id))
     fs.rmSync(file)
   })
+
+  it('lance le point d’entrée du CLI depuis la racine du repo', async () => {
+    expect(fs.existsSync(CLI_ENTRY)).toBe(true)
+    await spawnAndRecord('help', [path.join(REPO_ROOT, 'node_modules/.bin/tsx'), CLI_ENTRY, '--help'], 'scheduled')
+
+    const [row] = await db.select().from(jobRuns)
+    expect(row.status).toBe('done')
+  }, 30_000)
 
   it('enregistre une erreur quand l’exécutable est introuvable', async () => {
     await expect(spawnAndRecord('missing', ['/nonexistent/binary'], 'scheduled')).rejects.toThrow()

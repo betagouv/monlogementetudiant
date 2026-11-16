@@ -34,8 +34,8 @@ vi.mock('~/server/services/brevo', async (importOriginal) => ({
   sendStudentAlertEmail: mocks.sendStudentAlertEmail,
 }))
 
-vi.mock('../../cli/cron-failure', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('../../cli/cron-failure')>()),
+vi.mock('~/server/jobs/cron-failure', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('~/server/jobs/cron-failure')>()),
   notifyCronFailure: mocks.notifyCronFailure,
 }))
 

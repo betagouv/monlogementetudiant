@@ -1,0 +1,979 @@
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+import { and, eq } from 'drizzle-orm'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { createAccommodation, createExternalSource, createOwner } from '~/__tests__/fixtures/factories'
+import { createGeocodingStub } from '~/__tests__/helpers/geocoding-stub'
+import { getTestDb } from '~/__tests__/helpers/test-db'
+import { accommodationAddresses, accommodations, externalSources, owners } from '~/server/db/schema'
+import { typologiesByType } from '~/server/lib/typologies'
+
+async function loadTypologies(accommodationId: number) {
+  const row = await getTestDb().query.accommodations.findFirst({
+    where: eq(accommodations.id, accommodationId),
+    with: { typologies: true },
+  })
+  return typologiesByType(row?.typologies ?? [])
+}
+
+// Le géocodage vérifié interroge geo.api.gouv.fr puis la BAN : le stub répond
+// par URL, `mockFetch` ne sert qu'aux téléchargements d'images.
+const geocoding = createGeocodingStub([
+  { postalCode: '75001', city: 'Paris', inseeCode: '75101', address: '10 Rue du Soleil', lat: 48.8566, lng: 2.3522 },
+])
+
+const mockFetch = vi.fn()
+vi.stubGlobal('fetch', (...args: Parameters<typeof fetch>) =>
+  geocoding.handles(args[0]) ? geocoding.respond(args[0]) : mockFetch(...args),
+)
+
+const mockEnv = vi.hoisted(() => ({
+  S3_BUCKET: 'test-bucket' as string,
+  GEOCODING_API_URL: 'https://data.geopf.fr/geocodage/search' as string,
+}))
+
+vi.mock('~/server/env', () => ({ env: mockEnv }))
+
+vi.mock('~/server/services/s3', () => ({
+  uploadFile: vi.fn(async ({ key }: { key: string }) => `https://s3.gra.io.cloud.ovh.net/bucket/${key}`),
+  generateAccommodationKey: vi.fn((ext: string) => `accommodations/mock-uuid.${ext}`),
+}))
+
+vi.mock('~/server/lib/import/geocoder', async (importOriginal) => {
+  const original = await importOriginal<typeof import('~/server/lib/import/geocoder')>()
+  return {
+    ...original,
+    ensureCity: vi.fn(async (_postalCode: string, cityName: string) => ({ name: cityName, id: 0 })),
+  }
+})
+
+const { default: command } = await import('../import-csv')
+
+function writeTmpCsv(rows: string[][], headers?: string[]): string {
+  const defaultHeaders = [
+    'name',
+    'description',
+    'address',
+    'city',
+    'postal_code',
+    'residence_type',
+    'target_audience',
+    'latitude',
+    'longitude',
+    'owner_name',
+    'owner_url',
+    'owner_id',
+    'owner_slug',
+    'nb_total_apartments',
+    'nb_accessible_apartments',
+    'nb_coliving_apartments',
+    'nb_t1',
+    't1_rent_min',
+    't1_rent_max',
+    'nb_t1_bis',
+    't1_bis_rent_min',
+    't1_bis_rent_max',
+    'nb_t2',
+    't2_rent_min',
+    't2_rent_max',
+    'nb_t3',
+    't3_rent_min',
+    't3_rent_max',
+    'nb_t4',
+    't4_rent_min',
+    't4_rent_max',
+    'nb_t5',
+    't5_rent_min',
+    't5_rent_max',
+    'nb_t6',
+    't6_rent_min',
+    't6_rent_max',
+    'nb_t7_more',
+    't7_more_rent_min',
+    't7_more_rent_max',
+    'pictures',
+    'laundry_room',
+    'common_areas',
+    'bike_storage',
+    'parking',
+    'secure_access',
+    'residence_manager',
+    'kitchen_type',
+    'desk',
+    'cooking_plates',
+    'wifi',
+    'microwave',
+    'refrigerator',
+    'bathroom',
+    'accept_waiting_list',
+    'rental_charges_details',
+  ]
+
+  const h = headers ?? defaultHeaders
+  const lines = [h.join(';'), ...rows.map((r) => r.join(';'))]
+  const filePath = path.join(os.tmpdir(), `import-csv-test-${Date.now()}.csv`)
+  fs.writeFileSync(filePath, lines.join('\n'))
+  return filePath
+}
+
+function makeRow(overrides: Record<string, string> = {}): string[] {
+  const defaults: Record<string, string> = {
+    name: 'Résidence Soleil',
+    description: 'Belle résidence étudiante',
+    address: '10 Rue du Soleil',
+    city: 'Paris',
+    postal_code: '75001',
+    residence_type: 'residence-etudiante',
+    target_audience: 'mixte-etudiants-jeunes-actifs',
+    latitude: '48.8566',
+    longitude: '2.3522',
+    owner_name: 'Mon Bailleur',
+    owner_url: 'https://monbailleur.fr',
+    nb_total_apartments: '20',
+    nb_accessible_apartments: '2',
+    nb_coliving_apartments: '3',
+    nb_t1: '10',
+    t1_rent_min: '400',
+    t1_rent_max: '500',
+    nb_t1_bis: '5',
+    t1_bis_rent_min: '450',
+    t1_bis_rent_max: '550',
+    nb_t2: '3',
+    t2_rent_min: '600',
+    t2_rent_max: '700',
+    nb_t3: '',
+    t3_rent_min: '',
+    t3_rent_max: '',
+    nb_t4: '',
+    t4_rent_min: '',
+    t4_rent_max: '',
+    nb_t5: '',
+    t5_rent_min: '',
+    t5_rent_max: '',
+    nb_t6: '',
+    t6_rent_min: '',
+    t6_rent_max: '',
+    nb_t7_more: '',
+    t7_more_rent_min: '',
+    t7_more_rent_max: '',
+    pictures: '',
+    laundry_room: 'oui',
+    common_areas: 'oui',
+    bike_storage: 'non',
+    parking: 'oui',
+    secure_access: 'oui',
+    residence_manager: 'oui',
+    kitchen_type: 'private',
+    desk: 'oui',
+    cooking_plates: 'oui',
+    wifi: 'oui',
+    microwave: 'oui',
+    refrigerator: 'oui',
+    bathroom: 'private',
+    accept_waiting_list: 'oui',
+    rental_charges_details: 'Eau, chauffage et électricité',
+  }
+
+  const merged = { ...defaults, ...overrides }
+
+  const headers = [
+    'name',
+    'description',
+    'address',
+    'city',
+    'postal_code',
+    'residence_type',
+    'target_audience',
+    'latitude',
+    'longitude',
+    'owner_name',
+    'owner_url',
+    'owner_id',
+    'owner_slug',
+    'nb_total_apartments',
+    'nb_accessible_apartments',
+    'nb_coliving_apartments',
+    'nb_t1',
+    't1_rent_min',
+    't1_rent_max',
+    'nb_t1_bis',
+    't1_bis_rent_min',
+    't1_bis_rent_max',
+    'nb_t2',
+    't2_rent_min',
+    't2_rent_max',
+    'nb_t3',
+    't3_rent_min',
+    't3_rent_max',
+    'nb_t4',
+    't4_rent_min',
+    't4_rent_max',
+    'nb_t5',
+    't5_rent_min',
+    't5_rent_max',
+    'nb_t6',
+    't6_rent_min',
+    't6_rent_max',
+    'nb_t7_more',
+    't7_more_rent_min',
+    't7_more_rent_max',
+    'pictures',
+    'laundry_room',
+    'common_areas',
+    'bike_storage',
+    'parking',
+    'secure_access',
+    'residence_manager',
+    'kitchen_type',
+    'desk',
+    'cooking_plates',
+    'wifi',
+    'microwave',
+    'refrigerator',
+    'bathroom',
+    'accept_waiting_list',
+    'rental_charges_details',
+  ]
+
+  return headers.map((h) => merged[h] ?? '')
+}
+
+beforeEach(() => {
+  mockFetch.mockReset()
+  geocoding.reset()
+  mockEnv.S3_BUCKET = 'test-bucket'
+})
+
+describe('import-csv integration', () => {
+  it('creates accommodation and external source from CSV file', async () => {
+    const db = getTestDb()
+
+    const filePath = writeTmpCsv([makeRow()])
+
+    const result = await command.execute({ file: filePath, source: 'test-source', verbose: true })
+
+    expect(result.created).toBe(1)
+    expect(result.errors).toHaveLength(0)
+
+    const [created] = await db.select().from(accommodations).where(eq(accommodations.name, 'Résidence Soleil'))
+    expect(created).toBeDefined()
+
+    const [addr] = await db.select().from(accommodationAddresses).where(eq(accommodationAddresses.accommodationId, created!.id))
+    expect(addr.postalCode).toBe('75001')
+    expect(created!.residenceType).toBe('residence-etudiante')
+    expect(created!.targetAudience).toBe('mixte-etudiants-jeunes-actifs')
+    expect(created!.published).toBe(true)
+    const typos = await loadTypologies(created!.id)
+    expect(typos.t1?.nbTotal).toBe(10)
+    expect(typos.t1_bis?.nbTotal).toBe(5)
+    expect(typos.t2?.nbTotal).toBe(3)
+    expect(typos.t1?.priceMin).toBe(400)
+    expect(typos.t1?.priceMax).toBe(500)
+    expect(created!.priceMin).toBe(400)
+    expect(created!.nbTotalApartments).toBe(20)
+    expect(created!.nbAccessibleApartments).toBe(2)
+    expect(created!.nbColivingApartments).toBe(3)
+    expect(created!.laundryRoom).toBe(true)
+    expect(created!.commonAreas).toBe(true)
+    expect(created!.bikeStorage).toBe(false)
+    expect(created!.parking).toBe(true)
+    expect(created!.secureAccess).toBe(true)
+    expect(created!.residenceManager).toBe(true)
+    expect(created!.kitchenType).toBe('private')
+    expect(created!.desk).toBe(true)
+    expect(created!.cookingPlates).toBe(true)
+    expect(created!.wifi).toBe(true)
+    expect(created!.microwave).toBe(true)
+    expect(created!.refrigerator).toBe(true)
+    expect(created!.bathroom).toBe('private')
+    expect(created!.acceptWaitingList).toBe(true)
+    expect(created!.rentalChargesDetails).toBe('Eau, chauffage et électricité')
+    expect(created!.externalUrl).toBe('https://monbailleur.fr')
+
+    const sources = await db.select().from(externalSources).where(eq(externalSources.source, 'test-source'))
+    expect(sources).toHaveLength(1)
+    expect(sources[0].accommodationId).toBe(created!.id)
+  })
+
+  it('creates owner from CSV data', async () => {
+    const db = getTestDb()
+
+    const filePath = writeTmpCsv([makeRow({ owner_name: 'Nouveau Bailleur', owner_url: 'https://nouveau.fr' })])
+
+    await command.execute({ file: filePath, source: 'test-owner' })
+
+    const ownerRows = await db.select().from(owners).where(eq(owners.name, 'Nouveau Bailleur'))
+    expect(ownerRows).toHaveLength(1)
+    expect(ownerRows[0].url).toBe('https://nouveau.fr')
+  })
+
+  it('resolves the owner by id, ignoring a stale owner_name', async () => {
+    const db = getTestDb()
+
+    const owner = await createOwner({ name: 'Bailleur Renommé', slug: 'bailleur-renomme' })
+
+    const filePath = writeTmpCsv([makeRow({ owner_id: String(owner.id), owner_name: 'Ancien Nom' })])
+    const result = await command.execute({ file: filePath, source: 'test-owner-id' })
+
+    expect(result.errors).toHaveLength(0)
+    expect(result.ownerId).toBe(owner.id)
+
+    const [created] = await db.select().from(accommodations).where(eq(accommodations.ownerId, owner.id))
+    expect(created).toBeDefined()
+
+    // Le nom obsolète du CSV ne doit pas créer de bailleur.
+    expect(await db.select().from(owners).where(eq(owners.name, 'Ancien Nom'))).toHaveLength(0)
+  })
+
+  it('resolves the owner by slug, ignoring a stale owner_name', async () => {
+    const db = getTestDb()
+
+    const owner = await createOwner({ name: 'Bailleur Slug', slug: 'bailleur-slug' })
+
+    const filePath = writeTmpCsv([makeRow({ owner_slug: 'bailleur-slug', owner_name: 'Ancien Nom' })])
+    const result = await command.execute({ file: filePath, source: 'test-owner-slug' })
+
+    expect(result.errors).toHaveLength(0)
+    expect(result.ownerId).toBe(owner.id)
+    expect(await db.select().from(owners).where(eq(owners.name, 'Ancien Nom'))).toHaveLength(0)
+  })
+
+  it('fails without importing anything when owner_id is unknown', async () => {
+    const db = getTestDb()
+
+    const filePath = writeTmpCsv([makeRow({ name: 'Résidence Fantôme', owner_id: '999999' })])
+
+    await expect(command.execute({ file: filePath, source: 'test-owner-unknown' })).rejects.toThrow('Bailleur introuvable : id=999999')
+
+    expect(await db.select().from(accommodations).where(eq(accommodations.name, 'Résidence Fantôme'))).toHaveLength(0)
+    expect(await db.select().from(externalSources).where(eq(externalSources.source, 'test-owner-unknown'))).toHaveLength(0)
+  })
+
+  it('fails when owner_slug is unknown', async () => {
+    const filePath = writeTmpCsv([makeRow({ owner_slug: 'bailleur-inexistant' })])
+
+    await expect(command.execute({ file: filePath, source: 'test-slug-unknown' })).rejects.toThrow(
+      'Bailleur introuvable : slug=bailleur-inexistant',
+    )
+  })
+
+  it('reuses existing owner', async () => {
+    const db = getTestDb()
+
+    await createOwner({ name: 'Mon Bailleur', slug: 'mon-bailleur' })
+
+    const filePath = writeTmpCsv([makeRow()])
+    await command.execute({ file: filePath, source: 'test-reuse' })
+
+    const ownerRows = await db.select().from(owners).where(eq(owners.name, 'Mon Bailleur'))
+    expect(ownerRows).toHaveLength(1)
+  })
+
+  it('updates existing accommodation on re-import', async () => {
+    const db = getTestDb()
+
+    const filePath1 = writeTmpCsv([makeRow({ name: 'Résidence Lune', nb_t1: '10' })])
+    await command.execute({ file: filePath1, source: 'test-update' })
+
+    const filePath2 = writeTmpCsv([makeRow({ name: 'Résidence Lune', nb_t1: '20' })])
+    const result = await command.execute({ file: filePath2, source: 'test-update' })
+
+    expect(result.updated).toBe(1)
+    expect(result.created).toBe(0)
+
+    const sources = await db.select().from(externalSources).where(eq(externalSources.source, 'test-update'))
+    expect(sources).toHaveLength(1)
+
+    const acc = await db.select().from(accommodations).where(eq(accommodations.id, sources[0].accommodationId))
+    expect((await loadTypologies(acc[0].id)).t1?.nbTotal).toBe(20)
+  })
+
+  it('uses lat/lng from CSV when present', async () => {
+    const db = getTestDb()
+
+    const filePath = writeTmpCsv([makeRow({ latitude: '43.6047', longitude: '1.4442' })])
+
+    await command.execute({ file: filePath, source: 'test-geo' })
+
+    // No geocoder fetch should have been called
+    expect(mockFetch).not.toHaveBeenCalled()
+
+    const accs = await db.select().from(accommodations)
+    expect(accs).toHaveLength(1)
+  })
+
+  it('falls back to geocoder when lat/lng missing', async () => {
+    const db = getTestDb()
+
+    const filePath = writeTmpCsv([makeRow({ latitude: '', longitude: '' })])
+
+    await command.execute({ file: filePath, source: 'test-geocoder' })
+
+    // Le candidat BAN est validé contre les communes du code postal avant
+    // d'être retenu : les deux endpoints sont donc appelés une fois chacun.
+    expect(geocoding.communesCalls).toHaveLength(1)
+    expect(geocoding.searchCalls).toHaveLength(1)
+    expect(mockFetch).not.toHaveBeenCalled()
+
+    const accs = await db.select().from(accommodations)
+    expect(accs).toHaveLength(1)
+
+    const [addr] = await db.select().from(accommodationAddresses).where(eq(accommodationAddresses.accommodationId, accs[0].id))
+    expect(addr.address).toBe('10 Rue du Soleil')
+    expect(addr.postalCode).toBe('75001')
+  })
+
+  it('dry-run does not modify the database', async () => {
+    const db = getTestDb()
+
+    const filePath = writeTmpCsv([makeRow(), makeRow({ name: 'Résidence Deux' })])
+
+    const result = await command.execute({ file: filePath, source: 'test-dry', dryRun: true, verbose: true })
+
+    expect(result.created).toBe(2)
+
+    const sources = await db.select().from(externalSources).where(eq(externalSources.source, 'test-dry'))
+    expect(sources).toHaveLength(0)
+
+    const ownerRows = await db.select().from(owners)
+    expect(ownerRows).toHaveLength(0)
+  })
+
+  it('respects --limit option', async () => {
+    const filePath = writeTmpCsv([makeRow({ name: 'Résidence A' }), makeRow({ name: 'Résidence B' }), makeRow({ name: 'Résidence C' })])
+
+    const result = await command.execute({ file: filePath, source: 'test-limit', dryRun: true, limit: 1 })
+
+    expect(result.created).toBe(1)
+  })
+
+  it('handles mixed create/update', async () => {
+    const owner = await createOwner({ name: 'Mon Bailleur', slug: 'mon-bailleur-mix' })
+
+    // Create an existing accommodation with known sourceId
+    const existing = await createAccommodation({
+      name: 'Résidence Existante',
+      slug: 'residence-existante',
+      ownerId: owner.id,
+    })
+    await createExternalSource({
+      accommodationId: existing.id,
+      source: 'test-mix',
+      sourceId: existing.externalReference ?? undefined,
+    })
+
+    // sourceId is a hash of name+address+postal_code, so only new rows are imported here
+    const filePath = writeTmpCsv([makeRow({ name: 'Résidence Nouvelle 1' }), makeRow({ name: 'Résidence Nouvelle 2' })])
+
+    const result = await command.execute({ file: filePath, source: 'test-mix', verbose: true })
+
+    expect(result.created).toBe(2)
+  })
+
+  it('parses boolean values correctly', async () => {
+    const db = getTestDb()
+
+    const filePath = writeTmpCsv([
+      makeRow({
+        laundry_room: 'vrai',
+        common_areas: 'true',
+        bike_storage: '1',
+        parking: 'yes',
+        secure_access: 'non',
+        residence_manager: 'false',
+      }),
+    ])
+
+    await command.execute({ file: filePath, source: 'test-bool' })
+
+    const accs = await db.select().from(accommodations)
+    const acc = accs[0]
+    expect(acc.laundryRoom).toBe(true)
+    expect(acc.commonAreas).toBe(true)
+    expect(acc.bikeStorage).toBe(true)
+    expect(acc.parking).toBe(true)
+    expect(acc.secureAccess).toBe(false)
+    expect(acc.residenceManager).toBe(false)
+  })
+
+  it('parses digit values with euro sign and commas', async () => {
+    const db = getTestDb()
+
+    const filePath = writeTmpCsv([
+      makeRow({
+        t1_rent_min: '400€',
+        t1_rent_max: '500,00',
+        nb_t1: '10',
+      }),
+    ])
+
+    await command.execute({ file: filePath, source: 'test-digit' })
+
+    const accs = await db.select().from(accommodations)
+    const digitTypos = await loadTypologies(accs[0].id)
+    expect(digitTypos.t1?.priceMin).toBe(400)
+    expect(digitTypos.t1?.priceMax).toBe(500)
+    expect(digitTypos.t1?.nbTotal).toBe(10)
+  })
+
+  it('handles pictures with S3 URLs from current bucket (kept as-is)', async () => {
+    const db = getTestDb()
+
+    mockEnv.S3_BUCKET = 'monlogementetudiant-s3-staging'
+    const s3Url = 'https://monlogementetudiant-s3-staging.s3.gra.io.cloud.ovh.net/accommodations/image1.jpg'
+    const filePath = writeTmpCsv([makeRow({ pictures: s3Url })])
+
+    await command.execute({ file: filePath, source: 'test-s3-pic' })
+
+    const accs = await db.select().from(accommodations)
+    expect(accs[0].imagesUrls).toContain(s3Url)
+    // Should NOT have fetched the image since it's already on our bucket
+    expect(mockFetch).not.toHaveBeenCalled()
+  })
+
+  it('handles pictures with external URLs (re-uploaded)', async () => {
+    const db = getTestDb()
+
+    // Mock the external image download
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      arrayBuffer: async () => new ArrayBuffer(100),
+    })
+
+    const filePath = writeTmpCsv([makeRow({ pictures: 'https://flatbay.fr/images/photo.jpg' })])
+
+    await command.execute({ file: filePath, source: 'test-ext-pic' })
+
+    expect(mockFetch).toHaveBeenCalledWith('https://flatbay.fr/images/photo.jpg')
+
+    const accs = await db.select().from(accommodations)
+    expect(accs[0].imagesUrls).toHaveLength(1)
+    expect(accs[0].imagesUrls![0]).toContain('s3.gra.io.cloud.ovh.net')
+  })
+
+  it('handles multiple pictures separated by pipe', async () => {
+    const db = getTestDb()
+
+    mockEnv.S3_BUCKET = 'monlogementetudiant-s3-staging'
+    const s3Url1 = 'https://monlogementetudiant-s3-staging.s3.gra.io.cloud.ovh.net/img1.jpg'
+    const s3Url2 = 'https://monlogementetudiant-s3-staging.s3.gra.io.cloud.ovh.net/img2.jpg'
+    const filePath = writeTmpCsv([makeRow({ pictures: `${s3Url1}|${s3Url2}` })])
+
+    await command.execute({ file: filePath, source: 'test-multi-pic' })
+
+    const accs = await db.select().from(accommodations)
+    expect(accs[0].imagesUrls).toHaveLength(2)
+  })
+
+  it('re-uploads staging S3 images when running in prod', async () => {
+    const db = getTestDb()
+
+    // Simulate prod environment with prod bucket
+    mockEnv.S3_BUCKET = 'monlogementetudiant-s3'
+
+    // Image URL from staging bucket
+    const stagingUrl = 'https://monlogementetudiant-s3-staging.s3.gra.io.cloud.ovh.net/accommodations/image1.jpg'
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      arrayBuffer: async () => new ArrayBuffer(100),
+    })
+
+    const filePath = writeTmpCsv([makeRow({ pictures: stagingUrl })])
+
+    await command.execute({ file: filePath, source: 'test-staging-to-prod' })
+
+    // Should have fetched (re-downloaded) the staging image
+    expect(mockFetch).toHaveBeenCalledWith(stagingUrl)
+
+    const accs = await db.select().from(accommodations)
+    expect(accs[0].imagesUrls).toHaveLength(1)
+    // The URL should now point to our (mocked) prod bucket, not staging
+    expect(accs[0].imagesUrls![0]).not.toContain('staging')
+  })
+
+  it('handles BOM-encoded CSV', async () => {
+    const headers = [
+      'name',
+      'description',
+      'address',
+      'city',
+      'postal_code',
+      'residence_type',
+      'target_audience',
+      'latitude',
+      'longitude',
+      'owner_name',
+      'owner_url',
+      'owner_id',
+      'owner_slug',
+      'nb_total_apartments',
+      'nb_accessible_apartments',
+      'nb_coliving_apartments',
+      'nb_t1',
+      't1_rent_min',
+      't1_rent_max',
+      'nb_t1_bis',
+      't1_bis_rent_min',
+      't1_bis_rent_max',
+      'nb_t2',
+      't2_rent_min',
+      't2_rent_max',
+      'nb_t3',
+      't3_rent_min',
+      't3_rent_max',
+      'nb_t4',
+      't4_rent_min',
+      't4_rent_max',
+      'nb_t5',
+      't5_rent_min',
+      't5_rent_max',
+      'nb_t6',
+      't6_rent_min',
+      't6_rent_max',
+      'nb_t7_more',
+      't7_more_rent_min',
+      't7_more_rent_max',
+      'pictures',
+      'laundry_room',
+      'common_areas',
+      'bike_storage',
+      'parking',
+      'secure_access',
+      'residence_manager',
+      'kitchen_type',
+      'desk',
+      'cooking_plates',
+      'wifi',
+      'microwave',
+      'refrigerator',
+      'bathroom',
+      'accept_waiting_list',
+    ]
+
+    const row = makeRow({ name: 'Résidence BOM' })
+    const content = '\uFEFF' + headers.join(';') + '\n' + row.join(';')
+    const filePath = path.join(os.tmpdir(), `import-csv-bom-${Date.now()}.csv`)
+    fs.writeFileSync(filePath, content)
+
+    const result = await command.execute({ file: filePath, source: 'test-bom' })
+
+    expect(result.created).toBe(1)
+
+    const db = getTestDb()
+    const accs = await db.select().from(accommodations)
+    expect(accs.find((a) => a.name === 'Résidence BOM')).toBeDefined()
+  })
+
+  it('derives nbTotalApartments from typology when not in CSV', async () => {
+    const db = getTestDb()
+
+    const filePath = writeTmpCsv([
+      makeRow({
+        nb_total_apartments: '',
+        nb_t1: '10',
+        nb_t1_bis: '5',
+        nb_t2: '3',
+      }),
+    ])
+
+    await command.execute({ file: filePath, source: 'test-derived' })
+
+    const accs = await db.select().from(accommodations)
+    expect(accs[0].nbTotalApartments).toBe(18) // 10 + 5 + 3
+  })
+
+  it('throws when --file is missing', async () => {
+    await expect(command.execute({ source: 'test' })).rejects.toThrow('--file')
+  })
+
+  it('throws when --source is missing', async () => {
+    await expect(command.execute({ file: '/tmp/test.csv' })).rejects.toThrow('--source')
+  })
+
+  it('records errors without stopping the import', async () => {
+    const filePath = writeTmpCsv([
+      makeRow({ name: 'Bonne Résidence' }),
+      makeRow({ name: '' }), // will be skipped (empty name)
+      makeRow({ name: 'Autre Résidence' }),
+    ])
+
+    const result = await command.execute({ file: filePath, source: 'test-errors', verbose: true })
+
+    expect(result.created).toBe(2)
+    expect(result.skipped).toBe(1)
+  })
+
+  it('slug must not change on re-import with same name', async () => {
+    const db = getTestDb()
+
+    const filePath1 = writeTmpCsv([makeRow({ name: 'Résidence Stabilité' })])
+    await command.execute({ file: filePath1, source: 'slug-test' })
+
+    const [created] = await db.select().from(accommodations).where(eq(accommodations.name, 'Résidence Stabilité'))
+    expect(created).toBeDefined()
+    const originalSlug = created!.slug
+
+    // Second import: update (same source, same name)
+    const filePath2 = writeTmpCsv([makeRow({ name: 'Résidence Stabilité' })])
+    const result = await command.execute({ file: filePath2, source: 'slug-test' })
+    expect(result.updated).toBe(1)
+
+    const [updated] = await db.select().from(accommodations).where(eq(accommodations.id, created!.id))
+    expect(updated!.slug).toBe(originalSlug)
+  })
+
+  it('handles CSV with code column for sourceId', async () => {
+    const db = getTestDb()
+
+    const headers = [
+      'code',
+      'name',
+      'description',
+      'address',
+      'city',
+      'postal_code',
+      'residence_type',
+      'target_audience',
+      'latitude',
+      'longitude',
+      'owner_name',
+      'owner_url',
+      'owner_id',
+      'owner_slug',
+      'nb_total_apartments',
+      'nb_accessible_apartments',
+      'nb_coliving_apartments',
+      'nb_t1',
+      't1_rent_min',
+      't1_rent_max',
+      'nb_t1_bis',
+      't1_bis_rent_min',
+      't1_bis_rent_max',
+      'nb_t2',
+      't2_rent_min',
+      't2_rent_max',
+      'nb_t3',
+      't3_rent_min',
+      't3_rent_max',
+      'nb_t4',
+      't4_rent_min',
+      't4_rent_max',
+      'nb_t5',
+      't5_rent_min',
+      't5_rent_max',
+      'nb_t6',
+      't6_rent_min',
+      't6_rent_max',
+      'nb_t7_more',
+      't7_more_rent_min',
+      't7_more_rent_max',
+      'pictures',
+      'laundry_room',
+      'common_areas',
+      'bike_storage',
+      'parking',
+      'secure_access',
+      'residence_manager',
+      'kitchen_type',
+      'desk',
+      'cooking_plates',
+      'wifi',
+      'microwave',
+      'refrigerator',
+      'bathroom',
+      'accept_waiting_list',
+    ]
+
+    const row = ['ABC-123', ...makeRow()]
+    const filePath = writeTmpCsv([row], headers)
+
+    await command.execute({ file: filePath, source: 'test-code' })
+
+    const sources = await db
+      .select()
+      .from(externalSources)
+      .where(and(eq(externalSources.source, 'test-code'), eq(externalSources.sourceId, 'ABC-123')))
+    expect(sources).toHaveLength(1)
+  })
+
+  describe('Zod validation', () => {
+    it('normalizes uppercase kitchen_type and bathroom to lowercase', async () => {
+      const db = getTestDb()
+
+      const filePath = writeTmpCsv([makeRow({ kitchen_type: 'PRIVATE', bathroom: 'SHARED' })])
+
+      const result = await command.execute({ file: filePath, source: 'test-norm-upper' })
+
+      expect(result.created).toBe(1)
+      const accs = await db.select().from(accommodations).where(eq(accommodations.name, 'Résidence Soleil'))
+      expect(accs[0].kitchenType).toBe('private')
+      expect(accs[0].bathroom).toBe('shared')
+    })
+
+    it('normalizes mixed-case and whitespace-padded enum values', async () => {
+      const db = getTestDb()
+
+      const filePath = writeTmpCsv([makeRow({ kitchen_type: '  Private  ', bathroom: 'Shared' })])
+
+      const result = await command.execute({ file: filePath, source: 'test-norm-mixed' })
+
+      expect(result.created).toBe(1)
+      const accs = await db.select().from(accommodations)
+      expect(accs[0].kitchenType).toBe('private')
+      expect(accs[0].bathroom).toBe('shared')
+    })
+
+    it('normalizes uppercase residence_type to lowercase', async () => {
+      const db = getTestDb()
+
+      const filePath = writeTmpCsv([makeRow({ residence_type: 'RESIDENCE-ETUDIANTE' })])
+
+      const result = await command.execute({ file: filePath, source: 'test-norm-residence' })
+
+      expect(result.created).toBe(1)
+      const accs = await db.select().from(accommodations)
+      expect(accs[0].residenceType).toBe('residence-etudiante')
+    })
+
+    it('keeps kitchen_type and bathroom null when CSV is empty', async () => {
+      const db = getTestDb()
+
+      const filePath = writeTmpCsv([makeRow({ kitchen_type: '', bathroom: '' })])
+
+      const result = await command.execute({ file: filePath, source: 'test-norm-empty' })
+
+      expect(result.created).toBe(1)
+      const accs = await db.select().from(accommodations)
+      expect(accs[0].kitchenType).toBeNull()
+      expect(accs[0].bathroom).toBeNull()
+    })
+
+    it('fails the entire import when kitchen_type is not a valid enum value', async () => {
+      const db = getTestDb()
+
+      const filePath = writeTmpCsv([makeRow({ kitchen_type: 'garbage-value' })])
+
+      await expect(command.execute({ file: filePath, source: 'test-fail-kitchen' })).rejects.toThrow(/Validation Zod échouée/)
+
+      const accs = await db.select().from(accommodations)
+      expect(accs).toHaveLength(0)
+    })
+
+    it('fails the entire import when bathroom is not a valid enum value', async () => {
+      const db = getTestDb()
+
+      const filePath = writeTmpCsv([makeRow({ bathroom: 'douche' })])
+
+      await expect(command.execute({ file: filePath, source: 'test-fail-bathroom' })).rejects.toThrow(/Validation Zod échouée/)
+
+      const accs = await db.select().from(accommodations)
+      expect(accs).toHaveLength(0)
+    })
+
+    it('fails the entire import when residence_type is not a valid enum value', async () => {
+      const db = getTestDb()
+
+      const filePath = writeTmpCsv([makeRow({ residence_type: 'unknown-residence-type' })])
+
+      await expect(command.execute({ file: filePath, source: 'test-fail-residence' })).rejects.toThrow(/Validation Zod échouée/)
+
+      const accs = await db.select().from(accommodations)
+      expect(accs).toHaveLength(0)
+    })
+
+    it('aborts the whole import (two-pass: no partial writes) when an invalid value appears on a later row', async () => {
+      const db = getTestDb()
+
+      const filePath = writeTmpCsv([
+        makeRow({ name: 'Résidence Valide' }),
+        makeRow({ name: 'Résidence Invalide', kitchen_type: 'PASTEL' }),
+        makeRow({ name: 'Résidence Jamais Vue' }),
+      ])
+
+      await expect(command.execute({ file: filePath, source: 'test-fail-mid' })).rejects.toThrow(/Ligne 2 - Résidence Invalide/)
+
+      // Two-pass guarantee: NO row should be inserted, including the valid first one
+      const accs = await db.select().from(accommodations)
+      expect(accs).toHaveLength(0)
+
+      // No external_source should exist either
+      const sources = await db.select().from(externalSources).where(eq(externalSources.source, 'test-fail-mid'))
+      expect(sources).toHaveLength(0)
+
+      // No owner should have been created (validation runs before owner creation)
+      const ownerRows = await db.select().from(owners)
+      expect(ownerRows).toHaveLength(0)
+    })
+
+    it('collects all validation errors across rows in a single throw', async () => {
+      const db = getTestDb()
+
+      const filePath = writeTmpCsv([
+        makeRow({ name: 'Résidence A', kitchen_type: 'WRONG_KITCHEN' }),
+        makeRow({ name: 'Résidence B' }), // valid
+        makeRow({ name: 'Résidence C', bathroom: 'WRONG_BATHROOM' }),
+        makeRow({ name: 'Résidence D', residence_type: 'WRONG_RESIDENCE' }),
+      ])
+
+      await expect(command.execute({ file: filePath, source: 'test-collect-errors' })).rejects.toThrow(
+        // The thrown message should mention all 3 invalid rows by line number
+        /Validation Zod échouée \(3 ligne\(s\)\)[\s\S]*Ligne 1[\s\S]*Résidence A[\s\S]*Ligne 3[\s\S]*Résidence C[\s\S]*Ligne 4[\s\S]*Résidence D/,
+      )
+
+      // Two-pass guarantee: NO row inserted
+      const accs = await db.select().from(accommodations)
+      expect(accs).toHaveLength(0)
+    })
+
+    it('does not insert the valid first row when the second row fails validation', async () => {
+      const db = getTestDb()
+
+      const filePath = writeTmpCsv([makeRow({ name: 'Résidence Tout Bon' }), makeRow({ name: 'Résidence Mauvaise', bathroom: 'INVALIDE' })])
+
+      await expect(command.execute({ file: filePath, source: 'test-no-partial' })).rejects.toThrow(/Validation Zod échouée/)
+
+      const tousBon = await db.select().from(accommodations).where(eq(accommodations.name, 'Résidence Tout Bon'))
+      expect(tousBon).toHaveLength(0)
+    })
+
+    it('does not create owner when validation fails', async () => {
+      const db = getTestDb()
+
+      const filePath = writeTmpCsv([makeRow({ owner_name: 'Bailleur Jamais Créé', name: 'Résidence X', kitchen_type: 'INVALID' })])
+
+      await expect(command.execute({ file: filePath, source: 'test-no-owner' })).rejects.toThrow(/Validation Zod échouée/)
+
+      const ownerRows = await db.select().from(owners).where(eq(owners.name, 'Bailleur Jamais Créé'))
+      expect(ownerRows).toHaveLength(0)
+    })
+
+    it('does not call geocoder or upload images when validation fails (fast-fail)', async () => {
+      const filePath = writeTmpCsv([
+        makeRow({
+          latitude: '',
+          longitude: '',
+          pictures: 'https://flatbay.fr/images/photo.jpg',
+          kitchen_type: 'NOPE',
+        }),
+      ])
+
+      await expect(command.execute({ file: filePath, source: 'test-fast-fail' })).rejects.toThrow(/Validation Zod échouée/)
+
+      // Pass 1 happens before pass 2 → geocoder fetch and image download must NOT be called
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it('runs validation in dry-run mode (no DB writes but still throws)', async () => {
+      const db = getTestDb()
+
+      const filePath = writeTmpCsv([makeRow({ kitchen_type: 'invalid' })])
+
+      await expect(command.execute({ file: filePath, source: 'test-dry-fail', dryRun: true })).rejects.toThrow(/Validation Zod échouée/)
+
+      const accs = await db.select().from(accommodations)
+      expect(accs).toHaveLength(0)
+    })
+  })
+})

@@ -14,8 +14,8 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'html', 'json-summary'],
       reportsDirectory: 'coverage',
-      include: ['src/**', 'cli/**'],
-      exclude: ['src/**/*.test.ts', 'cli/**/*.test.ts', 'src/__tests__/**'],
+      include: ['src/**', 'apps/worker/**'],
+      exclude: ['src/**/*.test.ts', 'apps/worker/**/*.test.ts', 'src/__tests__/**'],
     },
     projects: [
       {
@@ -27,8 +27,8 @@ export default defineConfig({
         },
         test: {
           name: 'unit',
-          include: ['src/**/*.test.ts', 'cli/**/*.test.ts'],
-          exclude: ['src/**/*.integration.test.ts', 'cli/**/*.integration.test.ts', 'cli/commands/audit-rgaa/**/*.test.ts'],
+          include: ['src/**/*.test.ts', 'apps/worker/**/*.test.ts'],
+          exclude: ['src/**/*.integration.test.ts', 'apps/worker/**/*.integration.test.ts', 'apps/worker/commands/audit-rgaa/**/*.test.ts'],
           env: {
             BASE_URL: 'http://localhost:3000',
             SENTRY_CSP_REPORT_URI: 'https://sentry.example.com/api/1/security/?sentry_key=test',
@@ -95,7 +95,7 @@ export default defineConfig({
         },
         test: {
           name: 'integration',
-          include: ['src/**/*.integration.test.ts', 'cli/**/*.integration.test.ts'],
+          include: ['src/**/*.integration.test.ts', 'apps/worker/**/*.integration.test.ts'],
           testTimeout: 30_000,
           hookTimeout: 60_000,
           globalSetup: ['src/__tests__/helpers/global-setup-integration.ts'],
