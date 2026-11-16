@@ -29,6 +29,19 @@ test.describe("Fiche d'une résidence", () => {
     await expect(page.getByRole('link', { name: '04 77 00 00 00' })).toHaveAttribute('href', 'tel:+33477000000')
   })
 
+  test('précise que le loyer des colocations est par personne', async ({ page }) => {
+    await page.goto('/trouver-un-logement-etudiant/ville/saint-etienne/residence-e2e-coloc')
+
+    await expect(page.getByText('De 450 à 520 € Par personne Charges comprises')).toBeVisible()
+  })
+
+  test("n'indique pas « par personne » pour les logements individuels", async ({ page }) => {
+    await page.goto(FICHE_CENTRE)
+
+    await expect(page.getByText('De 420 à 520 € Charges comprises')).toBeVisible()
+    await expect(page.getByText(/Par personne/)).toHaveCount(0)
+  })
+
   test('signale une résidence complète', async ({ page }) => {
     await page.goto('/trouver-un-logement-etudiant/ville/saint-etienne/residence-e2e-complete')
 
