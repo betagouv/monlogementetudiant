@@ -36,6 +36,7 @@ const METRIC_LABELS: Record<string, string> = {
   failed: 'en échec',
   triggered: 'hausses détectées',
   jobsCreated: 'envois créés',
+  blocked: 'gestionnaires bloqués',
 }
 
 export function formatMetrics(metrics: Record<string, number>): string {

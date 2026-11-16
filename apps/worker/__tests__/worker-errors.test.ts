@@ -19,7 +19,7 @@ describe('reportWorkerJobError', () => {
   it.each([
     'requeue-pending-alerts',
     'report-alert-failures',
-    'brevo-unblock-managers',
+    'sync-brevo-blocked-managers',
     'graphile-cleanup',
   ])('envoie %s à Sentry et prévient par mail', async (identifier) => {
     await reportWorkerJobError({ identifier, error, startedAt })

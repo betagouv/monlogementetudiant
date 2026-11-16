@@ -13,7 +13,7 @@ import { useAdminBlockedContacts, useAdminUnblockHistory } from '~/hooks/use-adm
 import type { TBlockedReason } from '~/server/services/brevo-reminders'
 import { formatDateTime } from '~/utils/format-admin'
 import styles from '../../../app/(authenticated)/administration/administration.module.css'
-import { BLOCKED_REASON_CODES, BLOCKED_REASON_LABELS, UNBLOCK_STATUS_LABELS, UNBLOCK_TRIGGER_LABELS } from './labels'
+import { BLOCKED_REASON_CODES, BLOCKED_REASON_LABELS, UNBLOCK_STATUS_LABELS } from './labels'
 
 type BlockedContactsData = NonNullable<ReturnType<typeof useAdminBlockedContacts>['data']>
 type BlockedContactRow = BlockedContactsData['rows'][number]
@@ -41,11 +41,6 @@ const historyColumns: ColumnDef<UnblockEventRow, unknown>[] = [
     accessorKey: 'reason',
     header: "Motif d'origine",
     cell: ({ row }) => <span className="fr-text--sm">{row.original.reason ? BLOCKED_REASON_LABELS[row.original.reason] : '—'}</span>,
-  },
-  {
-    accessorKey: 'trigger',
-    header: 'Déclencheur',
-    cell: ({ row }) => <span className="fr-text--sm">{UNBLOCK_TRIGGER_LABELS[row.original.trigger]}</span>,
   },
   {
     accessorKey: 'status',
@@ -178,7 +173,7 @@ export const BlockedContactsTab = ({ from, to, page, reason, onReasonChange, onP
 
       <h2 className="fr-h5 fr-mt-5w">Historique des déblocages</h2>
       <p className="fr-text--sm fr-text-mention--grey fr-mb-2w">
-        Les gestionnaires désabonnés sont débloqués automatiquement chaque heure, ou dès leur demande de lien de connexion.
+        Un gestionnaire désabonné est débloqué automatiquement lorsqu’il demande un lien de connexion.
       </p>
       {history.isError && <Alert severity="error" title="Erreur de chargement" description={history.error.message} className="fr-mb-3w" />}
       <AdminDataTable

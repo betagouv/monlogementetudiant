@@ -694,10 +694,10 @@ Tâches Graphile du worker (`src/server/jobs/tasks/`) :
 - `send-alert-batch` : un mail par lot, lancé 60 s après la première ligne créée (les détections suivantes s'y regroupent), file `alert-send` sérielle (100 ms entre deux envois Brevo). Un envoi en échec est replanifié 30 min plus tard, 3 tentatives par ligne. Les lignes envoyées passent en `sent` avec un `send_id` commun.
 - `requeue-pending-alerts` (`5 * * * *`) : remet en file les lots ayant des lignes `pending` depuis plus de 10 minutes.
 - `report-alert-failures` (`15 * * * *`) : un seul mail récapitulatif (`CRON_FAILURE_EMAILS`) pour les lignes définitivement en échec, chacune signalée une fois (`failure_reported_at`).
-- `brevo-unblock-managers` (`20 * * * *`) : copie la liste des contacts bloqués Brevo restreinte aux gestionnaires et débloque ceux désabonnés (`unsubscribedVia*`) ; un gestionnaire désabonné est aussi débloqué à sa demande de lien de connexion. Historique dans `brevo_unblock_event` (onglet « Contacts bloqués » de l'administration).
+- `sync-brevo-blocked-managers` (`20 * * * *`) : copie la liste des contacts bloqués Brevo restreinte aux gestionnaires (`brevo_blocked_contact`), sans débloquer personne. Un gestionnaire désabonné (`unsubscribedVia*`) n'est débloqué que lorsqu'il demande lui-même un lien de connexion : son désabonnement est respecté sinon. Historique dans `brevo_unblock_event` (onglet « Contacts bloqués » de l'administration).
 
 > **Garde-fou anti-spam** : hors `NEXT_PUBLIC_APP_ENV === 'production'`, `send-alert-batch` n'envoie rien et laisse les lignes `pending`.
-> De même, hors production, `report-alert-failures` ne signale rien et le déblocage Brevo des gestionnaires (tâche planifiée et demande de lien) n'appelle jamais Brevo : la base de staging est une copie de la production.
+> De même, hors production, `report-alert-failures` ne signale rien et ni la copie des gestionnaires bloqués ni le déblocage à la demande de lien n'appellent Brevo : la base de staging est une copie de la production.
 
 #### `expire-alerts` — Péremption des alertes
 
@@ -971,7 +971,7 @@ Variables d'env requises : `MATOMO_URL`, `MATOMO_TOKEN`, `MATOMO_ID_SITE`
 
 ### Tâches planifiées (worker Graphile)
 
-Les tâches planifiées sont définies dans `src/server/jobs/schedule.ts` (`SCHEDULED_COMMANDS`, plus `SCHEDULED_IN_PROCESS` pour les tâches exécutées dans le process du worker : `requeue-pending-alerts`, `report-alert-failures`, `brevo-unblock-managers` — voir « Envoi des e-mails d'alerte » — et `graphile-cleanup`) et exécutées par le worker Graphile (`worker` du `Procfile`, `apps/worker/worker.ts`). Les horaires sont en UTC.
+Les tâches planifiées sont définies dans `src/server/jobs/schedule.ts` (`SCHEDULED_COMMANDS`, plus `SCHEDULED_IN_PROCESS` pour les tâches exécutées dans le process du worker : `requeue-pending-alerts`, `report-alert-failures`, `sync-brevo-blocked-managers` — voir « Envoi des e-mails d'alerte » — et `graphile-cleanup`) et exécutées par le worker Graphile (`worker` du `Procfile`, `apps/worker/worker.ts`). Les horaires sont en UTC.
 Les migrations Drizzle, puis celles du schéma `graphile_worker`, sont appliquées au déploiement par l'app web, via le hook `postdeploy` du `Procfile` (`apps/worker/index.ts postdeploy`).
 
 #### Apps Scalingo du worker

@@ -193,7 +193,6 @@ export const adminRemindersRouter = createTRPCRouter({
         createdAt: brevoUnblockEvents.createdAt,
         email: brevoUnblockEvents.email,
         reason: brevoUnblockEvents.reason,
-        trigger: brevoUnblockEvents.trigger,
         status: brevoUnblockEvents.status,
         firstname: user.firstname,
         lastname: user.lastname,
@@ -211,7 +210,6 @@ export const adminRemindersRouter = createTRPCRouter({
       email: event.email,
       userName: [event.firstname, event.lastname].filter(Boolean).join(' ').trim() || event.accountName || null,
       reason: isBlockedReason(event.reason) ? event.reason : null,
-      trigger: event.trigger,
       status: event.status,
     }))
     return { rows, total, pageCount: Math.ceil(total / UNBLOCK_PAGE_SIZE) }

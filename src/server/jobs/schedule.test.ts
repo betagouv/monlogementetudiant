@@ -47,11 +47,11 @@ describe('SCHEDULED_COMMANDS', () => {
 })
 
 describe('SCHEDULED_IN_PROCESS', () => {
-  it('planifie la reprise, le signalement des alertes, le déblocage Brevo et le nettoyage graphile', () => {
+  it('planifie la reprise, le signalement des alertes, la copie des gestionnaires bloqués Brevo et le nettoyage graphile', () => {
     expect(SCHEDULED_IN_PROCESS).toEqual([
       { identifier: 'requeue-pending-alerts', cron: '5 * * * *' },
       { identifier: 'report-alert-failures', cron: '15 * * * *' },
-      { identifier: 'brevo-unblock-managers', cron: '20 * * * *' },
+      { identifier: 'sync-brevo-blocked-managers', cron: '20 * * * *' },
       { identifier: 'graphile-cleanup', cron: '0 4 * * *' },
     ])
   })

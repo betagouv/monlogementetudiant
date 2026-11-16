@@ -6380,8 +6380,7 @@
       "name": "brevo_unblock_trigger",
       "schema": "public",
       "values": [
-        "login",
-        "scheduled"
+        "login"
       ]
     },
     "public.job_run_status": {

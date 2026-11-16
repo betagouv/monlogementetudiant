@@ -19,9 +19,9 @@ const JOB_DEFS: Record<string, TJobDef> = {
     label: 'Signalement des alertes en échec',
     description: 'Un mail récapitulatif des alertes étudiantes définitivement non envoyées après 3 tentatives',
   },
-  'brevo-unblock-managers': {
-    label: 'Déblocage Brevo des gestionnaires',
-    description: 'Débloque dans Brevo les gestionnaires désabonnés des e-mails, qui ne pourraient plus recevoir leur lien de connexion',
+  'sync-brevo-blocked-managers': {
+    label: 'Copie des gestionnaires bloqués dans Brevo',
+    description: 'Relève les gestionnaires bloqués dans Brevo ; un désabonné est débloqué à sa prochaine demande de lien de connexion',
   },
   'graphile-cleanup': {
     label: 'Nettoyage de la file des tâches',

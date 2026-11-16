@@ -7,7 +7,7 @@ export const JOB_IDENTIFIERS = [
   'detect-alerts',
   'requeue-pending-alerts',
   'report-alert-failures',
-  'brevo-unblock-managers',
+  'sync-brevo-blocked-managers',
   'graphile-cleanup',
 ] as const
 

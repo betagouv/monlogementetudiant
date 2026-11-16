@@ -28,7 +28,7 @@ export const SCHEDULED_COMMANDS: TScheduledCommand[] = [
 export const SCHEDULED_IN_PROCESS: TScheduledInProcess[] = [
   { identifier: 'requeue-pending-alerts', cron: '5 * * * *' },
   { identifier: 'report-alert-failures', cron: '15 * * * *' },
-  { identifier: 'brevo-unblock-managers', cron: '20 * * * *' },
+  { identifier: 'sync-brevo-blocked-managers', cron: '20 * * * *' },
   { identifier: 'graphile-cleanup', cron: '0 4 * * *' },
 ]
 
