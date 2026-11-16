@@ -5,7 +5,7 @@ const mocks = vi.hoisted(() => ({ captureCliException: vi.fn(), notifyCronFailur
 vi.mock('./sentry', () => ({ captureCliException: mocks.captureCliException }))
 vi.mock('~/server/jobs/cron-failure', () => ({ notifyCronFailure: mocks.notifyCronFailure }))
 
-import { reportWorkerJobError } from './worker-errors'
+import { reportWorkerFatalError, reportWorkerJobError } from './worker-errors'
 
 const startedAt = new Date('2026-11-14T04:00:00Z')
 const error = new Error('boom')
@@ -40,5 +40,14 @@ describe('reportWorkerJobError', () => {
     mocks.notifyCronFailure.mockRejectedValueOnce(new Error('brevo down'))
 
     await expect(reportWorkerJobError({ identifier: 'graphile-cleanup', error, startedAt })).resolves.toBeUndefined()
+  })
+})
+
+describe('reportWorkerFatalError', () => {
+  it('envoie l’arrêt du worker à Sentry, sans mail (Scalingo le relance en boucle)', async () => {
+    await reportWorkerFatalError(error)
+
+    expect(mocks.captureCliException).toHaveBeenCalledWith(error, { tags: { task: 'worker' } })
+    expect(mocks.notifyCronFailure).not.toHaveBeenCalled()
   })
 })

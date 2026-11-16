@@ -6,7 +6,7 @@ import { buildCrontab, SCHEDULED_COMMANDS, SCHEDULED_IN_PROCESS } from '~/server
 import { taskList } from '~/server/jobs/tasks'
 import { initCliSentry } from './sentry'
 import { waitForMigrations } from './wait-for-migrations'
-import { reportWorkerJobError } from './worker-errors'
+import { reportWorkerFatalError, reportWorkerJobError } from './worker-errors'
 
 function graphileConnectionString(): string {
   const url = new URL(env.DATABASE_URL)
@@ -42,7 +42,8 @@ async function main() {
   await closeDb()
 }
 
-main().catch((error) => {
+main().catch(async (error) => {
   console.error('Worker : arrêt sur erreur', error)
+  await reportWorkerFatalError(error)
   process.exit(1)
 })
