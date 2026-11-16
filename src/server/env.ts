@@ -9,7 +9,7 @@ const requiredInProd = isProd ? z.string().min(1) : z.string().optional()
 /** Requis en production seulement — staging n'a pas l'équivalent (backups, par exemple). */
 const requiredInProdOnly = isProdOnly ? z.string().min(1) : z.string().optional()
 
-const envSchema = z.object({
+export const envSchema = z.object({
   // Core
   BASE_URL: z.url(),
   AUTH_SECRET: z.string().min(1),
@@ -19,6 +19,12 @@ const envSchema = z.object({
   // pour la valeur par défaut, qui dépend du type de process : le plafond de la base est partagé
   // entre tous les containers, tous les one-off et toutes les sessions psql.
   DATABASE_POOL_MAX: z.preprocess((v) => (v === '' ? undefined : v), z.coerce.number().int().positive().optional()),
+
+  // À `true` sur les apps worker : seule l'app web migre au déploiement.
+  SKIP_POSTDEPLOY_MIGRATE: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
 
   // Alerting des crons : destinataires du mail envoyé quand un job planifié échoue.
   // Liste séparée par des virgules. Vide (ou absente) = aucun envoi, on se contente d'un

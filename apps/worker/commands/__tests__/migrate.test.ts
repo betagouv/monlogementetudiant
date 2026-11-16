@@ -7,7 +7,7 @@ vi.mock('graphile-worker', () => ({ runMigrations: mocks.graphileMigrate }))
 vi.mock('~/server/db', () => ({ db: {}, closeDb: mocks.closeDb }))
 
 import { env } from '~/server/env'
-import { migrate } from '../migrate'
+import { migrate, postdeploy } from '../migrate'
 
 beforeEach(() => {
   mocks.calls.length = 0
@@ -31,5 +31,24 @@ describe('migrate', () => {
     await expect(migrate()).rejects.toThrow('ko')
     expect(mocks.graphileMigrate).not.toHaveBeenCalled()
     expect(mocks.closeDb).toHaveBeenCalled()
+  })
+})
+
+describe('postdeploy', () => {
+  it('applique les migrations par défaut', async () => {
+    await postdeploy()
+
+    expect(mocks.calls).toEqual(['drizzle', 'graphile', 'close'])
+  })
+
+  it("n'applique rien quand SKIP_POSTDEPLOY_MIGRATE est actif", async () => {
+    env.SKIP_POSTDEPLOY_MIGRATE = true
+    try {
+      await postdeploy()
+    } finally {
+      env.SKIP_POSTDEPLOY_MIGRATE = false
+    }
+
+    expect(mocks.calls).toEqual([])
   })
 })
