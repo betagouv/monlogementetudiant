@@ -11,3 +11,7 @@ export async function reportWorkerJobError({ identifier, error, startedAt }: TWo
   if (MAILED_TASKS.has(identifier)) reports.push(notifyCronFailure({ job: identifier, error, startedAt }))
   await Promise.allSettled(reports)
 }
+
+export async function reportWorkerFatalError(error: unknown): Promise<void> {
+  await captureCliException(error, { tags: { task: 'worker' } })
+}
