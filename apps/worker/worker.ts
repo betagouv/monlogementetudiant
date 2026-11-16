@@ -5,6 +5,7 @@ import { markInterruptedRuns } from '~/server/jobs/job-run'
 import { buildCrontab, SCHEDULED_COMMANDS, SCHEDULED_IN_PROCESS } from '~/server/jobs/schedule'
 import { taskList } from '~/server/jobs/tasks'
 import { initCliSentry } from './sentry'
+import { waitForMigrations } from './wait-for-migrations'
 import { reportWorkerJobError } from './worker-errors'
 
 function graphileConnectionString(): string {
@@ -15,6 +16,7 @@ function graphileConnectionString(): string {
 
 async function main() {
   initCliSentry()
+  await waitForMigrations()
 
   try {
     const interrupted = await markInterruptedRuns()
