@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { latestAppliedMigration, latestJournalMigration, waitForMigrations } from './wait-for-migrations'
+import { latestAppliedMigration, latestJournalMigration, waitForMigrations } from '../wait-for-migrations'
 
 describe('migrations Drizzle de la base de test', () => {
   it('la dernière migration appliquée couvre le journal', async () => {

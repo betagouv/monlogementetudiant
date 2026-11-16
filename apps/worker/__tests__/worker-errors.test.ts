@@ -2,10 +2,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({ captureCliException: vi.fn(), notifyCronFailure: vi.fn() }))
 
-vi.mock('./sentry', () => ({ captureCliException: mocks.captureCliException }))
+vi.mock('../sentry', () => ({ captureCliException: mocks.captureCliException }))
 vi.mock('~/server/jobs/cron-failure', () => ({ notifyCronFailure: mocks.notifyCronFailure }))
 
-import { reportWorkerFatalError, reportWorkerJobError } from './worker-errors'
+import { reportWorkerFatalError, reportWorkerJobError } from '../worker-errors'
 
 const startedAt = new Date('2026-11-14T04:00:00Z')
 const error = new Error('boom')
