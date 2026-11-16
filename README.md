@@ -111,10 +111,10 @@ Le CLI charge automatiquement le `.env` via `tsx --env-file=.env`. Toutes les co
 
 ### Architecture
 
-Le CLI utilise un pattern **factory avec registre lazy** : les commandes sont chargées dynamiquement via `import()` au moment de l'exécution. Chaque commande exporte un objet `default` qui implémente `ImportCommand` ou `SyncCommand` (définis dans `cli/types.ts`).
+Le CLI utilise un pattern **factory avec registre lazy** : les commandes sont chargées dynamiquement via `import()` au moment de l'exécution. Chaque commande exporte un objet `default` qui implémente `ImportCommand` ou `SyncCommand` (définis dans `apps/worker/types.ts`).
 
 ```
-cli/
+apps/worker/            # Package pnpm « worker » : CLI + worker Graphile, déployé sur mle-worker*
   index.ts              # Point d'entrée (commander)
   types.ts              # Interfaces ImportCommand, SyncCommand
   factory.ts            # Registre lazy + runner (runImport, runSync)
@@ -387,7 +387,7 @@ Options :
 
 Variables d'env requises : `DATABASE_URL`, `BREVO_API_KEY`, `BREVO_CONTACTS_API_URL`
 
-> Conçue pour un one-off Scalingo. Sur Scalingo (vars injectées, pas de fichier `.env`), lancer directement `tsx cli/index.ts backfill-brevo-contacts --verbose` plutôt que `pnpm cli` (qui charge `--env-file=.env`).
+> Conçue pour un one-off Scalingo. Sur Scalingo (vars injectées, pas de fichier `.env`), lancer directement `tsx apps/worker/index.ts backfill-brevo-contacts --verbose` plutôt que `pnpm cli` (qui charge `--env-file=.env`).
 
 #### `backfill-geocoding` — Recaler les adresses mal géocodées
 
@@ -494,7 +494,7 @@ condition ne peut se tromper. Une clé hors format est ignorée, jamais supprim�
 Ce n'est **pas** un lifecycle S3 : une règle de lifecycle raisonne en âge d'objet (en jours) et non
 en calendrier, elle ne sait pas exclure « le 1er et le 15 » ; et un `PutBucketLifecycleConfiguration`
 remplace la configuration complète du bucket, écrasant silencieusement toute autre règle. La purge
-en TypeScript est versionnée, testable (`cli/lib/__tests__/backup-storage.test.ts`) et visible en
+en TypeScript est versionnée, testable (`apps/worker/lib/__tests__/backup-storage.test.ts`) et visible en
 `--dry-run`.
 
 Garde-fous : la commande refuse un backup Scalingo de plus de 36 h (mieux vaut un cron en échec, qui
@@ -628,7 +628,7 @@ pnpm cli verify-ramsese --national --json etablissements.json --concurrency 20  
 
 > `--national` court-circuite le CP/les communes et interroge `POST /v3/listeUai/filtres` sur les seules natures (liste blanche), pour obtenir tous les établissements de France. Combiné à `--json <fichier>`, il écrit la liste complète non tronquée. Les détails sont récupérés via un **pool borné** (`--concurrency <n>`, défaut 8) : jamais toutes les requêtes d'un coup, jamais en séquentiel — au plus `n` en vol. ⚠️ Périmètre national = plusieurs milliers d'appels détail ; monter la concurrence (ex. 20) pour accélérer sans saturer la passerelle, ou `--limit <n>` pour un test. Si l'étape filtres renvoie `400`, l'API n'accepte pas d'appel sans `communes` (national non supporté).
 
-> Conçue pour un one-off Scalingo. Sur Scalingo (vars injectées, pas de fichier `.env`), lancer directement `tsx cli/index.ts verify-ramsese --dump` plutôt que `pnpm cli` (qui charge `--env-file=.env`).
+> Conçue pour un one-off Scalingo. Sur Scalingo (vars injectées, pas de fichier `.env`), lancer directement `tsx apps/worker/index.ts verify-ramsese --dump` plutôt que `pnpm cli` (qui charge `--env-file=.env`).
 
 Rejoue le pipeline complet de la fiche logement — code postal → communes INSEE (`geo.api.gouv.fr`, **arrondissements Paris/Lyon/Marseille inclus**) → `POST /v3/listeUai/filtres` → détails géolocalisés → distance haversine — en réutilisant le vrai code de parsing (`~/utils/geo`) et la liste blanche des natures. Affiche pour chaque UAI : nom, natures, coordonnées brutes + `SYSTEME_REFERENCE`, coordonnées reprojetées WGS84 et distance ; puis le top 5 (rendu attendu du bloc).
 
@@ -742,7 +742,7 @@ pnpm cli check-applications-inactivity --owner <slug> --verbose   # recette : un
 - Les e-mails sont regroupés par destinataire : administrateurs du bailleur et gestionnaires dont le périmètre couvre la résidence (`manage_applications` pour les candidatures, `manage_residences` pour les disponibilités).
 - `owner.availability_imported` est posé par les commandes d'import et l'import CSV de l'admin.
 
-Suivi dans `import_job` (type `applications-inactivity`). Même double garde-fou que `expire-alerts` : rien hors production, sauf en `--dry-run`. Exception pour la recette : `--owner <slug>` limite le passage à ce bailleur et agit, e-mails compris, même hors production (sur Scalingo : `scalingo --app <app> run "npx tsx cli/index.ts check-applications-inactivity --owner <slug> --verbose"`).
+Suivi dans `import_job` (type `applications-inactivity`). Même double garde-fou que `expire-alerts` : rien hors production, sauf en `--dry-run`. Exception pour la recette : `--owner <slug>` limite le passage à ce bailleur et agit, e-mails compris, même hors production (sur Scalingo : `scalingo --app <app> run "npx tsx apps/worker/index.ts check-applications-inactivity --owner <slug> --verbose"`).
 
 Variables d'env requises : `DATABASE_URL`, `BREVO_API_KEY`, `BREVO_TEMPLATE_APPLICATIONS_INACTIVITY_WARNING`, `BREVO_TEMPLATE_APPLICATIONS_AUTO_SUSPENDED` (paramètres : `FIRSTNAME`, `OWNER_NAME`, `RESIDENCES[]`, `RESIDENCES_COUNT`, `LINK`).
 
@@ -971,12 +971,33 @@ Variables d'env requises : `MATOMO_URL`, `MATOMO_TOKEN`, `MATOMO_ID_SITE`
 
 ### Tâches planifiées (worker Graphile)
 
-Les tâches planifiées sont définies dans `src/server/jobs/schedule.ts` (`SCHEDULED_COMMANDS`, plus `SCHEDULED_IN_PROCESS` pour les tâches exécutées dans le process du worker : `requeue-pending-alerts`, `report-alert-failures`, `brevo-unblock-managers` — voir « Envoi des e-mails d'alerte » — et `graphile-cleanup`) et exécutées par le worker Graphile (`worker` du `Procfile`, `cli/worker.ts`). Les horaires sont en UTC.
-Les migrations Drizzle, puis celles du schéma `graphile_worker`, sont appliquées au déploiement via le hook `postdeploy` défini dans `Procfile`.
+Les tâches planifiées sont définies dans `src/server/jobs/schedule.ts` (`SCHEDULED_COMMANDS`, plus `SCHEDULED_IN_PROCESS` pour les tâches exécutées dans le process du worker : `requeue-pending-alerts`, `report-alert-failures`, `brevo-unblock-managers` — voir « Envoi des e-mails d'alerte » — et `graphile-cleanup`) et exécutées par le worker Graphile (`worker` du `Procfile`, `apps/worker/worker.ts`). Les horaires sont en UTC.
+Les migrations Drizzle, puis celles du schéma `graphile_worker`, sont appliquées au déploiement par l'app web, via le hook `postdeploy` du `Procfile` (`apps/worker/index.ts postdeploy`).
+
+#### Apps Scalingo du worker
+
+Le worker tourne sur une app Scalingo dédiée, pour des logs et un cycle de vie séparés du site (voir `docs/adr/0003-worker-app-dediee.md`) :
+
+| Environnement | App web | App worker |
+|---------------|---------|------------|
+| Production | `mle-prod` | `mle-worker` |
+| Staging | `mle-staging` | `mle-worker-staging` |
+
+Les deux apps déploient **tout le repo** (même branche, auto-deploy) et partagent le `Procfile` (`web`, `worker`) ; le scaling choisit ce qui tourne. `PROJECT_DIR` n'est pas utilisable : Scalingo n'embarque que ce dossier, or le worker importe `src/`.
+
+| | App web | App worker |
+|---|---|---|
+| Conteneurs | `web=N`, `worker=0` | `web=0`, `worker=1` (taille M minimum : les imports tournent dans ce conteneur) |
+| Addon PostgreSQL | oui | non |
+| Variables d'env | — | copie de l'app web, plus `DATABASE_URL` = URL de l'addon de l'app web, `NPM_NO_BUILD=true` (pas de `next build`), `SKIP_POSTDEPLOY_MIGRATE=true` (seul le web migre) |
+
+**Synchronisation des variables d'env** : toute variable ajoutée ou modifiée sur l'app web l'est aussi sur l'app worker, sinon le worker refuse de démarrer (validation de `src/server/env.ts`). Si les identifiants de l'addon PostgreSQL changent, mettre à jour `DATABASE_URL` sur l'app worker.
+
+Au démarrage, le worker attend que toutes les migrations Drizzle du dépôt soient appliquées (il déploie plus vite que le web, qui migre) ; au-delà de 15 min il s'arrête en erreur et Scalingo le relance.
 
 - `graphile-cleanup` (`0 4 * * *`) : supprime les jobs Graphile en échec définitif et les files et identifiants de tâches devenus inutiles.
 - Un échec de tâche du worker remonte dans Sentry ; les tâches planifiées exécutées dans le process (`SCHEDULED_IN_PROCESS`) déclenchent aussi le mail `CRON_FAILURE_EMAILS`, les commandes (`run-cli-command`) l'envoyant déjà elles-mêmes.
-- Éviter de déployer pendant les exécutions planifiées (notamment entre 01:00 et 08:00 UTC) : un déploiement arrête les commandes en cours, qui ne sont pas relancées.
+- Éviter de merger pendant les exécutions planifiées (notamment entre 01:00 et 08:00 UTC) : le déploiement de l'app worker arrête les commandes en cours, qui ne sont pas relancées.
 
 | Cron | Commande | Fréquence |
 |------|----------|-----------|
@@ -999,7 +1020,7 @@ Les migrations Drizzle, puis celles du schéma `graphile_worker`, sont appliqué
 | `30 6 * * *` | `reset-stale-availability` | Tous les jours à 6h30 |
 | `0 5 * * *` | `backup-db` | Tous les jours à 5h (production uniquement) |
 
-Pour voir les logs d'exécution : `scalingo --app <app> logs --filter worker`
+Pour voir les logs d'exécution : `scalingo --region osc-secnum-fr1 --app mle-worker logs --filter worker` (`mle-worker-staging` en staging)
 
 #### Relevé mensuel des métriques (`capture-monthly-metrics`)
 
@@ -1011,8 +1032,8 @@ Alimente les métriques mensuelles de l'administration (Candidatures, Usage étu
 Chaque passage recalcule le mois courant et le mois précédent. Idempotente : la relancer ne crée pas de doublon.
 
 ```bash
-npx tsx cli/index.ts capture-monthly-metrics
-npx tsx cli/index.ts capture-monthly-metrics --backfill-months 6
+npx tsx apps/worker/index.ts capture-monthly-metrics
+npx tsx apps/worker/index.ts capture-monthly-metrics --backfill-months 6
 ```
 
 - `--backfill-months <n>` : reconstitue aussi les compteurs des N mois précédents. Fiable sur 6 mois au plus (les événements sont conservés 7 mois).
@@ -1020,7 +1041,7 @@ npx tsx cli/index.ts capture-monthly-metrics --backfill-months 6
 **Premier déploiement** : la migration crée les tables via `postdeploy`, mais lancer une fois le backfill à la main sans attendre la nuit, sinon chaque purge nocturne fait disparaître des candidatures avant qu'elles soient recopiées :
 
 ```bash
-scalingo --app mle-prod --region osc-secnum-fr1 run "npx tsx cli/index.ts capture-monthly-metrics --backfill-months 6"
+scalingo --app mle-worker --region osc-secnum-fr1 run "npx tsx apps/worker/index.ts capture-monthly-metrics --backfill-months 6"
 ```
 
 Limites connues du rattrapage : les demandes de contact déjà anonymisées sont comptées avec un statut boursier « non renseigné », les candidatures DossierFacile de plus de 30 jours sont perdues, et les relevés d'état (boursiers, parcours activés, places, tension) commencent au mois du déploiement — les mois antérieurs s'affichent « — ».
@@ -1037,7 +1058,7 @@ message d'erreur et une stack tronquée. L'erreur est en parallèle envoyée à 
 
 Deux natures d'échec déclenchent l'alerte :
 
-- **Crash net** — toute exception non rattrapée qui remonte jusqu'à `cli/index.ts`.
+- **Crash net** — toute exception non rattrapée qui remonte jusqu'à `apps/worker/index.ts`.
 - **Échec partiel** — le job termine mais des éléments sont passés à la trappe (`result.errors`
   non vide pour les imports et syncs). Le job sort alors en code 1 et apparaît en erreur dans l'admin « Tâches planifiées » et dans les logs du conteneur `worker`, même si sa ligne `import_job` reste en `done` avec son résumé détaillé.
 
@@ -1046,7 +1067,7 @@ Les alertes étudiantes suivent leur propre circuit : un envoi Brevo en échec e
 Il n'y a **pas d'anti-flood** : un échec = un mail. Un job qui casse durablement enverra donc
 autant de mails qu'il a d'exécutions.
 
-Seules les commandes listées dans `CRON_COMMANDS` (`cli/cron-failure.ts`) notifient — un one-off
+Seules les commandes listées dans `CRON_COMMANDS` (`src/server/jobs/cron-failure.ts`) notifient — un one-off
 lancé à la main affiche déjà son erreur dans le terminal. `cron-failure.test.ts` échoue si une
 commande de `SCHEDULED_COMMANDS` manque à cette liste.
 
@@ -1061,7 +1082,7 @@ l'envoyer :
 Pour valider la chaîne de bout en bout après un déploiement :
 
 ```bash
-scalingo -a <app> --region osc-secnum-fr1 run npx tsx cli/index.ts cron-selftest
+scalingo -a <app> --region osc-secnum-fr1 run npx tsx apps/worker/index.ts cron-selftest
 ```
 
 Cette commande lève une erreur volontaire, ne touche ni la base ni aucune API métier, et n'est
@@ -1138,7 +1159,8 @@ src/
   providers/                    # Providers React (TanStack Query)
   dsfr/                         # Config DSFR (provider, head, color scheme)
   utils/                        # Utilitaires client
-cli/
+apps/worker/                    # Package pnpm « worker » (CLI + worker Graphile)
+  worker.ts                     # Point d'entrée du worker Graphile
   index.ts                      # Point d'entrée CLI (commander)
   commands/                     # Commandes CLI (import-backup, imports, syncs)
   lib/                          # Libs CLI (scalingo-backup, db-utils, geocoder, matomo)
