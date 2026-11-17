@@ -109,12 +109,14 @@ jobs:
 
   test_e2e:
     docker:
-      - image: cimg/node:24
+      # Variante -browsers : les bibliothèques système de Chromium y sont déjà, pas d'apt-get à chaque run.
+      - image: cimg/node:24-browsers
       - image: postgis/postgis:18-3.6
         environment:
           POSTGRES_USER: test
           POSTGRES_PASSWORD: test
           POSTGRES_DB: mle_test
+        command: postgres -c fsync=off -c synchronous_commit=off -c full_page_writes=off
     environment:
       DATABASE_URL: postgres://test:test@localhost:5432/mle_e2e
       DATABASE_URL_TEST: postgres://test:test@localhost:5432/mle_e2e
@@ -123,7 +125,8 @@ jobs:
       - install_dependencies
       - run:
           name: 'Install Playwright Chromium'
-          command: pnpm exec playwright install --with-deps chromium
+          # Les tests tournent en headless : le headless shell suffit (~270 Mo au lieu de ~660 Mo).
+          command: pnpm exec playwright install --only-shell chromium
       - run:
           name: 'Wait for PostgreSQL'
           command: for i in $(seq 1 30); do pg_isready -h localhost -U test && break; sleep 2; done
