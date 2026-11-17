@@ -989,9 +989,14 @@ Les deux apps déploient **tout le repo** (même branche, auto-deploy) et partag
 |---|---|---|
 | Conteneurs | `web=N`, `worker=0` | `web=0`, `worker=1` (taille M minimum : les imports tournent dans ce conteneur) |
 | Addon PostgreSQL | oui | non |
-| Variables d'env | — | copie de l'app web, plus `DATABASE_URL` = URL de l'addon de l'app web, `NPM_NO_BUILD=true` (pas de `next build`), `SKIP_POSTDEPLOY_MIGRATE=true` (seul le web migre), `SCALINGO_DATABASE_APP` = nom de l’app web (le backup cible son addon, `SCALINGO_APP` valant le nom de l’app worker) |
+| Variables d'env | toutes | seulement celles que lit le worker (liste ci-dessous) |
 
-**Synchronisation des variables d'env** : toute variable ajoutée ou modifiée sur l'app web l'est aussi sur l'app worker, sinon le worker refuse de démarrer (validation de `src/server/env.ts`). Si les identifiants de l'addon PostgreSQL changent, mettre à jour `DATABASE_URL` sur l'app worker.
+**Variables de l'app worker** : toutes celles de `src/server/env.ts` **sauf** `WEB_ONLY_ENV` (DossierFacile, `NEXT_PUBLIC_*` hors `NEXT_PUBLIC_APP_ENV`, FAQ WordPress, API v1, cache d'images, enquête boursiers…), facultatives pour le worker et le CLI. Lire l'une d'elles depuis le worker lève une erreur ; `apps/worker/env-usage.test.ts` échoue si du code atteignable depuis `apps/worker` en lit une. À poser :
+
+- mêmes valeurs que l'app web : `NEXT_PUBLIC_APP_ENV`, `BASE_URL`, `AUTH_SECRET`, `CRON_FAILURE_EMAILS`, `BREVO_*` (clé, URLs, `BREVO_REDIRECT_DOMAIN`, tous les `BREVO_TEMPLATE_*`), `S3_*` (dont `S3_BACKUP_BUCKET` en production), `IBAIL_API_*`, `FAC_HABITAT_SFTP_*`, `MATOMO_URL`, `MATOMO_TOKEN`, `MATOMO_ID_SITE`, `RAMSESE_*`, `GEOCODING_API_URL`, `SCALINGO_API_TOKEN`, `SCALINGO_REGION`, et le cas échéant `DATABASE_POOL_MAX` ;
+- propres à l'app worker : `DATABASE_URL` = URL de l'addon PostgreSQL de l'app web, `SCALINGO_DATABASE_APP` = nom de l'app web (le backup cible son addon ; `SCALINGO_APP`, posé par Scalingo, vaut le nom de l'app worker), `NPM_NO_BUILD=true` (pas de `next build`), `SKIP_POSTDEPLOY_MIGRATE=true` (seul le web migre).
+
+**Synchronisation** : une variable ajoutée ou modifiée sur l'app web l'est aussi sur l'app worker si le worker la lit ; sinon, l'ajouter à `WEB_ONLY_ENV`. Si les identifiants de l'addon PostgreSQL changent, mettre à jour `DATABASE_URL` sur l'app worker.
 
 Au démarrage, le worker attend que toutes les migrations Drizzle du dépôt soient appliquées (il déploie plus vite que le web, qui migre) ; au-delà de 15 min il s’arrête en erreur (Sentry et mail `CRON_FAILURE_EMAILS`, comme tout arrêt fatal du worker) et Scalingo le relance.
 
