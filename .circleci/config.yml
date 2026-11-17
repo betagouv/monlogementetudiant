@@ -97,6 +97,8 @@ jobs:
         command: postgres -c fsync=off -c synchronous_commit=off -c full_page_writes=off
     environment:
       DATABASE_URL_TEST: postgres://test:test@localhost:5432/mle_test
+      # Dans un conteneur, Node voit les CPU de l'hôte : on fixe le nombre de workers (une base de test par worker).
+      VITEST_MAX_WORKERS: 4
     steps:
       - checkout
       - install_dependencies

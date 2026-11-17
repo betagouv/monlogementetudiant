@@ -6,6 +6,18 @@ import * as schema from '../../server/db/schema'
 
 const DATABASE_URL_TEST = process.env.DATABASE_URL_TEST || 'postgres://test:test@localhost:5491/mle_test'
 
+/**
+ * Chaque worker Vitest (`VITEST_POOL_ID`, de 1 à maxWorkers) travaille sur sa propre base, clonée de la base
+ * migrée par le global setup : les fichiers d'intégration peuvent ainsi tourner en parallèle sans se
+ * partager de tables. Hors worker (global setup, scripts), on reste sur la base de référence.
+ */
+export function workerDatabaseUrl(poolId = process.env.VITEST_POOL_ID) {
+  if (!poolId) return DATABASE_URL_TEST
+  const url = new URL(DATABASE_URL_TEST)
+  url.pathname = `${url.pathname}_w${poolId}`
+  return url.toString()
+}
+
 let testDb: ReturnType<typeof drizzle<typeof schema>> | null = null
 let testConn: postgres.Sql | null = null
 
@@ -13,7 +25,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export function getTestDb() {
   if (!testDb) {
-    testConn = postgres(DATABASE_URL_TEST, { prepare: false, max: 5, idle_timeout: 30, connection: { application_name: 'mle-test' } })
+    testConn = postgres(workerDatabaseUrl(), { prepare: false, max: 5, idle_timeout: 30, connection: { application_name: 'mle-test' } })
     testDb = drizzle(testConn, { schema })
   }
   return testDb
@@ -40,7 +52,8 @@ async function waitForTestDatabase(maxAttempts = 30, delayMs = 1000) {
   throw new Error(`Database is not reachable at ${DATABASE_URL_TEST}`, { cause: lastError })
 }
 
-export async function setupTestDb() {
+/** Migre la base de référence ; avec `workerCount`, la clone ensuite pour chaque worker Vitest (tests d'intégration). */
+export async function setupTestDb(workerCount = 0) {
   await waitForTestDatabase()
 
   execSync(`DATABASE_URL="${DATABASE_URL_TEST}" ./node_modules/.bin/drizzle-kit migrate`, {
@@ -52,6 +65,25 @@ export async function setupTestDb() {
     cwd: process.cwd(),
     stdio: 'pipe',
   })
+
+  await createWorkerDatabases(workerCount)
+}
+
+/** (Re)crée une base par worker à partir de la base migrée, qui sert de modèle (`CREATE DATABASE … TEMPLATE`). */
+async function createWorkerDatabases(workerCount: number) {
+  const template = new URL(DATABASE_URL_TEST).pathname.slice(1)
+  const admin = new URL(DATABASE_URL_TEST)
+  admin.pathname = '/postgres'
+  const conn = postgres(admin.toString(), { prepare: false, max: 1 })
+  try {
+    for (let poolId = 1; poolId <= workerCount; poolId++) {
+      const name = new URL(workerDatabaseUrl(String(poolId))).pathname.slice(1)
+      await conn.unsafe(`DROP DATABASE IF EXISTS "${name}" WITH (FORCE)`)
+      await conn.unsafe(`CREATE DATABASE "${name}" TEMPLATE "${template}"`)
+    }
+  } finally {
+    await conn.end()
+  }
 }
 
 export async function teardownTestDb() {
