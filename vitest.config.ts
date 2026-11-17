@@ -100,7 +100,6 @@ export default defineConfig({
           hookTimeout: 60_000,
           globalSetup: ['src/__tests__/helpers/global-setup-integration.ts'],
           setupFiles: ['src/__tests__/helpers/setup-integration.ts'],
-          fileParallelism: false,
           env: {
             BASE_URL: 'http://localhost:3000',
             SENTRY_CSP_REPORT_URI: 'https://sentry.example.com/api/1/security/?sentry_key=test',
