@@ -1001,6 +1001,7 @@ Au démarrage, le worker attend que toutes les migrations Drizzle du dépôt soi
 
 | Cron | Commande | Fréquence |
 |------|----------|-----------|
+| `30 1 1 * *` | `capture-availability-snapshot` | 1er du mois à 1h30 (photo mensuelle du suivi des disponibilités par gestionnaire) |
 | `0 2 * * *` | `import arpej-ibail --owner-slug arpej` | Tous les jours à 2h |
 | `*/30 5-19 * * *` | `import fac-habitat --owner-slug fac-habitat` | Toutes les 30 min de 5h à 19h30 UTC (couvre 7h-20h à Paris, été comme hiver) |
 | `0 4 * * *` | `import initiall --owner-slug initiall` | Tous les jours à 4h |

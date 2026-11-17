@@ -6,6 +6,7 @@ import { buildCrontab, SCHEDULED_COMMANDS, SCHEDULED_IN_PROCESS } from './schedu
 import { taskList } from './tasks'
 
 const EXPECTED: [string, string, string][] = [
+  ['capture-availability-snapshot', '30 1 1 * *', 'capture-availability-snapshot'],
   ['import-arpej-ibail', '0 2 * * *', 'import arpej-ibail --owner-slug arpej'],
   ['import-fac-habitat', '*/30 5-19 * * *', 'import fac-habitat --owner-slug fac-habitat'],
   ['sync-cities', '0 1 * * 0', 'sync cities'],

@@ -18,6 +18,7 @@ export const IMPORT_JOB_TYPE_BY_IDENTIFIER: Record<string, TImportJobType> = {
   'send-goal-reminders': 'goal-reminders',
   'reset-stale-availability': 'availability-reset',
   'send-availability-recap': 'availability-recap',
+  'capture-availability-snapshot': 'availability-snapshot',
   'capture-monthly-metrics': 'monthly-metrics',
   'purge-contact-requests': 'purge-contacts',
   'purge-logs': 'purge-logs',
