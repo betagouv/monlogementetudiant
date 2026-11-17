@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '~/server/db'
 import { jobRuns } from '~/server/db/schema'
 import { CLI_ENTRY, REPO_ROOT } from '~/server/jobs/repo-root'
-import { jobIdentifierFromArgs, spawnAndRecord } from '~/server/jobs/tasks/run-cli-command'
+import { jobIdentifierFromArgs, launchCliCommand, spawnAndRecord } from '~/server/jobs/tasks/run-cli-command'
 import { cleanTables } from './helpers/test-db'
 
 const mocks = vi.hoisted(() => ({ notifyCronFailure: vi.fn() }))
@@ -90,5 +90,50 @@ describe('jobIdentifierFromArgs', () => {
   it('assemble les arguments hors options', () => {
     expect(jobIdentifierFromArgs(['import', 'arpej-ibail', '--owner-slug', 'arpej'])).toBe('import-arpej-ibail')
     expect(jobIdentifierFromArgs(['purge-logs'])).toBe('purge-logs')
+  })
+})
+
+describe('launchCliCommand (Scalingo)', () => {
+  const scalingo = { apiToken: 'tk', app: 'mle-worker', region: 'osc-secnum-fr1' }
+  const args = ['import', 'fac-habitat', '--owner-slug', 'fac-habitat']
+
+  beforeEach(async () => {
+    mocks.notifyCronFailure.mockReset()
+    await cleanTables()
+  })
+
+  it('crée la ligne job_run et lance un one-off qui la reprend', async () => {
+    const launch = vi.fn().mockResolvedValue({ containerId: 'ctn-1' })
+
+    await launchCliCommand(args, 45 * 60_000, scalingo, launch)
+
+    const [row] = await db.select().from(jobRuns)
+    expect(row).toMatchObject({ task: 'import-fac-habitat', trigger: 'scheduled', status: 'running' })
+    expect(launch).toHaveBeenCalledWith({
+      apiToken: 'tk',
+      app: 'mle-worker',
+      region: 'osc-secnum-fr1',
+      command: 'npx tsx apps/worker/index.ts import fac-habitat --owner-slug fac-habitat',
+      env: { JOB_RUN_ID: String(row.id), JOB_TIMEOUT_MS: String(45 * 60_000) },
+    })
+  })
+
+  it('passe la ligne en erreur et prévient quand le lancement échoue', async () => {
+    const launch = vi.fn().mockRejectedValue(new Error('Lancement du one-off Scalingo refusé : 403'))
+
+    await expect(launchCliCommand(args, 45 * 60_000, scalingo, launch)).rejects.toThrow('403')
+
+    const [row] = await db.select().from(jobRuns)
+    expect(row).toMatchObject({ status: 'error', error: 'Lancement du one-off Scalingo refusé : 403' })
+    expect(mocks.notifyCronFailure).toHaveBeenCalledWith(expect.objectContaining({ job: 'import-fac-habitat' }))
+  })
+
+  it('refuse de lancer sans token Scalingo', async () => {
+    const launch = vi.fn()
+
+    await expect(launchCliCommand(args, 45 * 60_000, { ...scalingo, apiToken: undefined }, launch)).rejects.toThrow(
+      'SCALINGO_API_TOKEN manquant',
+    )
+    expect(launch).not.toHaveBeenCalled()
   })
 })
