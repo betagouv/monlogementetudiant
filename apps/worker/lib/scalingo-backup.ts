@@ -5,13 +5,13 @@ import { Readable } from 'stream'
 import { pipeline } from 'stream/promises'
 import { z } from 'zod'
 import { env } from '~/server/env'
+import { exchangeScalingoToken } from '~/server/services/scalingo'
 
 /**
  * Réponses de l'API Scalingo. Schémas internes au service, non exportés : ils décrivent la forme
  * d'une API tierce, pas un objet du domaine. Seuls les champs qu'on lit sont déclarés — Zod
  * ignore le reste, ce qui évite de casser au moindre ajout côté Scalingo.
  */
-const ZTokenExchange = z.object({ token: z.string() })
 const ZAddonToken = z.object({ addon: z.object({ token: z.string() }) })
 
 const ZAddonList = z.object({
@@ -86,18 +86,7 @@ export class ScalingoBackupService {
   }
 
   async authenticate(): Promise<void> {
-    // Step 1: Exchange API token for bearer token
-    const exchangeRes = await fetch('https://auth.scalingo.com/v1/tokens/exchange', {
-      method: 'POST',
-      headers: {
-        Authorization: `Basic ${Buffer.from(`:${this.apiToken}`).toString('base64')}`,
-      },
-    })
-    if (!exchangeRes.ok) {
-      throw new Error(`Token exchange failed: ${exchangeRes.status} ${await exchangeRes.text()}`)
-    }
-    const { token } = await parseJson(exchangeRes, ZTokenExchange, 'tokens/exchange')
-    this.bearerToken = token
+    this.bearerToken = await exchangeScalingoToken(this.apiToken)
 
     // Step 2: Resolve the PostgreSQL addon of the app
     this.addonId = await this.resolveAddonId()
