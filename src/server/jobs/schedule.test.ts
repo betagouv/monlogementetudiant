@@ -82,6 +82,7 @@ describe('buildCrontab', () => {
     }
     expect(items.filter((i) => i.task === 'run-cli-command')).toHaveLength(SCHEDULED_COMMANDS.length)
     const arpej = items.find((i) => i.identifier === 'import-arpej-ibail')
-    expect(arpej?.payload).toEqual({ args: ['import', 'arpej-ibail', '--owner-slug', 'arpej'] })
+    expect(arpej?.payload).toEqual({ args: ['import', 'arpej-ibail', '--owner-slug', 'arpej'], timeoutMs: 45 * 60_000 })
+    expect(items.find((i) => i.identifier === 'sync-cities')?.payload).toMatchObject({ timeoutMs: 120 * 60_000 })
   })
 })

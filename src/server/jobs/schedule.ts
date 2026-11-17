@@ -1,13 +1,16 @@
 import type { TJobIdentifier } from '~/server/jobs/enqueue'
 
-export type TScheduledCommand = { identifier: string; cron: string; args: string[] }
+export type TScheduledCommand = { identifier: string; cron: string; args: string[]; timeoutMinutes?: number }
+
+// Au-delà, la commande est tuée pour libérer la file. Calé sur les durées observées (fac-habitat : 24 min au pire).
+export const DEFAULT_CLI_TIMEOUT_MINUTES = 45
 export type TScheduledInProcess = { identifier: TJobIdentifier; cron: string }
 
 export const SCHEDULED_COMMANDS: TScheduledCommand[] = [
   { identifier: 'capture-availability-snapshot', cron: '30 1 1 * *', args: ['capture-availability-snapshot'] },
   { identifier: 'import-arpej-ibail', cron: '0 2 * * *', args: ['import', 'arpej-ibail', '--owner-slug', 'arpej'] },
   { identifier: 'import-fac-habitat', cron: '*/30 5-19 * * *', args: ['import', 'fac-habitat', '--owner-slug', 'fac-habitat'] },
-  { identifier: 'sync-cities', cron: '0 1 * * 0', args: ['sync', 'cities'] },
+  { identifier: 'sync-cities', cron: '0 1 * * 0', args: ['sync', 'cities'], timeoutMinutes: 120 },
   { identifier: 'sync-rents', cron: '0 4 1 */3 *', args: ['sync', 'rents'] },
   { identifier: 'sync-students', cron: '10 4 1 * *', args: ['sync', 'students'] },
   { identifier: 'purge-logs', cron: '0 5 1 * *', args: ['purge-logs'] },
@@ -36,9 +39,9 @@ export const SCHEDULED_IN_PROCESS: TScheduledInProcess[] = [
 export const CLI_COMMANDS_QUEUE = 'cli-commands'
 
 export function buildCrontab(): string {
-  const commandLines = SCHEDULED_COMMANDS.map(({ identifier, cron, args }) => {
+  const commandLines = SCHEDULED_COMMANDS.map(({ identifier, cron, args, timeoutMinutes = DEFAULT_CLI_TIMEOUT_MINUTES }) => {
     const options = `id=${identifier}&max=1&queue=${CLI_COMMANDS_QUEUE}`
-    return `${cron} run-cli-command ?${options} ${JSON.stringify({ args })}`
+    return `${cron} run-cli-command ?${options} ${JSON.stringify({ args, timeoutMs: timeoutMinutes * 60_000 })}`
   })
   const inProcessLines = SCHEDULED_IN_PROCESS.map(
     ({ identifier, cron }) => `${cron} ${identifier} ?id=${identifier}&max=1&queue=${identifier}`,

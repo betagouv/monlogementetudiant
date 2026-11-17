@@ -1,15 +1,22 @@
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '~/server/db'
 import { jobRuns } from '~/server/db/schema'
 import { CLI_ENTRY, REPO_ROOT } from '~/server/jobs/repo-root'
 import { jobIdentifierFromArgs, spawnAndRecord } from '~/server/jobs/tasks/run-cli-command'
 import { cleanTables } from './helpers/test-db'
 
+const mocks = vi.hoisted(() => ({ notifyCronFailure: vi.fn() }))
+vi.mock('~/server/jobs/cron-failure', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('~/server/jobs/cron-failure')>()),
+  notifyCronFailure: mocks.notifyCronFailure,
+}))
+
 describe('spawnAndRecord', () => {
   beforeEach(async () => {
+    mocks.notifyCronFailure.mockReset()
     await cleanTables()
   })
 
@@ -55,6 +62,17 @@ describe('spawnAndRecord', () => {
 
     const [row] = await db.select().from(jobRuns)
     expect(row.status).toBe('error')
+  })
+
+  it('tue le fils au-delà du délai et enregistre l’erreur', async () => {
+    await expect(spawnAndRecord('trop-long', ['node', '-e', 'setTimeout(() => {}, 60000)'], 'scheduled', undefined, 300)).rejects.toThrow(
+      'délai de 300 ms dépassé',
+    )
+
+    const [row] = await db.select().from(jobRuns)
+    expect(row.status).toBe('error')
+    expect(row.error).toContain('délai de 300 ms dépassé')
+    expect(mocks.notifyCronFailure).toHaveBeenCalledWith(expect.objectContaining({ job: 'trop-long' }))
   })
 
   it('arrête le fils et mentionne le signal à l’abandon', async () => {
