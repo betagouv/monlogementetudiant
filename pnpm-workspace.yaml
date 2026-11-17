@@ -17,8 +17,9 @@ minimumReleaseAgeExclude:
 
 overrides:
   esbuild: 0.25.0
-  fast-uri: 3.1.8
-  'vite@<6.4.4': 6.4.4
+  fast-uri: 3.1.9
+  'vite@<6.4.5': 6.4.5
+  'glob@>=9 <14.0.2': 14.0.2
 
 allowBuilds:
   '@parcel/watcher': true
