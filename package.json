@@ -11,6 +11,7 @@
     "prebuild": "react-dsfr update-icons && cp node_modules/@codegouvfr/react-dsfr/dsfr/favicon/favicon.svg public/favicon.svg && cp node_modules/@codegouvfr/react-dsfr/dsfr/favicon/favicon.ico public/favicon.ico",
     "dev": "next dev",
     "build": "next build",
+    "scalingo-postbuild": "[ \"$NPM_NO_BUILD\" = true ] || pnpm run build",
     "start": "next start",
     "lint": "biome check src apps e2e",
     "lint:format": "biome check src apps e2e --fix",
