@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '~/server/db'
 import { jobRuns } from '~/server/db/schema'
 import { CLI_ENTRY, REPO_ROOT } from '~/server/jobs/repo-root'
-import { jobIdentifierFromArgs, launchCliCommand, spawnAndRecord } from '~/server/jobs/tasks/run-cli-command'
+import { jobIdentifierFromArgs, launchCliCommand, runsOnScalingo, spawnAndRecord } from '~/server/jobs/tasks/run-cli-command'
 import { cleanTables } from './helpers/test-db'
 
 const mocks = vi.hoisted(() => ({ notifyCronFailure: vi.fn() }))
@@ -128,6 +128,17 @@ describe('launchCliCommand (Scalingo)', () => {
     expect(mocks.notifyCronFailure).toHaveBeenCalledWith(expect.objectContaining({ job: 'import-fac-habitat' }))
   })
 
+  it('refuse de lancer sans SCALINGO_APP, avec ligne en erreur et mail', async () => {
+    const launch = vi.fn()
+
+    await expect(launchCliCommand(args, 45 * 60_000, { ...scalingo, app: undefined }, launch)).rejects.toThrow('SCALINGO_APP manquant')
+
+    expect(launch).not.toHaveBeenCalled()
+    const [row] = await db.select().from(jobRuns)
+    expect(row).toMatchObject({ status: 'error' })
+    expect(mocks.notifyCronFailure).toHaveBeenCalled()
+  })
+
   it('refuse de lancer sans token Scalingo', async () => {
     const launch = vi.fn()
 
@@ -135,5 +146,15 @@ describe('launchCliCommand (Scalingo)', () => {
       'SCALINGO_API_TOKEN manquant',
     )
     expect(launch).not.toHaveBeenCalled()
+  })
+})
+
+describe('runsOnScalingo', () => {
+  it.each([
+    [{ scalingoApp: 'mle-worker', container: undefined }, true],
+    [{ scalingoApp: undefined, container: 'worker-1' }, true],
+    [{ scalingoApp: undefined, container: undefined }, false],
+  ])('%o → %s', (input, expected) => {
+    expect(runsOnScalingo(input)).toBe(expected)
   })
 })

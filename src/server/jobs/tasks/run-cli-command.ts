@@ -69,7 +69,10 @@ export async function spawnAndRecord(
   })
 }
 
-type TScalingoTarget = { apiToken: string | undefined; app: string; region: string }
+type TScalingoTarget = { apiToken: string | undefined; app: string | undefined; region: string }
+
+export const runsOnScalingo = ({ scalingoApp, container }: { scalingoApp?: string; container?: string }) =>
+  Boolean(scalingoApp || container)
 
 export async function launchCliCommand(
   args: string[],
@@ -82,6 +85,7 @@ export async function launchCliCommand(
   const [run] = await db.insert(jobRuns).values({ task: identifier, trigger: 'scheduled' }).returning({ id: jobRuns.id })
 
   try {
+    if (!scalingo.app) throw new Error('SCALINGO_APP manquant : impossible de lancer le one-off')
     if (!scalingo.apiToken) throw new Error('SCALINGO_API_TOKEN manquant : impossible de lancer le one-off')
     await launch({
       apiToken: scalingo.apiToken,
@@ -100,7 +104,7 @@ export async function launchCliCommand(
 
 export const runCliCommand: Task = async (payload, helpers) => {
   const { args, timeoutMs } = ZRunCliCommandPayload.parse(payload)
-  if (env.SCALINGO_APP) {
+  if (runsOnScalingo({ scalingoApp: env.SCALINGO_APP, container: process.env.CONTAINER })) {
     await launchCliCommand(args, timeoutMs ?? DEFAULT_CLI_TIMEOUT_MINUTES * 60_000, {
       apiToken: env.SCALINGO_API_TOKEN,
       app: env.SCALINGO_APP,
