@@ -987,7 +987,7 @@ Les deux apps déploient **tout le repo** (même branche, auto-deploy) et partag
 
 | | App web | App worker |
 |---|---|---|
-| Conteneurs | `web=N`, `worker=0` | `web=0`, `worker=1` (taille M minimum : les imports tournent dans ce conteneur) |
+| Conteneurs | `web=N`, `worker=0` | `web=0`, `worker=1` (taille L : le worker ~300 Mo au repos, plus une commande CLI à la fois, de 350 à 500 Mo — elles passent toutes par la file `cli-commands`) |
 | Addon PostgreSQL | oui | non |
 | Variables d'env | toutes | seulement celles que lit le worker (liste ci-dessous) |
 

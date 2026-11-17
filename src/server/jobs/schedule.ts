@@ -32,9 +32,12 @@ export const SCHEDULED_IN_PROCESS: TScheduledInProcess[] = [
   { identifier: 'graphile-cleanup', cron: '0 4 * * *' },
 ]
 
+// Une seule commande CLI à la fois : chacune démarre un process tsx de plusieurs centaines de Mo.
+export const CLI_COMMANDS_QUEUE = 'cli-commands'
+
 export function buildCrontab(): string {
   const commandLines = SCHEDULED_COMMANDS.map(({ identifier, cron, args }) => {
-    const options = `id=${identifier}&max=1&queue=${identifier}`
+    const options = `id=${identifier}&max=1&queue=${CLI_COMMANDS_QUEUE}`
     return `${cron} run-cli-command ?${options} ${JSON.stringify({ args })}`
   })
   const inProcessLines = SCHEDULED_IN_PROCESS.map(

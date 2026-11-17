@@ -2,7 +2,7 @@ import { parseCrontab } from 'graphile-worker'
 import { describe, expect, it } from 'vitest'
 import { CRON_COMMANDS, jobNameFromArgv } from '~/server/jobs/cron-failure'
 import { JOB_IDENTIFIERS } from './enqueue'
-import { buildCrontab, SCHEDULED_COMMANDS, SCHEDULED_IN_PROCESS } from './schedule'
+import { buildCrontab, CLI_COMMANDS_QUEUE, SCHEDULED_COMMANDS, SCHEDULED_IN_PROCESS } from './schedule'
 import { taskList } from './tasks'
 
 const EXPECTED: [string, string, string][] = [
@@ -73,7 +73,7 @@ describe('buildCrontab', () => {
     for (const item of items.filter((i) => i.task === 'run-cli-command')) {
       expect(item.task).toBe('run-cli-command')
       expect(item.options).toMatchObject({ maxAttempts: 1, backfillPeriod: 0 })
-      expect(item.options.queueName).toBe(item.identifier)
+      expect(item.options.queueName).toBe(CLI_COMMANDS_QUEUE)
     }
     for (const { identifier } of SCHEDULED_IN_PROCESS) {
       const item = items.find((i) => i.identifier === identifier)
