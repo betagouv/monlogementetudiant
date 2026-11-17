@@ -987,13 +987,13 @@ Les deux apps déploient **tout le repo** (même branche, auto-deploy) et partag
 
 | | App web | App worker |
 |---|---|---|
-| Conteneurs | `web=N`, `worker=0` | `web=0`, `worker=1` (taille L : le worker ~300 Mo au repos, plus une commande CLI à la fois, de 350 à 500 Mo — elles passent toutes par la file `cli-commands`) ; chaque commande est tuée au-delà de 45 min (120 min pour `sync cities`), avec mail d’échec, pour ne pas bloquer la file |
+| Conteneurs | `web=N`, `worker=0` | `web=0`, `worker=1` (taille M : le worker ne fait que planifier ; chaque commande CLI tourne dans son propre one-off M) |
 | Addon PostgreSQL | oui | non |
 | Variables d'env | toutes | seulement celles que lit le worker (liste ci-dessous) |
 
 **Variables de l'app worker** : toutes celles de `src/server/env.ts` **sauf** `WEB_ONLY_ENV` (DossierFacile, `NEXT_PUBLIC_*` hors `NEXT_PUBLIC_APP_ENV`, FAQ WordPress, API v1, cache d'images, enquête boursiers…), facultatives pour le worker et le CLI. Lire l'une d'elles depuis le worker lève une erreur ; `apps/worker/__tests__/env-usage.test.ts` échoue si du code atteignable depuis `apps/worker` en lit une. À poser :
 
-- mêmes valeurs que l'app web : `NEXT_PUBLIC_APP_ENV`, `BASE_URL`, `AUTH_SECRET`, `CRON_FAILURE_EMAILS`, `BREVO_*` (clé, URLs, `BREVO_REDIRECT_DOMAIN`, tous les `BREVO_TEMPLATE_*`), `S3_*` (dont `S3_BACKUP_BUCKET` en production), `IBAIL_API_*`, `FAC_HABITAT_SFTP_*`, `MATOMO_URL`, `MATOMO_TOKEN`, `MATOMO_ID_SITE`, `RAMSESE_*`, `GEOCODING_API_URL`, `SCALINGO_API_TOKEN`, `SCALINGO_REGION`, et le cas échéant `DATABASE_POOL_MAX` ;
+- mêmes valeurs que l'app web : `NEXT_PUBLIC_APP_ENV`, `BASE_URL`, `AUTH_SECRET`, `CRON_FAILURE_EMAILS`, `BREVO_*` (clé, URLs, `BREVO_REDIRECT_DOMAIN`, tous les `BREVO_TEMPLATE_*`), `S3_*` (dont `S3_BACKUP_BUCKET` en production), `IBAIL_API_*`, `FAC_HABITAT_SFTP_*`, `MATOMO_URL`, `MATOMO_TOKEN`, `MATOMO_ID_SITE`, `RAMSESE_*`, `GEOCODING_API_URL`, `SCALINGO_API_TOKEN` (**requis, staging compris** : il lance les one-off), `SCALINGO_REGION`, et le cas échéant `DATABASE_POOL_MAX` ;
 - propres à l'app worker : `DATABASE_URL` = URL de l'addon PostgreSQL de l'app web, `SCALINGO_DATABASE_APP` = nom de l'app web (le backup cible son addon ; `SCALINGO_APP`, posé par Scalingo, vaut le nom de l'app worker), `NPM_NO_BUILD=true` (pas de `next build`), `SKIP_POSTDEPLOY_MIGRATE=true` (seul le web migre).
 
 **Synchronisation** : une variable ajoutée ou modifiée sur l'app web l'est aussi sur l'app worker si le worker la lit ; sinon, l'ajouter à `WEB_ONLY_ENV`. Si les identifiants de l'addon PostgreSQL changent, mettre à jour `DATABASE_URL` sur l'app worker.
@@ -1002,7 +1002,9 @@ Au démarrage, le worker attend que toutes les migrations Drizzle du dépôt soi
 
 - `graphile-cleanup` (`0 4 * * *`) : supprime les jobs Graphile en échec définitif et les files et identifiants de tâches devenus inutiles.
 - Un échec de tâche du worker remonte dans Sentry ; les tâches planifiées exécutées dans le process (`SCHEDULED_IN_PROCESS`) déclenchent aussi le mail `CRON_FAILURE_EMAILS`, les commandes (`run-cli-command`) l'envoyant déjà elles-mêmes.
-- Éviter de merger pendant les exécutions planifiées (notamment entre 01:00 et 08:00 UTC) : le déploiement de l'app worker arrête les commandes en cours, qui ne sont pas relancées.
+- **Exécution en one-off** : à l'heure prévue, la tâche `run-cli-command` crée la ligne `job_run` puis lance la commande dans un conteneur one-off M de l'app worker, via l'API Scalingo (`SCALINGO_API_TOKEN`). La commande clôt elle-même sa ligne (`done` / `error`) et s'arrête au-delà de son délai (45 min, 120 min pour `sync cities`) avec mail d'échec. Un déploiement de l'app worker n'interrompt pas une commande déjà lancée. Logs d'une commande : conteneurs `one-off-*` de l'app worker. Hors Scalingo (dev, tests), la commande tourne dans un sous-process du worker.
+- Un one-off tué par la plateforme laisse sa ligne en `running` : `graphile-cleanup` la passe en `interrupted` une fois son délai dépassé de 15 min.
+- Au démarrage, le worker libère après 60 s les verrous Graphile laissés par une instance précédente (déploiement, crash) : une tâche interne interrompue ne bloque pas sa file.
 
 | Cron | Commande | Fréquence |
 |------|----------|-----------|
