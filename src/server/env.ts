@@ -186,7 +186,7 @@ export const envSchema = z.object({
 
 type TEnvKey = keyof z.input<typeof envSchema>
 
-// Lues par le seul code web : facultatives pour le worker et le CLI (garde-fou : apps/worker/env-usage.test.ts).
+// Lues par le seul code web : facultatives pour le worker et le CLI (garde-fou : apps/worker/__tests__/env-usage.test.ts).
 export const WEB_ONLY_ENV = [
   'ACCOMMODATION_REPORT_EMAIL',
   'API_V1_ENABLED',
