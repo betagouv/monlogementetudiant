@@ -68,7 +68,8 @@ export class ScalingoBackupService {
   private readonly region: string
 
   constructor() {
-    const { SCALINGO_API_TOKEN: apiToken, SCALINGO_APP: appName, SCALINGO_REGION: region } = env
+    const { SCALINGO_API_TOKEN: apiToken, SCALINGO_REGION: region } = env
+    const appName = env.SCALINGO_DATABASE_APP || env.SCALINGO_APP
 
     if (!apiToken || !appName) {
       throw new Error('Missing required env vars: SCALINGO_API_TOKEN, SCALINGO_APP')
@@ -116,7 +117,7 @@ export class ScalingoBackupService {
   /**
    * Identifiant de l'addon PostgreSQL de l'application.
    *
-   * Déduit de `SCALINGO_APP` plutôt que configuré : c'est une propriété de l'app, pas un réglage à
+   * Déduit de l'app (`SCALINGO_DATABASE_APP`, sinon `SCALINGO_APP`) plutôt que configuré : c'est une propriété de l'app, pas un réglage à
    * tenir à jour au prochain changement d'addon. On filtre le JSON de l'API sur `addon_provider.id`.
    */
   private async resolveAddonId(): Promise<string> {
