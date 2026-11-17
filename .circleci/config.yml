@@ -1,8 +1,5 @@
 version: 2.1
 
-orbs:
-  skip: theodo/skip@0.1.2
-  queue: eddiewebb/queue@3.2.1
 executors:
   node:
     docker:
@@ -12,12 +9,9 @@ parameters:
   lockfile:
     type: string
     default: './pnpm-lock.yaml'
-  virtual_store_dir:
-    type: string
-    default: '.pnpm-store'
   cache_version:
     type: string
-    default: 'v1'
+    default: 'v2'
 
 workflows:
   version: 2
@@ -45,18 +39,18 @@ jobs:
     executor: node
     steps:
       - checkout
-      # - skip/skip_unchanged:
-      #     paths: pnpm-lock.yaml
       - install_dependencies
       - run:
           name: 'Fetch dependencies'
-          command: pnpm install --virtual-store-dir << pipeline.parameters.virtual_store_dir >> --frozen-lockfile
+          command: pnpm install --frozen-lockfile
+      # Les jobs suivants lancent pnpm, qui réinstalle tout si node_modules ne correspond pas exactement à une
+      # installation par défaut : on garde donc le virtual store par défaut et le node_modules du workspace worker.
       - save_cache:
           key: << pipeline.parameters.cache_version >>-pnpm-{{ checksum "<< pipeline.parameters.lockfile >>" }}
           paths:
-            - << pipeline.parameters.virtual_store_dir >>
             - ./node_modules
-      
+            - ./apps/worker/node_modules
+
   lint:
     executor: node
     steps:
@@ -148,7 +142,8 @@ commands:
     steps:
       - run:
           name: 'Install pnpm'
-          command: sudo corepack enable && corepack prepare pnpm@11.0.9 --activate
+          # Version lue dans le champ packageManager de package.json.
+          command: sudo corepack enable && corepack install
           
   install_dependencies:
     steps:
