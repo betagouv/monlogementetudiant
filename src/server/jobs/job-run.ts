@@ -1,10 +1,11 @@
 import { AsyncLocalStorage } from 'node:async_hooks'
-import { eq, sql } from 'drizzle-orm'
+import { and, eq, lt, notInArray, sql } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import { db } from '~/server/db'
 import { jobRuns } from '~/server/db/schema/job-run'
 import { env } from '~/server/env'
+import { DEFAULT_CLI_TIMEOUT_MINUTES, SCHEDULED_COMMANDS } from '~/server/jobs/schedule'
 
 export type TJobRunTrigger = (typeof jobRuns.$inferInsert)['trigger']
 
@@ -40,13 +41,32 @@ export async function recordJobMetrics(metrics: Record<string, number>): Promise
     .where(eq(jobRuns.id, id))
 }
 
+const CLI_TASKS = SCHEDULED_COMMANDS.map(({ identifier }) => identifier)
+
+// Les commandes CLI tournent dans des one-off qui survivent au redémarrage du worker.
 export async function markInterruptedRuns(): Promise<number> {
   const rows = await db
     .update(jobRuns)
     .set({ status: 'interrupted', endedAt: new Date() })
-    .where(eq(jobRuns.status, 'running'))
+    .where(and(eq(jobRuns.status, 'running'), notInArray(jobRuns.task, CLI_TASKS)))
     .returning({ id: jobRuns.id })
   return rows.length
+}
+
+const STALE_MARGIN_MINUTES = 15
+
+export async function markStaleCliRuns(now = new Date()): Promise<number> {
+  let count = 0
+  for (const { identifier, timeoutMinutes = DEFAULT_CLI_TIMEOUT_MINUTES } of SCHEDULED_COMMANDS) {
+    const cutoff = new Date(now.getTime() - (timeoutMinutes + STALE_MARGIN_MINUTES) * 60_000)
+    const rows = await db
+      .update(jobRuns)
+      .set({ status: 'interrupted', endedAt: now })
+      .where(and(eq(jobRuns.task, identifier), eq(jobRuns.status, 'running'), lt(jobRuns.startedAt, cutoff)))
+      .returning({ id: jobRuns.id })
+    count += rows.length
+  }
+  return count
 }
 
 // Connexion dédiée : les commandes CLI ferment la connexion partagée avant de rendre la main.

@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { db } from '~/server/db'
 import { jobRuns } from '~/server/db/schema'
-import { finishJobRun, markInterruptedRuns, recordJobMetrics, withJobRun } from '~/server/jobs/job-run'
+import { finishJobRun, markInterruptedRuns, markStaleCliRuns, recordJobMetrics, withJobRun } from '~/server/jobs/job-run'
 import { cleanTables } from './helpers/test-db'
 
 describe('job_run', () => {
@@ -79,5 +79,41 @@ describe('job_run', () => {
     const rows = await db.select().from(jobRuns).orderBy(jobRuns.task)
     expect(rows.map((r) => r.status)).toEqual(['interrupted', 'done'])
     expect(rows[0].endedAt).not.toBeNull()
+  })
+
+  it('ne marque pas interrompue une commande CLI, qui tourne dans son propre one-off', async () => {
+    await db.insert(jobRuns).values([
+      { task: 'import-fac-habitat', trigger: 'scheduled' },
+      { task: 'requeue-pending-alerts', trigger: 'scheduled' },
+    ])
+
+    expect(await markInterruptedRuns()).toBe(1)
+
+    const rows = await db.select().from(jobRuns).orderBy(jobRuns.task)
+    expect(rows.map((r) => [r.task, r.status])).toEqual([
+      ['import-fac-habitat', 'running'],
+      ['requeue-pending-alerts', 'interrupted'],
+    ])
+  })
+
+  it('markStaleCliRuns interrompt les commandes restées en cours au-delà de leur délai', async () => {
+    const now = new Date('2026-11-17T12:00:00Z')
+    const ago = (minutes: number) => new Date(now.getTime() - minutes * 60_000)
+    await db.insert(jobRuns).values([
+      { task: 'import-fac-habitat', trigger: 'scheduled', startedAt: ago(70) },
+      { task: 'import-arpej-ibail', trigger: 'scheduled', startedAt: ago(10) },
+      { task: 'sync-cities', trigger: 'scheduled', startedAt: ago(120) },
+      { task: 'requeue-pending-alerts', trigger: 'scheduled', startedAt: ago(600) },
+    ])
+
+    expect(await markStaleCliRuns(now)).toBe(1)
+
+    const rows = await db.select().from(jobRuns).orderBy(jobRuns.task)
+    expect(rows.map((r) => [r.task, r.status])).toEqual([
+      ['import-arpej-ibail', 'running'],
+      ['import-fac-habitat', 'interrupted'],
+      ['requeue-pending-alerts', 'running'],
+      ['sync-cities', 'running'],
+    ])
   })
 })
