@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { db } from '~/server/db'
 import { jobRuns } from '~/server/db/schema'
-import { markInterruptedRuns, recordJobMetrics, withJobRun } from '~/server/jobs/job-run'
+import { finishJobRun, markInterruptedRuns, recordJobMetrics, withJobRun } from '~/server/jobs/job-run'
 import { cleanTables } from './helpers/test-db'
 
 describe('job_run', () => {
@@ -33,6 +33,21 @@ describe('job_run', () => {
     const [row] = await db.select().from(jobRuns)
     expect(row).toMatchObject({ status: 'error', error: 'boum' })
     expect(row.endedAt).not.toBeNull()
+  })
+
+  it('finishJobRun clôt la ligne d’une commande lancée hors du worker', async () => {
+    const [ok] = await db.insert(jobRuns).values({ task: 'sync-stats', trigger: 'scheduled' }).returning({ id: jobRuns.id })
+    const [ko] = await db.insert(jobRuns).values({ task: 'sync-rents', trigger: 'scheduled' }).returning({ id: jobRuns.id })
+
+    await finishJobRun(ok.id)
+    await finishJobRun(ko.id, new Error('boum'))
+
+    const rows = await db.select().from(jobRuns).orderBy(jobRuns.id)
+    expect(rows.map(({ status, error }) => ({ status, error }))).toEqual([
+      { status: 'done', error: null },
+      { status: 'error', error: 'boum' },
+    ])
+    expect(rows.every((row) => row.endedAt !== null)).toBe(true)
   })
 
   it('ne fait rien hors contexte et sans JOB_RUN_ID', async () => {
