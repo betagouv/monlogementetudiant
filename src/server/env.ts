@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { type ProcessKind, processKindFromArgv } from './db/process-kind'
 
 const isProd = process.env.NEXT_PUBLIC_APP_ENV === 'production' || process.env.NEXT_PUBLIC_APP_ENV === 'staging'
 const isProdOnly = process.env.NEXT_PUBLIC_APP_ENV === 'production'
@@ -183,4 +184,57 @@ export const envSchema = z.object({
   SCHOLARSHIP_SURVEY_END_DATE: z.preprocess((v) => (v === '' ? undefined : v), z.iso.date().optional()),
 })
 
-export const env = envSchema.parse(process.env)
+type TEnvKey = keyof z.input<typeof envSchema>
+
+// Lues par le seul code web : facultatives pour le worker et le CLI (garde-fou : apps/worker/env-usage.test.ts).
+export const WEB_ONLY_ENV = [
+  'ACCOMMODATION_REPORT_EMAIL',
+  'API_V1_ENABLED',
+  'API_V1_RATE_LIMIT_MAX',
+  'API_V1_RATE_LIMIT_WINDOW_MS',
+  'DOSSIERFACILE_AUTHORIZE_URL',
+  'DOSSIERFACILE_CLIENT_ID',
+  'DOSSIERFACILE_CLIENT_SECRET',
+  'DOSSIERFACILE_REDIRECT_URI',
+  'DOSSIERFACILE_SCOPE',
+  'DOSSIERFACILE_TENANT_PROFILE_URL',
+  'DOSSIERFACILE_TOKEN_URL',
+  'DOSSIERFACILE_WEBHOOK_API_KEY',
+  'IMAGE_CACHE_MEMORY_MB',
+  'IMAGE_CACHE_S3_DISABLED',
+  'NEXT_PUBLIC_CALENDLY_URL',
+  'NEXT_PUBLIC_DOSSIERFACILE_LOCATAIRE_URL',
+  'NEXT_PUBLIC_GITBOOK_URL',
+  'NEXT_PUBLIC_MATOMO_SITE_ID',
+  'NEXT_PUBLIC_MATOMO_URL',
+  'NEXT_PUBLIC_TALLY_URL',
+  'SCHOLARSHIP_SURVEY_END_DATE',
+  'SENTRY_CSP_REPORT_URI',
+  'SUPPORT_TICKET_EMAIL',
+  'WP_FAQ_PAGE_ID',
+  'WP_FAQ_URL',
+] as const satisfies readonly TEnvKey[]
+
+const webOnlyKeys = new Set<string>(WEB_ONLY_ENV)
+
+const workerEnvSchema = envSchema.partial(
+  Object.fromEntries(WEB_ONLY_ENV.map((key) => [key, true])) as Record<(typeof WEB_ONLY_ENV)[number], true>,
+)
+
+export type TEnv = z.infer<typeof envSchema>
+
+export function parseEnv(source: NodeJS.ProcessEnv, kind: ProcessKind): TEnv {
+  if (kind === 'web') return envSchema.parse(source)
+
+  const parsed = workerEnvSchema.parse(source)
+  return new Proxy(parsed, {
+    get(target, key, receiver) {
+      if (typeof key === 'string' && webOnlyKeys.has(key) && Reflect.get(target, key, receiver) === undefined) {
+        throw new Error(`Variable d'environnement ${key} réservée à l’app web : indisponible dans le worker`)
+      }
+      return Reflect.get(target, key, receiver)
+    },
+  }) as TEnv
+}
+
+export const env = parseEnv(process.env, process.env.NEXT_RUNTIME ? 'web' : processKindFromArgv(process.argv[1]))

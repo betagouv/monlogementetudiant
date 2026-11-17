@@ -99,6 +99,7 @@
     "cheerio": "^1.2.0",
     "domhandler": "^6.0.1",
     "drizzle-kit": "^0.31.10",
+    "esbuild": "0.25.0",
     "playwright": "1.63.0",
     "postcss": "^8.5.26",
     "sass": "^1.102.0",
