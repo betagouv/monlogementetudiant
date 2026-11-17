@@ -1,12 +1,18 @@
 import { run } from 'graphile-worker'
-import { closeDb } from '~/server/db'
+import { closeDb, db } from '~/server/db'
 import { env } from '~/server/env'
 import { markInterruptedRuns } from '~/server/jobs/job-run'
 import { buildCrontab, SCHEDULED_COMMANDS, SCHEDULED_IN_PROCESS } from '~/server/jobs/schedule'
+import { releaseLocksTakenBefore } from '~/server/jobs/stale-locks'
 import { taskList } from '~/server/jobs/tasks'
 import { initCliSentry } from './sentry'
 import { waitForMigrations } from './wait-for-migrations'
 import { reportWorkerFatalError, reportWorkerJobError } from './worker-errors'
+
+const processStartedAt = new Date()
+
+// Laisse à l'instance précédente (déploiement) le temps de s'arrêter avant de récupérer ses verrous.
+const STALE_LOCKS_DELAY_MS = 60_000
 
 function graphileConnectionString(): string {
   const url = new URL(env.DATABASE_URL)
@@ -37,6 +43,16 @@ async function main() {
     void reportWorkerJobError({ identifier: job.task_identifier, error, startedAt: job.locked_at ?? new Date() })
   })
   console.log(`Worker démarré : ${SCHEDULED_COMMANDS.length + SCHEDULED_IN_PROCESS.length} tâche(s) planifiée(s)`)
+  setTimeout(() => {
+    releaseLocksTakenBefore(db, processStartedAt)
+      .then((owners) => {
+        if (owners.length > 0) console.log(`Worker : verrous d'instances précédentes libérés (${owners.join(', ')})`)
+      })
+      .catch((error) => {
+        console.error('Worker : libération des verrous orphelins impossible', error)
+        void reportWorkerJobError({ identifier: 'worker', error, startedAt: processStartedAt })
+      })
+  }, STALE_LOCKS_DELAY_MS).unref()
 
   await runner.promise
   await closeDb()
