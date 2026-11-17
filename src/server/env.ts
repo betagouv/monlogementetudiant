@@ -150,6 +150,8 @@ export const envSchema = z.object({
   // que `ScalingoBackupService` lève déjà une erreur explicite qui déclenche le mail d'échec.
   SCALINGO_API_TOKEN: z.string().optional(),
   SCALINGO_APP: z.string().optional(),
+  // App Scalingo qui porte l'addon PostgreSQL, si ce n'est pas l'app courante (app worker).
+  SCALINGO_DATABASE_APP: z.string().optional(),
   SCALINGO_REGION: z.string().default('osc-secnum-fr1'),
 
   // CLI : FacHabitat SFTP

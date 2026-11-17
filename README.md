@@ -989,7 +989,7 @@ Les deux apps déploient **tout le repo** (même branche, auto-deploy) et partag
 |---|---|---|
 | Conteneurs | `web=N`, `worker=0` | `web=0`, `worker=1` (taille M minimum : les imports tournent dans ce conteneur) |
 | Addon PostgreSQL | oui | non |
-| Variables d'env | — | copie de l'app web, plus `DATABASE_URL` = URL de l'addon de l'app web, `NPM_NO_BUILD=true` (pas de `next build`), `SKIP_POSTDEPLOY_MIGRATE=true` (seul le web migre) |
+| Variables d'env | — | copie de l'app web, plus `DATABASE_URL` = URL de l'addon de l'app web, `NPM_NO_BUILD=true` (pas de `next build`), `SKIP_POSTDEPLOY_MIGRATE=true` (seul le web migre), `SCALINGO_DATABASE_APP` = nom de l’app web (le backup cible son addon, `SCALINGO_APP` valant le nom de l’app worker) |
 
 **Synchronisation des variables d'env** : toute variable ajoutée ou modifiée sur l'app web l'est aussi sur l'app worker, sinon le worker refuse de démarrer (validation de `src/server/env.ts`). Si les identifiants de l'addon PostgreSQL changent, mettre à jour `DATABASE_URL` sur l'app worker.
 
