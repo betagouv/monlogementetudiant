@@ -35,6 +35,7 @@ import { uploadImages } from './commands/upload-images'
 import { verifyRamsese } from './commands/verify-ramsese'
 import { runImport, runSync } from './factory'
 import { captureCliException } from './sentry'
+import { trackJobRun } from './track-job-run'
 
 program.name('mle').description('MLE CLI tools')
 
@@ -376,15 +377,28 @@ function registerLocalCommands(): void {
 // Doit rester avant le parsing, sinon les commandes locales ne sont pas encore déclarées.
 registerLocalCommands()
 
+const positiveInt = (value: string | undefined): number | null => {
+  const parsed = Number(value)
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null
+}
+
 // Filet unique pour toutes les commandes : si un job planifié échoue, on remonte l'erreur
 // dans Sentry et par mail avant de sortir en échec. Les commandes lancées à la main ne
 // notifient pas — leur erreur est déjà sous les yeux de qui les a lancées.
 async function main() {
   const startedAt = new Date()
+  const job = jobNameFromArgv(process.argv)
   try {
-    await program.parseAsync()
+    await trackJobRun({
+      jobRunId: positiveInt(process.env.JOB_RUN_ID),
+      timeoutMs: positiveInt(process.env.JOB_TIMEOUT_MS),
+      job,
+      startedAt,
+      run: async () => {
+        await program.parseAsync()
+      },
+    })
   } catch (error) {
-    const job = jobNameFromArgv(process.argv)
     console.error(error)
 
     if (CRON_COMMANDS.has(job)) {

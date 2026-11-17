@@ -1,7 +1,10 @@
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { eq, sql } from 'drizzle-orm'
+import { drizzle } from 'drizzle-orm/postgres-js'
+import postgres from 'postgres'
 import { db } from '~/server/db'
 import { jobRuns } from '~/server/db/schema/job-run'
+import { env } from '~/server/env'
 
 export type TJobRunTrigger = (typeof jobRuns.$inferInsert)['trigger']
 
@@ -44,4 +47,18 @@ export async function markInterruptedRuns(): Promise<number> {
     .where(eq(jobRuns.status, 'running'))
     .returning({ id: jobRuns.id })
   return rows.length
+}
+
+// Connexion dédiée : les commandes CLI ferment la connexion partagée avant de rendre la main.
+export async function finishJobRun(id: number, error?: unknown): Promise<void> {
+  const conn = postgres(env.DATABASE_URL, { max: 1 })
+  try {
+    const message = error === undefined ? null : error instanceof Error ? error.message : String(error)
+    await drizzle(conn)
+      .update(jobRuns)
+      .set({ status: error === undefined ? 'done' : 'error', endedAt: new Date(), error: message })
+      .where(eq(jobRuns.id, id))
+  } finally {
+    await conn.end()
+  }
 }
