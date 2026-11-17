@@ -74,6 +74,7 @@ describe('buildCrontab', () => {
       expect(item.task).toBe('run-cli-command')
       expect(item.options).toMatchObject({ maxAttempts: 1, backfillPeriod: 0 })
       expect(item.options.queueName).toBe(CLI_COMMANDS_QUEUE)
+      expect(item.options).toMatchObject({ jobKey: item.identifier, jobKeyMode: 'replace' })
     }
     for (const { identifier } of SCHEDULED_IN_PROCESS) {
       const item = items.find((i) => i.identifier === identifier)
