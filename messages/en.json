@@ -382,7 +382,8 @@
           "firstnameRequired": "First name is required",
           "lastnameRequired": "Last name is required",
           "emailInvalid": "The email address is invalid",
-          "consentRequired": "You must agree to share your information"
+          "consentRequired": "You must agree to share your information",
+          "birthdateOverMaxAge": "This residence only accepts people aged {age} or under."
         }
       },
       "alert": {
@@ -2568,6 +2569,8 @@
         "addUser": "Add a manager",
         "waitingListLabel": "The residence accepts waiting list applications",
         "waitingListHint": "Receive student requests even when your residence is full.",
+        "rejectsOverMaxAgeLabel": "Automatically refuse applicants over {age}",
+        "rejectsOverMaxAgeHint": "For young workers' hostels and young workers' residences. Students are told before sending their contact details.",
         "save": "Save",
         "saving": "Saving...",
         "success": "Reception settings saved.",

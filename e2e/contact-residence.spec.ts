@@ -44,6 +44,20 @@ test.describe('Être recontacté par le gestionnaire', () => {
     await expect(page.getByText('Coordonnées partagées aux gestionnaires')).toBeVisible()
   })
 
+  test('bloque l’envoi pour un étudiant de plus de 30 ans quand la résidence les refuse', async ({ page }) => {
+    const { owner } = await createBailleur({ contactMode: EOwnerContactMode.CONTACTS })
+    const residence = await createResidence({ ownerId: owner.id, rejectsOverMaxAge: true })
+    const student = await createStudent({ birthdate: '1990-03-14' })
+    await signIn(page, student.email)
+
+    await gotoHydrated(page, ficheUrl(residence.slug))
+    await page.getByRole('button', { name: 'Être recontacté' }).click()
+
+    const modal = page.getByRole('dialog', { name: 'Être recontacté' })
+    await expect(modal.getByText('Cette résidence accueille uniquement les personnes de 30 ans maximum.')).toBeVisible()
+    await expect(modal.getByRole('button', { name: 'Partager mes coordonnées' })).toBeDisabled()
+  })
+
   test("ne propose pas d'être recontacté quand le gestionnaire ne reçoit pas de contacts", async ({ page }) => {
     const { owner } = await createBailleur({ contactMode: EOwnerContactMode.NONE })
     const residence = await createResidence({ ownerId: owner.id })

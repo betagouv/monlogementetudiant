@@ -28,6 +28,7 @@ interface OwnerDetailsProps {
   nbAvailable: number | null
   nbTotalApartments: number | null
   acceptWaitingList: boolean
+  rejectsOverMaxAge: boolean
   slug?: string
   isAuthenticated: boolean
   user?: TUser
@@ -47,6 +48,7 @@ export const OwnerDetails = async ({
   title,
   location,
   acceptWaitingList,
+  rejectsOverMaxAge,
   slug,
   isAuthenticated,
   user,
@@ -121,6 +123,7 @@ export const OwnerDetails = async ({
         availableApartmentTypes={availableApartmentTypes}
         nbAvailable={nbAvailable}
         acceptWaitingList={acceptWaitingList}
+        rejectsOverMaxAge={rejectsOverMaxAge}
         isAuthenticated={isAuthenticated}
         contactMode={contactMode}
       />

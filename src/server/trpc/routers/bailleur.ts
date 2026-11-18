@@ -1188,6 +1188,7 @@ export const bailleurRouter = createTRPCRouter({
             departmentCode: departments.code,
             acceptsApplications: accommodations.acceptsApplications,
             acceptWaitingList: accommodations.acceptWaitingList,
+            rejectsOverMaxAge: accommodations.rejectsOverMaxAge,
           })
           .from(accommodations)
           .leftJoin(
@@ -1303,6 +1304,14 @@ export const bailleurRouter = createTRPCRouter({
         await tx
           .update(accommodations)
           .set({ acceptWaitingList })
+          .where(and(eq(accommodations.ownerId, owner.id), inArray(accommodations.id, ids)))
+      }
+      for (const rejectsOverMaxAge of [true, false]) {
+        const ids = input.residences.filter((r) => r.rejectsOverMaxAge === rejectsOverMaxAge).map((r) => r.accommodationId)
+        if (ids.length === 0) continue
+        await tx
+          .update(accommodations)
+          .set({ rejectsOverMaxAge })
           .where(and(eq(accommodations.ownerId, owner.id), inArray(accommodations.id, ids)))
       }
       for (const change of changes) {

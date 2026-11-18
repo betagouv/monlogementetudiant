@@ -198,6 +198,7 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
               phoneNumber={accommodation.phoneNumber}
               isCrous={accommodation.isCrous ?? false}
               acceptWaitingList={acceptWaitingList}
+              rejectsOverMaxAge={accommodation.rejectsOverMaxAge ?? false}
               owner={owner}
               nbAvailable={displayedNbAvailable}
               nbTotalApartments={accommodation.nbTotalApartments ?? null}

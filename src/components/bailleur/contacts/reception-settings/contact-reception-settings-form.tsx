@@ -50,7 +50,12 @@ const ReceptionSettingsFields = ({ ownerId, settings }: { ownerId: number; setti
     defaultValues: {
       residences: settings.residences
         .filter((r) => r.acceptsApplications)
-        .map((r) => ({ accommodationId: r.id, managers: r.managers, acceptWaitingList: r.acceptWaitingList })),
+        .map((r) => ({
+          accommodationId: r.id,
+          managers: r.managers,
+          acceptWaitingList: r.acceptWaitingList,
+          rejectsOverMaxAge: r.rejectsOverMaxAge,
+        })),
     },
   })
 
@@ -81,7 +86,12 @@ const ReceptionSettingsFields = ({ ownerId, settings }: { ownerId: number; setti
       setResidences(selected.filter((r) => r.accommodationId !== residence.id))
       return
     }
-    const entry = { accommodationId: residence.id, managers: residence.managers, acceptWaitingList: residence.acceptWaitingList }
+    const entry = {
+      accommodationId: residence.id,
+      managers: residence.managers,
+      acceptWaitingList: residence.acceptWaitingList,
+      rejectsOverMaxAge: residence.rejectsOverMaxAge,
+    }
     const order = settings.residences.map((r) => r.id)
     setResidences([...selected, entry].sort((a, b) => order.indexOf(a.accommodationId) - order.indexOf(b.accommodationId)))
     setSelectedTabId(tabId(residence.id))
@@ -98,13 +108,16 @@ const ReceptionSettingsFields = ({ ownerId, settings }: { ownerId: number; setti
                 accommodationId: residence.id,
                 managers: residence.managers,
                 acceptWaitingList: residence.acceptWaitingList,
+                rejectsOverMaxAge: residence.rejectsOverMaxAge,
               },
           )
         : [],
     )
 
-  const updateResidence = (index: number, patch: { managers?: TReceptionManager[]; acceptWaitingList?: boolean }) =>
-    setResidences(selected.map((r, i) => (i === index ? { ...r, ...patch } : r)))
+  const updateResidence = (
+    index: number,
+    patch: { managers?: TReceptionManager[]; acceptWaitingList?: boolean; rejectsOverMaxAge?: boolean },
+  ) => setResidences(selected.map((r, i) => (i === index ? { ...r, ...patch } : r)))
 
   const onSubmit = (values: TContactReceptionSettingsForm) =>
     mutate({
@@ -113,6 +126,7 @@ const ReceptionSettingsFields = ({ ownerId, settings }: { ownerId: number; setti
         accommodationId: r.accommodationId,
         managerIds: r.managers.map((m) => m.id),
         acceptWaitingList: r.acceptWaitingList,
+        rejectsOverMaxAge: r.rejectsOverMaxAge,
       })),
     })
 
@@ -186,6 +200,8 @@ const ReceptionSettingsFields = ({ ownerId, settings }: { ownerId: number; setti
                 managersError={errors.residences?.[index]?.managers?.message}
                 acceptWaitingList={r.acceptWaitingList}
                 onAcceptWaitingListChange={(acceptWaitingList) => updateResidence(index, { acceptWaitingList })}
+                rejectsOverMaxAge={r.rejectsOverMaxAge}
+                onRejectsOverMaxAgeChange={(rejectsOverMaxAge) => updateResidence(index, { rejectsOverMaxAge })}
               />
             </div>
           ))}
