@@ -118,14 +118,13 @@ describe('sync-cities integration', () => {
       inseeCodes: ['95074'],
     })
 
-    const communes: Record<string, object> = {
-      '95127': { nom: 'Cergy', code: '95127', codesPostaux: ['95000', '95800'], codeDepartement: '95', population: 70906 },
-      '95074': { nom: 'Boisemont', code: '95074', codesPostaux: ['95000'], codeDepartement: '95', population: 892 },
-    }
+    const communes = [
+      { nom: 'Boisemont', code: '95074', codesPostaux: ['95000'], codeDepartement: '95', population: 892 },
+      { nom: 'Cergy', code: '95127', codesPostaux: ['95000', '95800'], codeDepartement: '95', population: 70906 },
+    ]
     mockFetch.mockImplementation((url: string) => {
-      const insee = /\/communes\/(\d+)\?/.exec(url)?.[1]
-      if (insee && communes[insee]) return Promise.resolve({ ok: true, status: 200, json: async () => communes[insee] })
-      return Promise.resolve({ ok: true, status: 200, json: async () => [] })
+      const json = url.includes('/departements/95/communes') ? communes : []
+      return Promise.resolve({ ok: true, status: 200, json: async () => json })
     })
 
     await command.execute({ dryRun: false })
