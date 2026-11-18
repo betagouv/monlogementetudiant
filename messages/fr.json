@@ -236,6 +236,10 @@
     "close": "Fermer"
   },
   "accomodation": {
+    "crousAlert": {
+      "title": "Il ne reste presque plus de logements Crous disponibles cette année",
+      "description": "Pour savoir s'il reste des places dans cette résidence, consultez <link>trouverunlogement.lescrous.fr</link>. Si elle n'y apparaît pas, c'est qu'elle est complète pour l'instant."
+    },
     "availability": {
       "noAvailabilityTitle": "Aucune disponibilité pour le moment",
       "noAvailabilityDescription": "Les logements sont actuellement complets, mais de nouvelles places peuvent se libérer à tout moment.",
@@ -326,8 +330,9 @@
         "dossierFacileApplied": "Candidature envoyée",
         "dossierFacileSelectType": "Type de logement",
         "consultDescription": "Vous serez redirigé vers le site de la résidence",
-        "consultDescriptionCrous": "Vous serez redirigé vers trouverunlogement.lescrous.fr",
-        "consultDescriptionManager": "Vous serez redirigé vers le site {managerFormatted}",        "call": "Appeler le {phoneNumber}",
+        "consultDescriptionCrous": "Vous serez redirigé vers Trouver un logement Crous",
+        "consultDescriptionManager": "Vous serez redirigé vers le site {managerFormatted}",
+        "call": "Appeler le {phoneNumber}",
         "dossierFacileDescription": "Dossier de location numérique certifié",
         "link": "Copier le lien",
         "email": "Envoyer par email",
@@ -338,7 +343,8 @@
         "contactRequest": "Être recontacté",
         "contactRequestDescription": "Laissez vos coordonnées, le gestionnaire vous recontactera par e-mail ou téléphone.",
         "contactRequestSuccess": "Vos coordonnées ont bien été transmises au gestionnaire.",
-        "contactRequestError": "Une erreur est survenue. Veuillez réessayer."
+        "contactRequestError": "Une erreur est survenue. Veuillez réessayer.",
+        "consultCrous": "Voir les logements Crous"
       },
       "contactRequestModal": {
         "title": "Être recontacté",
@@ -385,7 +391,9 @@
         "cta": "Créer une alerte logement"
       },
       "copySuccess": "Copié dans le presse-papiers",
-      "copyError": "Erreur lors de la copie dans le presse-papiers"
+      "copyError": "Erreur lors de la copie dans le presse-papiers",
+      "totalCount": "{count, plural, one {# logement} other {# logements}}",
+      "crousAvailability": "Disponibilités non communiquées"
     },
     "nearby": {
       "title": "Autres logements à proximité",
@@ -2408,7 +2416,11 @@
       "stats": {
         "title": "Statistiques des contacts",
         "periodLegend": "Période",
-        "period": { "7d": "7 jours", "30d": "30 jours", "90d": "90 jours" },
+        "period": {
+          "7d": "7 jours",
+          "30d": "30 jours",
+          "90d": "90 jours"
+        },
         "export": "Exporter",
         "caption": "Statistiques des contacts par résidence",
         "residence": "Résidence",

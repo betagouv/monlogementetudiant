@@ -26,6 +26,7 @@ interface OwnerDetailsProps {
   title: string
   location: string
   nbAvailable: number | null
+  nbTotalApartments: number | null
   acceptWaitingList: boolean
   slug?: string
   isAuthenticated: boolean
@@ -40,6 +41,7 @@ interface OwnerDetailsProps {
 
 export const OwnerDetails = async ({
   nbAvailable,
+  nbTotalApartments,
   owner,
   externalUrl,
   title,
@@ -62,12 +64,15 @@ export const OwnerDetails = async ({
     contactMode === EOwnerContactMode.CONTACTS && acceptsContactRequests({ nbAvailableApartments: nbAvailable, acceptWaitingList })
   const consultOfferPriority = showContactRequest ? 'secondary' : !isAuthenticated || !isDossierFacile ? 'primary' : 'tertiary'
 
+  // Crous : les disponibilités ne sont publiées que sur trouverunlogement.lescrous.fr, on affiche la taille du parc.
   const availabilityTitle =
-    nbAvailable === null
-      ? t('unknownAvailability')
-      : nbAvailable === 0
-        ? t('sidebar.noneAvailable')
-        : t('sidebar.availableCount', { count: nbAvailable })
+    isCrous && nbTotalApartments
+      ? t('sidebar.totalCount', { count: nbTotalApartments })
+      : nbAvailable === null
+        ? t('unknownAvailability')
+        : nbAvailable === 0
+          ? t('sidebar.noneAvailable')
+          : t('sidebar.availableCount', { count: nbAvailable })
 
   return (
     <div className={styles.sidebarCard}>
@@ -93,6 +98,12 @@ export const OwnerDetails = async ({
         </div>
       )}
       <h3 className="fr-h6 fr-mb-0 fr-text--center">{availabilityTitle}</h3>
+      {isCrous && (
+        <p className="fr-text--sm fr-mb-0 fr-mt-1w fr-text--center fr-text-mention--grey">
+          <span className="fr-icon-info-line fr-icon--sm fr-mr-1v" aria-hidden="true" />
+          {t('sidebar.crousAvailability')}
+        </p>
+      )}
       {nbAvailable !== null && (
         <p className="fr-text--xs fr-mb-0 fr-mt-1w fr-text--center">
           {t('sidebar.updatedAt', { date: formatLocalizedDate(updatedAt, 'dd MMMM yyyy', locale) })}
