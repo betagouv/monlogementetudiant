@@ -1,9 +1,9 @@
 import { eq, sql } from 'drizzle-orm'
 import { db } from '~/server/db'
-import { fetchCityFromGeoApi, fetchCommunesByDepartment, fillCityFromApi } from '~/server/lib/import/geocoder'
-import { accommodationAddresses, accommodations, cities, departments } from '../../src/server/db/schema'
-import { generateSlug } from '../../src/server/trpc/utils/accommodation-helpers'
-import { findAvailableSlug } from '../../src/server/utils/slug'
+import { accommodationAddresses, accommodations, cities, departments } from '~/server/db/schema'
+import { fetchCommunesByDepartment, fillCityFromApi } from '~/server/lib/import/geocoder'
+import { generateSlug } from '~/server/trpc/utils/accommodation-helpers'
+import { findAvailableSlug } from '~/server/utils/slug'
 import type { SyncCommand, SyncOptions, SyncResult } from '../types'
 
 // Paris, Marseille, Lyon — arrondissements hardcodés (même données que Django)
@@ -121,16 +121,29 @@ function findSlugInMemory(baseSlug: string, taken: Set<string>): string {
   return `${prefix}${i}`
 }
 
-async function importAllCommunes(options: SyncOptions, result: SyncResult): Promise<void> {
-  // Pre-load reference data
+function sameList(a: string[] | null, b: string[]): boolean {
+  return (a ?? []).length === b.length && (a ?? []).every((v, i) => v === b[i])
+}
+
+// Un appel par département : met à jour les villes existantes (le code INSEE fait foi) et crée les communes absentes.
+async function syncCommunesByDepartment(options: SyncOptions, result: SyncResult): Promise<void> {
   const deptRows = await db.select({ id: departments.id, code: departments.code }).from(departments)
   const deptMap = new Map(deptRows.map((d) => [d.code, d.id]))
 
-  const inseeRows = await db.select({ inseeCodes: cities.inseeCodes }).from(cities)
-  const existingInsee = new Set(inseeRows.flatMap((r) => r.inseeCodes))
-
-  const slugRows = await db.select({ slug: cities.slug }).from(cities)
-  const existingSlugs = new Set(slugRows.map((r) => r.slug))
+  const cityRows = await db
+    .select({
+      id: cities.id,
+      name: cities.name,
+      slug: cities.slug,
+      inseeCodes: cities.inseeCodes,
+      postalCodes: cities.postalCodes,
+      epciCode: cities.epciCode,
+      population: cities.population,
+    })
+    .from(cities)
+  const byInsee = new Map<string, (typeof cityRows)[number]>()
+  for (const row of cityRows) for (const code of row.inseeCodes ?? []) byInsee.set(code, row)
+  const existingSlugs = new Set(cityRows.map((r) => r.slug))
 
   const deptCodes = Array.from(deptMap.keys()).sort()
 
@@ -138,31 +151,48 @@ async function importAllCommunes(options: SyncOptions, result: SyncResult): Prom
     const deptCode = deptCodes[i]
     const deptId = deptMap.get(deptCode)!
 
-    let communes
-    try {
-      communes = await fetchCommunesByDepartment(deptCode)
-    } catch (error) {
-      result.errors.push(`Département ${deptCode}: ${error instanceof Error ? error.message : String(error)}`)
-      continue
-    }
-
+    const communes = await fetchCommunesByDepartment(deptCode)
     if (communes.length === 0) {
-      if (options.verbose) console.log(`    [${i + 1}/${deptCodes.length}] ${deptCode}: aucune commune retournée`)
+      result.errors.push(`Département ${deptCode} : aucune commune retournée par l'API`)
       continue
     }
 
     let created = 0
+    let updated = 0
     for (const commune of communes) {
       if (isArrondissement(commune.code)) continue
-      if (existingInsee.has(commune.code)) {
-        result.skipped++
+      const existing = byInsee.get(commune.code)
+
+      if (existing) {
+        const updates: Partial<typeof cities.$inferInsert> = {}
+        if (commune.nom !== existing.name) {
+          existingSlugs.delete(existing.slug)
+          updates.name = commune.nom
+          updates.slug = findSlugInMemory(generateSlug(commune.nom), existingSlugs)
+          existingSlugs.add(updates.slug)
+          console.log(`    ↻ ${existing.name} renommée en ${commune.nom} (INSEE ${commune.code})`)
+        }
+        if (commune.codesPostaux?.length && !sameList(existing.postalCodes, commune.codesPostaux))
+          updates.postalCodes = commune.codesPostaux
+        if (commune.codeEpci && commune.codeEpci !== existing.epciCode) updates.epciCode = commune.codeEpci
+        if (commune.population != null && commune.population !== existing.population) updates.population = commune.population
+
+        if (Object.keys(updates).length === 0) {
+          result.skipped++
+          continue
+        }
+        try {
+          if (!options.dryRun) await db.update(cities).set(updates).where(eq(cities.id, existing.id))
+          result.updated++
+          updated++
+        } catch (error) {
+          result.errors.push(`${commune.nom} (${commune.code}): ${error instanceof Error ? error.message : String(error)}`)
+        }
         continue
       }
 
-      const baseSlug = generateSlug(commune.nom)
-      const slug = findSlugInMemory(baseSlug, existingSlugs)
+      const slug = findSlugInMemory(generateSlug(commune.nom), existingSlugs)
       existingSlugs.add(slug)
-      existingInsee.add(commune.code)
 
       if (options.dryRun) {
         if (options.verbose) console.log(`      [dry-run] ${commune.nom} (${commune.code})`)
@@ -190,7 +220,7 @@ async function importAllCommunes(options: SyncOptions, result: SyncResult): Prom
       }
     }
 
-    console.log(`    [${i + 1}/${deptCodes.length}] ${deptCode}: ${created} nouvelles communes`)
+    console.log(`    [${i + 1}/${deptCodes.length}] ${deptCode}: ${updated} mises à jour, ${created} nouvelles communes`)
   }
 }
 
@@ -257,124 +287,14 @@ const command: SyncCommand = {
     console.log('  🏙️ Vérification des villes spéciales...')
     await ensureSpecialCities(options, result)
 
-    console.log('  🔄 Mise à jour des villes existantes...')
-    const allCities = await db.select({ id: cities.id, name: cities.name }).from(cities)
-    for (const city of allCities) {
-      try {
-        if (options.dryRun) {
-          result.updated++
-          continue
-        }
-        const updated = await fillCityFromApi(city.id)
-        if (updated) {
-          result.updated++
-          if (options.verbose) console.log(`    ✓ ${city.name}`)
-        } else {
-          result.skipped++
-          if (options.verbose) console.log(`    ⚠ ${city.name} — pas de données API`)
-        }
-      } catch (error) {
-        result.errors.push(`${city.name}: ${error instanceof Error ? error.message : String(error)}`)
-      }
-    }
+    console.log('  🔄 Mise à jour et import des communes par département...')
+    await syncCommunesByDepartment(options, result)
 
     console.log('  🏷️ Réattribution des slugs libérés...')
     await reclaimBaseSlugs(options, result)
 
     console.log('  📍 Rattachement des résidences à la commune qui contient leur adresse...')
     await reattachAddressesByGeometry(options, result)
-
-    console.log('  🔍 Recherche de villes manquantes...')
-    const publishedAccommodations = await db
-      .select({
-        postalCode: accommodationAddresses.postalCode,
-        city: cities.name,
-      })
-      .from(accommodations)
-      .innerJoin(accommodationAddresses, eq(accommodationAddresses.accommodationId, accommodations.id))
-      .innerJoin(cities, eq(accommodationAddresses.cityId, cities.id))
-      .where(eq(accommodations.published, true))
-
-    const existingPostalCodes = new Set((await db.select({ postalCodes: cities.postalCodes }).from(cities)).flatMap((c) => c.postalCodes))
-
-    const missingPostalCodes = new Map<string, string>()
-    for (const acc of publishedAccommodations) {
-      if (!acc.postalCode || !acc.city || existingPostalCodes.has(acc.postalCode)) continue
-      missingPostalCodes.set(acc.postalCode, acc.city)
-    }
-
-    if (missingPostalCodes.size > 0) {
-      console.log(`  📌 ${missingPostalCodes.size} villes manquantes à créer`)
-    }
-
-    for (const [postalCode, cityName] of missingPostalCodes) {
-      try {
-        const apiCity = await fetchCityFromGeoApi(postalCode, cityName)
-        if (!apiCity) {
-          result.errors.push(`Ville introuvable pour CP ${postalCode}`)
-          continue
-        }
-
-        // Check if a city with the same INSEE code already exists
-        const existingByInsee = await db
-          .select({ id: cities.id, name: cities.name, postalCodes: cities.postalCodes })
-          .from(cities)
-          .where(sql`${apiCity.code} = ANY(${cities.inseeCodes})`)
-          .limit(1)
-
-        if (existingByInsee[0]) {
-          // City exists — just add the missing postal code
-          if (!existingByInsee[0].postalCodes.includes(postalCode)) {
-            if (!options.dryRun) {
-              await db
-                .update(cities)
-                .set({ postalCodes: [...existingByInsee[0].postalCodes, postalCode] })
-                .where(eq(cities.id, existingByInsee[0].id))
-            }
-            if (options.verbose) console.log(`    ✓ ${existingByInsee[0].name} — ajout CP ${postalCode}`)
-          } else {
-            if (options.verbose) console.log(`    ✓ ${existingByInsee[0].name} existe déjà (INSEE ${apiCity.code})`)
-          }
-          result.skipped++
-          continue
-        }
-
-        const dept = await db.select().from(departments).where(eq(departments.code, apiCity.codeDepartement)).limit(1)
-        if (!dept[0]) {
-          result.errors.push(`Département ${apiCity.codeDepartement} introuvable`)
-          continue
-        }
-
-        if (options.dryRun) {
-          if (options.verbose) console.log(`    [dry-run] Création ${apiCity.nom} (${postalCode})`)
-          result.updated++
-          continue
-        }
-
-        const [newCity] = await db
-          .insert(cities)
-          .values({
-            name: apiCity.nom,
-            slug: await findAvailableSlug(generateSlug(apiCity.nom), db, cities),
-            postalCodes: apiCity.codesPostaux,
-            inseeCodes: [apiCity.code],
-            departmentId: dept[0].id,
-            popular: false,
-            epciCode: apiCity.codeEpci ?? null,
-            population: apiCity.population ?? null,
-          })
-          .returning({ id: cities.id })
-
-        await fillCityFromApi(newCity.id)
-        if (options.verbose) console.log(`    ✓ ${apiCity.nom} créée`)
-        result.updated++
-      } catch (error) {
-        result.errors.push(`CP ${postalCode}: ${error instanceof Error ? error.message : String(error)}`)
-      }
-    }
-
-    console.log('  🌍 Import de toutes les communes manquantes...')
-    await importAllCommunes(options, result)
 
     return result
   },
