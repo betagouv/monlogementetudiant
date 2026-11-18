@@ -121,6 +121,32 @@ describe('fetchCityFromGeoApi', () => {
     expect(result?.nom).toBe('Béziers')
   })
 
+  it('ignores communes whose name only contains the searched name', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => [
+        { nom: 'Saint-Denis-lès-Sens', code: '89342', codesPostaux: ['89100'], codeDepartement: '89', population: 628 },
+        { nom: 'Sens', code: '89387', codesPostaux: ['89100'], codeDepartement: '89', population: 27106 },
+      ],
+    })
+
+    const result = await fetchCityFromGeoApi('89100', 'Sens')
+    expect(result?.code).toBe('89387')
+  })
+
+  it('falls back to the most populous commune without an exact name match', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => [
+        { nom: 'Boisemont', code: '95074', codesPostaux: ['95000'], codeDepartement: '95', population: 892 },
+        { nom: 'Cergy', code: '95127', codesPostaux: ['95000'], codeDepartement: '95', population: 70906 },
+      ],
+    })
+
+    const result = await fetchCityFromGeoApi('95000', 'Cergy-Pontoise')
+    expect(result?.nom).toBe('Cergy')
+  })
+
   it('returns null on empty results', async () => {
     mockFetch.mockResolvedValueOnce({ ok: true, json: async () => [] })
 
