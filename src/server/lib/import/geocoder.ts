@@ -131,11 +131,18 @@ export async function reverseGeocode(lat: number, lng: number): Promise<GeocodeR
   }
 }
 
-export async function fetchCityFromGeoApi(postalCode: string, name?: string): Promise<GeoApiCity | null> {
-  const url = `https://geo.api.gouv.fr/communes?codePostal=${postalCode}&fields=nom,codesPostaux,codeDepartement,codeEpci,population`
+export function normalizeCommuneName(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[\s'\u2019-]+/g, ' ')
+    .trim()
+}
+
+async function fetchGeoApiJson(url: string): Promise<unknown | null> {
   const maxAttempts = 2
   const retryDelay = 5000
-
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       const response = await fetch(url)
@@ -147,23 +154,7 @@ export async function fetchCityFromGeoApi(postalCode: string, name?: string): Pr
         return null
       }
       if (!response.ok) return null
-      const results: GeoApiCity[] = await response.json()
-      if (results.length === 0) return null
-      if (name && results.length > 1) {
-        const normalized = name
-          .toLowerCase()
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-        const match = results.find((c) => {
-          const n = c.nom
-            .toLowerCase()
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-          return n === normalized || n.includes(normalized) || normalized.includes(n)
-        })
-        return match ?? results[0]
-      }
-      return results[0]
+      return await response.json()
     } catch {
       if (attempt < maxAttempts) {
         await new Promise((resolve) => setTimeout(resolve, retryDelay))
@@ -175,15 +166,24 @@ export async function fetchCityFromGeoApi(postalCode: string, name?: string): Pr
   return null
 }
 
-export async function fetchCityByInsee(inseeCode: string): Promise<GeoApiCity | null> {
-  const url = `https://geo.api.gouv.fr/communes/${inseeCode}?fields=nom,codesPostaux,codeDepartement,contour,codeEpci,population`
-  try {
-    const response = await fetch(url)
-    if (!response.ok) return null
-    return await response.json()
-  } catch {
-    return null
+// Un code postal couvre souvent plusieurs communes : sans homonyme exact, on retient la plus peupl\u00e9e.
+export async function fetchCityFromGeoApi(postalCode: string, name?: string): Promise<GeoApiCity | null> {
+  const results = (await fetchGeoApiJson(
+    `https://geo.api.gouv.fr/communes?codePostal=${postalCode}&fields=nom,codesPostaux,codeDepartement,codeEpci,population`,
+  )) as GeoApiCity[] | null
+  if (!results?.length) return null
+  if (name) {
+    const normalized = normalizeCommuneName(name)
+    const match = results.find((c) => normalizeCommuneName(c.nom) === normalized)
+    if (match) return match
   }
+  return results.reduce((best, c) => ((c.population ?? 0) > (best.population ?? 0) ? c : best))
+}
+
+export async function fetchCityByInsee(inseeCode: string): Promise<GeoApiCity | null> {
+  return (await fetchGeoApiJson(
+    `https://geo.api.gouv.fr/communes/${inseeCode}?fields=nom,code,codesPostaux,codeDepartement,codeEpci,population`,
+  )) as GeoApiCity | null
 }
 
 export async function fetchCommunesByDepartment(deptCode: string): Promise<GeoApiCity[]> {
@@ -216,13 +216,23 @@ export async function fetchCommunesByDepartment(deptCode: string): Promise<GeoAp
 }
 
 export async function fillCityFromApi(cityId: number): Promise<boolean> {
-  const city = await db.select({ postalCodes: cities.postalCodes, name: cities.name }).from(cities).where(eq(cities.id, cityId)).limit(1)
-  if (!city[0]) return false
+  const [city] = await db
+    .select({ postalCodes: cities.postalCodes, name: cities.name, inseeCodes: cities.inseeCodes })
+    .from(cities)
+    .where(eq(cities.id, cityId))
+    .limit(1)
+  if (!city) return false
 
-  const postalCode = city[0].postalCodes?.[0]
-  if (!postalCode) return false
-
-  const apiCity = await fetchCityFromGeoApi(postalCode, city[0].name)
+  let apiCity: GeoApiCity | null
+  const inseeCode = city.inseeCodes?.[0]
+  if (inseeCode) {
+    apiCity = await fetchCityByInsee(inseeCode)
+  } else {
+    const postalCode = city.postalCodes?.[0]
+    if (!postalCode) return false
+    apiCity = await fetchCityFromGeoApi(postalCode, city.name)
+    if (apiCity && normalizeCommuneName(apiCity.nom) !== normalizeCommuneName(city.name)) return false
+  }
   if (!apiCity) return false
 
   const updates: Record<string, unknown> = {}
@@ -230,6 +240,11 @@ export async function fillCityFromApi(cityId: number): Promise<boolean> {
   if (apiCity.population != null) updates.population = apiCity.population
   if (apiCity.codesPostaux?.length) updates.postalCodes = apiCity.codesPostaux
   if (apiCity.code) updates.inseeCodes = [apiCity.code]
+  if (inseeCode && apiCity.nom && apiCity.nom !== city.name) {
+    updates.name = apiCity.nom
+    updates.slug = await findAvailableSlug(generateSlug(apiCity.nom), db, cities)
+    console.log(`    ↻ ${city.name} renommée en ${apiCity.nom} (INSEE ${inseeCode})`)
+  }
 
   if (Object.keys(updates).length > 0) {
     await db.update(cities).set(updates).where(eq(cities.id, cityId))

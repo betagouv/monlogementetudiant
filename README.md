@@ -843,9 +843,11 @@ pnpm cli sync cities --dry-run --verbose
 ```
 
 1. Crée Paris/Marseille/Lyon si absentes (codes postaux et INSEE hardcodés)
-2. Met à jour chaque ville existante via geo.api.gouv.fr (contour, EPCI, population)
-3. Crée les villes manquantes à partir des accommodations publiées sans ville associée
-4. **Rattrapage de toutes les communes françaises** : parcourt chaque département via `GET /departements/{code}/communes` (~101 appels API) et importe les communes absentes en base (déduplication par code INSEE). Les arrondissements de Paris/Marseille/Lyon sont ignorés (gérés à l'étape 1). Cela permet à toutes les ~35 000 communes d'apparaître dans la recherche, même sans résidence associée.
+2. Met à jour chaque ville existante via geo.api.gouv.fr (EPCI, population, codes postaux). Le code INSEE fait foi : une ville dont le nom diffère du référentiel est renommée et son slug recalculé
+3. Rend le slug de base à une ville suffixée (`fontainebleau-1` → `fontainebleau`) dès qu'il est libre
+4. Rattache chaque adresse de résidence à la commune dont le contour la contient, quand elle est à plus de 300 m de sa ville actuelle
+5. Crée les villes manquantes à partir des accommodations publiées sans ville associée
+6. **Rattrapage de toutes les communes françaises** : parcourt chaque département via `GET /departements/{code}/communes` (~101 appels API) et importe les communes absentes en base (déduplication par code INSEE). Les arrondissements de Paris/Marseille/Lyon sont ignorés (gérés à l'étape 1). Cela permet à toutes les ~35 000 communes d'apparaître dans la recherche, même sans résidence associée.
 
 Pas de variables d'env spécifiques (utilise les APIs publiques geo.api.gouv.fr).
 

@@ -194,6 +194,59 @@ async function importAllCommunes(options: SyncOptions, result: SyncResult): Prom
   }
 }
 
+// Une ville suffixée (`fontainebleau-1`) reprend le slug de base dès qu'il se libère.
+async function reclaimBaseSlugs(options: SyncOptions, result: SyncResult): Promise<void> {
+  const rows = await db
+    .select({ id: cities.id, name: cities.name, slug: cities.slug })
+    .from(cities)
+    .orderBy(sql`length(${cities.slug})`, cities.slug)
+  const taken = new Set(rows.map((r) => r.slug))
+
+  for (const row of rows) {
+    const base = generateSlug(row.name)
+    const suffix = row.slug.startsWith(`${base}-`) ? row.slug.slice(base.length + 1) : ''
+    if (!/^\d+$/.test(suffix) || taken.has(base)) continue
+    console.log(`    ✓ ${row.name} : ${row.slug} → ${base}`)
+    taken.delete(row.slug)
+    taken.add(base)
+    if (!options.dryRun) await db.update(cities).set({ slug: base }).where(eq(cities.id, row.id))
+    result.updated++
+  }
+}
+
+async function reattachAddressesByGeometry(options: SyncOptions, result: SyncResult): Promise<void> {
+  const rows = await db.execute<{
+    address_id: string
+    accommodation: string
+    current_city: string
+    target_id: string
+    target_city: string
+  }>(sql`
+    SELECT a.id AS address_id, acc.name AS accommodation, cur.name AS current_city,
+      (array_agg(c.id))[1] AS target_id, (array_agg(c.name))[1] AS target_city
+    FROM ${accommodationAddresses} a
+    JOIN ${accommodations} acc ON acc.id = a.accommodation_id
+    JOIN ${cities} cur ON cur.id = a.city_id
+    JOIN ${cities} c ON ST_Contains(c.boundary, a.geom)
+    WHERE a.geom IS NOT NULL
+      AND cur.boundary IS NOT NULL
+      AND NOT ST_DWithin(cur.boundary::geography, a.geom::geography, 300)
+    GROUP BY a.id, acc.name, cur.name
+    HAVING count(*) = 1
+  `)
+
+  for (const row of rows) {
+    console.log(`    ✓ ${row.accommodation} : ${row.current_city} → ${row.target_city}`)
+    if (!options.dryRun) {
+      await db
+        .update(accommodationAddresses)
+        .set({ cityId: Number(row.target_id) })
+        .where(eq(accommodationAddresses.id, Number(row.address_id)))
+    }
+    result.updated++
+  }
+}
+
 const command: SyncCommand = {
   name: 'cities',
   description: 'Sync des villes depuis geo.api.gouv.fr',
@@ -224,6 +277,12 @@ const command: SyncCommand = {
         result.errors.push(`${city.name}: ${error instanceof Error ? error.message : String(error)}`)
       }
     }
+
+    console.log('  🏷️ Réattribution des slugs libérés...')
+    await reclaimBaseSlugs(options, result)
+
+    console.log('  📍 Rattachement des résidences à la commune qui contient leur adresse...')
+    await reattachAddressesByGeometry(options, result)
 
     console.log('  🔍 Recherche de villes manquantes...')
     const publishedAccommodations = await db
