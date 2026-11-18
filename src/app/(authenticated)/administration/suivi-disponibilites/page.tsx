@@ -10,6 +10,7 @@ import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, X
 import { Pagination } from '~/components/ui/pagination'
 import type { OwnerFollowUpRow, OwnerSegment } from '~/server/admin/availability-follow-up'
 import { useTRPC } from '~/server/trpc/client'
+import { formatRecentSince } from '~/utils/availability-freshness'
 import styles from '../administration.module.css'
 
 const SEGMENT_META: Record<OwnerSegment, { label: string; severity: 'success' | 'warning' | 'error' }> = {
@@ -19,6 +20,23 @@ const SEGMENT_META: Record<OwnerSegment, { label: string; severity: 'success' | 
 }
 
 const SEGMENT_ORDER: OwnerSegment[] = ['good', 'irregular', 'bad']
+
+const SEGMENT_SERIES: Record<OwnerSegment, { label: string; color: string }> = {
+  good: { label: 'Bons élèves', color: '#1f8d49' },
+  irregular: { label: 'Irréguliers', color: '#e8944a' },
+  bad: { label: 'Mauvais élèves', color: '#a94645' },
+}
+
+// Les relevés antérieurs suivaient l'ancienne règle (30 jours glissants, comptés en heures).
+const RULE_31_DAYS_FIRST_SNAPSHOT = '2026-12-01'
+
+const UNASSIGNED = 'unassigned'
+type AdminFilter = 'all' | typeof UNASSIGNED | string
+
+const matchesAdmin = (adminIds: string[], filter: AdminFilter) =>
+  filter === 'all' || (filter === UNASSIGNED ? adminIds.length === 0 : adminIds.includes(filter))
+
+const monthLabel = (capturedOn: string) => new Date(capturedOn).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })
 
 const OWNERS_PAGE_SIZE = 15
 
@@ -42,9 +60,10 @@ function ownerSource(row: OwnerFollowUpRow): string {
   return 'Mixte'
 }
 
-function downloadOwnersCsv(rows: OwnerFollowUpRow[]) {
+function downloadOwnersCsv(rows: OwnerFollowUpRow[], adminNames: Map<string, string>) {
   const header = [
     'Gestionnaire',
+    'Suivi par',
     'Segment',
     'Source',
     'Logements à jour',
@@ -62,6 +81,7 @@ function downloadOwnersCsv(rows: OwnerFollowUpRow[]) {
     const share = totals.apartments ? ((row.recent.apartments / totals.apartments) * 100).toFixed(1).replace('.', ',') : '0'
     return [
       `"${row.ownerName.replaceAll('"', '""')}"`,
+      `"${row.adminIds.map((id) => adminNames.get(id) ?? id).join(', ') || 'Non attribué'}"`,
       SEGMENT_META[row.segment].label,
       ownerSource(row),
       row.recent.apartments,
@@ -90,11 +110,15 @@ export default function SuiviDisponibilitesPage() {
   const byOwner = useQuery(trpc.admin.availability.byOwner.queryOptions())
   const followUp = useQuery(trpc.admin.availability.followUp.queryOptions())
   const snapshots = useQuery(trpc.admin.availability.snapshots.queryOptions())
+  const admins = useQuery(trpc.admin.availability.admins.queryOptions())
 
+  const [adminFilter, setAdminFilter] = useState<AdminFilter>('all')
   const [segmentFilter, setSegmentFilter] = useState<OwnerSegment | 'all'>('all')
   const [page, setPage] = useState(1)
 
-  const rows = useMemo(() => byOwner.data ?? [], [byOwner.data])
+  const allRows = useMemo(() => byOwner.data ?? [], [byOwner.data])
+  const adminNames = useMemo(() => new Map((admins.data ?? []).map((admin) => [admin.id, admin.name])), [admins.data])
+  const rows = useMemo(() => allRows.filter((row) => matchesAdmin(row.adminIds, adminFilter)), [allRows, adminFilter])
   const filteredRows = segmentFilter === 'all' ? rows : rows.filter((row) => row.segment === segmentFilter)
   const pageCount = Math.max(1, Math.ceil(filteredRows.length / OWNERS_PAGE_SIZE))
   const pagedRows = filteredRows.slice((page - 1) * OWNERS_PAGE_SIZE, page * OWNERS_PAGE_SIZE)
@@ -103,6 +127,22 @@ export default function SuiviDisponibilitesPage() {
     setSegmentFilter(segment)
     setPage(1)
   }
+
+  const selectAdmin = (filter: AdminFilter) => {
+    setAdminFilter(filter)
+    setSegmentFilter('all')
+    setPage(1)
+  }
+
+  const adminFilterOptions = [
+    { value: 'all', label: 'Tous', count: allRows.length },
+    ...(admins.data ?? []).map((admin) => ({
+      value: admin.id,
+      label: admin.name,
+      count: allRows.filter((row) => row.adminIds.includes(admin.id)).length,
+    })),
+    { value: UNASSIGNED, label: 'Non attribué', count: allRows.filter((row) => row.adminIds.length === 0).length },
+  ]
 
   const totals = useMemo(() => {
     const sum = { recent: 0, stale: 0, missing: 0, recentApi: 0, staleApi: 0, missingApi: 0, residences: 0 }
@@ -129,20 +169,39 @@ export default function SuiviDisponibilitesPage() {
     return counts
   }, [rows])
 
-  const chartData = useMemo(
-    () =>
-      (snapshots.data ?? []).map((point) => {
-        const total = point.recentApartments + point.staleApartments + point.missingApartments
-        const share = (n: number) => (total ? Math.round((n / total) * 1000) / 10 : 0)
-        return {
-          date: new Date(point.capturedOn).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' }),
-          'À jour': share(point.recentApartments),
-          'Màj irrégulière': share(point.staleApartments),
-          'Jamais renseignée': share(point.missingApartments),
-        }
-      }),
-    [snapshots.data],
-  )
+  // Les relevés sont filtrés selon les liens admin ↔ gestionnaire actuels (les liens ne sont pas historisés).
+  const snapshotPoints = useMemo(() => {
+    const adminIdsByOwner = new Map(allRows.map((row) => [row.ownerId, row.adminIds]))
+    const byDate = new Map<string, { recent: number; stale: number; missing: number; segments: Record<OwnerSegment, number> }>()
+    for (const row of snapshots.data ?? []) {
+      if (!matchesAdmin(adminIdsByOwner.get(row.ownerId) ?? [], adminFilter)) continue
+      const point = byDate.get(row.capturedOn) ?? { recent: 0, stale: 0, missing: 0, segments: { good: 0, irregular: 0, bad: 0 } }
+      point.recent += row.recentApartments
+      point.stale += row.staleApartments
+      point.missing += row.missingApartments
+      point.segments[row.segment] += 1
+      byDate.set(row.capturedOn, point)
+    }
+    return [...byDate.entries()].map(([capturedOn, point]) => ({ capturedOn, ...point }))
+  }, [snapshots.data, allRows, adminFilter])
+
+  const chartData = snapshotPoints.map((point) => {
+    const total = point.recent + point.stale + point.missing
+    const share = (n: number) => (total ? Math.round((n / total) * 1000) / 10 : 0)
+    return {
+      date: monthLabel(point.capturedOn),
+      'À jour': share(point.recent),
+      'Màj irrégulière': share(point.stale),
+      'Jamais renseignée': share(point.missing),
+    }
+  })
+
+  const segmentChartData = snapshotPoints.map((point) => ({
+    date: monthLabel(point.capturedOn),
+    ...Object.fromEntries(SEGMENT_ORDER.map((segment) => [SEGMENT_SERIES[segment].label, point.segments[segment]])),
+  }))
+
+  const hasLegacySnapshots = snapshotPoints.some((point) => point.capturedOn < RULE_31_DAYS_FIRST_SNAPSHOT)
 
   const isLoading = byOwner.isLoading
 
@@ -176,12 +235,33 @@ export default function SuiviDisponibilitesPage() {
           </div>
           <h1 className="fr-h3 fr-mb-0">Suivi des disponibilités</h1>
         </div>
-        <p className="fr-text--sm fr-text-mention--grey fr-mt-1v">
-          Mise à jour des disponibilités sur les résidences publiées hors CROUS. « À jour » : mise à jour dans les{' '}
-          {followUp.data?.recentDays ?? 30} derniers jours, par un gestionnaire ou par l&apos;import automatique des API (ARPEJ,
-          Fac-Habitat, Initiall).
+        <p className="fr-text--sm fr-text-mention--grey fr-mt-1v fr-mb-0">
+          Mise à jour des disponibilités sur les résidences publiées hors CROUS, par un gestionnaire ou par l&apos;import automatique des
+          API (ARPEJ, Fac-Habitat, Initiall). « À jour » : mise à jour dans les 31 derniers jours
+          {followUp.data ? `, soit depuis le ${formatRecentSince(followUp.data.recentSince)}` : ''}. 31 jours plutôt que 30 : un
+          gestionnaire qui met à jour une fois par mois, à date fixe, n&apos;est jamais pénalisé par un mois de 31 jours.
         </p>
       </div>
+
+      <fieldset className="fr-fieldset fr-mb-2w" aria-labelledby="suivi-par-legend">
+        <legend id="suivi-par-legend" className="fr-text--sm fr-text--bold fr-mb-1w">
+          Gestionnaires suivis par
+        </legend>
+        <ul className="fr-tags-group">
+          {adminFilterOptions.map((option) => (
+            <li key={option.value}>
+              <button
+                type="button"
+                className="fr-tag"
+                aria-pressed={adminFilter === option.value}
+                onClick={() => selectAdmin(option.value)}
+              >
+                {option.label} ({option.count})
+              </button>
+            </li>
+          ))}
+        </ul>
+      </fieldset>
 
       <div className={clsx(styles.statsGrid, 'fr-mb-3w')}>
         <div className={clsx(styles.statCard, styles.statCardGreen)}>
@@ -274,13 +354,51 @@ export default function SuiviDisponibilitesPage() {
 
       <div className={clsx(styles.card, 'fr-mb-3w')}>
         <div className={styles.cardHeader}>
+          <span className={styles.cardTitle}>Progression mensuelle des gestionnaires (nombre par segment)</span>
+        </div>
+        <div className="fr-px-3w fr-py-2w">
+          {segmentChartData.length === 0 ? (
+            <p className="fr-text--sm fr-text-mention--grey fr-mb-0">
+              Aucun relevé pour le moment : la courbe se construit au fil des relevés automatiques, le 1er de chaque mois.
+            </p>
+          ) : (
+            <ResponsiveContainer width="100%" height={280}>
+              <LineChart data={segmentChartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" fontSize={12} />
+                <YAxis allowDecimals={false} fontSize={12} />
+                <Tooltip />
+                <Legend />
+                {SEGMENT_ORDER.map((segment) => (
+                  <Line
+                    key={segment}
+                    type="monotone"
+                    dataKey={SEGMENT_SERIES[segment].label}
+                    stroke={SEGMENT_SERIES[segment].color}
+                    strokeWidth={2}
+                    dot
+                  />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+          {hasLegacySnapshots && (
+            <p className="fr-text--xs fr-text-mention--grey fr-mt-1w fr-mb-0">
+              Les relevés antérieurs à décembre 2026 ont été calculés avec l&apos;ancienne règle (mise à jour dans les 30 derniers jours).
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className={clsx(styles.card, 'fr-mb-3w')}>
+        <div className={styles.cardHeader}>
           <span className={styles.cardTitle}>Détail par gestionnaire</span>
           <Button
             priority="tertiary no outline"
             size="small"
             iconId="fr-icon-download-line"
             disabled={filteredRows.length === 0}
-            onClick={() => downloadOwnersCsv(filteredRows)}
+            onClick={() => downloadOwnersCsv(filteredRows, adminNames)}
           >
             Exporter en CSV
           </Button>
@@ -311,12 +429,23 @@ export default function SuiviDisponibilitesPage() {
               noCaption
               caption="Détail par gestionnaire"
               className="fr-mb-0"
-              headers={['Gestionnaire', 'Segment', 'Source', 'À jour', 'Màj irrégulière', 'Jamais renseignée', 'Parc total', 'Part à jour']}
+              headers={[
+                'Gestionnaire',
+                'Suivi par',
+                'Segment',
+                'Source',
+                'À jour',
+                'Màj irrégulière',
+                'Jamais renseignée',
+                'Parc total',
+                'Part à jour',
+              ]}
               data={pagedRows.map((row) => {
                 const rowTotals = ownerTotals(row)
                 const segment = SEGMENT_META[row.segment]
                 return [
                   row.ownerName,
+                  row.adminIds.map((id) => adminNames.get(id) ?? id).join(', ') || '—',
                   <Badge key="segment" severity={segment.severity} small>
                     {segment.label}
                   </Badge>,

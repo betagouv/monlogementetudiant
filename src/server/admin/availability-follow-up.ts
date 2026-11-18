@@ -1,11 +1,12 @@
-import { and, count, eq, sql } from 'drizzle-orm'
-import { INACTIVITY_WARNING_DAYS } from '~/server/bailleur/inactivity-rules'
+import { and, asc, count, eq, sql } from 'drizzle-orm'
 import { db } from '~/server/db'
 import { accommodationTypologies } from '~/server/db/schema/accommodation-typologies'
 import { accommodations } from '~/server/db/schema/accommodations'
+import { adminOwnerLinks } from '~/server/db/schema/admin-owner-links'
+import { user } from '~/server/db/schema/auth'
 import { availabilityFollowUpSnapshots } from '~/server/db/schema/availability-snapshots'
 import { owners } from '~/server/db/schema/owners'
-import { DAY_MS } from '~/utils/time'
+import { availabilityRecentSince } from '~/utils/availability-freshness'
 
 const AVAILABILITY_API_SOURCES = ['arpej', 'fac-habitat', 'initiall']
 
@@ -16,6 +17,8 @@ export type SituationCounts = { residences: number; residencesApi: number; apart
 export type OwnerFollowUpRow = {
   ownerId: number | null
   ownerName: string
+  // Comptes admin référents du gestionnaire (admin_owner_link) ; vide = non attribué.
+  adminIds: string[]
   segment: OwnerSegment
   recent: SituationCounts
   stale: SituationCounts
@@ -24,8 +27,10 @@ export type OwnerFollowUpRow = {
 
 // Fragments SQL communs : résidences publiées hors CROUS ; les imports API n'horodatent pas
 // les typologies, la date de dernier import (updatedAt) fait foi pour leurs résidences.
-function buildFragments() {
-  const recentSince = new Date(Date.now() - INACTIVITY_WARNING_DAYS.stale_availability * DAY_MS).toISOString()
+// « À jour » = mise à jour dans les 31 derniers jours, comptés en dates, heure de Paris (cf. availabilityRecentSince).
+function buildFragments(now: Date) {
+  const recentSinceDay = availabilityRecentSince(now)
+  const recentSince = sql`(${recentSinceDay}::date::timestamp at time zone 'Europe/Paris')`
   const isCrous = sql`exists (select 1 from external_source where accommodation_id = ${accommodations.id} and source = 'crous')`
   const isApi = sql`exists (select 1 from external_source where accommodation_id = ${accommodations.id} and source in (${sql.join(
     AVAILABILITY_API_SOURCES.map((source) => sql`${source}`),
@@ -37,15 +42,15 @@ function buildFragments() {
     case when ${isApi} then ${accommodations.updatedAt} end
   )`
   // coalesce : une dispo renseignée mais jamais horodatée (données d'avant le tracking) est « pas récente », pas hors catégorie
-  const isRecent = sql`(${hasAvailability} and coalesce(${lastUpdate} >= ${recentSince}::timestamptz, false))`
+  const isRecent = sql`(${hasAvailability} and coalesce(${lastUpdate} >= ${recentSince}, false))`
   const isMissing = sql`(not ${hasAvailability})`
-  const isStale = sql`(${hasAvailability} and not coalesce(${lastUpdate} >= ${recentSince}::timestamptz, false))`
+  const isStale = sql`(${hasAvailability} and not coalesce(${lastUpdate} >= ${recentSince}, false))`
   return { isCrous, isApi, isRecent, isMissing, isStale }
 }
 
 /** Tableau global du tableau de bord (compte des résidences par situation, part API). */
-export async function loadAvailabilityFollowUp() {
-  const { isCrous, isApi, isRecent, isMissing, isStale } = buildFragments()
+export async function loadAvailabilityFollowUp(now = new Date()) {
+  const { isCrous, isApi, isRecent, isMissing, isStale } = buildFragments(now)
 
   const [row] = await db
     .select({
@@ -63,7 +68,7 @@ export async function loadAvailabilityFollowUp() {
 
   const situation = (value: number, api: number) => ({ count: value, manual: value - api, api })
   return {
-    recentDays: INACTIVITY_WARNING_DAYS.stale_availability,
+    recentSince: availabilityRecentSince(now),
     total: situation(row?.total ?? 0, row?.totalApi ?? 0),
     recent: situation(row?.recent ?? 0, row?.recentApi ?? 0),
     nonRenseignee: situation(row?.nonRenseignee ?? 0, row?.nonRenseigneeApi ?? 0),
@@ -86,14 +91,17 @@ export function segmentOwner(counts: { recent: number; stale: number; missing: n
 }
 
 /** Détail par gestionnaire : résidences et logements par situation, part API, segment. */
-export async function loadAvailabilityByOwner(): Promise<OwnerFollowUpRow[]> {
-  const { isCrous, isApi, isRecent, isMissing, isStale } = buildFragments()
+export async function loadAvailabilityByOwner(now = new Date()): Promise<OwnerFollowUpRow[]> {
+  const { isCrous, isApi, isRecent, isMissing, isStale } = buildFragments(now)
   const apartments = sql`coalesce(${accommodations.nbTotalApartments}, 0)`
 
   const rows = await db
     .select({
       ownerId: accommodations.ownerId,
       ownerName: sql<string | null>`${owners.name}`,
+      adminIds: sql<
+        string[]
+      >`coalesce((select array_agg(${adminOwnerLinks.userId} order by ${adminOwnerLinks.userId}) from ${adminOwnerLinks} where ${adminOwnerLinks.ownerId} = ${accommodations.ownerId}), '{}')`,
       recentResidences: sql<number>`count(*) filter (where ${isRecent})`.mapWith(Number),
       recentResidencesApi: sql<number>`count(*) filter (where ${isRecent} and ${isApi})`.mapWith(Number),
       recentApartments: sql<number>`coalesce(sum(${apartments}) filter (where ${isRecent}), 0)`.mapWith(Number),
@@ -135,6 +143,7 @@ export async function loadAvailabilityByOwner(): Promise<OwnerFollowUpRow[]> {
       return {
         ownerId: row.ownerId,
         ownerName: row.ownerName ?? 'Sans gestionnaire',
+        adminIds: row.adminIds,
         segment: segmentOwner({ recent: recent.residences, stale: stale.residences, missing: missing.residences }),
         recent,
         stale,
@@ -150,7 +159,7 @@ export async function loadAvailabilityByOwner(): Promise<OwnerFollowUpRow[]> {
 /** Fige le relevé du jour (une ligne par gestionnaire) ; rejouable le même jour sans doublon. */
 export async function captureAvailabilitySnapshot(now = new Date()) {
   const capturedOn = now.toISOString().slice(0, 10)
-  const rows = await loadAvailabilityByOwner()
+  const rows = await loadAvailabilityByOwner(now)
 
   await db.transaction(async (tx) => {
     await tx.delete(availabilityFollowUpSnapshots).where(eq(availabilityFollowUpSnapshots.capturedOn, capturedOn))
@@ -178,19 +187,49 @@ export async function captureAvailabilitySnapshot(now = new Date()) {
   return { capturedOn, owners: rows.length }
 }
 
-/** Série mensuelle agrégée (tous gestionnaires confondus) pour la courbe de progression. */
-export async function loadAvailabilitySnapshotSeries() {
+/** Comptes admin référents d'au moins un gestionnaire, pour le filtre « suivi par ». */
+export async function loadFollowUpAdmins() {
   return db
+    .selectDistinct({ id: user.id, name: user.name })
+    .from(adminOwnerLinks)
+    .innerJoin(user, eq(user.id, adminOwnerLinks.userId))
+    .orderBy(asc(user.name))
+}
+
+export type AvailabilitySnapshotRow = {
+  capturedOn: string
+  ownerId: number | null
+  segment: OwnerSegment
+  recentApartments: number
+  staleApartments: number
+  missingApartments: number
+}
+
+/**
+ * Relevés mensuels, une ligne par gestionnaire et par date : la page agrège selon le filtre (admin référent)
+ * et compte les segments. Le segment est recalculé avec la règle actuelle sur les compteurs figés du relevé.
+ */
+export async function loadAvailabilitySnapshotRows(): Promise<AvailabilitySnapshotRow[]> {
+  const rows = await db
     .select({
       capturedOn: availabilityFollowUpSnapshots.capturedOn,
-      recentApartments: sql<number>`sum(${availabilityFollowUpSnapshots.recentApartments})`.mapWith(Number),
-      staleApartments: sql<number>`sum(${availabilityFollowUpSnapshots.staleApartments})`.mapWith(Number),
-      missingApartments: sql<number>`sum(${availabilityFollowUpSnapshots.missingApartments})`.mapWith(Number),
-      recentResidences: sql<number>`sum(${availabilityFollowUpSnapshots.recentResidences})`.mapWith(Number),
-      staleResidences: sql<number>`sum(${availabilityFollowUpSnapshots.staleResidences})`.mapWith(Number),
-      missingResidences: sql<number>`sum(${availabilityFollowUpSnapshots.missingResidences})`.mapWith(Number),
+      ownerId: availabilityFollowUpSnapshots.ownerId,
+      recentResidences: availabilityFollowUpSnapshots.recentResidences,
+      staleResidences: availabilityFollowUpSnapshots.staleResidences,
+      missingResidences: availabilityFollowUpSnapshots.missingResidences,
+      recentApartments: availabilityFollowUpSnapshots.recentApartments,
+      staleApartments: availabilityFollowUpSnapshots.staleApartments,
+      missingApartments: availabilityFollowUpSnapshots.missingApartments,
     })
     .from(availabilityFollowUpSnapshots)
-    .groupBy(availabilityFollowUpSnapshots.capturedOn)
-    .orderBy(availabilityFollowUpSnapshots.capturedOn)
+    .orderBy(asc(availabilityFollowUpSnapshots.capturedOn))
+
+  return rows.map((row) => ({
+    capturedOn: row.capturedOn,
+    ownerId: row.ownerId,
+    segment: segmentOwner({ recent: row.recentResidences, stale: row.staleResidences, missing: row.missingResidences }),
+    recentApartments: row.recentApartments,
+    staleApartments: row.staleApartments,
+    missingApartments: row.missingApartments,
+  }))
 }

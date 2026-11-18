@@ -19,6 +19,7 @@ import { useAdminMyLinkedOwners } from '~/hooks/use-admin-my-linked-owners'
 import { useAdminStats } from '~/hooks/use-admin-stats'
 import { useTRPC, useTRPCClient } from '~/server/trpc/client'
 import { authClient } from '~/services/better-auth-client'
+import { formatRecentSince } from '~/utils/availability-freshness'
 import { getAvatarColor, getInitials } from '~/utils/avatar'
 import { getFaviconUrl } from '~/utils/get-favicon-url'
 import { sPluriel } from '~/utils/sPluriel'
@@ -427,8 +428,9 @@ function AvailabilityFollowUp({ data, isLoading }: { data: ReturnType<typeof use
         </div>
         <div className="fr-px-3w">
           <p className="fr-text--sm fr-text-mention--grey fr-mt-2w fr-mb-0">
-            Résidences publiées hors CROUS. « Récemment » : dans les {suivi?.recentDays ?? 30} derniers jours, par un gestionnaire ou par
-            l&apos;import automatique des API (ARPEJ, Fac-Habitat, Initiall).
+            Résidences publiées hors CROUS. « Récemment » : dans les 31 derniers jours
+            {suivi ? ` (depuis le ${formatRecentSince(suivi.recentSince)})` : ''}, par un gestionnaire ou par l&apos;import automatique des
+            API (ARPEJ, Fac-Habitat, Initiall).
           </p>
           {isLoading || !suivi ? (
             <p className="fr-text--sm fr-text-mention--grey fr-py-3w fr-mb-0">Chargement...</p>
