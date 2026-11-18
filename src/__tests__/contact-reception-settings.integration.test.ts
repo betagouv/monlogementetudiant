@@ -66,7 +66,12 @@ const readResidences = async () => {
   return rows.map((r) => ({ id: r.id, acceptsApplications: r.acceptsApplications, acceptWaitingList: r.acceptWaitingList }))
 }
 
-type Row = { accommodationId: number; managerIds: string[]; acceptWaitingList?: boolean }
+const readRejectsOverMaxAge = async () => {
+  const rows = await getTestDb().select().from(accommodations).where(eq(accommodations.ownerId, ownerAId)).orderBy(accommodations.id)
+  return rows.map((r) => r.rejectsOverMaxAge)
+}
+
+type Row = { accommodationId: number; managerIds: string[]; acceptWaitingList?: boolean; rejectsOverMaxAge?: boolean }
 const save = (rows: Row[], ownerId?: number) =>
   ownerCaller.bailleur.saveContactReceptionSettings({
     ownerId,
@@ -155,6 +160,20 @@ describe('bailleur.saveContactReceptionSettings', () => {
       { id: resB.id, acceptsApplications: true, acceptWaitingList: false },
       { id: resC.id, acceptsApplications: false, acceptWaitingList: null },
     ])
+  })
+
+  it('écrit le refus des candidats au-delà de l’âge maximum, résidence par résidence', async () => {
+    await save([
+      { accommodationId: resA.id, managerIds: [MARINE], rejectsOverMaxAge: true },
+      { accommodationId: resB.id, managerIds: [MARINE] },
+    ])
+    expect(await readRejectsOverMaxAge()).toEqual([true, false, false])
+
+    const settings = await ownerCaller.bailleur.getContactReceptionSettings({})
+    expect(settings.residences.find((r) => r.id === resA.id)?.rejectsOverMaxAge).toBe(true)
+
+    await save([{ accommodationId: resA.id, managerIds: [MARINE], rejectsOverMaxAge: false }])
+    expect(await readRejectsOverMaxAge()).toEqual([false, false, false])
   })
 
   it('restreint un gestionnaire « toutes résidences » aux résidences cochées où il est sélectionné', async () => {

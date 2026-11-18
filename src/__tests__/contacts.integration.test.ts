@@ -153,6 +153,40 @@ describe('contacts.create', () => {
   })
 })
 
+describe('contacts.create — âge maximum', () => {
+  const yearsAgo = (years: number, days = 0) => {
+    const date = new Date()
+    date.setFullYear(date.getFullYear() - years)
+    date.setDate(date.getDate() - days)
+    return date.toISOString().slice(0, 10)
+  }
+
+  const setup = async (rejectsOverMaxAge: boolean) => {
+    const owner = await createOwner({ name: 'Owner FJT', slug: 'owner-fjt', contactMode: EOwnerContactMode.CONTACTS })
+    await createAccommodation({ slug: 'res-fjt', ownerId: owner!.id, rejectsOverMaxAge }, [typologyDraft('t1', { nbAvailable: 1 })])
+  }
+
+  it('refuse un candidat de 31 ans quand la résidence a activé le refus, sans rien enregistrer', async () => {
+    await setup(true)
+    await expect(caller.contacts.create({ accommodationSlug: 'res-fjt', ...contactInput, birthdate: yearsAgo(31) })).rejects.toThrow(
+      /30 ans maximum/,
+    )
+    expect(await getTestDb().select().from(contactRequests)).toHaveLength(0)
+  })
+
+  it('accepte un candidat de 30 ans révolus', async () => {
+    await setup(true)
+    const result = await caller.contacts.create({ accommodationSlug: 'res-fjt', ...contactInput, birthdate: yearsAgo(30, 300) })
+    expect(result).not.toBeNull()
+  })
+
+  it('accepte tout âge quand le refus n’est pas activé', async () => {
+    await setup(false)
+    const result = await caller.contacts.create({ accommodationSlug: 'res-fjt', ...contactInput, birthdate: yearsAgo(45) })
+    expect(result).not.toBeNull()
+  })
+})
+
 describe('contacts.create — rate limit', () => {
   it('rejects beyond 5 requests per hour from the same IP', async () => {
     const owner = await createOwner({ name: 'Owner Flood', slug: 'owner-flood', contactMode: EOwnerContactMode.CONTACTS })

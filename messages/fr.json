@@ -382,7 +382,8 @@
           "firstnameRequired": "Le prénom est requis",
           "lastnameRequired": "Le nom est requis",
           "emailInvalid": "L'e-mail est invalide",
-          "consentRequired": "Vous devez accepter le partage de vos informations"
+          "consentRequired": "Vous devez accepter le partage de vos informations",
+          "birthdateOverMaxAge": "Cette résidence accueille uniquement les personnes de {age} ans maximum."
         }
       },
       "alert": {
@@ -2568,6 +2569,8 @@
         "addUser": "Ajouter un gestionnaire",
         "waitingListLabel": "La résidence accepte les candidatures en liste d'attente",
         "waitingListHint": "Recevez des demandes d'étudiants même quand votre résidence est complète.",
+        "rejectsOverMaxAgeLabel": "Refuser automatiquement les candidats de plus de {age} ans",
+        "rejectsOverMaxAgeHint": "Pour les FJT et résidences jeunes actifs. L'étudiant est prévenu avant d'envoyer ses coordonnées.",
         "save": "Enregistrer",
         "saving": "Enregistrement...",
         "success": "Paramètres de réception enregistrés.",
