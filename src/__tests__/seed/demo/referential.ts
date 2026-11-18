@@ -315,10 +315,12 @@ export async function seedReferential(lyonAcademyId: number, random: Random, clo
     .insert(scholarshipSurveyOwners)
     .values({ ownerId: contactsOwner.id, completedAt: clock.daysAgo(20), completedByUserId: bailleur.id })
 
-  // L'admin référent suit deux bailleurs.
+  // L'admin référent suit deux bailleurs, dont un en binôme avec l'admin ; Campus Horizon reste non attribué
+  // (filtre « suivi par » du suivi des disponibilités).
   await db.insert(adminOwnerLinks).values([
     { userId: adminReferent.id, ownerId: contactsOwner.id },
     { userId: adminReferent.id, ownerId: dossierFacileOwner.id },
+    { userId: admin.id, ownerId: dossierFacileOwner.id },
   ])
 
   // ── Résidences ───────────────────────────────────────────────────────────────

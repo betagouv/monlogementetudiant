@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { accommodationTypologies } from '~/server/db/schema/accommodation-typologies'
 import type { TypologyDraft } from '~/server/lib/typologies'
+import { availabilityRecentSince } from '~/utils/availability-freshness'
 import { DAY_MS } from '~/utils/time'
 import { createAccommodation, createExternalSource, createOwner, createUser } from './fixtures/factories'
 import { adminCaller } from './helpers/test-caller'
@@ -41,7 +42,8 @@ describe('admin.stats.overview — suivi des mises à jour de disponibilité', (
     await stampAvailability(recentManual.id, daysAgo(5))
 
     const staleManual = await createAccommodation({ ownerId: manual.id }, [studio(2)])
-    await stampAvailability(staleManual.id, daysAgo(45))
+    // 70 jours : au-delà de la fenêtre de 31 jours.
+    await stampAvailability(staleManual.id, daysAgo(70))
 
     await createAccommodation({ ownerId: manual.id }, [studio(null)])
 
@@ -52,7 +54,7 @@ describe('admin.stats.overview — suivi des mises à jour de disponibilité', (
     await stampAvailability(recentApi.id, daysAgo(90))
     await createExternalSource({ accommodationId: recentApi.id, source: 'arpej', sourceId: 'arpej-1' })
 
-    const staleApi = await createAccommodation({ ownerId: api.id, updatedAt: daysAgo(60) }, [studio(3)])
+    const staleApi = await createAccommodation({ ownerId: api.id, updatedAt: daysAgo(70) }, [studio(3)])
     await stampAvailability(staleApi.id, daysAgo(90))
     await createExternalSource({ accommodationId: staleApi.id, source: 'fac-habitat', sourceId: 'fac-1' })
 
@@ -63,7 +65,7 @@ describe('admin.stats.overview — suivi des mises à jour de disponibilité', (
     const { suiviDispo } = await adminCaller.admin.stats.overview()
 
     expect(suiviDispo).toEqual({
-      recentDays: 30,
+      recentSince: availabilityRecentSince(),
       total: { count: 6, manual: 4, api: 2 },
       recent: { count: 2, manual: 1, api: 1 },
       nonRenseignee: { count: 1, manual: 1, api: 0 },
