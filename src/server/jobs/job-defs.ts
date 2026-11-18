@@ -9,7 +9,6 @@ export const IMPORT_JOB_TYPE_BY_IDENTIFIER: Record<string, TImportJobType> = {
   'import-initiall': 'initiall',
   'sync-cities': 'sync-cities',
   'sync-rents': 'sync-rents',
-  'sync-students': 'sync-students',
   'sync-stats': 'sync-stats',
   'detect-alert-jobs': 'alert-detection',
   'expire-alerts': 'alert-expiration',

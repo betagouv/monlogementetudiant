@@ -12,7 +12,6 @@ export const SCHEDULED_COMMANDS: TScheduledCommand[] = [
   { identifier: 'import-fac-habitat', cron: '*/30 5-19 * * *', args: ['import', 'fac-habitat', '--owner-slug', 'fac-habitat'] },
   { identifier: 'sync-cities', cron: '0 1 * * 0', args: ['sync', 'cities'], timeoutMinutes: 120 },
   { identifier: 'sync-rents', cron: '0 4 1 */3 *', args: ['sync', 'rents'] },
-  { identifier: 'sync-students', cron: '10 4 1 * *', args: ['sync', 'students'] },
   { identifier: 'purge-logs', cron: '0 5 1 * *', args: ['purge-logs'] },
   { identifier: 'send-availability-recap', cron: '0 5 1 * *', args: ['send-availability-recap'] },
   { identifier: 'sync-stats', cron: '0 3 * * *', args: ['sync', 'stats'] },

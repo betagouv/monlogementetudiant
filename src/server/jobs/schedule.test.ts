@@ -11,7 +11,6 @@ const EXPECTED: [string, string, string][] = [
   ['import-fac-habitat', '*/30 5-19 * * *', 'import fac-habitat --owner-slug fac-habitat'],
   ['sync-cities', '0 1 * * 0', 'sync cities'],
   ['sync-rents', '0 4 1 */3 *', 'sync rents'],
-  ['sync-students', '10 4 1 * *', 'sync students'],
   ['purge-logs', '0 5 1 * *', 'purge-logs'],
   ['send-availability-recap', '0 5 1 * *', 'send-availability-recap'],
   ['sync-stats', '0 3 * * *', 'sync stats'],
