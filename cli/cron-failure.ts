@@ -15,7 +15,6 @@ export const CRON_COMMANDS = new Set([
   'import initiall',
   'sync cities',
   'sync rents',
-  'sync students',
   'sync stats',
   'send-alert-jobs',
   'detect-alert-jobs',

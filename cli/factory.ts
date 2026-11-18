@@ -34,7 +34,6 @@ registerImport('crous', () => import('./commands/import-crous'))
 registerImport('initiall', () => import('./commands/import-initiall'))
 registerSync('cities', () => import('./commands/sync-cities'))
 registerSync('rents', () => import('./commands/sync-rents'))
-registerSync('students', () => import('./commands/sync-students'))
 registerSync('stats', () => import('./commands/sync-stats'))
 
 export async function runImport(type: string, options: ImportOptions): Promise<void> {

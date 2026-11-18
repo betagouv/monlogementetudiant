@@ -19,11 +19,6 @@ const CRON_JOB_DEF_MAP: Record<CronJobType, Omit<CronJobDef, 'type'>> = {
   initiall: { label: 'Import Initiall', description: 'Résidences Initiall via API WordPress', schedule: 'Tous les jours à 4h00' },
   'sync-cities': { label: 'Sync Villes', description: 'Communes depuis geo.api.gouv.fr', schedule: 'Tous les dimanches à 1h00' },
   'sync-rents': { label: 'Sync Loyers', description: 'Loyers moyens depuis data.gouv.fr', schedule: 'Le 1er de chaque trimestre à 4h00' },
-  'sync-students': {
-    label: 'Sync Étudiants',
-    description: 'Effectifs depuis data.enseignementsup',
-    schedule: 'Le 1er de chaque mois à 4h10',
-  },
   'sync-stats': { label: 'Sync Statistiques', description: 'Statistiques Matomo', schedule: 'Tous les jours à 3h00' },
   'alert-detection': {
     label: 'Détection alertes',

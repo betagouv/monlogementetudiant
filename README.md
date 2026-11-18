@@ -99,7 +99,6 @@ cli/
       auditStorage.ts      # Entry point (résumé console + CSV optionnel)
     sync-cities.ts       # Sync villes (geo.api.gouv.fr) + rattrapage toutes communes
     sync-rents.ts        # Sync loyers moyens (data.gouv.fr)
-    sync-students.ts     # Sync nb étudiants (enseignementsup)
     sync-stats.ts        # Sync stats Matomo
     seed-alert-snapshot.ts  # Amorce la baseline du snapshot de dispo (silencieux)
     backfill-alert-jobs.ts  # Vague initiale : jobs pour le stock dispo × alertes existantes
@@ -862,17 +861,6 @@ Télécharge le CSV des loyers prédits par EPCI depuis data.gouv.fr et met à j
 
 Pas de variables d'env spécifiques.
 
-#### `sync students` — Synchroniser le nombre d'étudiants
-
-```bash
-pnpm cli sync students
-pnpm cli sync students --dry-run --verbose
-```
-
-Télécharge les effectifs étudiants depuis data.enseignementsup-recherche.gouv.fr (année 2023-24), puis met à jour le champ `nb_students` des villes. Le matching se fait d'abord par code INSEE, puis par nom+département en fallback.
-
-Pas de variables d'env spécifiques.
-
 #### `sync stats` — Synchroniser les statistiques Matomo
 
 ```bash
@@ -913,7 +901,6 @@ Les migrations Drizzle sont appliquées au déploiement via le hook `postdeploy`
 | `0 4 * * *` | `import initiall --owner-slug initiall` | Tous les jours à 4h |
 | `0 1 * * 0` | `sync cities` | Dimanche à 1h |
 | `0 4 1 */3 *` | `sync rents` | 1er du trimestre à 4h |
-| `10 4 1 * *` | `sync students` | 1er du mois à 4h10 |
 | `0 5 1 * *` | `purge-logs` | 1er du mois à 5h |
 | `0 3 * * *` | `sync stats` | Tous les jours à 3h |
 | `30 3 * * *` | `purge-contact-requests` | Tous les jours à 3h30 |
