@@ -22,6 +22,8 @@ export const ConsultOfferButton = ({ href, slug, isCrous = false, priority = 'te
   const locale = useLocale()
   const trpcClient = useTRPCClient()
 
+  const label = isCrous ? t('sidebar.buttons.consultCrous') : t('sidebar.buttons.consult')
+
   const handleClick = () => {
     trackEvent({ category: 'Logement', action: 'consulter offre', name: slug })
     if (slug) {
@@ -37,12 +39,12 @@ export const ConsultOfferButton = ({ href, slug, isCrous = false, priority = 'te
           target: '_blank',
           rel: 'noopener noreferrer',
           onClick: handleClick,
-          title: tA11y('linkNewWindow', { label: t('sidebar.buttons.consult') }),
+          title: tA11y('linkNewWindow', { label }),
         }}
         priority={priority}
         size="medium"
       >
-        {t('sidebar.buttons.consult')}
+        {label}
       </Button>
       <span className={clsx('fr-text--xs fr-mt-1w fr-mb-0', styles.description)}>
         {isCrous
