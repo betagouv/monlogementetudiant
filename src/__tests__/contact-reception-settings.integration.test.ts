@@ -114,6 +114,14 @@ describe('bailleur.getContactReceptionSettings', () => {
     ])
   })
 
+  it('ne renvoie pas une résidence dépubliée', async () => {
+    await getTestDb().update(accommodations).set({ published: false }).where(eq(accommodations.id, resB.id))
+
+    const settings = await ownerCaller.bailleur.getContactReceptionSettings({})
+
+    expect(settings.residences.map((r) => r.name)).toEqual(['Res A', 'Res C'])
+  })
+
   it('est réservé aux administrateurs', async () => {
     const gestCaller = gestionnaireCallerFactory({ id: MARINE, email: `${MARINE}@a.com`, permissions: ['manage_applications'] })
     await expect(gestCaller.bailleur.getContactReceptionSettings({})).rejects.toThrow(/Administrateur du bailleur requis|FORBIDDEN/)
@@ -128,6 +136,14 @@ describe('bailleur.users.list — filtre par rôle', () => {
 })
 
 describe('bailleur.saveContactReceptionSettings', () => {
+  it('refuse une résidence dépubliée', async () => {
+    await getTestDb().update(accommodations).set({ published: false }).where(eq(accommodations.id, resA.id))
+
+    await expect(save([{ accommodationId: resA.id, managerIds: [MARINE] }])).rejects.toThrow(
+      /Une résidence dépubliée ne peut pas recevoir de contacts/,
+    )
+  })
+
   it('ouvre les résidences cochées, ferme les autres et écrit la liste d’attente', async () => {
     await save([
       { accommodationId: resA.id, managerIds: [MARINE], acceptWaitingList: true },

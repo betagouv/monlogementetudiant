@@ -12,6 +12,7 @@ export enum EContactStatus {
   A_CONTACTER = 'a_contacter',
   CONTACTE = 'contacte',
   NON_RETENU = 'non_retenu',
+  LOGEMENT_ATTRIBUE = 'logement_attribue',
 }
 
 export const CONTACT_STATUSES = Object.values(EContactStatus)
@@ -31,6 +32,7 @@ export const CONTACT_STATUS_CONFIG: Record<EContactStatus, StatusConfig> = {
   [EContactStatus.NON_RETENU]: { severity: null, barColor: '#929292' },
   [EContactStatus.A_CONTACTER]: { severity: 'error', barColor: '#e1000f' },
   [EContactStatus.CONTACTE]: { severity: 'success', barColor: '#18753c' },
+  [EContactStatus.LOGEMENT_ATTRIBUE]: { severity: 'info', barColor: '#0063cb' },
 }
 
 /** Colonnes du board selon le mode (ordre d'affichage = ordre des écrans). */
@@ -39,8 +41,14 @@ export const DF_COLUMNS: readonly EContactStatus[] = [
   EContactStatus.NON_RETENU,
   EContactStatus.A_CONTACTER,
   EContactStatus.CONTACTE,
+  EContactStatus.LOGEMENT_ATTRIBUE,
 ]
-export const CONTACTS_COLUMNS: readonly EContactStatus[] = [EContactStatus.A_CONTACTER, EContactStatus.NON_RETENU, EContactStatus.CONTACTE]
+export const CONTACTS_COLUMNS: readonly EContactStatus[] = [
+  EContactStatus.A_CONTACTER,
+  EContactStatus.NON_RETENU,
+  EContactStatus.CONTACTE,
+  EContactStatus.LOGEMENT_ATTRIBUE,
+]
 
 /** Statut « à rappeler » compté dans le badge des cartes résidence. */
 export const A_RAPPELER_STATUS: EContactStatus = EContactStatus.A_CONTACTER

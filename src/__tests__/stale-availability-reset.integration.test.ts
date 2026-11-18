@@ -1,13 +1,17 @@
 import { eq } from 'drizzle-orm'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
+import { confirmFromEmail } from '~/server/bailleur/availability-email-confirmation'
+import { runAvailabilityMonthlyRecap } from '~/server/bailleur/availability-recap'
 import { runInactivityCheck } from '~/server/bailleur/inactivity-suspension'
 import { runStaleAvailabilityReset } from '~/server/bailleur/stale-availability-reset'
+import { reminderEmails } from '~/server/db/schema/reminder-emails'
 import { DAY_MS } from '~/utils/time'
 import { accommodationTypologies } from '../server/db/schema/accommodation-typologies'
 import { accommodations } from '../server/db/schema/accommodations'
 import { activityLog } from '../server/db/schema/activity-log'
 import { user } from '../server/db/schema/auth'
+import { bailleurAccommodationScopes } from '../server/db/schema/bailleur-accommodation-scopes'
 import { owners } from '../server/db/schema/owners'
 import { typologyDraft } from '../server/lib/typologies'
 import { createAccommodation, createOwner, createUser } from './fixtures/factories'
@@ -15,7 +19,10 @@ import { getTestDb } from './helpers/test-db'
 import './helpers/setup-integration'
 import { ownerCaller } from './helpers/test-caller'
 
-const { resetWarningEmail } = vi.hoisted(() => ({ resetWarningEmail: vi.fn().mockResolvedValue(undefined) }))
+const { resetWarningEmail, resetDoneEmail } = vi.hoisted(() => ({
+  resetWarningEmail: vi.fn().mockResolvedValue(undefined),
+  resetDoneEmail: vi.fn().mockResolvedValue(undefined),
+}))
 
 vi.mock('~/services/better-auth', async () => {
   const actual = await vi.importActual<typeof import('~/services/better-auth')>('~/services/better-auth')
@@ -27,6 +34,8 @@ vi.mock('~/server/services/brevo', async () => {
   return {
     ...actual,
     sendAvailabilityResetWarningEmail: resetWarningEmail,
+    sendAvailabilityResetDoneEmail: resetDoneEmail,
+    sendAvailabilityMonthlyRecapEmail: vi.fn().mockResolvedValue(undefined),
     sendApplicationsInactivityWarningEmail: vi.fn().mockResolvedValue(undefined),
     sendApplicationsAutoSuspendedEmail: vi.fn().mockResolvedValue(undefined),
   }
@@ -57,6 +66,7 @@ const readActions = async () => (await getTestDb().select().from(activityLog)).m
 beforeEach(async () => {
   await getTestDb().delete(activityLog)
   resetWarningEmail.mockClear()
+  resetDoneEmail.mockClear()
   await createUser({ id: 'test-owner-id', name: 'Test Owner', firstname: 'Alice', email: 'owner@test.com', role: 'owner' })
   const owner = await createOwner({ name: 'Bailleur A', slug: 'bailleur-a', userId: 'test-owner-id', contactMode: EOwnerContactMode.NONE })
   ownerId = owner.id
@@ -74,17 +84,39 @@ describe('runStaleAvailabilityReset — bailleurs sans parcours', () => {
     expect(await runStaleAvailabilityReset()).toEqual({ warned: 0, reset: 0, cleared: 0, failures: [] })
   })
 
-  it('alerte à 30 jours avec un lien vers les résidences, sans toucher aux disponibilités', async () => {
+  it('alerte à 30 jours avec un lien vers les résidences et la date limite, sans toucher aux disponibilités', async () => {
     await stampAvailability(daysAgo(30))
+    const now = new Date()
 
-    expect(await runStaleAvailabilityReset()).toMatchObject({ warned: 1, reset: 0 })
+    expect(await runStaleAvailabilityReset({ now })).toMatchObject({ warned: 1, reset: 0 })
     expect((await readResidence()).staleAvailabilityWarnedAt).not.toBeNull()
     expect((await readResidence()).nbAvailableApartments).toBe(3)
     expect(resetWarningEmail).toHaveBeenCalledWith(
       'owner@test.com',
-      expect.objectContaining({ residences: ['Res A'], url: expect.stringContaining('/bailleur/residences') }),
+      expect.objectContaining({
+        residences: [expect.objectContaining({ name: 'Res A', nbAvailable: 3 })],
+        confirmUrl: expect.stringContaining('/api/disponibilites/confirmer?jeton='),
+        updateUrl: expect.stringContaining('/bailleur/residences'),
+        deadline: new Date(now.getTime() + 7 * DAY_MS),
+      }),
       { force: false },
     )
+    expect(resetDoneEmail).not.toHaveBeenCalled()
+  })
+
+  it('enregistre l’alerte et la remise à zéro', async () => {
+    resetWarningEmail.mockResolvedValueOnce('msg-warn')
+    resetDoneEmail.mockResolvedValueOnce('msg-done')
+    await stampAvailability(daysAgo(30))
+
+    await runStaleAvailabilityReset()
+    await runStaleAvailabilityReset({ now: daysAhead(7) })
+
+    const emails = await getTestDb().select().from(reminderEmails)
+    expect(emails.map((e) => [e.type, e.messageId]).sort()).toEqual([
+      ['availability_reset_done', 'msg-done'],
+      ['availability_reset_warning', 'msg-warn'],
+    ])
   })
 
   it('repasse en « non communiquée » 7 jours après l’alerte, sans toucher au reste des typologies', async () => {
@@ -92,7 +124,17 @@ describe('runStaleAvailabilityReset — bailleurs sans parcours', () => {
     await runStaleAvailabilityReset()
 
     expect(await runStaleAvailabilityReset({ now: daysAhead(6) })).toMatchObject({ reset: 0 })
+    expect(resetDoneEmail).not.toHaveBeenCalled()
     expect(await runStaleAvailabilityReset({ now: daysAhead(7) })).toMatchObject({ reset: 1 })
+    expect(resetDoneEmail).toHaveBeenCalledExactlyOnceWith(
+      'owner@test.com',
+      expect.objectContaining({
+        ownerName: 'Bailleur A',
+        residences: [expect.objectContaining({ name: 'Res A', city: expect.stringMatching(/^Ville Test/) })],
+        updateUrl: expect.stringContaining('/bailleur/residences'),
+      }),
+      { force: false },
+    )
 
     const typologies = await readTypologies()
     expect(typologies.map((t) => [t.type, t.nbTotal, t.nbAvailable, t.availabilityUpdatedAt]).sort()).toEqual([
@@ -185,6 +227,7 @@ describe('runStaleAvailabilityReset — bailleurs avec parcours', () => {
     expect((await readResidence()).applicationsSuspensionReason).toBe('stale_availability')
 
     expect(await runStaleAvailabilityReset({ now: daysAhead(7) })).toMatchObject({ reset: 1 })
+    expect(resetDoneEmail).not.toHaveBeenCalled()
 
     const row = await readResidence()
     expect(row.nbAvailableApartments).toBeNull()
@@ -206,6 +249,9 @@ describe('confirmation des disponibilités depuis l’e-mail', () => {
         id: res.id,
         slug: 'res-a',
         name: 'Res A',
+        city: expect.stringMatching(/^Ville Test/),
+        nbAvailable: 3,
+        lastUpdatedAt: expect.any(Date),
         typologies: [
           { type: 't1', nbAvailable: 2, nbTotal: 10 },
           { type: 't2', nbAvailable: 1, nbTotal: 5 },
@@ -215,7 +261,7 @@ describe('confirmation des disponibilités depuis l’e-mail', () => {
   })
 
   it('« rien n’a changé » horodate les disponibilités, lève l’alerte et évite la réinitialisation', async () => {
-    expect(await ownerCaller.bailleur.confirmAvailability()).toEqual({ confirmed: 1 })
+    expect(await ownerCaller.bailleur.confirmAvailability()).toEqual({ confirmed: 1, skipped: 0 })
 
     const typologies = await readTypologies()
     expect(typologies.every((t) => t.nbAvailable !== null && t.availabilityUpdatedBy === 'test-owner-id')).toBe(true)
@@ -223,6 +269,28 @@ describe('confirmation des disponibilités depuis l’e-mail', () => {
     expect(await ownerCaller.bailleur.listAvailabilityToConfirm()).toEqual([])
     expect(await runStaleAvailabilityReset({ now: daysAhead(7) })).toMatchObject({ reset: 0, warned: 0 })
     expect(await readActions()).toContain('accommodation.availability_confirmed')
+  })
+
+  it('affiche et passe à zéro les typologies non renseignées d’une résidence en alerte', async () => {
+    await getTestDb().update(accommodationTypologies).set({ nbAvailable: null }).where(eq(accommodationTypologies.type, 't2'))
+
+    expect(await ownerCaller.bailleur.listAvailabilityToConfirm()).toEqual([
+      expect.objectContaining({
+        id: res.id,
+        nbAvailable: 2,
+        typologies: [
+          { type: 't1', nbAvailable: 2, nbTotal: 10 },
+          { type: 't2', nbAvailable: null, nbTotal: 5 },
+        ],
+      }),
+    ])
+    expect(await ownerCaller.bailleur.confirmAvailability()).toEqual({ confirmed: 1, skipped: 0 })
+
+    expect((await readTypologies()).map((t) => [t.type, t.nbAvailable]).sort()).toEqual([
+      ['t1', 2],
+      ['t2', 0],
+    ])
+    expect(await readResidence()).toMatchObject({ nbAvailableApartments: 2, staleAvailabilityWarnedAt: null })
   })
 
   it('lève la suspension automatique « disponibilités »', async () => {
@@ -251,7 +319,7 @@ describe('confirmation des disponibilités depuis l’e-mail', () => {
 })
 
 describe('confirmation de toutes les résidences depuis la liste', () => {
-  it('horodate aussi les résidences sans alerte et ignore celles sans disponibilité', async () => {
+  it('horodate aussi les résidences sans alerte et passe les non renseignées à zéro', async () => {
     const stampedAt = daysAgo(10)
     await stampAvailability(stampedAt)
     const empty = await createAccommodation(
@@ -259,13 +327,151 @@ describe('confirmation de toutes les résidences depuis la liste', () => {
       [typologyDraft('t1', { nbTotal: 10, nbAvailable: null })],
     )
 
-    expect(await ownerCaller.bailleur.confirmAvailability()).toEqual({ confirmed: 0 })
-    expect(await ownerCaller.bailleur.confirmAvailability({ all: true })).toEqual({ confirmed: 1 })
+    expect(await ownerCaller.bailleur.confirmAvailability()).toEqual({ confirmed: 0, skipped: 0 })
+    expect(await ownerCaller.bailleur.confirmAvailability({ all: true })).toEqual({ confirmed: 2, skipped: 0 })
 
     const typologies = await readTypologies()
     expect(typologies.every((t) => t.availabilityUpdatedAt !== null && t.availabilityUpdatedAt > stampedAt)).toBe(true)
     expect((await readResidence()).updatedAt?.getTime()).toBe(typologies[0].availabilityUpdatedAt?.getTime())
-    expect((await readTypologies(empty.id)).every((t) => t.availabilityUpdatedAt === null)).toBe(true)
-    expect((await readResidence(empty.id)).updatedAt?.getTime()).toBe(stampedAt.getTime())
+    expect(await readTypologies(empty.id)).toEqual([
+      expect.objectContaining({ nbAvailable: 0, availabilityUpdatedBy: 'test-owner-id', availabilityUpdatedAt: expect.any(Date) }),
+    ])
+    expect((await readResidence(empty.id)).nbAvailableApartments).toBe(0)
+  })
+
+  it('passe à zéro les typologies non renseignées d’une résidence partiellement renseignée', async () => {
+    await getTestDb()
+      .update(accommodationTypologies)
+      .set({ nbAvailable: null, availabilityUpdatedAt: null, availabilityUpdatedBy: null })
+      .where(eq(accommodationTypologies.type, 't2'))
+
+    expect(await ownerCaller.bailleur.listAvailabilityToConfirm()).toEqual([])
+    expect(await ownerCaller.bailleur.confirmAvailability({ all: true })).toEqual({ confirmed: 1, skipped: 0 })
+
+    const typologies = await readTypologies()
+    expect(typologies.map((t) => [t.type, t.nbAvailable]).sort()).toEqual([
+      ['t1', 2],
+      ['t2', 0],
+    ])
+    expect(typologies.every((t) => t.availabilityUpdatedBy === 'test-owner-id')).toBe(true)
+    expect((await readResidence()).nbAvailableApartments).toBe(2)
+  })
+
+  it('ne réhorodate pas une saisie postérieure à l’affichage mais complète les non renseignées', async () => {
+    const enteredAt = new Date()
+    await getTestDb()
+      .update(accommodationTypologies)
+      .set({ nbAvailable: null, availabilityUpdatedAt: null, availabilityUpdatedBy: null })
+      .where(eq(accommodationTypologies.type, 't2'))
+    await getTestDb()
+      .update(accommodationTypologies)
+      .set({ availabilityUpdatedAt: enteredAt })
+      .where(eq(accommodationTypologies.type, 't1'))
+
+    expect(await ownerCaller.bailleur.confirmAvailability({ all: true, since: daysAgo(1) })).toEqual({ confirmed: 1, skipped: 0 })
+
+    const byType = Object.fromEntries((await readTypologies()).map((t) => [t.type, t]))
+    expect(byType.t1).toMatchObject({ nbAvailable: 2, availabilityUpdatedAt: enteredAt })
+    expect(byType.t2).toMatchObject({ nbAvailable: 0, availabilityUpdatedBy: 'test-owner-id' })
+  })
+})
+
+describe('parcours des e-mails de disponibilités', () => {
+  const tokenFromWarning = () => {
+    const [, params] = resetWarningEmail.mock.calls.at(-1) as [string, { confirmUrl: string }]
+    return new URL(params.confirmUrl).searchParams.get('jeton') ?? undefined
+  }
+
+  it('l’alerte à J+30 ne liste que les résidences périmées et annonce le passage en « non communiquée » à J+37', async () => {
+    await stampAvailability(daysAgo(30))
+    const fresh = await createAccommodation({ slug: 'res-fraiche', name: 'Res fraîche', ownerId, createdAt: daysAgo(100) }, [
+      typologyDraft('t1', { nbTotal: 10, nbAvailable: 4 }),
+    ])
+    await stampAvailability(daysAgo(3), fresh.id)
+    const now = new Date()
+
+    await runStaleAvailabilityReset({ now })
+
+    expect(resetWarningEmail).toHaveBeenCalledExactlyOnceWith(
+      'owner@test.com',
+      expect.objectContaining({
+        residences: [expect.objectContaining({ name: 'Res A' })],
+        deadline: new Date(now.getTime() + 7 * DAY_MS),
+      }),
+      { force: false },
+    )
+  })
+
+  it('« Rien n’a changé » depuis l’alerte lève celle-ci : rien n’est effacé à J+37 et aucun avis n’est envoyé', async () => {
+    await stampAvailability(daysAgo(30))
+    await runStaleAvailabilityReset()
+
+    expect(await confirmFromEmail(tokenFromWarning())).toEqual({ ok: true, confirmed: 1, skipped: 0 })
+    expect((await readResidence()).staleAvailabilityWarnedAt).toBeNull()
+
+    expect(await runStaleAvailabilityReset({ now: daysAhead(7) })).toMatchObject({ reset: 0 })
+    expect((await readResidence()).nbAvailableApartments).toBe(3)
+    expect(resetDoneEmail).not.toHaveBeenCalled()
+  })
+
+  it('une mise à jour depuis l’espace gestionnaire après l’alerte évite l’effacement et l’avis', async () => {
+    await stampAvailability(daysAgo(30))
+    await runStaleAvailabilityReset()
+
+    await ownerCaller.bailleur.updateAvailability({ slug: res.slug, availability: [{ type: 't1', nbAvailable: 5 }] })
+
+    expect(await runStaleAvailabilityReset({ now: daysAhead(7) })).toMatchObject({ reset: 0 })
+    expect(resetDoneEmail).not.toHaveBeenCalled()
+  })
+
+  it('à J+37, passe les disponibilités en « non communiquée » (et non à zéro), puis envoie l’avis une seule fois', async () => {
+    await stampAvailability(daysAgo(30))
+    await runStaleAvailabilityReset()
+
+    await runStaleAvailabilityReset({ now: daysAhead(7) })
+    await runStaleAvailabilityReset({ now: daysAhead(8) })
+
+    expect((await readTypologies()).map((t) => t.nbAvailable)).toEqual([null, null])
+    expect(resetDoneEmail).toHaveBeenCalledTimes(1)
+  })
+
+  it('chaque destinataire de l’avis ne reçoit que les résidences de son périmètre', async () => {
+    const resB = await createAccommodation({ slug: 'res-b', name: 'Res B', ownerId, createdAt: daysAgo(100) }, [
+      typologyDraft('t1', { nbTotal: 10, nbAvailable: 4 }),
+    ])
+    await stampAvailability(daysAgo(30))
+    await stampAvailability(daysAgo(30), resB.id)
+    await createUser({ id: 'gest', name: 'Gaston', firstname: 'Gaston', email: 'gest@test.com', role: 'owner' })
+    await getTestDb()
+      .update(user)
+      .set({ ownerId, bailleurRole: 'gestionnaire', bailleurPermissions: ['manage_residences'], applicationScopeRestricted: true })
+      .where(eq(user.id, 'gest'))
+    await getTestDb().insert(bailleurAccommodationScopes).values({ userId: 'gest', accommodationId: resB.id })
+    await runStaleAvailabilityReset()
+
+    await runStaleAvailabilityReset({ now: daysAhead(7) })
+
+    const byEmail = Object.fromEntries(
+      resetDoneEmail.mock.calls.map(([email, params]) => [email, params.residences.map((r: { name: string }) => r.name)]),
+    )
+    expect(byEmail).toEqual({ 'owner@test.com': ['Res A', 'Res B'], 'gest@test.com': ['Res B'] })
+  })
+
+  it('n’alerte ni n’avertit pour une résidence sans disponibilités renseignées', async () => {
+    await getTestDb().update(accommodationTypologies).set({ nbAvailable: null }).where(eq(accommodationTypologies.accommodationId, res.id))
+
+    await runStaleAvailabilityReset()
+    await runStaleAvailabilityReset({ now: daysAhead(7) })
+
+    expect(resetWarningEmail).not.toHaveBeenCalled()
+    expect(resetDoneEmail).not.toHaveBeenCalled()
+  })
+
+  it('une résidence passée en « non communiquée » sort du récap mensuel', async () => {
+    await stampAvailability(daysAgo(30))
+    await runStaleAvailabilityReset()
+    await runStaleAvailabilityReset({ now: daysAhead(7) })
+
+    expect(await runAvailabilityMonthlyRecap({ now: daysAhead(7) })).toMatchObject({ residences: 0, emails: 0 })
   })
 })

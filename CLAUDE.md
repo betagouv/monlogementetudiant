@@ -21,7 +21,7 @@ src/
   hooks/        # Custom hooks (React Query / tRPC)
   utils/        # Utilitaires partagés
   enums/        # Énumérations TypeScript
-cli/            # Scripts Node.js (imports CSV, SFTP, etc.)
+apps/worker/    # Package pnpm : CLI (imports, syncs) + worker Graphile, déployé sur mle-worker*
 ```
 
 ---
@@ -61,6 +61,7 @@ Toutes les vars sont déclarées et validées dans `src/server/env.ts` via Zod.
 - Les valeurs dans `.env` sont **brutes** — ne pas précalculer des dérivées (hash, URL composée) à la main dans le code. Si une var est dérivée d'autres (ex. base64 de deux vars), la déclarer directement dans `.env` comme valeur précalculée.
 - Utiliser `requiredInProd` pour les vars optionnelles en dev mais obligatoires en prod/staging.
 - Utiliser `requiredInProdUrl` pour les URLs.
+- Une variable lue uniquement par le web va dans `WEB_ONLY_ENV` (`src/server/env.ts`) ; sinon le worker l'exige aussi : la poser sur l'app worker (`mle-worker`, `mle-worker-staging`), faute de quoi il ne démarre pas.
 - Mettre à jour `.env.dist` avec des valeurs factices à chaque ajout/suppression de variable.
 - Nommer les vars en `SCREAMING_SNAKE_CASE` avec un préfixe par service : `BREVO_*`, `S3_*`, `CRISP_*`, `IBAIL_*`, etc.
 - Ajouter les vars manquantes dans les `env` de `vitest.config.ts` pour éviter les échecs à l'initialisation des tests.

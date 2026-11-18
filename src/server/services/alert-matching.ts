@@ -1,4 +1,5 @@
 import { eq, type SQL, sql } from 'drizzle-orm'
+import { computeExpandedPriceMax, EXPANDED_SEARCH_RADIUS_KM } from '~/lib/accommodations-expanded-search'
 import { academies } from '~/server/db/schema/academies'
 import { accommodationAddresses } from '~/server/db/schema/accommodation-addresses'
 import { accommodations } from '~/server/db/schema/accommodations'
@@ -58,9 +59,21 @@ export function buildTerritoryCondition(alert: Pick<AlertMatchInput, 'cityId' | 
  * accessibilité / territoire de l'alerte.
  */
 export function buildAlertMatchConditions(alert: AlertMatchInput): SQL[] {
+  const conditions = buildCommonConditions(alert, alert.maxPrice)
+
+  const territory = buildTerritoryCondition(alert)
+  if (territory) {
+    conditions.push(territory)
+  }
+
+  return conditions
+}
+
+/** Critères communs aux correspondances exactes et aux suggestions, à plafond de prix près. */
+function buildCommonConditions(alert: Pick<AlertMatchInput, 'hasColiving' | 'isAccessible'>, maxPrice: number): SQL[] {
   const conditions: SQL[] = [
     eq(accommodations.published, true),
-    sql`${accommodations.priceMin} <= ${alert.maxPrice}`,
+    sql`${accommodations.priceMin} <= ${maxPrice}`,
     sql`(${accommodations.ownerId} IS NULL OR ${accommodations.ownerId} NOT IN (SELECT ${owners.id} FROM ${owners} WHERE ${owners.slug} = 'crous'))`,
   ]
 
@@ -71,10 +84,24 @@ export function buildAlertMatchConditions(alert: AlertMatchInput): SQL[] {
     conditions.push(sql`${accommodations.nbAccessibleApartments} > 0`)
   }
 
-  const territory = buildTerritoryCondition(alert)
-  if (territory) {
-    conditions.push(territory)
-  }
+  return conditions
+}
 
+/**
+ * Conditions de la zone « suggestions similaires » d'une alerte **ville** : résidences hors de
+ * la ville mais à moins de `EXPANDED_SEARCH_RADIUS_KM` de sa frontière, avec un budget élargi
+ * de 25 % — les mêmes règles que la section « Plus de résultats » du moteur de recherche.
+ * Retourne `null` pour les alertes département/académie (pas d'élargissement pertinent).
+ */
+export function buildSimilarMatchConditions(alert: AlertMatchInput): SQL[] | null {
+  if (!alert.cityId) return null
+  const expandedPrice = computeExpandedPriceMax(alert.maxPrice)
+  if (expandedPrice === undefined) return null
+
+  const boundary = sql`(SELECT ${cities.boundary} FROM ${cities} WHERE ${cities.id} = ${alert.cityId})`
+  const conditions = buildCommonConditions(alert, expandedPrice)
+  conditions.push(
+    sql`EXISTS (SELECT 1 FROM ${accommodationAddresses} WHERE ${accommodationAddresses.accommodationId} = ${accommodations.id} AND ST_DWithin(${accommodationAddresses.geom}::geography, ${boundary}::geography, ${EXPANDED_SEARCH_RADIUS_KM * 1000}) AND NOT ST_Intersects(${accommodationAddresses.geom}, ${boundary}))`,
+  )
   return conditions
 }

@@ -4,6 +4,7 @@ import { EContactSource } from '~/enums/contact-source'
 import { EContactStatus } from '~/enums/contact-status'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { runInactivityCheck } from '~/server/bailleur/inactivity-suspension'
+import { reminderEmailItems, reminderEmails } from '~/server/db/schema/reminder-emails'
 import { DAY_MS } from '~/utils/time'
 import { accommodationTypologies } from '../server/db/schema/accommodation-typologies'
 import { accommodations } from '../server/db/schema/accommodations'
@@ -165,6 +166,21 @@ describe('runInactivityCheck — candidatures non traitées', () => {
     expect(adminCall?.[1].residences).toHaveLength(2)
   })
 
+  it('enregistre l’alerte avec un item par résidence et motif', async () => {
+    await addPendingContact(daysAgo(15))
+    warningEmail.mockResolvedValueOnce('msg-1').mockResolvedValueOnce('msg-2').mockResolvedValueOnce('msg-3')
+
+    await runInactivityCheck()
+
+    expect(warningEmail).toHaveBeenCalledWith('gest-in@a.com', expect.anything(), { force: false, reasons: ['unprocessed_applications'] })
+    const emails = await getTestDb().select().from(reminderEmails)
+    expect(emails.every((e) => e.type === 'applications_inactivity_warning')).toBe(true)
+    const adminEmail = emails.find((e) => e.userId === 'test-owner-id')
+    const items = await getTestDb().select().from(reminderEmailItems).where(eq(reminderEmailItems.reminderEmailId, adminEmail!.id))
+    expect(items).toHaveLength(1)
+    expect(items[0]).toMatchObject({ accommodationId: res.id, reason: 'unprocessed_applications' })
+  })
+
   it('reprend dès qu’une candidature est traitée, via le board', async () => {
     const contact = await addPendingContact(daysAgo(22))
     await runInactivityCheck({ now: daysAgo(7) })
@@ -265,7 +281,7 @@ describe('runInactivityCheck — candidatures non traitées', () => {
     expect((await readResidence()).unprocessedApplicationsWarnedAt).toBeNull()
     expect((await readResidence(qaResidence.id)).unprocessedApplicationsWarnedAt).not.toBeNull()
     expect(warningEmail).toHaveBeenCalledTimes(1)
-    expect(warningEmail).toHaveBeenCalledWith('qa@test.com', expect.anything(), { force: true })
+    expect(warningEmail).toHaveBeenCalledWith('qa@test.com', expect.anything(), { force: true, reasons: ['unprocessed_applications'] })
   })
 })
 

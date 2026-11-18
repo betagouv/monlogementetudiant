@@ -1,14 +1,16 @@
 import { and, eq, isNotNull, max, or, type SQL, sql } from 'drizzle-orm'
+import { EReminderType } from '~/enums/reminder-email'
 import { db } from '~/server/db'
 import { accommodationTypologies } from '~/server/db/schema/accommodation-typologies'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { owners } from '~/server/db/schema/owners'
-import { env } from '~/server/env'
 import { recomputeAndPersistAggregates } from '~/server/lib/typologies'
 import { logActivity } from '~/server/services/activity-logger'
 import { sendAvailabilityResetWarningEmail } from '~/server/services/brevo'
-import { type AvailabilityResetAction, availabilityClockStart, decideAvailabilityReset } from './inactivity-rules'
-import { inInactivityScope, loadMembers, sendGroupedEmails } from './inactivity-suspension'
+import { DAY_MS } from '~/utils/time'
+import { recapResidencesByIds, sendAvailabilityRecapEmails, sendAvailabilityResetDoneEmails } from './availability-recap'
+import { type AvailabilityResetAction, availabilityClockStart, decideAvailabilityReset, SUSPENSION_NOTICE_DAYS } from './inactivity-rules'
+import { inInactivityScope } from './inactivity-suspension'
 
 type StaleAvailabilityResetOptions = {
   dryRun?: boolean
@@ -21,11 +23,6 @@ type StaleAvailabilityResetOptions = {
 export type StaleAvailabilityResetResult = { warned: number; reset: number; cleared: number; failures: string[] }
 
 type Candidate = Awaited<ReturnType<typeof findCandidates>>[number]
-
-const RESIDENCES_URL = `${env.BASE_URL}/bailleur/residences`
-
-/** Le template porte le contexte : une ligne par résidence suffit. */
-const residenceNameOnly = () => ''
 
 /** Résidences hors import qui ont des disponibilités renseignées ou une alerte en cours. */
 async function findCandidates(ownerSlug?: string) {
@@ -129,27 +126,38 @@ export async function runStaleAvailabilityReset(options: StaleAvailabilityResetO
   }
   if (options.dryRun) return result
 
+  const toNotifyReset = plans.filter(({ residence, action }) => action === 'reset' && !inInactivityScope(residence)).map((p) => p.residence)
+  const resetNotices = await recapResidencesByIds(toNotifyReset.map((r) => r.id))
+
   const warned: Candidate[] = []
+  const resetIds = new Set<number>()
   for (const { residence, action } of plans) {
     try {
       await applyAction(residence, action, now)
       if (action === 'warn') warned.push(residence)
+      if (action === 'reset') resetIds.add(residence.id)
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       result.failures.push(`${residence.slug} : ${message}`)
     }
   }
 
-  const members = await loadMembers([...new Set(warned.map((r) => r.ownerId))])
-  await sendGroupedEmails(
-    warned.map((residence) => ({ residence, reason: 'stale_availability' as const })),
-    members,
-    sendAvailabilityResetWarningEmail,
-    residenceNameOnly,
-    result.failures,
-    options.sendOutsideProduction ?? false,
-    RESIDENCES_URL,
-  )
+  await sendAvailabilityRecapEmails({
+    type: EReminderType.AVAILABILITY_RESET_WARNING,
+    residences: await recapResidencesByIds(warned.map((r) => r.id)),
+    send: sendAvailabilityResetWarningEmail,
+    onlyWarned: true,
+    issuedAt: now,
+    deadline: new Date(now.getTime() + SUSPENSION_NOTICE_DAYS * DAY_MS),
+    force: options.sendOutsideProduction ?? false,
+    failures: result.failures,
+  })
+
+  await sendAvailabilityResetDoneEmails({
+    residences: resetNotices.filter((r) => resetIds.has(r.id)),
+    force: options.sendOutsideProduction ?? false,
+    failures: result.failures,
+  })
 
   return result
 }

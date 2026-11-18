@@ -83,6 +83,23 @@ describe('bailleur.create', () => {
     expect(result.slug).toContain('residence-test')
   })
 
+  it('does not accept applications when created unpublished', async () => {
+    const owner = await createOwner({ name: 'Owner Draft', slug: 'owner-draft', userId: 'test-owner-id' })
+    const result = await ownerCaller.bailleur.create({
+      name: 'Résidence Brouillon',
+      addresses: [{ address: '1 rue de la Paix', city: 'Paris', postalCode: '75001' }],
+      externalUrl: 'https://example.com',
+      published: false,
+      typologies: [
+        { type: 't1', priceMin: 400, priceMax: 600, superficieMin: 15, superficieMax: 25, colocation: false, nbTotal: 10, nbAvailable: 5 },
+      ],
+    })
+
+    const [row] = await getTestDb().select().from(accommodations).where(eq(accommodations.slug, result.slug))
+    expect(row.ownerId).toBe(owner.id)
+    expect(row.acceptsApplications).toBe(false)
+  })
+
   it('attaches the created residence to the linked owner and lists it', async () => {
     await createCityWithName('Lyon', 'lyon', ['69001'])
     const owner = await createOwner({ name: 'Owner List', slug: 'owner-list', userId: 'test-owner-id' })
@@ -625,6 +642,27 @@ describe('activity_log diff accuracy', () => {
     const logs = await db.select().from(activityLog)
     expect(logs).toHaveLength(1)
     expect(logs[0].action).toBe('accommodation.published')
+  })
+
+  it('turns off contact reception on unpublish and does not restore it on republish', async () => {
+    const db = getTestDb()
+    const owner = await createOwner({ name: 'Owner Stop', slug: 'owner-stop', userId: 'test-owner-id' })
+    await createAccommodation({
+      name: 'Stop Test',
+      slug: 'stop-test',
+      ownerId: owner.id,
+      published: true,
+      acceptsApplications: true,
+      geom: parisPoint,
+    })
+    const read = async () =>
+      (await db.select({ a: accommodations.acceptsApplications }).from(accommodations).where(eq(accommodations.slug, 'stop-test')))[0].a
+
+    await ownerCaller.bailleur.update({ slug: 'stop-test', published: false })
+    expect(await read()).toBe(false)
+
+    await ownerCaller.bailleur.update({ slug: 'stop-test', published: true })
+    expect(await read()).toBe(false)
   })
 
   it('classifies unpublish change as accommodation.unpublished', async () => {

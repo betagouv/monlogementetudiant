@@ -208,4 +208,23 @@ describe('GET /api/admin/residences/suivi-coordonnees/export', () => {
       'Mise en pause par': '',
     })
   })
+
+  it('compte les attributions renseignées, refusées et à renseigner, anonymisées comprises', async () => {
+    const owner = await createOwner({ name: 'Bailleur Attribution', slug: 'bailleur-attribution-export' })
+    const residence = await createAccommodation({ name: 'Résidence Attribution', slug: 'residence-attribution-export', ownerId: owner.id })
+    const base = { accommodationId: residence.id, confirmedAt: daysAgo(3), createdAt: daysAgo(3) }
+    await getTestDb()
+      .insert(contactRequests)
+      .values([
+        { ...base, email: 'oui@x.fr', status: EContactStatus.LOGEMENT_ATTRIBUE },
+        { ...base, email: 'non@x.fr', status: EContactStatus.NON_RETENU, contactedAt: daysAgo(2) },
+        { ...base, email: 'nr1@x.fr', status: EContactStatus.CONTACTE },
+        { ...base, email: '', status: EContactStatus.CONTACTE },
+      ])
+
+    const rows = await readCsv(await GET())
+    const row = rows.find((item) => item['Résidence'] === 'Résidence Attribution')!
+
+    expect([row['Attribution : oui'], row['Attribution : non'], row['Attribution : non renseigné']]).toEqual(['1', '1', '2'])
+  })
 })

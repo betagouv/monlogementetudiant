@@ -108,6 +108,7 @@ export const ZAccomodationDetails = ZAccomodation.extend(ZAmenities.shape)
   .extend(ZDescriptionSections.shape)
   .extend({
     phoneNumber: z.string().nullish(),
+    isCrous: z.boolean().optional(),
     owner: z
       .object({
         imageBase64: z.string().nullable(),

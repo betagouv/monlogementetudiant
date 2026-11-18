@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { hashPassword } from 'better-auth/crypto'
-import { createLocalAccountIssuer } from 'better-auth/db'
 import { and, eq, sql } from 'drizzle-orm'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { account, session } from '~/server/db/schema/auth'
@@ -57,7 +56,6 @@ const seedAccount = async (params: {
       id: `account-${params.id}-${params.accountId ?? 'legacy'}`,
       userId: params.id,
       accountId: params.accountId ?? email,
-      issuer: createLocalAccountIssuer('credential'),
       providerId: 'credential',
       password: params.password,
     })
@@ -111,7 +109,6 @@ describe('migration 0070 — comptes à mot de passe importés de Django', () =>
         id: 'account-etudiant-double-current',
         userId: 'etudiant-double',
         accountId: 'etudiant-double',
-        issuer: createLocalAccountIssuer('credential'),
         providerId: 'credential',
         password: await hashPassword('motDePasseActuel123!'),
       })

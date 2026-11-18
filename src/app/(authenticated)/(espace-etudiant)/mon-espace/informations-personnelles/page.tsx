@@ -33,6 +33,9 @@ export default async function StudentPersonalInformationsPage() {
             birthdate: profile.birthdate,
             scholarshipStatus: profile.scholarshipStatus,
             scholarshipType: profile.scholarshipType,
+            isWorkStudy: profile.isWorkStudy,
+            studyInstitution: profile.studyInstitution,
+            studyYear: profile.studyYear,
           }}
         />
         <div className="fr-border-top fr-pt-5w">

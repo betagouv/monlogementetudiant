@@ -6,8 +6,9 @@ import dynamic from 'next/dynamic'
 import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { parseAsBoolean, parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
-import { FC, Suspense, useEffect, useMemo } from 'react'
+import { FC, Fragment, Suspense, useEffect, useMemo } from 'react'
 import { tss } from 'tss-react'
+import { FindStudentAccommodationAlertBanner } from '~/components/find-student-accomodation/alert-banner/find-student-accommodation-alert-banner'
 import { AccomodationCard } from '~/components/find-student-accomodation/card/find-student-accomodation-card'
 import { MapSkeleton } from '~/components/map/map-skeleton'
 import { Pagination } from '~/components/ui/pagination'
@@ -20,6 +21,7 @@ import { TTerritory } from '~/schemas/territories'
 
 type FindStudentAccomodationResultsProps = {
   territory?: TTerritory
+  categoryKey?: string
   isAcademy?: boolean
   user?: TUser
 }
@@ -43,7 +45,11 @@ export const FindStudentAccomodationResults: FC<FindStudentAccomodationResultsPr
   )
 }
 
+const ALERT_BANNER_POSITION = { grille: 3, carte: 2 } as const
+
 export const FindStudentAccomodationResultsContent: FC<FindStudentAccomodationResultsContentProps> = ({
+  territory,
+  categoryKey,
   user,
   accommodations,
   isFetching,
@@ -52,6 +58,7 @@ export const FindStudentAccomodationResultsContent: FC<FindStudentAccomodationRe
   const pathname = usePathname()
   const [queryStates] = useQueryStates({
     academie: parseAsString,
+    alerte: parseAsBoolean,
     vue: parseAsString,
     page: parseAsInteger,
     bbox: parseAsString,
@@ -72,6 +79,20 @@ export const FindStudentAccomodationResultsContent: FC<FindStudentAccomodationRe
 
   const hasNoResults = !isFetching && !!accommodations && accommodations.count === 0
   const { classes } = useStyles({ view: queryStates.vue, hasNoResults })
+
+  const isMapView = queryStates.vue === 'carte'
+  const results = accommodations?.results || []
+  const alertBannerIndex = Math.min(isMapView ? ALERT_BANNER_POSITION.carte : ALERT_BANNER_POSITION.grille, results.length) - 1
+  const alertBanner =
+    territory && !queryStates.alerte ? (
+      <FindStudentAccommodationAlertBanner
+        territory={territory}
+        categoryKey={categoryKey}
+        isAuthenticated={!!user}
+        compact={isMapView}
+        className={classes.fullRow}
+      />
+    ) : null
 
   const AccomodationsMap = useMemo(
     () =>
@@ -94,8 +115,11 @@ export const FindStudentAccomodationResultsContent: FC<FindStudentAccomodationRe
       <div className={classes.container}>
         <div className={classes.accomodationsContainer}>
           <div className={classes.accommodationGrid} aria-busy={isFetching}>
-            {(accommodations?.results || []).map((accommodation) => (
-              <AccomodationCard key={accommodation.id} accomodation={accommodation} user={user} />
+            {results.map((accommodation, index) => (
+              <Fragment key={accommodation.id}>
+                <AccomodationCard accomodation={accommodation} user={user} />
+                {index === alertBannerIndex && alertBanner}
+              </Fragment>
             ))}
             {!accommodations?.results?.length && isFetching && (
               <div aria-hidden="true" className={classes.accommodationGrid}>
@@ -113,6 +137,7 @@ export const FindStudentAccomodationResultsContent: FC<FindStudentAccomodationRe
               <p>{t('description2')}</p>
             </div>
           )}
+          {hasNoResults && alertBanner}
         </div>
 
         {queryStates.vue === 'carte' && <div className={clsx('fr-hidden', 'fr-unhidden-sm', classes.mapContainer)}>{card}</div>}
@@ -153,6 +178,9 @@ export const FindStudentAccomodationResultsContent: FC<FindStudentAccomodationRe
                 if (queryStates.disponible) {
                   params.set('disponible', 'true')
                 }
+                if (queryStates.alerte) {
+                  params.set('alerte', 'true')
+                }
                 params.set('page', page.toString())
                 return {
                   href: `${pathname}?${params.toString()}`,
@@ -189,6 +217,9 @@ const useStyles = tss.withParams<{ view: string | null; hasNoResults: boolean }>
       maxWidth: view === 'carte' ? '60%' : '100%',
       width: view === 'carte' ? '60%' : '100%',
     },
+  },
+  fullRow: {
+    gridColumn: '1 / -1',
   },
   cardWidth: {
     [fr.breakpoints.up('md')]: {

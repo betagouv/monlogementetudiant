@@ -1,11 +1,9 @@
 import { subDays } from 'date-fns'
 import { sql } from 'drizzle-orm'
-import { z } from 'zod'
+import { type TStatisticsPeriod, ZStatisticsPeriod } from '~/schemas/statistics/period'
 import { db } from '~/server/db'
 
-export const ZStatisticsPeriod = z.enum(['7d', '30d', '90d'])
-
-export type TStatisticsPeriod = z.infer<typeof ZStatisticsPeriod>
+export { type TStatisticsPeriod, ZStatisticsPeriod }
 
 export const TYPE_VIEWED = 'accommodation.viewed'
 export const TYPE_CONSULT_OFFER = 'accommodation.consult_offer'

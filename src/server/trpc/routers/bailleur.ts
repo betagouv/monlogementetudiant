@@ -1,12 +1,14 @@
 import * as Sentry from '@sentry/nextjs'
 import { TRPCError } from '@trpc/server'
-import { and, asc, desc, eq, gt, ilike, inArray, ne, or, type SQL, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, exists, gt, ilike, inArray, ne, or, type SQL, sql } from 'drizzle-orm'
+import type { PgColumn } from 'drizzle-orm/pg-core'
 import { SignJWT } from 'jose'
 
 import { z } from 'zod'
 import { EContactSource, ZContactSource } from '~/enums/contact-source'
 import { A_RAPPELER_STATUS, EContactStatus, ZContactStatus } from '~/enums/contact-status'
 import { EOwnerContactMode, ZOwnerContactMode } from '~/enums/owner-contact-mode'
+import type { EStudyYear } from '~/enums/study-year'
 import type { TAccommodationSelection } from '~/schemas/accommodations/accommodation-selection'
 import { getTypologyLabel } from '~/schemas/accommodations/typology'
 import { DESCRIPTION_SECTION_KEYS, ZUpdateResidence } from '~/schemas/accommodations/update-residence'
@@ -55,14 +57,18 @@ import {
   nextApplicationsPermissions,
   sanitizeGestionnairePermissions,
 } from '~/server/bailleur/permissions'
+import { applicationsPatchOnPublishChange } from '~/server/bailleur/publication-applications'
 import { nextManagerAssignment, type StoredScope } from '~/server/bailleur/reception-assignment'
 import {
   CONTACT_BIRTHDATE_SQL,
   CONTACT_SCHOLARSHIP_STATUS_SQL,
   CONTACT_STUDENT_NAME_SQL,
+  CONTACT_STUDY_YEAR_SQL,
+  CONTACT_WORK_STUDY_SQL,
   contactStudentName,
   DOSSIER_FACILE_STUDENT_NAME_SQL,
   dossierFacileStudentName,
+  parseStudyYear,
 } from '~/server/candidatures/student-identity'
 import {
   findVisibleApplication,
@@ -72,6 +78,8 @@ import {
 } from '~/server/candidatures/visibility'
 import { db } from '~/server/db'
 import { deleteFile, keyFromPublicUrl } from '~/server/services/s3'
+import { ZStatisticsPeriod } from '~/server/statistics/accommodation-stats'
+import { emptyContactStats, getContactStatsForUser } from '~/server/statistics/contact-stats'
 
 type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
 
@@ -106,6 +114,27 @@ const DISPONIBILITES_SQL = sql<number>`coalesce(${accommodations.nbAvailableApar
 
 // La règle « dossier validé » et la fenêtre de rétention sont réunies dans
 // `visibleDossierFacileApplication` (src/server/candidatures/visibility.ts).
+
+const hasVisibleRequestSql = (contactMode: EOwnerContactMode): SQL => {
+  if (contactMode === EOwnerContactMode.CONTACTS) {
+    return exists(
+      db
+        .select({ one: sql`1` })
+        .from(contactRequests)
+        .where(and(eq(contactRequests.accommodationId, accommodations.id), visibleContactRequest())),
+    )
+  }
+  if (contactMode === EOwnerContactMode.DOSSIER_FACILE) {
+    return exists(
+      db
+        .select({ one: sql`1` })
+        .from(dossierFacileApplications)
+        .innerJoin(dossierFacileTenants, eq(dossierFacileApplications.tenantId, dossierFacileTenants.id))
+        .where(and(eq(dossierFacileApplications.accommodationSlug, accommodations.slug), visibleDossierFacileApplication())),
+    )
+  }
+  return sql`false`
+}
 
 function assertPermissionsMatchContactMode(permissions: BailleurPermission[], contactMode: EOwnerContactMode) {
   if (permissions.includes('manage_applications') && !canGrantApplicationsPermission(contactMode)) {
@@ -143,7 +172,10 @@ async function writeEligibleResidences(tx: DbTransaction, ownerId: number, scope
   const inScope = and(eq(accommodations.ownerId, ownerId), scopeAccommodationIdCondition(scope))
 
   if (selection.mode === 'all') {
-    await tx.update(accommodations).set({ acceptsApplications: true }).where(inScope)
+    await tx
+      .update(accommodations)
+      .set({ acceptsApplications: true })
+      .where(and(inScope, eq(accommodations.published, true)))
     return
   }
 
@@ -227,6 +259,7 @@ async function openScopeResidences(tx: DbTransaction, ownerId: number, scope: TB
       and(
         eq(accommodations.ownerId, ownerId),
         inArray(accommodations.id, scope.accommodationIds),
+        eq(accommodations.published, true),
         eq(accommodations.acceptsApplications, false),
       ),
     )
@@ -345,6 +378,32 @@ const verifyOwnerAccess = (userId: string, accommodationSlug: string) =>
 const verifyOwnerAccessById = (userId: string, accommodationId: number) =>
   assertOwnsAccommodation(userId, eq(accommodations.id, accommodationId))
 
+async function logContactModeration(
+  actor: { id: string; name: string },
+  accommodationWhere: SQL,
+  entity: { type: 'contact_request' | 'dossier_facile_application'; id: string },
+  status: { old: EContactStatus; new: EContactStatus },
+) {
+  if (status.old === status.new) return
+  const [residence] = await db
+    .select({ name: accommodations.name, slug: accommodations.slug, ownerId: owners.id, ownerName: owners.name })
+    .from(accommodations)
+    .leftJoin(owners, eq(owners.id, accommodations.ownerId))
+    .where(accommodationWhere)
+  if (!residence) return
+  await logActivity({
+    userId: actor.id,
+    userName: actor.name,
+    action: 'contact.status_updated',
+    entityType: entity.type,
+    entityId: entity.id,
+    entityName: residence.name,
+    ownerId: residence.ownerId ?? undefined,
+    ownerName: residence.ownerName ?? undefined,
+    metadata: { slug: residence.slug, diff: { contactStatus: status } },
+  })
+}
+
 const isPermutation = (current: string[], next: string[]) =>
   current.length === next.length && new Set(next).size === next.length && next.every((url) => current.includes(url))
 
@@ -430,6 +489,11 @@ const accommodationSelectFields = {
   lng: sql<number>`ST_X(${accommodationAddresses.geom}::geometry)`,
 } as const
 
+const CONTACTED_STATUSES: readonly EContactStatus[] = [EContactStatus.CONTACTE, EContactStatus.LOGEMENT_ATTRIBUE]
+
+const contactedAtPatch = (status: EContactStatus, column: PgColumn, now: Date) =>
+  CONTACTED_STATUSES.includes(status) ? { contactedAt: sql`coalesce(${column}, ${now.toISOString()}::timestamptz)` } : {}
+
 export const bailleurRouter = createTRPCRouter({
   list: ownerProcedure
     .input(
@@ -493,7 +557,7 @@ export const bailleurRouter = createTRPCRouter({
           .innerJoin(cities, eq(accommodationAddresses.cityId, cities.id))
           .where(where),
         db
-          .select(accommodationSelectFields)
+          .select({ ...accommodationSelectFields, hasVisibleContacts: sql<boolean>`${hasVisibleRequestSql(owner.contactMode)}` })
           .from(accommodations)
           .innerJoin(
             accommodationAddresses,
@@ -520,6 +584,7 @@ export const bailleurRouter = createTRPCRouter({
         results: (await rowsToAccommodationDTOs(results)).map((dto, index) => ({
           ...dto,
           acceptsApplications: results[index]?.acceptsApplications ?? false,
+          hasVisibleContacts: results[index]?.hasVisibleContacts ?? false,
         })),
       }
     }),
@@ -590,6 +655,8 @@ export const bailleurRouter = createTRPCRouter({
         await db.delete(accommodationAddresses).where(eq(accommodationAddresses.accommodationId, accommodationId))
         await db.insert(accommodationAddresses).values(resolved)
       }
+
+      if (snapshot) Object.assign(parentSet, applicationsPatchOnPublishChange(snapshot.published, fields.published))
 
       parentSet.updatedAt = new Date()
 
@@ -721,7 +788,7 @@ export const bailleurRouter = createTRPCRouter({
   }),
 
   confirmAvailability: bailleurProcedure('manage_residences')
-    .input(z.object({ all: z.boolean().optional(), ownerId: z.number().optional() }).optional())
+    .input(z.object({ all: z.boolean().optional(), ownerId: z.number().optional(), since: z.coerce.date().optional() }).optional())
     .mutation(async ({ ctx, input }) => {
       const owner = await getOwnerForUser(ctx.session.user.id, input?.ownerId)
       if (!owner) throw new TRPCError({ code: 'FORBIDDEN', message: 'Aucun bailleur associé à ce compte' })
@@ -730,6 +797,7 @@ export const bailleurRouter = createTRPCRouter({
         scope: await getAccommodationScope(ctx.session.user.id),
         user: { id: ctx.session.user.id, name: ctx.session.user.name },
         onlyWarned: !input?.all,
+        notUpdatedSince: input?.since,
       })
     }),
 
@@ -956,6 +1024,9 @@ export const bailleurRouter = createTRPCRouter({
         studentPhone: tenantUser?.phone ?? null,
         studentBirthdate: tenantUser?.birthdate ?? null,
         scholarshipStatus: tenantUser?.scholarshipStatus ?? null,
+        isWorkStudy: tenantUser?.isWorkStudy ?? null,
+        studyInstitution: tenantUser?.studyInstitution ?? null,
+        studyYear: parseStudyYear(tenantUser?.studyYear),
         dfTenantId: application.tenant.id,
         hasTenantUrl: !!application.tenant.url,
         hasPdfUrl: !!application.tenant.pdfUrl,
@@ -1125,7 +1196,7 @@ export const bailleurRouter = createTRPCRouter({
           )
           .leftJoin(cities, eq(accommodationAddresses.cityId, cities.id))
           .leftJoin(departments, eq(cities.departmentId, departments.id))
-          .where(eq(accommodations.ownerId, owner.id))
+          .where(and(eq(accommodations.ownerId, owner.id), eq(accommodations.published, true)))
           .orderBy(asc(accommodations.name))
           .limit(SCOPE_RESIDENCES_LIMIT),
         readOwnerGestionnaires(owner.id),
@@ -1153,12 +1224,16 @@ export const bailleurRouter = createTRPCRouter({
     }
 
     const ownerResidences = await db
-      .select({ id: accommodations.id, name: accommodations.name })
+      .select({ id: accommodations.id, name: accommodations.name, published: accommodations.published })
       .from(accommodations)
       .where(eq(accommodations.ownerId, owner.id))
     const ownedIds = new Set(ownerResidences.map((r) => r.id))
     if (checkedIds.some((id) => !ownedIds.has(id))) {
       throw new TRPCError({ code: 'BAD_REQUEST', message: "Une residence selectionnee n'appartient pas a ce bailleur" })
+    }
+    const unpublishedIds = new Set(ownerResidences.filter((r) => !r.published).map((r) => r.id))
+    if (checkedIds.some((id) => unpublishedIds.has(id))) {
+      throw new TRPCError({ code: 'BAD_REQUEST', message: 'Une résidence dépubliée ne peut pas recevoir de contacts' })
     }
 
     const gestionnaires = await readOwnerGestionnaires(owner.id)
@@ -1309,6 +1384,13 @@ export const bailleurRouter = createTRPCRouter({
     return { updated: changes.length }
   }),
 
+  contactStats: bailleurProcedure('manage_applications')
+    .input(z.object({ period: ZStatisticsPeriod, ownerId: z.number().optional() }))
+    .query(async ({ ctx, input }) => {
+      const stats = await getContactStatsForUser({ userId: ctx.session.user.id, ownerId: input.ownerId, period: input.period })
+      return { rows: stats?.rows ?? [], total: stats?.total ?? emptyContactStats() }
+    }),
+
   // Grille de résidences avec le nombre de contacts « à rappeler » (statut a_contacter).
   listResidencesWithContactCounts: bailleurProcedure('manage_applications')
     .input(z.object({ search: z.string().optional(), ownerId: z.number().optional() }))
@@ -1317,10 +1399,10 @@ export const bailleurRouter = createTRPCRouter({
       if (!owner) return { mode: EOwnerContactMode.NONE, residences: [] }
 
       const scope = await getAccommodationScope(ctx.session.user.id)
-      // Une résidence fermée aux candidatures n'a aucun contact à présenter.
+      // Une résidence fermée aux candidatures reste présentée tant qu'elle porte des demandes encore visibles.
       const conditions = [
         eq(accommodations.ownerId, owner.id),
-        eq(accommodations.acceptsApplications, true),
+        or(eq(accommodations.acceptsApplications, true), hasVisibleRequestSql(owner.contactMode)),
         scopeAccommodationIdCondition(scope),
       ].filter(Boolean) as SQL[]
       if (input.search && input.search.length >= 2) {
@@ -1434,6 +1516,8 @@ export const bailleurRouter = createTRPCRouter({
         studentName: string | null
         studentBirthdate: string | null
         scholarshipStatus: string | null
+        isWorkStudy: boolean | null
+        studyYear: EStudyYear | null
         apartmentType: string | null
         status: string
         createdAt: Date
@@ -1441,12 +1525,14 @@ export const bailleurRouter = createTRPCRouter({
       }> = []
 
       if (mode === EOwnerContactMode.DOSSIER_FACILE) {
-        items = await db
+        const rows = await db
           .select({
             id: dossierFacileApplications.id,
             studentName: DOSSIER_FACILE_STUDENT_NAME_SQL,
             studentBirthdate: user.birthdate,
             scholarshipStatus: user.scholarshipStatus,
+            isWorkStudy: user.isWorkStudy,
+            studyYear: user.studyYear,
             apartmentType: dossierFacileApplications.apartmentType,
             status: dossierFacileApplications.status,
             createdAt: dossierFacileApplications.createdAt,
@@ -1457,13 +1543,16 @@ export const bailleurRouter = createTRPCRouter({
           .leftJoin(user, eq(dossierFacileTenants.userId, user.id))
           .where(and(eq(dossierFacileApplications.accommodationSlug, input.slug), visibleDossierFacileApplication()))
           .orderBy(desc(dossierFacileApplications.createdAt))
+        items = rows.map((row) => ({ ...row, studyYear: parseStudyYear(row.studyYear) }))
       } else if (mode === EOwnerContactMode.CONTACTS) {
-        items = await db
+        const rows = await db
           .select({
             id: contactRequests.id,
             studentName: CONTACT_STUDENT_NAME_SQL,
             studentBirthdate: CONTACT_BIRTHDATE_SQL,
             scholarshipStatus: CONTACT_SCHOLARSHIP_STATUS_SQL,
+            isWorkStudy: CONTACT_WORK_STUDY_SQL,
+            studyYear: CONTACT_STUDY_YEAR_SQL,
             apartmentType: contactRequests.apartmentType,
             status: contactRequests.status,
             createdAt: contactRequests.createdAt,
@@ -1473,6 +1562,7 @@ export const bailleurRouter = createTRPCRouter({
           .leftJoin(user, eq(contactRequests.userId, user.id))
           .where(and(eq(contactRequests.accommodationId, residence.id), visibleContactRequest()))
           .orderBy(desc(contactRequests.createdAt))
+        items = rows.map((row) => ({ ...row, studyYear: parseStudyYear(row.studyYear) }))
       }
 
       return {
@@ -1511,6 +1601,9 @@ export const bailleurRouter = createTRPCRouter({
         studentPhone: request.phone ?? request.user?.phone ?? null,
         studentBirthdate: request.birthdate ?? request.user?.birthdate ?? null,
         scholarshipStatus: request.scholarshipStatus ?? request.user?.scholarshipStatus ?? null,
+        isWorkStudy: request.isWorkStudy ?? request.user?.isWorkStudy ?? null,
+        studyInstitution: request.studyInstitution ?? request.user?.studyInstitution ?? null,
+        studyYear: parseStudyYear(request.studyYear ?? request.user?.studyYear),
       }
     }),
 
@@ -1585,6 +1678,7 @@ export const bailleurRouter = createTRPCRouter({
   updateContactStatus: bailleurProcedure('manage_applications')
     .input(z.object({ id: z.string().uuid(), status: ZContactStatus, source: ZContactSource }))
     .mutation(async ({ ctx, input }) => {
+      const now = new Date()
       if (input.source === EContactSource.DOSSIER_FACILE) {
         // Même porte que la lecture : une candidature hors rétention ou au dossier non validé n'est
         // pas plus mutable qu'elle n'est consultable.
@@ -1595,7 +1689,12 @@ export const bailleurRouter = createTRPCRouter({
 
         const [updated] = await db
           .update(dossierFacileApplications)
-          .set({ status: input.status, reviewedAt: new Date(), updatedAt: new Date() })
+          .set({
+            status: input.status,
+            reviewedAt: now,
+            updatedAt: now,
+            ...contactedAtPatch(input.status, dossierFacileApplications.contactedAt, now),
+          })
           .where(eq(dossierFacileApplications.id, input.id))
           .returning()
         const [residence] = await db
@@ -1603,6 +1702,12 @@ export const bailleurRouter = createTRPCRouter({
           .from(accommodations)
           .where(eq(accommodations.slug, application.accommodationSlug))
         if (residence) await resumeIfResolved(residence.id)
+        await logContactModeration(
+          ctx.session.user,
+          eq(accommodations.slug, application.accommodationSlug),
+          { type: 'dossier_facile_application', id: input.id },
+          { old: application.status, new: input.status },
+        )
         return updated
       }
 
@@ -1613,10 +1718,16 @@ export const bailleurRouter = createTRPCRouter({
 
       const [updated] = await db
         .update(contactRequests)
-        .set({ status: input.status, reviewedAt: new Date(), updatedAt: new Date() })
+        .set({ status: input.status, reviewedAt: now, updatedAt: now, ...contactedAtPatch(input.status, contactRequests.contactedAt, now) })
         .where(eq(contactRequests.id, input.id))
         .returning()
       await resumeIfResolved(request.accommodationId)
+      await logContactModeration(
+        ctx.session.user,
+        eq(accommodations.id, request.accommodationId),
+        { type: 'contact_request', id: input.id },
+        { old: request.status, new: input.status },
+      )
 
       // L'étudiant est prévenu du refus — uniquement au passage vers « non retenu » (pas si la
       // fiche y était déjà), et si ses coordonnées sont encore présentes (non anonymisées).

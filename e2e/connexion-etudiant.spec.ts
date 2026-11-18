@@ -16,7 +16,7 @@ test.describe('Connexion étudiant', () => {
     await page.getByRole('main').getByRole('button', { name: 'Se connecter' }).click()
 
     await expect(page).toHaveURL(/\/mon-espace\/tableau-de-bord/)
-    await expect(page.getByRole('link', { name: 'Favoris et candidatures' }).first()).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Tableau de bord' }).first()).toBeVisible()
   })
 
   test('refuse un mot de passe incorrect', async ({ page }) => {

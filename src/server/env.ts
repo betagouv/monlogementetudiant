@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { type ProcessKind, processKindFromArgv } from './db/process-kind'
 
 const isProd = process.env.NEXT_PUBLIC_APP_ENV === 'production' || process.env.NEXT_PUBLIC_APP_ENV === 'staging'
 const isProdOnly = process.env.NEXT_PUBLIC_APP_ENV === 'production'
@@ -9,7 +10,7 @@ const requiredInProd = isProd ? z.string().min(1) : z.string().optional()
 /** Requis en production seulement — staging n'a pas l'équivalent (backups, par exemple). */
 const requiredInProdOnly = isProdOnly ? z.string().min(1) : z.string().optional()
 
-const envSchema = z.object({
+export const envSchema = z.object({
   // Core
   BASE_URL: z.url(),
   AUTH_SECRET: z.string().min(1),
@@ -19,6 +20,12 @@ const envSchema = z.object({
   // pour la valeur par défaut, qui dépend du type de process : le plafond de la base est partagé
   // entre tous les containers, tous les one-off et toutes les sessions psql.
   DATABASE_POOL_MAX: z.preprocess((v) => (v === '' ? undefined : v), z.coerce.number().int().positive().optional()),
+
+  // À `true` sur les apps worker : seule l'app web migre au déploiement.
+  SKIP_POSTDEPLOY_MIGRATE: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
 
   // Alerting des crons : destinataires du mail envoyé quand un job planifié échoue.
   // Liste séparée par des virgules. Vide (ou absente) = aucun envoi, on se contente d'un
@@ -48,6 +55,8 @@ const envSchema = z.object({
   // de la QA (voir `src/utils/redirect-email.ts`). Aucun mail ne part vers une vraie adresse.
   BREVO_REDIRECT_DOMAIN: z.string().min(1).default('qa-mail.monlogementetudiant.beta.gouv.fr'),
   BREVO_CONTACTS_API_URL: z.url(),
+  BREVO_EVENTS_API_URL: z.url().default('https://api.brevo.com/v3/smtp/statistics/events'),
+  BREVO_BLOCKED_CONTACTS_API_URL: z.url().default('https://api.brevo.com/v3/smtp/blockedContacts'),
   // accepts only entire positive numbers for the brevo templates.
   BREVO_TEMPLATE_MAGIC_LINK: z.coerce.number().int().positive(),
   BREVO_TEMPLATE_VALIDATION: z.coerce.number().int().positive(),
@@ -69,6 +78,9 @@ const envSchema = z.object({
   BREVO_TEMPLATE_CONTACT_DAILY_DIGEST: z.coerce.number().int().positive(),
   BREVO_TEMPLATE_CONTACT_NOT_RETAINED: z.coerce.number().int().positive(),
   BREVO_TEMPLATE_AVAILABILITY_RESET_WARNING: z.coerce.number().int().positive(),
+  BREVO_TEMPLATE_AVAILABILITY_MONTHLY_RECAP: z.coerce.number().int().positive(),
+  BREVO_TEMPLATE_AVAILABILITY_RESET_DONE: z.coerce.number().int().positive(),
+  BREVO_TEMPLATE_STUDENT_GOAL_REMINDER: z.coerce.number().int().positive(),
 
   // S3
   S3_ENDPOINT: z.url(),
@@ -139,6 +151,8 @@ const envSchema = z.object({
   // que `ScalingoBackupService` lève déjà une erreur explicite qui déclenche le mail d'échec.
   SCALINGO_API_TOKEN: z.string().optional(),
   SCALINGO_APP: z.string().optional(),
+  // App Scalingo qui porte l'addon PostgreSQL, si ce n'est pas l'app courante (app worker).
+  SCALINGO_DATABASE_APP: z.string().optional(),
   SCALINGO_REGION: z.string().default('osc-secnum-fr1'),
 
   // CLI : FacHabitat SFTP
@@ -165,6 +179,62 @@ const envSchema = z.object({
   // Rate-limit par défaut appliqué à chaque clé d'API (surchargable par clé).
   API_V1_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(120),
   API_V1_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60_000),
+
+  // Enquête flash boursiers : dernier jour d'ouverture (AAAA-MM-JJ, heure de Paris). Vide = enquête fermée.
+  SCHOLARSHIP_SURVEY_END_DATE: z.preprocess((v) => (v === '' ? undefined : v), z.iso.date().optional()),
 })
 
-export const env = envSchema.parse(process.env)
+type TEnvKey = keyof z.input<typeof envSchema>
+
+// Lues par le seul code web : facultatives pour le worker et le CLI (garde-fou : apps/worker/__tests__/env-usage.test.ts).
+export const WEB_ONLY_ENV = [
+  'ACCOMMODATION_REPORT_EMAIL',
+  'API_V1_ENABLED',
+  'API_V1_RATE_LIMIT_MAX',
+  'API_V1_RATE_LIMIT_WINDOW_MS',
+  'DOSSIERFACILE_AUTHORIZE_URL',
+  'DOSSIERFACILE_CLIENT_ID',
+  'DOSSIERFACILE_CLIENT_SECRET',
+  'DOSSIERFACILE_REDIRECT_URI',
+  'DOSSIERFACILE_SCOPE',
+  'DOSSIERFACILE_TENANT_PROFILE_URL',
+  'DOSSIERFACILE_TOKEN_URL',
+  'DOSSIERFACILE_WEBHOOK_API_KEY',
+  'IMAGE_CACHE_MEMORY_MB',
+  'IMAGE_CACHE_S3_DISABLED',
+  'NEXT_PUBLIC_CALENDLY_URL',
+  'NEXT_PUBLIC_DOSSIERFACILE_LOCATAIRE_URL',
+  'NEXT_PUBLIC_GITBOOK_URL',
+  'NEXT_PUBLIC_MATOMO_SITE_ID',
+  'NEXT_PUBLIC_MATOMO_URL',
+  'NEXT_PUBLIC_TALLY_URL',
+  'SCHOLARSHIP_SURVEY_END_DATE',
+  'SENTRY_CSP_REPORT_URI',
+  'SUPPORT_TICKET_EMAIL',
+  'WP_FAQ_PAGE_ID',
+  'WP_FAQ_URL',
+] as const satisfies readonly TEnvKey[]
+
+const webOnlyKeys = new Set<string>(WEB_ONLY_ENV)
+
+const workerEnvSchema = envSchema.partial(
+  Object.fromEntries(WEB_ONLY_ENV.map((key) => [key, true])) as Record<(typeof WEB_ONLY_ENV)[number], true>,
+)
+
+export type TEnv = z.infer<typeof envSchema>
+
+export function parseEnv(source: NodeJS.ProcessEnv, kind: ProcessKind): TEnv {
+  if (kind === 'web') return envSchema.parse(source)
+
+  const parsed = workerEnvSchema.parse(source)
+  return new Proxy(parsed, {
+    get(target, key, receiver) {
+      if (typeof key === 'string' && webOnlyKeys.has(key) && Reflect.get(target, key, receiver) === undefined) {
+        throw new Error(`Variable d'environnement ${key} réservée à l’app web : indisponible dans le worker`)
+      }
+      return Reflect.get(target, key, receiver)
+    },
+  }) as TEnv
+}
+
+export const env = parseEnv(process.env, process.env.NEXT_RUNTIME ? 'web' : processKindFromArgv(process.argv[1]))

@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { env } from '~/server/env'
 
 const GEO_API_URL = 'https://geo.api.gouv.fr'
-const THROTTLE_MS = 150
+const THROTTLE_MS = process.env.VITEST ? 0 : 150
 const CANDIDATE_LIMIT = 10
 const FETCH_TIMEOUT_MS = 10000
 

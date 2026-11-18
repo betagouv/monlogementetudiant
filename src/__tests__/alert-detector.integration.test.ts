@@ -1,6 +1,6 @@
 import { and, eq } from 'drizzle-orm'
 import { describe, expect, it } from 'vitest'
-import { accommodations, alertJobs } from '~/server/db/schema'
+import { accommodations, alertJobs, user } from '~/server/db/schema'
 import { backfillAlertJobs, detectAlertJobs, enqueueJobsForNewAlert } from '~/server/services/alert-detector'
 import { MAX_ATTEMPTS } from '~/server/services/alert-sender'
 import {
@@ -674,5 +674,124 @@ describe('detectAlertJobs — favoris', () => {
       )
 
     expect(await jobsFor(accom.id)).toHaveLength(0)
+  })
+})
+
+// ~1,5 km à l'est de la frontière de la ville (dans la zone élargie de 10 km) / ~15 km (hors zone).
+const POINT_NEARBY = { type: 'Point', coordinates: [2.42, 48.85] as [number, number] }
+const POINT_FAR = { type: 'Point', coordinates: [2.6, 48.85] as [number, number] }
+
+describe('suggestions similaires (zone élargie +10 km / +25 % budget)', () => {
+  it('crée un job « similar » pour une résidence proche hors ville dans le budget élargi', async () => {
+    const city = await setupCity()
+    // priceMin 600 : au-dessus du budget de l'alerte (500) mais sous le budget élargi (625).
+    const nearby = await createAccommodation({
+      cityId: city.id,
+      geom: POINT_NEARBY,
+      published: true,
+      priceMin: 600,
+      nbAvailableApartments: 0,
+    })
+    const alert = await createAlert({ userId: 'student-1', cityId: city.id, maxPrice: 500, receiveNotifications: true })
+
+    await detectAlertJobs() // baseline
+    await setAvailability(nearby.id, 3)
+    const result = await detectAlertJobs()
+
+    expect(result.jobsCreated).toBe(1)
+    const jobs = await jobsFor(nearby.id)
+    expect(jobs).toHaveLength(1)
+    expect(jobs[0].source).toBe('similar')
+    expect(jobs[0].studentAlertId).toBe(alert.id)
+    expect(jobs[0].status).toBe('pending')
+  })
+
+  it('ignore les résidences trop loin ou trop chères, et les alertes non-ville', async () => {
+    const city = await setupCity()
+    const far = await createAccommodation({ cityId: city.id, geom: POINT_FAR, published: true, priceMin: 450, nbAvailableApartments: 0 })
+    const tooExpensive = await createAccommodation({
+      cityId: city.id,
+      geom: POINT_NEARBY,
+      published: true,
+      priceMin: 700,
+      nbAvailableApartments: 0,
+    })
+    await createAlert({ userId: 'student-1', cityId: city.id, maxPrice: 500, receiveNotifications: true })
+    await createAlert({ userId: 'student-2', departmentId: city.departmentId, maxPrice: 900, receiveNotifications: true })
+
+    await detectAlertJobs() // baseline
+    await setAvailability(far.id, 2)
+    await setAvailability(tooExpensive.id, 2)
+    await detectAlertJobs()
+
+    const similarJobs = (await getTestDb().select().from(alertJobs)).filter((j) => j.source === 'similar')
+    expect(similarJobs).toHaveLength(0)
+  })
+
+  it('ne crée aucun job « similar » quand la préférence « logements similaires » est désactivée', async () => {
+    const city = await setupCity()
+    const nearby = await createAccommodation({
+      cityId: city.id,
+      geom: POINT_NEARBY,
+      published: true,
+      priceMin: 450,
+      nbAvailableApartments: 0,
+    })
+    await createAlert({ userId: 'student-1', cityId: city.id, maxPrice: 500, receiveNotifications: true })
+    await getTestDb().update(user).set({ similarAccommodationAlertsEnabled: false }).where(eq(user.id, 'student-1'))
+
+    await detectAlertJobs() // baseline
+    await setAvailability(nearby.id, 3)
+    const result = await detectAlertJobs()
+
+    expect(result.jobsCreated).toBe(0)
+    expect(await jobsFor(nearby.id)).toHaveLength(0)
+  })
+
+  it('plafonne les suggestions à 6 par alerte et par run', async () => {
+    const city = await setupCity()
+    const nearbyIds: number[] = []
+    for (let i = 0; i < 8; i++) {
+      const accom = await createAccommodation({
+        cityId: city.id,
+        geom: { type: 'Point', coordinates: [2.41 + i * 0.001, 48.85] },
+        published: true,
+        priceMin: 450,
+        nbAvailableApartments: 0,
+      })
+      nearbyIds.push(accom.id)
+    }
+    await createAlert({ userId: 'student-1', cityId: city.id, maxPrice: 500, receiveNotifications: true })
+
+    await detectAlertJobs() // baseline
+    for (const id of nearbyIds) await setAvailability(id, 2)
+    const result = await detectAlertJobs()
+
+    expect(result.jobsCreated).toBe(6)
+  })
+
+  it('enqueueJobsForNewAlert enfile aussi les suggestions du stock déjà disponible', async () => {
+    const city = await setupCity()
+    const inside = await createAccommodation({
+      cityId: city.id,
+      geom: POINT_INSIDE,
+      published: true,
+      priceMin: 400,
+      nbAvailableApartments: 4,
+    })
+    const nearby = await createAccommodation({
+      cityId: city.id,
+      geom: POINT_NEARBY,
+      published: true,
+      priceMin: 600,
+      nbAvailableApartments: 2,
+    })
+    const alert = await createAlert({ userId: 'student-1', cityId: city.id, maxPrice: 500, receiveNotifications: true })
+
+    const created = await enqueueJobsForNewAlert(alert.id)
+
+    expect(created).toBe(2)
+    expect((await jobsFor(inside.id))[0]?.source).toBe('alert')
+    expect((await jobsFor(nearby.id))[0]?.source).toBe('similar')
   })
 })

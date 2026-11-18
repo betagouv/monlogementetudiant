@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { STUDY_YEARS } from '~/enums/study-year'
 import { frSchemaTranslator, type TSchemaTranslator } from '~/schemas/schema-translator'
 import { computeAge } from '~/utils/date-helpers'
 
@@ -41,6 +42,29 @@ export const createZScholarshipStatus = (t: TSchemaTranslator = frSchemaTranslat
   z.enum(['yes', 'no', 'unknown'], { error: t('errors.scholarshipStatusRequired') })
 
 export const ZScholarshipStatus = createZScholarshipStatus()
+
+export const STUDY_INSTITUTION_MAX_LENGTH = 200
+
+/** Alternance : réponse oui/non obligatoire. */
+export const createZWorkStudy = (t: TSchemaTranslator = frSchemaTranslator) => z.boolean({ error: t('errors.workStudyRequired') })
+
+export const ZWorkStudy = createZWorkStudy()
+
+/** Version formulaire : un radio HTML ne porte que des chaînes, converties en booléen à la validation. */
+export const createZWorkStudyChoice = (t: TSchemaTranslator = frSchemaTranslator) =>
+  z.enum(['true', 'false'], { error: t('errors.workStudyRequired') }).transform((value) => value === 'true')
+
+export const createZStudyInstitution = (t: TSchemaTranslator = frSchemaTranslator) =>
+  z
+    .string({ error: t('errors.studyInstitutionRequired') })
+    .trim()
+    .min(1, { message: t('errors.studyInstitutionRequired') })
+    .max(STUDY_INSTITUTION_MAX_LENGTH, { message: t('errors.studyInstitutionTooLong', { max: STUDY_INSTITUTION_MAX_LENGTH }) })
+
+export const ZStudyInstitution = createZStudyInstitution()
+
+/** Année d'études visée à la rentrée du logement. */
+export const createZStudyYear = (t: TSchemaTranslator = frSchemaTranslator) => z.enum(STUDY_YEARS, { error: t('errors.studyYearRequired') })
 
 /**
  * Bloc d'informations étudiant partagé entre l'inscription et la modale de complétion.

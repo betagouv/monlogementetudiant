@@ -21,6 +21,7 @@ type WorkspaceHeaderClientProps = {
   contactMode: EOwnerContactMode
   canManageUsers: boolean
   canManageResidences: boolean
+  showScholarshipSurvey: boolean
   canManageApplications: boolean
   hasApplicationScope: boolean
   isAdmin: boolean
@@ -34,6 +35,7 @@ export function WorkspaceHeaderClient({
   contactMode,
   canManageUsers,
   canManageResidences,
+  showScholarshipSurvey,
   canManageApplications,
   hasApplicationScope,
   isAdmin,
@@ -69,6 +71,7 @@ export function WorkspaceHeaderClient({
             contactMode={selectedContactMode}
             canManageUsers={canManageUsers}
             canManageResidences={canManageResidences}
+            showScholarshipSurvey={showScholarshipSurvey}
             canManageApplications={canManageApplications}
             hasApplicationScope={hasApplicationScope}
             isAdmin={isAdmin}

@@ -9,6 +9,7 @@ import { IncomeForm } from '~/components/budget-simulation/income-form'
 import type { TBudgetSimulation } from '~/schemas/budget-simulation'
 import { BudgetAutosave } from './budget-autosave'
 import { BudgetSummaryCard } from './budget-summary-card'
+import { ResetBudgetButton } from './reset-budget-button'
 import styles from './saved-budget.module.css'
 
 interface SavedBudgetContentProps {
@@ -21,6 +22,9 @@ export function SavedBudgetContent({ initialState }: SavedBudgetContentProps) {
   return (
     <BudgetSimulatorProvider initialState={initialState ?? undefined} trackStart={false}>
       <BudgetAutosave />
+      <div className="fr-flex fr-justify-content-end fr-mb-2w">
+        <ResetBudgetButton />
+      </div>
       <BudgetSummaryCard />
       <div className="fr-border-bottom">
         <BudgetSection

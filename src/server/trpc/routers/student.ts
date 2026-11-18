@@ -16,6 +16,9 @@ export const studentRouter = createTRPCRouter({
         birthdate: user.birthdate,
         scholarshipStatus: user.scholarshipStatus,
         scholarshipType: user.scholarshipType,
+        isWorkStudy: user.isWorkStudy,
+        studyInstitution: user.studyInstitution,
+        studyYear: user.studyYear,
         similarAccommodationAlertsEnabled: user.similarAccommodationAlertsEnabled,
         favoriteAlertsEnabled: user.favoriteAlertsEnabled,
       })
@@ -31,6 +34,9 @@ export const studentRouter = createTRPCRouter({
         birthdate: null,
         scholarshipStatus: null,
         scholarshipType: null,
+        isWorkStudy: null,
+        studyInstitution: null,
+        studyYear: null,
         similarAccommodationAlertsEnabled: true,
         favoriteAlertsEnabled: true,
       }
@@ -48,6 +54,9 @@ export const studentRouter = createTRPCRouter({
         birthdate: input.birthdate ?? null,
         scholarshipStatus: input.scholarshipStatus ?? null,
         scholarshipType: input.scholarshipStatus === 'yes' ? (input.scholarshipType ?? null) : null,
+        isWorkStudy: input.isWorkStudy ?? null,
+        studyInstitution: input.studyInstitution || null,
+        studyYear: input.studyYear ?? null,
         updatedAt: new Date(),
       })
       .where(eq(user.id, ctx.session.user.id))

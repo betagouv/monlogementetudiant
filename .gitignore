@@ -1,7 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -51,9 +51,13 @@ docs/audit-rgaa/
 
 # Audit RGAA : outillage local, non versionné
 cli/commands/audit-rgaa/
-cli/local/
+apps/worker/local/
 
 # Playwright
 /test-results
 /playwright-report
 /.next-e2e
+
+# superpowers
+docs/superpowers/
+.superpowers/

@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { frSchemaTranslator, type TSchemaTranslator } from '~/schemas/schema-translator'
+import { createZStudyYear, createZWorkStudyChoice, STUDY_INSTITUTION_MAX_LENGTH } from '~/schemas/student-profile/student-profile'
 
 export const SCHOLARSHIP_TYPES = ['crous_social', 'crous_annual_specific', 'french_government', 'health_social_training', 'other'] as const
 
@@ -22,6 +23,14 @@ export const createZUpdateStudentProfileInput = (t: TSchemaTranslator = frSchema
     birthdate: z.string().nullable().optional(),
     scholarshipStatus: z.enum(['yes', 'no', 'unknown']).nullable().optional(),
     scholarshipType: z.enum(SCHOLARSHIP_TYPES).nullable().optional(),
+    isWorkStudy: z.boolean().nullable().optional(),
+    studyInstitution: z
+      .string()
+      .trim()
+      .max(STUDY_INSTITUTION_MAX_LENGTH, { message: t('errors.studyInstitutionTooLong', { max: STUDY_INSTITUTION_MAX_LENGTH }) })
+      .nullable()
+      .optional(),
+    studyYear: createZStudyYear(t).nullable().optional(),
   })
 
 export const ZUpdateStudentProfileInput = createZUpdateStudentProfileInput()
@@ -31,6 +40,7 @@ export type TUpdateStudentProfileInput = z.infer<typeof ZUpdateStudentProfileInp
 export const createZUpdateStudentProfileForm = (t: TSchemaTranslator = frSchemaTranslator) =>
   createZUpdateStudentProfileInput(t)
     .extend({
+      isWorkStudy: createZWorkStudyChoice(t).nullish(),
       currentPassword: z.string().optional(),
       newPassword: z.string().optional(),
       confirmPassword: z.string().optional(),
@@ -56,3 +66,5 @@ export const createZUpdateStudentProfileForm = (t: TSchemaTranslator = frSchemaT
 export const ZUpdateStudentProfileForm = createZUpdateStudentProfileForm()
 
 export type TUpdateStudentProfileForm = z.infer<typeof ZUpdateStudentProfileForm>
+
+export type TUpdateStudentProfileFormInput = z.input<typeof ZUpdateStudentProfileForm>

@@ -11,6 +11,7 @@ const Line = ({ icon, children }: { icon: string; children: React.ReactNode }) =
 
 export const ContactDetailAbout = ({ contact }: { contact: TContactDetail }) => {
   const t = useTranslations('bailleur.contacts.detail')
+  const tSchemas = useTranslations('schemas')
   const age = computeAge(contact.studentBirthdate)
 
   return (
@@ -34,6 +35,13 @@ export const ContactDetailAbout = ({ contact }: { contact: TContactDetail }) => 
         )}
         {age !== null && <Line icon="ri-calendar-line">{t('age', { count: age })}</Line>}
         {contact.scholarshipStatus === 'yes' && <Line icon="ri-money-euro-circle-line">{t('scholarship')}</Line>}
+        {contact.isWorkStudy !== null && (
+          <Line icon="ri-briefcase-line">{t('workStudy', { value: t(contact.isWorkStudy ? 'workStudyYes' : 'workStudyNo') })}</Line>
+        )}
+        {contact.studyInstitution && <Line icon="ri-building-line">{t('studyInstitution', { value: contact.studyInstitution })}</Line>}
+        {contact.studyYear && (
+          <Line icon="ri-graduation-cap-line">{t('studyYear', { value: tSchemas(`studyYear.${contact.studyYear}`) })}</Line>
+        )}
       </ul>
     </>
   )

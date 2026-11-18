@@ -173,9 +173,9 @@ export const BailleurUserModal = ({ ownerId, ownerContactMode, canGrantAdministr
         <Alert className="fr-mb-2w" severity="warning" small description={t('adminLimit.body', { max: MAX_BAILLEUR_ADMINISTRATORS })} />
       )}
 
-      {isLoadingDetail ? (
-        <p className="fr-text-mention--grey">{t('loading')}</p>
-      ) : (
+      {isOpen && isLoadingDetail && <p className="fr-text-mention--grey">{t('loading')}</p>}
+
+      {isOpen && !isLoadingDetail && (
         // Masqué et non démonté pendant la confirmation : « Retour » retrouve la saisie intacte.
         <div className={pendingOpening ? 'fr-hidden' : undefined}>
           <BailleurUserForm

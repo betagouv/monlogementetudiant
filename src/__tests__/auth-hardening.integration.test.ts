@@ -1,5 +1,4 @@
 import { hashPassword } from 'better-auth/crypto'
-import { createLocalAccountIssuer } from 'better-auth/db'
 import { eq } from 'drizzle-orm'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { account, session, user, verification } from '~/server/db/schema/auth'
@@ -104,7 +103,6 @@ describe('connexion par lien des rôles qui n’utilisent pas le mot de passe', 
         id: `account-${id}`,
         userId: id,
         accountId: id,
-        issuer: createLocalAccountIssuer('credential'),
         providerId: 'credential',
         password: await hashPassword('motDePasseHerite123!'),
       })
@@ -163,7 +161,6 @@ describe('réinitialisation du mot de passe', () => {
         id: 'account-etudiant-reset',
         userId: 'etudiant-reset',
         accountId: 'etudiant-reset',
-        issuer: createLocalAccountIssuer('credential'),
         providerId: 'credential',
         password: await hashPassword(password),
       })

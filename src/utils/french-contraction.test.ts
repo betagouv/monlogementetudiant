@@ -21,6 +21,18 @@ describe('applyFrenchContraction', () => {
     expect(applyFrenchContraction('à', 'Lens')).toBe('à Lens')
   })
 
+  it('élide « de » devant une voyelle', () => {
+    expect(applyFrenchContraction('de', 'Agiras')).toBe("d'Agiras")
+    expect(applyFrenchContraction('de', 'Orléans')).toBe("d'Orléans")
+    expect(applyFrenchContraction('de', 'Évry-Courcouronnes')).toBe("d'Évry-Courcouronnes")
+  })
+
+  it('n’élide pas « de » devant un h ni une consonne, et jamais « à »', () => {
+    expect(applyFrenchContraction('de', 'Hénin-Beaumont')).toBe('de Hénin-Beaumont')
+    expect(applyFrenchContraction('de', 'Fac-Habitat')).toBe('de Fac-Habitat')
+    expect(applyFrenchContraction('à', 'Orléans')).toBe('à Orléans')
+  })
+
   it('renvoie une chaîne vide pour un nom vide', () => {
     expect(applyFrenchContraction('à', '')).toBe('')
   })

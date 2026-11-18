@@ -13,10 +13,14 @@ export const ZImportJobType = z.enum([
   'alert-expiration',
   'applications-inactivity',
   'contact-digest',
+  'goal-reminders',
   'availability-reset',
+  'availability-recap',
+  'availability-snapshot',
   'purge-contacts',
   'purge-logs',
   'backup-db',
+  'monthly-metrics',
 ])
 export type TImportJobType = z.infer<typeof ZImportJobType>
 
@@ -26,10 +30,14 @@ const MAINTENANCE_JOB_TYPES: string[] = [
   'alert-expiration',
   'applications-inactivity',
   'contact-digest',
+  'goal-reminders',
   'availability-reset',
+  'availability-recap',
+  'availability-snapshot',
   'purge-contacts',
   'purge-logs',
   'backup-db',
+  'monthly-metrics',
 ]
 
 // Tout ce qui ne contient pas "sync" et n'est pas un job de maintenance est un import.

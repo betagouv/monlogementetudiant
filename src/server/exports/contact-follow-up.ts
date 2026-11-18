@@ -3,7 +3,9 @@ import { SUSPENSION_REASON_LABELS } from '~/enums/applications-suspension-reason
 import { CONTACT_RETENTION_DAYS, EContactStatus } from '~/enums/contact-status'
 import { ELoginAttemptStatus } from '~/enums/login-attempt-status'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
+import { attributionCounts } from '~/server/contacts/attribution'
 import { db } from '~/server/db'
+import { contactRequests } from '~/server/db/schema'
 import type { TCsvColumn } from '~/utils/csv'
 
 export type TContactFollowUpRow = {
@@ -23,6 +25,9 @@ export type TContactFollowUpRow = {
   dernier_changement_statut: string | null
   nb_en_attente: number
   nb_expirees_non_traitees: number
+  nb_attribue_oui: number
+  nb_attribue_non: number
+  nb_attribue_non_renseigne: number
 }
 
 export const CONTACT_FOLLOW_UP_COLUMNS: TCsvColumn<TContactFollowUpRow>[] = [
@@ -42,10 +47,15 @@ export const CONTACT_FOLLOW_UP_COLUMNS: TCsvColumn<TContactFollowUpRow>[] = [
   { key: 'dernier_changement_statut', header: 'Dernier changement de statut' },
   { key: 'nb_en_attente', header: 'En attente de traitement' },
   { key: 'nb_expirees_non_traitees', header: 'Expirées sans traitement' },
+  { key: 'nb_attribue_oui', header: 'Attribution : oui' },
+  { key: 'nb_attribue_non', header: 'Attribution : non' },
+  { key: 'nb_attribue_non_renseigne', header: 'Attribution : non renseigné' },
 ]
 
-const TREATED_STATUSES = sql`(${EContactStatus.CONTACTE}, ${EContactStatus.NON_RETENU})`
+const TREATED_STATUSES = sql`(${EContactStatus.CONTACTE}, ${EContactStatus.NON_RETENU}, ${EContactStatus.LOGEMENT_ATTRIBUE})`
 const RETENTION = sql`make_interval(days => ${CONTACT_RETENTION_DAYS}::int)`
+
+const ATTRIBUTION = attributionCounts(contactRequests)
 
 const formatDate = (column: string) => sql.raw(`to_char(${column} AT TIME ZONE 'Europe/Paris', 'DD/MM/YYYY')`)
 
@@ -92,7 +102,10 @@ export const getContactFollowUpRows = async () => {
         count(*) FILTER (WHERE status IN ${TREATED_STATUSES}) AS treated,
         max(reviewed_at) FILTER (WHERE status IN ${TREATED_STATUSES}) AS last_status_change,
         count(*) FILTER (WHERE status NOT IN ${TREATED_STATUSES} AND created_at >= now() - ${RETENTION}) AS pending,
-        count(*) FILTER (WHERE status NOT IN ${TREATED_STATUSES} AND created_at < now() - ${RETENTION}) AS expired
+        count(*) FILTER (WHERE status NOT IN ${TREATED_STATUSES} AND created_at < now() - ${RETENTION}) AS expired,
+        ${ATTRIBUTION.oui} AS attribue_oui,
+        ${ATTRIBUTION.non} AS attribue_non,
+        ${ATTRIBUTION.nonRenseigne} AS attribue_non_renseigne
       FROM contact_request
       WHERE user_id IS NOT NULL OR confirmed_at IS NOT NULL
       GROUP BY accommodation_id
@@ -143,7 +156,10 @@ export const getContactFollowUpRows = async () => {
       coalesce(c.treated, 0)::int AS nb_traitees,
       ${formatDate('c.last_status_change')} AS dernier_changement_statut,
       coalesce(c.pending, 0)::int AS nb_en_attente,
-      coalesce(c.expired, 0)::int AS nb_expirees_non_traitees
+      coalesce(c.expired, 0)::int AS nb_expirees_non_traitees,
+      coalesce(c.attribue_oui, 0)::int AS nb_attribue_oui,
+      coalesce(c.attribue_non, 0)::int AS nb_attribue_non,
+      coalesce(c.attribue_non_renseigne, 0)::int AS nb_attribue_non_renseigne
     FROM residences res
     LEFT JOIN managers_by_residence mbr ON mbr.accommodation_id = res.id
     LEFT JOIN contacts c ON c.accommodation_id = res.id

@@ -44,6 +44,6 @@
   ],
   "exclude": [
     "node_modules",
-    "cli/local"
+    "apps/worker/local"
   ]
 }

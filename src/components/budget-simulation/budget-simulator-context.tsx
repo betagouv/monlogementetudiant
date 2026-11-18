@@ -4,6 +4,7 @@ import { createContext, type ReactNode, useContext, useEffect, useState } from '
 import { trackEvent } from '~/lib/tracking'
 import type { TBudgetFrequency, TBudgetSimulation } from '~/schemas/budget-simulation'
 import { formatBudgetAmount, getMonthlyEquivalent } from '~/utils/budget-amount'
+import { computeBudgetTotals } from '~/utils/budget-totals'
 
 export type BudgetFrequency = TBudgetFrequency
 
@@ -246,15 +247,5 @@ export function useBudgetSimulator() {
 
 export function useBudgetTotals() {
   const { state } = useBudgetSimulator()
-
-  const totalIncomes = state.activeIncomeTypes.reduce(
-    (sum, type) => sum + getMonthlyEquivalent(state.monthlyIncomes[type], state.incomeFrequencies[type]),
-    0,
-  )
-  const totalExpenses = state.activeExpenseTypes.reduce(
-    (sum, type) => sum + getMonthlyEquivalent(state.monthlyExpenses[type], state.expenseFrequencies[type]),
-    0,
-  )
-
-  return { totalIncomes, totalExpenses, remainingBalance: totalIncomes - totalExpenses }
+  return computeBudgetTotals(state)
 }

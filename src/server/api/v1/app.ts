@@ -3,8 +3,9 @@ import * as Sentry from '@sentry/nextjs'
 import { cors } from 'hono/cors'
 import { HTTPException } from 'hono/http-exception'
 import { env } from '~/server/env'
-import { apiKeyMiddleware, requireFeatureEnabled } from './middlewares'
+import { apiKeyMiddleware, requireFeatureEnabled, requireOwnerKey } from './middlewares'
 import { accommodationsApp } from './routes/accommodations'
+import { contactsApp } from './routes/contacts'
 import { territoriesApp } from './routes/territories'
 import { createApiHono } from './shared'
 
@@ -13,13 +14,15 @@ const app = createApiHono().basePath('/api/v1')
 // --- Middlewares ---
 app.use('*', requireFeatureEnabled)
 app.use('*', cors({ origin: '*', allowMethods: ['GET', 'OPTIONS'], allowHeaders: ['x-api-key', 'content-type'] }))
-for (const path of ['/accommodations', '/accommodations/*', '/cities', '/departments', '/academies', '/territories/*']) {
+for (const path of ['/accommodations/*', '/cities', '/departments', '/academies', '/territories/*']) {
   app.use(path, apiKeyMiddleware)
 }
+app.use('/contacts/*', apiKeyMiddleware, requireOwnerKey)
 
 // --- Routes (une sous-app OpenAPI par domaine) ---
 app.route('/', accommodationsApp)
 app.route('/', territoriesApp)
+app.route('/', contactsApp)
 
 // --- OpenAPI document + Scalar ---
 app.openAPIRegistry.registerComponent('securitySchemes', 'ApiKeyAuth', {
@@ -34,7 +37,7 @@ app.doc('/openapi.json', {
     title: 'API Mon Logement Étudiant',
     version: '1.0.0',
     description:
-      'API publique en lecture seule du catalogue des résidences étudiantes et des territoires. ' +
+      'API en lecture seule : catalogue des résidences étudiantes et des territoires, et demandes de contact pour les clés rattachées à un bailleur. ' +
       "Une clé d'API (en-tête « x-api-key ») est requise sur tous les endpoints de données.",
   },
   // Les chemins du doc incluent déjà « /api/v1 » (basePath) : le serveur ne porte donc que l'origine.

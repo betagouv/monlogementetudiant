@@ -37,6 +37,7 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
     const v = accommodation.typologies[suffix]
     return {
       type,
+      perPerson: isPerPersonTypology(suffix),
       title,
       tooltip,
       min: v?.priceMin ?? null,
@@ -103,7 +104,7 @@ export const AccommodationResidence = async ({ accommodation }: AccommodationRes
                     {accommodation.min && accommodation.max && accommodation.min !== accommodation.max
                       ? t('priceRange', { min: accommodation.min, max: accommodation.max })
                       : `${accommodation.min} €`}{' '}
-                    {isPerPersonTypology(accommodation.type) && `${t('perPerson')} `}
+                    {accommodation.perPerson && `${t('perPerson')} `}
                     {t('charges')}
                   </p>
                 </div>

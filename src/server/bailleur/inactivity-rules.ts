@@ -14,7 +14,7 @@ export const INACTIVITY_WARNING_DAYS: Record<InactivityReason, number> = {
 export const SUSPENSION_NOTICE_DAYS = 7
 
 /** Tolérance sur l'heure de passage du cron, pour qu'un préavis de N jours ne glisse pas à N + 1. */
-const CRON_RUN_TOLERANCE_MS = 12 * 60 * 60 * 1000
+export const CRON_RUN_TOLERANCE_MS = 12 * 60 * 60 * 1000
 
 const SUSPENSION_NOTICE_MS = SUSPENSION_NOTICE_DAYS * DAY_MS - CRON_RUN_TOLERANCE_MS
 

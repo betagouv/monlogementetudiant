@@ -122,7 +122,10 @@ export async function findPendingMagicLinks(email: string) {
       ),
     )
     .orderBy(desc(loginAttempts.createdAt))
-  return rows.map((row) => ({ id: row.id, verificationIdentifier: Buffer.from(row.tokenHash, 'hex').toString('base64url') }))
+  return rows.map((row) => ({
+    id: row.id,
+    verificationIdentifier: `magic-link:${Buffer.from(row.tokenHash, 'hex').toString('base64url')}`,
+  }))
 }
 
 export async function recordOtpSignIn(params: { attemptId: number; userAgent: string | null }): Promise<void> {

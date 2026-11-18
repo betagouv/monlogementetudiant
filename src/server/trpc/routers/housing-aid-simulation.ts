@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm'
+import { desc, eq } from 'drizzle-orm'
 import { type HelpSimulatorFormData, helpSimulatorSchema } from '~/components/helps-simulator/help-simulator-schema'
 import { db } from '~/server/db'
 import { housingAidSimulations } from '~/server/db/schema'
@@ -10,6 +10,8 @@ export const housingAidSimulationRouter = createTRPCRouter({
       .select({ inputs: housingAidSimulations.inputs })
       .from(housingAidSimulations)
       .where(eq(housingAidSimulations.userId, ctx.session.user.id))
+      .orderBy(desc(housingAidSimulations.updatedAt))
+      .limit(1)
 
     if (!row) return null
 
@@ -19,19 +21,14 @@ export const housingAidSimulationRouter = createTRPCRouter({
     return parsed.data
   }),
 
+  // Pas de mise à jour : chaque enregistrement (acte volontaire) ouvre une nouvelle version.
   save: userProcedure.input(helpSimulatorSchema).mutation(async ({ ctx, input }) => {
     const inputs: HelpSimulatorFormData = {
       ...input,
       monthlyRent: typeof input.monthlyRent === 'number' && !Number.isNaN(input.monthlyRent) ? input.monthlyRent : undefined,
     }
 
-    await db
-      .insert(housingAidSimulations)
-      .values({ userId: ctx.session.user.id, inputs })
-      .onConflictDoUpdate({
-        target: housingAidSimulations.userId,
-        set: { inputs, updatedAt: new Date() },
-      })
+    await db.insert(housingAidSimulations).values({ userId: ctx.session.user.id, inputs })
 
     return { success: true }
   }),

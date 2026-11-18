@@ -75,6 +75,17 @@ export const ContactDetailActions = ({ contact, source, dfTenantId }: Props) => 
     )
   }
 
+  if (status === EContactStatus.LOGEMENT_ATTRIBUE) {
+    return (
+      <div className={clsx(PANEL_CLASSNAME, styles.actionsPanel)}>
+        <Success color="green-emeraude" width={64} height={64} />
+
+        <p className="fr-h5">{t('assignedTitle')}</p>
+        <p>{t('assignedDescription')}</p>
+      </div>
+    )
+  }
+
   if (status === EContactStatus.NON_RETENU) {
     return (
       <div className={clsx(PANEL_CLASSNAME, styles.actionsPanel)}>
