@@ -1,99 +1,102 @@
 'use client'
 
-import Table from '@codegouvfr/react-dsfr/Table'
+import Breadcrumb from '@codegouvfr/react-dsfr/Breadcrumb'
+import { Tabs } from '@codegouvfr/react-dsfr/Tabs'
 import { useQuery } from '@tanstack/react-query'
-import clsx from 'clsx'
+import { useSearchParams } from 'next/navigation'
+import { parseAsStringLiteral, useQueryState } from 'nuqs'
 import { useTRPC } from '~/server/trpc/client'
-import { sPluriel } from '~/utils/sPluriel'
-import styles from '../administration.module.css'
+import { HousingAidCityDetail } from './housing-aid-city-detail'
+import { HousingAidCityTable } from './housing-aid-city-table'
+import { BudgetMetricCards, HousingAidMetricCards, HousingAidStatusTable, SIMULATIONS_HREF, SimulationSection } from './simulations-ui'
 
-const STATUS_LABELS: Record<string, string> = {
-  student: 'Étudiant',
-  apprentice: 'Apprenti',
-  'employed-student': 'Étudiant salarié',
-  lyceen: 'Lycéen',
-  'boursier-crous': 'Boursier CROUS',
-}
-
-const euros = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })
-const amount = (value: number | null) => (value === null ? '–' : euros.format(value))
+const TABS = ['aides', 'budget'] as const
 
 export default function SimulationsPage() {
   const trpc = useTRPC()
   const { data, isLoading } = useQuery(trpc.admin.simulations.overview.queryOptions())
+  const [tab, setTab] = useQueryState('onglet', parseAsStringLiteral(TABS).withDefault('aides'))
+  // Ville sélectionnée dans l'URL : la vue détail se partage et le bouton « retour » du navigateur fonctionne.
+  const cityKey = useSearchParams().get('ville')
 
-  const budget = data?.budget
   const housingAid = data?.housingAid
 
-  const budgetCards = [
-    {
-      label: `Simulation${sPluriel(budget?.count ?? 0)} de budget`,
-      value: budget?.count ?? '-',
-      icon: 'fr-icon-calculator-line',
-      colorClass: styles.statCardBlue,
-    },
-    {
-      label: 'Revenus moyens / mois',
-      value: amount(budget?.averageIncomes ?? null),
-      icon: 'fr-icon-arrow-up-line',
-      colorClass: styles.statCardGreen,
-    },
-    {
-      label: 'Dépenses moyennes / mois',
-      value: amount(budget?.averageExpenses ?? null),
-      icon: 'fr-icon-arrow-down-line',
-      colorClass: styles.statCardOrange,
-    },
-    {
-      label: 'Solde moyen / mois',
-      value: amount(budget?.averageBalance ?? null),
-      icon: 'fr-icon-money-euro-circle-line',
-      colorClass: styles.statCardPurple,
-    },
-  ]
+  if (cityKey) {
+    const row = housingAid?.byCity.find((city) => city.key === cityKey)
+    return (
+      <>
+        <Breadcrumb
+          currentPageLabel={row?.city ?? (isLoading ? 'Chargement…' : 'Ville inconnue')}
+          segments={[{ label: "Simulations d'aides au logement", linkProps: { href: SIMULATIONS_HREF } }]}
+          classes={{ root: 'fr-mt-0 fr-mb-2w' }}
+        />
+        {isLoading ? (
+          <p className="fr-text--sm">Chargement…</p>
+        ) : (
+          <HousingAidCityDetail row={row} totalSimulations={housingAid?.simulations ?? 0} />
+        )}
+      </>
+    )
+  }
 
   return (
-    <div>
+    <>
       <div className="fr-mb-3w">
         <h1 className="fr-h3 fr-mb-0">Simulations des étudiants</h1>
-        <p className="fr-text--sm fr-text-mention--grey fr-mb-0">
+        <p className="fr-text--sm fr-text-mention--grey fr-mt-1v fr-mb-0">
           Historique complet des versions de simulations sauvegardées par les étudiants connectés (les simulations anonymes du site public
           ne sont pas enregistrées).
         </p>
       </div>
 
-      <h2 className="fr-h5">Simulateur de budget</h2>
-      <div className={clsx(styles.statsGrid, 'fr-mb-3w')}>
-        {budgetCards.map((card) => (
-          <div key={card.label} className={clsx(styles.statCard, card.colorClass)}>
-            <div className={styles.statLabel}>{card.label}</div>
-            <div className={clsx(styles.statValue, 'fr-mt-1v')}>{isLoading ? '-' : card.value}</div>
-            <span className={clsx(card.icon, styles.statIcon)} aria-hidden="true" />
-          </div>
-        ))}
-      </div>
+      <Tabs
+        selectedTabId={tab}
+        onTabChange={(tabId) => setTab(tabId as (typeof TABS)[number])}
+        tabs={[
+          { tabId: 'aides', label: 'Aides au logement', iconId: 'fr-icon-home-4-line' },
+          { tabId: 'budget', label: 'Budget', iconId: 'fr-icon-calculator-line' },
+        ]}
+      >
+        {tab === 'aides' ? (
+          <>
+            <SimulationSection
+              title="Vue d'ensemble"
+              icon="fr-icon-bar-chart-box-line"
+              description="Toutes les versions sont comptées : un étudiant qui modifie sa simulation compte plusieurs fois dans « Simulations », une seule fois dans « Étudiants »."
+            >
+              <HousingAidMetricCards metrics={housingAid} isLoading={isLoading} />
+            </SimulationSection>
 
-      <h2 className="fr-h5">
-        Simulateur d'aides au logement
-        {housingAid ? ` — ${housingAid.count} simulation${sPluriel(housingAid.count)}` : ''}
-      </h2>
-      <p className="fr-text--sm fr-text-mention--grey">
-        Le statut est multi-choix : une simulation compte dans chaque ligne qui la concerne, la somme des lignes peut dépasser le total.
-      </p>
-      {housingAid && housingAid.byStatus.length > 0 ? (
-        <Table
-          headers={['Statut', 'Simulations', 'Revenus moyens', 'Loyer moyen envisagé', 'Avec garant']}
-          data={housingAid.byStatus.map((row) => [
-            STATUS_LABELS[row.status] ?? row.status,
-            row.count,
-            amount(row.averageIncome),
-            amount(row.averageRent),
-            row.guarantorRate === null ? '–' : `${row.guarantorRate} %`,
-          ])}
-        />
-      ) : (
-        <p className="fr-text--sm">{isLoading ? 'Chargement…' : 'Aucune simulation enregistrée pour le moment.'}</p>
-      )}
-    </div>
+            <SimulationSection
+              title="Par statut"
+              icon="fr-icon-user-line"
+              description="Le statut est multi-choix : une simulation compte dans chaque ligne qui la concerne, la somme des lignes peut dépasser le total."
+            >
+              {housingAid && housingAid.byStatus.length > 0 ? (
+                <HousingAidStatusTable rows={housingAid.byStatus} caption="Simulations d'aides au logement par statut" />
+              ) : (
+                <p className="fr-text--sm fr-mb-0">{isLoading ? 'Chargement…' : 'Aucune simulation enregistrée pour le moment.'}</p>
+              )}
+            </SimulationSection>
+
+            <SimulationSection
+              title="Par ville visée"
+              icon="fr-icon-map-pin-2-line"
+              description="Cliquez sur une ville pour voir son détail par statut. La ville étant saisie librement, les variantes d'écriture sont regroupées ; la colonne « Étudiants » compte chaque étudiant une seule fois par ville."
+            >
+              {housingAid && housingAid.byCity.length > 0 ? (
+                <HousingAidCityTable rows={housingAid.byCity} totalSimulations={housingAid.simulations} />
+              ) : (
+                <p className="fr-text--sm fr-mb-0">{isLoading ? 'Chargement…' : 'Aucune ville renseignée pour le moment.'}</p>
+              )}
+            </SimulationSection>
+          </>
+        ) : (
+          <SimulationSection title="Vue d'ensemble" icon="fr-icon-bar-chart-box-line">
+            <BudgetMetricCards budget={data?.budget} isLoading={isLoading} />
+          </SimulationSection>
+        )}
+      </Tabs>
+    </>
   )
 }
