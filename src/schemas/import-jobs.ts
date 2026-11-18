@@ -7,7 +7,6 @@ export const ZImportJobType = z.enum([
   'initiall',
   'sync-cities',
   'sync-rents',
-  'sync-students',
   'sync-stats',
   'alert-detection',
   'alert-expiration',

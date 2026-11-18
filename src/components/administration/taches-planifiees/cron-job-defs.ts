@@ -8,7 +8,6 @@ const JOB_DEFS: Record<string, TJobDef> = {
   'import-initiall': { label: 'Import Initiall', description: 'Résidences Initiall via API WordPress' },
   'sync-cities': { label: 'Sync Villes', description: 'Communes depuis geo.api.gouv.fr' },
   'sync-rents': { label: 'Sync Loyers', description: 'Loyers moyens depuis data.gouv.fr' },
-  'sync-students': { label: 'Sync Étudiants', description: 'Effectifs depuis data.enseignementsup' },
   'sync-stats': { label: 'Sync Statistiques', description: 'Statistiques Matomo' },
   'detect-alert-jobs': { label: 'Détection alertes', description: 'Hausses de disponibilité → jobs d’alerte' },
   'requeue-pending-alerts': {
