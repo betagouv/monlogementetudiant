@@ -5,11 +5,13 @@ import Button from '@codegouvfr/react-dsfr/Button'
 import Checkbox from '@codegouvfr/react-dsfr/Checkbox'
 import Input from '@codegouvfr/react-dsfr/Input'
 import Table from '@codegouvfr/react-dsfr/Table'
+import clsx from 'clsx'
 import Link from 'next/link'
 import { type ReactNode, useMemo, useState } from 'react'
 import { Pagination } from '~/components/ui/pagination'
 import type { SimulationCityRow } from '~/server/admin/simulations-by-city'
 import { normalizeText } from '~/utils/normalize-text'
+import styles from './housing-aid-city-table.module.css'
 import { amount, fmt, rate, SIMULATIONS_HREF } from './simulations-ui'
 
 const PAGE_SIZE = 15
@@ -98,7 +100,7 @@ export function HousingAidCityTable({ rows, totalSimulations }: { rows: Simulati
   }
 
   const headers: ReactNode[] = COLUMNS.map(({ column, label }) => (
-    <div key={column} className="fr-cell--sort">
+    <div key={column} className={clsx('fr-cell--sort', styles.sortHeader)}>
       <span>{label}</span>
       <button
         type="button"
@@ -115,7 +117,7 @@ export function HousingAidCityTable({ rows, totalSimulations }: { rows: Simulati
   return (
     <>
       <div className="fr-grid-row fr-grid-row--gutters fr-grid-row--bottom fr-mb-1w">
-        <div className="fr-col-12 fr-col-md-5">
+        <div className="fr-col-12 fr-col-md-4">
           <Input
             label="Rechercher une ville"
             className="fr-mb-0"
@@ -129,7 +131,7 @@ export function HousingAidCityTable({ rows, totalSimulations }: { rows: Simulati
             }}
           />
         </div>
-        <div className="fr-col-12 fr-col-md-4">
+        <div className="fr-col-12 fr-col-md-5">
           <Checkbox
             small
             className="fr-mb-0"
@@ -168,6 +170,7 @@ export function HousingAidCityTable({ rows, totalSimulations }: { rows: Simulati
         <p className="fr-text--sm fr-text-mention--grey fr-mt-2w">Aucune ville ne correspond à ces critères.</p>
       ) : (
         <Table
+          className={styles.table}
           noCaption
           caption="Simulations d'aides au logement par ville visée"
           headers={headers}
@@ -177,7 +180,7 @@ export function HousingAidCityTable({ rows, totalSimulations }: { rows: Simulati
                 {row.city}
               </Link>
               {row.isUniversityCity && (
-                <Badge small severity="info" noIcon>
+                <Badge small severity="info" noIcon className={styles.cityBadge}>
                   Ville universitaire
                 </Badge>
               )}
