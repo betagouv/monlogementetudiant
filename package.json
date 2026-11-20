@@ -67,7 +67,7 @@
     "leaflet": "^1.9.4",
     "leaflet-defaulticon-compatibility": "^0.1.2",
     "marked": "^18.0.10",
-    "next": "^16.4.5",
+    "next": "^16.4.6",
     "next-intl": "^4.13.7",
     "nuqs": "^2.9.6",
     "postgres": "^3.4.9",
