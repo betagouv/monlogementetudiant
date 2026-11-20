@@ -14,6 +14,7 @@ import { accommodations, contactRequests, owners, user } from '~/server/db/schem
 import { env } from '~/server/env'
 import { ensureFavorite } from '~/server/favorites/ensure-favorite'
 import { sendContactRequestConfirmationEmail } from '~/server/services/brevo'
+import { isOverMaxApplicantAge, MAX_APPLICANT_AGE } from '~/utils/applicant-age'
 import { baseProcedure, createTRPCRouter, userProcedure } from '../init'
 
 /** Lien de double opt-in envoyé au visiteur. */
@@ -29,6 +30,7 @@ const findAccommodationBySlug = async (slug: string) => {
       ownerId: accommodations.ownerId,
       nbAvailableApartments: accommodations.nbAvailableApartments,
       acceptWaitingList: accommodations.acceptWaitingList,
+      rejectsOverMaxAge: accommodations.rejectsOverMaxAge,
       acceptsApplications: accommodations.acceptsApplications,
       applicationsSuspendedAt: accommodations.applicationsSuspendedAt,
     })
@@ -102,6 +104,13 @@ export const contactsRouter = createTRPCRouter({
 
       if (!acceptsContactRequests(accommodation)) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: "Cette résidence est complète et n'accepte pas de liste d'attente" })
+      }
+
+      if (accommodation.rejectsOverMaxAge && isOverMaxApplicantAge(input.birthdate)) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: `Cette résidence accueille uniquement les personnes de ${MAX_APPLICANT_AGE} ans maximum`,
+        })
       }
 
       const ipHash = hashIp(ctx.clientIp)

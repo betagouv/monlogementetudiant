@@ -35,6 +35,7 @@ import {
 import { acceptsContactRequests } from '~/server/bailleur/applications-open'
 import { useTRPC, useTRPCClient } from '~/server/trpc/client'
 import { authClient } from '~/services/better-auth-client'
+import { isOverMaxApplicantAge, MAX_APPLICANT_AGE } from '~/utils/applicant-age'
 import { isStudentProfileComplete } from '~/utils/student-profile'
 import { CandidatureModal, useCandidatureModal } from './candidature-modal'
 import styles from './contact-request-modal.module.css'
@@ -44,6 +45,7 @@ interface Props {
   availableApartmentTypes: ApartmentType[]
   nbAvailable: number | null
   acceptWaitingList: boolean
+  rejectsOverMaxAge: boolean
   isAuthenticated: boolean
   contactMode: EOwnerContactMode
 }
@@ -53,13 +55,14 @@ export const DossierFacileLinkButton = ({
   availableApartmentTypes,
   nbAvailable,
   acceptWaitingList,
+  rejectsOverMaxAge,
   isAuthenticated,
   contactMode,
 }: Props) => {
   if (contactMode === EOwnerContactMode.NONE) return null
   if (contactMode === EOwnerContactMode.CONTACTS) {
     return acceptsContactRequests({ nbAvailableApartments: nbAvailable, acceptWaitingList }) ? (
-      <ContactRequestButton accommodationSlug={accommodationSlug} />
+      <ContactRequestButton accommodationSlug={accommodationSlug} rejectsOverMaxAge={rejectsOverMaxAge} />
     ) : null
   }
   if (availableApartmentTypes.length === 0) return null
@@ -67,7 +70,7 @@ export const DossierFacileLinkButton = ({
   return <DossierFacileApplyButton accommodationSlug={accommodationSlug} availableApartmentTypes={availableApartmentTypes} />
 }
 
-const ContactRequestButton = ({ accommodationSlug }: { accommodationSlug: string }) => {
+const ContactRequestButton = ({ accommodationSlug, rejectsOverMaxAge }: { accommodationSlug: string; rejectsOverMaxAge: boolean }) => {
   const t = useTranslations('accomodation')
   const trpc = useTRPC()
   const { data: session } = authClient.useSession()
@@ -102,7 +105,7 @@ const ContactRequestButton = ({ accommodationSlug }: { accommodationSlug: string
         {t('sidebar.buttons.contactRequest')}
       </Button>
       <span className="fr-text--xs fr-mb-0">{t('sidebar.buttons.contactRequestDescription')}</span>
-      <ContactRequestModal accommodationSlug={accommodationSlug} />
+      <ContactRequestModal accommodationSlug={accommodationSlug} rejectsOverMaxAge={rejectsOverMaxAge} />
     </div>
   )
 }
@@ -113,13 +116,15 @@ const useContactRequestModal = (accommodationSlug: string) => {
 
 type TContactRequestErrorsTranslator = ReturnType<typeof useTranslations<'accomodation.sidebar.contactRequestModal.errors'>>
 
-const buildZContactRequestForm = (t: TContactRequestErrorsTranslator, tSchemas: TSchemaTranslator) =>
+const buildZContactRequestForm = (t: TContactRequestErrorsTranslator, tSchemas: TSchemaTranslator, rejectsOverMaxAge = false) =>
   z.object({
     firstname: z.string().trim().min(1, t('firstnameRequired')),
     lastname: z.string().trim().min(1, t('lastnameRequired')),
     email: z.string().trim().email(t('emailInvalid')),
     phone: z.string().trim(),
-    birthdate: createZBirthDate(tSchemas),
+    birthdate: createZBirthDate(tSchemas).refine((value) => !rejectsOverMaxAge || !isOverMaxApplicantAge(value), {
+      message: t('birthdateOverMaxAge', { age: MAX_APPLICANT_AGE }),
+    }),
     scholarshipStatus: createZScholarshipStatus(tSchemas),
     isWorkStudy: createZWorkStudyChoice(tSchemas),
     studyInstitution: createZStudyInstitution(tSchemas),
@@ -147,6 +152,7 @@ const LockableInput = ({
   required,
   lockedValue,
   form,
+  forcedError,
 }: {
   label: ReactNode
   hintText?: string
@@ -156,12 +162,22 @@ const LockableInput = ({
   required?: boolean
   lockedValue: string
   form: TContactRequestFormApi
+  // Erreur affichée sans attendre la soumission (ex. âge maximum de la résidence), y compris sur un champ verrouillé.
+  forcedError?: string
 }) => {
   if (lockedValue) {
-    return <Input label={label} disabled nativeInputProps={{ type, autoComplete, value: lockedValue, readOnly: true }} />
+    return (
+      <Input
+        label={label}
+        disabled={!forcedError}
+        state={forcedError ? 'error' : 'default'}
+        stateRelatedMessage={forcedError}
+        nativeInputProps={{ type, autoComplete, value: lockedValue, readOnly: true }}
+      />
+    )
   }
 
-  const error = form.formState.errors[name]?.message
+  const error = forcedError ?? form.formState.errors[name]?.message
 
   return (
     <Input
@@ -286,12 +302,15 @@ const LockableStudyYear = ({ lockedValue, form }: { lockedValue: TContactRequest
   )
 }
 
-const ContactRequestModal = ({ accommodationSlug }: { accommodationSlug: string }) => {
+const ContactRequestModal = ({ accommodationSlug, rejectsOverMaxAge }: { accommodationSlug: string; rejectsOverMaxAge: boolean }) => {
   const t = useTranslations('accomodation.sidebar.contactRequestModal')
   const buttonT = useTranslations('accomodation.sidebar.buttons')
   const errorsT = useTranslations('accomodation.sidebar.contactRequestModal.errors')
   const tSchemas = useTranslations('schemas')
-  const ZContactRequestForm = useMemo(() => buildZContactRequestForm(errorsT, tSchemas), [errorsT, tSchemas])
+  const ZContactRequestForm = useMemo(
+    () => buildZContactRequestForm(errorsT, tSchemas, rejectsOverMaxAge),
+    [errorsT, tSchemas, rejectsOverMaxAge],
+  )
   const trpc = useTRPC()
   const queryClient = useQueryClient()
   const modal = useContactRequestModal(accommodationSlug)
@@ -322,6 +341,11 @@ const ContactRequestModal = ({ accommodationSlug }: { accommodationSlug: string 
     values: { ...known, consent: false },
     resetOptions: { keepDirtyValues: true },
   })
+
+  // Résidence réservée aux moins de 30 ans : l'étudiant est prévenu dès la saisie et ne peut pas envoyer.
+  const birthdate = form.watch('birthdate')
+  const isOverMaxAge = rejectsOverMaxAge && isOverMaxApplicantAge(birthdate)
+  const overMaxAgeError = isOverMaxAge ? errorsT('birthdateOverMaxAge', { age: MAX_APPLICANT_AGE }) : undefined
 
   const { mutate, isPending } = useMutation(
     trpc.contacts.create.mutationOptions({
@@ -396,6 +420,7 @@ const ContactRequestModal = ({ accommodationSlug }: { accommodationSlug: string 
                 required
                 lockedValue={known.birthdate}
                 form={form}
+                forcedError={overMaxAgeError}
               />
             </div>
             <LockableScholarshipStatus lockedValue={known.scholarshipStatus} form={form} />
@@ -436,7 +461,7 @@ const ContactRequestModal = ({ accommodationSlug }: { accommodationSlug: string 
               <Button priority="secondary" type="button" onClick={handleClose}>
                 {t('cancel')}
               </Button>
-              <Button priority="primary" type="submit" disabled={isPending}>
+              <Button priority="primary" type="submit" disabled={isPending || isOverMaxAge}>
                 {isPending ? t('submitting') : t('submit')}
               </Button>
             </div>

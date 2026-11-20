@@ -315,10 +315,12 @@ export async function seedReferential(lyonAcademyId: number, random: Random, clo
     .insert(scholarshipSurveyOwners)
     .values({ ownerId: contactsOwner.id, completedAt: clock.daysAgo(20), completedByUserId: bailleur.id })
 
-  // L'admin référent suit deux bailleurs.
+  // L'admin référent suit deux bailleurs, dont un en binôme avec l'admin ; Campus Horizon reste non attribué
+  // (filtre « suivi par » du suivi des disponibilités).
   await db.insert(adminOwnerLinks).values([
     { userId: adminReferent.id, ownerId: contactsOwner.id },
     { userId: adminReferent.id, ownerId: dossierFacileOwner.id },
+    { userId: admin.id, ownerId: dossierFacileOwner.id },
   ])
 
   // ── Résidences ───────────────────────────────────────────────────────────────
@@ -413,7 +415,8 @@ export async function seedReferential(lyonAcademyId: number, random: Random, clo
       offset: [0.005, 0.008],
       address: '20 avenue Gaston Berger',
       typologies: [typology('t1', 430, 510, [17, 21], 120, 9), typology('t1_bis', 540, 600, [24, 28], 30, 3)],
-      extra: { ...EQUIPMENT_FULL, nbAccessibleApartments: 6 },
+      // Foyer jeunes travailleurs : refuse les demandes des plus de 30 ans (formulaire bloqué côté étudiant).
+      extra: { ...EQUIPMENT_FULL, nbAccessibleApartments: 6, residenceType: EResidenceType.JEUNES_TRAVAILLEURS, rejectsOverMaxAge: true },
       availabilityAgeDays: 1,
     },
     {

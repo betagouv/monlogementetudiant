@@ -236,6 +236,10 @@
     "close": "Close"
   },
   "accomodation": {
+    "crousAlert": {
+      "title": "Almost no Crous accommodation is left this year",
+      "description": "To find out whether places are left in this residence, visit <link>trouverunlogement.lescrous.fr</link>. If it is not listed there, it is full for now."
+    },
     "availability": {
       "noAvailabilityTitle": "No availability at the moment",
       "noAvailabilityDescription": "The accommodation is currently full, but new places may become available at any time.",
@@ -326,8 +330,9 @@
         "dossierFacileApplied": "Application sent",
         "dossierFacileSelectType": "Accommodation type",
         "consultDescription": "You will be redirected to the residence's website",
-        "consultDescriptionCrous": "You will be redirected to trouverunlogement.lescrous.fr",
-        "consultDescriptionManager": "You will be redirected to {managerFormatted}'s website",        "call": "Call {phoneNumber}",
+        "consultDescriptionCrous": "You will be redirected to Trouver un logement Crous",
+        "consultDescriptionManager": "You will be redirected to {managerFormatted}'s website",
+        "call": "Call {phoneNumber}",
         "dossierFacileDescription": "Certified digital rental file",
         "link": "Copy link",
         "email": "Send by email",
@@ -338,7 +343,8 @@
         "contactRequest": "Request a callback",
         "contactRequestDescription": "Leave your contact details and the manager will contact you by email or phone.",
         "contactRequestSuccess": "Your contact details have been shared with the manager.",
-        "contactRequestError": "An error occurred. Please try again."
+        "contactRequestError": "An error occurred. Please try again.",
+        "consultCrous": "See Crous accommodation"
       },
       "contactRequestModal": {
         "title": "Request a callback",
@@ -376,7 +382,8 @@
           "firstnameRequired": "First name is required",
           "lastnameRequired": "Last name is required",
           "emailInvalid": "The email address is invalid",
-          "consentRequired": "You must agree to share your information"
+          "consentRequired": "You must agree to share your information",
+          "birthdateOverMaxAge": "This residence only accepts people aged {age} or under."
         }
       },
       "alert": {
@@ -385,7 +392,9 @@
         "cta": "Create a housing alert"
       },
       "copySuccess": "Copied to clipboard",
-      "copyError": "Error while copying to clipboard"
+      "copyError": "Error while copying to clipboard",
+      "totalCount": "{count, plural, one {# accommodation} other {# accommodations}}",
+      "crousAvailability": "Availability not provided"
     },
     "nearby": {
       "title": "Other nearby accommodation",
@@ -2408,7 +2417,11 @@
       "stats": {
         "title": "Contact statistics",
         "periodLegend": "Period",
-        "period": { "7d": "7 days", "30d": "30 days", "90d": "90 days" },
+        "period": {
+          "7d": "7 days",
+          "30d": "30 days",
+          "90d": "90 days"
+        },
         "export": "Export",
         "caption": "Contact statistics by residence",
         "residence": "Residence",
@@ -2556,6 +2569,8 @@
         "addUser": "Add a manager",
         "waitingListLabel": "The residence accepts waiting list applications",
         "waitingListHint": "Receive student requests even when your residence is full.",
+        "rejectsOverMaxAgeLabel": "Automatically refuse applicants over {age}",
+        "rejectsOverMaxAgeHint": "For young workers' hostels and young workers' residences. Students are told before sending their contact details.",
         "save": "Save",
         "saving": "Saving...",
         "success": "Reception settings saved.",

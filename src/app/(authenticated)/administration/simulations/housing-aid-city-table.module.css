@@ -1,0 +1,23 @@
+/* Le tableau DSFR s'ajuste à son contenu (fit-content) : on l'étire sur toute la largeur du bloc. */
+.table :global(.fr-table__wrapper),
+.table :global(.fr-table__content table) {
+  width: 100%;
+}
+
+/* Libellé et bouton de tri côte à côte, sans chevauchement : le libellé passe à la ligne si la place manque. */
+.sortHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.sortHeader :global(.fr-btn--sort) {
+  flex-shrink: 0;
+  margin-left: 0;
+}
+
+/* Le badge « Ville universitaire » ne se coupe pas : il passe sous le nom d'un bloc si la place manque. */
+.cityBadge {
+  white-space: nowrap;
+}

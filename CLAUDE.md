@@ -144,6 +144,11 @@ db.select().from(table).where(and(eq(table.ownerId, id), eq(table.status, 'activ
 
 **Schema :** `src/server/db/schema/` — vérifier les noms de colonnes ici avant de les utiliser dans les requêtes.
 
+**Seed obligatoire :** toute évolution du modèle de données (nouvelle table, nouvelle colonne, changement de type, d'enum ou de contrainte) doit être répercutée dans le même commit sur le seed (`src/__tests__/seed/`, commun dev et e2e).
+- Une nouvelle table reçoit des lignes réalistes ; une nouvelle colonne est renseignée avec des valeurs variées (y compris `null` si autorisé), pas seulement sa valeur par défaut.
+- Contrôle de données minimales : le seed vérifie à la fin qu'il a produit le volume minimal attendu pour chaque table concernée et échoue sinon (message en français). Ajouter la table au contrôle quand on la crée.
+- Le seed vide puis recrée sa base : ne **jamais** le lancer de soi-même sur la base de dev locale (`mle_dev`), qui peut contenir des données réelles importées pour tester. Ne pas l'ajouter à un hook de commit. Le vérifier sur la base jetable e2e (`pnpm e2e:seed`) ; `pnpm db:seed` reste une commande que le développeur lance volontairement.
+
 ---
 
 ## Services API externes

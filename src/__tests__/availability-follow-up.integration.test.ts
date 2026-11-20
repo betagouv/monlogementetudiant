@@ -1,12 +1,18 @@
 import { eq } from 'drizzle-orm'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { captureAvailabilitySnapshot, loadAvailabilityByOwner, loadAvailabilitySnapshotSeries } from '~/server/admin/availability-follow-up'
+import {
+  captureAvailabilitySnapshot,
+  loadAvailabilityByOwner,
+  loadAvailabilitySnapshotRows,
+  loadFollowUpAdmins,
+} from '~/server/admin/availability-follow-up'
 import { accommodationTypologies } from '~/server/db/schema/accommodation-typologies'
 import { accommodations } from '~/server/db/schema/accommodations'
+import { adminOwnerLinks } from '~/server/db/schema/admin-owner-links'
 import { availabilityFollowUpSnapshots } from '~/server/db/schema/availability-snapshots'
 import { typologyDraft } from '~/server/lib/typologies'
 import { DAY_MS } from '~/utils/time'
-import { createAccommodation, createExternalSource, createOwner } from './fixtures/factories'
+import { createAccommodation, createExternalSource, createOwner, createUser } from './fixtures/factories'
 import { getTestDb } from './helpers/test-db'
 import './helpers/setup-integration'
 
@@ -80,13 +86,14 @@ describe('loadAvailabilityByOwner', () => {
     expect(row?.recent).toEqual({ residences: 1, residencesApi: 1, apartments: 40, apartmentsApi: 40 })
   })
 
-  it('classe en màj irrégulière une disponibilité renseignée il y a plus de 30 jours', async () => {
+  it('classe en màj irrégulière une disponibilité de plus de 31 jours', async () => {
     const owner = await createOwner({ name: 'Bailleur Stale', slug: 'bailleur-stale' })
     const accommodation = await createAccommodation({ ownerId: owner.id, nbTotalApartments: 25 }, [
       typologyDraft('t1', { nbTotal: 25, nbAvailable: 1 }),
     ])
-    await setAvailabilityUpdatedAt(accommodation.id, daysAgo(60))
-    await setAccommodationUpdatedAt(accommodation.id, daysAgo(60))
+    // 70 jours : au-delà de la fenêtre de 31 jours.
+    await setAvailabilityUpdatedAt(accommodation.id, daysAgo(70))
+    await setAccommodationUpdatedAt(accommodation.id, daysAgo(70))
 
     const rows = await loadAvailabilityByOwner()
     const row = rows.find((r) => r.ownerName === 'Bailleur Stale')
@@ -110,6 +117,52 @@ describe('loadAvailabilityByOwner', () => {
     const row = rows.find((r) => r.ownerName === 'Bailleur Legacy')
     expect(row?.segment).toBe('irregular')
     expect(row?.stale).toEqual({ residences: 1, residencesApi: 0, apartments: 15, apartmentsApi: 0 })
+  })
+
+  it('compte 31 jours en dates, heure de Paris', async () => {
+    // Relevé du 1er novembre 2026 (heure de Paris) : 31 jours avant = 1er octobre, quelle que soit l'heure.
+    const now = new Date('2026-11-01T01:30:00Z')
+    const owner = await createOwner({ name: 'Bailleur Mois', slug: 'bailleur-mois' })
+    const october = await createAccommodation({ ownerId: owner.id, nbTotalApartments: 10 }, [
+      typologyDraft('t1', { nbTotal: 10, nbAvailable: 1 }),
+    ])
+    // 1er octobre 00:30 à Paris (CEST) = 30 septembre 22:30 UTC.
+    await setAvailabilityUpdatedAt(october.id, new Date('2026-09-30T22:30:00Z'))
+    const september = await createAccommodation({ ownerId: owner.id, nbTotalApartments: 5 }, [
+      typologyDraft('t1', { nbTotal: 5, nbAvailable: 1 }),
+    ])
+    // 30 septembre 23:30 à Paris = 21:30 UTC.
+    await setAvailabilityUpdatedAt(september.id, new Date('2026-09-30T21:30:00Z'))
+    await setAccommodationUpdatedAt(october.id, new Date('2026-09-01T00:00:00Z'))
+    await setAccommodationUpdatedAt(september.id, new Date('2026-09-01T00:00:00Z'))
+
+    const rows = await loadAvailabilityByOwner(now)
+    const row = rows.find((r) => r.ownerName === 'Bailleur Mois')
+    expect(row?.recent.apartments).toBe(10)
+    expect(row?.stale.apartments).toBe(5)
+  })
+
+  it('rattache chaque gestionnaire à ses admins référents', async () => {
+    const yasmine = await createUser({ id: 'admin-yasmine', role: 'admin', name: 'Yasmine' })
+    const cecilia = await createUser({ id: 'admin-cecilia', role: 'admin', name: 'Cécilia' })
+    const followed = await createOwner({ name: 'Suivi', slug: 'suivi' })
+    const unassigned = await createOwner({ name: 'Non suivi', slug: 'non-suivi' })
+    await createAccommodation({ ownerId: followed.id, nbTotalApartments: 10 })
+    await createAccommodation({ ownerId: unassigned.id, nbTotalApartments: 10 })
+    await getTestDb()
+      .insert(adminOwnerLinks)
+      .values([
+        { userId: yasmine.id, ownerId: followed.id },
+        { userId: cecilia.id, ownerId: followed.id },
+      ])
+
+    const rows = await loadAvailabilityByOwner()
+    expect(rows.find((r) => r.ownerName === 'Suivi')?.adminIds).toEqual(['admin-cecilia', 'admin-yasmine'])
+    expect(rows.find((r) => r.ownerName === 'Non suivi')?.adminIds).toEqual([])
+    expect(await loadFollowUpAdmins()).toEqual([
+      { id: 'admin-cecilia', name: 'Cécilia' },
+      { id: 'admin-yasmine', name: 'Yasmine' },
+    ])
   })
 
   it('regroupe les résidences sans gestionnaire et exclut CROUS et non publiées', async () => {
@@ -157,12 +210,14 @@ describe('captureAvailabilitySnapshot', () => {
     expect(stored).toHaveLength(2)
   })
 
-  it('agrège la série mensuelle par date de relevé', async () => {
+  it('restitue les relevés par gestionnaire et par date, avec leur segment', async () => {
     await captureAvailabilitySnapshot(new Date('2026-10-01T02:00:00Z'))
     await captureAvailabilitySnapshot(new Date('2026-11-01T02:00:00Z'))
 
-    const series = await loadAvailabilitySnapshotSeries()
-    expect(series.map((point) => point.capturedOn)).toEqual(['2026-10-01', '2026-11-01'])
-    expect(series[0]).toMatchObject({ recentApartments: 12, missingApartments: 8, recentResidences: 1, missingResidences: 1 })
+    const rows = await loadAvailabilitySnapshotRows()
+    expect(rows.map((row) => row.capturedOn)).toEqual(['2026-10-01', '2026-10-01', '2026-11-01', '2026-11-01'])
+    const october = rows.filter((row) => row.capturedOn === '2026-10-01')
+    expect(october.find((row) => row.ownerId !== null)).toMatchObject({ segment: 'good', recentApartments: 12 })
+    expect(october.find((row) => row.ownerId === null)).toMatchObject({ segment: 'bad', missingApartments: 8 })
   })
 })

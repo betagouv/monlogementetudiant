@@ -111,14 +111,19 @@ describe('admin.simulations.overview', () => {
     expect(overview.budget.averageExpenses).toBe(Math.round((700 + 300 + 500) / 3))
     expect(overview.budget.averageBalance).toBe(Math.round((500 + 500 + 500) / 3))
 
-    expect(overview.housingAid.count).toBe(3)
+    expect(overview.housingAid).toMatchObject({ simulations: 3, students: 2 })
     const student = overview.housingAid.byStatus.find((row) => row.status === 'student')
-    expect(student).toMatchObject({ count: 2, averageIncome: 500, averageRent: 450, guarantorRate: 50 })
+    expect(student).toMatchObject({ simulations: 2, students: 1, averageIncome: 500, averageRent: 450, guarantorRate: 50 })
     const boursier = overview.housingAid.byStatus.find((row) => row.status === 'boursier-crous')
-    expect(boursier).toMatchObject({ count: 1, averageIncome: 400 })
+    expect(boursier).toMatchObject({ simulations: 1, averageIncome: 400 })
     const apprentice = overview.housingAid.byStatus.find((row) => row.status === 'apprentice')
     // Loyer non renseigné (NaN normalisé) : pas de moyenne de loyer pour cette ligne.
-    expect(apprentice).toMatchObject({ count: 1, averageIncome: 1100, averageRent: null, guarantorRate: 0 })
+    expect(apprentice).toMatchObject({ simulations: 1, averageIncome: 1100, averageRent: null, guarantorRate: 0 })
     expect(overview.housingAid.byStatus.find((row) => row.status === 'lyceen')).toBeUndefined()
+
+    // Même ville pour les trois simulations : une seule ligne, avec son détail par statut.
+    expect(overview.housingAid.byCity).toHaveLength(1)
+    expect(overview.housingAid.byCity[0]).toMatchObject({ simulations: 3, students: 2 })
+    expect(overview.housingAid.byCity[0].byStatus.map((row) => row.status)).toEqual(['student', 'apprentice', 'boursier-crous'])
   })
 })

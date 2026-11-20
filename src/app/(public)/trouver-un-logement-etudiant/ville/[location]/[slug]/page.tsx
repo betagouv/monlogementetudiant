@@ -16,6 +16,7 @@ import { AccommodationLocalisation } from '~/app/(public)/trouver-un-logement-et
 import AccommodationMap from '~/app/(public)/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-map'
 import { AccommodationResidence } from '~/app/(public)/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-residence'
 import { AccommodationVirtualTour } from '~/app/(public)/trouver-un-logement-etudiant/ville/[location]/[slug]/accommodation-virtual-tour'
+import { AccommodationCrousAlert } from '~/components/accommodation/accommodation-crous-alert'
 import { AccommodationImages } from '~/components/accommodation/accommodation-images'
 import { NearbyAccommodations } from '~/components/accommodation/nearby-accommodations'
 import { SaveAccommodationFavoriteButton } from '~/components/favorites/save-accommodation-favorite-button'
@@ -77,6 +78,9 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
     ...(accommodation.nbAccessibleApartments ? [{ iconId: 'ri-wheelchair-line' as RiIconClassName, children: t('tags.accessible') }] : []),
   ]
 
+  // Les disponibilités Crous ne sont publiées que sur trouverunlogement.lescrous.fr : celles d'un import éventuel
+  // ne sont pas affichées.
+  const displayedNbAvailable = accommodation.isCrous ? null : nbAvailable
   const ownerLandingUrl = owner?.landingUrl ?? null
   const cityFormatted = formatCityWithPreposition(locale, 'à', city)
   const breadCrumbTitle = commonT('breadcrumbs.accommodationTitle', { name, cityFormatted })
@@ -136,6 +140,7 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
             </div>
             <SaveAccommodationFavoriteButton slug={slug} withLabel user={user} />
           </div>
+          {accommodation.isCrous && <AccommodationCrousAlert />}
         </div>
         <div className={styles.container}>
           <div className={styles.infosContainer}>
@@ -168,7 +173,7 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
                 </p>
               )}
             </div>
-            <AccommodationAvailability nbAvailable={nbAvailable} acceptWaitingList={acceptWaitingList} />
+            <AccommodationAvailability nbAvailable={displayedNbAvailable} acceptWaitingList={acceptWaitingList} />
             <AccommodationResidence accommodation={accommodation} />
             <AccommodationVirtualTour url={virtualTourUrl} />
             <AccommodationEquipments accommodation={accommodation} />
@@ -193,8 +198,10 @@ export default async function AccommodationPage({ params }: { params: Promise<{ 
               phoneNumber={accommodation.phoneNumber}
               isCrous={accommodation.isCrous ?? false}
               acceptWaitingList={acceptWaitingList}
+              rejectsOverMaxAge={accommodation.rejectsOverMaxAge ?? false}
               owner={owner}
-              nbAvailable={nbAvailable}
+              nbAvailable={displayedNbAvailable}
+              nbTotalApartments={accommodation.nbTotalApartments ?? null}
               externalUrl={externalUrl}
               title={name}
               location={city}

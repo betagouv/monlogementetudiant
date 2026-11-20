@@ -402,10 +402,38 @@ async function seedStudentSpace(db: Db, ref: DemoReferential, students: Student[
   }
   await db.insert(studentAlerts).values(alerts)
 
-  // Simulations d'aides et de budget (une par étudiant au plus).
+  // Simulations d'aides et de budget. Un tiers des étudiants a plusieurs versions (historique) ; la ville
+  // est parfois saisie sans l'autocomplétion (casse, tirets) pour exercer le regroupement par ville.
   const cityNames = ref.cities.map((c) => c.name)
-  await db.insert(housingAidSimulations).values(
-    [account, ...random.sample(others, 18)].map((student) => ({
+  // Villes hors référentiel de démo (saisie libre) : assez de lignes pour exercer recherche, tri et pagination.
+  const OTHER_CITIES = [
+    'Pau',
+    'Brest',
+    'Nancy',
+    'Tours',
+    'Caen',
+    'Poitiers',
+    'Dijon',
+    'Amiens',
+    'Reims',
+    'Limoges',
+    'Besançon',
+    'Perpignan',
+    'Rouen',
+    'Angers',
+    'Metz',
+    'Nîmes',
+    'Le Mans',
+    'La Rochelle',
+  ]
+  const typedCity = (name: string) => random.pick([name, name.toUpperCase(), name.replace(/-/g, ' '), `${name.toLowerCase()} `])
+  const versionDates = () => {
+    const at = clock.daysAgo(random.int(0, 150))
+    return { createdAt: at, updatedAt: at }
+  }
+  const housingAidSimulationRows = [account, ...random.sample(others, 34)].flatMap((student) => {
+    const city = random.chance(0.6) ? random.pick(cityNames) : random.pick(OTHER_CITIES)
+    return Array.from({ length: random.chance(0.33) ? random.int(2, 3) : 1 }, () => ({
       userId: student.id,
       inputs: {
         age: random.int(18, 26),
@@ -414,12 +442,13 @@ async function seedStudentSpace(db: Db, ref: DemoReferential, students: Student[
         monthlyIncome: random.int(0, 12) * 100,
         monthlyRent: random.int(30, 70) * 10,
         rentUnknown: false,
-        city: random.pick(cityNames),
+        city: random.chance(0.8) ? typedCity(city) : random.pick(cityNames),
         hasGuarantor: random.pick(['yes', 'no', 'unknown'] as const),
       },
-      createdAt: clock.daysAgo(random.int(0, 150)),
-    })),
-  )
+      ...versionDates(),
+    }))
+  })
+  await db.insert(housingAidSimulations).values(housingAidSimulationRows)
   await db.insert(budgetSimulations).values(
     [account, ...random.sample(others, 12)].map((student) => ({
       userId: student.id,
