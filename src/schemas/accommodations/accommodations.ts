@@ -97,9 +97,11 @@ const ZAmenities = z.object({
 })
 
 // Flat accommodation object.
-export const ZAccomodation = ZBaseAccommodationInfo.extend(ZAggregates.shape)
-  .extend(ZOwnerInfo.shape)
-  .extend({ typologies: ZTypologiesRecord })
+export const ZAccomodation = ZBaseAccommodationInfo.extend(ZAggregates.shape).extend(ZOwnerInfo.shape).extend({
+  typologies: ZTypologiesRecord,
+  // Résidence Crous : ses disponibilités ne sont publiées que sur trouverunlogement.lescrous.fr.
+  isCrous: z.boolean().optional(),
+})
 export type TAccomodation = z.infer<typeof ZAccomodation>
 
 export const ZAccomodationCard = ZAccomodation
@@ -109,7 +111,6 @@ export const ZAccomodationDetails = ZAccomodation.extend(ZAmenities.shape)
   .extend(ZDescriptionSections.shape)
   .extend({
     phoneNumber: z.string().nullish(),
-    isCrous: z.boolean().optional(),
     owner: z
       .object({
         imageBase64: z.string().nullable(),

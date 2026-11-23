@@ -8,7 +8,7 @@ import { FC, useEffect } from 'react'
 import { AvailabilityBadge } from '~/components/shared/availability-badge'
 import { trackEvent } from '~/lib/tracking'
 import { useTRPC } from '~/server/trpc/client'
-import { calculateAvailability } from '~/utils/calculateAvailability'
+import { publicAvailability } from '~/utils/calculateAvailability'
 import { getAccommodationPath } from '~/utils/get-accommodation-url'
 
 export const AccommodationMapPreview: FC<{ id: number; onLoaded?: () => void }> = ({ id, onLoaded }) => {
@@ -36,10 +36,10 @@ export const AccommodationMapPreview: FC<{ id: number; onLoaded?: () => void }> 
         )}
         <li>
           <AvailabilityBadge
-            nbAvailable={calculateAvailability(accommodation.typologies)}
+            nbAvailable={publicAvailability(accommodation)}
             noAvailabilityText={tCard('noAvailability')}
             availabilityText={(count) => tCard('availabilityCount', { count })}
-            unknownAvailabilityText={tCard('unknownAvailability')}
+            unknownAvailabilityText={accommodation.isCrous ? undefined : tCard('unknownAvailability')}
             as="span"
           />
         </li>

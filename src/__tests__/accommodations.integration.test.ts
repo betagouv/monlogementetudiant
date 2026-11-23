@@ -437,6 +437,8 @@ describe('accommodations.list', () => {
     const result = await caller.accommodations.list({ viewCrous: true })
     expect(result.count).toBe(1)
     expect(result.results[0].slug).toBe('crous-residence')
+    // Les cartes masquent les disponibilités Crous : la liste doit signaler la résidence comme telle.
+    expect(result.results[0].isCrous).toBe(true)
   })
 
   it('excludes crous when viewCrous is false', async () => {
@@ -454,6 +456,7 @@ describe('accommodations.list', () => {
     const result = await caller.accommodations.list({ viewCrous: false })
     expect(result.count).toBe(1)
     expect(result.results[0].slug).toBe('non-crous-res')
+    expect(result.results[0].isCrous).toBe(false)
   })
 
   it('excludes crous when viewCrous is not specified (default false)', async () => {

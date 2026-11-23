@@ -99,6 +99,7 @@ const ZAccommodationDTORow = z.object({
   wifi: z.boolean().nullable().optional(),
   ownerName: z.string().nullable().optional(),
   ownerUrl: z.string().nullable().optional(),
+  isCrous: z.boolean().nullable().optional(),
 })
 
 export type TAccommodationDTORow = z.infer<typeof ZAccommodationDTORow>
@@ -281,6 +282,7 @@ export const listAccommodationsWithConditions = async ({
           ${accommodations.updatedAt} as "updatedAt",
           ${owners.name} as "ownerName",
           ${owners.url} as "ownerUrl",
+          ${crousExistsCondition} as "isCrous",
           ST_Y(${accommodationAddresses.geom}::geometry) as lat,
           ST_X(${accommodationAddresses.geom}::geometry) as lng
         FROM ${accommodations}
@@ -387,6 +389,8 @@ export function toAccommodationDTO(row: TAccommodationDTORow, typologies: TTypol
     priceMax: row.priceMaxComputed,
     ownerName: row.ownerName ?? null,
     ownerUrl: row.ownerUrl ?? null,
+    // Absent des sélections qui ne le calculent pas (espace bailleur) : seule la recherche publique en a besoin.
+    ...(row.isCrous != null && { isCrous: row.isCrous }),
     typologies,
   }
 }

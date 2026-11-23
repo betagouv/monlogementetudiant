@@ -18,7 +18,7 @@ import { TooltipHoverOnly } from '~/components/tooltip-hover-only'
 import { TUser } from '~/lib/types'
 import { TAccomodationCard } from '~/schemas/accommodations/accommodations'
 import type { TFavoriteApplicationKind } from '~/server/trpc/routers/favorites'
-import { calculateAvailability } from '~/utils/calculateAvailability'
+import { publicAvailability } from '~/utils/calculateAvailability'
 import { formatCityWithPreposition } from '~/utils/french-contraction'
 import { ApplicationStatus } from './application-status'
 
@@ -34,7 +34,7 @@ export const StudentAccommodationFavorite: FC<StudentAccommodationFavoriteProps>
   const { classes } = useStyles()
   const locale = useLocale()
   const { city, citySlug, imagesUrls, name, nbTotalApartments, postalCode, priceMin, published } = accomodation
-  const nbAvailable = calculateAvailability(accomodation.typologies)
+  const nbAvailable = publicAvailability(accomodation)
   const badgeAvailability = (
     <AvailabilityBadge
       nbAvailable={nbAvailable}

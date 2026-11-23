@@ -17,7 +17,7 @@ import { useWidgetCampaign } from '~/components/widget/widget-campaign-context'
 import { trackEvent } from '~/lib/tracking'
 import { TUser } from '~/lib/types'
 import { TAccomodationCard } from '~/schemas/accommodations/accommodations'
-import { calculateAvailability } from '~/utils/calculateAvailability'
+import { publicAvailability } from '~/utils/calculateAvailability'
 import { formatDay } from '~/utils/formatDate'
 import { getAccommodationPath } from '~/utils/get-accommodation-url'
 import { appendWidgetCampaign } from '~/utils/widget-campaign'
@@ -45,7 +45,7 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
   const t = useTranslations('findAccomodation.card')
   const tA11y = useTranslations('accessibility')
   const { city, imagesUrls, name, nbTotalApartments, postalCode, priceMin, acceptWaitingList, updatedAt } = accomodation
-  const nbAvailable = calculateAvailability(accomodation.typologies)
+  const nbAvailable = publicAvailability(accomodation)
   const nbIndividualApartments = (accomodation.nbTotalApartments || 0) - (accomodation.nbColivingApartments || 0)
   const accommodationsTypes = [
     ...(nbIndividualApartments > 0 ? [t('individual')] : []),
@@ -62,7 +62,7 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
       nbAvailable={nbAvailable}
       noAvailabilityText={t('noAvailability')}
       availabilityText={(count) => t('availabilityCount', { count })}
-      unknownAvailabilityText={t('unknownAvailability')}
+      unknownAvailabilityText={accomodation.isCrous ? undefined : t('unknownAvailability')}
       as="span"
     />
   )

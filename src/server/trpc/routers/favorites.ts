@@ -1,6 +1,7 @@
 import { TRPCError } from '@trpc/server'
 import { and, eq, inArray, sql } from 'drizzle-orm'
 import { z } from 'zod'
+import { crousExistsCondition } from '~/server/accommodations/list-query'
 import { db } from '~/server/db'
 import { accommodationAddresses } from '~/server/db/schema/accommodation-addresses'
 import { accommodationTypologies } from '~/server/db/schema/accommodation-typologies'
@@ -96,6 +97,7 @@ export const favoritesRouter = createTRPCRouter({
         updatedAt: accommodations.updatedAt,
         ownerName: owners.name,
         ownerUrl: owners.url,
+        isCrous: sql<boolean>`${crousExistsCondition}`,
         lat: sql<number>`ST_Y(${accommodationAddresses.geom}::geometry)`,
         lng: sql<number>`ST_X(${accommodationAddresses.geom}::geometry)`,
       })

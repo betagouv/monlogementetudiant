@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { TTypologiesRecord } from '~/schemas/accommodations/accommodations'
-import { calculateAvailability } from './calculateAvailability'
+import { calculateAvailability, publicAvailability } from './calculateAvailability'
 
 // Minimal typology view (only nbAvailable matters for availability).
 const mk = (nbAvailable: number | null): TTypologiesRecord[keyof TTypologiesRecord] => ({
@@ -32,5 +32,16 @@ describe('calculateAvailability', () => {
 
   it('ignores typologies with null availability when summing', () => {
     expect(calculateAvailability({ t1: mk(5), t2: mk(null) })).toBe(5)
+  })
+})
+
+describe('publicAvailability', () => {
+  it('masque les disponibilités d’une résidence Crous', () => {
+    expect(publicAvailability({ isCrous: true, typologies: { t1: mk(3) } })).toBeNull()
+  })
+
+  it('affiche celles des autres résidences', () => {
+    expect(publicAvailability({ isCrous: false, typologies: { t1: mk(3) } })).toBe(3)
+    expect(publicAvailability({ typologies: { t1: mk(0) } })).toBe(0)
   })
 })
