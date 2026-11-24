@@ -1,7 +1,7 @@
 'use client'
 
 import clsx from 'clsx'
-import { type FocusEvent, type KeyboardEvent, type ReactNode, useEffect, useId, useRef, useState } from 'react'
+import { type FocusEvent, type ReactNode, useEffect, useId, useRef, useState } from 'react'
 import styles from './toggletip.module.css'
 
 interface ToggletipProps {
@@ -21,33 +21,29 @@ export const Toggletip = ({ label, children }: ToggletipProps) => {
     const onPointerDown = (event: PointerEvent) => {
       if (!rootRef.current?.contains(event.target as Node)) setOpen(false)
     }
-    document.addEventListener('pointerdown', onPointerDown)
-    return () => document.removeEventListener('pointerdown', onPointerDown)
-  }, [open])
-
-  const onKeyDown = (event: KeyboardEvent) => {
-    if (event.key === 'Escape' && open) {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
       setOpen(false)
-      if (document.activeElement !== buttonRef.current) {
+      const focusInside = rootRef.current?.contains(document.activeElement)
+      if (focusInside && document.activeElement !== buttonRef.current) {
         closedByEscape.current = true
         buttonRef.current?.focus()
       }
     }
-  }
+    document.addEventListener('pointerdown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [open])
 
   const onBlur = (event: FocusEvent) => {
     if (!rootRef.current?.contains(event.relatedTarget as Node | null)) setOpen(false)
   }
 
   return (
-    <span
-      ref={rootRef}
-      className={styles.root}
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-      onKeyDown={onKeyDown}
-      onBlur={onBlur}
-    >
+    <span ref={rootRef} className={styles.root} onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)} onBlur={onBlur}>
       <button
         ref={buttonRef}
         type="button"
