@@ -9,10 +9,11 @@ interface WaitingListBadgeProps {
   as?: 'span' | 'p'
 }
 
+export const shouldShowWaitingListBadge = (acceptWaitingList: boolean, nbAvailable: number | null | undefined) =>
+  acceptWaitingList && (nbAvailable === null || nbAvailable === undefined || nbAvailable <= 0)
+
 export function WaitingListBadge({ acceptWaitingList, nbAvailable, waitingListText, className, as }: WaitingListBadgeProps) {
-  if (!acceptWaitingList || (nbAvailable !== null && nbAvailable !== undefined && nbAvailable > 0)) {
-    return null
-  }
+  if (!shouldShowWaitingListBadge(acceptWaitingList, nbAvailable)) return null
 
   return (
     <Badge noIcon className={clsx('fr-badge--purple-glycine', className)} as={as}>

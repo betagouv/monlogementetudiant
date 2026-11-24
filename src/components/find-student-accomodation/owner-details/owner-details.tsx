@@ -9,7 +9,7 @@ import { DossierFacileLinkButton } from '~/components/find-student-accomodation/
 import { OwnerDetailsActions } from '~/components/find-student-accomodation/owner-details/owner-details-actions'
 import { OwnerDetailsAlert } from '~/components/find-student-accomodation/owner-details/owner-details-alert'
 import { ReportErrorButton } from '~/components/find-student-accomodation/owner-details/report-error-modal'
-import { WaitingListBadge } from '~/components/shared/waiting-list-badge'
+import { shouldShowWaitingListBadge, WaitingListBadge } from '~/components/shared/waiting-list-badge'
 import { Toggletip } from '~/components/toggletip'
 import { NewWindowHint } from '~/components/ui/new-window'
 import { type ApartmentType } from '~/enums/apartment-type'
@@ -123,7 +123,7 @@ export const OwnerDetails = async ({
           {t('sidebar.updatedAt', { date: formatLocalizedDate(updatedAt, 'dd MMMM yyyy', locale) })}
         </p>
       )}
-      {acceptWaitingList && (
+      {shouldShowWaitingListBadge(acceptWaitingList, nbAvailable) && (
         <div className="fr-flex fr-justify-content-center fr-mt-2w">
           <WaitingListBadge acceptWaitingList={acceptWaitingList} nbAvailable={nbAvailable} waitingListText={t('waitingList')} />
         </div>
