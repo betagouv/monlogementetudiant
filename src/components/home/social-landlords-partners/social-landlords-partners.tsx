@@ -12,6 +12,7 @@ import fachabitat from '~/images/fac-habitat.svg'
 import mgel from '~/images/mgel.svg'
 import opal from '~/images/opal.svg'
 import studefi from '~/images/studefi.svg'
+import { wpUrl } from '~/utils/wp-redirect'
 import styles from './social-landlords-partners.module.css'
 
 export const SocialLandlordsPartnersSection = async () => {
@@ -56,7 +57,7 @@ export const SocialLandlordsPartnersSection = async () => {
           priority="tertiary"
           className={styles.partnersButton}
           linkProps={{
-            href: '/landing',
+            href: wpUrl('/partenariat/'),
             target: '_blank',
             'aria-label': t('accessibility.linkNewWindow', { label: tHome('partners.buttonLabel') }),
           }}

@@ -21,6 +21,13 @@ export function buildWpPath(prefix: string, segments: string[]): string | null {
   return `${prefix}/${slugs.join('/')}/`
 }
 
+/** URL absolue d'une page du WordPress `info.`, pour les liens : un lien interne vers une route de redirection
+ * ferait passer `next/link` par un fetch RSC cross-origin, bloqué par `connect-src`. */
+export const wpUrl = (path: string) => new URL(path, WP_ORIGIN).toString()
+
+/** Page « préparer sa vie étudiante » d'une ville, ou la racine de l'espace si le nom ne donne pas de slug. */
+export const wpCityUrl = (city: string) => wpUrl(buildWpPath('/preparer-sa-vie-etudiante', [city]) ?? '/')
+
 export const wpNotFound = () => new Response('Not Found', { status: 404, headers: { 'content-type': 'text/plain; charset=utf-8' } })
 
 /**

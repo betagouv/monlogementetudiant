@@ -2,6 +2,7 @@ import Button from '@codegouvfr/react-dsfr/Button'
 import clsx from 'clsx'
 import { useLocale, useTranslations } from 'next-intl'
 import { formatCityWithPreposition } from '~/utils/french-contraction'
+import { wpCityUrl } from '~/utils/wp-redirect'
 import styles from './logement.module.css'
 
 export const PrepareStudentLifeRedirection = ({ city }: { city: string }) => {
@@ -11,7 +12,7 @@ export const PrepareStudentLifeRedirection = ({ city }: { city: string }) => {
   return (
     <div className={clsx(styles.section, styles.prepareStudentLifeSection)}>
       <h3 className="fr-h4 fr-m-0">{t('title', { titleFormatted })}</h3>
-      <Button priority="tertiary" size="small" linkProps={{ href: `/preparer-sa-vie-etudiante/${city}` }}>
+      <Button priority="tertiary" size="small" linkProps={{ href: wpCityUrl(city) }}>
         {t('discoverCta', { title: city })}
       </Button>
     </div>

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { FC } from 'react'
 import { tss } from 'tss-react'
 import { TCity } from '~/schemas/territories'
+import { wpCityUrl } from '~/utils/wp-redirect'
 
 interface AutocompleteResultsProps {
   data: TCity[]
@@ -17,7 +18,7 @@ export const CitiesAutocompleteResults: FC<AutocompleteResultsProps> = ({ data }
       <ul className={classes.list}>
         {data.map((item: TCity) => (
           <li className={classes.item} key={item.id}>
-            <Link className={classes.itemLink} href={{ pathname: `/preparer-sa-vie-etudiante/${item.name}` }}>
+            <Link className={classes.itemLink} href={wpCityUrl(item.name)}>
               {item.name}
             </Link>
           </li>

@@ -3,6 +3,7 @@ import clsx from 'clsx'
 import { getTranslations } from 'next-intl/server'
 import { getFaqContents } from '~/components/faq/faq-content'
 import { FaqQuestionsAnswers } from '~/components/faq/faq-questions-answers'
+import { wpUrl } from '~/utils/wp-redirect'
 import styles from './faq.module.css'
 
 export const FAQSection = async () => {
@@ -13,7 +14,7 @@ export const FAQSection = async () => {
       <div className={clsx(styles.faqContent, 'fr-border')}>
         <FaqQuestionsAnswers contents={getFaqContents(tFaqContents).slice(0, 5)} />
       </div>
-      <Button size="large" priority="secondary" linkProps={{ href: '/foire-aux-questions' }}>
+      <Button size="large" priority="secondary" linkProps={{ href: wpUrl('/foire-aux-questions/') }}>
         {tHome('faq.button')}
       </Button>
     </section>

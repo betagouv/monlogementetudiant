@@ -2,6 +2,7 @@ import { Breadcrumb } from '@codegouvfr/react-dsfr/Breadcrumb'
 import { Summary } from '@codegouvfr/react-dsfr/Summary'
 import { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
+import { wpUrl } from '~/utils/wp-redirect'
 import styles from '../pages.module.css'
 
 export const generateMetadata = async (): Promise<Metadata> => {
@@ -43,7 +44,7 @@ export default async function SiteMap() {
             },
             {
               linkProps: {
-                href: '/preparer-sa-vie-etudiante',
+                href: wpUrl('/'),
               },
               text: t('links.prepareStudentLife'),
             },
@@ -64,13 +65,13 @@ export default async function SiteMap() {
             },
             {
               linkProps: {
-                href: '/foire-aux-questions',
+                href: wpUrl('/foire-aux-questions/'),
               },
               text: t('links.faq'),
             },
             {
               linkProps: {
-                href: '/landing',
+                href: wpUrl('/partenariat/'),
               },
               text: t('links.landing'),
             },

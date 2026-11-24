@@ -5,6 +5,7 @@ import { getTranslations } from 'next-intl/server'
 import { WrapperSimulator } from '~/app/(public)/simuler-mes-aides-au-logement/wrapper-simulator'
 import { getGlobalQuestionsAnswers } from '~/server/questions-answers/get-global-questions-answers'
 import { getCanonicalUrl, getDefaultOgImage } from '~/utils/canonical'
+import { wpUrl } from '~/utils/wp-redirect'
 import styles from './simuler-mes-aides-au-logement.module.css'
 
 export const generateMetadata = async () => {
@@ -43,7 +44,12 @@ export default async function SimulateAccommodationAids() {
             <div className={clsx('fr-col-md-4', styles.faqTitleContainer)}>
               <h2 className={styles.faqTitle}>{t.rich('title', { br: () => <br /> })}</h2>
               <div className={styles.faqButtonContainer}>
-                <Button iconId="ri-question-line" className="whiteButton" priority="secondary" linkProps={{ href: '/foire-aux-questions' }}>
+                <Button
+                  iconId="ri-question-line"
+                  className="whiteButton"
+                  priority="secondary"
+                  linkProps={{ href: wpUrl('/foire-aux-questions/') }}
+                >
                   {tFaq('title')}
                 </Button>
               </div>
