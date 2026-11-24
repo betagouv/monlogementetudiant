@@ -52,7 +52,9 @@ test.describe('Statuts de disponibilité', () => {
 
     await gotoHydrated(page, ficheUrl(residence.slug))
     const trigger = page.getByRole('button', { name: 'Comprendre ce statut' })
+    const link = page.getByRole('link', { name: 'Comprendre les statuts de disponibilité' })
     await trigger.focus()
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false')
     await page.keyboard.press('Enter')
 
     await expect(trigger).toHaveAttribute('aria-expanded', 'true')
@@ -60,16 +62,49 @@ test.describe('Statuts de disponibilité', () => {
       page.getByText('La résidence est complète à la date de mise à jour. Créez une alerte pour être prévenu dès qu’une place se libère.'),
     ).toBeVisible()
     await page.keyboard.press('Tab')
-    await expect(page.getByRole('link', { name: 'Comprendre les statuts de disponibilité' })).toBeFocused()
+    await expect(link).toBeFocused()
 
     await page.keyboard.press('Escape')
-    await expect(page.getByRole('link', { name: 'Comprendre les statuts de disponibilité' })).toBeHidden()
+    await expect(link).toBeHidden()
     await expect(trigger).toBeFocused()
 
-    await page.keyboard.press('Escape')
-    await page.keyboard.press('Shift+Tab')
-    await page.keyboard.press('Tab')
+    await page.keyboard.press('Enter')
     await expect(trigger).toHaveAttribute('aria-expanded', 'true')
+    await page.keyboard.press('Enter')
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  test('le lien de la bulle garde le focus quand la souris sort', async ({ page }) => {
+    const { owner } = await createBailleur()
+    const residence = await createResidence({ ownerId: owner.id }, typology(0))
+
+    await gotoHydrated(page, ficheUrl(residence.slug))
+    const trigger = page.getByRole('button', { name: 'Comprendre ce statut' })
+    const link = page.getByRole('link', { name: 'Comprendre les statuts de disponibilité' })
+    await trigger.focus()
+    await page.keyboard.press('Enter')
+    await page.keyboard.press('Tab')
+    await trigger.hover()
+    await page.mouse.move(0, 0)
+
+    await expect(link).toBeVisible()
+    await expect(link).toBeFocused()
+  })
+
+  test('un clic sur le texte de la bulle la laisse ouverte', async ({ page }) => {
+    const { owner } = await createBailleur()
+    const residence = await createResidence({ ownerId: owner.id }, typology(null))
+
+    await gotoHydrated(page, ficheUrl(residence.slug))
+    const trigger = page.getByRole('button', { name: 'Comprendre ce statut' })
+    await trigger.click()
+    const explanation = page.getByText(
+      'Le gestionnaire ne nous a pas transmis de disponibilités récentes. Consultez son site ou contactez-le directement.',
+    )
+    await explanation.click()
+
+    await expect(explanation).toBeVisible()
+    expect(await trigger.evaluate((button) => button.parentElement?.tagName)).toBe('DIV')
   })
 
   test("n'affiche pas de bulle pour une résidence Crous", async ({ page }) => {

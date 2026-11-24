@@ -1,7 +1,7 @@
 'use client'
 
 import clsx from 'clsx'
-import { type FocusEvent, type ReactNode, useEffect, useId, useRef, useState } from 'react'
+import { type FocusEvent, type MouseEvent, type ReactNode, useEffect, useId, useRef, useState } from 'react'
 import styles from './toggletip.module.css'
 
 interface ToggletipProps {
@@ -12,9 +12,9 @@ interface ToggletipProps {
 export const Toggletip = ({ label, children }: ToggletipProps) => {
   const [open, setOpen] = useState(false)
   const panelId = useId()
-  const rootRef = useRef<HTMLSpanElement>(null)
+  const rootRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
-  const closedByEscape = useRef(false)
+  const hovered = useRef(false)
 
   useEffect(() => {
     if (!open) return
@@ -24,11 +24,7 @@ export const Toggletip = ({ label, children }: ToggletipProps) => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return
       setOpen(false)
-      const focusInside = rootRef.current?.contains(document.activeElement)
-      if (focusInside && document.activeElement !== buttonRef.current) {
-        closedByEscape.current = true
-        buttonRef.current?.focus()
-      }
+      if (rootRef.current?.contains(document.activeElement)) buttonRef.current?.focus()
     }
     document.addEventListener('pointerdown', onPointerDown)
     document.addEventListener('keydown', onKeyDown)
@@ -38,12 +34,30 @@ export const Toggletip = ({ label, children }: ToggletipProps) => {
     }
   }, [open])
 
+  const onMouseEnter = () => {
+    hovered.current = true
+    setOpen(true)
+  }
+
+  const onMouseLeave = () => {
+    hovered.current = false
+    const focused = document.activeElement
+    const keyboardFocusInside = !!focused && rootRef.current?.contains(focused) && focused.matches(':focus-visible')
+    if (!keyboardFocusInside) setOpen(false)
+  }
+
   const onBlur = (event: FocusEvent) => {
-    if (!rootRef.current?.contains(event.relatedTarget as Node | null)) setOpen(false)
+    if (hovered.current || rootRef.current?.contains(event.relatedTarget as Node | null)) return
+    setOpen(false)
+  }
+
+  const onClick = (event: MouseEvent) => {
+    if (event.detail === 0) setOpen((value) => !value)
+    else setOpen(true)
   }
 
   return (
-    <span ref={rootRef} className={styles.root} onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)} onBlur={onBlur}>
+    <div ref={rootRef} className={styles.root} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave} onBlur={onBlur}>
       <button
         ref={buttonRef}
         type="button"
@@ -51,15 +65,11 @@ export const Toggletip = ({ label, children }: ToggletipProps) => {
         aria-label={label}
         aria-expanded={open}
         aria-controls={panelId}
-        onClick={() => setOpen(true)}
-        onFocus={() => {
-          if (closedByEscape.current) closedByEscape.current = false
-          else setOpen(true)
-        }}
+        onClick={onClick}
       />
       <div id={panelId} className={clsx('fr-text--sm fr-mb-0', styles.panel)} hidden={!open}>
         {children}
       </div>
-    </span>
+    </div>
   )
 }
