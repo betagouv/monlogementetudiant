@@ -13,11 +13,21 @@ import {
   CONTACT_STUDY_INSTITUTION_SQL,
   CONTACT_STUDY_YEAR_SQL,
   CONTACT_WORK_STUDY_SQL,
+  DOSSIER_FACILE_STUDENT_NAME_SQL,
   parseStudyYear,
 } from '~/server/candidatures/student-identity'
-import { visibleContactRequest } from '~/server/candidatures/visibility'
+import { visibleContactRequest, visibleDossierFacileApplication } from '~/server/candidatures/visibility'
 import { db } from '~/server/db'
-import { accommodationAddresses, accommodations, cities, contactRequests, departments, user } from '~/server/db/schema'
+import {
+  accommodationAddresses,
+  accommodations,
+  cities,
+  contactRequests,
+  departments,
+  dossierFacileApplications,
+  dossierFacileTenants,
+  user,
+} from '~/server/db/schema'
 import type { TCsvColumn } from '~/utils/csv'
 import { formatIsoDate } from '~/utils/date-helpers'
 import { getRegionByDepartmentCode } from '~/utils/french-regions'
@@ -142,6 +152,40 @@ const fetchContactRequestRows = (accommodationConditions: SQL[]): Promise<TRawRo
     .where(and(...accommodationConditions, visibleContactRequest()))
     .orderBy(asc(accommodations.name), desc(contactRequests.createdAt))
 
+const fetchDossierFacileRows = (accommodationConditions: SQL[]): Promise<TRawRow[]> =>
+  db
+    .select({
+      residence: accommodations.name,
+      ville: cities.name,
+      departement: departments.code,
+      nom: DOSSIER_FACILE_STUDENT_NAME_SQL,
+      email: user.email,
+      telephone: user.phone,
+      dateNaissance: user.birthdate,
+      boursier: user.scholarshipStatus,
+      alternance: user.isWorkStudy,
+      etablissement: user.studyInstitution,
+      anneeEtudes: user.studyYear,
+      typeLogement: dossierFacileApplications.apartmentType,
+      statut: dossierFacileApplications.status,
+      createdAt: dossierFacileApplications.createdAt,
+    })
+    .from(dossierFacileApplications)
+    .innerJoin(dossierFacileTenants, eq(dossierFacileApplications.tenantId, dossierFacileTenants.id))
+    .innerJoin(accommodations, eq(dossierFacileApplications.accommodationSlug, accommodations.slug))
+    .leftJoin(user, eq(dossierFacileTenants.userId, user.id))
+    .leftJoin(accommodationAddresses, mainAddressJoin)
+    .leftJoin(cities, eq(accommodationAddresses.cityId, cities.id))
+    .leftJoin(departments, eq(cities.departmentId, departments.id))
+    .where(and(...accommodationConditions, visibleDossierFacileApplication()))
+    .orderBy(asc(accommodations.name), desc(dossierFacileApplications.createdAt))
+
+const fetchRows = (mode: EOwnerContactMode, accommodationConditions: SQL[]): Promise<TRawRow[]> => {
+  if (mode === EOwnerContactMode.CONTACTS) return fetchContactRequestRows(accommodationConditions)
+  if (mode === EOwnerContactMode.DOSSIER_FACILE) return fetchDossierFacileRows(accommodationConditions)
+  return Promise.resolve([])
+}
+
 export async function getBailleurContactsExport(params: {
   userId: string
   ownerId?: number
@@ -165,7 +209,7 @@ export async function getBailleurContactsExport(params: {
     accommodationConditions.push(eq(accommodations.id, residence.id))
   }
 
-  const rawRows = owner.contactMode === EOwnerContactMode.CONTACTS ? await fetchContactRequestRows(accommodationConditions) : []
+  const rawRows = await fetchRows(owner.contactMode, accommodationConditions)
 
   const rows = rawRows.map(toExportRow).filter((row) => residenceSlug || !region || row.region === region)
 
