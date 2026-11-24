@@ -25,9 +25,10 @@ import { getTestDb } from './helpers/test-db'
 import './helpers/setup-integration'
 import { gestionnaireCallerFactory, ownerCaller } from './helpers/test-caller'
 
-const { warningEmail, suspendedEmail } = vi.hoisted(() => ({
+const { warningEmail, suspendedEmail, staleSuspendedEmail } = vi.hoisted(() => ({
   warningEmail: vi.fn().mockResolvedValue(undefined),
   suspendedEmail: vi.fn().mockResolvedValue(undefined),
+  staleSuspendedEmail: vi.fn().mockResolvedValue(undefined),
 }))
 
 vi.mock('~/services/better-auth', async () => {
@@ -41,6 +42,7 @@ vi.mock('~/server/services/brevo', async () => {
     ...actual,
     sendApplicationsInactivityWarningEmail: warningEmail,
     sendApplicationsAutoSuspendedEmail: suspendedEmail,
+    sendApplicationsStaleAvailabilitySuspendedEmail: staleSuspendedEmail,
     sendApplicationsSuspendedEmail: vi.fn().mockResolvedValue(undefined),
   }
 })
@@ -89,6 +91,7 @@ beforeEach(async () => {
   await db.delete(activityLog)
   warningEmail.mockClear()
   suspendedEmail.mockClear()
+  staleSuspendedEmail.mockClear()
 
   await createUser({ id: 'test-owner-id', name: 'Test Owner', firstname: 'Alice', email: 'owner@test.com', role: 'owner' })
   const owner = await createOwner({
@@ -136,6 +139,7 @@ describe('runInactivityCheck — candidatures non traitées', () => {
     expect(row.applicationsSuspensionReason).toBe('unprocessed_applications')
     expect(row.applicationsSuspendedById).toBeNull()
     expect(suspendedEmail).toHaveBeenCalledTimes(2)
+    expect(staleSuspendedEmail).not.toHaveBeenCalled()
   })
 
   it('laisse tout le préavis à une résidence déjà en retard à la première alerte', async () => {
@@ -292,6 +296,12 @@ describe('runInactivityCheck — disponibilités', () => {
     expect(await runInactivityCheck()).toMatchObject({ warned: 1 })
     expect(await runInactivityCheck({ now: daysAhead(7) })).toMatchObject({ suspended: 1 })
     expect((await readResidence()).applicationsSuspensionReason).toBe('stale_availability')
+    expect(suspendedEmail).not.toHaveBeenCalled()
+    expect(staleSuspendedEmail).toHaveBeenCalledWith(
+      'owner@test.com',
+      expect.objectContaining({ residences: [expect.not.stringContaining(':')], url: expect.stringMatching(/\/bailleur\/residences$/) }),
+      expect.objectContaining({ reasons: ['stale_availability'] }),
+    )
 
     await ownerCaller.bailleur.updateAvailability({ slug: res.slug, availability: [{ type: 't1', nbAvailable: 2 }] })
 

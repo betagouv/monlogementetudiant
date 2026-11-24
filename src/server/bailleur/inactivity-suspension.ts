@@ -17,7 +17,11 @@ import { env } from '~/server/env'
 import type { TReminderRecord } from '~/server/reminders/record-reminder-email'
 import { recordReminderEmail } from '~/server/reminders/record-reminder-email'
 import { logActivity } from '~/server/services/activity-logger'
-import { sendApplicationsAutoSuspendedEmail, sendApplicationsInactivityWarningEmail } from '~/server/services/brevo'
+import {
+  sendApplicationsAutoSuspendedEmail,
+  sendApplicationsInactivityWarningEmail,
+  sendApplicationsStaleAvailabilitySuspendedEmail,
+} from '~/server/services/brevo'
 import { maskEmail } from '~/utils/mask-email'
 import {
   availabilityClockStart,
@@ -57,6 +61,7 @@ const REASON_PERMISSIONS: Record<InactivityReason, BailleurPermission> = {
 }
 
 const CONTACTS_URL = `${env.BASE_URL}/bailleur/contacts`
+const RESIDENCES_URL = `${env.BASE_URL}/bailleur/residences`
 
 /** Résidences suivies par `decideInactivity` — miroir des deux premières conditions de `evaluateResidences`. */
 export const inInactivityScope = (residence: { contactMode: EOwnerContactMode; acceptsApplications: boolean }) =>
@@ -360,13 +365,23 @@ export async function runInactivityCheck(options: InactivityCheckOptions = {}): 
     EReminderType.APPLICATIONS_INACTIVITY_WARNING,
   )
   await sendGroupedEmails(
-    suspensions,
+    suspensions.filter((n) => n.reason === 'unprocessed_applications'),
     members,
     sendApplicationsAutoSuspendedEmail,
     suspensionLine,
     result.failures,
     force,
     EReminderType.APPLICATIONS_AUTO_SUSPENDED,
+  )
+  await sendGroupedEmails(
+    suspensions.filter((n) => n.reason === 'stale_availability'),
+    members,
+    sendApplicationsStaleAvailabilitySuspendedEmail,
+    () => '',
+    result.failures,
+    force,
+    EReminderType.APPLICATIONS_AUTO_SUSPENDED,
+    RESIDENCES_URL,
   )
 
   return result
