@@ -491,6 +491,13 @@
       "removeLabel": "Retirer des favoris",
       "addedAnnouncement": "Résidence ajoutée à vos favoris",
       "removedAnnouncement": "Résidence retirée de vos favoris"
+    },
+    "availabilityHelp": {
+      "label": "Comprendre ce statut",
+      "link": "Comprendre les statuts de disponibilité",
+      "available": "Le gestionnaire a indiqué ce nombre de logements libres lors de sa dernière mise à jour. Il peut évoluer entre deux mises à jour.",
+      "none": "La résidence est complète à la date de mise à jour. Créez une alerte pour être prévenu dès qu’une place se libère.",
+      "unknown": "Le gestionnaire ne nous a pas transmis de disponibilités récentes. Consultez son site ou contactez-le directement."
     }
   },
   "findAccomodation": {

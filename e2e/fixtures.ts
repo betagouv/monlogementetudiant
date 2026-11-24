@@ -7,6 +7,7 @@ import { createCredentialUser, SEED_PASSWORD } from '../src/__tests__/seed/accou
 import { EOwnerContactMode } from '../src/enums/owner-contact-mode'
 import { accommodationTypologies } from '../src/server/db/schema/accommodation-typologies'
 import { cities } from '../src/server/db/schema/cities'
+import { externalSources } from '../src/server/db/schema/external-sources'
 import { scholarshipSurveyOwners } from '../src/server/db/schema/scholarship-survey'
 
 /**
@@ -97,6 +98,11 @@ export async function createResidence(
     },
     typologies,
   )
+}
+
+/** Rattache une résidence au Crous (source externe `crous`), ce qui change l'affichage de ses disponibilités. */
+export async function markAsCrous(accommodationId: number) {
+  await getTestDb().insert(externalSources).values({ accommodationId, source: 'crous' })
 }
 
 /** Fait remonter la dernière confirmation des disponibilités d'une résidence à la date donnée. */

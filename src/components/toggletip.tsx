@@ -14,6 +14,7 @@ export const Toggletip = ({ label, children }: ToggletipProps) => {
   const panelId = useId()
   const rootRef = useRef<HTMLSpanElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
+  const closedByEscape = useRef(false)
 
   useEffect(() => {
     if (!open) return
@@ -27,7 +28,10 @@ export const Toggletip = ({ label, children }: ToggletipProps) => {
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'Escape' && open) {
       setOpen(false)
-      buttonRef.current?.focus()
+      if (document.activeElement !== buttonRef.current) {
+        closedByEscape.current = true
+        buttonRef.current?.focus()
+      }
     }
   }
 
@@ -52,7 +56,10 @@ export const Toggletip = ({ label, children }: ToggletipProps) => {
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen(true)}
-        onFocus={() => setOpen(true)}
+        onFocus={() => {
+          if (closedByEscape.current) closedByEscape.current = false
+          else setOpen(true)
+        }}
       />
       <div id={panelId} className={clsx('fr-text--sm fr-mb-0', styles.panel)} hidden={!open}>
         {children}
