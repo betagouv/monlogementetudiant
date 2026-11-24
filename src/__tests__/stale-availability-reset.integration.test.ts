@@ -38,6 +38,7 @@ vi.mock('~/server/services/brevo', async () => {
     sendAvailabilityMonthlyRecapEmail: vi.fn().mockResolvedValue(undefined),
     sendApplicationsInactivityWarningEmail: vi.fn().mockResolvedValue(undefined),
     sendApplicationsAutoSuspendedEmail: vi.fn().mockResolvedValue(undefined),
+    sendApplicationsStaleAvailabilitySuspendedEmail: vi.fn().mockResolvedValue(undefined),
   }
 })
 

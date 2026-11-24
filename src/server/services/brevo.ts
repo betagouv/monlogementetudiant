@@ -312,10 +312,13 @@ export async function sendApplicationsInactivityWarningEmail(
   })
 }
 
-export async function sendApplicationsAutoSuspendedEmail(
+type InactivityEmailOptions = { force?: boolean; reasons?: InactivityReason[] }
+
+async function sendAutoSuspendedEmail(
+  templateId: number,
   email: string,
   params: InactivityEmailParams,
-  { force = false, reasons }: { force?: boolean; reasons?: InactivityReason[] } = {},
+  { force = false, reasons }: InactivityEmailOptions,
 ): Promise<string | null> {
   if (env.NEXT_PUBLIC_APP_ENV !== 'production' && !force) {
     console.info(`[${env.NEXT_PUBLIC_APP_ENV}] suspension automatique non envoyée à ${maskEmail(email)}`)
@@ -324,11 +327,20 @@ export async function sendApplicationsAutoSuspendedEmail(
 
   return sendTemplateEmail({
     to: email,
-    templateId: env.BREVO_TEMPLATE_APPLICATIONS_AUTO_SUSPENDED,
+    templateId,
     params: inactivityParams(params),
     tags: reminderTags(EReminderType.APPLICATIONS_AUTO_SUSPENDED, reasons),
   })
 }
+
+export const sendApplicationsAutoSuspendedEmail = (email: string, params: InactivityEmailParams, options: InactivityEmailOptions = {}) =>
+  sendAutoSuspendedEmail(env.BREVO_TEMPLATE_APPLICATIONS_AUTO_SUSPENDED, email, params, options)
+
+export const sendApplicationsStaleAvailabilitySuspendedEmail = (
+  email: string,
+  params: InactivityEmailParams,
+  options: InactivityEmailOptions = {},
+) => sendAutoSuspendedEmail(env.BREVO_TEMPLATE_APPLICATIONS_STALE_AVAILABILITY_SUSPENDED, email, params, options)
 
 export type AvailabilityRecapResidence = { name: string; city: string | null; nbAvailable: number; lastUpdatedAt: Date | null }
 

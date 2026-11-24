@@ -72,6 +72,7 @@ export const envSchema = z.object({
   BREVO_TEMPLATE_APPLICATIONS_SUSPENDED: z.coerce.number().int().positive(),
   BREVO_TEMPLATE_APPLICATIONS_INACTIVITY_WARNING: z.coerce.number().int().positive(),
   BREVO_TEMPLATE_APPLICATIONS_AUTO_SUSPENDED: z.coerce.number().int().positive(),
+  BREVO_TEMPLATE_APPLICATIONS_STALE_AVAILABILITY_SUSPENDED: z.coerce.number().int().positive(),
   BREVO_TEMPLATE_CONTACT_MODE_ACTIVATED: z.coerce.number().int().positive(),
   BREVO_TEMPLATE_CONTACT_MODE_DEACTIVATED: z.coerce.number().int().positive(),
   BREVO_TEMPLATE_CONTACT_RESIDENCES_UPDATED: z.coerce.number().int().positive(),
