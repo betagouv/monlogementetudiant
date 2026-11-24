@@ -10,12 +10,14 @@ import { OwnerDetailsActions } from '~/components/find-student-accomodation/owne
 import { OwnerDetailsAlert } from '~/components/find-student-accomodation/owner-details/owner-details-alert'
 import { ReportErrorButton } from '~/components/find-student-accomodation/owner-details/report-error-modal'
 import { WaitingListBadge } from '~/components/shared/waiting-list-badge'
+import { Toggletip } from '~/components/toggletip'
 import { NewWindowHint } from '~/components/ui/new-window'
 import { type ApartmentType } from '~/enums/apartment-type'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { TUser } from '~/lib/types'
 import { TAccomodationDetails } from '~/schemas/accommodations/accommodations'
 import { acceptsContactRequests } from '~/server/bailleur/applications-open'
+import { getAvailabilityStatus } from '~/utils/availability-status'
 import { formatLocalizedDate } from '~/utils/date-helpers'
 import { formatFrenchPhoneNumber, toTelHref } from '~/utils/phone-number'
 import styles from './owner-details.module.css'
@@ -100,6 +102,16 @@ export const OwnerDetails = async ({
         </div>
       )}
       <h3 className="fr-h6 fr-mb-0 fr-text--center">{availabilityTitle}</h3>
+      {!isCrous && (
+        <div className="fr-flex fr-justify-content-center fr-mt-1v">
+          <Toggletip label={t('availabilityHelp.label')}>
+            <p className="fr-text--sm fr-mb-1w">{t(`availabilityHelp.${getAvailabilityStatus(nbAvailable)}`)}</p>
+            <Link href="/comprendre-les-disponibilites" className="fr-link fr-text--sm">
+              {t('availabilityHelp.link')}
+            </Link>
+          </Toggletip>
+        </div>
+      )}
       {isCrous && (
         <p className="fr-text--sm fr-mb-0 fr-mt-1w fr-text--center fr-text-mention--grey">
           <span className="fr-icon-info-line fr-icon--sm fr-mr-1v" aria-hidden="true" />

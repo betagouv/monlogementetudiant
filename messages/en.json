@@ -491,6 +491,13 @@
       "removeLabel": "Remove from favourites",
       "addedAnnouncement": "Residence added to your favourites",
       "removedAnnouncement": "Residence removed from your favourites"
+    },
+    "availabilityHelp": {
+      "label": "Understand this status",
+      "link": "Understand availability statuses",
+      "available": "The manager reported this number of vacant units at their last update. It may change between two updates.",
+      "none": "The residence is full as of the last update. Create an alert to be notified as soon as a place becomes available.",
+      "unknown": "The manager has not sent us recent availability. Check their website or contact them directly."
     }
   },
   "findAccomodation": {
