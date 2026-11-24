@@ -118,6 +118,13 @@ export async function sendVerificationEmail(email: string, url: string): Promise
   })
 }
 
+export async function sendStudentWelcomeEmail(email: string): Promise<void> {
+  await sendTemplateEmail({
+    to: email,
+    templateId: env.BREVO_TEMPLATE_STUDENT_WELCOME,
+  })
+}
+
 export async function sendResetPasswordEmail(email: string, url: string): Promise<void> {
   await sendTemplateEmail({
     to: email,

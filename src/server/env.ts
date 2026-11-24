@@ -81,6 +81,7 @@ export const envSchema = z.object({
   BREVO_TEMPLATE_AVAILABILITY_MONTHLY_RECAP: z.coerce.number().int().positive(),
   BREVO_TEMPLATE_AVAILABILITY_RESET_DONE: z.coerce.number().int().positive(),
   BREVO_TEMPLATE_STUDENT_GOAL_REMINDER: z.coerce.number().int().positive(),
+  BREVO_TEMPLATE_STUDENT_WELCOME: z.coerce.number().int().positive(),
 
   // S3
   S3_ENDPOINT: z.url(),
@@ -192,6 +193,7 @@ export const WEB_ONLY_ENV = [
   'API_V1_ENABLED',
   'API_V1_RATE_LIMIT_MAX',
   'API_V1_RATE_LIMIT_WINDOW_MS',
+  'BREVO_TEMPLATE_STUDENT_WELCOME',
   'DOSSIERFACILE_AUTHORIZE_URL',
   'DOSSIERFACILE_CLIENT_ID',
   'DOSSIERFACILE_CLIENT_SECRET',

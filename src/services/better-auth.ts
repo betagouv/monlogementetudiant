@@ -17,7 +17,7 @@ import { db } from '~/server/db'
 import * as schema from '~/server/db/schema'
 import { adminOwnerLinks } from '~/server/db/schema/admin-owner-links'
 import { env } from '~/server/env'
-import { sendMagicLinkEmail, sendResetPasswordEmail, sendVerificationEmail } from '~/server/services/brevo'
+import { sendMagicLinkEmail, sendResetPasswordEmail, sendStudentWelcomeEmail, sendVerificationEmail } from '~/server/services/brevo'
 import {
   findPendingMagicLinks,
   MAGIC_LINK_EXPIRES_IN_SECONDS,
@@ -37,6 +37,16 @@ const shouldLogAuthLinks = env.NEXT_PUBLIC_APP_ENV === 'development' && ['localh
 function logLocalAuthLink(kind: 'activation' | 'connexion' | 'code' | 'reset-password', email: string, url: string) {
   if (!shouldLogAuthLinks) return
   console.log(`[better-auth:${kind}] ${email} -> ${url}`)
+}
+
+const sendStudentWelcomeEmailSafely = async (userId: string, email: string) => {
+  try {
+    const account = await db.query.user.findFirst({ where: eq(schema.user.id, userId), columns: { role: true } })
+    if (account?.role !== 'user') return
+    await sendStudentWelcomeEmail(email)
+  } catch (error) {
+    Sentry.captureException(error, { tags: { step: 'sendStudentWelcomeEmail' }, extra: { userId } })
+  }
 }
 
 export const auth = betterAuth({
@@ -113,6 +123,7 @@ export const auth = betterAuth({
     // laissées en visiteur avec cette même adresse.
     afterEmailVerification: async (user) => {
       await linkGuestContactRequestsSafely(user.id, user.email)
+      await sendStudentWelcomeEmailSafely(user.id, user.email)
     },
   },
   plugins: [
