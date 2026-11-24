@@ -78,9 +78,7 @@ describe('GET /api/bailleur/contacts/export', () => {
 
     expect(response.status).toBe(200)
     expect(response.headers.get('Content-Type')).toBe('text/csv; charset=utf-8')
-    expect(response.headers.get('Content-Disposition')).toBe(
-      `attachment; filename="contacts-bailleur-a-${formatIsoDate(new Date())}.csv"`,
-    )
+    expect(response.headers.get('Content-Disposition')).toBe(`attachment; filename="contacts-bailleur-a-${formatIsoDate(new Date())}.csv"`)
     const [header, line] = (await response.text()).replace(/^﻿/, '').split('\n')
     expect(header).toBe(
       "Résidence;Ville;Département;Région;Nom;E-mail;Téléphone;Date de naissance;Boursier;Alternance;Établissement;Année d'études;Type de logement;Statut;Date de la demande",

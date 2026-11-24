@@ -34,10 +34,7 @@ const createCityIn = async (departmentCode: string, cityName: string) => {
   return city.id
 }
 
-const addRequest = (
-  accommodationId: number,
-  values: Partial<typeof contactRequests.$inferInsert> = {},
-): Promise<unknown> =>
+const addRequest = (accommodationId: number, values: Partial<typeof contactRequests.$inferInsert> = {}): Promise<unknown> =>
   getTestDb()
     .insert(contactRequests)
     .values({
