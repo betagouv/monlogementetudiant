@@ -111,12 +111,11 @@ export const OwnerDetails = async ({
           {t('sidebar.updatedAt', { date: formatLocalizedDate(updatedAt, 'dd MMMM yyyy', locale) })}
         </p>
       )}
-      <WaitingListBadge
-        acceptWaitingList={acceptWaitingList}
-        nbAvailable={nbAvailable}
-        waitingListText={t('waitingList')}
-        className="fr-mt-2w fr-justify-content-center fr-width-full"
-      />
+      {acceptWaitingList && (
+        <div className="fr-flex fr-justify-content-center fr-mt-2w">
+          <WaitingListBadge acceptWaitingList={acceptWaitingList} nbAvailable={nbAvailable} waitingListText={t('waitingList')} />
+        </div>
+      )}
 
       <DossierFacileLinkButton
         accommodationSlug={accommodationSlug}
