@@ -1,0 +1,42 @@
+.root {
+  position: relative;
+  display: inline-block;
+}
+
+.trigger {
+  padding: 0;
+  border: 0;
+  background: none;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--text-action-high-blue-france);
+}
+
+.panel {
+  position: absolute;
+  top: calc(100% + 0.75rem);
+  left: 50%;
+  z-index: calc(var(--ground) + 1000);
+  width: max-content;
+  max-width: min(24rem, calc(100vw - 2rem));
+  padding: 0.75rem 1rem;
+  transform: translateX(-50%);
+  text-align: center;
+  color: var(--text-default-grey);
+  background-color: var(--background-overlap-grey);
+  border: 1px solid var(--border-default-grey);
+  filter: drop-shadow(var(--overlap-shadow));
+}
+
+.panel::before {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  width: 0.75rem;
+  height: 0.75rem;
+  background-color: var(--background-overlap-grey);
+  border-top: 1px solid var(--border-default-grey);
+  border-left: 1px solid var(--border-default-grey);
+  transform: translate(-50%, 50%) rotate(45deg);
+}
