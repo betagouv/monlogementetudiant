@@ -11,6 +11,7 @@ export const ZSaveContactReceptionSettings = z.object({
         accommodationId: z.number().int().positive(),
         managerIds: z.array(z.string().min(1)).max(MAX_MANAGERS),
         acceptWaitingList: z.boolean(),
+        rejectsOverMaxAge: z.boolean().default(false),
       }),
     )
     .min(1, { message: 'Sélectionnez au moins une résidence' })
@@ -33,6 +34,7 @@ export const zContactReceptionSettingsForm = ({ requireManagers }: { requireMana
             ? z.array(ZReceptionManager).min(1, { message: 'Sélectionnez au moins un gestionnaire' })
             : z.array(ZReceptionManager),
           acceptWaitingList: z.boolean(),
+          rejectsOverMaxAge: z.boolean(),
         }),
       )
       .min(1, { message: 'Sélectionnez au moins une résidence' }),

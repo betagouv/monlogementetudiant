@@ -1,0 +1,1 @@
+ALTER TABLE "accommodation" ADD COLUMN "rejects_over_max_age" boolean DEFAULT false NOT NULL;

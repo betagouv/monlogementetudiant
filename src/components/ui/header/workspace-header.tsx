@@ -3,6 +3,7 @@ import { FC } from 'react'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
 import { getAccommodationScope, scopeHasAnyAccommodation } from '~/server/bailleur/accommodation-scope'
 import { hasPermission, isBailleurAdministrator, type PermissionCheckUser } from '~/server/bailleur/permissions'
+import { isScholarshipSurveyActive } from '~/server/scholarship-survey/active'
 import { getServerSession } from '~/services/better-auth'
 import { WorkspaceHeaderClient } from './workspace-header-client'
 
@@ -26,6 +27,7 @@ export const WorkspaceHeaderComponent: FC = async () => {
   const canManageUsers = isBailleurAdministrator(checkUser)
   const canManageResidences = hasPermission(checkUser, 'manage_residences')
   const canManageApplications = hasPermission(checkUser, 'manage_applications')
+  const showScholarshipSurvey = canManageResidences && isScholarshipSurveyActive()
   // Un gestionnaire restreint à zéro résidence n'a aucun écran Contacts à ouvrir.
   const hasApplicationScope = scopeHasAnyAccommodation(await getAccommodationScope(auth.user.id))
 
@@ -38,6 +40,7 @@ export const WorkspaceHeaderComponent: FC = async () => {
       contactMode={auth.user.owner?.contactMode ?? EOwnerContactMode.NONE}
       canManageUsers={canManageUsers}
       canManageResidences={canManageResidences}
+      showScholarshipSurvey={showScholarshipSurvey}
       canManageApplications={canManageApplications}
       hasApplicationScope={hasApplicationScope}
       isAdmin={isAdmin}

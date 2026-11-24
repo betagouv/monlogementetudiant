@@ -21,7 +21,7 @@ src/
   hooks/        # Custom hooks (React Query / tRPC)
   utils/        # Utilitaires partagés
   enums/        # Énumérations TypeScript
-cli/            # Scripts Node.js (imports CSV, SFTP, etc.)
+apps/worker/    # Package pnpm : CLI (imports, syncs) + worker Graphile, déployé sur mle-worker*
 ```
 
 ---
@@ -61,6 +61,7 @@ Toutes les vars sont déclarées et validées dans `src/server/env.ts` via Zod.
 - Les valeurs dans `.env` sont **brutes** — ne pas précalculer des dérivées (hash, URL composée) à la main dans le code. Si une var est dérivée d'autres (ex. base64 de deux vars), la déclarer directement dans `.env` comme valeur précalculée.
 - Utiliser `requiredInProd` pour les vars optionnelles en dev mais obligatoires en prod/staging.
 - Utiliser `requiredInProdUrl` pour les URLs.
+- Une variable lue uniquement par le web va dans `WEB_ONLY_ENV` (`src/server/env.ts`) ; sinon le worker l'exige aussi : la poser sur l'app worker (`mle-worker`, `mle-worker-staging`), faute de quoi il ne démarre pas.
 - Mettre à jour `.env.dist` avec des valeurs factices à chaque ajout/suppression de variable.
 - Nommer les vars en `SCREAMING_SNAKE_CASE` avec un préfixe par service : `BREVO_*`, `S3_*`, `CRISP_*`, `IBAIL_*`, etc.
 - Ajouter les vars manquantes dans les `env` de `vitest.config.ts` pour éviter les échecs à l'initialisation des tests.
@@ -142,6 +143,11 @@ db.select().from(table).where(and(eq(table.ownerId, id), eq(table.status, 'activ
 ```
 
 **Schema :** `src/server/db/schema/` — vérifier les noms de colonnes ici avant de les utiliser dans les requêtes.
+
+**Seed obligatoire :** toute évolution du modèle de données (nouvelle table, nouvelle colonne, changement de type, d'enum ou de contrainte) doit être répercutée dans le même commit sur le seed (`src/__tests__/seed/`, commun dev et e2e).
+- Une nouvelle table reçoit des lignes réalistes ; une nouvelle colonne est renseignée avec des valeurs variées (y compris `null` si autorisé), pas seulement sa valeur par défaut.
+- Contrôle de données minimales : le seed vérifie à la fin qu'il a produit le volume minimal attendu pour chaque table concernée et échoue sinon (message en français). Ajouter la table au contrôle quand on la crée.
+- Le seed vide puis recrée sa base : ne **jamais** le lancer de soi-même sur la base de dev locale (`mle_dev`), qui peut contenir des données réelles importées pour tester. Ne pas l'ajouter à un hook de commit. Le vérifier sur la base jetable e2e (`pnpm e2e:seed`) ; `pnpm db:seed` reste une commande que le développeur lance volontairement.
 
 ---
 

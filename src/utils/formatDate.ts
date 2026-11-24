@@ -1,4 +1,5 @@
 import { format } from 'date-fns'
+import { fr } from 'date-fns/locale'
 import { formatInTimeZone } from 'date-fns-tz'
 
 export const dateFormatter =
@@ -25,3 +26,5 @@ export const DEFAULT_TIMEZONE = 'Europe/Paris'
 export const formatDateTime = (date: Date) => dateAsDayAndTimeInTimeZone(date, DEFAULT_TIMEZONE)
 
 export const formatDay = (date: Date) => dateAsDayConventionalInTimeZone(date, DEFAULT_TIMEZONE)
+
+export const formatLongDay = (date: Date) => formatInTimeZone(date, DEFAULT_TIMEZONE, 'd MMMM yyyy', { locale: fr })

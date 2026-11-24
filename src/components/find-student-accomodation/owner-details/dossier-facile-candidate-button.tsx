@@ -5,6 +5,7 @@ import Checkbox from '@codegouvfr/react-dsfr/Checkbox'
 import Input from '@codegouvfr/react-dsfr/Input'
 import { createModal } from '@codegouvfr/react-dsfr/Modal'
 import { RadioButtons } from '@codegouvfr/react-dsfr/RadioButtons'
+import Select from '@codegouvfr/react-dsfr/Select'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
@@ -21,12 +22,20 @@ import { NewWindowHint } from '~/components/ui/new-window'
 import { RequiredFieldsNotice, RequiredLabel } from '~/components/ui/required-mark'
 import type { ApartmentType } from '~/enums/apartment-type'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
+import { STUDY_YEARS } from '~/enums/study-year'
 import { trackEvent } from '~/lib/tracking'
 import type { TSchemaTranslator } from '~/schemas/schema-translator'
-import { createZBirthDate, createZScholarshipStatus } from '~/schemas/student-profile/student-profile'
+import {
+  createZBirthDate,
+  createZScholarshipStatus,
+  createZStudyInstitution,
+  createZStudyYear,
+  createZWorkStudyChoice,
+} from '~/schemas/student-profile/student-profile'
 import { acceptsContactRequests } from '~/server/bailleur/applications-open'
 import { useTRPC, useTRPCClient } from '~/server/trpc/client'
 import { authClient } from '~/services/better-auth-client'
+import { isOverMaxApplicantAge, MAX_APPLICANT_AGE } from '~/utils/applicant-age'
 import { isStudentProfileComplete } from '~/utils/student-profile'
 import { CandidatureModal, useCandidatureModal } from './candidature-modal'
 import styles from './contact-request-modal.module.css'
@@ -36,6 +45,7 @@ interface Props {
   availableApartmentTypes: ApartmentType[]
   nbAvailable: number | null
   acceptWaitingList: boolean
+  rejectsOverMaxAge: boolean
   isAuthenticated: boolean
   contactMode: EOwnerContactMode
 }
@@ -45,13 +55,14 @@ export const DossierFacileLinkButton = ({
   availableApartmentTypes,
   nbAvailable,
   acceptWaitingList,
+  rejectsOverMaxAge,
   isAuthenticated,
   contactMode,
 }: Props) => {
   if (contactMode === EOwnerContactMode.NONE) return null
   if (contactMode === EOwnerContactMode.CONTACTS) {
     return acceptsContactRequests({ nbAvailableApartments: nbAvailable, acceptWaitingList }) ? (
-      <ContactRequestButton accommodationSlug={accommodationSlug} />
+      <ContactRequestButton accommodationSlug={accommodationSlug} rejectsOverMaxAge={rejectsOverMaxAge} />
     ) : null
   }
   if (availableApartmentTypes.length === 0) return null
@@ -59,7 +70,7 @@ export const DossierFacileLinkButton = ({
   return <DossierFacileApplyButton accommodationSlug={accommodationSlug} availableApartmentTypes={availableApartmentTypes} />
 }
 
-const ContactRequestButton = ({ accommodationSlug }: { accommodationSlug: string }) => {
+const ContactRequestButton = ({ accommodationSlug, rejectsOverMaxAge }: { accommodationSlug: string; rejectsOverMaxAge: boolean }) => {
   const t = useTranslations('accomodation')
   const trpc = useTRPC()
   const { data: session } = authClient.useSession()
@@ -94,7 +105,7 @@ const ContactRequestButton = ({ accommodationSlug }: { accommodationSlug: string
         {t('sidebar.buttons.contactRequest')}
       </Button>
       <span className="fr-text--xs fr-mb-0">{t('sidebar.buttons.contactRequestDescription')}</span>
-      <ContactRequestModal accommodationSlug={accommodationSlug} />
+      <ContactRequestModal accommodationSlug={accommodationSlug} rejectsOverMaxAge={rejectsOverMaxAge} />
     </div>
   )
 }
@@ -105,20 +116,27 @@ const useContactRequestModal = (accommodationSlug: string) => {
 
 type TContactRequestErrorsTranslator = ReturnType<typeof useTranslations<'accomodation.sidebar.contactRequestModal.errors'>>
 
-const buildZContactRequestForm = (t: TContactRequestErrorsTranslator, tSchemas: TSchemaTranslator) =>
+const buildZContactRequestForm = (t: TContactRequestErrorsTranslator, tSchemas: TSchemaTranslator, rejectsOverMaxAge = false) =>
   z.object({
     firstname: z.string().trim().min(1, t('firstnameRequired')),
     lastname: z.string().trim().min(1, t('lastnameRequired')),
     email: z.string().trim().email(t('emailInvalid')),
     phone: z.string().trim(),
-    birthdate: createZBirthDate(tSchemas),
+    birthdate: createZBirthDate(tSchemas).refine((value) => !rejectsOverMaxAge || !isOverMaxApplicantAge(value), {
+      message: t('birthdateOverMaxAge', { age: MAX_APPLICANT_AGE }),
+    }),
     scholarshipStatus: createZScholarshipStatus(tSchemas),
+    isWorkStudy: createZWorkStudyChoice(tSchemas),
+    studyInstitution: createZStudyInstitution(tSchemas),
+    studyYear: createZStudyYear(tSchemas),
     consent: z.boolean().refine((value) => value, t('consentRequired')),
   })
 
-type TContactRequestForm = z.infer<ReturnType<typeof buildZContactRequestForm>>
+type TContactRequestFormValues = z.input<ReturnType<typeof buildZContactRequestForm>>
+type TContactRequestForm = z.output<ReturnType<typeof buildZContactRequestForm>>
+type TContactRequestFormApi = UseFormReturn<TContactRequestFormValues, unknown, TContactRequestForm>
 
-type TContactRequestField = 'firstname' | 'lastname' | 'email' | 'phone' | 'birthdate'
+type TContactRequestField = 'firstname' | 'lastname' | 'email' | 'phone' | 'birthdate' | 'studyInstitution'
 
 /**
  * Une information déjà connue du compte n'est pas redemandée : elle s'affiche verrouillée.
@@ -134,6 +152,7 @@ const LockableInput = ({
   required,
   lockedValue,
   form,
+  forcedError,
 }: {
   label: ReactNode
   hintText?: string
@@ -142,13 +161,23 @@ const LockableInput = ({
   autoComplete: string
   required?: boolean
   lockedValue: string
-  form: UseFormReturn<TContactRequestForm>
+  form: TContactRequestFormApi
+  // Erreur affichée sans attendre la soumission (ex. âge maximum de la résidence), y compris sur un champ verrouillé.
+  forcedError?: string
 }) => {
   if (lockedValue) {
-    return <Input label={label} disabled nativeInputProps={{ type, autoComplete, value: lockedValue, readOnly: true }} />
+    return (
+      <Input
+        label={label}
+        disabled={!forcedError}
+        state={forcedError ? 'error' : 'default'}
+        stateRelatedMessage={forcedError}
+        nativeInputProps={{ type, autoComplete, value: lockedValue, readOnly: true }}
+      />
+    )
   }
 
-  const error = form.formState.errors[name]?.message
+  const error = forcedError ?? form.formState.errors[name]?.message
 
   return (
     <Input
@@ -167,7 +196,7 @@ const LockableScholarshipStatus = ({
   form,
 }: {
   lockedValue: TContactRequestForm['scholarshipStatus'] | ''
-  form: UseFormReturn<TContactRequestForm>
+  form: TContactRequestFormApi
 }) => {
   const t = useTranslations('accomodation.sidebar.contactRequestModal')
   const options = [
@@ -197,12 +226,91 @@ const LockableScholarshipStatus = ({
   )
 }
 
-const ContactRequestModal = ({ accommodationSlug }: { accommodationSlug: string }) => {
+/** Pendant de `LockableInput` pour l'alternance : une valeur connue s'affiche verrouillée. */
+const LockableWorkStudy = ({
+  lockedValue,
+  form,
+}: {
+  lockedValue: TContactRequestFormValues['isWorkStudy'] | ''
+  form: TContactRequestFormApi
+}) => {
+  const t = useTranslations('accomodation.sidebar.contactRequestModal')
+
+  if (lockedValue) {
+    return (
+      <Input
+        label={t('workStudy')}
+        disabled
+        nativeInputProps={{ type: 'text', value: lockedValue === 'true' ? t('workStudyYes') : t('workStudyNo'), readOnly: true }}
+      />
+    )
+  }
+
+  const error = form.formState.errors.isWorkStudy?.message
+
+  return (
+    <RadioButtons
+      legend={<RequiredLabel>{t('workStudy')}</RequiredLabel>}
+      state={error ? 'error' : 'default'}
+      stateRelatedMessage={error}
+      orientation="horizontal"
+      options={[
+        { label: t('workStudyYes'), value: 'true' },
+        { label: t('workStudyNo'), value: 'false' },
+      ].map((option) => ({
+        label: option.label,
+        nativeInputProps: { ...form.register('isWorkStudy'), value: option.value, 'aria-required': true },
+      }))}
+    />
+  )
+}
+
+/** Pendant de `LockableInput` pour l'année d'études : une valeur connue s'affiche verrouillée. */
+const LockableStudyYear = ({ lockedValue, form }: { lockedValue: TContactRequestForm['studyYear'] | ''; form: TContactRequestFormApi }) => {
+  const t = useTranslations('accomodation.sidebar.contactRequestModal')
+  const tSchemas = useTranslations('schemas')
+
+  if (lockedValue) {
+    return (
+      <Input
+        label={t('studyYear')}
+        disabled
+        nativeInputProps={{ type: 'text', value: tSchemas(`studyYear.${lockedValue}`), readOnly: true }}
+      />
+    )
+  }
+
+  const error = form.formState.errors.studyYear?.message
+
+  return (
+    <Select
+      label={<RequiredLabel>{t('studyYear')}</RequiredLabel>}
+      hint={t('studyYearHint')}
+      state={error ? 'error' : 'default'}
+      stateRelatedMessage={error}
+      nativeSelectProps={{ ...form.register('studyYear'), 'aria-required': true }}
+    >
+      <option value="" disabled hidden>
+        {t('studyYearPlaceholder')}
+      </option>
+      {STUDY_YEARS.map((year) => (
+        <option key={year} value={year}>
+          {tSchemas(`studyYear.${year}`)}
+        </option>
+      ))}
+    </Select>
+  )
+}
+
+const ContactRequestModal = ({ accommodationSlug, rejectsOverMaxAge }: { accommodationSlug: string; rejectsOverMaxAge: boolean }) => {
   const t = useTranslations('accomodation.sidebar.contactRequestModal')
   const buttonT = useTranslations('accomodation.sidebar.buttons')
   const errorsT = useTranslations('accomodation.sidebar.contactRequestModal.errors')
   const tSchemas = useTranslations('schemas')
-  const ZContactRequestForm = useMemo(() => buildZContactRequestForm(errorsT, tSchemas), [errorsT, tSchemas])
+  const ZContactRequestForm = useMemo(
+    () => buildZContactRequestForm(errorsT, tSchemas, rejectsOverMaxAge),
+    [errorsT, tSchemas, rejectsOverMaxAge],
+  )
   const trpc = useTRPC()
   const queryClient = useQueryClient()
   const modal = useContactRequestModal(accommodationSlug)
@@ -222,14 +330,22 @@ const ContactRequestModal = ({ accommodationSlug }: { accommodationSlug: string 
     // Le cast couvre le cas « pas encore renseigné » : la chaîne vide ne coche aucun radio et
     // échoue à la validation, comme pour un visiteur qui n'aurait rien saisi.
     scholarshipStatus: (account?.scholarshipStatus || '') as TContactRequestForm['scholarshipStatus'],
+    isWorkStudy: (account?.isWorkStudy == null ? '' : String(account.isWorkStudy)) as TContactRequestFormValues['isWorkStudy'],
+    studyInstitution: account?.studyInstitution || '',
+    studyYear: (account?.studyYear || '') as TContactRequestForm['studyYear'],
   }
-  const hasKnownFields = Object.values(known).some(Boolean)
+  const hasKnownFields = Object.values(known).some((value) => value !== undefined && value !== '')
 
-  const form = useForm<TContactRequestForm>({
+  const form = useForm<TContactRequestFormValues, unknown, TContactRequestForm>({
     resolver: zodResolver(ZContactRequestForm),
     values: { ...known, consent: false },
     resetOptions: { keepDirtyValues: true },
   })
+
+  // Résidence réservée aux moins de 30 ans : l'étudiant est prévenu dès la saisie et ne peut pas envoyer.
+  const birthdate = form.watch('birthdate')
+  const isOverMaxAge = rejectsOverMaxAge && isOverMaxApplicantAge(birthdate)
+  const overMaxAgeError = isOverMaxAge ? errorsT('birthdateOverMaxAge', { age: MAX_APPLICANT_AGE }) : undefined
 
   const { mutate, isPending } = useMutation(
     trpc.contacts.create.mutationOptions({
@@ -304,9 +420,24 @@ const ContactRequestModal = ({ accommodationSlug }: { accommodationSlug: string 
                 required
                 lockedValue={known.birthdate}
                 form={form}
+                forcedError={overMaxAgeError}
               />
             </div>
             <LockableScholarshipStatus lockedValue={known.scholarshipStatus} form={form} />
+            <LockableWorkStudy lockedValue={known.isWorkStudy} form={form} />
+            <div className={styles.formGrid}>
+              <LockableInput
+                label={<RequiredLabel>{t('studyInstitution')}</RequiredLabel>}
+                hintText={t('studyInstitutionHint')}
+                name="studyInstitution"
+                type="text"
+                autoComplete="organization"
+                required
+                lockedValue={known.studyInstitution}
+                form={form}
+              />
+              <LockableStudyYear lockedValue={known.studyYear} form={form} />
+            </div>
             <Checkbox
               state={form.formState.errors.consent ? 'error' : 'default'}
               stateRelatedMessage={form.formState.errors.consent?.message}
@@ -330,7 +461,7 @@ const ContactRequestModal = ({ accommodationSlug }: { accommodationSlug: string 
               <Button priority="secondary" type="button" onClick={handleClose}>
                 {t('cancel')}
               </Button>
-              <Button priority="primary" type="submit" disabled={isPending}>
+              <Button priority="primary" type="submit" disabled={isPending || isOverMaxAge}>
                 {isPending ? t('submitting') : t('submit')}
               </Button>
             </div>

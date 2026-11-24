@@ -60,6 +60,8 @@ export const accommodations = pgTable(
     wifi: boolean('wifi'),
     bathroom: varchar('bathroom', { length: 50 }),
     acceptWaitingList: boolean('accept_waiting_list'),
+    // Réglage gestionnaire : demandes de contact refusées au-delà de MAX_APPLICANT_AGE (FJT, résidences jeunes actifs).
+    rejectsOverMaxAge: boolean('rejects_over_max_age').notNull().default(false),
     acceptsApplications: boolean('accepts_applications').notNull().default(true),
     applicationsSuspendedAt: timestamp('applications_suspended_at', { withTimezone: true }),
     applicationsSuspendedById: text('applications_suspended_by_id').references(() => user.id, { onDelete: 'set null' }),

@@ -13,6 +13,7 @@ const COLUMN_ICON: Record<EContactStatus, string> = {
   [EContactStatus.NON_RETENU]: 'ri-close-circle-line',
   [EContactStatus.A_CONTACTER]: 'ri-time-line',
   [EContactStatus.CONTACTE]: 'ri-checkbox-circle-line',
+  [EContactStatus.LOGEMENT_ATTRIBUE]: 'ri-home-heart-line',
 }
 
 /** La colonne d'entrée du board porte toujours l'icône « équipe » dorée, quel que soit son statut. */

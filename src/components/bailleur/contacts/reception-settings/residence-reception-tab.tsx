@@ -6,6 +6,7 @@ import ToggleSwitch from '@codegouvfr/react-dsfr/ToggleSwitch'
 import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import type { TReceptionManager } from '~/schemas/contacts/contact-reception-settings'
+import { MAX_APPLICANT_AGE } from '~/utils/applicant-age'
 import { buildHref } from '~/utils/preserve-query-params'
 import { ManagerCombobox } from './manager-combobox'
 
@@ -18,6 +19,8 @@ type Props = {
   managersError?: string
   acceptWaitingList: boolean
   onAcceptWaitingListChange: (checked: boolean) => void
+  rejectsOverMaxAge: boolean
+  onRejectsOverMaxAgeChange: (checked: boolean) => void
 }
 
 export const ResidenceReceptionTab = ({
@@ -29,6 +32,8 @@ export const ResidenceReceptionTab = ({
   managersError,
   acceptWaitingList,
   onAcceptWaitingListChange,
+  rejectsOverMaxAge,
+  onRejectsOverMaxAgeChange,
 }: Props) => {
   const t = useTranslations('bailleur.contacts.receptionSettings')
   const searchParams = useSearchParams()
@@ -71,6 +76,18 @@ export const ResidenceReceptionTab = ({
         inputTitle={t('waitingListLabel')}
         checked={acceptWaitingList}
         onChange={onAcceptWaitingListChange}
+        showCheckedHint={false}
+        labelPosition="left"
+      />
+
+      <hr className="fr-mt-3w fr-pb-3w" />
+
+      <ToggleSwitch
+        label={t('rejectsOverMaxAgeLabel', { age: MAX_APPLICANT_AGE })}
+        helperText={t('rejectsOverMaxAgeHint')}
+        inputTitle={t('rejectsOverMaxAgeLabel', { age: MAX_APPLICANT_AGE })}
+        checked={rejectsOverMaxAge}
+        onChange={onRejectsOverMaxAgeChange}
         showCheckedHint={false}
         labelPosition="left"
       />

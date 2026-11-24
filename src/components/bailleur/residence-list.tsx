@@ -165,7 +165,7 @@ export const ResidenceList: FC<ResidenceListProps> = ({ canSeeContacts }) => {
                   accomodation={accommodation}
                   href={buildHref(`/bailleur/residences/${accommodation.slug}`, { ownerId: queryStates.ownerId?.toString() })}
                   contactsHref={
-                    canSeeContacts && accommodation.acceptsApplications
+                    canSeeContacts && (accommodation.acceptsApplications || accommodation.hasVisibleContacts)
                       ? buildHref(`/bailleur/contacts/${accommodation.slug}`, { ownerId: queryStates.ownerId?.toString() })
                       : undefined
                   }

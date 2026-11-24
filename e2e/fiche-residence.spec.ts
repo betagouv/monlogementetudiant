@@ -3,6 +3,7 @@ import { expect, gotoHydrated, test } from './fixtures'
 // Parcours : consultation de la fiche d'une résidence (données seedées par e2e/seed.ts).
 
 const FICHE_CENTRE = '/trouver-un-logement-etudiant/ville/saint-etienne/residence-e2e-du-centre'
+const FICHE_CROUS = '/trouver-un-logement-etudiant/ville/lyon/residence-demo-crous-gerland'
 
 test.describe("Fiche d'une résidence", () => {
   test('présente la résidence, ses prix et ses logements', async ({ page }) => {
@@ -11,14 +12,14 @@ test.describe("Fiche d'une résidence", () => {
     await expect(page.getByRole('heading', { level: 1, name: /Résidence E2E du Centre/ })).toBeVisible()
     await expect(page.getByText('À partir de 420 €').first()).toBeVisible()
     await expect(page.getByText('Studio', { exact: true }).first()).toBeVisible()
-    await expect(page.getByRole('heading', { name: '42 logements', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: '7 logements disponibles', exact: true })).toBeVisible()
     await expect(page.getByText(/^Mis à jour le /)).toBeVisible()
   })
 
   test("ouvre l'offre du gestionnaire dans un nouvel onglet", async ({ page }) => {
     await page.goto(FICHE_CENTRE)
 
-    const offerLink = page.getByRole('link', { name: /Consulter l'offre du gestionnaire/ })
+    const offerLink = page.getByRole('link', { name: /Consulter l'offre/ })
     await expect(offerLink).toHaveAttribute('href', 'https://bailleur.example.com/residence-du-centre')
     await expect(offerLink).toHaveAttribute('target', '_blank')
   })
@@ -27,6 +28,19 @@ test.describe("Fiche d'une résidence", () => {
     await page.goto(FICHE_CENTRE)
 
     await expect(page.getByRole('link', { name: '04 77 00 00 00' })).toHaveAttribute('href', 'tel:+33477000000')
+  })
+
+  test('précise que le loyer des colocations est par personne', async ({ page }) => {
+    await page.goto('/trouver-un-logement-etudiant/ville/saint-etienne/residence-e2e-coloc')
+
+    await expect(page.getByText('De 450 à 520 € Par personne Charges comprises')).toBeVisible()
+  })
+
+  test("n'indique pas « par personne » pour les logements individuels", async ({ page }) => {
+    await page.goto(FICHE_CENTRE)
+
+    await expect(page.getByText('De 420 à 520 € Charges comprises')).toBeVisible()
+    await expect(page.getByText(/Par personne/)).toHaveCount(0)
   })
 
   test('signale une résidence complète', async ({ page }) => {
@@ -46,5 +60,31 @@ test.describe("Fiche d'une résidence", () => {
     // Le lien pointe sur le nom de la ville, redirigé vers son slug en gardant la vue carte.
     await expect(page).toHaveURL(/\/trouver-un-logement-etudiant\/ville\/saint-etienne\?vue=carte/)
     await expect(page.getByRole('heading', { level: 1, name: 'Trouver un logement social étudiant à Saint-Étienne' })).toBeVisible()
+  })
+
+  test('renvoie vers le site du Crous sur une résidence Crous', async ({ page }) => {
+    await page.goto(FICHE_CROUS)
+
+    await expect(page.getByRole('heading', { level: 2, name: /plus de logements Crous disponibles/ })).toBeVisible()
+    await expect(page.getByRole('link', { name: /trouverunlogement\.lescrous\.fr/ }).first()).toHaveAttribute(
+      'href',
+      'https://trouverunlogement.lescrous.fr/',
+    )
+    await expect(page.getByRole('link', { name: /Voir les logements Crous/ })).toHaveAttribute(
+      'href',
+      'https://trouverunlogement.lescrous.fr/',
+    )
+    await expect(page.getByText('Vous serez redirigé vers Trouver un logement Crous')).toBeVisible()
+    await expect(page.getByText('Vous serez redirigé vers le site de la résidence')).toHaveCount(0)
+    // Le parc remplace le nombre de logements disponibles, publié seulement sur le site du Crous.
+    await expect(page.getByRole('heading', { level: 3, name: /^\d+ logements$/ })).toBeVisible()
+    await expect(page.getByText('Disponibilités non communiquées')).toBeVisible()
+    await expect(page.getByText(/logements? disponibles?$/)).toHaveCount(0)
+  })
+
+  test("n'affiche pas l'encart Crous sur les autres résidences", async ({ page }) => {
+    await page.goto(FICHE_CENTRE)
+
+    await expect(page.getByRole('heading', { name: /plus de logements Crous disponibles/ })).toHaveCount(0)
   })
 })

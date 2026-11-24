@@ -13,6 +13,7 @@ type UpdateConsumerInput = {
   rateLimitEnabled?: boolean
   rateLimitMax?: number
   rateLimitWindowSeconds?: number
+  ownerId?: number | null
 }
 
 export const useAdminUpdateConsumer = () => {

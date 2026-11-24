@@ -1,8 +1,5 @@
 version: 2.1
 
-orbs:
-  skip: theodo/skip@0.1.2
-  queue: eddiewebb/queue@3.2.1
 executors:
   node:
     docker:
@@ -12,12 +9,9 @@ parameters:
   lockfile:
     type: string
     default: './pnpm-lock.yaml'
-  virtual_store_dir:
-    type: string
-    default: '.pnpm-store'
   cache_version:
     type: string
-    default: 'v1'
+    default: 'v2'
 
 workflows:
   version: 2
@@ -45,18 +39,18 @@ jobs:
     executor: node
     steps:
       - checkout
-      # - skip/skip_unchanged:
-      #     paths: pnpm-lock.yaml
       - install_dependencies
       - run:
           name: 'Fetch dependencies'
-          command: pnpm install --virtual-store-dir << pipeline.parameters.virtual_store_dir >> --frozen-lockfile
+          command: pnpm install --frozen-lockfile
+      # Les jobs suivants lancent pnpm, qui réinstalle tout si node_modules ne correspond pas exactement à une
+      # installation par défaut : on garde donc le virtual store par défaut et le node_modules du workspace worker.
       - save_cache:
           key: << pipeline.parameters.cache_version >>-pnpm-{{ checksum "<< pipeline.parameters.lockfile >>" }}
           paths:
-            - << pipeline.parameters.virtual_store_dir >>
             - ./node_modules
-      
+            - ./apps/worker/node_modules
+
   lint:
     executor: node
     steps:
@@ -89,13 +83,16 @@ jobs:
   test_coverage:
     docker:
       - image: cimg/node:24
-      - image: postgis/postgis:16-3.4
+      - image: postgis/postgis:18-3.6
         environment:
           POSTGRES_USER: test
           POSTGRES_PASSWORD: test
           POSTGRES_DB: mle_test
+        command: postgres -c fsync=off -c synchronous_commit=off -c full_page_writes=off
     environment:
       DATABASE_URL_TEST: postgres://test:test@localhost:5432/mle_test
+      # Dans un conteneur, Node voit les CPU de l'hôte : on fixe le nombre de workers (une base de test par worker).
+      VITEST_MAX_WORKERS: 4
     steps:
       - checkout
       - install_dependencies
@@ -112,12 +109,14 @@ jobs:
 
   test_e2e:
     docker:
-      - image: cimg/node:24
-      - image: postgis/postgis:16-3.4
+      # Variante -browsers : les bibliothèques système de Chromium y sont déjà, pas d'apt-get à chaque run.
+      - image: cimg/node:24-browsers
+      - image: postgis/postgis:18-3.6
         environment:
           POSTGRES_USER: test
           POSTGRES_PASSWORD: test
           POSTGRES_DB: mle_test
+        command: postgres -c fsync=off -c synchronous_commit=off -c full_page_writes=off
     environment:
       DATABASE_URL: postgres://test:test@localhost:5432/mle_e2e
       DATABASE_URL_TEST: postgres://test:test@localhost:5432/mle_e2e
@@ -126,7 +125,8 @@ jobs:
       - install_dependencies
       - run:
           name: 'Install Playwright Chromium'
-          command: pnpm exec playwright install --with-deps chromium
+          # Les tests tournent en headless : le headless shell suffit (~270 Mo au lieu de ~660 Mo).
+          command: pnpm exec playwright install --only-shell chromium
       - run:
           name: 'Wait for PostgreSQL'
           command: for i in $(seq 1 30); do pg_isready -h localhost -U test && break; sleep 2; done
@@ -145,7 +145,8 @@ commands:
     steps:
       - run:
           name: 'Install pnpm'
-          command: sudo corepack enable && corepack prepare pnpm@11.0.9 --activate
+          # Version lue dans le champ packageManager de package.json.
+          command: sudo corepack enable && corepack install
           
   install_dependencies:
     steps:

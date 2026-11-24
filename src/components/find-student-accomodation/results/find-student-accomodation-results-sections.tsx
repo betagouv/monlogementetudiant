@@ -10,6 +10,7 @@ import { FindStudentAccomodationNeighborsResults } from './find-student-accomoda
 import { FindStudentAccomodationResultsContent } from './find-student-accomodation-results'
 
 type FindStudentAccomodationResultsSectionsProps = {
+  categoryKey?: string
   isAcademy?: boolean
   showNeighbors?: boolean
   territory?: TTerritory
@@ -17,6 +18,7 @@ type FindStudentAccomodationResultsSectionsProps = {
 }
 
 export const FindStudentAccomodationResultsSections: FC<FindStudentAccomodationResultsSectionsProps> = ({
+  categoryKey,
   isAcademy,
   showNeighbors,
   territory,
@@ -31,6 +33,7 @@ export const FindStudentAccomodationResultsSections: FC<FindStudentAccomodationR
     <>
       <FindStudentAccomodationResultsContent
         territory={territory}
+        categoryKey={categoryKey}
         isAcademy={isAcademy}
         user={user}
         accommodations={accommodations}

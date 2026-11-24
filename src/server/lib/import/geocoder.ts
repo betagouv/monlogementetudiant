@@ -23,7 +23,9 @@ export interface GeoApiCity {
   contour?: GeoJSON.Geometry
 }
 
-const GEOCODE_THROTTLE_MS = 200
+const IS_TEST = Boolean(process.env.VITEST)
+const GEOCODE_THROTTLE_MS = IS_TEST ? 0 : 200
+const RETRY_DELAY_MS = IS_TEST ? 0 : 5000
 let lastGeocodeCall = 0
 
 async function throttle() {
@@ -38,7 +40,6 @@ async function throttle() {
 export async function geocodeAddress(fullAddress: string): Promise<GeocodeResult | null> {
   const url = `https://data.geopf.fr/geocodage/search?q=${encodeURIComponent(fullAddress)}&limit=1`
   const maxAttempts = 2
-  const retryDelay = 5000
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
@@ -46,7 +47,7 @@ export async function geocodeAddress(fullAddress: string): Promise<GeocodeResult
       const response = await fetch(url)
       if (response.status === 429 || response.status >= 500) {
         if (attempt < maxAttempts) {
-          await new Promise((resolve) => setTimeout(resolve, retryDelay))
+          await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS))
           continue
         }
         return null
@@ -56,7 +57,7 @@ export async function geocodeAddress(fullAddress: string): Promise<GeocodeResult
       const feature = data?.features?.[0]
       if (!feature?.geometry?.coordinates || feature.geometry.type !== 'Point') {
         if (attempt < maxAttempts) {
-          await new Promise((resolve) => setTimeout(resolve, retryDelay))
+          await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS))
           continue
         }
         return null
@@ -72,7 +73,7 @@ export async function geocodeAddress(fullAddress: string): Promise<GeocodeResult
       }
     } catch {
       if (attempt < maxAttempts) {
-        await new Promise((resolve) => setTimeout(resolve, retryDelay))
+        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS))
         continue
       }
       return null
@@ -142,13 +143,12 @@ export function normalizeCommuneName(name: string): string {
 
 async function fetchGeoApiJson(url: string): Promise<unknown | null> {
   const maxAttempts = 2
-  const retryDelay = 5000
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       const response = await fetch(url)
       if (response.status === 429 || response.status >= 500) {
         if (attempt < maxAttempts) {
-          await new Promise((resolve) => setTimeout(resolve, retryDelay))
+          await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS))
           continue
         }
         return null
@@ -157,7 +157,7 @@ async function fetchGeoApiJson(url: string): Promise<unknown | null> {
       return await response.json()
     } catch {
       if (attempt < maxAttempts) {
-        await new Promise((resolve) => setTimeout(resolve, retryDelay))
+        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS))
         continue
       }
       return null
@@ -189,7 +189,6 @@ export async function fetchCityByInsee(inseeCode: string): Promise<GeoApiCity | 
 export async function fetchCommunesByDepartment(deptCode: string): Promise<GeoApiCity[]> {
   const url = `https://geo.api.gouv.fr/departements/${deptCode}/communes?fields=nom,codesPostaux,codeDepartement,contour,codeEpci,population`
   const maxAttempts = 2
-  const retryDelay = 5000
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
@@ -197,7 +196,7 @@ export async function fetchCommunesByDepartment(deptCode: string): Promise<GeoAp
       const response = await fetch(url)
       if (response.status === 429 || response.status >= 500) {
         if (attempt < maxAttempts) {
-          await new Promise((resolve) => setTimeout(resolve, retryDelay))
+          await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS))
           continue
         }
         return []
@@ -206,7 +205,7 @@ export async function fetchCommunesByDepartment(deptCode: string): Promise<GeoAp
       return await response.json()
     } catch {
       if (attempt < maxAttempts) {
-        await new Promise((resolve) => setTimeout(resolve, retryDelay))
+        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS))
         continue
       }
       return []

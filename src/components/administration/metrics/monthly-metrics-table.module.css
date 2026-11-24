@@ -1,0 +1,16 @@
+.table th:first-child,
+.table td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background-color: var(--background-default-grey);
+  box-shadow: inset -1px 0 0 var(--border-default-grey);
+}
+
+.table tbody tr:nth-child(even) th:first-child {
+  background-color: var(--background-alt-grey);
+}
+
+.table thead th:first-child {
+  z-index: 2;
+}

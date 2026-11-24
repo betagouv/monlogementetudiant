@@ -16,7 +16,7 @@ test.describe('Accès aux espaces connectés', () => {
     await page.goto('/mon-espace')
 
     await expect(page).toHaveURL(/\/mon-espace\/tableau-de-bord/)
-    await expect(page.getByRole('link', { name: 'Favoris et candidatures' }).first()).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Tableau de bord' }).first()).toBeVisible()
   })
 
   test("redirige un visiteur non connecté de l'espace gestionnaire vers la connexion", async ({ page }) => {

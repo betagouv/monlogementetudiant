@@ -1,5 +1,4 @@
 import { hashPassword } from 'better-auth/crypto'
-import { createLocalAccountIssuer } from 'better-auth/db'
 import { eq, sql } from 'drizzle-orm'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { apiV1App } from '~/server/api/v1/app'
@@ -98,6 +97,13 @@ describe('API v1 — rate limit', () => {
     const r3 = await req('/cities', key)
     expect([r1.status, r2.status, r3.status]).toEqual([200, 200, 429])
     expect(r3.body.error).toBeTruthy()
+  })
+
+  it("ne facture qu'une fois la clé par appel à /accommodations", async () => {
+    const { key } = await makeKey({ rateLimitMax: 2, rateLimitTimeWindow: 60_000 })
+    const r1 = await req('/accommodations', key)
+    const r2 = await req('/accommodations', key)
+    expect([r1.status, r2.status]).toEqual([200, 200])
   })
 
   it("incrémente le compteur d'usage de la clé (attribution)", async () => {
@@ -386,7 +392,6 @@ describe('API v1 — création de clés réservée au back-office', () => {
       id: 'account-student-api-key',
       userId: 'student-api-key',
       accountId: 'student-api-key',
-      issuer: createLocalAccountIssuer('credential'),
       providerId: 'credential',
       password: await hashPassword(password),
     })

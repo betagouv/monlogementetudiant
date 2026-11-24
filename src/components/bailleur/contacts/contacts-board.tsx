@@ -46,6 +46,7 @@ export const ContactsBoard = ({ slug }: Props) => {
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: trpc.bailleur.listResidencesWithContactCounts.queryKey() })
+        queryClient.invalidateQueries({ queryKey: trpc.bailleur.contactStats.queryKey() })
       },
       onError: (_error, _variables, context) => {
         // Restauration immédiate de l'instantané précédent, sans aller-retour serveur.

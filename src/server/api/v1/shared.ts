@@ -25,6 +25,10 @@ export const errorResponses = {
   429: { description: 'Quota de requêtes dépassé.', content: { 'application/json': { schema: ZApiError } } },
 } as const
 
+export const forbiddenResponse = {
+  403: { description: "Clé d'API non rattachée à un bailleur.", content: { 'application/json': { schema: ZApiError } } },
+} as const
+
 export const security = [{ ApiKeyAuth: [] as string[] }]
 
 type ListResult = Awaited<ReturnType<typeof queryPublicAccommodations>>

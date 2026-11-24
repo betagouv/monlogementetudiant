@@ -51,6 +51,7 @@ export const dossierFacileApplications = pgTable(
     // Même vocabulaire de statut que `contact_request` : les deux canaux alimentent le même board.
     status: text('status').$type<EContactStatus>().notNull().default(EContactStatus.A_MODERER),
     reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
+    contactedAt: timestamp('contacted_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

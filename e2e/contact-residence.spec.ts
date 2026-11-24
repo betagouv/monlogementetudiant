@@ -24,6 +24,13 @@ test.describe('Être recontacté par le gestionnaire', () => {
     await expect(modal.getByLabel('Prénom')).toHaveValue('Camille')
     await expect(modal.getByLabel('Prénom')).toBeDisabled()
 
+    await modal
+      .getByRole('group', { name: /Êtes-vous alternant/ })
+      .getByText('Non')
+      .click()
+    await modal.getByLabel(/Établissement d'études à la rentrée/).fill('Université Clermont Auvergne')
+    await modal.getByLabel(/Année d'études à la rentrée/).selectOption({ label: '1re année (Bac+1)' })
+
     await modal.getByRole('button', { name: 'Partager mes coordonnées' }).click()
     await expect(modal.getByText('Vous devez accepter le partage de vos informations')).toBeVisible()
 
@@ -35,6 +42,20 @@ test.describe('Être recontacté par le gestionnaire', () => {
     await page.goto('/mon-espace/favoris')
     await expect(page.getByText(residence.name)).toBeVisible()
     await expect(page.getByText('Coordonnées partagées aux gestionnaires')).toBeVisible()
+  })
+
+  test('bloque l’envoi pour un étudiant de plus de 30 ans quand la résidence les refuse', async ({ page }) => {
+    const { owner } = await createBailleur({ contactMode: EOwnerContactMode.CONTACTS })
+    const residence = await createResidence({ ownerId: owner.id, rejectsOverMaxAge: true })
+    const student = await createStudent({ birthdate: '1990-03-14' })
+    await signIn(page, student.email)
+
+    await gotoHydrated(page, ficheUrl(residence.slug))
+    await page.getByRole('button', { name: 'Être recontacté' }).click()
+
+    const modal = page.getByRole('dialog', { name: 'Être recontacté' })
+    await expect(modal.getByText('Cette résidence accueille uniquement les personnes de 30 ans maximum.')).toBeVisible()
+    await expect(modal.getByRole('button', { name: 'Partager mes coordonnées' })).toBeDisabled()
   })
 
   test("ne propose pas d'être recontacté quand le gestionnaire ne reçoit pas de contacts", async ({ page }) => {

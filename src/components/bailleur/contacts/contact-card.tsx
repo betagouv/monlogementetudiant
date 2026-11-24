@@ -8,8 +8,10 @@ import { useLocale, useTranslations } from 'next-intl'
 import { forwardRef, type HTMLAttributes } from 'react'
 import { EContactSource } from '~/enums/contact-source'
 import { CONTACT_STATUS_CONFIG, CONTACT_STATUSES, EContactStatus } from '~/enums/contact-status'
+import type { EStudyYear } from '~/enums/study-year'
 import { computeAge, formatLocalizedDate } from '~/utils/date-helpers'
 import { buildHref } from '~/utils/preserve-query-params'
+import { studySummaryParts } from '~/utils/study-summary'
 import styles from './contact-card.module.css'
 
 export interface ContactItem {
@@ -17,6 +19,8 @@ export interface ContactItem {
   studentName: string | null
   studentBirthdate: string | null
   scholarshipStatus: string | null
+  isWorkStudy: boolean | null
+  studyYear: EStudyYear | null
   apartmentType: string | null
   status: string
   createdAt: string | Date
@@ -38,6 +42,7 @@ export const ContactCard = forwardRef<HTMLDivElement, Props>(({ contact, slug, o
   const config = CONTACT_STATUS_CONFIG[status]
   const studentName = contact.studentName ?? t('defaultCandidateName')
   const age = computeAge(contact.studentBirthdate)
+  const studySummary = studySummaryParts(contact, (key, values) => t(`card.${key}`, values)).join(' · ')
   const href = buildHref(`/bailleur/contacts/${slug}/${contact.id}`, searchParams)
 
   return (
@@ -74,6 +79,8 @@ export const ContactCard = forwardRef<HTMLDivElement, Props>(({ contact, slug, o
       {contact.scholarshipStatus === 'yes' && (
         <span className="ri-money-euro-circle-line fr-text--sm fr-text-mention--grey fr-mb-0"> {t('card.scholarship')}</span>
       )}
+
+      {studySummary && <span className="ri-graduation-cap-line fr-text--sm fr-text-mention--grey fr-mb-0"> {studySummary}</span>}
 
       <div className="fr-flex fr-align-items-center fr-justify-content-space-between fr-mt-1w">
         {contact.source === EContactSource.DOSSIER_FACILE && (

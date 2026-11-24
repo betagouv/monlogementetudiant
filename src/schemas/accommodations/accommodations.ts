@@ -41,6 +41,7 @@ const ZBaseAccommodationInfo = z.object({
   targetAudience: z.enum(ETargetAudience).nullable(),
   slug: z.string().max(250),
   acceptWaitingList: z.boolean(),
+  rejectsOverMaxAge: z.boolean().optional(),
   imagesUrls: z.array(z.string()).nullable(),
   description: z.string().nullable(),
   rentalChargesDetails: z.string().nullable(),
@@ -108,6 +109,7 @@ export const ZAccomodationDetails = ZAccomodation.extend(ZAmenities.shape)
   .extend(ZDescriptionSections.shape)
   .extend({
     phoneNumber: z.string().nullish(),
+    isCrous: z.boolean().optional(),
     owner: z
       .object({
         imageBase64: z.string().nullable(),

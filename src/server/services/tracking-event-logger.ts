@@ -4,7 +4,12 @@ import { accommodationAddresses } from '~/server/db/schema/accommodation-address
 import { accommodations } from '~/server/db/schema/accommodations'
 import { trackingEvents } from '~/server/db/schema/tracking-events'
 
-export type TrackingEventType = 'search.city' | 'search.department' | 'accommodation.viewed' | 'accommodation.consult_offer'
+export type TrackingEventType =
+  | 'search.city'
+  | 'search.department'
+  | 'accommodation.viewed'
+  | 'accommodation.consult_offer'
+  | 'owner.landing_click'
 
 type LogTrackingEventParams = {
   type: TrackingEventType

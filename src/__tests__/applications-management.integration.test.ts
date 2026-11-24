@@ -1,13 +1,22 @@
 import { eq, sql } from 'drizzle-orm'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { EOwnerContactMode } from '~/enums/owner-contact-mode'
+import { EStudyYear } from '~/enums/study-year'
 import { accommodations } from '../server/db/schema/accommodations'
 import { activityLog } from '../server/db/schema/activity-log'
 import { user } from '../server/db/schema/auth'
 import { bailleurAccommodationScopes } from '../server/db/schema/bailleur-accommodation-scopes'
 import { owners } from '../server/db/schema/owners'
 import { typologyDraft } from '../server/lib/typologies'
-import { createAccommodation, createDossierFacileTenant, createOwner, createUser } from './fixtures/factories'
+import {
+  createAcademy,
+  createAccommodation,
+  createCity,
+  createDepartment,
+  createDossierFacileTenant,
+  createOwner,
+  createUser,
+} from './fixtures/factories'
 import { getTestDb } from './helpers/test-db'
 import './helpers/setup-integration'
 import { adminCaller, authenticatedCaller, caller, gestionnaireCallerFactory, ownerCaller } from './helpers/test-caller'
@@ -40,6 +49,9 @@ const contactInput = {
   phone: '0102030405',
   birthdate: '2003-04-15',
   scholarshipStatus: 'yes',
+  isWorkStudy: false,
+  studyInstitution: 'Université de Lille',
+  studyYear: EStudyYear.BAC_2,
 } as const
 
 const GEST = { id: 'gest-a', email: 'gest-a@a.com' }
@@ -90,8 +102,16 @@ beforeEach(async () => {
   }
   await db.update(user).set({ bailleurRole: 'administrator', ownerId: ownerB.id }).where(eq(user.id, 'test-owner-id-2'))
 
-  resIn = await createAccommodation({ slug: 'res-in', name: 'Res In', ownerId: ownerA.id }, [typologyDraft('t1', { nbAvailable: 5 })])
-  resOut = await createAccommodation({ slug: 'res-out', name: 'Res Out', ownerId: ownerA.id }, [typologyDraft('t1', { nbAvailable: 5 })])
+  const academy = await createAcademy({ name: 'Académie Mails' })
+  const department = await createDepartment({ academyId: academy.id, name: 'Département Mails', code: '77' })
+  const cityIn = await createCity({ departmentId: department.id, name: 'Melun', slug: 'melun', postalCodes: ['77000'] })
+  const cityOut = await createCity({ departmentId: department.id, name: 'Nancy', slug: 'nancy', postalCodes: ['54000'] })
+  resIn = await createAccommodation({ slug: 'res-in', name: 'Res In', ownerId: ownerA.id, cityId: cityIn.id }, [
+    typologyDraft('t1', { nbAvailable: 5 }),
+  ])
+  resOut = await createAccommodation({ slug: 'res-out', name: 'Res Out', ownerId: ownerA.id, cityId: cityOut.id }, [
+    typologyDraft('t1', { nbAvailable: 5 }),
+  ])
 
   await createUser({ id: GEST.id, name: 'Gest A', firstname: 'Gest', lastname: 'A', email: GEST.email, role: 'owner' })
   await db
@@ -174,7 +194,7 @@ describe('bailleur.setApplicationsSuspended', () => {
       'owner@test.com',
       expect.objectContaining({
         firstname: 'Alice',
-        residenceName: 'Res In',
+        residenceName: 'Res In – Melun',
         suspendedBy: 'Test Gestionnaire',
         ownerName: 'Bailleur A',
         url: 'http://localhost:3000/bailleur/contacts/res-in',
@@ -238,7 +258,7 @@ describe('notification d’attribution de la gestion des candidatures', () => {
     expect(grantedEmail).toHaveBeenCalledOnce()
     expect(grantedEmail).toHaveBeenCalledWith(
       'nouveau@a.com',
-      expect.objectContaining({ firstname: 'Nou', ownerName: 'Bailleur A', residences: ['Res In'], residencesCount: 1 }),
+      expect.objectContaining({ firstname: 'Nou', ownerName: 'Bailleur A', residences: ['Res In – Melun'], residencesCount: 1 }),
     )
   })
 
@@ -262,7 +282,7 @@ describe('notification d’attribution de la gestion des candidatures', () => {
     })
 
     expect(grantedEmail).toHaveBeenCalledOnce()
-    expect(grantedEmail).toHaveBeenCalledWith(GEST.email, expect.objectContaining({ residences: ['Res Out'], residencesCount: 1 }))
+    expect(grantedEmail).toHaveBeenCalledWith(GEST.email, expect.objectContaining({ residences: ['Res Out – Nancy'], residencesCount: 1 }))
   })
 
   it('annonce toutes les résidences au passage en périmètre complet', async () => {
@@ -305,7 +325,7 @@ describe('notification d’attribution de la gestion des candidatures', () => {
     grantedEmail.mockClear()
     await save([resIn, resOut])
     expect(grantedEmail).toHaveBeenCalledOnce()
-    expect(grantedEmail).toHaveBeenCalledWith(GEST.email, expect.objectContaining({ residences: ['Res Out'], residencesCount: 1 }))
+    expect(grantedEmail).toHaveBeenCalledWith(GEST.email, expect.objectContaining({ residences: ['Res Out – Nancy'], residencesCount: 1 }))
   })
 
   it("un échec d'envoi ne fait pas échouer la mise à jour", async () => {

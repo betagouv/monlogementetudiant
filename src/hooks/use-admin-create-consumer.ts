@@ -10,6 +10,7 @@ type CreateConsumerInput = {
   description?: string
   rateLimitMax?: number
   rateLimitWindowSeconds?: number
+  ownerId?: number
 }
 
 export const useAdminCreateConsumer = () => {

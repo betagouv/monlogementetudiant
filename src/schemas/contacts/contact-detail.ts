@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { ZContactStatus } from '~/enums/contact-status'
+import { ZStudyYear } from '~/enums/study-year'
 
 /**
  * Forme des candidatures telles que les fiches détail de l'espace gestionnaire les consomment.
@@ -34,6 +35,9 @@ export const ZContactDetail = z.object({
   studentPhone: z.string().nullable(),
   studentBirthdate: z.string().nullable(),
   scholarshipStatus: z.string().nullable(),
+  isWorkStudy: z.boolean().nullable(),
+  studyInstitution: z.string().nullable(),
+  studyYear: ZStudyYear.nullable(),
   accommodationName: z.string(),
 })
 

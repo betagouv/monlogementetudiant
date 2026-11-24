@@ -66,7 +66,12 @@ const readResidences = async () => {
   return rows.map((r) => ({ id: r.id, acceptsApplications: r.acceptsApplications, acceptWaitingList: r.acceptWaitingList }))
 }
 
-type Row = { accommodationId: number; managerIds: string[]; acceptWaitingList?: boolean }
+const readRejectsOverMaxAge = async () => {
+  const rows = await getTestDb().select().from(accommodations).where(eq(accommodations.ownerId, ownerAId)).orderBy(accommodations.id)
+  return rows.map((r) => r.rejectsOverMaxAge)
+}
+
+type Row = { accommodationId: number; managerIds: string[]; acceptWaitingList?: boolean; rejectsOverMaxAge?: boolean }
 const save = (rows: Row[], ownerId?: number) =>
   ownerCaller.bailleur.saveContactReceptionSettings({
     ownerId,
@@ -114,6 +119,14 @@ describe('bailleur.getContactReceptionSettings', () => {
     ])
   })
 
+  it('ne renvoie pas une résidence dépubliée', async () => {
+    await getTestDb().update(accommodations).set({ published: false }).where(eq(accommodations.id, resB.id))
+
+    const settings = await ownerCaller.bailleur.getContactReceptionSettings({})
+
+    expect(settings.residences.map((r) => r.name)).toEqual(['Res A', 'Res C'])
+  })
+
   it('est réservé aux administrateurs', async () => {
     const gestCaller = gestionnaireCallerFactory({ id: MARINE, email: `${MARINE}@a.com`, permissions: ['manage_applications'] })
     await expect(gestCaller.bailleur.getContactReceptionSettings({})).rejects.toThrow(/Administrateur du bailleur requis|FORBIDDEN/)
@@ -128,6 +141,14 @@ describe('bailleur.users.list — filtre par rôle', () => {
 })
 
 describe('bailleur.saveContactReceptionSettings', () => {
+  it('refuse une résidence dépubliée', async () => {
+    await getTestDb().update(accommodations).set({ published: false }).where(eq(accommodations.id, resA.id))
+
+    await expect(save([{ accommodationId: resA.id, managerIds: [MARINE] }])).rejects.toThrow(
+      /Une résidence dépubliée ne peut pas recevoir de contacts/,
+    )
+  })
+
   it('ouvre les résidences cochées, ferme les autres et écrit la liste d’attente', async () => {
     await save([
       { accommodationId: resA.id, managerIds: [MARINE], acceptWaitingList: true },
@@ -139,6 +160,20 @@ describe('bailleur.saveContactReceptionSettings', () => {
       { id: resB.id, acceptsApplications: true, acceptWaitingList: false },
       { id: resC.id, acceptsApplications: false, acceptWaitingList: null },
     ])
+  })
+
+  it('écrit le refus des candidats au-delà de l’âge maximum, résidence par résidence', async () => {
+    await save([
+      { accommodationId: resA.id, managerIds: [MARINE], rejectsOverMaxAge: true },
+      { accommodationId: resB.id, managerIds: [MARINE] },
+    ])
+    expect(await readRejectsOverMaxAge()).toEqual([true, false, false])
+
+    const settings = await ownerCaller.bailleur.getContactReceptionSettings({})
+    expect(settings.residences.find((r) => r.id === resA.id)?.rejectsOverMaxAge).toBe(true)
+
+    await save([{ accommodationId: resA.id, managerIds: [MARINE], rejectsOverMaxAge: false }])
+    expect(await readRejectsOverMaxAge()).toEqual([false, false, false])
   })
 
   it('restreint un gestionnaire « toutes résidences » aux résidences cochées où il est sélectionné', async () => {

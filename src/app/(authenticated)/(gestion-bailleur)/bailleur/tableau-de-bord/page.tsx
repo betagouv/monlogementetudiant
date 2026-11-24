@@ -27,7 +27,7 @@ export default async function TableauDeBordPage({ searchParams }: TableauDeBordP
   const calendlyUrl = z.string().parse(env.NEXT_PUBLIC_CALENDLY_URL)
   const awaitedSearchParams = await searchParams
   const t = await getTranslations('bailleur')
-  const { session, accommodations, lastAvailabilityUpdate, incompleteAccommodations, ctx } =
+  const { session, accommodations, lastAvailabilityUpdate, incompleteAccommodations, scholarshipSurveyPending, ctx } =
     await getBailleurDashboardPageContext(awaitedSearchParams)
 
   if (!session || !session.user) {
@@ -117,6 +117,29 @@ export default async function TableauDeBordPage({ searchParams }: TableauDeBordP
           <div>
             <span className="fr-h3 fr-text--bold">{t('dashboard.priorityActions.title')}</span>
             <div className={styles.actionsGrid}>
+              {scholarshipSurveyPending && (
+                <div className={styles.actionCard}>
+                  <div className={styles.actionHeader}>
+                    <Link className="fr-link fr-link--no-underline" href={buildHref('/bailleur/enquete-boursiers', awaitedSearchParams)}>
+                      <span className="fr-h6 fr-text-title--blue-france fr-mb-0">
+                        {t('dashboard.priorityActions.actions.scholarshipSurvey.title')}
+                      </span>
+                    </Link>
+                    <Badge severity="new" className="fr-hidden fr-unhidden-md" noIcon>
+                      {t('dashboard.priorityActions.actions.scholarshipSurvey.badge')}
+                    </Badge>
+                  </div>
+                  <div className={styles.actionFooter}>
+                    <Link
+                      className="fr-link fr-link--no-underline"
+                      href={buildHref('/bailleur/enquete-boursiers', awaitedSearchParams)}
+                      aria-label={t('dashboard.priorityActions.actions.scholarshipSurvey.title')}
+                    >
+                      <span className="ri-arrow-right-line" />
+                    </Link>
+                  </div>
+                </div>
+              )}
               {ctx.owner.contactMode === EOwnerContactMode.NONE && ctx.isAdministrator && (
                 <div className={styles.actionCard}>
                   <div className={styles.actionHeader}>

@@ -1,4 +1,8 @@
+import { z } from 'zod'
+import { EReminderType, REASON_TAGS, REMINDER_TAGS } from '~/enums/reminder-email'
+import type { InactivityReason } from '~/server/bailleur/inactivity-rules'
 import { env } from '~/server/env'
+import { formatLongDay } from '~/utils/formatDate'
 import { maskEmail } from '~/utils/mask-email'
 import { redirectEmail } from '~/utils/redirect-email'
 
@@ -26,7 +30,18 @@ interface TemplateEmailParams {
   params?: Record<string, string | string[] | Array<Record<string, string | number>>>
 }
 
-export async function sendTemplateEmail({ to, templateId, params }: TemplateEmailParams): Promise<void> {
+const ZBrevoSendResponse = z.object({ messageId: z.string() })
+
+const reminderTags = (type: EReminderType, reasons: InactivityReason[] = []) => [
+  ...new Set([REMINDER_TAGS[type], ...reasons.map((reason) => REASON_TAGS[reason])]),
+]
+
+export async function sendTemplateEmail({
+  to,
+  templateId,
+  params,
+  tags,
+}: TemplateEmailParams & { tags?: string[] }): Promise<string | null> {
   const response = await fetch(env.BREVO_API_URL, {
     method: 'POST',
     headers: brevoHeaders,
@@ -35,6 +50,7 @@ export async function sendTemplateEmail({ to, templateId, params }: TemplateEmai
       templateId,
       replyTo: { email: SENDER_EMAIL },
       ...(params && { params }),
+      ...(tags?.length && { tags }),
     }),
   })
 
@@ -42,6 +58,13 @@ export async function sendTemplateEmail({ to, templateId, params }: TemplateEmai
     const error = await response.text()
     throw new Error(`Brevo email failed: ${response.status} ${error}`)
   }
+
+  const result = ZBrevoSendResponse.safeParse(await response.json().catch(() => null))
+  if (!result.success) {
+    console.warn(`Réponse Brevo sans messageId pour ${maskEmail(to)} (template ${templateId})`)
+    return null
+  }
+  return result.data.messageId
 }
 
 interface RawEmailParams {
@@ -237,6 +260,23 @@ export async function sendContactDailyDigestEmail(
   })
 }
 
+export async function sendStudentGoalReminderEmail(
+  email: string,
+  params: { goalTitle: string },
+  { force = false }: { force?: boolean } = {},
+): Promise<void> {
+  if (env.NEXT_PUBLIC_APP_ENV !== 'production' && !force) {
+    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] rappel d'objectif non envoyé à ${maskEmail(email)}`)
+    return
+  }
+
+  await sendTemplateEmail({
+    to: email,
+    templateId: env.BREVO_TEMPLATE_STUDENT_GOAL_REMINDER,
+    params: { objectif: params.goalTitle },
+  })
+}
+
 type InactivityEmailParams = { firstname: string; ownerName: string; residences: string[]; url: string }
 
 const inactivityParams = (params: InactivityEmailParams) => ({
@@ -250,51 +290,133 @@ const inactivityParams = (params: InactivityEmailParams) => ({
 export async function sendApplicationsInactivityWarningEmail(
   email: string,
   params: InactivityEmailParams,
-  { force = false }: { force?: boolean } = {},
-): Promise<void> {
+  { force = false, reasons }: { force?: boolean; reasons?: InactivityReason[] } = {},
+): Promise<string | null> {
   if (env.NEXT_PUBLIC_APP_ENV !== 'production' && !force) {
     console.info(`[${env.NEXT_PUBLIC_APP_ENV}] alerte d'inactivité non envoyée à ${maskEmail(email)}`)
-    return
+    return null
   }
 
-  await sendTemplateEmail({
+  return sendTemplateEmail({
     to: email,
     templateId: env.BREVO_TEMPLATE_APPLICATIONS_INACTIVITY_WARNING,
     params: inactivityParams(params),
+    tags: reminderTags(EReminderType.APPLICATIONS_INACTIVITY_WARNING, reasons),
   })
 }
 
 export async function sendApplicationsAutoSuspendedEmail(
   email: string,
   params: InactivityEmailParams,
-  { force = false }: { force?: boolean } = {},
-): Promise<void> {
+  { force = false, reasons }: { force?: boolean; reasons?: InactivityReason[] } = {},
+): Promise<string | null> {
   if (env.NEXT_PUBLIC_APP_ENV !== 'production' && !force) {
     console.info(`[${env.NEXT_PUBLIC_APP_ENV}] suspension automatique non envoyée à ${maskEmail(email)}`)
-    return
+    return null
   }
 
-  await sendTemplateEmail({
+  return sendTemplateEmail({
     to: email,
     templateId: env.BREVO_TEMPLATE_APPLICATIONS_AUTO_SUSPENDED,
     params: inactivityParams(params),
+    tags: reminderTags(EReminderType.APPLICATIONS_AUTO_SUSPENDED, reasons),
   })
 }
 
-export async function sendAvailabilityResetWarningEmail(
+export type AvailabilityRecapResidence = { name: string; city: string | null; nbAvailable: number; lastUpdatedAt: Date | null }
+
+export type AvailabilityRecapEmailParams = {
+  firstname: string
+  ownerName: string
+  residences: AvailabilityRecapResidence[]
+  confirmUrl: string
+  updateUrl: string
+  deadline?: Date
+}
+
+const availabilityLabel = (count: number) => {
+  if (count === 0) return 'Aucune disponibilité'
+  return count === 1 ? '1 disponibilité' : `${count} disponibilités`
+}
+
+export const availabilityRecapParams = (params: AvailabilityRecapEmailParams) => ({
+  FIRSTNAME: params.firstname,
+  OWNER_NAME: params.ownerName,
+  RESIDENCES: params.residences.map((residence) => ({
+    NAME: residence.name,
+    CITY: residence.city ?? '',
+    AVAILABLE: residence.nbAvailable,
+    AVAILABLE_LABEL: availabilityLabel(residence.nbAvailable),
+    UPDATED_AT: residence.lastUpdatedAt ? formatLongDay(residence.lastUpdatedAt) : 'non renseignée',
+  })),
+  RESIDENCES_COUNT: String(params.residences.length),
+  CONFIRM_LINK: params.confirmUrl,
+  UPDATE_LINK: params.updateUrl,
+  DEADLINE: params.deadline ? formatLongDay(params.deadline) : '',
+})
+
+export type SendAvailabilityRecapEmail = (
   email: string,
-  params: InactivityEmailParams,
-  { force = false }: { force?: boolean } = {},
-): Promise<void> {
+  params: AvailabilityRecapEmailParams,
+  options?: { force?: boolean },
+) => Promise<string | null>
+
+export const sendAvailabilityResetWarningEmail: SendAvailabilityRecapEmail = async (email, params, { force = false } = {}) => {
   if (env.NEXT_PUBLIC_APP_ENV !== 'production' && !force) {
     console.info(`[${env.NEXT_PUBLIC_APP_ENV}] alerte de disponibilités périmées non envoyée à ${maskEmail(email)}`)
-    return
+    return null
   }
 
-  await sendTemplateEmail({
+  return sendTemplateEmail({
     to: email,
     templateId: env.BREVO_TEMPLATE_AVAILABILITY_RESET_WARNING,
-    params: { ...inactivityParams(params), CONFIRM_LINK: `${env.BASE_URL}/bailleur/disponibilites/confirmer` },
+    params: availabilityRecapParams(params),
+    tags: reminderTags(EReminderType.AVAILABILITY_RESET_WARNING),
+  })
+}
+
+export const sendAvailabilityMonthlyRecapEmail: SendAvailabilityRecapEmail = async (email, params, { force = false } = {}) => {
+  if (env.NEXT_PUBLIC_APP_ENV !== 'production' && !force) {
+    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] récap mensuel des disponibilités non envoyé à ${maskEmail(email)}`)
+    return null
+  }
+
+  return sendTemplateEmail({
+    to: email,
+    templateId: env.BREVO_TEMPLATE_AVAILABILITY_MONTHLY_RECAP,
+    params: availabilityRecapParams(params),
+    tags: reminderTags(EReminderType.AVAILABILITY_MONTHLY_RECAP),
+  })
+}
+
+export type AvailabilityResetDoneEmailParams = {
+  firstname: string
+  ownerName: string
+  residences: { name: string; city: string | null }[]
+  updateUrl: string
+}
+
+export async function sendAvailabilityResetDoneEmail(
+  email: string,
+  params: AvailabilityResetDoneEmailParams,
+  { force = false }: { force?: boolean } = {},
+): Promise<string | null> {
+  if (env.NEXT_PUBLIC_APP_ENV !== 'production' && !force) {
+    console.info(`[${env.NEXT_PUBLIC_APP_ENV}] avis de disponibilités effacées non envoyé à ${maskEmail(email)}`)
+    return null
+  }
+
+  return sendTemplateEmail({
+    to: email,
+    templateId: env.BREVO_TEMPLATE_AVAILABILITY_RESET_DONE,
+    tags: reminderTags(EReminderType.AVAILABILITY_RESET_DONE),
+    params: {
+      FIRSTNAME: params.firstname,
+      OWNER_NAME: params.ownerName,
+      RESIDENCES: params.residences.map((residence) => ({ NAME: residence.name, CITY: residence.city ?? '' })),
+      RESIDENCES_COUNT: String(params.residences.length),
+      UPDATE_LINK: params.updateUrl,
+    },
   })
 }
 
@@ -378,13 +500,23 @@ export async function sendAlertDeactivationEmail(email: string, params: { alertN
 
 export async function sendStudentAlertEmail(
   email: string,
-  params: { firstName: string; alertName?: string; accommodations: { nom: string; url: string }[] },
+  params: {
+    firstName: string
+    alertName?: string
+    accommodations: { nom: string; url: string }[]
+    suggestions?: { nom: string; url: string }[]
+  },
 ): Promise<void> {
   // On n'envoie réellement les alertes qu'en production, jamais en dev ni en staging.
   if (env.NEXT_PUBLIC_APP_ENV !== 'production') {
     console.info(`[${env.NEXT_PUBLIC_APP_ENV}] email d'alerte non envoyé à ${maskEmail(email)}`)
     return
   }
+
+  // Une liste vide doit disparaître du payload : le template masque la section
+  // « Suggestions » sur l'absence du paramètre.
+  const { suggestions, ...rest } = params
+  const templateParams = suggestions && suggestions.length > 0 ? { ...rest, suggestions } : rest
 
   const response = await fetch(env.BREVO_API_URL, {
     method: 'POST',
@@ -393,7 +525,7 @@ export async function sendStudentAlertEmail(
       to: [recipient(email)],
       templateId: env.BREVO_TEMPLATE_STUDENT_ALERT,
       replyTo: { email: SENDER_EMAIL },
-      params,
+      params: templateParams,
     }),
   })
 

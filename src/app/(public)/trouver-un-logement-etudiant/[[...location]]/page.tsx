@@ -4,7 +4,6 @@ import { HydrationBoundary } from '@tanstack/react-query'
 import { Metadata } from 'next'
 import { getLocale, getTranslations } from 'next-intl/server'
 import { FindStudentAccommodationCrousAlert } from '~/components/find-student-accomodation/crous-alert/find-student-accommodation-crous-alert'
-import { FindStudentAccommodationBanner } from '~/components/find-student-accomodation/find-student-accommodation-banner'
 import { FindStudentAccommodationTitle } from '~/components/find-student-accomodation/header/find-student-accommodation-title'
 import { FindStudentAccomodationHeader } from '~/components/find-student-accomodation/header/find-student-accomodation-header'
 import FindStudentAccommodationQA from '~/components/find-student-accomodation/qa/find-student-accommodation-qa'
@@ -109,12 +108,12 @@ export default async function FindStudentAccommodationPage({
         <FindStudentAccomodationHeader location={territory?.name} />
         <FindStudentAccomodationSortView territory={territory} />
         {awaitedSearchParams.crous === 'true' && <FindStudentAccommodationCrousAlert />}
-        {!!territory && <FindStudentAccommodationBanner territory={territory} categoryKey={routeCategoryKey} />}
         <FindStudentAccomodationResultsSections
           territory={territory}
           isAcademy={isAcademy}
           user={user}
           showNeighbors={routeCategoryKey === 'ville'}
+          categoryKey={routeCategoryKey}
         />
       </div>
       <FindStudentAccommodationQA />

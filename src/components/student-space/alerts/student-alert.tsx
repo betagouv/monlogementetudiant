@@ -21,7 +21,7 @@ export const StudentAlert = ({ alert }: StudentAlertProps) => {
   }
 
   return (
-    <div className="fr-border fr-background-default--grey fr-width-full fr-p-5w">
+    <div className="fr-border fr-background-default--grey fr-width-full fr-p-md-5w fr-p-3w">
       <div className="fr-flex fr-direction-column fr-flex-gap-4v">
         <div className="fr-flex fr-justify-content-space-between">
           <h2 className="fr-h4 fr-text-title--blue-france fr-mb-0">{alert.name}</h2>
