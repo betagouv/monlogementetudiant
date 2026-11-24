@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+// Chargé une fois à la collecte : sinon le premier test paie le chargement à froid de date-fns dans son délai de 5 s.
+import './brevo'
 
 const fetchMock = vi.fn()
 vi.stubGlobal('fetch', fetchMock)
