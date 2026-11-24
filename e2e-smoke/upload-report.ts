@@ -4,7 +4,7 @@ import { DeleteObjectsCommand, ListObjectsV2Command, PutObjectCommand, S3Client 
 import { z } from 'zod'
 
 const E2E_REPORTS_PREFIX = 'e2e-reports/'
-const KEEP_RUNS = 12
+const KEEP_RUNS = 2
 const RESULTS_FILE = path.join(import.meta.dirname, '..', 'test-results-smoke', 'results.json')
 
 const ZEnv = z.object({
