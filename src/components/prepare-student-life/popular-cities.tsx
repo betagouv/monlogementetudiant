@@ -8,6 +8,7 @@ import { FC } from 'react'
 import { tss } from 'tss-react'
 import { useCities } from '~/hooks/use-cities'
 import { TCity } from '~/schemas/territories'
+import { wpCityUrl } from '~/utils/wp-redirect'
 
 interface PopularCitiesProps {
   cities: TCity[]
@@ -42,7 +43,7 @@ export const PopularCities: FC<PopularCitiesProps> = ({ cities }) => {
               desc={desc}
               detail={city.priceMin ? t('minimumBudget', { price: city.priceMin }) : undefined}
               linkProps={{
-                href: `/preparer-sa-vie-etudiante/${city.slug}`,
+                href: wpCityUrl(city.slug),
               }}
               orientation="vertical"
               title={city.name}

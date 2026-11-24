@@ -6,6 +6,7 @@ import { FC } from 'react'
 import { MAIN_NAVIGATION_ID } from '~/components/ui/common-skip-links'
 import { MainNavigation } from '~/components/ui/header/main-navigation'
 import type { TMegaMenuCategory } from '~/components/ui/header/mega-menu'
+import { wpCityUrl, wpUrl } from '~/utils/wp-redirect'
 import styles from './navigation.module.css'
 
 const STUDENT_CITIES = [
@@ -34,7 +35,7 @@ export const HeaderNavigation: FC = () => {
   const cityLinks = STUDENT_CITIES.map((city) => ({
     text: city.name,
     linkProps: {
-      href: `/preparer-sa-vie-etudiante/${city.slug}/`,
+      href: wpCityUrl(city.slug),
       target: '_self' as const,
     },
   }))
@@ -47,7 +48,7 @@ export const HeaderNavigation: FC = () => {
       {
         text: <span className="fr-text--bold">{t('prepareBudget.moreCities')}</span>,
         linkProps: {
-          href: '/preparer-sa-vie-etudiante/',
+          href: wpUrl('/'),
           target: '_self' as const,
         },
       },

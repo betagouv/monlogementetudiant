@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildWpPath, redirectToWp } from './wp-redirect'
+import { buildWpPath, redirectToWp, wpCityUrl, wpUrl } from './wp-redirect'
 
 describe('buildWpPath', () => {
   it('construit le chemin WordPress à partir de slugs', () => {
@@ -32,5 +32,21 @@ describe('redirectToWp', () => {
     const response = redirectToWp(new Request('https://app.test/preparer-sa-vie-etudiante'), '')
 
     expect(response.headers.get('location')).toBe('https://info.monlogementetudiant.beta.gouv.fr/')
+  })
+})
+
+describe('wpUrl', () => {
+  it('construit l’URL absolue d’une page WordPress', () => {
+    expect(wpUrl('/foire-aux-questions/')).toBe('https://info.monlogementetudiant.beta.gouv.fr/foire-aux-questions/')
+  })
+})
+
+describe('wpCityUrl', () => {
+  it('pointe vers la page de la ville, nom brut normalisé', () => {
+    expect(wpCityUrl('Le Mans')).toBe('https://info.monlogementetudiant.beta.gouv.fr/preparer-sa-vie-etudiante/le-mans/')
+  })
+
+  it('retombe sur la racine si le nom ne donne pas de slug', () => {
+    expect(wpCityUrl("L'Haÿ-les-Roses")).toBe('https://info.monlogementetudiant.beta.gouv.fr/')
   })
 })

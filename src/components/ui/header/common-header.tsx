@@ -9,6 +9,7 @@ import { HeaderNavigation } from '~/components/ui/header/navigation'
 import { UserConnectedDropdown } from '~/components/ui/header/user-connected-dropdown'
 import { UserSignInDropdown } from '~/components/ui/header/user-sign-in-dropdown'
 import { getServerSession } from '~/services/better-auth'
+import { wpUrl } from '~/utils/wp-redirect'
 
 type CommonHeaderProps = {
   withNavigation?: boolean
@@ -30,7 +31,7 @@ export const CommonHeader: FC<CommonHeaderProps> = async ({ withNavigation = tru
             key="faq-cta"
             priority="tertiary no outline"
             iconId="ri-question-line"
-            linkProps={{ href: '/foire-aux-questions', target: '_self' }}
+            linkProps={{ href: wpUrl('/foire-aux-questions/'), target: '_self' }}
           >
             {t('navigation.faq')}
           </Button>,

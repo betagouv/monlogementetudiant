@@ -3,6 +3,7 @@ import clsx from 'clsx'
 import { getTranslations } from 'next-intl/server'
 import { getFaqContents } from '~/components/faq/faq-content'
 import { FaqQuestionsAnswers } from '~/components/faq/faq-questions-answers'
+import { wpUrl } from '~/utils/wp-redirect'
 import styles from './find-student-accommodation-qa.module.css'
 
 export default async function FindStudentAccommodationQA() {
@@ -16,7 +17,7 @@ export default async function FindStudentAccommodationQA() {
             <h2 className={clsx(styles.whiteColor, styles.titleMargin)}>{t('faq.title')}</h2>
             <Button
               iconId="ri-question-line"
-              linkProps={{ href: '/foire-aux-questions', target: '_self' }}
+              linkProps={{ href: wpUrl('/foire-aux-questions/'), target: '_self' }}
               className="whiteButton"
               priority="secondary"
             >
