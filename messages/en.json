@@ -2619,6 +2619,15 @@
         "title": "No manager can access student applications",
         "description": "By default, only administrators can see applications. To let a manager view and handle them, click the <icon></icon> \"Reception settings\" button.",
         "action": "Reception settings"
+      },
+      "export": {
+        "title": "Export student contact details",
+        "description": "The CSV file contains the contact details of students whose request is still visible. Only share it with your teams.",
+        "regionLabel": "Region",
+        "allRegions": "All regions",
+        "residenceLabel": "Residence",
+        "allResidences": "All residences",
+        "button": "Export contact details (CSV)"
       }
     },
     "ownerForm": {

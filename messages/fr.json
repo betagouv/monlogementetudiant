@@ -2619,6 +2619,15 @@
         "title": "Aucun gestionnaire n'a accès aux dossiers des étudiants",
         "description": "Par défaut, seuls les administrateurs voient les candidatures. Pour autoriser un gestionnaire à les consulter et à les traiter, cliquez sur le bouton <icon></icon> « Paramètres de réception ».",
         "action": "Paramètres de réception"
+      },
+      "export": {
+        "title": "Exporter les coordonnées des étudiants",
+        "description": "Le fichier CSV contient les coordonnées des étudiants dont la demande est encore visible. Ne le partagez qu'avec vos équipes.",
+        "regionLabel": "Région",
+        "allRegions": "Toutes les régions",
+        "residenceLabel": "Résidence",
+        "allResidences": "Toutes les résidences",
+        "button": "Exporter les coordonnées (CSV)"
       }
     },
     "ownerForm": {
