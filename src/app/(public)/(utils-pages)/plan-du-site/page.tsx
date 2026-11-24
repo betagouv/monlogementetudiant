@@ -55,6 +55,12 @@ export default async function SiteMap() {
               text: t('links.findAccomodation'),
             },
             {
+              linkProps: {
+                href: '/comprendre-les-disponibilites',
+              },
+              text: t('links.availabilityStatuses'),
+            },
+            {
               // Les mentions légales vivent sur le site éditorial, comme dans le pied de page.
               linkProps: {
                 href: 'https://info.monlogementetudiant.beta.gouv.fr/mentions-legales/',

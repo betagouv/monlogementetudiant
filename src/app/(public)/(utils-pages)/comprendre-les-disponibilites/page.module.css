@@ -1,0 +1,12 @@
+.statuses {
+  background-color: var(--background-default-grey);
+  border: 1px solid var(--border-default-grey);
+}
+
+.status {
+  padding: 1.5rem;
+}
+
+.status + .status {
+  border-top: 1px solid var(--border-default-grey);
+}

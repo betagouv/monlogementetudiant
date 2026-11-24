@@ -52,6 +52,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     ...findStudentAccommodationMetadata,
     {
+      url: `${baseUrl}/comprendre-les-disponibilites`,
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.3,
+    },
+    {
       url: `${baseUrl}/plan-du-site`,
       lastModified,
       changeFrequency: 'monthly',
