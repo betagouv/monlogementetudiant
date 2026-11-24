@@ -40,3 +40,12 @@
   border-left: 1px solid var(--border-default-grey);
   transform: translate(-50%, 50%) rotate(45deg);
 }
+
+.panel::after {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  height: 0.75rem;
+}

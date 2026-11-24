@@ -97,4 +97,36 @@ test.describe('Statuts de disponibilité', () => {
     }
     await expect(page.getByText('Dépôt de dossier possible')).toHaveCount(0)
   })
+
+  test('la bulle reste ouverte quand la souris descend du bouton vers le lien', async ({ page }) => {
+    const { owner } = await createBailleur()
+    const residence = await createResidence({ ownerId: owner.id }, typology(null))
+
+    await gotoHydrated(page, ficheUrl(residence.slug))
+    const trigger = page.getByRole('button', { name: 'Comprendre ce statut' })
+    await trigger.hover()
+    const link = page.getByRole('link', { name: 'Comprendre les statuts de disponibilité' })
+    const from = await trigger.boundingBox()
+    const to = await link.boundingBox()
+    if (!from || !to) throw new Error('positions introuvables')
+
+    await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2)
+    await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 30 })
+
+    await expect(link).toBeVisible()
+  })
+
+  test('Échap ferme une bulle ouverte au survol', async ({ page }) => {
+    const { owner } = await createBailleur()
+    const residence = await createResidence({ ownerId: owner.id }, typology(null))
+
+    await gotoHydrated(page, ficheUrl(residence.slug))
+    await page.getByRole('button', { name: 'Comprendre ce statut' }).hover()
+    const link = page.getByRole('link', { name: 'Comprendre les statuts de disponibilité' })
+    await expect(link).toBeVisible()
+
+    await page.keyboard.press('Escape')
+
+    await expect(link).toBeHidden()
+  })
 })
