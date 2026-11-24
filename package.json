@@ -24,6 +24,7 @@
     "test:e2e": "pnpm e2e:seed && playwright test",
     "test:e2e:ui": "pnpm e2e:seed && playwright test --ui",
     "test:smoke": "playwright test --config playwright.smoke.config.ts",
+    "smoke:upload": "tsx --env-file=.env e2e-smoke/upload-report.ts",
     "check-env": "tsx --env-file=.env src/server/env.ts",
     "cli": "tsx --env-file=.env apps/worker/index.ts"
   },

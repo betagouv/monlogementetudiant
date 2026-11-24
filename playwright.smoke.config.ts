@@ -11,7 +11,11 @@ export default defineConfig({
   retries: isLocal ? 0 : 1,
   expect: { timeout: 10_000 },
   forbidOnly: !!process.env.CI,
-  reporter: [['list'], ['html', { outputFolder: 'playwright-report-smoke', open: 'never' }]],
+  reporter: [
+    ['list'],
+    ['html', { outputFolder: 'playwright-report-smoke', open: 'never' }],
+    ['json', { outputFile: 'test-results-smoke/results.json' }],
+  ],
   use: {
     baseURL,
     locale: 'fr-FR',
