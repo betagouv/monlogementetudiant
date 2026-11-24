@@ -13,6 +13,7 @@ import {
   FindStudentAccommodationPlaceholderImageCard,
 } from '~/components/find-student-accomodation/card/find-student-accommodation-image-card'
 import { AvailabilityBadge } from '~/components/shared/availability-badge'
+import { WaitingListBadge } from '~/components/shared/waiting-list-badge'
 import { useWidgetCampaign } from '~/components/widget/widget-campaign-context'
 import { trackEvent } from '~/lib/tracking'
 import { TUser } from '~/lib/types'
@@ -67,8 +68,6 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
     />
   )
 
-  const showWaitingListBadge = acceptWaitingList && (nbAvailable === null || nbAvailable === undefined || nbAvailable === 0)
-
   const badgeProps = priceMin
     ? {
         badge: <Badge severity="new" noIcon as="span">{`${t('priceFrom')} ${priceMin}€`}</Badge>,
@@ -108,8 +107,15 @@ export const AccomodationCard: FC<AccomodationCardProps> = ({
             <span className={clsx('ri-community-line', styles.description)}>{t('accommodationsCount', { count: nbTotalApartments })}</span>
           )}
           {badgeAvailability && <span className={clsx('fr-mt-1v', styles.badgeLine)}>{badgeAvailability}</span>}
-          {showWaitingListBadge && (
-            <span className={clsx('ri-folder-2-line fr-mt-1v', styles.badgeLine, styles.description)}>{t('waitingList')}</span>
+          {acceptWaitingList && (
+            <span className={clsx('fr-mt-1v', styles.badgeLine)}>
+              <WaitingListBadge
+                acceptWaitingList={acceptWaitingList}
+                nbAvailable={nbAvailable}
+                waitingListText={t('waitingList')}
+                as="span"
+              />
+            </span>
           )}
         </>
       }

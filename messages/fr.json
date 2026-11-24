@@ -432,7 +432,7 @@
       "unknownAvailability": "Disponibilité non renseignée",
       "availabilityCount": "{count, plural, one {Disponibilité} other {Disponibilités}}"
     },
-    "waitingList": "Dépôt de dossier possible",
+    "waitingList": "Liste d’attente",
     "unknownAvailability": "Disponibilités non renseignées",
     "unknownAvailabilityTooltip": "Le gestionnaire ne nous a pas transmis les disponibilités de cette résidence.",
     "tooltip": {
@@ -567,7 +567,7 @@
       "unknownAvailability": "Disponibilités non renseignées",
       "unknownAvailabilityTooltip": "Le gestionnaire ne nous a pas transmis les disponibilités de cette résidence.",
       "noAvailability": "Aucune disponibilité",
-      "waitingList": "Dépôt de dossier possible",
+      "waitingList": "Liste d’attente",
       "accommodationsCount": "{count} logements",
       "availabilityCount": "{count, plural, one {Disponibilité} other {Disponibilités}}",
       "lastUpdate": "Mise à jour le {date}"

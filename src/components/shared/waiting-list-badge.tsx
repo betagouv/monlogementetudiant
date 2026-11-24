@@ -1,3 +1,4 @@
+import { Badge } from '@codegouvfr/react-dsfr/Badge'
 import clsx from 'clsx'
 
 interface WaitingListBadgeProps {
@@ -5,12 +6,17 @@ interface WaitingListBadgeProps {
   nbAvailable: number | null
   waitingListText: string
   className?: string
+  as?: 'span' | 'p'
 }
 
-export function WaitingListBadge({ acceptWaitingList, nbAvailable, waitingListText, className }: WaitingListBadgeProps) {
+export function WaitingListBadge({ acceptWaitingList, nbAvailable, waitingListText, className, as }: WaitingListBadgeProps) {
   if (!acceptWaitingList || (nbAvailable !== null && nbAvailable !== undefined && nbAvailable > 0)) {
     return null
   }
 
-  return <span className={clsx('ri-folder-2-line fr-flex fr-align-items-center fr-text--sm fr-mb-0', className)}>{waitingListText}</span>
+  return (
+    <Badge noIcon className={clsx('fr-badge--pink-macaron', className)} as={as}>
+      <span className="fr-text--uppercase fr-mb-0">{waitingListText}</span>
+    </Badge>
+  )
 }

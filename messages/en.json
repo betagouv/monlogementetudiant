@@ -432,7 +432,7 @@
       "unknownAvailability": "Availability not provided",
       "availabilityCount": "{count, plural, other {Available}}"
     },
-    "waitingList": "Applications can be submitted",
+    "waitingList": "Waiting list",
     "unknownAvailability": "Availability not provided",
     "unknownAvailabilityTooltip": "The manager has not sent us the availability for this residence.",
     "tooltip": {
@@ -567,7 +567,7 @@
       "unknownAvailability": "Availability not provided",
       "unknownAvailabilityTooltip": "The manager has not sent us the availability for this residence.",
       "noAvailability": "No availability",
-      "waitingList": "Applications can be submitted",
+      "waitingList": "Waiting list",
       "accommodationsCount": "{count} homes",
       "availabilityCount": "{count, plural, other {Available}}",
       "lastUpdate": "Updated on {date}"
