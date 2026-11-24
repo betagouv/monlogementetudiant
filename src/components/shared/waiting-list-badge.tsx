@@ -15,7 +15,7 @@ export function WaitingListBadge({ acceptWaitingList, nbAvailable, waitingListTe
   }
 
   return (
-    <Badge noIcon className={clsx('fr-badge--pink-macaron', className)} as={as}>
+    <Badge noIcon className={clsx('fr-badge--purple-glycine', className)} as={as}>
       <span className="fr-text--uppercase fr-mb-0">{waitingListText}</span>
     </Badge>
   )

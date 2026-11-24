@@ -42,6 +42,8 @@ test.describe('Statuts de disponibilité', () => {
     await link.hover()
     await expect(link).toBeVisible()
     await expect(link).toHaveAttribute('href', '/comprendre-les-disponibilites')
+    await link.click()
+    await expect(page).toHaveURL(/\/comprendre-les-disponibilites$/)
   })
 
   test('la bulle est utilisable au clavier', async ({ page }) => {
@@ -79,5 +81,20 @@ test.describe('Statuts de disponibilité', () => {
 
     await expect(page.getByRole('heading', { name: '20 logements', exact: true })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Comprendre ce statut' })).toHaveCount(0)
+  })
+
+  test('présente les quatre statuts', async ({ page }) => {
+    await gotoHydrated(page, '/comprendre-les-disponibilites')
+
+    await expect(page.getByRole('heading', { level: 1, name: 'Comprendre les disponibilités' })).toBeVisible()
+    for (const title of [
+      'Des logements sont disponibles',
+      'Aucun logement disponible pour le moment',
+      'Le gestionnaire n’a pas mis à jour ses disponibilités',
+      'La résidence accepte les candidatures en liste d’attente',
+    ]) {
+      await expect(page.getByRole('heading', { level: 2, name: title })).toBeVisible()
+    }
+    await expect(page.getByText('Dépôt de dossier possible')).toHaveCount(0)
   })
 })

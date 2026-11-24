@@ -63,7 +63,8 @@
         "title": "Signaler un problème"
       }
     },
-    "homeLabel": "Accueil"
+    "homeLabel": "Accueil",
+    "availabilityStatuses": "Comprendre les disponibilités"
   },
   "loading": {
     "card": "Chargement de la carte..."
@@ -161,6 +162,10 @@
     "cookieManagement": {
       "title": "Gestion des cookies",
       "description": "Gérez vos préférences de cookies sur Mon Logement Étudiant."
+    },
+    "availabilityStatuses": {
+      "title": "Comprendre les disponibilités",
+      "description": "Ce que signifient les statuts de disponibilité des résidences étudiantes sur Mon Logement Étudiant, et ce que vous pouvez faire pour chacun."
     }
   },
   "header": {
@@ -902,7 +907,8 @@
       "legalMentions": "Mentions légales",
       "personalData": "Données personnelles",
       "cookies": "Gestion des cookies",
-      "landing": "Landing - Mon Logement Étudiant"
+      "landing": "Landing - Mon Logement Étudiant",
+      "availabilityStatuses": "Comprendre les disponibilités"
     },
     "lastUpdate": "Mis à jour le"
   },
@@ -2765,5 +2771,28 @@
     "unavailable": "Impossible de déterminer votre position. Veuillez saisir votre ville.",
     "unsupported": "Votre navigateur ne permet pas la géolocalisation. Veuillez saisir votre ville.",
     "notFound": "Aucune commune française n’a été trouvée à votre position. Veuillez saisir votre ville."
+  },
+  "availabilityStatuses": {
+    "title": "Comprendre les disponibilités",
+    "intro": "Chaque résidence affiche un statut de disponibilité. Il est renseigné par le gestionnaire et mis à jour au moins une fois par mois. Voici ce que signifie chaque statut et ce que vous pouvez faire.",
+    "statuses": {
+      "available": {
+        "title": "Des logements sont disponibles",
+        "description": "Le gestionnaire a indiqué un nombre de logements libres. Consultez son offre ou transmettez vos coordonnées si la résidence le propose. Le chiffre est indicatif : il peut évoluer entre deux mises à jour."
+      },
+      "none": {
+        "title": "Aucun logement disponible pour le moment",
+        "description": "La résidence est complète à la date de mise à jour. Vous pouvez créer une alerte logement pour être prévenu dès qu’une place se libère, ou candidater en liste d’attente si le gestionnaire l’accepte."
+      },
+      "unknown": {
+        "title": "Le gestionnaire n’a pas mis à jour ses disponibilités",
+        "description": "Aucune information récente du gestionnaire. La résidence peut avoir des places libres. Consultez directement son site ou contactez-le."
+      },
+      "waitingList": {
+        "title": "La résidence accepte les candidatures en liste d’attente",
+        "description": "Même sans logement libre, vous pouvez transmettre vos coordonnées depuis la fiche de la résidence. Le gestionnaire vous recontacte dans l’ordre des demandes quand un logement se libère."
+      }
+    },
+    "reportError": "Vous avez constaté une erreur sur la disponibilité d’une résidence ? Utilisez le bouton « Signaler une erreur » sur sa fiche."
   }
 }

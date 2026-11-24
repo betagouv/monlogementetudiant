@@ -63,7 +63,8 @@
         "title": "Report a problem"
       }
     },
-    "homeLabel": "Home"
+    "homeLabel": "Home",
+    "availabilityStatuses": "Understanding availability"
   },
   "loading": {
     "card": "Loading map..."
@@ -161,6 +162,10 @@
     "cookieManagement": {
       "title": "Cookie management",
       "description": "Manage your cookie preferences on Mon Logement Étudiant."
+    },
+    "availabilityStatuses": {
+      "title": "Understanding availability",
+      "description": "What the availability statuses of student residences mean on Mon Logement Étudiant, and what you can do for each."
     }
   },
   "header": {
@@ -902,7 +907,8 @@
       "legalMentions": "Legal notice",
       "personalData": "Personal data",
       "cookies": "Cookie management",
-      "landing": "Landing page - Mon Logement Étudiant"
+      "landing": "Landing page - Mon Logement Étudiant",
+      "availabilityStatuses": "Understanding availability"
     },
     "lastUpdate": "Updated on"
   },
@@ -2765,5 +2771,28 @@
     "unavailable": "Unable to determine your location. Please enter your city.",
     "unsupported": "Your browser does not support geolocation. Please enter your city.",
     "notFound": "No French town was found at your location. Please enter your city."
+  },
+  "availabilityStatuses": {
+    "title": "Understanding availability",
+    "intro": "Each residence displays an availability status. It is provided by the manager and updated at least once a month. Here is what each status means and what you can do.",
+    "statuses": {
+      "available": {
+        "title": "Units are available",
+        "description": "The manager reported a number of vacant units. Check their offer or share your contact details if the residence offers it. The figure is indicative: it may change between two updates."
+      },
+      "none": {
+        "title": "No units available at the moment",
+        "description": "The residence is full as of the last update. You can create a housing alert to be notified as soon as a place becomes available, or apply to the waiting list if the manager accepts it."
+      },
+      "unknown": {
+        "title": "The manager has not updated their availability",
+        "description": "No recent information from the manager. The residence may have vacant units. Check their website directly or contact them."
+      },
+      "waitingList": {
+        "title": "The residence accepts waiting-list applications",
+        "description": "Even with no vacant unit, you can share your contact details from the residence page. The manager will contact you in the order of requests when a unit becomes available."
+      }
+    },
+    "reportError": "Noticed an error in a residence’s availability? Use the “Report an error” button on its page."
   }
 }
