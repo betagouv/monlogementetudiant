@@ -221,6 +221,19 @@ describe('brevo service', () => {
     })
   })
 
+  describe('sendStudentWelcomeEmail', () => {
+    it('uses template ID 58 without params', async () => {
+      const { sendStudentWelcomeEmail } = await import('./brevo')
+
+      await sendStudentWelcomeEmail('user@test.com')
+
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body)
+      expect(body.templateId).toBe(58)
+      expect(body.params).toBeUndefined()
+      expect(body.to).toEqual([{ email: 'user@test.com' }])
+    })
+  })
+
   describe('sendResetPasswordEmail', () => {
     it('uses template ID 23 with RESET_LINK param', async () => {
       const { sendResetPasswordEmail } = await import('./brevo')
