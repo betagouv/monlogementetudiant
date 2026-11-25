@@ -235,6 +235,24 @@ export async function syncTypologies(
 }
 
 /**
+ * Pure counterpart of mergeTypologies: applies field-level patches onto the current drafts and
+ * returns the rows that would be persisted (all-null rows dropped). Exposed so a reporting path
+ * (e.g. the import --report option) can predict the exact outcome of a merge without writing.
+ */
+export function mergeTypologyPatches(current: TypologyDraft[], patches: TypologyPatch[]): TypologyDraft[] {
+  const byType = new Map<TypologyType, TypologyDraft>(current.map((d) => [d.type, d]))
+  for (const patch of patches) {
+    const base = byType.get(patch.type) ?? typologyDraft(patch.type)
+    const merged: TypologyDraft = { ...base }
+    for (const [key, value] of Object.entries(patch)) {
+      if (key !== 'type' && value !== undefined) (merged as Record<string, unknown>)[key] = value
+    }
+    byType.set(patch.type, merged)
+  }
+  return [...byType.values()].filter(hasAnyValue)
+}
+
+/**
  * Field-level MERGE of partial typologies onto the current rows (partial importers, e.g. ARPEJ / CROUS
  * rents/surfaces): for each patch, only the provided fields overwrite the existing row of that type;
  * untouched dimensions are preserved. Types that end up all-null are dropped. Refreshes aggregates.
@@ -246,16 +264,11 @@ export async function mergeTypologies(
   options: PersistTypologiesOptions = {},
 ): Promise<void> {
   const current = await tx.select().from(accommodationTypologies).where(eq(accommodationTypologies.accommodationId, accommodationId))
-  const byType = new Map<TypologyType, TypologyDraft>(current.map((r) => [r.type, typologyDraft(r.type, r)]))
-  for (const patch of patches) {
-    const base = byType.get(patch.type) ?? typologyDraft(patch.type)
-    const merged: TypologyDraft = { ...base }
-    for (const [key, value] of Object.entries(patch)) {
-      if (key !== 'type' && value !== undefined) (merged as Record<string, unknown>)[key] = value
-    }
-    byType.set(patch.type, merged)
-  }
-  await persistTypologies(tx, accommodationId, [...byType.values()].filter(hasAnyValue), options)
+  const merged = mergeTypologyPatches(
+    current.map((r) => typologyDraft(r.type, r)),
+    patches,
+  )
+  await persistTypologies(tx, accommodationId, merged, options)
   await recomputeAndPersistAggregates(tx, accommodationId)
 }
 
