@@ -68,6 +68,15 @@ describe('getOwnerIncompleteAccommodations', () => {
     expect(await getOwnerIncompleteAccommodations(owner.id)).toHaveLength(1)
   })
 
+  it('ignores unpublished residences', async () => {
+    const owner = await setupOwner()
+    await createAccommodation({ ownerId: owner.id, slug: 'res-x', published: false, ...completeFields, residenceType: null }, [
+      completeTypology,
+    ])
+
+    expect(await getOwnerIncompleteAccommodations(owner.id)).toEqual([])
+  })
+
   it("does not return other owners' residences", async () => {
     const owner = await setupOwner('owner-a')
     const other = await setupOwner('owner-b')

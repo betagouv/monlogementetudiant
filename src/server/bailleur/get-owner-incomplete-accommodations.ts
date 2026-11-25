@@ -35,5 +35,5 @@ export const getOwnerIncompleteAccommodations = async (ownerId: number): Promise
   db
     .select({ name: accommodations.name, slug: accommodations.slug })
     .from(accommodations)
-    .where(and(eq(accommodations.ownerId, ownerId), isIncomplete))
+    .where(and(eq(accommodations.ownerId, ownerId), eq(accommodations.published, true), isIncomplete))
     .orderBy(accommodations.name)
