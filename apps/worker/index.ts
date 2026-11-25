@@ -1,6 +1,7 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { program } from 'commander'
+import { closeDb } from '~/server/db'
 import { CRON_COMMANDS, jobNameFromArgv, notifyCronFailure } from '~/server/jobs/cron-failure'
 import { backfillAlertJobsCommand } from './commands/backfill-alert-jobs'
 import { backfillBrevoContacts } from './commands/backfill-brevo-contacts'
@@ -143,7 +144,14 @@ program
   .option('--dry-run', 'Simuler sans modifier la BDD')
   .option('--verbose', 'Afficher les residences traitees')
   .option('--limit <n>', 'Limiter le nombre de residences du fichier', parseInt)
-  .action((file, opts) => importCrousRents(file, opts))
+  .option('--report <path>', 'Ecrire un rapport CSV avant/apres des loyers par typologie')
+  .action(async (file, opts) => {
+    try {
+      await importCrousRents(file, opts)
+    } finally {
+      await closeDb()
+    }
+  })
 
 program
   .command('import-crous-typologies <file>')
