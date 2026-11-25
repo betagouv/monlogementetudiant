@@ -23,6 +23,7 @@ const EXPECTED: [string, string, string][] = [
   ['detect-alert-jobs', '0 8 * * *', 'detect-alert-jobs'],
   ['capture-monthly-metrics', '30 3 * * *', 'capture-monthly-metrics'],
   ['purge-contact-requests', '45 3 * * *', 'purge-contact-requests'],
+  ['purge-inactive-accounts', '15 4 * * *', 'purge-inactive-accounts'],
   ['backup-db', '0 5 * * *', 'backup-db'],
 ]
 

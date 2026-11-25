@@ -223,6 +223,8 @@ export const auth = betterAuth({
         // Filet de sécurité : couvre l'étudiant qui avait déjà un compte et a laissé ses coordonnées
         // en étant déconnecté (le hook de vérification d'e-mail, lui, ne joue qu'à l'inscription).
         after: async (createdSession) => {
+          await db.update(schema.user).set({ lastActiveAt: new Date() }).where(eq(schema.user.id, createdSession.userId))
+
           const usr = await db.query.user.findFirst({
             where: eq(schema.user.id, createdSession.userId),
             columns: { email: true, emailVerified: true, role: true },

@@ -26,6 +26,7 @@ export const CRON_COMMANDS = new Set([
   'capture-monthly-metrics',
   'capture-availability-snapshot',
   'purge-contact-requests',
+  'purge-inactive-accounts',
   'purge-logs',
   'backup-db',
   'cron-selftest',

@@ -23,6 +23,7 @@ import { importCrousSurfaces } from './commands/import-crous-surfaces'
 import { importCrousTypologies } from './commands/import-crous-typologies'
 import { migrate, postdeploy } from './commands/migrate'
 import { purgeContactRequests } from './commands/purge-contact-requests'
+import { purgeInactiveAccounts } from './commands/purge-inactive-accounts'
 import { purgeLogs } from './commands/purge-logs'
 import { resetStaleAvailabilityCommand } from './commands/reset-stale-availability'
 import { seedAlertSnapshotCommand } from './commands/seed-alert-snapshot'
@@ -328,6 +329,12 @@ program
   .description('Purge RGPD : supprime les demandes visiteur non confirmées, anonymise les demandes expirées')
   .option('--dry-run', 'Compter sans modifier la BDD')
   .action((opts) => purgeContactRequests(opts))
+
+program
+  .command('purge-inactive-accounts')
+  .description('Purge RGPD : supprime les comptes étudiants sans connexion depuis 24 mois (données en cascade + contact Brevo)')
+  .option('--dry-run', 'Compter sans modifier la BDD')
+  .action((opts) => purgeInactiveAccounts(opts))
 
 program
   .command('verify-ramsese')

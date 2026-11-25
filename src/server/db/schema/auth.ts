@@ -23,6 +23,7 @@ export const user = pgTable(
     image: text(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+    lastActiveAt: timestamp('last_active_at', { withTimezone: true }).notNull().defaultNow(),
     // Custom fields
     firstname: text().notNull().default(''),
     lastname: text().notNull().default(''),

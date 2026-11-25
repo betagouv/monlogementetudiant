@@ -43,6 +43,7 @@ import { nextRunAt } from '~/server/jobs/next-run'
 import { logActivity } from '~/server/services/activity-logger'
 import { sendAdminResetPasswordEmail, sendOwnerWelcomeEmail } from '~/server/services/brevo'
 import { generateSlug } from '~/server/trpc/utils/accommodation-helpers'
+import { deleteUserAccount } from '~/server/users/delete-account'
 import { findAvailableSlug } from '~/server/utils/slug'
 import { adminProcedure, createTRPCRouter } from '../init'
 import { adminAvailabilityRouter } from './admin-availability'
@@ -272,11 +273,11 @@ const usersRouter = createTRPCRouter({
     }),
 
   delete: adminProcedure.input(z.object({ id: z.string() })).mutation(async ({ input }) => {
-    const [deleted] = await db.delete(user).where(eq(user.id, input.id)).returning({ id: user.id })
+    const deleted = await deleteUserAccount(input.id)
     if (!deleted) {
       throw new TRPCError({ code: 'NOT_FOUND', message: (await getAdminErrorTranslations())('userNotFound') })
     }
-    return deleted
+    return { id: deleted.id }
   }),
 
   linkToOwner: adminProcedure.input(z.object({ userId: z.string(), ownerId: z.number() })).mutation(async ({ input }) => {

@@ -24,6 +24,7 @@ export const SCHEDULED_COMMANDS: TScheduledCommand[] = [
   { identifier: 'detect-alert-jobs', cron: '0 8 * * *', args: ['detect-alert-jobs'] },
   { identifier: 'capture-monthly-metrics', cron: '30 3 * * *', args: ['capture-monthly-metrics'] },
   { identifier: 'purge-contact-requests', cron: '45 3 * * *', args: ['purge-contact-requests'] },
+  { identifier: 'purge-inactive-accounts', cron: '15 4 * * *', args: ['purge-inactive-accounts'] },
   { identifier: 'backup-db', cron: '0 5 * * *', args: ['backup-db'] },
 ]
 

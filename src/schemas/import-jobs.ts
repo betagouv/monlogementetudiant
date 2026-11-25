@@ -17,6 +17,7 @@ export const ZImportJobType = z.enum([
   'availability-recap',
   'availability-snapshot',
   'purge-contacts',
+  'purge-inactive-accounts',
   'purge-logs',
   'backup-db',
   'monthly-metrics',
@@ -34,6 +35,7 @@ const MAINTENANCE_JOB_TYPES: string[] = [
   'availability-recap',
   'availability-snapshot',
   'purge-contacts',
+  'purge-inactive-accounts',
   'purge-logs',
   'backup-db',
   'monthly-metrics',
@@ -70,5 +72,7 @@ export const ZImportJobSummary = z.object({
   deleted: z.number().optional(),
   anonymized: z.number().optional(),
   dossiersPurged: z.number().optional(),
+  // Purge RGPD des comptes étudiants inactifs (`purge-inactive-accounts`)
+  purged: z.number().optional(),
 })
 export type TImportJobSummary = z.infer<typeof ZImportJobSummary>

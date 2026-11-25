@@ -612,3 +612,15 @@ export async function syncBrevoDataUpdated(email: string): Promise<void> {
     DATE_DERNIERE_MAJ_DONNEES: new Date().toISOString().split('T')[0],
   })
 }
+
+export async function deleteBrevoContact(email: string): Promise<void> {
+  const response = await fetch(`${env.BREVO_CONTACTS_API_URL}/${encodeURIComponent(email)}`, {
+    method: 'DELETE',
+    headers: brevoHeaders,
+  })
+
+  if (!response.ok && response.status !== 404) {
+    const error = await response.text()
+    throw new Error(`Échec de la suppression du contact Brevo : ${response.status} ${error}`)
+  }
+}

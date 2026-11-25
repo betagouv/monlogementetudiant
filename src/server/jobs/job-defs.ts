@@ -20,6 +20,7 @@ export const IMPORT_JOB_TYPE_BY_IDENTIFIER: Record<string, TImportJobType> = {
   'capture-availability-snapshot': 'availability-snapshot',
   'capture-monthly-metrics': 'monthly-metrics',
   'purge-contact-requests': 'purge-contacts',
+  'purge-inactive-accounts': 'purge-inactive-accounts',
   'purge-logs': 'purge-logs',
   'backup-db': 'backup-db',
 }
