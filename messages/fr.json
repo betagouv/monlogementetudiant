@@ -1846,6 +1846,11 @@
         "disconnectedToast": "Votre compte DossierFacile a été déconnecté.",
         "disconnectErrorToast": "Une erreur est survenue lors de la déconnexion de votre compte DossierFacile."
       },
+      "exportData": {
+        "title": "Télécharger mes données",
+        "description": "Récupérez une copie de l'ensemble des données liées à votre compte (profil, candidatures, alertes, favoris, simulations, objectifs) au format JSON.",
+        "cta": "Télécharger mes données"
+      },
       "deleteAccount": {
         "title": "Supprimer mon compte",
         "description": "La suppression de votre compte est immédiate et définitive : vos informations personnelles, candidatures, alertes, favoris, simulations et listes d'objectifs seront effacés.",

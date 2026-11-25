@@ -1846,6 +1846,11 @@
         "disconnectedToast": "Your DossierFacile account has been disconnected.",
         "disconnectErrorToast": "An error occurred while disconnecting your DossierFacile account."
       },
+      "exportData": {
+        "title": "Download my data",
+        "description": "Get a copy of all the data linked to your account (profile, applications, alerts, favorites, simulations, goals) in JSON format.",
+        "cta": "Download my data"
+      },
       "deleteAccount": {
         "title": "Delete my account",
         "description": "Deleting your account is immediate and permanent: your personal information, applications, alerts, favorites, simulations and goal lists will be erased.",

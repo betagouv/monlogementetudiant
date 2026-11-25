@@ -1,3 +1,4 @@
+import Button from '@codegouvfr/react-dsfr/Button'
 import clsx from 'clsx'
 import { notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
@@ -47,6 +48,13 @@ export default async function StudentPersonalInformationsPage() {
           />
         </div>
         <DossierFacileConnection />
+        <div className="fr-border-top fr-pt-5w">
+          <h2 className="fr-h4">{t('exportData.title')}</h2>
+          <p className="fr-text--sm fr-text-mention--grey">{t('exportData.description')}</p>
+          <Button priority="secondary" iconId="ri-download-line" linkProps={{ href: '/api/student/export-donnees' }}>
+            {t('exportData.cta')}
+          </Button>
+        </div>
         <DeleteAccount />
       </div>
     </>
