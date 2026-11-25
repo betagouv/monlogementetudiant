@@ -743,6 +743,13 @@
       "when": 1795603620879,
       "tag": "0105_student_alert_user_fk",
       "breakpoints": true
+    },
+    {
+      "idx": 106,
+      "version": "7",
+      "when": 1795603862750,
+      "tag": "0106_student_last_active_at",
+      "breakpoints": true
     }
   ]
 }

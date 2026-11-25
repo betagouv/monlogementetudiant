@@ -71,6 +71,10 @@ const JOB_DEFS: Record<string, TJobDef> = {
     label: 'Purge RGPD candidatures',
     description: 'Demandes non confirmées supprimées, expirées anonymisées',
   },
+  'purge-inactive-accounts': {
+    label: 'Purge RGPD comptes inactifs',
+    description: 'Comptes étudiants sans connexion depuis 24 mois supprimés (données en cascade, contact Brevo retiré)',
+  },
   'purge-logs': { label: 'Purge des logs', description: 'Tables append-only au-delà de leur rétention, archivées dans S3' },
   'backup-db': {
     label: 'Backup de la base',

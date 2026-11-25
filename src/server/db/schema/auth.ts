@@ -23,6 +23,12 @@ export const user = pgTable(
     image: text(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+    /**
+     * Dernier signe de vie (connexion). Horloge de la purge RGPD des comptes étudiants
+     * inactifs ; le stock existant repart de la date de déploiement de la migration, ce qui
+     * garantit 24 mois de préavis avant la première vague de suppression.
+     */
+    lastActiveAt: timestamp('last_active_at', { withTimezone: true }).notNull().defaultNow(),
     // Custom fields
     firstname: text().notNull().default(''),
     lastname: text().notNull().default(''),
