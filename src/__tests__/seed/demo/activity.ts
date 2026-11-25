@@ -110,8 +110,6 @@ async function seedStudents(db: Db, ref: DemoReferential, random: Random, clock:
       studyInstitution: profileComplete ? random.pick(institutions) : null,
       createdAt: clock.daysAgo(age + random.next()),
       updatedAt: clock.daysAgo(Math.max(0, age - random.int(0, 20))),
-      // Dernier signe de vie : la plupart se sont reconnectés depuis l'inscription, mais ~5 %
-      // de dormants dépassent la fenêtre de purge des comptes inactifs (24 mois).
       lastActiveAt: random.chance(0.05) ? clock.daysAgo(750 + random.int(0, 200)) : clock.daysAgo(Math.max(0, age - random.int(0, 30))),
     })
   }

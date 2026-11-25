@@ -53,7 +53,6 @@ beforeEach(async () => {
   await createUser({ id: 'test-admin-id', name: 'Test Admin', email: 'admin@test.com', role: 'admin' })
 })
 
-/** Peuple toutes les tables de l'espace étudiant pour vérifier l'effacement intégral. */
 async function seedStudentData(userId: string) {
   const db = getTestDb()
   const owner = await createOwner({ name: 'Owner Deletion', slug: 'owner-deletion', contactMode: EOwnerContactMode.CONTACTS })
@@ -92,7 +91,6 @@ describe('student.deleteAccount', () => {
 
     expect(await db.query.user.findFirst({ where: eq(user.id, 'test-user-id') })).toBeUndefined()
 
-    // Rétention alignée sur la vie du compte : plus aucune trace dans l'espace étudiant.
     const remnants = await Promise.all([
       db.select().from(contactRequests).where(eq(contactRequests.userId, 'test-user-id')),
       db.select().from(dossierFacileTenants).where(eq(dossierFacileTenants.userId, 'test-user-id')),
@@ -106,7 +104,6 @@ describe('student.deleteAccount', () => {
     ])
     for (const rows of remnants) expect(rows).toHaveLength(0)
 
-    // Les cascades de second niveau suivent le dossier DossierFacile.
     expect(await db.select().from(dossierFacileDocuments)).toHaveLength(0)
     expect(await db.select().from(dossierFacileApplications)).toHaveLength(0)
     expect(await db.select().from(studentGoals)).toHaveLength(0)

@@ -7,11 +7,6 @@ import { useDeleteAccount } from '~/hooks/use-delete-account'
 
 const deleteAccountModal = createModal({ id: 'delete-account-modal', isOpenedByDefault: false })
 
-/**
- * Section « Supprimer mon compte » de l'espace étudiant (effacement RGPD en libre-service).
- * La suppression est totale et immédiate, candidatures en cours comprises : la modale le dit
- * explicitement avant confirmation.
- */
 export const DeleteAccount = () => {
   const t = useTranslations('student.personalInformations.deleteAccount')
   const { mutate, isPending } = useDeleteAccount()

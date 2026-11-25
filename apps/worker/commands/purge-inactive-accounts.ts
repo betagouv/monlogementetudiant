@@ -10,8 +10,6 @@ interface PurgeInactiveAccountsOptions {
 export async function purgeInactiveAccounts(options: PurgeInactiveAccountsOptions): Promise<void> {
   console.log('🧹 Purge des comptes étudiants inactifs...')
 
-  // Suivi du run dans import_jobs (visible dans l'admin « Tâches planifiées »). Pas de trace
-  // en dry-run (rien n'est écrit).
   let jobId: number | null = null
   if (!options.dryRun) {
     const [job] = await db

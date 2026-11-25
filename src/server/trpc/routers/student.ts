@@ -90,12 +90,6 @@ export const studentRouter = createTRPCRouter({
       return { success: true }
     }),
 
-  /**
-   * Effacement RGPD en libre-service : l'étudiant supprime son compte et l'intégralité de ses
-   * données, candidatures en cours comprises. `userProcedure` laisse passer les admins (ils ont
-   * accès à l'espace étudiant) : on verrouille sur le rôle pour qu'un admin ne supprime pas son
-   * propre compte d'administration par ce biais.
-   */
   deleteAccount: userProcedure.mutation(async ({ ctx }) => {
     if (ctx.session.user.role !== 'user') {
       throw new TRPCError({ code: 'FORBIDDEN', message: 'Seul un compte étudiant peut être supprimé ici' })

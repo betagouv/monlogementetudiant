@@ -19,11 +19,6 @@ import {
   user,
 } from '~/server/db/schema'
 
-/**
- * Rassemble toutes les données personnelles d'un étudiant pour l'export RGPD (droit à la
- * portabilité, art. 20). Structure lisible : noms de résidences et de territoires joints
- * plutôt que des identifiants internes, données techniques (hash d'IP, tokens) exclues.
- */
 export async function collectStudentData(userId: string) {
   const profile = await db.query.user.findFirst({
     where: eq(user.id, userId),

@@ -72,7 +72,6 @@ describe('collectStudentData', () => {
     ])
     expect(data!.ticketsSupport).toEqual([expect.objectContaining({ message: 'Question sur mon compte' })])
 
-    // Aucune donnée technique interne ne doit fuiter dans l'export.
     const serialized = JSON.stringify(data)
     expect(serialized).not.toContain('ipHash')
     expect(serialized).not.toContain('"userId"')

@@ -11,7 +11,6 @@ export const useDeleteAccount = () => {
   return useMutation(
     trpc.student.deleteAccount.mutationOptions({
       onSuccess: async () => {
-        // La session est déjà partie avec le compte : il reste à purger l'état client.
         await signOut({ callbackUrl: '/', redirect: true })
       },
       onError: (error) => {

@@ -273,7 +273,6 @@ const usersRouter = createTRPCRouter({
     }),
 
   delete: adminProcedure.input(z.object({ id: z.string() })).mutation(async ({ input }) => {
-    // Même routine que la suppression en libre-service : le contact Brevo part avec le compte.
     const deleted = await deleteUserAccount(input.id)
     if (!deleted) {
       throw new TRPCError({ code: 'NOT_FOUND', message: (await getAdminErrorTranslations())('userNotFound') })

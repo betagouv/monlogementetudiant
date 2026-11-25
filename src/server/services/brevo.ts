@@ -613,10 +613,6 @@ export async function syncBrevoDataUpdated(email: string): Promise<void> {
   })
 }
 
-/**
- * Suppression définitive du contact Brevo (effacement RGPD). Un contact inconnu (404) n'est
- * pas une erreur : l'adresse peut ne jamais avoir été synchronisée.
- */
 export async function deleteBrevoContact(email: string): Promise<void> {
   const response = await fetch(`${env.BREVO_CONTACTS_API_URL}/${encodeURIComponent(email)}`, {
     method: 'DELETE',

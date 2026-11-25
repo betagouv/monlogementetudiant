@@ -5,7 +5,6 @@ import { getServerSession } from '~/services/better-auth'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-/** Export RGPD : l'étudiant télécharge l'ensemble de ses données au format JSON (portabilité, art. 20). */
 export async function GET() {
   const session = await getServerSession()
   if (!session) return new Response('Unauthorized', { status: 401 })

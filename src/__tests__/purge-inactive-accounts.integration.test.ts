@@ -19,7 +19,6 @@ vi.mock('~/server/services/brevo', async () => {
   return { ...actual, deleteBrevoContact: (...args: unknown[]) => deleteBrevoContact(...args) }
 })
 
-/** Fait vieillir le dernier signe de vie pour franchir la fenêtre d'inactivité sans attendre. */
 const ageLastActivity = (id: string, months: number) =>
   getTestDb()
     .update(user)
