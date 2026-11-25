@@ -1,6 +1,7 @@
 import clsx from 'clsx'
 import { notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
+import { DeleteAccount } from '~/components/student-space/informations/delete-account'
 import { DossierFacileConnection } from '~/components/student-space/informations/dossier-facile-connection'
 import { NotificationSettings } from '~/components/student-space/informations/notification-settings'
 import { StudentProfileForm } from '~/components/student-space/informations/student-profile-form'
@@ -46,6 +47,7 @@ export default async function StudentPersonalInformationsPage() {
           />
         </div>
         <DossierFacileConnection />
+        <DeleteAccount />
       </div>
     </>
   )

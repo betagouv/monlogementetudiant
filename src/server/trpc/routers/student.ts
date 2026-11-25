@@ -1,8 +1,10 @@
+import { TRPCError } from '@trpc/server'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { ZUpdateStudentProfileInput } from '~/schemas/student/update-profile'
 import { db } from '~/server/db'
 import { user } from '~/server/db/schema/auth'
+import { deleteUserAccount } from '~/server/users/delete-account'
 import { createTRPCRouter, userProcedure } from '../init'
 
 export const studentRouter = createTRPCRouter({
@@ -87,4 +89,19 @@ export const studentRouter = createTRPCRouter({
       await db.update(user).set(updateData).where(eq(user.id, ctx.session.user.id))
       return { success: true }
     }),
+
+  /**
+   * Effacement RGPD en libre-service : l'étudiant supprime son compte et l'intégralité de ses
+   * données, candidatures en cours comprises. `userProcedure` laisse passer les admins (ils ont
+   * accès à l'espace étudiant) : on verrouille sur le rôle pour qu'un admin ne supprime pas son
+   * propre compte d'administration par ce biais.
+   */
+  deleteAccount: userProcedure.mutation(async ({ ctx }) => {
+    if (ctx.session.user.role !== 'user') {
+      throw new TRPCError({ code: 'FORBIDDEN', message: 'Seul un compte étudiant peut être supprimé ici' })
+    }
+
+    await deleteUserAccount(ctx.session.user.id)
+    return { success: true }
+  }),
 })

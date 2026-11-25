@@ -736,6 +736,13 @@
       "when": 1795009742706,
       "tag": "0104_reject_applicants_over_max_age",
       "breakpoints": true
+    },
+    {
+      "idx": 105,
+      "version": "7",
+      "when": 1795603620879,
+      "tag": "0105_student_alert_user_fk",
+      "breakpoints": true
     }
   ]
 }

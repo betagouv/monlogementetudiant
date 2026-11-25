@@ -1845,6 +1845,17 @@
         "linkedToast": "Votre compte DossierFacile a été lié avec succès",
         "disconnectedToast": "Votre compte DossierFacile a été déconnecté.",
         "disconnectErrorToast": "Une erreur est survenue lors de la déconnexion de votre compte DossierFacile."
+      },
+      "deleteAccount": {
+        "title": "Supprimer mon compte",
+        "description": "La suppression de votre compte est immédiate et définitive : vos informations personnelles, candidatures, alertes, favoris, simulations et listes d'objectifs seront effacés.",
+        "cta": "Supprimer mon compte",
+        "confirmTitle": "Supprimer définitivement mon compte",
+        "confirmBody": "Toutes vos données seront effacées : profil, candidatures (y compris celles en cours de traitement par les gestionnaires), alertes, favoris, simulations et listes d'objectifs.",
+        "confirmWarning": "Cette action est irréversible.",
+        "cancel": "Annuler",
+        "confirm": "Supprimer mon compte",
+        "errorToast": "La suppression de votre compte a échoué. Veuillez réessayer."
       }
     },
     "alerts": {

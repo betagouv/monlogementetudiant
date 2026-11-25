@@ -1845,6 +1845,17 @@
         "linkedToast": "Your DossierFacile account has been successfully linked",
         "disconnectedToast": "Your DossierFacile account has been disconnected.",
         "disconnectErrorToast": "An error occurred while disconnecting your DossierFacile account."
+      },
+      "deleteAccount": {
+        "title": "Delete my account",
+        "description": "Deleting your account is immediate and permanent: your personal information, applications, alerts, favorites, simulations and goal lists will be erased.",
+        "cta": "Delete my account",
+        "confirmTitle": "Permanently delete my account",
+        "confirmBody": "All your data will be erased: profile, applications (including those currently being reviewed by property managers), alerts, favorites, simulations and goal lists.",
+        "confirmWarning": "This action cannot be undone.",
+        "cancel": "Cancel",
+        "confirm": "Delete my account",
+        "errorToast": "Your account could not be deleted. Please try again."
       }
     },
     "alerts": {
