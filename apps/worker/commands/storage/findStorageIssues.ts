@@ -3,11 +3,11 @@ import { isNotNull } from 'drizzle-orm'
 import { db } from '~/server/db'
 import { accommodations } from '~/server/db/schema/accommodations'
 import { env } from '~/server/env'
-import { IMAGE_CACHE_PREFIX, PURGE_ARCHIVE_PREFIX } from '~/server/services/s3'
+import { E2E_REPORTS_PREFIX, IMAGE_CACHE_PREFIX, PURGE_ARCHIVE_PREFIX } from '~/server/services/s3'
 import type { AuditResult, BrokenUrl, UnreferencedFile } from './types'
 
 /** Préfixes gérés par l'application, hors du périmètre des médias de résidences. */
-const MANAGED_PREFIXES = [IMAGE_CACHE_PREFIX, PURGE_ARCHIVE_PREFIX]
+const MANAGED_PREFIXES = [IMAGE_CACHE_PREFIX, PURGE_ARCHIVE_PREFIX, E2E_REPORTS_PREFIX]
 
 export function createS3Client(): S3Client {
   return new S3Client({

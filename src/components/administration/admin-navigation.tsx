@@ -68,6 +68,7 @@ const navSections: NavSection[] = [
       { label: 'Feedback', icon: 'fr-icon-questionnaire-line', href: '/administration/feedback' },
       { label: 'Tickets', icon: 'fr-icon-mail-line', href: '/administration/tickets', badgeKey: 'tickets' },
       { label: 'Changelog', icon: 'fr-icon-git-commit-line', href: '/administration/changelog' },
+      { label: 'Recettes', icon: 'ri-film-line', href: '/administration/recettes' },
     ],
   },
 ]

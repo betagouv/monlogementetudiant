@@ -57,6 +57,8 @@ apps/worker/local/
 /test-results
 /playwright-report
 /.next-e2e
+/test-results-smoke
+/playwright-report-smoke
 
 # superpowers
 docs/superpowers/

@@ -34,6 +34,8 @@ export const IMAGE_CACHE_PREFIX = `image-cache/`
 /** Préfixe des archives NDJSON déposées par `purge-logs` — même remarque. */
 export const PURGE_ARCHIVE_PREFIX = `purges/`
 
+export { E2E_REPORTS_PREFIX } from './s3-prefixes'
+
 export async function uploadFile(input: { key: string; body: Buffer; contentType: string }): Promise<string> {
   await s3.send(
     new PutObjectCommand({
