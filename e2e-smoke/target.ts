@@ -1,4 +1,4 @@
-import { test as base, expect, type Page } from '@playwright/test'
+import { test as base, expect, type Locator, type Page } from '@playwright/test'
 
 export const baseURL = process.env.SMOKE_BASE_URL ?? 'http://localhost:3210'
 
@@ -30,7 +30,14 @@ export function resultCards(page: Page) {
 }
 
 export async function readResultsCount(page: Page) {
-  const label = page.getByText(/^\d+ résidences/).first()
-  await label.waitFor()
+  const label = page.getByText(/^\d+ résidence/).first()
+  const empty = page.getByText('Aucun résultat pour votre recherche')
+  await expect(label.or(empty).first()).toBeVisible()
+  if (await empty.isVisible()) return 0
   return Number((await label.textContent())?.match(/^\d+/)?.[0])
+}
+
+export async function countLoadedImages(images: Locator) {
+  const loaded = await images.evaluateAll((els) => els.filter((el) => el instanceof HTMLImageElement && el.complete && el.naturalWidth > 0))
+  return loaded.length
 }

@@ -1,4 +1,4 @@
-import { city, cityQuery, expect, gotoHydrated, isLocal, readResultsCount, resultCards, test } from './target'
+import { city, cityQuery, countLoadedImages, expect, gotoHydrated, isLocal, readResultsCount, resultCards, test } from './target'
 
 test("la page d'accueil répond et propose la recherche", async ({ page }) => {
   await page.goto('/')
@@ -42,6 +42,13 @@ test('le filtre de loyer maximum restreint les résultats', async ({ page }) => 
   await slider.fill('600')
   await slider.blur()
 
+  await expect(page).toHaveURL(/prix=600/)
+  await expect
+    .poll(async () => {
+      const prices = await page.getByText(/À partir de \d+\s?€/).allTextContents()
+      return prices.every((price) => Number(price.match(/\d+/)?.[0]) <= 600)
+    })
+    .toBe(true)
   await expect.poll(() => readResultsCount(page)).toBeLessThanOrEqual(before)
 })
 
@@ -50,15 +57,7 @@ test('la vue carte affiche le fond de plan et des résidences', async ({ page })
 
   await expect(page.locator('.leaflet-marker-pane > *').first()).toBeVisible()
 
-  const tiles = page.locator('img.leaflet-tile')
-  await expect
-    .poll(async () => {
-      const loaded = await tiles.evaluateAll((els) =>
-        els.filter((el) => el instanceof HTMLImageElement && el.complete && el.naturalWidth > 0),
-      )
-      return loaded.length
-    })
-    .toBeGreaterThan(0)
+  await expect.poll(() => countLoadedImages(page.locator('img.leaflet-tile'))).toBeGreaterThan(0)
 })
 
 test('les photos des résidences se chargent', async ({ page }) => {
@@ -67,13 +66,5 @@ test('les photos des résidences se chargent', async ({ page }) => {
   await page.goto(`/trouver-un-logement-etudiant/ville/${city.slug}`)
   await expect(resultCards(page).first()).toBeVisible()
 
-  const images = resultCards(page).locator('img')
-  await expect
-    .poll(async () => {
-      const loaded = await images.evaluateAll((els) =>
-        els.filter((el) => el instanceof HTMLImageElement && el.complete && el.naturalWidth > 0),
-      )
-      return loaded.length
-    })
-    .toBeGreaterThan(0)
+  await expect.poll(() => countLoadedImages(resultCards(page).locator('img'))).toBeGreaterThan(0)
 })

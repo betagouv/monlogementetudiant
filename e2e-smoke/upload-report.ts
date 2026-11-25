@@ -1,10 +1,13 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { DeleteObjectsCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import slugify from 'slugify'
 import { z } from 'zod'
+import { E2E_REPORTS_PREFIX } from '../src/server/services/s3-prefixes'
+import { baseURL } from './target'
 
-const E2E_REPORTS_PREFIX = 'e2e-reports/'
 const KEEP_RUNS = 2
+const DELETE_BATCH_SIZE = 1000
 const RESULTS_FILE = path.join(import.meta.dirname, '..', 'test-results-smoke', 'results.json')
 
 const ZEnv = z.object({
@@ -68,18 +71,9 @@ function collectSpecs(suites: TSuite[]): z.infer<typeof ZSpec>[] {
   return suites.flatMap((suite) => [...(suite.specs ?? []), ...collectSpecs(suite.suites ?? [])])
 }
 
-function slugify(title: string): string {
-  return title
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-}
-
 async function main() {
   const env = ZEnv.parse(process.env)
-  const target = process.env.SMOKE_BASE_URL ?? 'http://localhost:3210'
+  const target = baseURL
 
   const raw = ZResults.safeParse(JSON.parse(readFileSync(RESULTS_FILE, 'utf-8')))
   if (!raw.success) {
@@ -108,7 +102,7 @@ async function main() {
 
     let videoKey: string | null = null
     if (videoPath) {
-      videoKey = `videos/${String(index + 1).padStart(2, '0')}-${slugify(spec.title)}.webm`
+      videoKey = `videos/${String(index + 1).padStart(2, '0')}-${slugify(spec.title, { lower: true, strict: true })}.webm`
       await s3.send(
         new PutObjectCommand({
           Bucket: env.S3_BUCKET,
@@ -167,10 +161,18 @@ async function purgeOldRuns(s3: S3Client, bucket: string) {
   const expired = prefixes.sort().slice(0, Math.max(0, prefixes.length - KEEP_RUNS))
 
   for (const prefix of expired) {
-    const objects = await s3.send(new ListObjectsV2Command({ Bucket: bucket, Prefix: prefix }))
-    const keys = (objects.Contents ?? []).flatMap((o) => (o.Key ? [{ Key: o.Key }] : []))
-    if (keys.length > 0) {
-      await s3.send(new DeleteObjectsCommand({ Bucket: bucket, Delete: { Objects: keys } }))
+    const keys: { Key: string }[] = []
+    let continuationToken: string | undefined
+    do {
+      const objects = await s3.send(new ListObjectsV2Command({ Bucket: bucket, Prefix: prefix, ContinuationToken: continuationToken }))
+      for (const o of objects.Contents ?? []) {
+        if (o.Key) keys.push({ Key: o.Key })
+      }
+      continuationToken = objects.NextContinuationToken
+    } while (continuationToken)
+
+    for (let i = 0; i < keys.length; i += DELETE_BATCH_SIZE) {
+      await s3.send(new DeleteObjectsCommand({ Bucket: bucket, Delete: { Objects: keys.slice(i, i + DELETE_BATCH_SIZE) } }))
     }
     console.log(`Recette purgée (rétention ${KEEP_RUNS}) : ${prefix}`)
   }

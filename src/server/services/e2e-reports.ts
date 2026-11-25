@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { env } from '~/server/env'
 import { E2E_REPORTS_PREFIX, s3 } from '~/server/services/s3'
 
-const VIDEO_URL_TTL_SECONDS = 3600
+const VIDEO_URL_TTL_SECONDS = 12 * 3600
 
 const ZManifest = z.object({
   runAt: z.string(),
@@ -27,22 +27,11 @@ const ZManifest = z.object({
   ),
 })
 
-export type TE2eReportTest = {
-  title: string
-  file: string
-  status: string
-  durationMs: number
-  videoUrl: string | null
-}
+type TManifest = z.infer<typeof ZManifest>
 
-export type TE2eReport = {
-  id: string
-  runAt: string
-  target: string
-  durationMs: number
-  stats: { passed: number; failed: number; flaky: number; skipped: number }
-  tests: TE2eReportTest[]
-}
+export type TE2eReportTest = Omit<TManifest['tests'][number], 'video'> & { videoUrl: string | null }
+
+export type TE2eReport = Omit<TManifest, 'tests'> & { id: string; tests: TE2eReportTest[] }
 
 async function listRunPrefixes(): Promise<string[]> {
   const prefixes: string[] = []
@@ -71,8 +60,9 @@ async function readManifest(runPrefix: string): Promise<TE2eReport | null> {
   try {
     const response = await s3.send(new GetObjectCommand({ Bucket: env.S3_BUCKET, Key: `${runPrefix}manifest.json` }))
     body = (await response.Body?.transformToString()) ?? ''
-  } catch {
-    return null
+  } catch (error) {
+    if (error instanceof Error && (error.name === 'NoSuchKey' || error.name === 'NotFound')) return null
+    throw error
   }
 
   let parsed: unknown
@@ -86,13 +76,10 @@ async function readManifest(runPrefix: string): Promise<TE2eReport | null> {
   if (!manifest.success) return null
 
   const tests = await Promise.all(
-    manifest.data.tests.map(async (test) => ({
-      title: test.title,
-      file: test.file,
-      status: test.status,
-      durationMs: test.durationMs,
-      videoUrl: test.video
-        ? await getSignedUrl(s3, new GetObjectCommand({ Bucket: env.S3_BUCKET, Key: `${runPrefix}${test.video}` }), {
+    manifest.data.tests.map(async ({ video, ...test }) => ({
+      ...test,
+      videoUrl: video
+        ? await getSignedUrl(s3, new GetObjectCommand({ Bucket: env.S3_BUCKET, Key: `${runPrefix}${video}` }), {
             expiresIn: VIDEO_URL_TTL_SECONDS,
           })
         : null,
@@ -100,11 +87,8 @@ async function readManifest(runPrefix: string): Promise<TE2eReport | null> {
   )
 
   return {
+    ...manifest.data,
     id: runPrefix.slice(E2E_REPORTS_PREFIX.length).replace(/\/$/, ''),
-    runAt: manifest.data.runAt,
-    target: manifest.data.target,
-    durationMs: manifest.data.durationMs,
-    stats: manifest.data.stats,
     tests,
   }
 }
